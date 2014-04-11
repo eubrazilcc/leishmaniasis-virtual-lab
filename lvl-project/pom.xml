@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
+
+Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+the European Commission - subsequent versions of the EUPL (the "Licence");
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+  http://ec.europa.eu/idabc/eupl
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and 
+limitations under the Licence.
+
+This product combines work with different licenses. See the "NOTICE" text
+file for details on the various modules and licenses.
+The "NOTICE" text file is part of the distribution. Any derivative works
+that you distribute must include a readable copy of the "NOTICE" text file.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>eu.eubrazilcc.lvl</groupId>
+		<artifactId>leishmaniasis-virtual-lab</artifactId>
+		<version>0.0.1</version>
+		<relativePath>..</relativePath>
+	</parent>
+
+	<artifactId>lvl-project</artifactId>
+	<packaging>pom</packaging>
+
+	<name>lvl-project</name>
+	<description>EUBrazilCC - Leishmaniasis Virtual Laboratory (LVL)</description>
+	<url>http://eubrazilcloudconnect.eu/</url>
+
+	<inceptionYear>2014</inceptionYear>
+
+	<licenses>
+		<license>
+			<name>European Union Public Licence (EUPL)</name>
+			<url>http://joinup.ec.europa.eu/software/page/eupl/licence-eupl</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>EUBrazilCC (EU‐Brazil Cloud Connect) Consortium</name>
+		<url>http://eubrazilcloudconnect.eu/</url>
+	</organization>
+
+	<scm>
+		<connection>scm:svn:http://127.0.0.1/svn/lvl</connection>
+		<developerConnection>scm:svn:https://127.0.0.1/svn/lvl</developerConnection>
+		<tag>HEAD</tag>
+		<url>http://127.0.0.1/websvn/lvl</url>
+	</scm>
+
+	<properties>
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
+
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<!-- Convenience properties to set library versions -->
+		<biojava.version>3.0.7</biojava.version>
+		<jersey.version>2.6</jersey.version>
+		<junit.version>4.11</junit.version>
+		<mockito.version>1.9.5</mockito.version>
+
+		<!-- Convenience properties to set Maven plugins versions -->
+		<buildnumber-maven-plugin.version>1.2</buildnumber-maven-plugin.version>
+		<exec-maven-plugin.version>1.2.1</exec-maven-plugin.version>
+		<jaxb2-maven-plugin.version>1.5</jaxb2-maven-plugin.version>
+		<m2e.lifecycle-mapping.version>1.0.0</m2e.lifecycle-mapping.version>
+		<maven-assembly-plugin.version>2.4</maven-assembly-plugin.version>
+		<maven-compiler-plugin.version>2.5.1</maven-compiler-plugin.version>
+		<maven-jar-plugin.version>2.4</maven-jar-plugin.version>
+		<maven-failsafe-plugin.version>2.17</maven-failsafe-plugin.version>
+		<maven-surefire-plugin.version>2.16</maven-surefire-plugin.version>
+		<maven-war-plugin.version>2.4</maven-war-plugin.version>
+		<tomcat7-maven-plugin.version>2.2</tomcat7-maven-plugin.version>
+		<embedmongo-maven-plugin.version>0.1.10</embedmongo-maven-plugin.version>
+		<embedmongo-maven-plugin.mongodb.version>2.6.0</embedmongo-maven-plugin.mongodb.version>
+		<embedmongo-maven-plugin.download.path>http://dedalo.i3m.upv.es/mongodb/</embedmongo-maven-plugin.download.path>
+	</properties>
+
+	<dependencies>
+		<!-- JUnit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Mockito: a mock objects library for Java -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.hamcrest</groupId>
+					<artifactId>hamcrest-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<!-- Maven for Eclipse -->
+				<!-- Nothing yet -->
+
+				<!-- Place build time-stamp in jar or war manifest -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>${maven-jar-plugin.version}</version>
+					<configuration>
+						<archive>
+							<manifest>
+								<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							</manifest>
+							<manifestEntries>
+								<Implementation-Build>${buildNumber}</Implementation-Build>
+							</manifestEntries>
+						</archive>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>${maven-war-plugin.version}</version>
+					<configuration>
+						<archive>
+							<manifest>
+								<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							</manifest>
+							<manifestEntries>
+								<Implementation-Build>${buildNumber}</Implementation-Build>
+							</manifestEntries>
+						</archive>
+					</configuration>
+				</plugin>
+				
+				<!-- Configure integration tests (child projects may override this configuration) -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>${maven-failsafe-plugin.version}</version>
+					<executions>
+						<execution>
+							<id>integration-test</id>
+							<goals>
+								<goal>integration-test</goal>
+								<goal>verify</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin> <!-- Apache Tomcat 7 is the predefined HTTP/Servlet container for integration tests -->
+					<groupId>org.apache.tomcat.maven</groupId>
+					<artifactId>tomcat7-maven-plugin</artifactId>
+					<version>${tomcat7-maven-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>com.github.joelittlejohn.embedmongo</groupId>
+					<artifactId>embedmongo-maven-plugin</artifactId>
+					<version>${embedmongo-maven-plugin.version}</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+			<!-- Build time-stamp -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>${buildnumber-maven-plugin.version}</version>
+				<configuration>
+					<format>{0,date,yyyy-MM-dd HH:mm:ss}</format>
+					<items>
+						<item>timestamp</item>
+					</items>
+					<revisionOnScmFailure>unknown</revisionOnScmFailure>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<modules>
+		<module>lvl-core</module>
+		<module>lvl-storage</module>
+		<module>lvl-auth</module>
+		<module>lvl-service</module>
+		<module>lvl-resource-bundle</module>    	    
+  </modules>
+
+</project>

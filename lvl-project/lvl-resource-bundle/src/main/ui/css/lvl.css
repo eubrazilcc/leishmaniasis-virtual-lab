@@ -1,0 +1,174 @@
+@CHARSET "UTF-8";
+
+/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+	padding-top: 50px;
+	padding-bottom: 20px;
+}
+
+.lvl-container {
+	padding: 40px 15px;
+}
+
+img.lvl-logo-header {
+	height: 30px;
+	width: auto;
+}
+
+.lvl-footer {
+	padding-top: 40px;
+	padding-bottom: 40px;
+	margin-top: 100px;
+	color: #777;
+	text-align: center;
+	border-top: 1px solid #e5e5e5;
+}
+
+i.lvl-social {
+	padding-right: 2px;
+}
+
+i.lvl-social {
+	margin: auto;
+	vertical-align: middle;
+	display: inline-block;
+}
+
+.lvl-social-right {
+	padding-right: 10px;
+}
+
+a.lvl-social:hover {
+	opacity: 0.8;
+}
+
+.map {
+	height: 500px;
+	width: 100%;
+	background: url(../img/textured_paper.jpeg) repeat;
+}
+
+.map:-moz-full-screen {
+	height: 100%;
+}
+
+.map:-webkit-full-screen {
+	height: 100%;
+}
+
+.map:-ms-fullscreen {
+	height: 100%;
+}
+
+.map:full-screen {
+	height: 100%;
+}
+
+/* Sidebar nav vertical */
+@media ( min-width : 768px) {
+	.lvl-sidebar-nav .navbar .navbar-collapse {
+		padding: 0;
+		max-height: none;
+	}
+	.lvl-sidebar-nav .navbar ul {
+		float: none;
+		display: block;
+	}
+	.lvl-sidebar-nav .navbar li {
+		float: none;
+		display: block;
+	}
+	.lvl-sidebar-nav .navbar li a {
+		padding-top: 6px;
+		padding-bottom: 6px;
+	}
+}
+
+/* Page content */
+.lvl-top {
+	top: 12px;
+	padding-top: 0px;
+}
+
+.lvl-toolbar-bottom {
+	padding-bottom: 6px;
+	border-bottom: 1px solid #eee;
+	margin-bottom: 6px;
+}
+
+.lvl-left-border {
+	border-left: 1px solid #eee;
+}
+
+.lvl-file>a {
+	color: #333;
+}
+
+.lvl-file>a:hover {
+	color: #333;
+}
+
+.lvl-activity {
+	padding: 5px 10px;
+	margin: 0 0 10px;
+}
+
+.lvl-activity>a {
+	color: #333;
+}
+
+.lvl-activity>a:hover {
+	color: #333;
+}
+
+.lvl-ul-centered {
+	margin-top: 6px;
+	margin-bottom: 0px;
+}
+
+.map-home {
+	position: absolute;
+	top: 65px;
+	left: 8px;
+	background: rgba(255, 255, 255, 0.4);
+	border-radius: 4px;
+	padding: 2px;
+}
+
+.ol-touch .map-home {
+	top: 80px;
+}
+
+.map-home a {
+	display: block;
+	color: white;
+	font-size: 16px;
+	font-family: 'Lucida Grande', Verdana, Geneva, Lucida, Arial, Helvetica,
+		sans-serif;
+	font-weight: bold;
+	margin: 1px;
+	text-decoration: none;
+	text-align: center;
+	border-radius: 2px;
+	height: 22px;
+	width: 22px;
+	background: rgba(0, 60, 136, 0.5);
+}
+
+.ol-touch .map-home a {
+	font-size: 20px;
+	height: 30px;
+	width: 30px;
+	line-height: 26px;
+}
+
+.map-home a:hover {
+	background: rgba(0, 60, 136, 0.7);
+}
+
+.map-home .ol-has-tooltip:hover [role=tooltip],.map-home .ol-has-tooltip:focus [role=tooltip]
+	{
+	right: 2.2em;
+	left: auto;
+	border-radius: 4px 0 0 4px
+}

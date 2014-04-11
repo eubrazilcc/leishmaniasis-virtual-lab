@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
+
+Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+the European Commission - subsequent versions of the EUPL (the "Licence");
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+  http://ec.europa.eu/idabc/eupl
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and 
+limitations under the Licence.
+
+This product combines work with different licenses. See the "NOTICE" text
+file for details on the various modules and licenses.
+The "NOTICE" text file is part of the distribution. Any derivative works
+that you distribute must include a readable copy of the "NOTICE" text file.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>eu.eubrazilcc.lvl</groupId>
+		<artifactId>lvl-project</artifactId>
+		<version>0.0.1</version>
+		<relativePath>..</relativePath>
+	</parent>
+	
+	<artifactId>lvl-core</artifactId>
+	<name>lvl-core</name>
+	<description>LVL core types and components</description>
+	<url>http://eubrazilcloudconnect.eu/</url>
+	
+	<repositories>
+		<repository>
+			<id>biojava-maven-repo</id>
+			<name>BioJava repository</name>
+			<url>http://www.biojava.org/download/maven/</url>			
+		</repository>
+	</repositories>
+	
+	<dependencies>
+		<!-- Apache commons -->
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+		</dependency>
+		<dependency> <!-- needed by commons-configuration -->
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+		</dependency>
+
+		<!-- HTTP client -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>fluent-hc</artifactId>
+		</dependency>
+
+		<!-- Guava: Google Core Libraries for Java -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		<dependency> <!-- JSR305 Annotations -->
+			<groupId>com.google.code.findbugs</groupId>
+			<artifactId>jsr305</artifactId>
+		</dependency>
+
+		<!-- Joda Time -->
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+		</dependency>
+
+		<!-- Apache Tika -->
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+		</dependency>
+		
+		<!-- JAX-RS reference implementation -->
+		<dependency>
+    		<groupId>javax.ws.rs</groupId>
+    		<artifactId>javax.ws.rs-api</artifactId>
+    		<scope>provided</scope>
+		</dependency>
+		
+		<!-- Java tools for processing biological data -->
+		<dependency>
+			<groupId>org.biojava</groupId>
+			<artifactId>biojava3-core</artifactId>
+			<version>${biojava.version}</version>
+		</dependency>
+		
+		<!-- Java Servlet API 3.0 -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Logback and SLF4J logging framework -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<scope>provided</scope>
+		</dependency>		
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- Build -->
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+				<inherited>true</inherited>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+			<!-- Test -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${maven-surefire-plugin.version}</version>
+				<configuration>
+					<argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC</argLine>
+					<!-- Configure tests to go through the JUnit test suite -->
+					<includes>
+						<include>**/AllTests.java</include>
+					</includes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
+</project>

@@ -1,0 +1,139 @@
+/*
+ * Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
+ * 
+ * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+ * the European Commission - subsequent versions of the EUPL (the "Licence");
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ * 
+ *   http://ec.europa.eu/idabc/eupl
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and 
+ * limitations under the Licence.
+ * 
+ * This product combines work with different licenses. See the "NOTICE" text
+ * file for details on the various modules and licenses.
+ * The "NOTICE" text file is part of the distribution. Any derivative works
+ * that you distribute must include a readable copy of the "NOTICE" text file.
+ */
+
+package eu.eubrazilcc.lvl.core;
+
+import static com.google.common.base.Objects.toStringHelper;
+
+import javax.annotation.Nullable;
+import javax.ws.rs.core.Link;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import eu.eubrazilcc.lvl.core.xml.LinkAdapter;
+
+/**
+ * Any collection that can be returned to the client as a series of pages that
+ * contains a part of the collection.
+ * @author Erik Torres <ertorser@upv.es>
+ */
+public class Paginable {
+
+	private Link previous;
+	private Link next;
+
+	private Link first;
+	private Link last;
+
+	public Paginable() { }
+
+	public void push(final Paginable other) {
+		this.previous = other.previous;
+		this.next = other.next;
+		this.first = other.first;
+		this.last = other.last;
+	}
+
+	@XmlJavaTypeAdapter(LinkAdapter.class)
+	public @Nullable Link getPrevious() {
+		return previous;
+	}
+
+	public void setPrevious(final Link previous) {
+		this.previous = previous;
+	}
+
+	@XmlJavaTypeAdapter(LinkAdapter.class)
+	public @Nullable Link getNext() {
+		return next;
+	}
+
+	public void setNext(final Link next) {
+		this.next = next;
+	}
+
+	@XmlJavaTypeAdapter(LinkAdapter.class)
+	public @Nullable Link getFirst() {
+		return first;
+	}
+
+	public void setFirst(final Link first) {
+		this.first = first;
+	}
+
+	@XmlJavaTypeAdapter(LinkAdapter.class)
+	public @Nullable Link getLast() {
+		return last;
+	}
+
+	public void setLast(final Link last) {
+		this.last = last;
+	}
+
+	@Override
+	public String toString() {
+		return toStringHelper(Paginable.class.getSimpleName())
+				.add("previous", previous)
+				.add("next", next)
+				.add("first", first)
+				.add("last", last)
+				.toString();
+	}
+
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public static class Builder {
+
+		private final Paginable paginable;
+
+		public Builder() {
+			paginable = new Paginable();
+		}
+
+		public Builder previous(final Link previous) {
+			paginable.setPrevious(previous);
+			return this;
+		}
+
+		public Builder next(final Link next) {
+			paginable.setNext(next);
+			return this;
+		}
+
+		public Builder first(final Link first) {
+			paginable.setFirst(first);
+			return this;
+		}
+
+		public Builder last(final Link last) {
+			paginable.setLast(last);
+			return this;
+		}
+
+		public Paginable build() {
+			return paginable;
+		}
+
+	}
+
+}

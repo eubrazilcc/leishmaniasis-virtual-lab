@@ -1,0 +1,131 @@
+/*
+ * Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
+ * 
+ * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+ * the European Commission - subsequent versions of the EUPL (the "Licence");
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ * 
+ *   http://ec.europa.eu/idabc/eupl
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and 
+ * limitations under the Licence.
+ * 
+ * This product combines work with different licenses. See the "NOTICE" text
+ * file for details on the various modules and licenses.
+ * The "NOTICE" text file is part of the distribution. Any derivative works
+ * that you distribute must include a readable copy of the "NOTICE" text file.
+ */
+
+package eu.eubrazilcc.lvl.storage;
+
+import static com.google.common.collect.Lists.newArrayList;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.commons.lang.mutable.MutableLong;
+import org.junit.Test;
+
+import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
+import eu.eubrazilcc.lvl.storage.oauth2.User;
+import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
+
+/**
+ * Tests OAuth2 resource owner collection in the database.
+ * @author Erik Torres <ertorser@upv.es>
+ */
+public class ResourceOwnerCollectionTest {
+
+	@Test
+	public void test() {
+		System.out.println("ResourceOwnerCollectionTest.test()");
+		try {
+			final Collection<String> scopes = newArrayList("scope1", "scope2");
+			// insert
+			final ResourceOwner resourceOwner = ResourceOwner.builder()
+					.id("username")
+					.user(User.builder()
+							.username("username")
+							.password("password")
+							.email("username@example.com")
+							.fullname("Fullname")
+							.scope(scopes)
+							.build()).build();
+			ResourceOwnerDAO.INSTANCE.insert(resourceOwner);
+			// find
+			ResourceOwner resourceOwner2 = ResourceOwnerDAO.INSTANCE.find(resourceOwner.getOwnerId());
+			assertThat("resource owner is not null", resourceOwner2, notNullValue());
+			assertThat("resource owner coincides with original", resourceOwner2, equalTo(resourceOwner));
+			System.out.println(resourceOwner2.toString());
+			// update
+			resourceOwner.getUser().setPassword("new_password");
+			ResourceOwnerDAO.INSTANCE.update(resourceOwner);
+			// find after update
+			resourceOwner2 = ResourceOwnerDAO.INSTANCE.find(resourceOwner.getOwnerId());
+			assertThat("resource owner is not null", resourceOwner2, notNullValue());
+			assertThat("resource owner coincides with original", resourceOwner2, equalTo(resourceOwner));
+			System.out.println(resourceOwner2.toString());
+			// check validity
+			final boolean validity = ResourceOwnerDAO.INSTANCE.isValid(resourceOwner.getOwnerId(), 
+					resourceOwner.getUser().getUsername(), resourceOwner.getUser().getPassword());
+			assertThat("resource owner is valid", validity);
+			// add scopes
+			ResourceOwnerDAO.INSTANCE.addScopes(resourceOwner.getOwnerId(), "scope3");
+			// remove scopes
+			ResourceOwnerDAO.INSTANCE.removeScopes(resourceOwner.getOwnerId(), "scope2");
+			// get scope
+			final String oauthScope = ResourceOwnerDAO.INSTANCE.oauthScope(resourceOwner.getOwnerId(), true);
+			assertThat("resource owner OAuth scope is not null", oauthScope, notNullValue());
+			assertThat("resource owner OAuth scope is not blank", isNotBlank(oauthScope));
+			assertThat("resource owner OAuth scope coincided with expected", oauthScope, equalTo("scope1 scope3"));
+			System.out.println("OAuth scope: '" + oauthScope + "'");
+			// remove
+			ResourceOwnerDAO.INSTANCE.delete(resourceOwner.getOwnerId());
+			// pagination
+			final List<String> ids = newArrayList();
+			for (int i = 0; i < 11; i++) {
+				final ResourceOwner resourceOwner3 = ResourceOwner.builder()
+						.id(Integer.toString(i))
+						.user(User.builder()
+								.username(Integer.toString(i))
+								.password("password")
+								.email("username@example.com")
+								.fullname("Fullname")
+								.scope(scopes)
+								.build()).build();								
+				ids.add(resourceOwner3.getOwnerId());
+				ResourceOwnerDAO.INSTANCE.insert(resourceOwner3);
+			}
+			final int size = 3;
+			int start = 0;
+			List<ResourceOwner> resourceOwners = null;
+			final MutableLong count = new MutableLong(0l);
+			do {
+				resourceOwners = ResourceOwnerDAO.INSTANCE.list(start, size, count);
+				if (resourceOwners.size() != 0) {
+					System.out.println("Paging " + start + " - " + resourceOwners.size() + " of " + count.getValue());
+				}
+				start += resourceOwners.size();
+			} while (!resourceOwners.isEmpty());
+			for (final String id2 : ids) {			
+				ResourceOwnerDAO.INSTANCE.delete(id2);
+			}
+			ResourceOwnerDAO.INSTANCE.stats(System.out);
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			fail("ResourceOwnerCollectionTest.test() failed: " + e.getMessage());
+		} finally {			
+			System.out.println("ResourceOwnerCollectionTest.test() has finished");
+		}
+	}
+
+}

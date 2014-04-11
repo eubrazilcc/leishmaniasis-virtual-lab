@@ -1,0 +1,7 @@
+/* Leishmaniasis Virtual Laboratory was made by EUBrazilCC, a small or medium-scale focused research project (STREP) is partially funded by the European Commission under the Cooperation Programme, Framework Programme Seven (FP7) – FP7614048 and by CNPq (Conselho Nacional de Desenvolvimento Científico e Tecnológico, Brazil */
+/* eubrazilcloudconnect.eu */
+
+/* SITE */
+  Standards: HTML5, CSS3
+  Components: jQuery, Bootstrap, AngularJS
+  Software: Git, Eclipse

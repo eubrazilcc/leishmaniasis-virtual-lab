@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<!-- 
+Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
+
+Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+the European Commission - subsequent versions of the EUPL (the "Licence");
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+  http://ec.europa.eu/idabc/eupl
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and 
+limitations under the Licence.
+
+This product combines work with different licenses. See the "NOTICE" text
+file for details on the various modules and licenses.
+The "NOTICE" text file is part of the distribution. Any derivative works
+that you distribute must include a readable copy of the "NOTICE" text file.
+-->
+<html>
+<head>
+  <meta name="description" content="Leishmaniasis Virtual Laboratory (LVL) documentation">
+  <meta name="keywords" content="Leishmaniasis,LVL,EUBrazilCC">
+  <meta name="author" content="EUBrazilCC consortium">
+  <meta charset="UTF-8">
+  <title>LVL - Administration &amp; Development Guide</title>
+</head>
+<body>
+
+<h1>Leishmaniasis Virtual Laboratory (LVL) Administration &amp; Development Guide</h1>
+
+<p>Version 0.0.1</p>
+<p>April 2014</p>
+
+<h2>Abstract</h2>
+
+<p>This document is a guide to the administration and configuration of the Leishmaniasis Virtual Laboratory (LVL).</p>
+
+<hr />
+
+<h2>Index</h2>
+
+<ul>
+  <li><a href="#installation">Installation</a>
+    <ul>
+      <li><a href="#installation_requirements">Requirements</a></li>
+      <li><a href="#installation_quick_guide">Quick install guide</a></li>
+      <li><a href="#installation_from_source">Installing from source</a></li>
+    </ul>
+  </li>
+  <li><a href="#secutiry">Security</a>
+    <ul>
+      <li><a href="#secutiry_general">General considerations</a></li>
+      <li><a href="#secutiry_oauth2_authorization">OAuth 2.0 authorization</a></li>
+    </ul>
+  </li>
+  <li><a href="#database">Database</a>
+    <ul>
+      <li><a href="#database_configuration">Configuration</a></li>
+    </ul>
+  </li>
+  <li><a href="#restful_api">RESTful API</a>
+    <ul>
+      <li><a href="#restful_api_resources">Resources</a></li>
+      <li><a href="#restful_api_endpoints">Endpoints</a></li>
+      <li><a href="#restful_api_geojson_support">GeoJSON support</a></li>
+    </ul>
+  </li>
+  <li><a href="#user_interface">User Interface</a>
+    <ul>
+      <li><a href="#user_interface_run_locally">Run locally</a></li>
+      <li><a href="#user_interface_programming_models">Programming models</a></li>
+      <li><a href="#user_interface_movile_versions">Mobile versions</a></li>
+    </ul>
+  </li>
+  <li><a href="#examples">Examples</a>
+    <ul>
+      <li><a href="#examples_restful_api">RESTful API examples</a>
+        <ul>
+          <li><a href="#examples_restful_api_submit_sequence">Submit a new sequence</a></li>
+          <li><a href="#examples_restful_api_get_sequence">Get a sequence using the accession number</a></li>
+          <li><a href="#examples_restful_api_update_sequence">Update a sequence</a></li>
+          <li><a href="#examples_restful_api_delete_sequence">Delete a sequence</a></li>
+          <li><a href="#examples_restful_api_list_sequences">List sequences</a></li>
+          <li><a href="#examples_restful_api_find_nearby_equences">Find nearby sequences</a></li>
+        </ul>
+      </li>  
+    </ul>
+  </li>  
+</ul>
+
+<hr />
+
+<h2><a id="installation">Installation</a></h2>
+
+<h3><a id="installation_requirements">Requirements</a></h3>
+
+<p>In order to install a complete LVL system, you need at least one server running Linux (Ubuntu, Debian, CentOS). Currently, the recommended platform
+   to run LVL is <a href="http://www.ubuntu.com/download/server" target="_blank">Ubuntu 12.04 LTS</a>. It is highly recommended to use a separate server
+   instance (virtual or physical) for the LVL collection to obtain better performance.</p>
+
+<p>A minimum LVL installation includes the following components:</p>
+
+<ul>
+  <li>LVL collection: a database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>
+    <ul>
+      <li>Recommended version: 2.6.0</li>
+    </ul>  
+  </li>
+  <li>LVL identity provider &amp; authorization server: a Java servlet application that runs in a servlet container
+    <ul>
+      <li>Recommended setup: <a href="http://tomcat.apache.org/" target="_blank">Apache Tomcat</a> 7.0.26</li>
+    </ul>
+  </li>
+  <li>LVL service: a servlet-based REST service
+    <ul>
+      <li>Recommended setup: it can be combined with the <i>LVL identity provider &amp; authorization server</i> in the same servlet container or it 
+          can run separately in a different container</li>
+    </ul>
+  </li>
+  <li>LVL Web portal: a pure-JavaScript application that needs an HTTP server
+    <ul>
+      <li>Recommended setup: <a href="http://nginx.org/" target="_blank">nginx</a> 1.1.19
+        <ul>
+          <li>Optionally, you can include <a href="https://github.com/nbs-system/naxsi/wiki" target="_blank">Naxsi</a> with nginx to protect your 
+              server against XSS &amp; SQL injection</li>
+        </ul>
+      </li>      
+    </ul>
+  </li>
+</ul>
+
+<p>For example, the following command will install all these required dependencies in Ubuntu:</p>
+
+<code>
+$ sudo apt-get install openjdk-7-jre tomcat7 nginx mongodb
+</code>
+
+<p>Or, including Naxsi:</p>
+
+<code>
+$ sudo apt-get install openjdk-7-jre tomcat7 nginx-naxsi mongodb
+</code>
+
+<p>However, for a better performance, it is recommended to follow the instructions bellow to install and 
+   <a href="#database_configuration">configure the database</a> with the latest MongoDB production version.</p>
+
+<h3><a id="installation_quick_guide">Quick install guide</a></h3>
+
+<p>This is a simple guide to get LVL setup and running quickly. For additional details on installation and configuration you can read the rest of this guide.</p>
+
+<h4>Setup directories</h4>
+
+<p>Create the LVL base directory and extract the resource bundle to the new directory:</p>
+
+<code>
+$ sudo mkdir /opt/lvl
+</code>
+
+<br />
+
+<code>
+$ sudo tar xvzf lvl-resource-bundle-0.0.1.tar.gz -C /opt/lvl
+</code>
+
+<br />
+
+<p>The LVL configuration files are located in the directory <em>/opt/lvl/etc</em>, you can customize these files to your needs.</p>
+
+<p>Finally, change the owner of the <em>/opt/lvl/</em> to the Tomcat user:</p>
+
+<code>
+$ sudo chown -R tomcat7.tomcat7 /opt/lvl
+</code>
+
+<h4>Setup database</h4>
+
+<p>Currently, LVL only supports password-based authentication for MongoDB connections. If you enable this 
+   <a href="http://docs.mongodb.org/manual/security/" target="_blank">security mechanism in MongoDB</a>, then you will need to update the LVL 
+   configuration file: <em>/opt/lvl/etc/lvl.xml</em>.</p>
+
+<h4>Install &amp; configure services</h4>
+
+<p>(In Ubuntu, by default <em>CATALINA_HOME</em> is <em>/usr/share/tomcat7</em>, and <em>CATALINA_BASE</em> is <em>/var/lib/tomcat7</em>. 
+   Both variables can be set in <em>/etc/default/tomcat7</em>)</p>
+
+<p>Copy or link the common LVL dependencies to the Tomcat shared libraries directory. These dependencies could include logging and database drivers,
+   which are known to perform better when loaded only once within the same JVM. For example:</p>
+
+<code>
+$ ln -s /opt/lvl/lib/java/mongo-java-driver-2.11.4.jar /usr/share/tomcat7/lib/mongo-java-driver-2.11.4.jar
+</code>
+
+<p>The following script is an example of how this task can be done in an automatic manner:</p>
+
+<code>
+for f in `ls /opt/lvl/lib/java/*.jar`; do ln -s ${f} /usr/share/tomcat7/lib/`basename ${f}`; done
+</code>
+
+<p>Copy the LVL services to the Tomcat Web applications directory and change the owner of the files to the Tomcat user:</p>
+
+<code>
+$ sudo cp lvl-auth.war lvl-service.war /var/lib/tomcat7/webapps/
+</code>
+
+<br />
+
+<code>
+$ sudo chown -R tomcat7.tomcat7 /var/lib/tomcat7/webapps/*.war
+</code>
+
+<p>Service deployment should occur automatically and you can track the progress in the Tomcat log file:</p>
+
+<code>
+$ sudo tail -f /var/log/tomcat7/catalina.out
+</code>
+
+<p>LVL services will produce their own log files:</p>
+
+<code>
+$ sudo tail -f /opt/lvl/var/log/lvl/lvl-auth.log
+<br />
+$ sudo tail -f /opt/lvl/var/log/lvl/lvl-service.log
+</code>
+
+<h4>Troubleshooting</h4>
+
+<p>Increase the size of your heap if you get the following error:</p>
+
+<code>
+SEVERE: Error waiting for multi-thread deployment of WAR files to complete<br />
+java.util.concurrent.ExecutionException: java.lang.OutOfMemoryError: Java heap space
+</code>
+
+<p>In Ubuntu, heap size can be increased by modifying the value assigned to the Java startup parameter <em>-Xmx1024m</em> in the <em>JAVA_OPTS</em>.
+   This variable is setup in <em>/etc/default/tomcat7</em>.</p>
+
+<p>Restart Tomcat to apply the change:</p>
+
+<code>
+$ sudo service tomcat7 restart
+</code>
+
+<h4>Install &amp; configure Web portal</h4>
+
+<em>TODO</em>
+
+<h4>Performance optimization</h4>
+
+<p>In order to improve performance, you can use a load balancer (nginx) to distribute the workload among several replicas of the services. This option
+   is currently available for the <em>LVL identity provider &amp; authorization server</em> and the <em>LVL service</em>. Database performance can be 
+   improved by deploying more replicas of the <em>LVL collection</em>.</p>
+
+<h3><a id="installation_from_source">Installing from source</a></h3>
+
+<p>To build the LVL system you will need the Java Development Kit (JDK). Currently, the recommended Java implementation to build LVL is 
+   <a href="http://openjdk.java.net/projects/jdk7u/" target="_blank">OpenJDK 7</a>. Note that JDK is only needed for building LVL. For just
+   running LVL, a JRE (Java Runtime Environment) will suffice.</p>
+
+<p>In addition to JDK, you will also need <a href="http://maven.apache.org/" target="_blank">Apache Maven</a> and a 
+   <a href="http://git-scm.com/" target="_blank">Git</a> client.</p>
+
+<p>Clone the LVL source code repository:</p>
+
+<code>
+$ git clone https://github.com/eubrazilcc/leishmaniasis-virtual-lab.git
+</code>
+
+<p>Enter to the LVL project main folder and install the LVL project BOM and POM files in your local Maven repository:</p>
+
+<code>
+$ cd leishmaniasis-virtual-lab
+<br />
+$ mvn install:install-file -Dfile=pom.xml -DpomFile=pom.xml
+<br />
+$ mvn clean install -pl lvl-project
+</code>
+
+<p>Enter to the project folder, build and install the LVL core libraries in your local Maven repository:</p>
+
+<code>
+$ cd lvl-project
+<br />
+$ mvn clean install -pl lvl-core,lvl-storage
+</code>
+
+<p>Build the LVL services:</p>
+
+<code>
+$ mvn clean package -pl lvl-auth
+</code>
+
+<br />
+
+<code>
+$ mvn clean package -pl lvl-service
+</code>
+
+<p>Copy the LVL service packages to your server and continues with the usual <a href="#installation">installation</a> steps:</p>
+
+<code>
+$ scp lvl-auth/target/lvl-auth.war lvl-service/target/lvl-service.war &lt;USERNAME&gt;@&lt;SERVER_HOSTNAME&gt;:&lt;SERVER_LOCATION&gt;/
+</code>
+
+<p>Build the LVL resources bundle and copy it to your server:</p>
+
+<code>
+$ mvn clean package -pl lvl-resource-bundle
+</code>
+
+<br />
+
+<code>
+$ scp lvl-resource-bundle/target/lvl-resource-bundle-0.0.1.tar.gz &lt;USERNAME&gt;@&lt;SERVER_HOSTNAME&gt;:&lt;SERVER_LOCATION&gt;/
+</code>
+
+<h4>Integration tests</h4>
+
+<p>Currently, there are several accepted approaches as to how to handle Web service integration test with Maven. The LVL project uses
+   the <em>verify</em> goal of <em>the Maven Failsafe Plugin</em>, which is one of the solutions suggested by a member of the Apache 
+   Maven Project Management Committee (PMC) in <a href="http://stackoverflow.com/a/16936585" target="_blank">response</a> to a 
+   stackoverflow subscriber question.</p>
+
+<p>In order to build (including JUnit tests) a LVL service, you should run the common Maven command:</p>
+
+<code>
+$ mvn clean package -pl lvl-auth
+</code>
+
+<p>However, the previous process does not include integration tests. In order to force the build process to pass through this type of 
+   test you should build LVL services with the following Maven command:</p>
+
+<code>
+$ mvn clean verify -pl lvl-auth
+</code>
+
+<p>This will start an Apache Tomcat 7 container after the package is created, it will deploy the service WAR (<em>lvl-auth.war</em> 
+   in this example) to the container and will perform additional tests that resembles user interaction in the production environment.
+   If the service fails to pass the integration test, the build process will be aborted by Maven.</p>
+
+<p>Currently, the LVL packages feature integration tests that include the following:</p>
+
+<ul>
+  <li>lvl-storage:
+    <ul>
+      <li>database deployment in MongoDB 2.6.x</li>
+    </ul>   
+  </li>
+  <li>lvl-auth:
+    <ul>
+      <li>database deployment in MongoDB 2.6.x</li>
+      <li>Web service deployment in Apache Tomcat 7</li>
+    </ul>   
+  </li>
+  <li>lvl-service:
+    <ul>
+      <li>database deployment in MongoDB 2.6.x</li>
+      <li>Web service deployment in Apache Tomcat 7</li>
+    </ul>   
+  </li>
+</ul>
+
+<h4>Skipping JUnit tests</h4>
+
+<p>To skip running the tests for the entire project or for a particular project, set the <em>maven.test.skip</em> property to <em>true</em> 
+   in the command line to skip test compilation and execution. See the question 
+   <a href="http://maven.apache.org/general.html#skip-test" target="_blank">How do I skip the tests?</a> 
+   in the Maven's documentation for more details.</p>
+
+<p>For example, to build the <em>LVL RESTful Web service</em> with all its dependencies, skipping test you can execute:</p>
+
+<code>
+$ mvn clean install -pl lvl-service -am -Dmaven.test.skip=true
+</code>
+
+<h2><a id="secutiry">Security</a></h2>
+
+<h3><a id="secutiry_general">General considerations</a></h3>
+
+<p>At least, the identification provider and authorization server should run on HTTPS, although it's also recommended to use HTTPS with the RESTful API. 
+The following is a general description of how to create server keys &amp; certificates in Java to test your deployment with HTTPS.</p>
+
+<p>Generate server key:</p>
+
+<code>
+$ keytool -genkey -keystore ./server-keystore -alias serverKey -dname "CN=localhost, OU=GRyCAP, O=I3M-UPVLC, L=Valencia, ST=Spain, C=ES" -validity 360
+</code>
+
+<p>Export server certificate:</p>
+
+<code>
+$ keytool -export -alias serverKey -rfc -keystore ./server-keystore &gt; ./server.cert
+</code>
+
+<p>Import server certificate to client trust-store:</p>
+
+<code>
+$ keytool -import -alias serverCert -file ./server.cert -keystore ./client-truststore
+</code>
+
+<h3><a id="secutiry_oauth2_authorization">OAuth 2.0 authorization</a></h3>
+
+<p><em>TODO:</em> improve this section with a better description.</p>
+
+<h4>Roles</h4>
+
+<ul>
+  <li><em>Resource owner:</em> Any registered user with an active LVL account can grant access to individual resources or collections in the LVL.
+    <ul>
+      <li>All LVL users.</li>
+    </ul>
+  </li>
+  <li><em>Identity provider (IdP):</em> User identity consists of: username, e-mail address and password.           
+    <ul>
+      <li>LVL identity service (integrated in the authorization service in the current version).
+        <ul>
+          <li>Each resource identified by a URI has an assigned scope that coincides with the base name of the resource to facilitate access control. 
+              For example, the resource <i>/sequences</i> will use the rules defined for the scope <i>sequences</i> to grant access.</li>
+          <li>Scopes can be annotated with additional attributes, which can be later used to grant access to the resource. By default, read only 
+              access is granted to the resources in a scope.</li>
+          <li>To enable a user with unlimited full-access, add him/her to the scope annotated with the attribute <em>a</em>. For example: <i>sequences,a</i>.</li>
+          <li>Multiple attributes separated by comma can be assigned to the scope.</li>
+          <li>In the current version, identity is provided along with the authorization request 
+              (OAuth 2.0 <a href="http://tools.ietf.org/html/rfc6749#section-4.3" target="_blank">Resource Owner Password Credentials Grant</a> 
+              authorization use case). Other expected use case is the 
+              OAuth 2.0 <a href="http://tools.ietf.org/html/rfc6749#section-4.1" target="_blank">Authorization Code Grant</a>, 
+              where registered clients will be granted with access to the <em>default</em> scope.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><em>Client application:</em> Any end-user application that access the resources (information, computing and storage capacities) from a user interface 
+      on behalf of an authenticated LVL user.
+    <ul>
+      <li>LVL Web portal.</li>
+    </ul>
+  </li>  
+  <li><em>Resource server:</em> API providers.
+    <ul>
+      <li>LVL RESTful Web service.</li>
+    </ul>
+  </li>
+  <li><em>Authorization &amp; token server:</em> The server issuing access tokens to the client after successfully authenticating the resource owner 
+      and obtaining authorization.
+    <ul>
+      <li>LVL authorization service (implemented with <a href="http://oltu.apache.org/" target="_blank">Apache Oltu</a>).</li>
+    </ul>
+  </li>
+</ul>
+
+<h4>Scope aliases</h4>
+
+<ul>
+  <li><em>all</em>: grant global access to all LVL resources
+    <ul>
+      <li>users/*,a</li>
+      <li>sequences,a</li>
+      <li>pending-sequences,a</li>
+      <li>pipelines,a</li>
+      <li>my-sequences/*,a</li>
+    </ul>
+  </li>  
+  <li><em>user</em>: grant read-only access to public LVL resources, full-access to user workspace
+    <ul>
+      <li>users/&lt;username&gt;,a</li>
+      <li>sequences</li>
+      <li>pipelines</li>
+      <li>my-sequences/&lt;username&gt;,a</li>
+    </ul>
+  </li>
+  <li><em>data-curator</em>: grant full-access to sequences
+    <ul>
+      <li>sequences,a</li>
+      <li>pending-sequences,a</li>
+    </ul>    
+  </li>
+  <li><em>default</em>: grant read-only access to public LVL resources
+    <ul>      
+      <li>sequences</li>
+      <li>pipelines</li>
+    </ul>
+  </li>
+</ul>
+
+<h4>Authorization schema</h4>
+
+<p>a) LVL Web portal uses the OAuth 2.0 <a href="http://tools.ietf.org/html/rfc6749#section-4.3" target="_blank">Resource Owner Password Credentials Grant</a> 
+   schema:</p>
+
+<pre>
+        username/password
+1) User ----------------&gt; Authz Server --&gt; IdP --&gt; Database (user + scopes)
+        &lt;----------------
+          access token
+         scope (optional)
+       
+       
+          access token             check()
+2) User ----------------&gt; Resource -------&gt; Database (user + scopes)
+</pre>
+
+<p>b) Other (anonymous) clients can use the OAuth 2.0 <a href="http://tools.ietf.org/html/rfc6749#section-4.1" target="_blank">Authorization Code Grant</a>
+   schema:</p>
+
+<p><em>TODO</em></p>
+
+<h4>Resources</h4>
+
+<ul>
+  <li><a href="http://tools.ietf.org/html/rfc6749">RFC6749 - The OAuth 2.0 Authorization Framework</a>.</li>
+  <li><a href="https://developers.google.com/oauthplayground/">OAuth 2.0 Playground - test OAuth interactions with Google OAuth2 API</a>.</li>
+  <li><a href="http://oltu.apache.org/">Apache Oltu - OAuth protocol implementation in Java</a>.</li>
+</ul>
+
+<h2><a id="database">Database</a></h2>
+
+<h3><a id="database_configuration">Configuration</a></h3>
+
+<p>Follow the instructions from the MongoDB documentation to install a server:
+<a href="http://docs.mongodb.org/manual/installation/" target="_blank">Install MongoDB</a>.</p>
+
+<p>In this case we setup a minimal MongoDB installation on Ubuntu: 
+<a href="http://docs.mongodb.org/manual/tutorial/install-mongodb-on-ubuntu/" target="_blank">Install MongoDB on Ubuntu</a>.</p>
+
+<h2><a id="restful_api">RESTful API</a></h2>
+
+<h3><a id="restful_api_resources">Resources</a></h3>
+
+<p><em>TODO</em>: Get new publications from PubMed and new sequences from GenBank: the system must periodically inspect these resources for new records on Leishmaniasis. Users with administrator role are notified when new records are found.
+Provide assisted data import: user with administrator role imports references from PubMed and GenBank. The system must at least assist in identifying the following fields: PubMed identifier, sequence accession number, geographical coordinates and/or country/region.</p>
+
+<h3><a id="restful_api_endpoints">Endpoints</a></h3>
+
+<ul>
+  <li>Sandbox endpoint: <em>https://lvl.i3m.upv.es/lvl-service/rest/v1</em></li>
+  <li>Production endpoint: <em>TODO</em></li>
+</ul>
+
+<h3><a id="restful_api_geojson_support">GeoJSON support</a></h3>
+
+<p>Currently, LVL supports the following GeoJSON geometries: point, line and polygon. For a complete 
+   description: <a href="http://geojson.org/" target="_blank">GeoJSON -- JSON Geometry and Feature 
+   Description</a>.</p>
+
+<h2><a id="user_interface">User Interface</a></h2>
+
+<h3><a id="user_interface_run_locally">Run locally</a></h3>
+
+<p>You will need an HTTP server to test user interface locally on you machine. The simplest probably is to use Python's built-in http server. 
+   If you have Python installed, it should be enough to run this from a command line:</p>
+
+<code>
+# Python 2.x
+<br />
+$ python -m SimpleHTTPServer
+<br /><br />
+# Python 3.x
+<br />
+$ python -m http.server
+</code>
+
+<pre>
+Serving HTTP on 0.0.0.0 port 8000 ...
+</pre>
+
+<p>This will serve files from the current directory at localhost under port 8000:</p>
+
+<code>
+http://localhost:8000/
+</code>
+
+<h3><a id="user_interface_programming_models">Programming models</a></h3>
+
+<p>The UI supports two different programming models depending on the type of access:</p>
+
+<ul>
+  <li>Asynchronous access: possible changes of the information displayed in the UI are not visible until the user explicitly requests the refresh,
+    for example, by clicking on a button.
+    <ul>
+      <li>HTTP GET (RESTful API).</li>
+    </ul>
+  </li>
+  <li>Synchronous access (near real-time): the UI displays information that is continuously being updated.
+    <ul>
+      <li>Server-sent Events (SSE).</li>
+      <li>WebSockets was also considered but quickly discarded due to a few limitations found (mostly lack of support in some browsers).</li>
+    </ul>
+  </li>
+</ul>
+
+<h3><a id="user_interface_movile_versions">Mobile versions</a></h3>
+
+<p>A responsive mobile-first design strategy was used to develop the UI. <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> framework and
+<a href="http://angularjs.org/" target="_blank">AngularJS</a> were used in the development. <a href="http://jquerymobile.com/" target="_blank">jQuery Mobile</a>
+was discarded in a first approach due to known incompatibility issues with those frameworks, in special with AngularJS.</p>
+
+<h2><a id="examples">Examples</a></h2>
+
+<h3><a id="examples_restful_api">RESTful API examples</a></h3>
+
+<p>This section provides simple examples to illustrate the use of the REST API. The examples use <a href="http://curl.haxx.se/" target="_blank">cURL</a> to access the endpoint.</p>
+
+<h4><a id="examples_restful_api_submit_sequence">Submit a new sequence:</a></h4>
+
+<code>
+$ curl -v -X POST -H "Content-Type: application/json" -d '{"accession": "456", "version": "1.0", "definition": "example sequence", "organism": "unknown"}' http://127.0.0.1:8080/lvl/sequences
+</code>
+
+<pre>
+* About to connect() to 127.0.0.1 port 8080 (#0)
+*   Trying 127.0.0.1... connected
+&gt; POST /lvl/sequences HTTP/1.1
+&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
+&gt; Host: 127.0.0.1:8080
+&gt; Accept: */*
+&gt; Content-Type: application/json
+&gt; Content-Length: 95
+&gt; 
+* upload completely sent off: 95out of 95 bytes
+&lt; HTTP/1.1 201 Created
+&lt; Location: http://127.0.0.1:8080/lvl/sequences/456
+&lt; Date: Thu, 06 Mar 2014 09:46:20 GMT
+&lt; Content-Length: 0
+&lt; 
+* Connection #0 to host 127.0.0.1 left intact
+* Closing connection #0
+</pre>
+
+<h4><a id="examples_restful_api_get_sequence">Get a sequence using the accession number:</a></h4>
+
+<code>
+$ curl -v http://127.0.0.1:8080/lvl/sequences/456
+</code>
+
+<pre>
+* About to connect() to 127.0.0.1 port 8080 (#0)
+*   Trying 127.0.0.1... connected
+&gt; GET /lvl/sequences/456 HTTP/1.1
+&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
+&gt; Host: 127.0.0.1:8080
+&gt; Accept: */*
+&gt; 
+&lt; HTTP/1.1 200 OK
+&lt; Content-Type: application/json
+&lt; Date: Thu, 06 Mar 2014 09:57:38 GMT
+&lt; Content-Length: 88
+&lt; 
+* Connection #0 to host 127.0.0.1 left intact
+* Closing connection #0
+{"accession":"456","definition":"example sequence","organism":"unknown","version":"2.0"}
+</pre>
+
+<h4><a id="examples_restful_api_update_sequence">Update a sequence:</a></h4>
+
+<code>
+$ curl -v -X PUT -H "Content-Type: application/json" -d '{"accession": "456", "version": "2.0", "definition": "example sequence", "organism": "unknown"}' http://127.0.0.1:8080/lvl/sequences/456
+</code>
+
+<pre>
+* About to connect() to 127.0.0.1 port 8080 (#0)
+*   Trying 127.0.0.1... connected
+&gt; PUT /lvl/sequences/456 HTTP/1.1
+&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
+&gt; Host: 127.0.0.1:8080
+&gt; Accept: */*
+&gt; Content-Type: application/json
+&gt; Content-Length: 95
+&gt; 
+* upload completely sent off: 95out of 95 bytes
+&lt; HTTP/1.1 204 No Content
+&lt; Date: Thu, 06 Mar 2014 09:48:45 GMT
+&lt; 
+* Connection #0 to host 127.0.0.1 left intact
+* Closing connection #0
+</pre>
+
+<h4><a id="examples_restful_api_delete_sequence">Delete a sequence:</a></h4>
+
+<code>
+$ curl -v -X DELETE http://127.0.0.1:8080/lvl/sequences/456
+</code>
+
+<pre>
+* About to connect() to 127.0.0.1 port 8080 (#0)
+*   Trying 127.0.0.1... connected
+&gt; DELETE /lvl/sequences/456 HTTP/1.1
+&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
+&gt; Host: 127.0.0.1:8080
+&gt; Accept: */*
+&gt; 
+&lt; HTTP/1.1 204 No Content
+&lt; Date: Thu, 06 Mar 2014 09:49:57 GMT
+&lt; 
+* Connection #0 to host 127.0.0.1 left intact
+* Closing connection #0
+</pre>
+
+<h4><a id="examples_restful_api_list_sequences">List all the sequences in the database. This method uses pagination, by default only the first 10 items are 
+retrieved and the navigation links are included in the response:</a></h4>
+
+<code>
+$ curl -v http://127.0.0.1:8080/lvl/sequences
+</code>
+
+<pre>
+* About to connect() to 127.0.0.1 port 8080 (#0)
+*   Trying 127.0.0.1... connected
+&gt; GET /lvl/sequences HTTP/1.1
+&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
+&gt; Host: 127.0.0.1:8080
+&gt; Accept: */*
+&gt; 
+&lt; HTTP/1.1 200 OK
+&lt; Content-Type: application/json
+&lt; Date: Thu, 06 Mar 2014 10:13:41 GMT
+&lt; Content-Length: 1125
+&lt; 
+* Connection #0 to host 127.0.0.1 left intact
+* Closing connection #
+{"type":"sequences",
+ "last":"&lt;http://127.0.0.1:8080/lvl/sequences?start=2&amp;size=10&gt;; rel=\"last\"; type=\"application/json\"",
+ "next":"&lt;http://127.0.0.1:8080/lvl/sequences?start=10&amp;size=10&gt;; rel=\"next\"; type=\"application/json\"",
+ "sequences":[
+ {"accession":"1","definition":"example sequence","organism":"unknown","version":"1.0"},
+ {"accession":"10","definition":"example sequence","organism":"unknown","version":"1.0"},
+ {"accession":"11","definition":"example sequence","organism":"unknown","version":"1.0"},
+ {"accession":"2","definition":"example sequence","organism":"unknown","version":"1.0"},
+ {"accession":"3","definition":"example sequence","organism":"unknown","version":"1.0"},
+ {"accession":"4","definition":"example sequence","organism":"unknown","version":"1.0"},
+ {"accession":"5","definition":"example sequence","organism":"unknown","version":"1.0"},
+ {"accession":"6","definition":"example sequence","organism":"unknown","version":"1.0"},
+ {"accession":"7","definition":"example sequence","organism":"unknown","version":"1.0"},
+ {"accession":"8","definition":"example sequence","organism":"unknown","version":"1.0"}]}
+</pre>
+
+<h4><a id="examples_restful_api_find_nearby_equences">Find the sequences in the database that are within the specified distance (in meters) from the center 
+point specified (using WGS84):</a></h4>
+
+<p>It uses coordinates order longitude, latitude. Response is a GeoJSON Features Collection.</p>
+
+<code>
+$ curl -v http://127.0.0.1:8080/lvl/sequences/nearby/-1.0/1.0?maxDistance=2000.0
+</code>
+
+<pre>
+<em>TODO</em>
+</pre>
+
+<footer>
+  <hr />
+  <h4>Leishmaniasis Virtual Laboratory</h4>
+  <p>Copyright &copy; 2014 <a href="http://www.eubrazilcloudconnect.eu/" target="_blank">EUBrazilCC</a>, Licensed under the 
+  <a href="https://joinup.ec.europa.eu/software/page/eupl" target="_blank">European Union Public Licence (EUPL)</a>.</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
+
+Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+the European Commission - subsequent versions of the EUPL (the "Licence");
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+  http://ec.europa.eu/idabc/eupl
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and 
+limitations under the Licence.
+
+This product combines work with different licenses. See the "NOTICE" text
+file for details on the various modules and licenses.
+The "NOTICE" text file is part of the distribution. Any derivative works
+that you distribute must include a readable copy of the "NOTICE" text file.
+-->
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+	<id>dependency-bundle</id>
+	<formats>
+		<format>tar.gz</format>
+	</formats>
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<fileSets>
+		<fileSet>
+			<directory>${project.basedir}</directory>
+			<outputDirectory>/</outputDirectory>
+			<includes>
+				<include>README*.TXT</include>
+				<include>*LICENSE*.TXT</include>
+				<include>*LICENCE*.TXT</include>
+				<include>NOTICE*.TXT</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/src/main/etc</directory>
+			<outputDirectory>etc</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/src/main/var</directory>
+			<outputDirectory>var</outputDirectory>
+			<directoryMode>0755</directoryMode>
+		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/src/main/ui</directory>
+			<outputDirectory>htdocs</outputDirectory>
+		</fileSet>
+	</fileSets>
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>lib/java</outputDirectory>
+			<excludes>
+				<exclude>eu.eubrazilcc.lvl:lvl-resource-bundle</exclude>
+			</excludes>
+			<unpack>false</unpack>
+			<scope>runtime</scope>
+			<useProjectArtifact>true</useProjectArtifact> <!-- Dummy package, includes only a manifest with the version -->
+		</dependencySet>
+	</dependencySets>
+</assembly>

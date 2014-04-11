@@ -1,0 +1,51 @@
+EUBrazilCC LVL - Leishmaniasis Virtual Laboratory
+Copyright 2014 EUBrazilCC (EU-Brazil Cloud Connect)
+
+This "NOTICE" text file is part of the distribution. Any derivative works that
+you distribute must include a readable copy of the attribution notices contained
+within this NOTICE file, excluding those notices that do not pertain to any part
+of the derivative works.
+
+EUBrazilCC LVL includes software originally developed by the EUBrazilCC 
+consortium (http://eubrazilcloudconnect.eu/) and provided under the terms and 
+conditions of the European Union Public Licence (EUPL), Version 1.1
+(EUPL_LICENCE-1.1).
+
+EUBrazilCC LVL includes software developed by third parties and provided under 
+an open source license (http://www.opensource.org).
+
+Apache Commons, Apache HttpComponents, Apache Tika and Apache Oltu were not
+modified, were produced by The Apache Software Foundation and licensed under 
+the terms and conditions given in:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Google Guava was not modified, was produced by Google and licensed under the 
+terms and conditions given in:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+MongoDB Java driver and Morphia were not modified, was produced by MongoDB, Inc. 
+and licensed under the terms and conditions given in:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Jackson JSON processor was not modified, was licensed under the terms and 
+conditions given in:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Joda-Time was not modified, was licensed under the terms and conditions given 
+in:
+
+http://www.joda.org/joda-time/license.html
+
+Logback was not modified, was produced by Quality Open Software and licensed 
+under the terms and conditions given in:
+
+http://logback.qos.ch/license.html
+
+SLF4J was not modified, was produced by Quality Open Software and licensed under 
+the terms and conditions given in:
+
+http://www.slf4j.org/license.html
