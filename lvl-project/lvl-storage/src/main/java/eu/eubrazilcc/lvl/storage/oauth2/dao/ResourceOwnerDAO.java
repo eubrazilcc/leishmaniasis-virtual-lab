@@ -25,6 +25,8 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asOAuthString;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -58,6 +60,7 @@ import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
+import eu.eubrazilcc.lvl.storage.oauth2.User;
 
 /**
  * Resource owner DAO.
@@ -70,6 +73,10 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public static final String COLLECTION = "resource_owners";
 	public static final String PRIMARY_KEY = "resourceOwner.ownerId";
 
+	public static final String ADMIN_USER           = "root";
+	public static final String ADMIN_DEFAULT_PASSWD = "changeit";
+	public static final String ADMIN_DEFAULT_EMAIL  = "root@example.com";
+
 	private final Morphia morphia = new Morphia();
 
 	private URI baseUri = null;
@@ -77,6 +84,19 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	private ResourceOwnerDAO() {
 		MongoDBConnector.INSTANCE.createIndex(PRIMARY_KEY, COLLECTION);
 		morphia.map(ResourceOwnerEntity.class);
+		// ensure that at least the administrator account exists in the database
+		final List<ResourceOwner> owners = list(0, 1, null);
+		if (owners == null || owners.isEmpty()) {
+			insert(ResourceOwner.builder()
+					.id(ADMIN_USER)
+					.user(User.builder()
+							.username(ADMIN_USER)
+							.password(ADMIN_DEFAULT_PASSWD)
+							.email(ADMIN_DEFAULT_EMAIL)
+							.fullname("LVL root user")
+							.scope(asList(all()))
+							.build()).build());
+		}
 	}
 
 	public ResourceOwnerDAO baseUri(final URI baseUri) {
