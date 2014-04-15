@@ -133,17 +133,16 @@ public class AuthTest {
 			final String redirectURI = "https://localhost:8443/redirect";
 			final String state = SecretProvider.generateFastUrlSafeSecret();
 			final String scope = all();
-			final String username = "test_username";
-			final String password = "test_password";
-			ResourceOwnerDAO.INSTANCE.insert(ResourceOwner.builder()
-					.id(username)
+			final ResourceOwner resourceOwner = ResourceOwner.builder()
+					.id("test_username")
 					.user(User.builder()
-							.username(username)
-							.password(password)
+							.username("test_username")
+							.password("test_password")
 							.email("username@example.com")
 							.fullname("Fullname")
 							.scope(asList(scope))
-							.build()).build());
+							.build()).build();			
+			ResourceOwnerDAO.INSTANCE.insert(resourceOwner);
 
 			// test client registration
 			URI uri = UriBuilder.fromUri(BASE_URI).path(OAuth2Registration.class).build();
@@ -220,19 +219,42 @@ public class AuthTest {
 					.setGrantType(GrantType.PASSWORD)
 					.setClientId(clientId)
 					.setClientSecret(clientSecret)
-					.setUsername(username)
-					.setPassword(password)
+					.setUsername(resourceOwner.getUser().getUsername())
+					.setPassword(resourceOwner.getUser().getPassword())
 					.buildBodyMessage();
-			final OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());			
-			final OAuthJSONAccessTokenResponse response2 = oAuthClient.accessToken(request);
+			OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());			
+			OAuthJSONAccessTokenResponse response2 = oAuthClient.accessToken(request);
 			assertThat("Access token is valid", response2.getAccessToken(), notNullValue());
 			assertThat("Access token expiration is not null", response2.getExpiresIn(), notNullValue());
 			assertThat("Access token scope is not null", response2.getScope(), notNullValue());
-			final String accessToken = response2.getAccessToken();
+			String accessToken = response2.getAccessToken();
 			/* uncomment the following lines for additional output */
 			System.out.println("     >> Access token: " + response2.getAccessToken());
 			System.out.println("     >> Expires in: " + response2.getExpiresIn() + " seconds");
 			System.out.println("     >> Scope: " + response2.getScope());
+
+			// test access token (email & password), this test uses an additional parameter in the request
+			uri = UriBuilder.fromUri(BASE_URI).path(OAuth2Token.class).build();
+			System.out.println(" >> Access token (email & password): " + uri.toString());
+			request = OAuthClientRequest
+					.tokenLocation(uri.toString())
+					.setGrantType(GrantType.PASSWORD)
+					.setClientId(clientId)
+					.setClientSecret(clientSecret)
+					.setUsername(resourceOwner.getUser().getEmail())
+					.setPassword(resourceOwner.getUser().getPassword())
+					.setParameter(OAuth2Token.USE_EMAIL, "true") // additional parameter
+					.buildBodyMessage();
+			oAuthClient = new OAuthClient(new URLConnectionClient());			
+			response2 = oAuthClient.accessToken(request);
+			assertThat("Access token is valid (using email address)", response2.getAccessToken(), notNullValue());
+			assertThat("Access token expiration is not null (using email address)", response2.getExpiresIn(), notNullValue());
+			assertThat("Access token scope is not null (using email address)", response2.getScope(), notNullValue());
+			accessToken = response2.getAccessToken();
+			/* uncomment the following lines for additional output */
+			System.out.println("     >> Access token (using email address): " + response2.getAccessToken());
+			System.out.println("     >> Expires in (using email address): " + response2.getExpiresIn() + " seconds");
+			System.out.println("     >> Scope (using email address): " + response2.getScope());
 
 			// test identity provider (IdP) create new user
 			final Path path = IdentityProvider.class.getAnnotation(Path.class);

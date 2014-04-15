@@ -9,7 +9,11 @@ angular.module('lvl.fastclick', [])
 /* global configuration */
 angular.module('lvl.config', [])
 .constant('ENV', {
-	'oauth2Endpoint': 'http://lvl.i3m.upv.es/lvl-auth/oauth2/v1'
+	'oauth2Endpoint': 'http://lvl.i3m.upv.es/lvl-auth/oauth2/v1',
+	'oauth2ClientApp': {
+		'client_id': 'lvl_portal',
+		'client_secret': 'changeit'
+	}
 });
 
 angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers', 'lvl.fastclick', 'ui.bootstrap' ])

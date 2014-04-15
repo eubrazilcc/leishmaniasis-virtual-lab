@@ -74,16 +74,29 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
 			assertThat("resource owner coincides with original", resourceOwner2, equalTo(resourceOwner));
 			System.out.println(resourceOwner2.toString());
-			// check validity
-			final boolean validity = ResourceOwnerDAO.INSTANCE.isValid(resourceOwner.getOwnerId(), 
-					resourceOwner.getUser().getUsername(), resourceOwner.getUser().getPassword());
-			assertThat("resource owner is valid", validity);
+			// check validity using owner Id and username
+			boolean validity = ResourceOwnerDAO.INSTANCE.isValid(resourceOwner.getOwnerId(), 
+					resourceOwner.getUser().getUsername(), 
+					resourceOwner.getUser().getPassword(), 
+					false, 
+					null);
+			assertThat("resource owner is valid (using owner Id & username)", validity);
+			
+			// check validity using email address
+			validity = ResourceOwnerDAO.INSTANCE.isValid(null, 
+					resourceOwner.getUser().getEmail(), 
+					resourceOwner.getUser().getPassword(), 
+					true, 
+					null);
+			assertThat("resource owner is valid (using email)", validity);			
+			
 			// add scopes
 			ResourceOwnerDAO.INSTANCE.addScopes(resourceOwner.getOwnerId(), "scope3");
 			// remove scopes
 			ResourceOwnerDAO.INSTANCE.removeScopes(resourceOwner.getOwnerId(), "scope2");
-			// get scope
-			final String oauthScope = ResourceOwnerDAO.INSTANCE.oauthScope(resourceOwner.getOwnerId(), true);
+			// get OAuth scope
+			resourceOwner2 = ResourceOwnerDAO.INSTANCE.find(resourceOwner.getOwnerId());
+			final String oauthScope = ResourceOwnerDAO.oauthScope(resourceOwner2, true);
 			assertThat("resource owner OAuth scope is not null", oauthScope, notNullValue());
 			assertThat("resource owner OAuth scope is not blank", isNotBlank(oauthScope));
 			assertThat("resource owner OAuth scope coincided with expected", oauthScope, equalTo("scope1 scope3"));
@@ -98,7 +111,7 @@ public class ResourceOwnerCollectionTest {
 						.user(User.builder()
 								.username(Integer.toString(i))
 								.password("password")
-								.email("username@example.com")
+								.email("username" + i + "@example.com")
 								.fullname("Fullname")
 								.scope(scopes)
 								.build()).build();								

@@ -138,8 +138,8 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		MongoDBConnector.INSTANCE.stats(os, COLLECTION);
 	}
 
-	private BasicDBObject key(final String accession) {
-		return new BasicDBObject(PRIMARY_KEY, accession);		
+	private BasicDBObject key(final String key) {
+		return new BasicDBObject(PRIMARY_KEY, key);		
 	}
 
 	private BasicDBObject sortCriteria() {

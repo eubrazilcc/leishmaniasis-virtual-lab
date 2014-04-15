@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
@@ -70,8 +71,9 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	INSTANCE;
 
-	public static final String COLLECTION = "resource_owners";
+	public static final String COLLECTION  = "resource_owners";
 	public static final String PRIMARY_KEY = "resourceOwner.ownerId";
+	public static final String EMAIL_KEY   = "resourceOwner.user.email";
 
 	public static final String ADMIN_USER           = "root";
 	public static final String ADMIN_DEFAULT_PASSWD = "changeit";
@@ -83,6 +85,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	private ResourceOwnerDAO() {
 		MongoDBConnector.INSTANCE.createIndex(PRIMARY_KEY, COLLECTION);
+		MongoDBConnector.INSTANCE.createIndex(EMAIL_KEY, COLLECTION);
 		morphia.map(ResourceOwnerEntity.class);
 		// ensure that at least the administrator account exists in the database
 		final List<ResourceOwner> owners = list(0, 1, null);
@@ -171,8 +174,12 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		MongoDBConnector.INSTANCE.stats(os, COLLECTION);
 	}
 
-	private BasicDBObject key(final String accession) {
-		return new BasicDBObject(PRIMARY_KEY, accession);		
+	private BasicDBObject key(final String key) {
+		return new BasicDBObject(PRIMARY_KEY, key);		
+	}
+
+	private BasicDBObject emailKey(final String key) {
+		return new BasicDBObject(EMAIL_KEY, key);		
 	}
 
 	private BasicDBObject sortCriteria() {
@@ -213,22 +220,61 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	/**
+	 * Search for an resource owner in the database using the specified email address.
+	 * @param email - email address whose associate resource owner is to be returned
+	 * @return the resource owner to which the specified email address is associated in 
+	 *         the database, or {@code null} if the database contains no entry for the email
+	 */
+	public ResourceOwner findByEmail(final String email) {
+		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(emailKey(email), COLLECTION);		
+		return parseBasicDBObjectOrNull(obj);
+	}
+
+	/**
 	 * Checks whether or not the specified user name and password coincides with 
 	 * those stored for resource owner identified by the provided id.
 	 * @param ownerId - identifier of the resource owner
-	 * @param username - user name to be validated
+	 * @param username - user name to be validated, or email address if {@code useEmail}
+	 *        is set to true
 	 * @param password - password to be validated
+	 * @param useEmail - use email address to search the database, instead of owner Id
+	 * @param scopeRef - if set and the resource owner is valid, then the scopes associated 
+	 *        with the resource owner are concatenated and returned to the caller to be used
+	 *        with OAuth 
 	 * @return {@code true} only if the provided user name and password coincides
 	 *        with those stored for the resource owner. Otherwise, returns {@code false}.
 	 */
-	public boolean isValid(final String ownerId, final String username, final String password) {
+	public boolean isValid(final String ownerId, final String username, final String password, final boolean useEmail,
+			final @Nullable AtomicReference<String> scopeRef) {
+		return !useEmail ? isValidUsingOwnerId(ownerId, username, password, scopeRef) : isValidUsingEmail(username, password,scopeRef);
+	}	
+
+	private boolean isValidUsingOwnerId(final String ownerId, final String username, final String password,
+			final @Nullable AtomicReference<String> scopeRef) {
 		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
 		checkArgument(isNotBlank(username), "Uninitialized or invalid username");
 		checkArgument(isNotBlank(password), "Uninitialized or invalid password");
 		final ResourceOwner resourceOwner = find(ownerId);
-		return (resourceOwner != null && resourceOwner.getUser() != null 
+		final boolean isValid = (resourceOwner != null && resourceOwner.getUser() != null 
 				&& username.equals(resourceOwner.getUser().getUsername())
 				&& password.equals(resourceOwner.getUser().getPassword()));
+		if (isValid && scopeRef != null) {
+			scopeRef.set(oauthScope(resourceOwner, false));
+		}
+		return isValid;
+	}
+
+	private boolean isValidUsingEmail(final String email, final String password, final @Nullable AtomicReference<String> scopeRef) {
+		checkArgument(isNotBlank(email), "Uninitialized or invalid email address");
+		checkArgument(isNotBlank(password), "Uninitialized or invalid password");
+		final ResourceOwner resourceOwner = findByEmail(email);
+		final boolean isValid = (resourceOwner != null && resourceOwner.getUser() != null 
+				&& email.equals(resourceOwner.getUser().getEmail())
+				&& password.equals(resourceOwner.getUser().getPassword()));
+		if (isValid && scopeRef != null) {
+			scopeRef.set(oauthScope(resourceOwner, false));
+		}
+		return isValid;
 	}
 
 	/**
@@ -268,18 +314,15 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	/**
-	 * Concatenates in a single string all the scopes of the resource owner identified 
-	 * by the provided id and returns the generated string to the caller. This string
-	 * can be used to transmit the scope in OAuth.
-	 * @param id - identifier of the resource owner whose scopes will be returned
+	 * Concatenates in a single string all the scopes of the specified resource owner 
+	 * and returns the generated string to the caller. This string can be used to transmit 
+	 * the scope in OAuth.
+	 * @param resourceOwner - the resource owner whose scopes will be returned
 	 * @param sort - set to {@code true} to sort the resulting scope in lexicographical order
-	 * @return A string where all the scopes of the resource owner identified by the 
-	 *         provided id are concatenated.
+	 * @return A string where all the scopes of the specified resource owner are concatenated.
 	 */
-	public String oauthScope(final String ownerId, final boolean sort) {
-		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
-		final ResourceOwner resourceOwner = find(ownerId);
-		checkState(resourceOwner != null, "Resource owner not found");
+	public static final String oauthScope(final ResourceOwner resourceOwner, final boolean sort) {
+		checkArgument(resourceOwner != null, "Uninitialized or invalid resource owner");		
 		return (resourceOwner.getUser() != null && resourceOwner.getUser().getScopes() != null 
 				? asOAuthString(resourceOwner.getUser().getScopes(), sort) : null);
 	}

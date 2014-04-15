@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -66,12 +68,14 @@ public class OAuth2Token {
 	 */
 	public static final long TOKEN_EXPIRATION_SECONDS = 604800l; // 1 week
 
-	public static final String INVALID_CLIENT_DESCRIPTION = "Client authentication failed (e.g., unknown client, no client authentication included, or unsupported authentication method)";
+	public static final String USE_EMAIL = "use_email";
+
+	public static final String INVALID_CLIENT_DESCRIPTION = "Client authentication failed (e.g., unknown client, no client authentication included, or unsupported authentication method)";	
 
 	@POST
 	@Consumes("application/x-www-form-urlencoded")
 	@Produces("application/json")
-	public Response authorize(final @Context HttpServletRequest request, final MultivaluedMap<String, String> form) throws OAuthSystemException {		
+	public Response authorize(final @Context HttpServletRequest request, final MultivaluedMap<String, String> form) throws OAuthSystemException {
 		try {
 			final OAuthTokenRequest oauthRequest = new OAuthTokenRequest(new OAuth2RequestWrapper(request, form, null));
 			final OAuthIssuer oauthIssuerImpl = new OAuthIssuerImpl(new OAuth2TokenGenerator());			
@@ -108,7 +112,9 @@ public class OAuth2Token {
 					return Response.status(response.getResponseStatus()).entity(response.getBody()).build();
 				}
 			} else if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.PASSWORD.toString())) {
-				if (!ResourceOwnerDAO.INSTANCE.isValid(oauthRequest.getUsername(), oauthRequest.getUsername(), oauthRequest.getPassword())) {
+				final AtomicReference<String> scopeRef = new AtomicReference<String>();
+				if (!ResourceOwnerDAO.INSTANCE.isValid(oauthRequest.getUsername(), oauthRequest.getUsername(), oauthRequest.getPassword(), 
+						"true".equalsIgnoreCase(oauthRequest.getParam(USE_EMAIL)), scopeRef)) {
 					final OAuthResponse response = OAuthASResponse
 							.errorResponse(HttpServletResponse.SC_BAD_REQUEST)
 							.setError(OAuthError.TokenResponse.INVALID_GRANT)
@@ -116,7 +122,7 @@ public class OAuth2Token {
 							.buildJSONMessage();
 					return Response.status(response.getResponseStatus()).entity(response.getBody()).build();
 				}
-				scope = ResourceOwnerDAO.INSTANCE.oauthScope(oauthRequest.getUsername(), false);
+				scope = scopeRef.get();
 			} else if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.REFRESH_TOKEN.toString())) {
 				// refresh token is not supported in this implementation
 				final OAuthResponse response = OAuthASResponse

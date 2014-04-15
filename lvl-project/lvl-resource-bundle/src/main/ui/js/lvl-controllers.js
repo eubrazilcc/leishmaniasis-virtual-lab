@@ -13,17 +13,23 @@ angular.module('lvl.controllers', [])
 		delete $window.sessionStorage.token;
 	};
 }])
-.controller('LoginCtrl', ['$scope', '$routeParams', function($scope, $routeParams) {
+.controller('LoginCtrl', ['$scope', '$routeParams', '$window', 'UserAuthService', function($scope, $routeParams, $window, UserAuthService) {
 	$scope.showAlert = $routeParams.fail;
-	$scope.alertMessage = 'The webpage you are trying to access requires additional authentication.';
-	$scope.login = function() {
+	$scope.alertMessage = 'The webpage you are trying to access requires additional authentication.';	
+	$scope.login = function(user) {
+		var access_token = UserAuthService.token(user);
+		if (access_token !== undefined) {
+			// TODO $window.sessionStorage.token = 	
+		} else {
+			
+			// TODO
+			$location.path('/');
+			// TODO
+			
+		}
 		
-		// $window.sessionStorage.token = data.token;
-				
-		console.log("LOGIN IN");
 		
 		
-		// TODO
 	};
 }])
 .controller('FileStoreCtrl', ['$scope', function($scope) {

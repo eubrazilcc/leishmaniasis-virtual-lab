@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!-- 
 Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
 
@@ -20,7 +20,7 @@ file for details on the various modules and licenses.
 The "NOTICE" text file is part of the distribution. Any derivative works
 that you distribute must include a readable copy of the "NOTICE" text file.
 -->
-<html>
+<html lang="en">
 <head>
   <meta name="description" content="Leishmaniasis Virtual Laboratory (LVL) documentation">
   <meta name="keywords" content="Leishmaniasis,LVL,EUBrazilCC">
@@ -87,7 +87,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
           <li><a href="#examples_restful_api_list_sequences">List sequences</a></li>
           <li><a href="#examples_restful_api_find_nearby_equences">Find nearby sequences</a></li>
         </ul>
-      </li>  
+      </li>
+      <li><a href="#examples_oauth2">OAuth2 examples</a>
+        <ul>
+          <li><a href="#examples_oauth2_get_access_token_password">Get access token for user/password</a></li>
+          <li><a href="#examples_oauth2_access_to_protected_resource">Access to protected resource</a></li>
+        </ul>
+      </li>
     </ul>
   </li>  
 </ul>
@@ -527,6 +533,33 @@ $ keytool -import -alias serverCert -file ./server.cert -keystore ./client-trust
 
 <h2><a id="restful_api">RESTful API</a></h2>
 
+<p>The <em>LVL service</em> was designed to decople the client and the server as much as possible. To this end, the server only provides a 
+   RESTful JSON API to feed the possible clients, such as the <em>LVL Web portal</em>. As a consequence, all the templating, views and business 
+   logic should be done client-side. The <em>LVL Web portal</em> is a pure-JavaScript, single-page Web application that resides as a static
+   project in an HTTP server, which is completely independent of the <em>LVL API</em> container (the client is not sent from the <em>LVL API</em>
+   server, as is the case, for example, in most PHP applications).</p>
+   
+<p>Futhermore, the server and the client can be provided on different servers and domains in order to improve performance.</p>
+
+<p>On the other hand, the resources that the <em>LVL API</em> provides are user specific (e.g. DNA sequences, biomolecular pipelines), so the
+   <em>LVL identity provider &amp; authorization server</em> provides an authentication and authorization mechanism based on OAuth2 in the
+   backend service.</p>
+   
+<p>As the clients and the servers may reside on different domains, <a href="http://www.w3.org/TR/cors/" target="_blank">Cross-origin resource sharing (CORS)</a>
+   becomes one of the major concerns of this design. To cope with CORS, the following additional HTTP headers are sent as part of each server response:</p>
+
+<code>
+Access-Control-Allow-Origin: *
+<br />
+Access-Control-Allow-Headers: origin, content-type, accept, authorization
+<br />
+Access-Control-Allow-Credentials: true
+<br />
+Access-Control-Allow-Methods: GET PUT DELETE POST HEAD OPTIONS
+<br />
+Access-Control-Max-Age: 604800   
+</code>
+
 <h3><a id="restful_api_resources">Resources</a></h3>
 
 <p><em>TODO</em>: Get new publications from PubMed and new sequences from GenBank: the system must periodically inspect these resources for new records on Leishmaniasis. Users with administrator role are notified when new records are found.
@@ -747,6 +780,76 @@ $ curl -v http://127.0.0.1:8080/lvl/sequences/nearby/-1.0/1.0?maxDistance=2000.0
 
 <pre>
 <em>TODO</em>
+</pre>
+
+<h3><a id="examples_oauth2">OAuth2 examples</a></h3>
+
+<p>This section provides simple examples to illustrate the use of the OAuth2 API. The examples use <a href="http://curl.haxx.se/" target="_blank">cURL</a> to access the endpoint.</p>
+
+<h4><a id="examples_oauth2_get_access_token_password">Get access token for user/password:</a></h4>
+
+<code>
+$ curl -v -X POST -d 'client_id=lvl_portal&amp;client_secret=changeit&amp;grant_type=password&amp;username=root&amp;password=changeit' http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/token
+</code>
+
+<pre>
+* About to connect() to lvl.i3m.upv.es port 80 (#0)
+*   Trying 158.42.105.62... connected
+&gt; POST /lvl-auth/oauth2/v1/token HTTP/1.1
+&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
+&gt; Host: lvl.i3m.upv.es
+&gt; Accept: */*
+&gt; Content-Length: 95
+&gt; Content-Type: application/x-www-form-urlencoded
+&gt; 
+* upload completely sent off: 95out of 95 bytes
+&lt; HTTP/1.1 200 OK
+&lt; Server: nginx/1.1.19
+&lt; Date: Tue, 15 Apr 2014 10:19:36 GMT
+&lt; Content-Type: application/json
+&lt; Content-Length: 164
+&lt; Connection: keep-alive
+&lt; Access-Control-Allow-Origin: *
+&lt; Access-Control-Allow-Headers: origin, content-type, accept, authorization
+&lt; Access-Control-Allow-Credentials: true
+&lt; Access-Control-Allow-Methods: GET PUT DELETE POST HEAD OPTIONS
+&lt; Access-Control-Max-Age: 604800
+&lt; 
+* Connection #0 to host lvl.i3m.upv.es left intact
+* Closing connection #0
+{"scope":"users/*,a sequences,a pipelines,a my_sequences/*,a pending_sequences,a","expires_in":604800,"access_token":"+sSWJ1WLssx00iT6obLw8jxPNlCtvJCN9a17Twwqnuo="}
+</pre>
+
+<h4><a id="examples_oauth2_access_to_protected_resource">Access to protected resource:</a></h4>
+
+<code>
+$ curl -v --header "Authorization: Bearer k94LAp+oPa7bMNVCut84II7VTR+vEpf6MW+GaQHK72U=" http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/users/root
+</code>
+
+<pre>
+* About to connect() to lvl.i3m.upv.es port 80 (#0)
+*   Trying 158.42.105.62... connected
+&gt; GET /lvl-auth/oauth2/v1/users/root HTTP/1.1
+&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
+&gt; Host: lvl.i3m.upv.es
+&gt; Accept: */*
+&gt; Authorization: Bearer k94LAp+oPa7bMNVCut84II7VTR+vEpf6MW+GaQHK72U=
+&gt; 
+&lt; HTTP/1.1 200 OK
+&lt; Server: nginx/1.1.19
+&lt; Date: Tue, 15 Apr 2014 16:17:08 GMT
+&lt; Content-Type: application/json
+&lt; Content-Length: 267
+&lt; Connection: keep-alive
+&lt; Access-Control-Allow-Origin: *
+&lt; Access-Control-Allow-Headers: origin, content-type, accept, authorization
+&lt; Access-Control-Allow-Credentials: true
+&lt; Access-Control-Allow-Methods: GET PUT DELETE POST HEAD OPTIONS
+&lt; Access-Control-Max-Age: 604800
+&lt; 
+* Connection #0 to host lvl.i3m.upv.es left intact
+* Closing connection #0
+{"email":"***","fullname":"LVL root user","link":"&lt;http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/root&gt;; rel=\"self\"; type=\"application/json\"","password":"***","scopes":["users/*,a","sequences,a","pipelines,a","my_sequences/*,a","pending_sequences,a"],"username":"root"}
 </pre>
 
 <footer>
