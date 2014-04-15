@@ -47,6 +47,7 @@ import com.mongodb.DBObject;
 
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.util.NamingUtils;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
@@ -63,11 +64,30 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	public static final String COLLECTION = "client_apps";
 	public static final String PRIMARY_KEY = "clientApp.clientId";
 
+	public static final String LVL_PORTAL_NAME        = "lvl_portal";
+	public static final String LVL_PORTAL_SECRET      = "changeit";
+	public static final String LVL_PORTAL_DESCRIPTION = "LVL Web portal";
+
 	private final Morphia morphia = new Morphia();
 
 	private ClientAppDAO() {		
 		MongoDBConnector.INSTANCE.createIndex(PRIMARY_KEY, COLLECTION);
 		morphia.map(ClientAppEntity.class);
+		// ensure that at least the administrator account exists in the database
+		final List<ClientApp> clientApps = list(0, 1, null);
+		if (clientApps == null || clientApps.isEmpty()) {
+			insert(ClientApp.builder()
+					.name(LVL_PORTAL_NAME)
+					// .url("http://localhost/client")
+					.description(LVL_PORTAL_DESCRIPTION)
+					// .icon("http://localhost/client/icon")
+					// .redirectURL("http://localhost/client/redirect")
+					.clientId(NamingUtils.toAsciiSafeName(LVL_PORTAL_NAME))
+					.clientSecret(LVL_PORTAL_SECRET)
+					.issuedAt(System.currentTimeMillis() / 1000l)
+					.expiresIn(Long.MAX_VALUE) // never expires
+					.build());					
+		}
 	}
 
 	@Override
