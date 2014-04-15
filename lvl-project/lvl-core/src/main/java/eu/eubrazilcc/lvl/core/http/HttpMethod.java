@@ -22,6 +22,10 @@
 
 package eu.eubrazilcc.lvl.core.http;
 
+import static com.google.common.base.Joiner.on;
+
+import com.google.common.collect.ImmutableList;
+
 /**
  * A subset of HTTP/1.1 methods available for REST.
  * @author Erik Torres <ertorser@upv.es>
@@ -29,11 +33,24 @@ package eu.eubrazilcc.lvl.core.http;
  */
 public final class HttpMethod {
 
-	public static final String GET = "GET";
-	public static final String PUT = "PUT";
-	public static final String DELETE = "DELETE";
-	public static final String POST = "POST";
-	public static final String HEAD = "HEAD";
+	public static final String GET     = "GET";
+	public static final String PUT     = "PUT";
+	public static final String DELETE  = "DELETE";
+	public static final String POST    = "POST";
+	public static final String HEAD    = "HEAD";
 	public static final String OPTIONS = "OPTIONS";
-	
+
+	public static final ImmutableList<String> ALLOWED_HTTP_METHODS = new ImmutableList.Builder<String>()
+			.add(GET, PUT, DELETE, POST, HEAD, OPTIONS)
+			.build();
+
+	/**
+	 * Returns a String with the HTTP methods allowed in the application. This String can be
+	 * used as an HTTP header.
+	 * @return a String with the HTTP methods allowed in the application.
+	 */
+	public static final String allowedHttpMethods() {
+		return on(" ").skipNulls().join(ALLOWED_HTTP_METHODS);
+	}
+
 }
