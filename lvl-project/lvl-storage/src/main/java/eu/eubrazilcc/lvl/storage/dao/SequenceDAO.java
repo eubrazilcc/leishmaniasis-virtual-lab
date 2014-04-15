@@ -174,13 +174,15 @@ public enum SequenceDAO implements BaseDAO<String, Sequence> {
 		addLink(sequence);
 		return sequence;
 	}
-	
+
 	private Sequence parseBasicDBObjectOrNull(final BasicDBObject obj) {
 		Sequence sequence = null;
-		final SequenceEntity entity = morphia.fromDBObject(SequenceEntity.class, obj);
-		if (entity != null) {
-			sequence = morphia.fromDBObject(SequenceEntity.class, obj).getSequence();
-			addLink(sequence);
+		if (obj != null) {
+			final SequenceEntity entity = morphia.fromDBObject(SequenceEntity.class, obj);
+			if (entity != null) {
+				sequence = morphia.fromDBObject(SequenceEntity.class, obj).getSequence();
+				addLink(sequence);
+			}
 		}
 		return sequence;
 	}

@@ -105,8 +105,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	@Override
 	public AccessToken find(final String token) {
 		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(key(token), COLLECTION);		
-		final AccessTokenEntity entity = morphia.fromDBObject(AccessTokenEntity.class, obj);		
-		return entity != null ? entity.getAccessToken() : null;
+		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
@@ -114,7 +113,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		return transform(MongoDBConnector.INSTANCE.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, AccessToken>() {
 			@Override
 			public AccessToken apply(final BasicDBObject obj) {
-				return morphia.fromDBObject(AccessTokenEntity.class, obj).getAccessToken();
+				return parseBasicDBObject(obj);
 			}
 		});		
 	}
@@ -145,6 +144,21 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 
 	private BasicDBObject sortCriteria() {
 		return new BasicDBObject(PRIMARY_KEY, 1);
+	}	
+
+	private AccessToken parseBasicDBObject(final BasicDBObject obj) {
+		return morphia.fromDBObject(AccessTokenEntity.class, obj).getAccessToken();
+	}
+
+	private AccessToken parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		AccessToken token = null;		
+		if (obj != null) {
+			final AccessTokenEntity entity = morphia.fromDBObject(AccessTokenEntity.class, obj);
+			if (entity != null) {
+				token = morphia.fromDBObject(AccessTokenEntity.class, obj).getAccessToken();
+			}
+		}
+		return token;
 	}
 
 	/**

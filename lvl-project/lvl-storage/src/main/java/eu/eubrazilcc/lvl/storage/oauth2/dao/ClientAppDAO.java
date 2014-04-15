@@ -104,8 +104,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	@Override
 	public ClientApp find(final String clientId) {
 		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(key(clientId), COLLECTION);		
-		final ClientAppEntity entity = morphia.fromDBObject(ClientAppEntity.class, obj);		
-		return entity != null ? entity.getClientApp() : null;
+		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
@@ -113,7 +112,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 		return transform(MongoDBConnector.INSTANCE.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, ClientApp>() {
 			@Override
 			public ClientApp apply(final BasicDBObject obj) {
-				return morphia.fromDBObject(ClientAppEntity.class, obj).getClientApp();
+				return parseBasicDBObject(obj);
 			}
 		});		
 	}
@@ -146,11 +145,40 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 		return new BasicDBObject(PRIMARY_KEY, 1);
 	}
 
+	private ClientApp parseBasicDBObject(final BasicDBObject obj) {
+		return morphia.fromDBObject(ClientAppEntity.class, obj).getClientApp();
+	}
+
+	private ClientApp parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		ClientApp clientApp = null;
+		if (obj != null) {
+			final ClientAppEntity entity = morphia.fromDBObject(ClientAppEntity.class, obj);
+			if (entity != null) {
+				clientApp = morphia.fromDBObject(ClientAppEntity.class, obj).getClientApp();
+			}
+		}
+		return clientApp;
+	}	
+
+	/**
+	 * Checks whether or not the specified client Id were previously stored (registered).
+	 * @param clientId - the client identifier
+	 * @return {@code true} only if the client Id is found in the storage. Otherwise, returns 
+	 *         {@code false}.
+	 */
 	public boolean isValid(final String clientId) {
 		checkArgument(isNotBlank(clientId), "Uninitialized or invalid client Id");
 		return find(clientId) != null;		
 	}
 
+	/**
+	 * Checks whether or not the specified client Id and the associated secret were previously 
+	 * stored (registered).
+	 * @param clientId - the client identifier
+	 * @param clientSecret - the secret associated to the client
+	 * @return {@code true} only if the client Id and secret are found in the storage. Otherwise, returns 
+	 *         {@code false}.
+	 */
 	public boolean isValid(final String clientId, final String clientSecret) {
 		checkArgument(isNotBlank(clientId), "Uninitialized or invalid client Id");
 		checkArgument(isNotBlank(clientSecret), "Uninitialized or invalid client secret");

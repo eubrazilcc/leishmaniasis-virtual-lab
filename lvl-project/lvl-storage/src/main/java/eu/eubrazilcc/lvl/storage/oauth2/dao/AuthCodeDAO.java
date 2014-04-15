@@ -104,8 +104,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	@Override
 	public AuthCode find(final String code) {
 		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(key(code), COLLECTION);		
-		final AuthCodeEntity entity = morphia.fromDBObject(AuthCodeEntity.class, obj);		
-		return entity != null ? entity.getAuthCode() : null;
+		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
@@ -113,7 +112,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 		return transform(MongoDBConnector.INSTANCE.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, AuthCode>() {
 			@Override
 			public AuthCode apply(final BasicDBObject obj) {
-				return morphia.fromDBObject(AuthCodeEntity.class, obj).getAuthCode();
+				return parseBasicDBObject(obj);
 			}
 		});		
 	}
@@ -146,13 +145,36 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 		return new BasicDBObject(PRIMARY_KEY, 1);
 	}
 
+	private AuthCode parseBasicDBObject(final BasicDBObject obj) {
+		return morphia.fromDBObject(AuthCodeEntity.class, obj).getAuthCode();
+	}
+
+	private AuthCode parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		AuthCode authCode = null;
+		if (obj != null) {
+			final AuthCodeEntity entity = morphia.fromDBObject(AuthCodeEntity.class, obj);
+			if (entity != null) {
+				authCode = morphia.fromDBObject(AuthCodeEntity.class, obj).getAuthCode();
+			}
+		}
+		return authCode;
+	}
+
+	/**
+	 * Checks whether or not the specified secret (access code) was previously stored
+	 * and is currently valid (not expired).
+	 * @param code - the secret associated to the access code
+	 * @return {@code true} only if the provided secret (access code) is found in the
+	 *         storage and is currently valid (not expired). Otherwise, returns 
+	 *         {@code false}.
+	 */
 	public boolean isValid(final String code) {		
 		checkArgument(isNotBlank(code), "Uninitialized or invalid code");
 		final AuthCode authCode = find(code);		
 		return (authCode != null && authCode.getCode() != null && code.equals(authCode.getCode())
 				&& (authCode.getIssuedAt() + authCode.getExpiresIn()) > (System.currentTimeMillis() / 1000l));
 	}
-	
+
 	/**
 	 * Extracts from an entity the fields that depends on the service (e.g. links)
 	 * before storing the entity in the database. These fields are stored in this

@@ -187,10 +187,12 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	private ResourceOwner parseBasicDBObjectOrNull(final BasicDBObject obj) {
 		ResourceOwner owner = null;
-		final ResourceOwnerEntity entity = morphia.fromDBObject(ResourceOwnerEntity.class, obj);
-		if (entity != null) {
-			owner = morphia.fromDBObject(ResourceOwnerEntity.class, obj).getResourceOwner();
-			addLink(owner);
+		if (obj != null) {
+			final ResourceOwnerEntity entity = morphia.fromDBObject(ResourceOwnerEntity.class, obj);
+			if (entity != null) {
+				owner = morphia.fromDBObject(ResourceOwnerEntity.class, obj).getResourceOwner();
+				addLink(owner);
+			}
 		}
 		return owner;
 	}
