@@ -119,14 +119,17 @@ public class IdentityProvider {
 	@GET
 	@Path("{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public User getUser(@PathParam("id") String id, final @QueryParam("plain") @DefaultValue("false") boolean plain,
+	public User getUser(final @PathParam("id") String id, 
+			final @QueryParam("plain") @DefaultValue("false") boolean plain,
+			final @QueryParam("use_email") @DefaultValue("false") boolean useEmail,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {		
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), false, RESOURCE_NAME);
-		// get from database
-		final ResourceOwner owner = ResourceOwnerDAO.INSTANCE.baseUri(uriInfo.getBaseUri()).find(id);
+		// get from database		
+		final ResourceOwner owner = (!useEmail ? ResourceOwnerDAO.INSTANCE.baseUri(uriInfo.getBaseUri()).find(id)
+				: ResourceOwnerDAO.INSTANCE.baseUri(uriInfo.getBaseUri()).findByEmail(id));
 		if (owner == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}

@@ -3,7 +3,7 @@
 /* Services */
 
 angular.module('lvl.services', [])
-.factory('Oauth2Service', function($http, $window, ENV) {
+.factory('Oauth2Factory', function($http, $window, ENV) {
 	return {
 		token: function(user) {
 			return $http({
@@ -38,48 +38,64 @@ angular.module('lvl.services', [])
 		}
 	};
 })
-.factory('UserAuthService', function ($q, $timeout, $http, $rootScope, $location, Oauth2Service) {
-	return {
-		userInfo: null,
-		token: function (user) {
-			var defer = $q.defer();
-			Oauth2Service.token(user).success(function (data, status) {				
-				if (data["access_token"] !== undefined) {
-					var access_token = data["access_token"];
-					console.log("Access token obtained: " + access_token); // TODO
-					defer.resolve(access_token);
+.factory('UserAuthFactory', function ($q, $timeout, $http, $location, Oauth2Factory) {
+	var userInfo = null;
+	return function () {
+		var defer = $q.defer();
+		if (userInfo) {
+			// console.log("User info exists: " + userInfo);
+			defer.resolve(userInfo);
+		} else {
+			// console.log("Requesting user info...");
+			Oauth2Factory.user().success(function (data, status) {
+				
+				
+				// TODO
+				for (var prop in data) {
+					console.log(prop + " => " + data[prop]);
+				}
+				// TODO
+				
+				
+				if (data.username != null) {
+					userInfo = data;
+					console.log("User info obtained: " + userInfo); // TODO
+					defer.resolve(userInfo);
 				} else {
-					console.log("Failed to get access token"); // TODO
+					console.log("Failed to get user info"); // TODO
 					defer.reject(data);
 				}
 			}).error(function (data, status) {
-				console.log("401 Response. Rejecting defer");  // TODO
+				console.log("401 Response. Rejecting defer"); // TODO
 				defer.reject(data);
 			});
-			return defer.promise;
-		},
-		isAuthenticated: function () {
-			var defer = $q.defer();
-			if (this.userInfo) {
-				// console.log("User info exists: " + userInfo);
-				defer.resolve(this.userInfo);
-			} else {
-				// console.log("Requesting user info...");
-				Oauth2Service.user().success(function (data, status) {
-					if (data.id != null) {
-						this.userInfo = data;
-						// console.log("User info obtained: " + this.userInfo);
-						defer.resolve(this.userInfo);
-					} else {
-						// console.log("Failed to get user info");
-						defer.reject(data);
-					}
-				}).error(function (data, status) {
-					// console.log("401 Response. Rejecting defer");
-					defer.reject(data);
-				});
-			}
-			return defer.promise;
 		}
-	}
+		return defer.promise;
+	};
+})
+.factory('AccessTokenFactory', function ($q, $timeout, $http, $location, Oauth2Factory) {
+	var accessToken = null;
+	return function (user) {
+		var defer = $q.defer();
+		if (accessToken) {
+			// console.log("Access token exists: " + accessToken);
+			defer.resolve(accessToken);
+		} else {
+			// console.log("Requesting access token...");
+			Oauth2Factory.token(user).success(function (data, status) {				
+				if (data["access_token"] !== undefined) {
+					accessToken = data["access_token"];
+					console.log("Access token obtained: " + accessToken); // TODO
+					defer.resolve(accessToken);
+				} else {
+					// console.log("Failed to get access token");
+					defer.reject(data);
+				}
+			}).error(function (data, status) {
+				// console.log("400 Response. Rejecting defer");
+				defer.reject(data);
+			});
+		}		
+		return defer.promise;
+	};
 });

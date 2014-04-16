@@ -315,6 +315,16 @@ public class AuthTest {
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by username result: " + user2.toString());
 
+			// test identity provider (IdP) get user by email address
+			user2 = target.path(path.value()).path(user.getEmail()).queryParam("use_email", true).queryParam("plain", true)
+					.request(MediaType.APPLICATION_JSON)
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
+					.get(User.class);
+			assertThat("Get user by email address result is not null", user2, notNullValue());
+			assertThat("Get user by email address coincides with expected", user2.equalsIgnoreLink(user));
+			/* uncomment for additional output */
+			System.out.println("     >> Get user by email address result: " + user2.toString());			
+
 			// test identity provider (IdP) update user
 			user.setPassword("updated_password2");
 			response3 = target.path(path.value()).path(user.getUsername()).request()

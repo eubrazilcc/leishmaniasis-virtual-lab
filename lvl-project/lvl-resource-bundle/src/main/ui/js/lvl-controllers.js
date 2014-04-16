@@ -13,23 +13,32 @@ angular.module('lvl.controllers', [])
 		delete $window.sessionStorage.token;
 	};
 }])
-.controller('LoginCtrl', ['$scope', '$routeParams', '$window', 'UserAuthService', function($scope, $routeParams, $window, UserAuthService) {
-	$scope.showAlert = $routeParams.fail;
-	$scope.alertMessage = 'The webpage you are trying to access requires additional authentication.';	
+.controller('LoginCtrl', ['$scope', '$routeParams', '$window', '$location', 'AccessTokenFactory', function($scope, $routeParams, $window, $location, AccessTokenFactory) {
+	var referrer = $routeParams.ref !== undefined ? $routeParams.ref : '/';
+	$scope.showAlert = $routeParams.fail !== undefined;	
+	switch ($routeParams.fail) {
+	case "refused":
+		$scope.alertMessage = 'Authorization has been refused for the provided credentials.';
+		break;
+	case "unauthenticated":
+	default:
+		$scope.alertMessage = 'The webpage you are trying to access requires additional authentication.';
+	}
 	$scope.login = function(user) {
-		var access_token = UserAuthService.token(user);
-		if (access_token !== undefined) {
-			// TODO $window.sessionStorage.token = 	
-		} else {
-			
-			// TODO
-			$location.path('/');
-			// TODO
-			
-		}
-		
-		
-		
+		AccessTokenFactory(user).then(
+				function (accessToken) {					
+					if (accessToken !== undefined) {
+						$window.sessionStorage.token = accessToken;
+						$location.path(referrer);
+					} else {
+						$location.path('/login/' + encodeURIComponent(referrer) + '/refused');
+					}
+				},
+				function (reason) {
+					$location.path('/login/' + encodeURIComponent(referrer) + '/refused');					
+				},
+				null
+		);
 	};
 }])
 .controller('FileStoreCtrl', ['$scope', function($scope) {
