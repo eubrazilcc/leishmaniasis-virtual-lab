@@ -9,14 +9,15 @@ angular.module('lvl.fastclick', [])
 /* global configuration */
 angular.module('lvl.config', [])
 .constant('ENV', {
-	'oauth2Endpoint': 'http://lvl.i3m.upv.es/lvl-auth/oauth2/v1',
-	'oauth2ClientApp': {
-		'client_id': 'lvl_portal',
-		'client_secret': 'changeit'
-	}
+	'oauth2Endpoint'    : 'http://lvl.i3m.upv.es/lvl-auth/oauth2/v1',
+	'oauth2ClientApp'   : {
+		'client_id'     : 'lvl_portal',
+		'client_secret' : 'changeit'
+	},
+	'lvlCookieId': 'LVL-LeishVirtLab'
 });
 
-angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers', 'lvl.fastclick', 'ui.bootstrap' ])
+angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers', 'lvl.fastclick', 'ui.bootstrap' ])
 .config(['$routeProvider', function($routeProvider) {
 	$routeProvider.when('/', {templateUrl: 'partials/home.html', controller: 'HomeCtrl'});
 	$routeProvider.when('/login/:ref?/:fail?', {templateUrl: 'partials/login.html', controller: 'LoginCtrl'});
@@ -25,15 +26,13 @@ angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'lvl.config', 'lvl.filters', 'l
 	$routeProvider.when('/404', {templateUrl: 'partials/404.html', controller: 'PageNotFoundCtrl'});
 	$routeProvider.otherwise({redirectTo: '/404'});
 }])
+.run(['$rootScope', 'CookieFactory', function($rootScope, CookieFactory) {
+	CookieFactory.load();
+}])
 .run(['$rootScope', '$location', 'UserAuthFactory', function($rootScope, $location, UserAuthFactory) {
-	$rootScope.$on('$routeChangeStart', function(event, next, current) {
+	$rootScope.$on('$routeChangeStart', function(event, next, current) {		
 		if (next.reqAuth) {
 			UserAuthFactory().catch(function(reason) {
-
-				// TODO
-				console.log("WHY HERE?");
-				// TODO
-
 				$location.path('/login/' + encodeURIComponent($location.path()) + '/unauthenticated');
 			});
 		}

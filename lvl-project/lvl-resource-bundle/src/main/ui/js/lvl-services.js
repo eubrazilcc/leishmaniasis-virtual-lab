@@ -2,13 +2,39 @@
 
 /* Services */
 
+var authNHeaders = function($window) {
+	return (typeof $window.sessionStorage.token !== undefined ? { 'Authorization': 'Bearer ' + $window.sessionStorage.token } : null);
+}
+
 angular.module('lvl.services', [])
-.factory('Oauth2Factory', function($http, $window, ENV) {
+.factory('CookieFactory', [ '$window', '$cookieStore', 'ENV', function($window, $cookieStore, ENV) {
 	return {
-		token: function(user) {
+		load: function() {
+			if (typeof $window.sessionStorage.token === undefined || $window.sessionStorage.email === undefined) {
+				var existingCookieUser = $cookieStore.get(ENV.lvlCookieId);
+				if (existingCookieUser) {
+					$window.sessionStorage.token = existingCookieUser.token;
+					$window.sessionStorage.email = existingCookieUser.email;
+				}
+			}
+		},
+		store: function() {
+			$cookieStore.put(ENV.lvlCookieId, {
+				'token': $window.sessionStorage.token,
+				'email': $window.sessionStorage.email
+			});
+		},		
+		remove: function() {
+			$cookieStore.remove(ENV.lvlCookieId);
+		}
+	};
+}])
+.factory('Oauth2Factory', [ '$http', '$window', 'ENV', function($http, $window, ENV) {
+	return {
+		token: function(user) {			
 			return $http({
 				url: ENV.oauth2Endpoint + '/token',
-				method: "POST",
+				method: 'POST',
 				data: 'client_id=' + encodeURIComponent(ENV.oauth2ClientApp.client_id)
 				+ '&client_secret=' + encodeURIComponent(ENV.oauth2ClientApp.client_secret)
 				+ '&grant_type=password'
@@ -17,76 +43,36 @@ angular.module('lvl.services', [])
 				+ '&use_email=true',
 				headers: {'Content-Type': 'application/x-www-form-urlencoded'}			
 			});
-		},
-		signIn: function(authResult) {
-
-			// TODO
-
-			return $http.post(ENV.oauth2Endpoint + '/connect', authResult);
-		},
+		},		
 		disconnect: function() {
 
 			// TODO
 
 			return $http.post(ENV.oauth2Endpoint + '/disconnect');
 		},
-		user: function() {
-			if (typeof $window.sessionStorage.token !== undefined) {
-				$http.defaults.headers.common.Authorization = "Bearer " + $window.sessionStorage.token;
-			}
-			return $http.get(ENV.oauth2Endpoint + '/users');
-		}
-	};
-})
-.factory('UserAuthFactory', function ($q, $timeout, $http, $location, Oauth2Factory) {
-	var userInfo = null;
-	return function () {
-		var defer = $q.defer();
-		if (userInfo) {
-			// console.log("User info exists: " + userInfo);
-			defer.resolve(userInfo);
-		} else {
-			// console.log("Requesting user info...");
-			Oauth2Factory.user().success(function (data, status) {
-				
-				
-				// TODO
-				for (var prop in data) {
-					console.log(prop + " => " + data[prop]);
-				}
-				// TODO
-				
-				
-				if (data.username != null) {
-					userInfo = data;
-					console.log("User info obtained: " + userInfo); // TODO
-					defer.resolve(userInfo);
-				} else {
-					console.log("Failed to get user info"); // TODO
-					defer.reject(data);
-				}
-			}).error(function (data, status) {
-				console.log("401 Response. Rejecting defer"); // TODO
-				defer.reject(data);
+		user: function() {			
+			return $http({
+				url: ENV.oauth2Endpoint + '/users/' + encodeURIComponent($window.sessionStorage.email),
+				method: 'GET',
+				params: { 'use_email': 'true' },
+				headers: authNHeaders($window)
 			});
 		}
-		return defer.promise;
 	};
-})
-.factory('AccessTokenFactory', function ($q, $timeout, $http, $location, Oauth2Factory) {
-	var accessToken = null;
+}])
+.factory('AccessTokenFactory', [ '$q', '$timeout', '$http', '$window', '$location', 'Oauth2Factory', function ($q, $timeout, $http, $window, $location, Oauth2Factory) {
 	return function (user) {
 		var defer = $q.defer();
-		if (accessToken) {
-			// console.log("Access token exists: " + accessToken);
-			defer.resolve(accessToken);
+		if ($window.sessionStorage.token) {
+			// console.log("Access token exists: " + $window.sessionStorage.token);
+			defer.resolve($window.sessionStorage.token);
 		} else {
 			// console.log("Requesting access token...");
 			Oauth2Factory.token(user).success(function (data, status) {				
 				if (data["access_token"] !== undefined) {
-					accessToken = data["access_token"];
-					console.log("Access token obtained: " + accessToken); // TODO
-					defer.resolve(accessToken);
+					$window.sessionStorage.token = data["access_token"];
+					// console.log("Access token obtained: " + $window.sessionStorage.token);
+					defer.resolve($window.sessionStorage.token);
 				} else {
 					// console.log("Failed to get access token");
 					defer.reject(data);
@@ -98,4 +84,29 @@ angular.module('lvl.services', [])
 		}		
 		return defer.promise;
 	};
-});
+}])
+.factory('UserAuthFactory', [ '$q', '$timeout', '$http', '$window', '$location', 'Oauth2Factory', function ($q, $timeout, $http, $window, $location, Oauth2Factory) {
+	return function () {
+		var defer = $q.defer();
+		if ($window.sessionStorage.userInfo) {
+			// console.log("User info exists: " + $window.sessionStorage.userInfo);
+			defer.resolve($window.sessionStorage.userInfo);
+		} else {
+			// console.log("Requesting user info...");
+			Oauth2Factory.user().success(function (data, status) {
+				if (data.username != null) {
+					$window.sessionStorage.userInfo = data;
+					// console.log("User info obtained: " + $window.sessionStorage.userInfo);
+					defer.resolve($window.sessionStorage.userInfo);
+				} else {
+					// console.log("Failed to get user info");
+					defer.reject(data);
+				}
+			}).error(function (data, status) {
+				// console.log("401 Response. Rejecting defer");
+				defer.reject(data);
+			});
+		}
+		return defer.promise;
+	};
+}]);

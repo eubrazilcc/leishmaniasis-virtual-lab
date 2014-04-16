@@ -6,14 +6,28 @@ angular.module('lvl.controllers', [])
 .controller('HomeCtrl', function() {
 	// nothing yet
 })
-.controller('NavBarCtrl', ['$scope', '$window', function($scope, $window) {
-	$scope.isAuthenticated = typeof $window.sessionStorage.token === undefined;
+.controller('NavBarCtrl', ['$scope', '$rootScope', '$window', 'ENV', 'CookieFactory', function($scope, $rootScope, $window, ENV, CookieFactory) {
+	$rootScope.$watch( 
+			function() {
+				return $window.sessionStorage.token; 
+			}, 
+			function(newValue, oldValue) {		
+				$scope.isAuthenticated = (typeof $window.sessionStorage.token !== undefined && $window.sessionStorage.email !== undefined);
+			});
 	$scope.logout = function() {
 		$scope.isAuthenticated = false;
+		// clear session
 		delete $window.sessionStorage.token;
+		delete $window.sessionStorage.email;
+		delete $window.sessionStorage.userInfo;
+		// clear cookies
+		CookieFactory.remove();
+		// delete token from remote OAuth service
+		// TODO
 	};
 }])
-.controller('LoginCtrl', ['$scope', '$routeParams', '$window', '$location', 'AccessTokenFactory', function($scope, $routeParams, $window, $location, AccessTokenFactory) {
+.controller('LoginCtrl', ['$scope', '$routeParams', '$window', '$location', 'ENV', 'AccessTokenFactory', 'CookieFactory', function($scope, $routeParams, $window, $location, ENV, AccessTokenFactory, CookieFactory) {
+	$scope.rememberme = true;
 	var referrer = $routeParams.ref !== undefined ? $routeParams.ref : '/';
 	$scope.showAlert = $routeParams.fail !== undefined;	
 	switch ($routeParams.fail) {
@@ -24,18 +38,31 @@ angular.module('lvl.controllers', [])
 	default:
 		$scope.alertMessage = 'The webpage you are trying to access requires additional authentication.';
 	}
-	$scope.login = function(user) {
-		AccessTokenFactory(user).then(
+	$scope.login = function() {		
+		// workaround to solve the problem with AJAX, remember password and single-page applications
+		if ($scope.user === undefined) {
+			$scope.user = {
+					email: $("#email").val(),
+					password: $("#password").val()
+			};
+		}
+		AccessTokenFactory($scope.user).then(
 				function (accessToken) {					
 					if (accessToken !== undefined) {
 						$window.sessionStorage.token = accessToken;
+						$window.sessionStorage.email = $scope.user.email;
+						if ($scope.rememberme === true) {
+							CookieFactory.store();
+						} else {
+							CookieFactory.remove();
+						}
 						$location.path(referrer);
 					} else {
 						$location.path('/login/' + encodeURIComponent(referrer) + '/refused');
 					}
 				},
 				function (reason) {
-					$location.path('/login/' + encodeURIComponent(referrer) + '/refused');					
+					$location.path('/login/' + encodeURIComponent(referrer) + '/refused');
 				},
 				null
 		);

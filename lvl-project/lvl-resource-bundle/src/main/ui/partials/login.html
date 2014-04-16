@@ -28,13 +28,13 @@
                   <label for="passwd">Password <a href="#">(forgot password)</a></label>
                   <div class="input-group">                  
                     <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                    <input ng-model="user.password" id="passwd" name="passwd" type="password" class="form-control" placeholder="Password" required>
+                    <input ng-model="user.password" id="password" name="password" type="password" class="form-control" placeholder="Password" required>
                   </div>
                 </div>
                 <label class="checkbox">
-                  <input type="checkbox" value="remember-me" checked> Remember me
+                  <input ng-model="rememberme" name="rememberme" type="checkbox"> Remember me
                 </label>
-                <button ng-click="login(user)" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+                <button ng-click="login()" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
               </form>
             </div>
           </div>
