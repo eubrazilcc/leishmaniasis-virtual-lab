@@ -3,9 +3,17 @@
 /* Controllers */
 
 angular.module('lvl.controllers', [])
-.controller('HomeCtrl', function() {
-	// nothing yet
-})
+.controller('HomeCtrl', ['$scope', '$rootScope', '$window', function($scope, $rootScope, $window) {
+	$rootScope.$watch( 
+			function() {
+				return $window.sessionStorage.token; 
+			}, 
+			function(newValue, oldValue) {		
+				$scope.isAuthenticated = (typeof $window.sessionStorage.token !== undefined && $window.sessionStorage.email !== undefined);
+				$scope.style1 = $scope.isAuthenticated ? 'col-xs-12' : 'col-md-8 col-xs-12';
+				$scope.style2 = 'col-md-4 col-xs-12';
+			});
+}])
 .controller('NavBarCtrl', ['$scope', '$rootScope', '$window', 'ENV', 'CookieFactory', function($scope, $rootScope, $window, ENV, CookieFactory) {
 	$rootScope.$watch( 
 			function() {
