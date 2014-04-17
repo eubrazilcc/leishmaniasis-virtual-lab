@@ -43,12 +43,16 @@ angular.module('lvl.services', [])
 				+ '&use_email=true',
 				headers: {'Content-Type': 'application/x-www-form-urlencoded'}			
 			});
-		},		
-		disconnect: function() {
-
-			// TODO
-
-			return $http.post(ENV.oauth2Endpoint + '/disconnect');
+		},
+		revoke: function() {
+			return $http({
+				url: ENV.oauth2Endpoint + '/revoke',
+				method: 'POST',
+				data: 'client_id=' + encodeURIComponent(ENV.oauth2ClientApp.client_id)
+				+ '&client_secret=' + encodeURIComponent(ENV.oauth2ClientApp.client_secret)
+				+ '&token=' + encodeURIComponent($window.sessionStorage.token),
+				headers: {'Content-Type': 'application/x-www-form-urlencoded'}			
+			});
 		},
 		user: function() {			
 			return $http({
@@ -57,6 +61,24 @@ angular.module('lvl.services', [])
 				params: { 'use_email': 'true' },
 				headers: authNHeaders($window)
 			});
+		}
+	};
+}])
+.factory('IdPFactory', [ '$http', '$window', 'ENV', function($http, $window, ENV) {
+	return {
+		register: function(user) {		
+			return $http({
+				url: ENV.oauth2Endpoint + '/users/signup',
+				method: 'POST',
+				data: user,
+				headers: {'Content-Type': 'application/json'}			
+			});
+		},
+		validate: function() {
+			// TODO
+		},
+		resend_notification: function() {
+			// TODO
 		}
 	};
 }])
@@ -107,6 +129,25 @@ angular.module('lvl.services', [])
 				defer.reject(data);
 			});
 		}
+		return defer.promise;
+	};
+}])
+.factory('UserRegistrationFactory', [ '$q', '$timeout', '$http', '$window', '$location', 'IdPFactory', function ($q, $timeout, $http, $window, $location, IdPFactory) {
+	return function (user) {
+		var defer = $q.defer();
+		IdPFactory.register(user).success(function (data, status) {
+			// console.log("Registering new user...");
+			if (data !== undefined) {
+				// console.log("New user registered");
+				defer.resolve();
+			} else {
+				// console.log("Failed to register new user");
+				defer.reject(data);
+			}
+		}).error(function (data, status) {
+			// console.log("400 Response. Rejecting defer");
+			defer.reject(data);
+		});
 		return defer.promise;
 	};
 }]);

@@ -3,7 +3,7 @@
 /* Controllers */
 
 angular.module('lvl.controllers', [])
-.controller('HomeCtrl', ['$scope', '$rootScope', '$window', function($scope, $rootScope, $window) {
+.controller('HomeCtrl', ['$scope', '$rootScope', '$window', '$location', 'UserRegistrationFactory', function($scope, $rootScope, $window, $location, UserRegistrationFactory) {
 	$rootScope.$watch( 
 			function() {
 				return $window.sessionStorage.token; 
@@ -14,10 +14,22 @@ angular.module('lvl.controllers', [])
 				$scope.style2 = 'col-md-4 col-xs-12';
 			});
 	$scope.signup = function() {
-		// TODO
+		UserRegistrationFactory($scope.user).then(
+				function (data) {
+					$location.path('/user/validate/' + $scope.user.email);
+				},
+				function (reason) {
+
+					// TODO
+					console.log("FAILED: " + reason);
+					// TODO
+
+				},
+				null
+		);
 	};
 }])
-.controller('NavBarCtrl', ['$scope', '$rootScope', '$window', 'ENV', 'CookieFactory', function($scope, $rootScope, $window, ENV, CookieFactory) {
+.controller('NavBarCtrl', ['$scope', '$rootScope', '$window', 'ENV', 'CookieFactory', 'Oauth2Factory', function($scope, $rootScope, $window, ENV, CookieFactory, Oauth2Factory) {
 	$rootScope.$watch( 
 			function() {
 				return $window.sessionStorage.token; 
@@ -27,20 +39,20 @@ angular.module('lvl.controllers', [])
 			});
 	$scope.logout = function() {
 		$scope.isAuthenticated = false;
+		// delete token from remote OAuth service
+		Oauth2Factory.revoke();
 		// clear session
 		delete $window.sessionStorage.token;
 		delete $window.sessionStorage.email;
 		delete $window.sessionStorage.userInfo;
 		// clear cookies
-		CookieFactory.remove();
-		// delete token from remote OAuth service
-		// TODO
+		CookieFactory.remove();		
 	};
 }])
 .controller('LoginCtrl', ['$scope', '$routeParams', '$window', '$location', 'ENV', 'AccessTokenFactory', 'CookieFactory', function($scope, $routeParams, $window, $location, ENV, AccessTokenFactory, CookieFactory) {
 	$scope.rememberme = true;
 	var referrer = $routeParams.ref !== undefined ? $routeParams.ref : '/';
-	$scope.showAlert = $routeParams.fail !== undefined;	
+	$scope.showAlert = $routeParams.fail !== undefined;
 	switch ($routeParams.fail) {
 	case "refused":
 		$scope.alertMessage = 'Authorization has been refused for the provided credentials.';
@@ -79,8 +91,13 @@ angular.module('lvl.controllers', [])
 		);
 	};
 }])
-.controller('UserValidationCtrl', ['$scope', function($scope) {
-	// nothing yet
+.controller('UserValidationCtrl', ['$scope', '$routeParams', function($scope, $routeParams) {
+	$scope.user = {
+			email: ($routeParams.email !== undefined ? $routeParams.email : ''),
+			code: ($routeParams.code !== undefined ? $routeParams.code : '')
+	};
+
+	// TODO
 }])
 .controller('FileStoreCtrl', ['$scope', function($scope) {
 	$scope.toggleTopEntries = function() {

@@ -17,7 +17,7 @@ angular.module('lvl.config', [])
 	'lvlCookieId': 'LVL-LeishVirtLab'
 });
 
-angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers', 'lvl.fastclick', 'ui.bootstrap' ])
+angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'chieffancypants.loadingBar', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers', 'lvl.fastclick', 'ui.bootstrap' ])
 .config(['$routeProvider', function($routeProvider) {
 	$routeProvider.when('/', {templateUrl: 'partials/home.html', controller: 'HomeCtrl'});
 	$routeProvider.when('/login/:ref?/:fail?', {templateUrl: 'partials/login.html', controller: 'LoginCtrl'});	
