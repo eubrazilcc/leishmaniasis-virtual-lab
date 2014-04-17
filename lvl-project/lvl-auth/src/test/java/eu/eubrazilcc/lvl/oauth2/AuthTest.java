@@ -28,6 +28,7 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,11 +43,13 @@ import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.Map;
 
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -78,6 +81,7 @@ import eu.eubrazilcc.lvl.oauth2.rest.IdentityProvider;
 import eu.eubrazilcc.lvl.oauth2.rest.OAuth2AuthzServer;
 import eu.eubrazilcc.lvl.oauth2.rest.OAuth2Registration;
 import eu.eubrazilcc.lvl.oauth2.rest.OAuth2Token;
+import eu.eubrazilcc.lvl.oauth2.rest.OAuth2TokenRevocation;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
@@ -258,8 +262,41 @@ public class AuthTest {
 			System.out.println("     >> Expires in (using email address): " + response2.getExpiresIn() + " seconds");
 			System.out.println("     >> Scope (using email address): " + response2.getScope());
 
+			// test token revocation
+			request = OAuthClientRequest
+					.tokenLocation(uri.toString())
+					.setGrantType(GrantType.PASSWORD)
+					.setClientId(clientId)
+					.setClientSecret(clientSecret)
+					.setUsername(resourceOwner.getUser().getUsername())
+					.setPassword(resourceOwner.getUser().getPassword())
+					.buildBodyMessage();
+			oAuthClient = new OAuthClient(new URLConnectionClient());
+			response2 = oAuthClient.accessToken(request);
+			final String accessToken2 = response2.getAccessToken();
+
+			Path path = OAuth2TokenRevocation.class.getAnnotation(Path.class);
+			System.out.println(" >> Token revocation: " + target.path(path.value()).getUri().toString());			
+			final Form form = new Form();
+			form.param("token", accessToken2);
+			form.param("client_id", clientId);
+			form.param("client_secret", clientSecret);					
+			Response response3 = target.path(path.value()).request()
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken2))
+					.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+			assertThat("Revoke token response is not null", response3, notNullValue());
+			assertThat("Revoke token response is OK", response3.getStatus() == Response.Status.OK.getStatusCode());
+			assertThat("Revoke token response is not empty", response3.getEntity(), notNullValue());
+			String payload = response3.readEntity(String.class);
+			assertThat("Revoke token response entity is not null", payload, notNullValue());
+			assertThat("Revoke token response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println("     >> Revoke token response body (JSON), empty is OK: " + payload);
+			System.out.println("     >> Revoke token response JAX-RS object: " + response3);
+			System.out.println("     >> Revoke token HTTP headers: " + response3.getStringHeaders());
+
 			// test identity provider (IdP) create new user
-			final Path path = IdentityProvider.class.getAnnotation(Path.class);
+			path = IdentityProvider.class.getAnnotation(Path.class);
 			final User user = User.builder()
 					.username("username2")
 					.password("password2")
@@ -268,13 +305,13 @@ public class AuthTest {
 					.scope(user("username2"))
 					.build();
 			System.out.println(" >> IdP resource server: " + target.path(path.value()).getUri().toString());
-			Response response3 = target.path(path.value()).request()
+			response3 = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.post(Entity.entity(user, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("Create new user response is not null", response3, notNullValue());
 			assertThat("Create new user response is CREATED", response3.getStatus() == Response.Status.CREATED.getStatusCode());
 			assertThat("Create new user response is not empty", response3.getEntity(), notNullValue());
-			String payload = response3.readEntity(String.class);
+			payload = response3.readEntity(String.class);
 			assertThat("Create new user response entity is not null", payload, notNullValue());
 			assertThat("Create new user response entity is empty", isBlank(payload));
 			/* uncomment for additional output */			
@@ -351,7 +388,18 @@ public class AuthTest {
 			assertThat("Get user by username after update result is not null", user2, notNullValue());
 			assertThat("Get user by username after update coincides with expected", user2.equalsIgnoreLink(user));
 			/* uncomment for additional output */
-			System.out.println("     >> Get user by username after update result: " + user2.toString());			
+			System.out.println("     >> Get user by username after update result: " + user2.toString());
+
+			// test identity provider (IdP) get user by username with revoked token
+			try {
+				target.path(path.value()).path(user.getUsername())
+				.request(MediaType.APPLICATION_JSON)
+				.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken2))
+				.get(User.class);
+				fail("Should have thrown an NotAuthorizedException because access token is revoked");
+			} catch (NotAuthorizedException e) {
+				assertThat(e.getMessage(), containsString("HTTP 401 Unauthorized"));
+			}
 
 			// test identity provider (IdP) delete user
 			response3 = target.path(path.value()).path(user.getUsername()).request()

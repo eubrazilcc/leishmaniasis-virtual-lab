@@ -65,6 +65,7 @@ public class OAuth2Application extends Application {
 		instances.add(new OAuth2Registration());
 		instances.add(new OAuth2AuthzServer());
 		instances.add(new OAuth2Token());
+		instances.add(new OAuth2TokenRevocation());
 		instances.add(new IdentityProvider());
 		// add additional JAX-RS providers
 		classes.add(CrossDomainFilter.class);

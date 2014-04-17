@@ -13,6 +13,9 @@ angular.module('lvl.controllers', [])
 				$scope.style1 = $scope.isAuthenticated ? 'col-xs-12' : 'col-md-8 col-xs-12';
 				$scope.style2 = 'col-md-4 col-xs-12';
 			});
+	$scope.signup = function() {
+		// TODO
+	};
 }])
 .controller('NavBarCtrl', ['$scope', '$rootScope', '$window', 'ENV', 'CookieFactory', function($scope, $rootScope, $window, ENV, CookieFactory) {
 	$rootScope.$watch( 
