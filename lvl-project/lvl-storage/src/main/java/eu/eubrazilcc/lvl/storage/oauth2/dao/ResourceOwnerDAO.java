@@ -129,8 +129,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	@Override
-	public void delete(final String accession) {
-		MongoDBConnector.INSTANCE.remove(key(accession), COLLECTION);
+	public void delete(final String resourceOwnerId) {
+		MongoDBConnector.INSTANCE.remove(key(resourceOwnerId), COLLECTION);
 	}
 
 	@Override

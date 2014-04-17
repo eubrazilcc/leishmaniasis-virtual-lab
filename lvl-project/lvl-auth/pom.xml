@@ -133,6 +133,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<artifactId>jackson-mapper-asl</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		
+		<!-- JavaMail API -->
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+		</dependency>
 	
 		<!-- Logback and SLF4J logging framework -->
 		<dependency>

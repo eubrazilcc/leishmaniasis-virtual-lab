@@ -23,10 +23,9 @@
 package eu.eubrazilcc.lvl.storage.oauth2;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Objects;
 
@@ -90,7 +89,7 @@ public class ResourceOwner implements Serializable {
 		private final ResourceOwner resourceOwner = new ResourceOwner();
 
 		public Builder id(final String ownerId) {
-			checkArgument(StringUtils.isNotBlank(ownerId), "Uninitialized or invalid owner Id");
+			checkArgument(isNotBlank(ownerId), "Uninitialized or invalid owner Id");
 			resourceOwner.setOwnerId(ownerId);
 			return this;
 		}

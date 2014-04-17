@@ -92,8 +92,10 @@ public class ResourceOwnerCollectionTest {
 			
 			// add scopes
 			ResourceOwnerDAO.INSTANCE.addScopes(resourceOwner.getOwnerId(), "scope3");
+			
 			// remove scopes
 			ResourceOwnerDAO.INSTANCE.removeScopes(resourceOwner.getOwnerId(), "scope2");
+			
 			// get OAuth scope
 			resourceOwner2 = ResourceOwnerDAO.INSTANCE.find(resourceOwner.getOwnerId());
 			final String oauthScope = ResourceOwnerDAO.oauthScope(resourceOwner2, true);
@@ -101,8 +103,10 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner OAuth scope is not blank", isNotBlank(oauthScope));
 			assertThat("resource owner OAuth scope coincided with expected", oauthScope, equalTo("scope1 scope3"));
 			System.out.println("OAuth scope: '" + oauthScope + "'");
+			
 			// remove
 			ResourceOwnerDAO.INSTANCE.delete(resourceOwner.getOwnerId());
+			
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {

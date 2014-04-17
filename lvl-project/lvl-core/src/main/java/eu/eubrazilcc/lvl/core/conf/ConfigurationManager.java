@@ -130,6 +130,22 @@ public enum ConfigurationManager implements Closeable2 {
 	public ImmutableList<String> getDbHosts() {
 		return configuration().getDbHosts();
 	}
+	
+	public String getSmtpHost() {
+		return configuration().getSmtpHost();
+	}
+	
+	public int getSmtpPort() {
+		return configuration().getSmtpPort();
+	}
+	
+	public String getSmtpSupportEmail() {
+		return configuration().getSmtpSupportEmail();
+	}
+	
+	public String getSmtpNoreplyEmail() {
+		return configuration().getSmtpNoreplyEmail();
+	}
 
 	@Override
 	public void setup(final @Nullable Collection<URL> urls) {		
@@ -194,6 +210,10 @@ public enum ConfigurationManager implements Closeable2 {
 							final String dbPassword = getString("database.credentials.password", configuration, foundNameList, null);
 							final ImmutableList<String> dbHosts = getStringList("database.hosts.host", Pattern.compile("^[\\w]+:[\\d]+$"), 
 									configuration, foundNameList, Lists.newArrayList("localhost:27017"));
+							final String smtpHost = getString("smtp.host", configuration, foundNameList, "localhost");
+							final int smtpPort = getInteger("smtp.port", configuration, foundNameList, 25);
+							final String smtpSupportEmail = getString("smtp.support-email", configuration, foundNameList, "support@example.com");
+							final String smtpNoreplyEmail = getString("smtp.noreply-email", configuration, foundNameList, "noreply@example.com");
 							// get secondary property will return null if the requested property is missing
 							configuration.setThrowExceptionOnMissing(false);
 							// nothing yet
@@ -209,7 +229,8 @@ public enum ConfigurationManager implements Closeable2 {
 									}								
 								}
 							}
-							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dbName, dbUsername, dbPassword, dbHosts, othersMap);
+							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dbName, dbUsername, dbPassword, dbHosts, 
+									smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
 							throw new IllegalStateException("Main configuration not found");
@@ -306,11 +327,16 @@ public enum ConfigurationManager implements Closeable2 {
 		private final String dbName;
 		private final Optional<String> dbUsername;
 		private final Optional<String> dbPassword;
-		private final ImmutableList<String> dbHosts;		
+		private final ImmutableList<String> dbHosts;
+		private final String smtpHost;
+		private final int smtpPort;
+		private final String smtpSupportEmail;
+		private final String smtpNoreplyEmail;
 		// other configurations
-		private final ImmutableMap<String, String> othersMap;		
+		private final ImmutableMap<String, String> othersMap;
 		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, 
 				final String dbName, final @Nullable String dbUsername, final @Nullable String dbPassword, final ImmutableList<String> dbHosts,
+				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
 				final @Nullable Map<String, String> othersMap) {
 			this.rootDir = checkNotNull(rootDir, "Uninitialized root directory");
 			this.localCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
@@ -318,7 +344,11 @@ public enum ConfigurationManager implements Closeable2 {
 			this.dbName = dbName;
 			this.dbUsername = Optional.fromNullable(StringUtils.trimToNull(dbUsername));
 			this.dbPassword = Optional.fromNullable(StringUtils.trimToNull(dbPassword));
-			this.dbHosts = dbHosts;			
+			this.dbHosts = dbHosts;
+			this.smtpHost = smtpHost;
+			this.smtpPort = smtpPort;
+			this.smtpSupportEmail = smtpSupportEmail;
+			this.smtpNoreplyEmail = smtpNoreplyEmail;
 			this.othersMap = new ImmutableMap.Builder<String, String>().putAll(othersMap).build();			
 		}		
 		public File getRootDir() {
@@ -341,7 +371,19 @@ public enum ConfigurationManager implements Closeable2 {
 		}		
 		public ImmutableList<String> getDbHosts() {
 			return dbHosts;
-		}		
+		}
+		public String getSmtpHost() {
+			return smtpHost;
+		}
+		public int getSmtpPort() {
+			return smtpPort;
+		}
+		public String getSmtpSupportEmail() {
+			return smtpSupportEmail;
+		}
+		public String getSmtpNoreplyEmail() {
+			return smtpNoreplyEmail;
+		}
 		public ImmutableMap<String, String> getOthersMap() {
 			return othersMap;
 		}
@@ -362,6 +404,10 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("dbUsername", dbUsername.orNull())
 					.add("dbPassword", dbPassword.orNull())
 					.add("dbHosts", dbHosts)					
+					.add("smtpHost", smtpHost)
+					.add("smtpPort", smtpPort)
+					.add("smtpSupportEmail", smtpSupportEmail)
+					.add("smtpNoreplyEmail", smtpNoreplyEmail)
 					.add("customProperties", customPropertiesToString())
 					.toString();
 		}

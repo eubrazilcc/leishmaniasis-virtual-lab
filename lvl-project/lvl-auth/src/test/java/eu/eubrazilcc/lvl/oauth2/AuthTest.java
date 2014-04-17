@@ -78,9 +78,11 @@ import eu.eubrazilcc.lvl.oauth2.rest.IdentityProvider;
 import eu.eubrazilcc.lvl.oauth2.rest.OAuth2AuthzServer;
 import eu.eubrazilcc.lvl.oauth2.rest.OAuth2Registration;
 import eu.eubrazilcc.lvl.oauth2.rest.OAuth2Token;
+import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.Users;
+import eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
 import eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider;
@@ -365,6 +367,45 @@ public class AuthTest {
 			System.out.println("     >> Delete user response body (JSON), empty is OK: " + payload);
 			System.out.println("     >> Delete user response JAX-RS object: " + response3);
 			System.out.println("     >> Delete user HTTP headers: " + response3.getStringHeaders());
+
+			// test identity provider (IdP) sign up new user
+			response3 = target.path(path.value()).path("signup").queryParam("skip-validation", true).request()
+					.post(Entity.entity(user, MediaType.APPLICATION_JSON_TYPE));
+			assertThat("Create pending user response is not null", response3, notNullValue());
+			assertThat("Create pending user response is CREATED", response3.getStatus() == Response.Status.CREATED.getStatusCode());
+			assertThat("Create pending user response is not empty", response3.getEntity(), notNullValue());
+			payload = response3.readEntity(String.class);
+			assertThat("Create pending user response entity is not null", payload, notNullValue());
+			assertThat("Create pending user response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println("     >> Create pending user response body (JSON), empty is OK: " + payload);
+			System.out.println("     >> Create pending user response JAX-RS object: " + response3);
+			System.out.println("     >> Create pending user HTTP headers: " + response3.getStringHeaders());
+
+			// test identity provider (IdP) validate new user
+			final PendingUser pendingUser = PendingUserDAO.INSTANCE.findByEmail(user.getEmail());			
+			response3 = target.path(path.value()).path("validate").path(user.getEmail()).request()
+					.put(Entity.entity(pendingUser.getConfirmationCode(), MediaType.APPLICATION_JSON_TYPE));
+			assertThat("Validate user response is not null", response3, notNullValue());
+			assertThat("Validate user response is OK", response3.getStatus() == Response.Status.NO_CONTENT.getStatusCode());
+			assertThat("Validate user response is not empty", response3.getEntity(), notNullValue());
+			payload = response3.readEntity(String.class);
+			assertThat("Validate user response entity is not null", payload, notNullValue());
+			assertThat("Validate user response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println("     >> Validate user response body (JSON), empty is OK: " + payload);
+			System.out.println("     >> Validate user response JAX-RS object: " + response3);
+			System.out.println("     >> Validate user HTTP headers: " + response3.getStringHeaders());
+
+			// test identity provider (IdP) get user by username after validation
+			user2 = target.path(path.value()).path(user.getUsername()).queryParam("plain", true)
+					.request(MediaType.APPLICATION_JSON)
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
+					.get(User.class);
+			assertThat("Get user by username after validation result is not null", user2, notNullValue());
+			assertThat("Get user by username after validation coincides with expected", user2.equalsIgnoreLink(user));
+			/* uncomment for additional output */
+			System.out.println("     >> Get user by username after validation result: " + user2.toString());
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("AuthTest.test() failed: " + e.getMessage());

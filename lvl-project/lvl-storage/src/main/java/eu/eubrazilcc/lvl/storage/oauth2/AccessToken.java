@@ -24,13 +24,12 @@ package eu.eubrazilcc.lvl.storage.oauth2;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Objects;
 
@@ -116,7 +115,7 @@ public class AccessToken implements Serializable {
 		}
 
 		public Builder token(final String token) {
-			checkArgument(StringUtils.isNotBlank(token), "Uninitialized or invalid token");
+			checkArgument(isNotBlank(token), "Uninitialized or invalid token");
 			accessToken.setToken(token);
 			return this;
 		}
@@ -133,7 +132,7 @@ public class AccessToken implements Serializable {
 		}
 		
 		public Builder scope(final String scope) {
-			checkArgument(StringUtils.isNotBlank(scope), "Uninitialized or invalid scope");
+			checkArgument(isNotBlank(scope), "Uninitialized or invalid scope");
 			accessToken.getScopes().add(scope);
 			return this;
 		}

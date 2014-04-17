@@ -176,6 +176,14 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<artifactId>javax.ws.rs-api</artifactId>
 				<version>2.0</version>
 			</dependency>
+			
+			<!-- JavaMail API: a framework to build mail and messaging applications -->
+			
+			<dependency>
+				<groupId>javax.mail</groupId>
+				<artifactId>mail</artifactId>
+				<version>1.4.7</version>
+			</dependency>
 
 			<!-- Joda Time: Date and time library to replace JDK date handling -->
 

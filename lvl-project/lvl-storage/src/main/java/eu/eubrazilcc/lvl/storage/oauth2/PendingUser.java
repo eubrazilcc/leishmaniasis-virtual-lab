@@ -30,24 +30,26 @@ import java.io.Serializable;
 import com.google.common.base.Objects;
 
 /**
- * OAuth2 access code.
+ * Pending users are supposed to send a confirmation code.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class AuthCode implements Serializable {
-	
-	private static final long serialVersionUID = -5271391065299414494L;
-	
-	private String code;
+public class PendingUser implements Serializable {
+
+	private static final long serialVersionUID = 4734782376847178866L;
+
+	private String pendingUserId;
 	private long expiresIn;
 	private long issuedAt;
+	private String confirmationCode;
+	private User user;	
 
-	public AuthCode() { }
+	public PendingUser() { }
 
-	public String getCode() {
-		return code;
+	public String getPendingUserId() {
+		return pendingUserId;
 	}
-	public void setCode(final String code) {
-		this.code = code;
+	public void setPendingUserId(final String pendingUserId) {
+		this.pendingUserId = pendingUserId;
 	}
 	public long getExpiresIn() {
 		return expiresIn;
@@ -61,29 +63,45 @@ public class AuthCode implements Serializable {
 	public void setIssuedAt(final long issuedAt) {
 		this.issuedAt = issuedAt;
 	}
-	
+	public String getConfirmationCode() {
+		return confirmationCode;
+	}
+	public void setConfirmationCode(final String confirmationCode) {
+		this.confirmationCode = confirmationCode;
+	}
+	public User getUser() {
+		return user;
+	}
+	public void setUser(final User user) {
+		this.user = user;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof AuthCode)) {
+		if (obj == null || !(obj instanceof PendingUser)) {
 			return false;
 		}
-		final AuthCode other = AuthCode.class.cast(obj);
-		return Objects.equal(code, other.code)				
+		final PendingUser other = PendingUser.class.cast(obj);
+		return Objects.equal(pendingUserId, other.pendingUserId)
 				&& Objects.equal(expiresIn, other.expiresIn)
-				&& Objects.equal(issuedAt, other.issuedAt);
+				&& Objects.equal(issuedAt, other.issuedAt)
+				&& Objects.equal(confirmationCode, other.confirmationCode)
+				&& Objects.equal(user, other.user);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(code, expiresIn, issuedAt);
+		return Objects.hashCode(pendingUserId, expiresIn, issuedAt, confirmationCode, user);
 	}
 
 	@Override
 	public String toString() {
 		return Objects.toStringHelper(this)
-				.add("code", code)				
+				.add("pendingUserId", pendingUserId)
 				.add("expiresIn", expiresIn)
 				.add("issuedAt", issuedAt)
+				.add("confirmationCode", confirmationCode)
+				.add("user", user)
 				.toString();
 	}
 
@@ -95,29 +113,41 @@ public class AuthCode implements Serializable {
 
 	public static class Builder {
 
-		private final AuthCode accessCode = new AuthCode();
+		private final PendingUser pendingUser = new PendingUser();
 
-		public Builder code(final String code) {
-			checkArgument(isNotBlank(code), "Uninitialized or invalid code");
-			accessCode.setCode(code);
+		public Builder id(final String pendingUserId) {
+			checkArgument(isNotBlank(pendingUserId), "Uninitialized or invalid pending user Id");
+			pendingUser.setPendingUserId(pendingUserId);
 			return this;
 		}
 
 		public Builder expiresIn(final long expiresIn) {
-			accessCode.setExpiresIn(expiresIn);
+			pendingUser.setExpiresIn(expiresIn);
 			return this;
 		}
 
 		public Builder issuedAt(final long issuedAt) {
 			checkArgument(issuedAt >= 0l, "Invalid issued at");
-			accessCode.setIssuedAt(issuedAt);
+			pendingUser.setIssuedAt(issuedAt);
 			return this;
 		}
 
-		public AuthCode build() {
-			return accessCode;
+		public Builder confirmationCode(final String confirmationCode) {
+			checkArgument(isNotBlank(confirmationCode), "Uninitialized or invalid confirmation code");
+			pendingUser.setConfirmationCode(confirmationCode);
+			return this;
+		}
+
+		public Builder user(final User user) {
+			checkArgument(user != null, "Uninitialized user");
+			pendingUser.setUser(user);
+			return this;
+		}
+
+		public PendingUser build() {
+			return pendingUser;
 		}
 
 	}
-	
+
 }

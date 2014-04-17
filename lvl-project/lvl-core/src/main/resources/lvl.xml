@@ -75,5 +75,18 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		</hosts> -->
 	
 	</database>
+	
+	<smtp>
+	
+		<!-- Optional SMTP host and port. If undefined, 'localhost:25' is used -->
+		<!-- <host>localhost</host>
+		<port>25</port> -->
+		
+		<!-- Optional e-mails for support and notification (no-reply). If undefined,
+			example.com domain is used -->		
+		<!-- <support-email>support@example.com</support-email>
+		<noreply-email>noreply@example.com</noreply-email> -->
+	
+	</smtp>
 
 </config>

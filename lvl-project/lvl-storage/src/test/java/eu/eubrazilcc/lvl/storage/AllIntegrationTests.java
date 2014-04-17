@@ -38,7 +38,7 @@ import eu.eubrazilcc.lvl.storage.mock.CloserServiceMock;
 
 @RunWith(Suite.class)
 @SuiteClasses({ SequenceCollectionTest.class, TokenCollectionTest.class, AuthCodeCollectionTest.class, 
-	ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class })
+	ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class })
 public class AllIntegrationTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

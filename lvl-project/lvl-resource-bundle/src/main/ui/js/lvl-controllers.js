@@ -76,6 +76,9 @@ angular.module('lvl.controllers', [])
 		);
 	};
 }])
+.controller('UserValidationCtrl', ['$scope', function($scope) {
+	// nothing yet
+}])
 .controller('FileStoreCtrl', ['$scope', function($scope) {
 	$scope.toggleTopEntries = function() {
 		$scope.isTopEntriesVisible = ! $scope.isTopEntriesVisible;

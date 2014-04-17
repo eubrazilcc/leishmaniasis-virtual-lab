@@ -23,12 +23,11 @@
 package eu.eubrazilcc.lvl.storage.oauth2;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Objects;
 
@@ -156,13 +155,13 @@ public class ClientApp implements Serializable {
 		private final ClientApp clientApp = new ClientApp();
 
 		public Builder name(final String name) {
-			checkArgument(StringUtils.isNotBlank(name), "Uninitialized or invalid name");
+			checkArgument(isNotBlank(name), "Uninitialized or invalid name");
 			clientApp.setName(name);
 			return this;
 		}
 
 		public Builder url(final String url) {
-			checkArgument(StringUtils.isNotBlank(url), "Uninitialized or invalid URL");
+			checkArgument(isNotBlank(url), "Uninitialized or invalid URL");
 			try {				
 				clientApp.setUrl(new URI(url));
 			} catch (URISyntaxException e) {
@@ -172,13 +171,13 @@ public class ClientApp implements Serializable {
 		}
 
 		public Builder description(final String description) {
-			checkArgument(StringUtils.isNotBlank(description), "Uninitialized or invalid description");
+			checkArgument(isNotBlank(description), "Uninitialized or invalid description");
 			clientApp.setDescription(description);
 			return this;
 		}
 
 		public Builder icon(final String icon) {
-			checkArgument(StringUtils.isNotBlank(icon), "Uninitialized or invalid icon");
+			checkArgument(isNotBlank(icon), "Uninitialized or invalid icon");
 			try {
 				clientApp.setIcon(new URI(icon));
 			} catch (URISyntaxException e) {
@@ -188,7 +187,7 @@ public class ClientApp implements Serializable {
 		}
 
 		public Builder redirectURL(final String redirectURL) {
-			checkArgument(StringUtils.isNotBlank(redirectURL), "Uninitialized or invalid redirect URL");
+			checkArgument(isNotBlank(redirectURL), "Uninitialized or invalid redirect URL");
 			try {
 				clientApp.setRedirectURL(new URI(redirectURL));
 			} catch (URISyntaxException e) {
@@ -198,13 +197,13 @@ public class ClientApp implements Serializable {
 		}
 
 		public Builder clientId(final String clientId) {
-			checkArgument(StringUtils.isNotBlank(clientId), "Uninitialized or invalid client Id");
+			checkArgument(isNotBlank(clientId), "Uninitialized or invalid client Id");
 			clientApp.setClientId(clientId);
 			return this;
 		}
 
 		public Builder clientSecret(final String clientSecret) {
-			checkArgument(StringUtils.isNotBlank(clientSecret), "Uninitialized or invalid client secret");
+			checkArgument(isNotBlank(clientSecret), "Uninitialized or invalid client secret");
 			clientApp.setClientSecret(clientSecret);
 			return this;
 		}

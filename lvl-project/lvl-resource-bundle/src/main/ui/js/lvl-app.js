@@ -20,7 +20,8 @@ angular.module('lvl.config', [])
 angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers', 'lvl.fastclick', 'ui.bootstrap' ])
 .config(['$routeProvider', function($routeProvider) {
 	$routeProvider.when('/', {templateUrl: 'partials/home.html', controller: 'HomeCtrl'});
-	$routeProvider.when('/login/:ref?/:fail?', {templateUrl: 'partials/login.html', controller: 'LoginCtrl'});
+	$routeProvider.when('/login/:ref?/:fail?', {templateUrl: 'partials/login.html', controller: 'LoginCtrl'});	
+	$routeProvider.when('/user/validate/:email?/:code?', {templateUrl: 'partials/user_validation.html', controller: 'UserValidationCtrl'});	
 	$routeProvider.when('/files', {templateUrl: 'partials/filestore.html', controller: 'FileStoreCtrl', reqAuth: true});
 	$routeProvider.when('/map', {templateUrl: 'partials/mapviewer.html', controller: 'MapViewerCtrl'});
 	$routeProvider.when('/404', {templateUrl: 'partials/404.html', controller: 'PageNotFoundCtrl'});

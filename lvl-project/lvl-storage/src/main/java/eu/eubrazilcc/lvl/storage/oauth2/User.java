@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.oauth2;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -32,8 +33,6 @@ import java.util.Set;
 
 import javax.ws.rs.core.Link;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Objects;
 
@@ -161,31 +160,31 @@ public class User implements Serializable {
 		}
 		
 		public Builder username(final String username) {
-			checkArgument(StringUtils.isNotBlank(username), "Uninitialized or invalid username");
+			checkArgument(isNotBlank(username), "Uninitialized or invalid username");
 			user.setUsername(username);
 			return this;
 		}
 
 		public Builder password(final String password) {
-			checkArgument(StringUtils.isNotBlank(password), "Uninitialized or invalid password");
+			checkArgument(isNotBlank(password), "Uninitialized or invalid password");
 			user.setPassword(password);
 			return this;
 		}
 
 		public Builder email(final String email) {
-			checkArgument(StringUtils.isNotBlank(email), "Uninitialized or invalid email");
+			checkArgument(isNotBlank(email), "Uninitialized or invalid email");
 			user.setEmail(email);
 			return this;
 		}
 
 		public Builder fullname(final String fullname) {
-			checkArgument(StringUtils.isNotBlank(fullname), "Uninitialized or invalid fullname");
+			checkArgument(isNotBlank(fullname), "Uninitialized or invalid fullname");
 			user.setFullname(fullname);
 			return this;
 		}
 
 		public Builder scope(final String scope) {
-			checkArgument(StringUtils.isNotBlank(scope), "Uninitialized or invalid scope");
+			checkArgument(isNotBlank(scope), "Uninitialized or invalid scope");
 			user.getScopes().add(scope);
 			return this;
 		}

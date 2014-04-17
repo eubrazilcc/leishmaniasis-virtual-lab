@@ -154,6 +154,14 @@ $ sudo apt-get install openjdk-7-jre tomcat7 nginx-naxsi mongodb
 <p>However, for a better performance, it is recommended to follow the instructions bellow to install and 
    <a href="#database_configuration">configure the database</a> with the latest MongoDB production version.</p>
 
+<h4>Testing email</h4>
+
+<p>A mailing system is required to send notifications. The following example sends an email from the command line:</p>
+
+<code>
+$ echo "This is the message body" | mail -s "This is the subject" user@example.com -aFrom:Name\&lt;from_user@example.com\&gt;
+</code>
+
 <h3><a id="installation_quick_guide">Quick install guide</a></h3>
 
 <p>This is a simple guide to get LVL setup and running quickly. For additional details on installation and configuration you can read the rest of this guide.</p>
