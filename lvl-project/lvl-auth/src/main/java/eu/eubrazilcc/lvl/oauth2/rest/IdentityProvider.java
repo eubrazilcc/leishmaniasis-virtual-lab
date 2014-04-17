@@ -205,6 +205,10 @@ public class IdentityProvider {
 		if (user == null || isBlank(user.getUsername()) || isBlank(user.getEmail()) || isBlank(user.getPassword())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
+		// verify that no other user exists in the database with the same username or email address
+		if (ResourceOwnerDAO.INSTANCE.find(user.getUsername()) != null || ResourceOwnerDAO.INSTANCE.findByEmail(user.getEmail()) != null) {
+			throw new WebApplicationException(Response.Status.FOUND);
+		}
 		// create pending user in the database
 		final PendingUser pendingUser = PendingUser.builder()
 				.confirmationCode(RandomStringUtils.random(8, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray()))
@@ -217,12 +221,7 @@ public class IdentityProvider {
 		// send confirmation code by email
 		if (!skipValidation) {
 			final URI baseUri = uriInfo.getBaseUriBuilder().clone().build();
-			URI portalUri = null;
-			try {
-				portalUri = new URI(baseUri.getScheme(), baseUri.getAuthority(), null, null, null);				
-			} catch (URISyntaxException e) { }
-			EmailSender.INSTANCE.sendTextEmail(pendingUser.getUser().getEmail(), emailValidationSubject(), 
-					emailValidationMessage(pendingUser.getUser().getUsername(), pendingUser.getUser().getEmail(), pendingUser.getConfirmationCode(), portalUri));
+			sendConfirmation(baseUri, pendingUser);
 		}
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(pendingUser.getUser().getUsername());		
 		return Response.created(uriBuilder.build()).build();
@@ -249,6 +248,32 @@ public class IdentityProvider {
 				.user(pendingUser.getUser())
 				.build());
 		PendingUserDAO.INSTANCE.delete(pendingUser.getPendingUserId());		
+	}
+
+	@PUT
+	@Path("resend_confirmation")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void resendConfirmationCode(final String email, final @Context UriInfo uriInfo) {
+		if (isBlank(email)) {
+			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+		}
+		// get from database
+		final PendingUser pendingUser = PendingUserDAO.INSTANCE.findByEmail(email);		
+		if (pendingUser == null) {
+			throw new WebApplicationException(Response.Status.NOT_FOUND);
+		}
+		// re-send confirmation code by email
+		final URI baseUri = uriInfo.getBaseUriBuilder().clone().build();
+		sendConfirmation(baseUri, pendingUser);
+	}
+	
+	private static final void sendConfirmation(final URI baseUri, final PendingUser pendingUser) {		
+		URI portalUri = null;
+		try {
+			portalUri = new URI(baseUri.getScheme(), baseUri.getAuthority(), null, null, null);				
+		} catch (URISyntaxException e) { }
+		EmailSender.INSTANCE.sendTextEmail(pendingUser.getUser().getEmail(), emailValidationSubject(), 
+				emailValidationMessage(pendingUser.getUser().getUsername(), pendingUser.getUser().getEmail(), pendingUser.getConfirmationCode(), portalUri));
 	}
 
 	private static final String emailValidationSubject() {

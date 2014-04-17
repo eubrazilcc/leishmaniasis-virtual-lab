@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.service;
 
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.findConfigurationFiles;
+
 import java.io.Closeable;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -48,7 +50,8 @@ public enum CloserService implements CloserServiceIf {
 
 	@Override
 	public void preload() {		
-		// load default configuration
+		// load configuration
+		ConfigurationManager.INSTANCE.setup(findConfigurationFiles());
 		ConfigurationManager.INSTANCE.preload();
 		// load MongoDB connector and register it for closing
 		MongoDBConnector.INSTANCE.preload();
