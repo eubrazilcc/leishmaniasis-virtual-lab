@@ -91,13 +91,29 @@ angular.module('lvl.controllers', [])
 		);
 	};
 }])
-.controller('UserValidationCtrl', ['$scope', '$routeParams', function($scope, $routeParams) {
+.controller('UserValidationCtrl', ['$scope', '$routeParams', 'ResendActivationCodeFactory', function($scope, $routeParams, ResendActivationCodeFactory) {
+	$scope.showAlert = false;
 	$scope.user = {
 			email: ($routeParams.email !== undefined ? $routeParams.email : ''),
 			code: ($routeParams.code !== undefined ? $routeParams.code : '')
 	};
+	$scope.activate = function() {
 
-	// TODO
+		// TODO
+		console.log("HERE IS OK!");		
+		// TODO			
+	};
+	$scope.resend = function() {
+		ResendActivationCodeFactory($scope.user).then(
+				function (data) {					
+					// TODO
+				},
+				function (reason) {
+					// TODO
+				},
+				null
+		);
+	};
 }])
 .controller('FileStoreCtrl', ['$scope', function($scope) {
 	$scope.toggleTopEntries = function() {

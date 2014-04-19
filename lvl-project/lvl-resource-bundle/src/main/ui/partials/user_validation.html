@@ -1,14 +1,28 @@
   <!-- Content -->  
   <div class="container">
     <div class="lvl-container">
+      <div class="row" ng-show="showAlert">
+        <div class="col-xs-12">
+          <div class="alert alert-danger fade in">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <h4>Account validation failed</h4>
+            <p>Check that the email you entered coincides with the email address that you provided during 
+               registration, check your activation code and try again.</p>
+            <p>
+              <button ng-click="resend()" type="button" class="btn btn-danger">Send code again</button>
+              <button ng-click="showAlert=false" type="button" class="btn btn-default">Close</button>
+            </p>
+          </div>
+        </div>
+      </div>
       <div class="row">
         <div class="col-xs-12">
-          <h3>Registration successful.</h3>
+          <h3>Registration successful</h3>
           <p>Thank you for registering at Leishmaniasis Virtual Laboratory. An email has been sent to you 
              with a code which you may use to activate your account. Please, check your mailbox and enter
              the code below. Sometimes this can be marked as Spam so check your filtered folder too. If 
-             nothing has arrived within 5 minutes click <a ng-href="/#/resend/validation/{{user.email}}">here</a>
-             and we will send you the code again.</p>
+             nothing has arrived within 5 minutes click <a href ng-click="resend()">here</a> and we will 
+             send you the code again.</p>
         </div>
       </div>
       <div class="row">
@@ -27,7 +41,7 @@
                   <input ng-model="user.code" type="text" class="form-control" id="code" placeholder="Enter activation code" required autofocus>
                   <span class="help-block">The 6-12 characters code that has been sent to you by email.</span>
                 </div>
-                <button type="submit" class="btn btn-default">Activate</button>
+                <button ng-click="activate()" type="submit" class="btn btn-default">Activate</button>
               </form>
             </div>
           </div>

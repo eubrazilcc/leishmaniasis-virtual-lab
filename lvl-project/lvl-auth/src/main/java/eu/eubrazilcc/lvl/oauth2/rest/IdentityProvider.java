@@ -207,7 +207,7 @@ public class IdentityProvider {
 		}
 		// verify that no other user exists in the database with the same username or email address
 		if (ResourceOwnerDAO.INSTANCE.find(user.getUsername()) != null || ResourceOwnerDAO.INSTANCE.findByEmail(user.getEmail()) != null) {
-			throw new WebApplicationException(Response.Status.FOUND);
+			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// create pending user in the database
 		final PendingUser pendingUser = PendingUser.builder()

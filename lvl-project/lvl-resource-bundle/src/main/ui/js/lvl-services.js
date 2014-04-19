@@ -71,18 +71,24 @@ angular.module('lvl.services', [])
 				url: ENV.oauth2Endpoint + '/users/signup',
 				method: 'POST',
 				data: user,
-				headers: {'Content-Type': 'application/json'}			
+				headers: {'Content-Type': 'application/json'}
 			});
 		},
 		validate: function() {
 			// TODO
+			return null;
 		},
-		resend_notification: function() {
-			// TODO
+		resendCode: function(user) {
+			return $http({
+				url: ENV.oauth2Endpoint + '/users/resend_confirmation',
+				method: 'PUT',
+				data: user.email,
+				headers: {'Content-Type': 'application/json'}
+			});
 		}
 	};
 }])
-.factory('AccessTokenFactory', [ '$q', '$timeout', '$http', '$window', '$location', 'Oauth2Factory', function ($q, $timeout, $http, $window, $location, Oauth2Factory) {
+.factory('AccessTokenFactory', [ '$q', '$http', '$window', 'Oauth2Factory', function ($q, $http, $window, Oauth2Factory) {
 	return function (user) {
 		var defer = $q.defer();
 		if ($window.sessionStorage.token) {
@@ -107,32 +113,7 @@ angular.module('lvl.services', [])
 		return defer.promise;
 	};
 }])
-.factory('UserAuthFactory', [ '$q', '$timeout', '$http', '$window', '$location', 'Oauth2Factory', function ($q, $timeout, $http, $window, $location, Oauth2Factory) {
-	return function () {
-		var defer = $q.defer();
-		if ($window.sessionStorage.userInfo) {
-			// console.log("User info exists: " + $window.sessionStorage.userInfo);
-			defer.resolve($window.sessionStorage.userInfo);
-		} else {
-			// console.log("Requesting user info...");
-			Oauth2Factory.user().success(function (data, status) {
-				if (data.username != null) {
-					$window.sessionStorage.userInfo = data;
-					// console.log("User info obtained: " + $window.sessionStorage.userInfo);
-					defer.resolve($window.sessionStorage.userInfo);
-				} else {
-					// console.log("Failed to get user info");
-					defer.reject(data);
-				}
-			}).error(function (data, status) {
-				// console.log("401 Response. Rejecting defer");
-				defer.reject(data);
-			});
-		}
-		return defer.promise;
-	};
-}])
-.factory('UserRegistrationFactory', [ '$q', '$timeout', '$http', '$window', '$location', 'IdPFactory', function ($q, $timeout, $http, $window, $location, IdPFactory) {
+.factory('UserRegistrationFactory', [ '$q', '$http', '$window', 'IdPFactory', function ($q, $http, $window, IdPFactory) {
 	return function (user) {
 		var defer = $q.defer();
 		IdPFactory.register(user).success(function (data, status) {
@@ -145,6 +126,37 @@ angular.module('lvl.services', [])
 				defer.reject(data);
 			}
 		}).error(function (data, status) {
+			// console.log("400 Response. Rejecting defer");
+			defer.reject(data);
+		});
+		return defer.promise;
+	};
+}])
+.factory('ResendActivationCodeFactory', [ '$q', '$http', 'IdPFactory', function ($q, $http, IdPFactory) {
+	return function (user) {
+		var defer = $q.defer();
+		IdPFactory.resendCode(user).success(function (data, status) {
+			// console.log("Sending activation code...");
+			if (data !== undefined) {
+				// console.log("Activation code send to: " + user.email);
+				defer.resolve();
+			} else {
+				// console.log("Failed to send activation code");
+				defer.reject(data);
+			}
+		}).error(function (data, status, headers) {
+
+			// TODO
+			console.log("DATA: " + data);
+			console.log("STATUS: " + status);
+			var headersObj = headers();
+			var headersStr = "";
+			for (var prop in headersObj) {
+				headersStr += prop + " => " + headersObj[prop] + "\n";
+			}			
+			console.log("HEADERS: " + headersStr);			
+			// TODO
+
 			// console.log("400 Response. Rejecting defer");
 			defer.reject(data);
 		});

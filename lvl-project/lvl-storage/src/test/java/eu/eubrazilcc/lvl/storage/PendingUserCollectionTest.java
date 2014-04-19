@@ -63,19 +63,23 @@ public class PendingUserCollectionTest {
 							.scope(scopes)
 							.build()).build();
 			PendingUserDAO.INSTANCE.insert(pendingUser);
+			
 			// find
 			PendingUser pendingUser2 = PendingUserDAO.INSTANCE.find(pendingUser.getPendingUserId());
 			assertThat("pending user is not null", pendingUser2, notNullValue());
 			assertThat("pending user coincides with original", pendingUser2, equalTo(pendingUser));
 			System.out.println(pendingUser2.toString());
+			
 			// update
 			pendingUser.getUser().setPassword("new_password");
 			PendingUserDAO.INSTANCE.update(pendingUser);
+			
 			// find after update
 			pendingUser2 = PendingUserDAO.INSTANCE.find(pendingUser.getPendingUserId());
 			assertThat("pending user is not null", pendingUser2, notNullValue());
 			assertThat("pending user coincides with original", pendingUser2, equalTo(pendingUser));
 			System.out.println(pendingUser2.toString());
+			
 			// check validity using pending user Id and username
 			boolean validity = PendingUserDAO.INSTANCE.isValid(pendingUser.getPendingUserId(), 
 					pendingUser.getUser().getUsername(), 
