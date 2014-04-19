@@ -74,9 +74,15 @@ angular.module('lvl.services', [])
 				headers: {'Content-Type': 'application/json'}
 			});
 		},
-		validate: function() {
+		validate: function(user) {
+			return $http({
+				url: ENV.oauth2Endpoint + '/pending_users/' + user.email,
+				method: 'PUT',
+				data: { 'activationCode' : user.code, 'user' : { 'email' : user.email } },
+				headers: {'Content-Type': 'application/json'}
+			});
+
 			// TODO
-			return null;
 		},
 		resendActivationCode: function(user) {
 			return $http({
@@ -113,40 +119,55 @@ angular.module('lvl.services', [])
 	};
 }])
 .factory('UserRegistrationFactory', [ '$q', '$http', '$window', 'PendingUsersFactory', function ($q, $http, $window, PendingUsersFactory) {
-	return function (user) {
-		var defer = $q.defer();
-		PendingUsersFactory.register(user).success(function (data, status) {
-			// console.log("Registering new user...");
-			if (data !== undefined) {
-				// console.log("New user registered");
-				defer.resolve();
-			} else {
-				// console.log("Failed to register new user");
+	var defer = $q.defer();
+	return {
+		register : function(user) {
+			PendingUsersFactory.register(user).success(function (data, status) {
+				// console.log("Registering new user...");
+				if (data !== undefined) {
+					// console.log("New user registered");
+					defer.resolve();
+				} else {
+					// console.log("Failed to register new user");
+					defer.reject(data);
+				}
+			}).error(function (data, status) {
+				// console.log("400 Response. Rejecting defer");
 				defer.reject(data);
-			}
-		}).error(function (data, status) {
-			// console.log("400 Response. Rejecting defer");
-			defer.reject(data);
-		});
-		return defer.promise;
-	};
-}])
-.factory('ResendActivationCodeFactory', [ '$q', '$http', 'PendingUsersFactory', function ($q, $http, PendingUsersFactory) {
-	return function (user) {
-		var defer = $q.defer();
-		PendingUsersFactory.resendActivationCode(user).success(function (data, status) {
-			// console.log("Sending activation code...");
-			if (data !== undefined) {
-				// console.log("Activation code send to: " + user.email);
-				defer.resolve();
-			} else {
-				// console.log("Failed to send activation code");
+			});
+			return defer.promise;
+		},
+		activate : function(user) {
+			PendingUsersFactory.activate(user).success(function (data, status) {
+				// console.log("Registering new user...");
+				if (data !== undefined) {
+					// console.log("New user registered");
+					defer.resolve();
+				} else {
+					// console.log("Failed to register new user");
+					defer.reject(data);
+				}
+			}).error(function (data, status) {
+				// console.log("400 Response. Rejecting defer");
 				defer.reject(data);
-			}
-		}).error(function (data, status) {
-			// console.log("400 Response. Rejecting defer");
-			defer.reject(data);
-		});
-		return defer.promise;
+			});
+			return defer.promise;
+		},
+		resendActivationCode: function(user) {
+			PendingUsersFactory.resendActivationCode(user).success(function (data, status) {
+				// console.log("Sending activation code...");
+				if (data !== undefined) {
+					// console.log("Activation code send to: " + user.email);
+					defer.resolve();
+				} else {
+					// console.log("Failed to send activation code");
+					defer.reject(data);
+				}
+			}).error(function (data, status) {
+				// console.log("400 Response. Rejecting defer");
+				defer.reject(data);
+			});
+			return defer.promise;
+		}
 	};
 }]);

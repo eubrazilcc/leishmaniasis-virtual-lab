@@ -3,13 +3,12 @@
     <div class="lvl-container">
       <div class="row" ng-show="showAlert">
         <div class="col-xs-12">
-          <div class="alert alert-danger fade in">
+          <div ng-class="style1">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <h4>Account validation failed</h4>
-            <p>Check that the email you entered coincides with the email address that you provided during 
-               registration, check your activation code and try again.</p>
-            <p>
-              <button ng-click="resend()" type="button" class="btn btn-danger">Send code again</button>
+            <h4>{{msgHeader}}</h4>
+            <p>{{msgBody}}</p>
+            <p ng-show="showButtons">
+              <button ng-click="resend()" type="button" ng-class="style2">Send code again</button>
               <button ng-click="showAlert=false" type="button" class="btn btn-default">Close</button>
             </p>
           </div>

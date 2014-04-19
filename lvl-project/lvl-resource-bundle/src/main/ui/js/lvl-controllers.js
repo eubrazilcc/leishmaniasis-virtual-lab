@@ -14,7 +14,7 @@ angular.module('lvl.controllers', [])
 				$scope.style2 = 'col-md-4 col-xs-12';
 			});
 	$scope.signup = function() {
-		UserRegistrationFactory($scope.user).then(
+		UserRegistrationFactory.register($scope.user).then(
 				function (data) {
 					$location.path('/user/validate/' + $scope.user.email);
 				},
@@ -91,25 +91,54 @@ angular.module('lvl.controllers', [])
 		);
 	};
 }])
-.controller('UserValidationCtrl', ['$scope', '$routeParams', 'ResendActivationCodeFactory', function($scope, $routeParams, ResendActivationCodeFactory) {
+.controller('UserValidationCtrl', ['$scope', '$routeParams', 'UserRegistrationFactory', function($scope, $routeParams, UserRegistrationFactory) {
 	$scope.showAlert = false;
 	$scope.user = {
 			email: ($routeParams.email !== undefined ? $routeParams.email : ''),
 			code: ($routeParams.code !== undefined ? $routeParams.code : '')
 	};
 	$scope.activate = function() {
+		UserRegistrationFactory.activate($scope.user).then(
+				function (data) {
 
-		// TODO
-		console.log("HERE IS OK!");		
-		// TODO			
-	};
-	$scope.resend = function() {
-		ResendActivationCodeFactory($scope.user).then(
-				function (data) {					
 					// TODO
+					console.log("HERE IS OK!");		
+					// TODO
+
 				},
 				function (reason) {
+
 					// TODO
+					console.log("HERE IS BAD!");		
+					// TODO
+
+				},
+				null
+		);
+
+		/*		
+		$scope.msgHeader = 'Account validation failed';
+        $scope.msgBody = 'Check that the email you entered coincides with the email address that you provided during registration, check your activation code and try again.';		
+		 */
+
+	};
+	$scope.resend = function() {
+		UserRegistrationFactory.resendActivationCode($scope.user).then(
+				function (data) {
+					$scope.msgHeader = 'The activation code has been successfully sent to your email';
+					$scope.msgBody = 'Please check your inbox. Within the next 10 minutes you should find a message from Leish VirtLab containing your activation code.';
+					$scope.style1 = 'alert alert-success fade in';
+					$scope.style2 = 'btn btn-success';
+					$scope.showButtons = false;
+					$scope.showAlert = true;
+				},
+				function (reason) {
+					$scope.msgHeader = 'The activation code has not been sent';
+					$scope.msgBody = 'Please wait a few minutes before trying to re-send the activation code.';
+					$scope.style1 = 'alert alert-danger fade in';
+					$scope.style2 = 'btn btn-danger';
+					$scope.showButtons = true;
+					$scope.showAlert = true;
 				},
 				null
 		);
