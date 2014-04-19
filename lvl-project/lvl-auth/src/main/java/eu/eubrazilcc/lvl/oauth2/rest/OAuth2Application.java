@@ -67,6 +67,7 @@ public class OAuth2Application extends Application {
 		instances.add(new OAuth2Token());
 		instances.add(new OAuth2TokenRevocation());
 		instances.add(new IdentityProvider());
+		instances.add(new UserRegistration());
 		// add additional JAX-RS providers
 		classes.add(CrossDomainFilter.class);
 		classes.add(MoxyJsonFeature.class);		
@@ -77,12 +78,12 @@ public class OAuth2Application extends Application {
 	public Set<Class<?>> getClasses() {		
 		return classes;		
 	}
-	
+
 	@Override
 	public Set<Object> getSingletons() {
 		return instances;
 	}
-	
+
 	private static final String objectsClassNames(final Collection<Object> objects) {
 		return Arrays.toString(newArrayList(transform(objects, new Function<Object, String>() {
 			@Override

@@ -30,7 +30,6 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceSco
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,37 +52,28 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.mutable.MutableLong;
 
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
-import eu.eubrazilcc.lvl.oauth2.mail.EmailSender;
-import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.Users;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer;
 import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.AnonymizationLevel;
 
 /**
- * Implements an identity provider as an OAuth 2.0 Resource Server using Apache Oltu. It receives the validating token 
- * in the header of the request. In addition, provides new user sign-up logic to the LVL portal.
+ * Implements an identity provider as an OAuth 2.0 Resource Server using Apache Oltu. It receives the 
+ * validating token in the header of the request.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="https://cwiki.apache.org/confluence/display/OLTU/OAuth+2.0+Authorization+Server">OAuth 2.0 Authorization Server</a>
  * @see <a href="http://tools.ietf.org/html/rfc6749">RFC6749</a> - The OAuth 2.0 Authorization Framework
  */
 @Path("/users")
-public class IdentityProvider {
-
-	/**
-	 * The lifetime in seconds of the confirmation code.
-	 */
-	public static final long CONFIRMATION_CODE_EXPIRATION_SECONDS = 86400l; // 1 day	
+public class IdentityProvider {	
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " User Resource (IdP)";
 	public static final String RESOURCE_SCOPE = resourceScope(IdentityProvider.class);
@@ -165,7 +155,7 @@ public class IdentityProvider {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void updateUser(final @PathParam("id") String id, final User update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		if (isBlank(id) || !id.equals(update.getUsername())) {
+		if (isBlank(id) || update == null || !id.equals(update.getUsername())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, RESOURCE_NAME);
@@ -193,103 +183,6 @@ public class IdentityProvider {
 		}
 		// delete
 		ResourceOwnerDAO.INSTANCE.delete(id);
-	}
-
-	/* New user sign-up with LVL portal */
-
-	@POST
-	@Path("signup")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response signUp(final User user, final @Context UriInfo uriInfo,
-			final @QueryParam("skip-validation") @DefaultValue("false") boolean skipValidation) {
-		if (user == null || isBlank(user.getUsername()) || isBlank(user.getEmail()) || isBlank(user.getPassword())) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
-		}
-		// verify that no other user exists in the database with the same username or email address
-		if (ResourceOwnerDAO.INSTANCE.find(user.getUsername()) != null || ResourceOwnerDAO.INSTANCE.findByEmail(user.getEmail()) != null) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
-		}
-		// create pending user in the database
-		final PendingUser pendingUser = PendingUser.builder()
-				.confirmationCode(RandomStringUtils.random(8, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray()))
-				.issuedAt(System.currentTimeMillis() / 1000l)
-				.expiresIn(CONFIRMATION_CODE_EXPIRATION_SECONDS)
-				.id(user.getUsername())
-				.user(user)
-				.build();
-		PendingUserDAO.INSTANCE.insert(pendingUser);
-		// send confirmation code by email
-		if (!skipValidation) {
-			final URI baseUri = uriInfo.getBaseUriBuilder().clone().build();
-			sendConfirmation(baseUri, pendingUser);
-		}
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(pendingUser.getUser().getUsername());		
-		return Response.created(uriBuilder.build()).build();
-	}
-
-	@PUT
-	@Path("validate/{email}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public void validateUser(final @PathParam("email") String email, final String code) {
-		if (isBlank(email) || isBlank(code)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
-		}
-		// get from database
-		final PendingUser pendingUser = PendingUserDAO.INSTANCE.findByEmail(email);		
-		if (pendingUser == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
-		}
-		if (!PendingUserDAO.INSTANCE.isValid(pendingUser.getPendingUserId(), pendingUser.getUser().getUsername(), code, false)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
-		}
-		// update
-		ResourceOwnerDAO.INSTANCE.insert(ResourceOwner.builder()
-				.id(pendingUser.getUser().getUsername())
-				.user(pendingUser.getUser())
-				.build());
-		PendingUserDAO.INSTANCE.delete(pendingUser.getPendingUserId());		
-	}
-
-	@PUT
-	@Path("resend_confirmation")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public void resendConfirmationCode(final String email, final @Context UriInfo uriInfo) {
-		if (isBlank(email)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
-		}
-		// get from database
-		final PendingUser pendingUser = PendingUserDAO.INSTANCE.findByEmail(email);		
-		if (pendingUser == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
-		}
-		// re-send confirmation code by email
-		final URI baseUri = uriInfo.getBaseUriBuilder().clone().build();
-		sendConfirmation(baseUri, pendingUser);
-	}
-	
-	private static final void sendConfirmation(final URI baseUri, final PendingUser pendingUser) {		
-		URI portalUri = null;
-		try {
-			portalUri = new URI(baseUri.getScheme(), baseUri.getAuthority(), null, null, null);				
-		} catch (URISyntaxException e) { }
-		EmailSender.INSTANCE.sendTextEmail(pendingUser.getUser().getEmail(), emailValidationSubject(), 
-				emailValidationMessage(pendingUser.getUser().getUsername(), pendingUser.getUser().getEmail(), pendingUser.getConfirmationCode(), portalUri));
-	}
-
-	private static final String emailValidationSubject() {
-		return "Leish VirtLab";
-	}
-
-	private static final String emailValidationMessage(final String username, final String email, final String confirmationCode, final URI portalUri) {
-		return "Dear " + username + ",\n\n"
-				+ "Thank you for registering at Leishmaniasis Virtual Laboratory. Please, validate your email address in " 
-				+ portalUri.toString() + "/#/user/validate" + " "
-				+ "using the following code:\n\n" + confirmationCode + "\n\n"
-				+ "You may also validate your email address by clicking on this link or copying and pasting it in your browser:\n\n"
-				+ portalUri.toString() + "/#/user/validate/" + email + "/" + confirmationCode + "\n\n"
-				+ "After validating your email address, you can log in the portal directly using email and password used for account registration.\n\n"
-				+ "Leish VirtLab team";
-
 	}
 
 }

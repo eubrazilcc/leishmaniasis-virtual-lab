@@ -64,11 +64,11 @@ angular.module('lvl.services', [])
 		}
 	};
 }])
-.factory('IdPFactory', [ '$http', '$window', 'ENV', function($http, $window, ENV) {
+.factory('PendingUsersFactory', [ '$http', '$window', 'ENV', function($http, $window, ENV) {
 	return {
 		register: function(user) {		
 			return $http({
-				url: ENV.oauth2Endpoint + '/users/signup',
+				url: ENV.oauth2Endpoint + '/pending_users',
 				method: 'POST',
 				data: user,
 				headers: {'Content-Type': 'application/json'}
@@ -78,12 +78,11 @@ angular.module('lvl.services', [])
 			// TODO
 			return null;
 		},
-		resendCode: function(user) {
+		resendActivationCode: function(user) {
 			return $http({
-				url: ENV.oauth2Endpoint + '/users/resend_confirmation',
-				method: 'PUT',
-				data: user.email,
-				headers: {'Content-Type': 'application/json'}
+				url: ENV.oauth2Endpoint + '/pending_users/' + encodeURIComponent(user.email),
+				method: 'GET',
+				params: { 'send_activation': 'true' }
 			});
 		}
 	};
@@ -113,10 +112,10 @@ angular.module('lvl.services', [])
 		return defer.promise;
 	};
 }])
-.factory('UserRegistrationFactory', [ '$q', '$http', '$window', 'IdPFactory', function ($q, $http, $window, IdPFactory) {
+.factory('UserRegistrationFactory', [ '$q', '$http', '$window', 'PendingUsersFactory', function ($q, $http, $window, PendingUsersFactory) {
 	return function (user) {
 		var defer = $q.defer();
-		IdPFactory.register(user).success(function (data, status) {
+		PendingUsersFactory.register(user).success(function (data, status) {
 			// console.log("Registering new user...");
 			if (data !== undefined) {
 				// console.log("New user registered");
@@ -132,10 +131,10 @@ angular.module('lvl.services', [])
 		return defer.promise;
 	};
 }])
-.factory('ResendActivationCodeFactory', [ '$q', '$http', 'IdPFactory', function ($q, $http, IdPFactory) {
+.factory('ResendActivationCodeFactory', [ '$q', '$http', 'PendingUsersFactory', function ($q, $http, PendingUsersFactory) {
 	return function (user) {
 		var defer = $q.defer();
-		IdPFactory.resendCode(user).success(function (data, status) {
+		PendingUsersFactory.resendActivationCode(user).success(function (data, status) {
 			// console.log("Sending activation code...");
 			if (data !== undefined) {
 				// console.log("Activation code send to: " + user.email);
@@ -144,19 +143,7 @@ angular.module('lvl.services', [])
 				// console.log("Failed to send activation code");
 				defer.reject(data);
 			}
-		}).error(function (data, status, headers) {
-
-			// TODO
-			console.log("DATA: " + data);
-			console.log("STATUS: " + status);
-			var headersObj = headers();
-			var headersStr = "";
-			for (var prop in headersObj) {
-				headersStr += prop + " => " + headersObj[prop] + "\n";
-			}			
-			console.log("HEADERS: " + headersStr);			
-			// TODO
-
+		}).error(function (data, status) {
 			// console.log("400 Response. Rejecting defer");
 			defer.reject(data);
 		});
