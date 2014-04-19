@@ -40,7 +40,7 @@ public class PendingUser implements Serializable {
 	private String pendingUserId;
 	private long expiresIn;
 	private long issuedAt;
-	private String confirmationCode;
+	private String activationCode;
 	private User user;	
 
 	public PendingUser() { }
@@ -63,11 +63,11 @@ public class PendingUser implements Serializable {
 	public void setIssuedAt(final long issuedAt) {
 		this.issuedAt = issuedAt;
 	}
-	public String getConfirmationCode() {
-		return confirmationCode;
+	public String getActivationCode() {
+		return activationCode;
 	}
-	public void setConfirmationCode(final String confirmationCode) {
-		this.confirmationCode = confirmationCode;
+	public void setActivationCode(final String activationCode) {
+		this.activationCode = activationCode;
 	}
 	public User getUser() {
 		return user;
@@ -85,13 +85,13 @@ public class PendingUser implements Serializable {
 		return Objects.equal(pendingUserId, other.pendingUserId)
 				&& Objects.equal(expiresIn, other.expiresIn)
 				&& Objects.equal(issuedAt, other.issuedAt)
-				&& Objects.equal(confirmationCode, other.confirmationCode)
+				&& Objects.equal(activationCode, other.activationCode)
 				&& Objects.equal(user, other.user);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(pendingUserId, expiresIn, issuedAt, confirmationCode, user);
+		return Objects.hashCode(pendingUserId, expiresIn, issuedAt, activationCode, user);
 	}
 
 	@Override
@@ -100,7 +100,7 @@ public class PendingUser implements Serializable {
 				.add("pendingUserId", pendingUserId)
 				.add("expiresIn", expiresIn)
 				.add("issuedAt", issuedAt)
-				.add("confirmationCode", confirmationCode)
+				.add("confirmationCode", activationCode)
 				.add("user", user)
 				.toString();
 	}
@@ -132,9 +132,9 @@ public class PendingUser implements Serializable {
 			return this;
 		}
 
-		public Builder confirmationCode(final String confirmationCode) {
-			checkArgument(isNotBlank(confirmationCode), "Uninitialized or invalid confirmation code");
-			pendingUser.setConfirmationCode(confirmationCode);
+		public Builder activationCode(final String activationCode) {
+			checkArgument(isNotBlank(activationCode), "Uninitialized or invalid activation code");
+			pendingUser.setActivationCode(activationCode);
 			return this;
 		}
 

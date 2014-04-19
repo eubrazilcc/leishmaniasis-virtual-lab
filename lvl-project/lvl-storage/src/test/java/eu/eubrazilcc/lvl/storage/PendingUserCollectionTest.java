@@ -54,7 +54,7 @@ public class PendingUserCollectionTest {
 					.id("username")
 					.expiresIn(1000l)
 					.issuedAt(2000l)
-					.confirmationCode("1234567890abcDEF")
+					.activationCode("1234567890abcDEF")
 					.user(User.builder()
 							.username("username")
 							.password("password")
@@ -83,14 +83,14 @@ public class PendingUserCollectionTest {
 			// check validity using pending user Id and username
 			boolean validity = PendingUserDAO.INSTANCE.isValid(pendingUser.getPendingUserId(), 
 					pendingUser.getUser().getUsername(), 
-					pendingUser.getConfirmationCode(), 
+					pendingUser.getActivationCode(), 
 					false);
 			assertThat("pending user is valid (using owner Id & username)", validity);
 
 			// check validity using email address
 			validity = PendingUserDAO.INSTANCE.isValid(null, 
 					pendingUser.getUser().getEmail(), 
-					pendingUser.getConfirmationCode(), 
+					pendingUser.getActivationCode(), 
 					true);
 			assertThat("pending user is valid (using email)", validity);			
 
@@ -104,7 +104,7 @@ public class PendingUserCollectionTest {
 						.id(Integer.toString(i))
 						.expiresIn(1000l)
 						.issuedAt(2000l)
-						.confirmationCode("1234567890abcDEF")
+						.activationCode("1234567890abcDEF")
 						.user(User.builder()
 								.username(Integer.toString(i))
 								.password("password")

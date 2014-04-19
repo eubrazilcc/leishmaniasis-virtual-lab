@@ -224,24 +224,24 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	}	
 
 	private boolean isValidUsingPendingUserId(final String pendingUserId, final String username, 
-			final String confirmationCode) {
+			final String activationCode) {
 		checkArgument(isNotBlank(pendingUserId), "Uninitialized or invalid pending user id");
 		checkArgument(isNotBlank(username), "Uninitialized or invalid username");
-		checkArgument(isNotBlank(confirmationCode), "Uninitialized or invalid confirmation code");
+		checkArgument(isNotBlank(activationCode), "Uninitialized or invalid activation code");
 		final PendingUser pendingUser = find(pendingUserId);
 		final boolean isValid = (pendingUser != null && pendingUser.getUser() != null 
 				&& username.equals(pendingUser.getUser().getUsername())
-				&& confirmationCode.equals(pendingUser.getConfirmationCode()));
+				&& activationCode.equals(pendingUser.getActivationCode()));
 		return isValid;
 	}
 
-	private boolean isValidUsingEmail(final String email, final String confirmationCode) {
+	private boolean isValidUsingEmail(final String email, final String activationCode) {
 		checkArgument(isNotBlank(email), "Uninitialized or invalid email address");
-		checkArgument(isNotBlank(confirmationCode), "Uninitialized or invalid confirmation code");
+		checkArgument(isNotBlank(activationCode), "Uninitialized or invalid activation code");
 		final PendingUser pendingUser = findByEmail(email);
 		final boolean isValid = (pendingUser != null && pendingUser.getUser() != null 
 				&& email.equals(pendingUser.getUser().getEmail())
-				&& confirmationCode.equals(pendingUser.getConfirmationCode()));
+				&& activationCode.equals(pendingUser.getActivationCode()));
 		return isValid;
 	}
 
