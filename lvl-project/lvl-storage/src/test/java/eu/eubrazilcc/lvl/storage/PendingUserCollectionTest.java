@@ -60,7 +60,7 @@ public class PendingUserCollectionTest {
 							.password("password")
 							.email("username@example.com")
 							.fullname("Fullname")
-							.scope(scopes)
+							.scopes(scopes)
 							.build()).build();
 			PendingUserDAO.INSTANCE.insert(pendingUser);
 			
@@ -110,7 +110,7 @@ public class PendingUserCollectionTest {
 								.password("password")
 								.email("username" + i + "@example.com")
 								.fullname("Fullname")
-								.scope(scopes)
+								.scopes(scopes)
 								.build()).build();								
 				ids.add(pendingUser3.getPendingUserId());
 				PendingUserDAO.INSTANCE.insert(pendingUser3);

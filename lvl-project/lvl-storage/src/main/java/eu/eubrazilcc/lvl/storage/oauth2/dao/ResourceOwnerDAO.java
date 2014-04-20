@@ -97,7 +97,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 							.password(ADMIN_DEFAULT_PASSWD)
 							.email(ADMIN_DEFAULT_EMAIL)
 							.fullname("LVL root user")
-							.scope(asList(all()))
+							.scopes(asList(all()))
 							.build()).build());
 		}
 	}

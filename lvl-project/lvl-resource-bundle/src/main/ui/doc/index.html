@@ -49,12 +49,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
       <li><a href="#installation_requirements">Requirements</a></li>
       <li><a href="#installation_quick_guide">Quick install guide</a></li>
       <li><a href="#installation_from_source">Installing from source</a></li>
+      <li><a href="#installation_troubleshooting">Troubleshooting</a></li>
     </ul>
   </li>
-  <li><a href="#secutiry">Security</a>
+  <li><a href="#security">Security</a>
     <ul>
-      <li><a href="#secutiry_general">General considerations</a></li>
-      <li><a href="#secutiry_oauth2_authorization">OAuth 2.0 authorization</a></li>
+      <li><a href="#security_general">General considerations</a></li>
+      <li><a href="#security_oauth2_authorization">OAuth 2.0 authorization</a></li>
     </ul>
   </li>
   <li><a href="#database">Database</a>
@@ -240,24 +241,6 @@ $ sudo tail -f /opt/lvl/var/log/lvl/lvl-auth.log
 $ sudo tail -f /opt/lvl/var/log/lvl/lvl-service.log
 </code>
 
-<h4>Troubleshooting</h4>
-
-<p>Increase the size of your heap if you get the following error:</p>
-
-<code>
-SEVERE: Error waiting for multi-thread deployment of WAR files to complete<br />
-java.util.concurrent.ExecutionException: java.lang.OutOfMemoryError: Java heap space
-</code>
-
-<p>In Ubuntu, heap size can be increased by modifying the value assigned to the Java startup parameter <em>-Xmx1024m</em> in the <em>JAVA_OPTS</em>.
-   This variable is setup in <em>/etc/default/tomcat7</em>.</p>
-
-<p>Restart Tomcat to apply the change:</p>
-
-<code>
-$ sudo service tomcat7 restart
-</code>
-
 <h4>Install &amp; configure Web portal</h4>
 
 <em>TODO</em>
@@ -390,9 +373,97 @@ $ mvn clean verify -pl lvl-auth
 $ mvn clean install -pl lvl-service -am -Dmaven.test.skip=true
 </code>
 
-<h2><a id="secutiry">Security</a></h2>
+<h3><a id="installation_troubleshooting">Troubleshooting</a></h3>
 
-<h3><a id="secutiry_general">General considerations</a></h3>
+<h4>Out of memory error</h4>
+
+<p>Increase the size of your heap if you get the following error in Tomcat:</p>
+
+<code>
+SEVERE: Error waiting for multi-thread deployment of WAR files to complete<br />
+java.util.concurrent.ExecutionException: java.lang.OutOfMemoryError: Java heap space
+</code>
+
+<p>In Ubuntu, heap size can be increased by modifying the value assigned to the Java startup parameter <em>-Xmx1024m</em> in the <em>JAVA_OPTS</em>.
+   This variable is setup in <em>/etc/default/tomcat7</em>.</p>
+
+<p>Restart Tomcat to apply the change:</p>
+
+<code>
+$ sudo service tomcat7 restart
+</code>
+
+<h4>Access-Control-Allow-Origin header not found error</h4>
+
+<p>This error can be caused by client or server misconfiguration. Open a connection to your server and 
+   check that the following headers are exchanged between your client and server endpoints:</p>
+
+<ul>
+  <li>Your client request must include a valid accept header:
+    <ul>
+      <li>Accept: */*</li>
+    </ul>
+  </li>
+  <li>Your client request must include the origin and the server response header must allow the origin 
+    you sent in your request:
+    <ul>
+      <li>Origin: http://localhost</li>
+      <li>Access-Control-Allow-Origin: http://localhost</li>
+    </ul>
+  </li>
+  <li>Your client request must include the requested method and the server response header must allow 
+    the requested method:
+    <ul>
+      <li>Access-Control-Request-Method: POST</li>
+      <li>Access-Control-Allow-Methods: POST</li>
+    </ul>
+  </li>
+  <li>Your client must include the <em>requested with</em> header:
+    <ul>
+      <li>Access-Control-Request-Headers: X-Requested-With</li>
+    </ul>
+  </li>
+</ul>
+
+<p>The following example shows how an AJAX client connects to the server before requesting a resource:</p>
+
+<code>
+$ curl -H "Origin: http://localhost" -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: X-Requested-With" -X OPTIONS --verbose \
+  http://172.16.166.135:8080/lvl-auth/oauth2/v1/pending_users
+</code>
+
+<pre>
+* About to connect() to 172.16.166.135 port 8080 (#0)
+*   Trying 172.16.166.135... connected
+&gt; OPTIONS /lvl-auth/oauth2/v1/pending_users HTTP/1.1
+&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
+&gt; Host: 172.16.166.135:8080
+&gt; Accept: */*
+&gt; Origin: http://localhost
+&gt; Access-Control-Request-Method: POST
+&gt; Access-Control-Request-Headers: X-Requested-With
+&gt; 
+&lt; HTTP/1.1 200 OK
+&lt; Server: Apache-Coyote/1.1
+&lt; Access-Control-Allow-Origin: http://localhost
+&lt; Access-Control-Allow-Credentials: true
+&lt; Access-Control-Max-Age: 86400
+&lt; Access-Control-Allow-Methods: POST
+&lt; Access-Control-Allow-Headers: content-type,access-control-request-headers,accept,access-control-request-method,origin,authorization,x-requested-with
+&lt; Content-Length: 0
+&lt; Date: Sun, 20 Apr 2014 14:21:10 GMT
+&lt; 
+* Connection #0 to host 172.16.166.135 left intact
+* Closing connection #0
+</pre>
+
+<p>A 200 response means that the client can continue with the operation. If request is invalid, or is not 
+   permitted, then request is rejected with HTTP status code 403 (Forbidden).</p>
+
+<h2><a id="security">Security</a></h2>
+
+<h3><a id="security_general">General considerations</a></h3>
 
 <p>At least, the identification provider and authorization server should run on HTTPS, although it's also recommended to use HTTPS with the RESTful API. 
 The following is a general description of how to create server keys &amp; certificates in Java to test your deployment with HTTPS.</p>
@@ -415,7 +486,7 @@ $ keytool -export -alias serverKey -rfc -keystore ./server-keystore &gt; ./serve
 $ keytool -import -alias serverCert -file ./server.cert -keystore ./client-truststore
 </code>
 
-<h3><a id="secutiry_oauth2_authorization">OAuth 2.0 authorization</a></h3>
+<h3><a id="security_oauth2_authorization">OAuth 2.0 authorization</a></h3>
 
 <p><em>TODO:</em> improve this section with a better description.</p>
 

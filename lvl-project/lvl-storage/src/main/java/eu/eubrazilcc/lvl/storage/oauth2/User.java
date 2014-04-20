@@ -113,7 +113,7 @@ public class User implements Serializable {
 				&& Objects.equal(fullname, other.fullname)
 				&& Objects.equal(scopes, other.scopes);
 	}
-	
+
 	public boolean equalsToAnonymous(final User other) {
 		if (other == null) {
 			return false;
@@ -158,7 +158,7 @@ public class User implements Serializable {
 			user.setLink(link);
 			return this;
 		}
-		
+
 		public Builder username(final String username) {
 			checkArgument(isNotBlank(username), "Uninitialized or invalid username");
 			user.setUsername(username);
@@ -189,7 +189,7 @@ public class User implements Serializable {
 			return this;
 		}
 
-		public Builder scope(final Collection<String> scopes) {
+		public Builder scopes(final Collection<String> scopes) {
 			checkArgument(scopes != null && !isEmpty(scopes), "Uninitialized scopes");
 			user.getScopes().addAll(scopes);
 			return this;

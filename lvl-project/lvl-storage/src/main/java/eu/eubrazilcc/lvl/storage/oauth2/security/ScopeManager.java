@@ -30,6 +30,7 @@ import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterators.any;
 import static com.google.common.collect.Ordering.natural;
+import static com.google.common.collect.Sets.newHashSet;
 import static java.util.regex.Pattern.matches;
 import static org.apache.commons.lang.StringUtils.chop;
 import static org.apache.commons.lang.StringUtils.endsWith;
@@ -43,6 +44,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Path;
 
@@ -159,6 +161,14 @@ public final class ScopeManager {
 				.omitEmptyStrings()
 				.trimResults()
 				.splitToList(scope);
+	}
+
+	public static final Set<String> asSet(final String scope) {
+		final List<String> list = asList(scope);
+		if (list != null) {
+			return newHashSet(list);
+		}
+		return newHashSet();
 	}
 
 	public static final String resourceScope(final Class<?> resourceType) {

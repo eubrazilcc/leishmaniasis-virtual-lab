@@ -147,7 +147,7 @@ public class AuthTest {
 							.password("test_password")
 							.email("username@example.com")
 							.fullname("Fullname")
-							.scope(asList(scope))
+							.scopes(asList(scope))
 							.build()).build();			
 			ResourceOwnerDAO.INSTANCE.insert(resourceOwner);
 
@@ -303,7 +303,7 @@ public class AuthTest {
 					.password("password2")
 					.email("username2@example.com")
 					.fullname("Fullname2")
-					.scope(user("username2"))
+					.scopes(asList(user("username2")))
 					.build();
 			System.out.println(" >> IdP resource server: " + target.path(path.value()).getUri().toString());
 			response3 = target.path(path.value()).request()
@@ -433,7 +433,7 @@ public class AuthTest {
 			System.out.println("     >> Create pending user response JAX-RS object: " + response3);
 			System.out.println("     >> Create pending user HTTP headers: " + response3.getStringHeaders());
 
-			// test user registration new user validation
+			// test user registration new user activation
 			final PendingUser pendingUser = PendingUserDAO.INSTANCE.findByEmail(user.getEmail());
 			final PendingUser pendingUser2 = PendingUser.builder()
 					.user(User.builder().email(user.getEmail()).build())
@@ -441,18 +441,18 @@ public class AuthTest {
 					.build();
 			response3 = target.path(path.value()).path(user.getEmail()).request()
 					.put(Entity.entity(pendingUser2, MediaType.APPLICATION_JSON_TYPE));
-			assertThat("New user validation response is not null", response3, notNullValue());
-			assertThat("New user validation response is OK", response3.getStatus() == Response.Status.NO_CONTENT.getStatusCode());
-			assertThat("New user validation response is not empty", response3.getEntity(), notNullValue());
+			assertThat("New user activation response is not null", response3, notNullValue());			
+			assertThat("New user activation response is OK", response3.getStatus() == Response.Status.NO_CONTENT.getStatusCode());
+			assertThat("New user activation response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
-			assertThat("New user validation response entity is not null", payload, notNullValue());
-			assertThat("New user validation response entity is empty", isBlank(payload));
+			assertThat("New user activation response entity is not null", payload, notNullValue());
+			assertThat("New user activation response entity is empty", isBlank(payload));
 			/* uncomment for additional output */			
-			System.out.println("     >> New user validation response body (JSON), empty is OK: " + payload);
-			System.out.println("     >> New user validation response JAX-RS object: " + response3);
-			System.out.println("     >> New user validation HTTP headers: " + response3.getStringHeaders());
+			System.out.println("     >> New user activation response body (JSON), empty is OK: " + payload);
+			System.out.println("     >> New user activation response JAX-RS object: " + response3);
+			System.out.println("     >> New user activation HTTP headers: " + response3.getStringHeaders());
 
-			// test identity provider (IdP) get user by username after validation
+			// test identity provider (IdP) get user by username after activation
 			path = IdentityProvider.class.getAnnotation(Path.class);
 			System.out.println(" >> IdP resource server: " + target.path(path.value()).getUri().toString());
 			user2 = target.path(path.value()).path(user.getUsername()).queryParam("plain", true)
@@ -460,6 +460,8 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(User.class);
 			assertThat("Get user by username after validation result is not null", user2, notNullValue());
+			assertThat("Get user by username after validation scopes is not null", user2.getScopes(), notNullValue());
+			assertThat("Get user by username after validation scopes is not empty", !user2.getScopes().isEmpty());
 			assertThat("Get user by username after validation coincides with expected", user2.equalsIgnoreLink(user));
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by username after validation result: " + user2.toString());

@@ -22,7 +22,9 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asSet;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.net.URI;
@@ -104,7 +106,9 @@ public class UserRegistration {
 		if (ResourceOwnerDAO.INSTANCE.find(user.getUsername()) != null || ResourceOwnerDAO.INSTANCE.findByEmail(user.getEmail()) != null) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		// create pending user in the database
+		// set the correct scopes that the new user must have
+		user.setScopes(asSet(user(user.getUsername())));
+		// create pending user in the database		
 		final PendingUser pendingUser = PendingUser.builder()
 				.activationCode(RandomStringUtils.random(8, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray()))
 				.issuedAt(System.currentTimeMillis() / 1000l)
@@ -140,12 +144,13 @@ public class UserRegistration {
 				pendingUser.getActivationCode(), false)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		// update
+		// create regular user in the database		
 		ResourceOwnerDAO.INSTANCE.insert(ResourceOwner.builder()
 				.id(pendingUser.getUser().getUsername())
 				.user(pendingUser.getUser())
 				.build());
-		PendingUserDAO.INSTANCE.delete(pendingUser.getPendingUserId());	
+		// delete pending user from database
+		PendingUserDAO.INSTANCE.delete(pendingUser.getPendingUserId());
 	}
 
 	private static final void sendActivation(final URI baseUri, final PendingUser pendingUser) {		

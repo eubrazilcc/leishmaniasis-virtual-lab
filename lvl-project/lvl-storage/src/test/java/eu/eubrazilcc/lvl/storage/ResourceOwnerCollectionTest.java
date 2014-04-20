@@ -58,7 +58,7 @@ public class ResourceOwnerCollectionTest {
 							.password("password")
 							.email("username@example.com")
 							.fullname("Fullname")
-							.scope(scopes)
+							.scopes(scopes)
 							.build()).build();
 			ResourceOwnerDAO.INSTANCE.insert(resourceOwner);
 			// find
@@ -117,7 +117,7 @@ public class ResourceOwnerCollectionTest {
 								.password("password")
 								.email("username" + i + "@example.com")
 								.fullname("Fullname")
-								.scope(scopes)
+								.scopes(scopes)
 								.build()).build();								
 				ids.add(resourceOwner3.getOwnerId());
 				ResourceOwnerDAO.INSTANCE.insert(resourceOwner3);
