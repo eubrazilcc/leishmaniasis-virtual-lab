@@ -40,7 +40,6 @@ import com.google.common.base.Function;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.conf.LogManager;
-import eu.eubrazilcc.lvl.core.rest.CrossDomainFilter;
 import eu.eubrazilcc.lvl.service.SingletonService;
 
 /**
@@ -64,7 +63,6 @@ public class LeishVirtLabApplication extends Application {
 		// create LVL resources
 		instances.add(new SequenceResource());		
 		// add additional JAX-RS providers
-		classes.add(CrossDomainFilter.class);
 		classes.add(MoxyJsonFeature.class);
 		LOGGER.info(SERVICE_NAME + " initialized successfully, registered resources: " + objectsClassNames(instances));
 	}

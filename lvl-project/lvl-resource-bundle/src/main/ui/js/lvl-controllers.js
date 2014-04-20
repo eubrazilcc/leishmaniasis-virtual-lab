@@ -107,20 +107,15 @@ angular.module('lvl.controllers', [])
 
 				},
 				function (reason) {
-
-					// TODO
-					console.log("HERE IS BAD!");		
-					// TODO
-
+					$scope.msgHeader = 'Account activation failed';
+					$scope.msgBody = 'Check that the email you entered coincides with the email address that you provided during registration, check your activation code and try again.';
+					$scope.style1 = 'alert alert-danger fade in';
+					$scope.style2 = 'btn btn-danger';
+					$scope.showButtons = true;
+					$scope.showAlert = true;
 				},
 				null
 		);
-
-		/*		
-		$scope.msgHeader = 'Account validation failed';
-        $scope.msgBody = 'Check that the email you entered coincides with the email address that you provided during registration, check your activation code and try again.';		
-		 */
-
 	};
 	$scope.resend = function() {
 		UserRegistrationFactory.resendActivationCode($scope.user).then(
@@ -134,7 +129,7 @@ angular.module('lvl.controllers', [])
 				},
 				function (reason) {
 					$scope.msgHeader = 'The activation code has not been sent';
-					$scope.msgBody = 'Please wait a few minutes before trying to re-send the activation code.';
+					$scope.msgBody = 'Please wait 5 minutes before trying to re-send the activation code.';
 					$scope.style1 = 'alert alert-danger fade in';
 					$scope.style2 = 'btn btn-danger';
 					$scope.showButtons = true;

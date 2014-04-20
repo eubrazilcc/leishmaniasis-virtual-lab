@@ -554,7 +554,7 @@ $ keytool -import -alias serverCert -file ./server.cert -keystore ./client-trust
    backend service.</p>
    
 <p>As the clients and the servers may reside on different domains, <a href="http://www.w3.org/TR/cors/" target="_blank">Cross-origin resource sharing (CORS)</a>
-   becomes one of the major concerns of this design. To cope with CORS, the following additional HTTP headers are sent as part of each server response:</p>
+   becomes one of the major concerns of this design. To cope with CORS, the following additional HTTP headers may be sent as part of server response:</p>
 
 <code>
 Access-Control-Allow-Origin: *
@@ -567,6 +567,11 @@ Access-Control-Allow-Methods: GET PUT DELETE POST HEAD OPTIONS
 <br />
 Access-Control-Max-Age: 604800   
 </code>
+
+<p>This <a href="http://enable-cors.org/server.html" target="_blank">link</a> provides a list of resources
+   to add CORS support to different HTTP servers and technologies. In particular, this
+   <a href="http://tomcat.apache.org/tomcat-7.0-doc/config/filter.html#CORS_Filter" target="_blank"> Tomcat filter</a>
+   adds support for CORS in Tomcat (starting from Tomcat version 7.0.41).</p>
 
 <h3><a id="restful_api_resources">Resources</a></h3>
 

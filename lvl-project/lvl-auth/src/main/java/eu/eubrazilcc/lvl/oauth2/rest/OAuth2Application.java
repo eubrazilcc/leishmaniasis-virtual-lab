@@ -40,7 +40,6 @@ import com.google.common.base.Function;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.conf.LogManager;
-import eu.eubrazilcc.lvl.core.rest.CrossDomainFilter;
 import eu.eubrazilcc.lvl.oauth2.SingletonService;
 
 /**
@@ -69,8 +68,7 @@ public class OAuth2Application extends Application {
 		instances.add(new IdentityProvider());
 		instances.add(new UserRegistration());
 		// add additional JAX-RS providers
-		classes.add(CrossDomainFilter.class);
-		classes.add(MoxyJsonFeature.class);		
+		classes.add(MoxyJsonFeature.class);
 		LOGGER.info(SERVICE_NAME + " initialized successfully, registered resources: " + objectsClassNames(instances));
 	}
 

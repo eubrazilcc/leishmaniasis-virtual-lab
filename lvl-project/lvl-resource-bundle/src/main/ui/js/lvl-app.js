@@ -9,7 +9,7 @@ angular.module('lvl.fastclick', [])
 /* global configuration */
 angular.module('lvl.config', [])
 .constant('ENV', {
-	'oauth2Endpoint'    : 'http://lvl.i3m.upv.es/lvl-auth/oauth2/v1',
+	'oauth2Endpoint'    : 'http://172.16.166.135:8080/lvl-auth/oauth2/v1', // TODO 'http://lvl.i3m.upv.es/lvl-auth/oauth2/v1',
 	'oauth2ClientApp'   : {
 		'client_id'     : 'lvl_portal',
 		'client_secret' : 'changeit'
