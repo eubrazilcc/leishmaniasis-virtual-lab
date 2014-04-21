@@ -94,7 +94,7 @@ angular.module('lvl.controllers', [])
 		);
 	};
 }])
-.controller('UserValidationCtrl', ['$scope', '$routeParams', 'UserRegistrationFactory', function($scope, $routeParams, UserRegistrationFactory) {
+.controller('UserValidationCtrl', ['$scope', '$routeParams', '$location', '$timeout', 'UserRegistrationFactory', function($scope, $routeParams, $location, $timeout, UserRegistrationFactory) {
 	$scope.alerts = [];
 	$scope.addAlert = function(msg, type) {
 		$scope.alerts.push({'type': type || 'danger', 'msg': msg});
@@ -109,11 +109,16 @@ angular.module('lvl.controllers', [])
 	$scope.activate = function() {
 		UserRegistrationFactory.activate($scope.user).then(
 				function (data) {
-
-					// TODO
-					console.log("HERE IS OK: " + data);		
-					// TODO
-
+					$scope.addAlert('<strong>Activation successful.</strong> You can now <a class="alert-link" href="/#/login">log in</a> the portal directly using email and password used for account registration. You will be redirected to the login page automatically in 5 seconds.', 'success');
+					var timer = $timeout(function() {
+						$location.path('/login');
+					}, 5000);
+					$scope.$on(
+							"$destroy",
+							function(event) {
+								$timeout.cancel(timer);
+							}
+					);
 				},
 				function (reason) {					
 					$scope.addAlert('<strong>Account activation failed.</strong> Check that the email you entered coincides with the email address that you provided during registration and check your activation code.', 'danger');
@@ -132,7 +137,7 @@ angular.module('lvl.controllers', [])
 				},
 				null
 		);
-	};
+	};	
 }])
 .controller('FileStoreCtrl', ['$scope', function($scope) {
 	$scope.toggleTopEntries = function() {
