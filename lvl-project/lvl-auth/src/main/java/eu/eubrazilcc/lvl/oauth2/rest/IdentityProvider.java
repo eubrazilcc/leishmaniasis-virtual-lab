@@ -126,13 +126,15 @@ public class IdentityProvider {
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), false, RESOURCE_NAME);
-		// get from database		
+		// get effective user (this is an exception since we always want to check authorization before)
 		final ResourceOwner owner = (!useEmail ? ResourceOwnerDAO.INSTANCE.baseUri(uriInfo.getBaseUri()).find(id)
 				: ResourceOwnerDAO.INSTANCE.baseUri(uriInfo.getBaseUri()).findByEmail(id));
 		if (owner == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
+		// check authorization
+		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, owner.getOwnerId()), false, RESOURCE_NAME);
+		// get from database		
 		return UserAnonymizer.start(plain ? AnonymizationLevel.NONE : AnonymizationLevel.HARD).apply(owner);
 	}
 

@@ -141,7 +141,7 @@ public class UserRegistration {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		if (!PendingUserDAO.INSTANCE.isValid(pendingUser.getPendingUserId(), pendingUser.getUser().getUsername(), 
-				pendingUser.getActivationCode(), false)) {
+				update.getActivationCode(), false)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// create regular user in the database		

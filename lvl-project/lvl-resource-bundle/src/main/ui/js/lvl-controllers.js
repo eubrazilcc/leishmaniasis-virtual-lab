@@ -4,6 +4,13 @@
 
 angular.module('lvl.controllers', [])
 .controller('HomeCtrl', ['$scope', '$rootScope', '$window', '$location', 'UserRegistrationFactory', function($scope, $rootScope, $window, $location, UserRegistrationFactory) {
+	$scope.alerts = [];
+	$scope.addAlert = function(msg, type) {
+		$scope.alerts.push({'type': type || 'danger', 'msg': msg});
+	};
+	$scope.closeAlert = function(index) {
+		$scope.alerts.splice(index, 1);
+	};
 	$rootScope.$watch( 
 			function() {
 				return $window.sessionStorage.token; 
@@ -19,11 +26,7 @@ angular.module('lvl.controllers', [])
 					$location.path('/user/validate/' + $scope.user.email);
 				},
 				function (reason) {
-
-					// TODO
-					console.log("FAILED: " + reason);
-					// TODO
-
+					$scope.addAlert('<strong>Account registration failed.</strong> There is a temporary failure in the server. Please retry later.', 'danger');
 				},
 				null
 		);
@@ -92,7 +95,13 @@ angular.module('lvl.controllers', [])
 	};
 }])
 .controller('UserValidationCtrl', ['$scope', '$routeParams', 'UserRegistrationFactory', function($scope, $routeParams, UserRegistrationFactory) {
-	$scope.showAlert = false;
+	$scope.alerts = [];
+	$scope.addAlert = function(msg, type) {
+		$scope.alerts.push({'type': type || 'danger', 'msg': msg});
+	};
+	$scope.closeAlert = function(index) {
+		$scope.alerts.splice(index, 1);
+	};
 	$scope.user = {
 			email: ($routeParams.email !== undefined ? $routeParams.email : ''),
 			code: ($routeParams.code !== undefined ? $routeParams.code : '')
@@ -102,38 +111,24 @@ angular.module('lvl.controllers', [])
 				function (data) {
 
 					// TODO
-					console.log("HERE IS OK!");		
+					console.log("HERE IS OK: " + data);		
 					// TODO
 
 				},
-				function (reason) {
-					$scope.msgHeader = 'Account activation failed';
-					$scope.msgBody = 'Check that the email you entered coincides with the email address that you provided during registration, check your activation code and try again.';
-					$scope.style1 = 'alert alert-danger fade in';
-					$scope.style2 = 'btn btn-danger';
-					$scope.showButtons = true;
-					$scope.showAlert = true;
+				function (reason) {					
+					$scope.addAlert('<strong>Account activation failed.</strong> Check that the email you entered coincides with the email address that you provided during registration and check your activation code.', 'danger');
 				},
 				null
 		);
 	};
 	$scope.resend = function() {
 		UserRegistrationFactory.resendActivationCode($scope.user).then(
-				function (data) {
-					$scope.msgHeader = 'The activation code has been successfully sent to your email';
-					$scope.msgBody = 'Please check your inbox. Within the next 10 minutes you should find a message from Leish VirtLab containing your activation code.';
-					$scope.style1 = 'alert alert-success fade in';
-					$scope.style2 = 'btn btn-success';
-					$scope.showButtons = false;
-					$scope.showAlert = true;
+				function (data) {					
+					$scope.addAlert('<strong>The activation code has been successfully sent to your email.</strong> Please check your inbox. Within the next 10 minutes you should find a message from Leish VirtLab containing your activation code.', 'success');					
 				},
 				function (reason) {
-					$scope.msgHeader = 'The activation code has not been sent';
-					$scope.msgBody = 'Please wait 5 minutes before trying to re-send the activation code.';
-					$scope.style1 = 'alert alert-danger fade in';
-					$scope.style2 = 'btn btn-danger';
-					$scope.showButtons = true;
-					$scope.showAlert = true;
+					$scope.addAlert('<strong>The activation code has not been sent.</strong> '
+							+ (reason === 404 ? 'No account is currently pending for activation that matches this email address.' : 'Please wait 5 minutes before trying to re-send the activation code.'), 'danger');					
 				},
 				null
 		);

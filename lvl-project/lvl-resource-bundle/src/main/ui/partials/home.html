@@ -2,7 +2,12 @@
   <div class="jumbotron">
     <div class="container">
       <div class="row">
-        <div ng-class="style1">
+        <alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">
+          <span ng-bind-html="alert.msg"></span>
+        </alert>
+      </div>
+      <div class="row">        
+        <div ng-class="style1">          
           <h1>Leishmaniasis Virtual Laboratory</h1>
           <p>Leishmaniasis is one of the world’s most neglected diseases with 1-2 million new cases per year. Our Leishmaniasis Virtual Lab will enable public health workers to access information and data to anticipate outbreaks.</p>
           <p><a class="btn btn-primary btn-lg" href="#/files" role="button">Start using it &raquo;</a></p>      
@@ -10,7 +15,7 @@
         <div ng-class="style2" ng-show="!isAuthenticated">
           <div class="panel panel-success">
             <div class="panel-body">
-              <form class="form-signup" role="form" autocomplete="off">
+              <form name="signupForm" class="form-signup" role="form" autocomplete="off">
                 <div class="form-group">
                   <label for="username">Choose a username</label>
                   <div class="input-group margin-bottom-sm">
@@ -32,7 +37,7 @@
                     <input ng-model="user.password" id="password" name="password" type="password" class="form-control" placeholder="Enter password" required>
                   </div>
                 </div>                
-                <button ng-click="signup()" class="btn btn-lg btn-success btn-block" type="submit">Sign up for Leish VirtLab</button>
+                <button ng-click="signupForm.$invalid || signup()" class="btn btn-lg btn-success btn-block" type="submit">Sign up for Leish VirtLab</button>
                 <div>
                   <br>
                   By signing up you are agreeing to our <a href="#">Privacy Policy</a> and <a href="#">Terms &amp; Conditions</a>.

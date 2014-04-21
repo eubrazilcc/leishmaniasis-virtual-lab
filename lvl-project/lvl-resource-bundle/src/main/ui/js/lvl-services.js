@@ -82,8 +82,6 @@ angular.module('lvl.services', [])
 				data: { 'activationCode' : user.code, 'user' : { 'email' : user.email } },
 				headers: {'Content-Type': 'application/json'}
 			});
-
-			// TODO
 		},
 		resendActivationCode: function(user) {
 			return $http({
@@ -119,9 +117,8 @@ angular.module('lvl.services', [])
 		return defer.promise;
 	};
 }])
-.factory('UserRegistrationFactory', [ '$q', 'PendingUsersFactory', function ($q, PendingUsersFactory) {
-	var defer = $q.defer();
-	var service = function(http, op) {
+.factory('UserRegistrationFactory', [ '$q', 'PendingUsersFactory', function ($q, PendingUsersFactory) {	
+	var service = function(http, op, defer) {
 		http.success(function (data, status) {
 			// console.log("Executing operation " + op + "...");
 			if (data !== undefined) {
@@ -129,24 +126,27 @@ angular.module('lvl.services', [])
 				defer.resolve();
 			} else {
 				// console.log("Failed operation " + op);
-				defer.reject(data);
+				defer.reject(500);
 			}
 		}).error(function (data, status) {
 			// console.log(status + " response in operation " + op);
-			defer.reject(data);
+			defer.reject(status);
 		});
 	}
-	return {
+	return {		
 		register : function(user) {
-			service(PendingUsersFactory.register(user), 'register new user');
+			var defer = $q.defer();
+			service(PendingUsersFactory.register(user), 'register new user', defer);
 			return defer.promise;
 		},
 		activate : function(user) {
-			service(PendingUsersFactory.activate(user), 'activate user account');
+			var defer = $q.defer();
+			service(PendingUsersFactory.activate(user), 'activate user account', defer);
 			return defer.promise;
 		},
 		resendActivationCode: function(user) {
-			service(PendingUsersFactory.resendActivationCode(user), 'resend activation code');
+			var defer = $q.defer();
+			service(PendingUsersFactory.resendActivationCode(user), 'resend activation code', defer);
 			return defer.promise;
 		}
 	};
