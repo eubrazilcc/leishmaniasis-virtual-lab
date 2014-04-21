@@ -15,29 +15,32 @@
         <div ng-class="style2" ng-show="!isAuthenticated">
           <div class="panel panel-success">
             <div class="panel-body">
-              <form name="signupForm" class="form-signup" role="form" autocomplete="off">
-                <div class="form-group">
+              <form name="signupForm" class="form-signup" role="form" ng-submit="signupForm.$invalid || signup()" autocomplete="off" novalidate>
+                <div class="form-group" ng-class="{ 'has-error' : signupForm.username.$invalid && !signupForm.username.$pristine }">
                   <label for="username">Choose a username</label>
                   <div class="input-group margin-bottom-sm">
                     <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                    <input ng-model="user.username" id="username" name="username" type="text" class="form-control" placeholder="Enter username" required>
-                  </div>
+                    <input ng-model="user.username" id="username" name="username" type="text" class="form-control" placeholder="Enter username" ng-minlength="3" required>                    
+                  </div>                  
+                  <p ng-show="signupForm.username.$error.minlength" class="help-block">Minimum is 3 characters</p>
                 </div>
-                <div class="form-group">
+                <div class="form-group" ng-class="{ 'has-error' : signupForm.email.$invalid && !signupForm.email.$pristine }">
                   <label for="email">Enter your email address</label>
                   <div class="input-group margin-bottom-sm">
                     <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
                     <input ng-model="user.email" id="email" name="email" type="email" class="form-control" placeholder="Enter email" required>
                   </div>
+                  <p ng-show="signupForm.email.$invalid && !signupForm.email.$pristine" class="help-block">Valid email required</p>
                 </div>
-                <div class="form-group">
+                <div class="form-group" ng-class="{ 'has-error' : signupForm.password.$invalid && !signupForm.password.$pristine }">
                   <label for="password">Choose a password</label>
                   <div class="input-group">                  
                     <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                    <input ng-model="user.password" id="password" name="password" type="password" class="form-control" placeholder="Enter password" required>
+                    <input ng-model="user.password" id="password" name="password" type="password" class="form-control" placeholder="Enter password"  ng-minlength="6" required>
                   </div>
+                  <p ng-show="signupForm.password.$error.minlength" class="help-block">Minimum is 6 characters</p>
                 </div>                
-                <button ng-click="signupForm.$invalid || signup()" class="btn btn-lg btn-success btn-block" type="submit">Sign up for Leish VirtLab</button>
+                <button class="btn btn-lg btn-success btn-block" type="submit">Sign up for Leish VirtLab</button>
                 <div>
                   <br>
                   By signing up you are agreeing to our <a href="#">Privacy Policy</a> and <a href="#">Terms &amp; Conditions</a>.

@@ -26,7 +26,7 @@ angular.module('lvl.controllers', [])
 					$location.path('/user/validate/' + $scope.user.email);
 				},
 				function (reason) {
-					$scope.addAlert('<strong>Account registration failed.</strong> There is a temporary failure in the server. Please retry later.', 'danger');
+					$scope.addAlert('<strong>Account registration failed.</strong> ' + (reason === 400 ? 'Username or email address are currently registered (<a class="alert-link" href="#/account_recovery/password_recovery‎">forgot password</a>).' : 'There is a temporary failure in the server. Please retry later.'), 'danger');
 				},
 				null
 		);
@@ -109,7 +109,7 @@ angular.module('lvl.controllers', [])
 	$scope.activate = function() {
 		UserRegistrationFactory.activate($scope.user).then(
 				function (data) {
-					$scope.addAlert('<strong>Activation successful.</strong> You can now <a class="alert-link" href="/#/login">log in</a> the portal directly using email and password used for account registration. You will be redirected to the login page automatically in 5 seconds.', 'success');
+					$scope.addAlert('<strong>Activation successful.</strong> You can now <a class="alert-link" href="#/login">log in</a> the portal directly using email and password used for account registration. You will be redirected to the login page automatically in 5 seconds.', 'success');
 					var timer = $timeout(function() {
 						$location.path('/login');
 					}, 5000);
