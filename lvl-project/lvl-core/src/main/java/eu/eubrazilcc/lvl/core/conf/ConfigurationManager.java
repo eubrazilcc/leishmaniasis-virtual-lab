@@ -130,21 +130,25 @@ public enum ConfigurationManager implements Closeable2 {
 	public ImmutableList<String> getDbHosts() {
 		return configuration().getDbHosts();
 	}
-	
+
 	public String getSmtpHost() {
 		return configuration().getSmtpHost();
 	}
-	
+
 	public int getSmtpPort() {
 		return configuration().getSmtpPort();
 	}
-	
+
 	public String getSmtpSupportEmail() {
 		return configuration().getSmtpSupportEmail();
 	}
-	
+
 	public String getSmtpNoreplyEmail() {
 		return configuration().getSmtpNoreplyEmail();
+	}	
+
+	public String getPortalEndpoint() {
+		return configuration().getPortalEndpoint().or("");
 	}
 
 	@Override
@@ -214,6 +218,7 @@ public enum ConfigurationManager implements Closeable2 {
 							final int smtpPort = getInteger("smtp.port", configuration, foundNameList, 25);
 							final String smtpSupportEmail = getString("smtp.support-email", configuration, foundNameList, "support@example.com");
 							final String smtpNoreplyEmail = getString("smtp.noreply-email", configuration, foundNameList, "noreply@example.com");
+							final String portalEndpoint = getString("portal.endpoint", configuration, foundNameList, null);
 							// get secondary property will return null if the requested property is missing
 							configuration.setThrowExceptionOnMissing(false);
 							// nothing yet
@@ -230,7 +235,7 @@ public enum ConfigurationManager implements Closeable2 {
 								}
 							}
 							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dbName, dbUsername, dbPassword, dbHosts, 
-									smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, othersMap);
+									smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
 							throw new IllegalStateException("Main configuration not found");
@@ -332,11 +337,13 @@ public enum ConfigurationManager implements Closeable2 {
 		private final int smtpPort;
 		private final String smtpSupportEmail;
 		private final String smtpNoreplyEmail;
+		private final Optional<String> portalEndpoint;
 		// other configurations
 		private final ImmutableMap<String, String> othersMap;
 		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, 
 				final String dbName, final @Nullable String dbUsername, final @Nullable String dbPassword, final ImmutableList<String> dbHosts,
 				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
+				final @Nullable String portalEndpoint,
 				final @Nullable Map<String, String> othersMap) {
 			this.rootDir = checkNotNull(rootDir, "Uninitialized root directory");
 			this.localCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
@@ -349,6 +356,7 @@ public enum ConfigurationManager implements Closeable2 {
 			this.smtpPort = smtpPort;
 			this.smtpSupportEmail = smtpSupportEmail;
 			this.smtpNoreplyEmail = smtpNoreplyEmail;
+			this.portalEndpoint = Optional.fromNullable(StringUtils.trimToNull(portalEndpoint));
 			this.othersMap = new ImmutableMap.Builder<String, String>().putAll(othersMap).build();			
 		}		
 		public File getRootDir() {
@@ -383,6 +391,9 @@ public enum ConfigurationManager implements Closeable2 {
 		}
 		public String getSmtpNoreplyEmail() {
 			return smtpNoreplyEmail;
+		}		
+		public Optional<String> getPortalEndpoint() {
+			return portalEndpoint;
 		}
 		public ImmutableMap<String, String> getOthersMap() {
 			return othersMap;
@@ -408,6 +419,7 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("smtpPort", smtpPort)
 					.add("smtpSupportEmail", smtpSupportEmail)
 					.add("smtpNoreplyEmail", smtpNoreplyEmail)
+					.add("portalEndpoint", portalEndpoint.orNull())
 					.add("customProperties", customPropertiesToString())
 					.toString();
 		}

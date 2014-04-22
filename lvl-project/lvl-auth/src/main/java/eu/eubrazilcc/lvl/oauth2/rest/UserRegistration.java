@@ -26,6 +26,7 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asSet;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -49,6 +50,8 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.oauth2.mail.EmailSender;
@@ -64,6 +67,8 @@ import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
  */
 @Path("/pending_users")
 public class UserRegistration {
+
+	private final static Logger LOGGER = LoggerFactory.getLogger(UserRegistration.class);
 
 	/**
 	 * The lifetime in seconds of the confirmation code.
@@ -156,8 +161,12 @@ public class UserRegistration {
 	private static final void sendActivation(final URI baseUri, final PendingUser pendingUser) {		
 		URI portalUri = null;
 		try {
-			portalUri = new URI(baseUri.getScheme(), baseUri.getAuthority(), null, null, null);				
-		} catch (URISyntaxException e) { }
+			final String portalEndpoint = ConfigurationManager.INSTANCE.getPortalEndpoint();
+			portalUri = isNotBlank(portalEndpoint) ? new URI(portalEndpoint.replaceAll("/$", "")) 
+			: new URI(baseUri.getScheme(), baseUri.getAuthority(), null, null, null);
+		} catch (URISyntaxException e) {
+			LOGGER.error("Failed to create LVL portal endpoint", e);
+		}
 		EmailSender.INSTANCE.sendTextEmail(pendingUser.getUser().getEmail(), emailActivationSubject(), 
 				emailActivationMessage(pendingUser.getUser().getUsername(), pendingUser.getUser().getEmail(), pendingUser.getActivationCode(), portalUri));
 	}
@@ -166,13 +175,13 @@ public class UserRegistration {
 		return "Leish VirtLab";
 	}
 
-	private static final String emailActivationMessage(final String username, final String email, final String confirmationCode, final URI portalUri) {
+	private static final String emailActivationMessage(final String username, final String email, final String activationCode, final URI portalUri) {
 		return "Dear " + username + ",\n\n"
 				+ "Thank you for registering at Leishmaniasis Virtual Laboratory. Please, validate your email address in " 
 				+ portalUri.toString() + "/#/user/validate" + " "
-				+ "using the following code:\n\n" + confirmationCode + "\n\n"
+				+ "using the following code:\n\n" + activationCode + "\n\n"
 				+ "You may also validate your email address by clicking on this link or copying and pasting it in your browser:\n\n"
-				+ portalUri.toString() + "/#/user/validate/" + email + "/" + confirmationCode + "\n\n"
+				+ portalUri.toString() + "/#/user/validate/" + email + "/" + activationCode + "\n\n"
 				+ "After validating your email address, you can log in the portal directly using email and password used for account registration.\n\n"
 				+ "Leish VirtLab team";
 

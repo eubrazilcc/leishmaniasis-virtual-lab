@@ -76,6 +76,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	
 	</database>
 	
+	<!-- Email configuration -->
 	<smtp>
 	
 		<!-- Optional SMTP host and port. If undefined, 'localhost:25' is used -->
@@ -88,5 +89,14 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<noreply-email>noreply@example.com</noreply-email> -->
 	
 	</smtp>
+	
+	<!-- Portal configuration -->
+	<portal>
+	
+		<!-- Optional endpoint where the LVL portal is listening for incoming 
+			connections. If undefined, the services will use their own URI -->
+		<!-- <endpoint>https://localhost/</endpoint> -->
+	
+	</portal>
 
 </config>
