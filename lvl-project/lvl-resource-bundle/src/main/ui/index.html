@@ -97,11 +97,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
           <button ng-show="!isAuthenticated" go-click="/login" type="button" class="btn btn-default">Sign in</button>
           <!-- show/hide depending on authentication -->
           <div ng-show="isAuthenticated" class="btn-group">
-            <a class="btn btn-primary" href="#/profile"><i class="fa fa-user fa-fw"></i></a>
+            <a class="btn btn-primary" href="#/user/profile"><i class="fa fa-user fa-fw"></i></a>
             <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#" target="_self">
             <span class="fa fa-caret-down"></span></a>
             <ul class="dropdown-menu">
-              <li><a href="#"><i class="fa fa-cog fa-fw"></i> Account settings</a></li>              
+              <li><a href="#/user/profile"><i class="fa fa-cog fa-fw"></i> Account settings</a></li>
+              <li><a href="#/admin"><i class="fa fa-cogs fa-fw"></i> System settings</a></li>
               <li class="divider"></li>
               <li><a ng-click="logout()" href="#"><i class="fa fa-sign-out fa-fw"></i> Sign out</a></li>
             </ul>

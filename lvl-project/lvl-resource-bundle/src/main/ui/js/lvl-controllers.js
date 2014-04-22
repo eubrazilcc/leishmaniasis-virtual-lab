@@ -139,12 +139,36 @@ angular.module('lvl.controllers', [])
 		);
 	};	
 }])
+.controller('UserProfileCtrl', ['$scope', '$routeParams', function($scope, $routeParams) {
+	// default top entries to be visible
+	$scope.isProfileDetailsVisible = true;
+	
+	// TODO
+	$scope.user = {
+			'username': 'ertorser',
+			'fullname': 'Erik Torres',
+			'following': 10,
+			'followers': 85
+	};
+	// TODO
+	
+}])
 .controller('FileStoreCtrl', ['$scope', function($scope) {
+	// default top entries to be visible
+	$scope.isTopEntriesVisible = true;
 	$scope.toggleTopEntries = function() {
 		$scope.isTopEntriesVisible = ! $scope.isTopEntriesVisible;
 	};
-	// default top entries to be visible
-	$scope.isTopEntriesVisible = true;
+	
+	// TODO
+	$scope.user = {
+			'username': 'ertorser',
+			'fullname': 'Erik Torres',
+			'following': 10,
+			'followers': 85
+	};
+	// TODO
+	
 }])
 .controller('MapViewerCtrl', ['$scope', function($scope) {
 	// initial setup

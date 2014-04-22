@@ -4,16 +4,16 @@
 
 angular.module('lvl.directives', [])
 .directive('toggleGrid', [ function () {
-	function link($scope, element, attributes) {
-		var expr = attributes.toggleGrid;		
-		var divC = (attributes.toggleGridComplement || "complement");
-		var divT = (attributes.toggleGridToggleable || "toggleable");		
-		var duration = (attributes.toggleGridDuration || "fast");
-		$scope.$watch(expr, function(newVal, oldVal) {
+	function link(scope, element, attrs) {
+		var expr = attrs.toggleGrid;		
+		var divC = (attrs.toggleGridComplement || "complement");
+		var divT = (attrs.toggleGridToggleable || "toggleable");		
+		var duration = (attrs.toggleGridDuration || "fast");
+		scope.$watch(expr, function(newVal, oldVal) {
 			if (newVal === oldVal) {
 				return;
 			}
-			if (!$scope.$eval(expr)) {
+			if (!scope.$eval(expr)) {
 				// evaluate link-time value of the model
 				// nothing to do
 			}
@@ -42,7 +42,7 @@ angular.module('lvl.directives', [])
 		restrict: "A"
 	});
 }])
-.directive('goClick', function ($location) {
+.directive('goClick', ['$location', function ($location) {	
 	return function (scope, element, attrs) {
 		var path;
 		attrs.$observe('goClick', function (val) {
@@ -54,7 +54,29 @@ angular.module('lvl.directives', [])
 			});
 		});
 	};
-})
+}])
+.directive('htmlPopover', ['$compile', '$templateCache', function ($compile, $templateCache) {
+	return {
+		restrict: "A",
+		link: function (scope, element, attrs) {
+			var tplId = (attrs.popoverTemplate || 'popoverTemplate.html');
+			var placement = (attrs.popoverPlacement || 'right');
+			var trigger = (attrs.popoverTrigger || 'click');
+			
+			var content = $templateCache.get(tplId);
+			content = $compile("<div>" + content + "</div>")(scope);
+			
+			var options = {
+					'content': content,
+					'placement': placement,
+					'trigger': trigger,
+					'html': true,
+					'date': scope.date
+			};			
+			$(element).popover(options);
+		}
+	};
+}])
 .directive('resize', ['$window', function ($window) { // <div ng-style="style()" resize></div>
 	return function (scope, element) {
 		var w = angular.element($window);

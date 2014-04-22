@@ -100,10 +100,27 @@
         </div>       
       </div>
       <!-- Top entries -->
+      <script type="text/ng-template" id="entryTemplate.html">
+          <div class="media">
+            <a class="thumbnail pull-left" href="#/user/profile/{{user.username}}">
+              <img class="media-object" src="https://www.gravatar.com/avatar/53f455aea79b19eaca5d54a35390bd49?s=80">
+            </a>
+            <div class="media-body">              
+              <h4 class="media-heading">{{user.fullname}} (<a href="#/user/profile/{{user.username}}">{{user.username}}</a>)</h4>              
+              <p><span class="label label-info" tooltip="following"><i class="fa fa-eye fa-fw"></i> {{user.following}}</span> <span class="label label-primary" tooltip="followers"><i class="fa fa-users fa-fw"></i> {{user.followers}}</span></p>
+              <p>
+                <a href="#" class="btn btn-xs btn-default" tooltip="message"><i class="fa fa-comment fa-fw"></i></a>
+                <a href="#" class="btn btn-xs btn-default" tooltip="favorite"><i class="fa fa-heart fa-fw"></i></a>
+                <a href="#" class="btn btn-xs btn-default" tooltip="unfollow"><i class="fa fa-ban fa-fw"></i></a>
+              </p>
+            </div>
+          </div>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, aliquet massa... <a href="#">read more</a></p>
+      </script>
       <div id="toggleable" class="col-md-3 col-xs-12 hidden-xs lvl-top lvl-left-border">
         <button ng-click="toggleTopEntries()" type="button" class="close" aria-hidden="true">&times;</button>
         <p><b>Top entries</b></p>
-        <p class="lvl-activity"><i class="fa fa-quote-left fa-1x pull-left fa-border"></i><a href="#">New protocol announced</a></p>
+        <p class="lvl-activity"><i class="fa fa-quote-left fa-1x pull-left fa-border"></i><a href html-popover popover-placement="left" popover-trigger="click" popover-template='entryTemplate.html'>New protocol announced</a></p>
         <p class="lvl-activity"><i class="fa fa-quote-left fa-1x pull-left fa-border"></i> <span class="label label-primary">New</span> <a href="#">Lorem ipsum dolor sit amet, consectetur adipiscing elit</a></p>
         <p class="lvl-activity"><i class="fa fa-quote-left fa-1x pull-left fa-border"></i><a href="#">Integer posuere erat a ante</a></p>
       </div>
