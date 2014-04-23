@@ -175,7 +175,9 @@ angular.module('lvl.controllers', [])
 }])
 .controller('SettingsCtrl', ['$scope', function($scope) {
 	$scope.isUsersOpen = true;
-	$scope.isSequencesOpen = true;
+	$scope.isSequencesOpen = false;
+	$scope.isPapersOpen = false;
+	$scope.isIssuesOpen = false;
 	
 	
 	// TODO

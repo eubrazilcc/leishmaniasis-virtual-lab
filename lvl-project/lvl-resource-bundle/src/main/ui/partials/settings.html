@@ -1,16 +1,62 @@
 <!-- Content -->
 <div class="container-fluid">
+
+  <!-- Toolbar (shown in extra-small to small devices) -->
+  <div class="row">
+    <div class="col-xs-12 hidden-md hidden-lg lvl-top lvl-toolbar-bottom">
+      <div class="btn-group">
+        <button type="button" class="btn btn-primary"><i class="fa fa-dashboard fa-fw"></i></button>
+        <div class="btn-group">        
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-users fa-fw"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a href="#"><i class="fa fa-user fa-fw"></i> Active</a></li>
+            <li><a href="#"><i class="fa fa-ban fa-fw"></i> Inactive</a></li>
+          </ul>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-bug fa-fw"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a href="#"><i class="fa fa-unlock fa-fw"></i> Public</a></li>
+            <li><a href="#"><i class="fa fa-lock fa-fw"></i> Private</a></li>
+          </ul>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-file-text fa-fw"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a href="#"><i class="fa fa-unlock-alt fa-fw"></i> Open access</a></li>
+            <li><a href="#"><i class="fa fa-money fa-fw"></i> Non free</a></li>
+          </ul>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-bell fa-fw"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a href="#"><i class="fa fa-tasks fa-fw"></i> Tasks</a></li>
+            <li><a href="#"><i class="fa fa-exclamation-triangle fa-fw"></i> Errors</a></li>
+          </ul>
+        </div>       
+      </div>
+    </div>
+  </div> <!-- Toolbar (shown in extra-small to small devices) -->
+
   <div class="row">
   
-    <!-- Left column -->
-    <div class="col-md-2 col-xs-4 lvl-top">
+    <!-- Left column (medium to large devices) -->
+    <div class="col-md-2 hidden-sm hidden-xs lvl-top">
         
       <!-- Sidebar navigation menu -->
       <div class="row">
         <div class="col-xs-12">
           <div class="panel panel-default">
             <div class="panel-heading">
-              <h3 class="panel-title"><i class="fa fa-dashboard fa-fw"></i> Dashboard</h3>
+              <h3 class="panel-title"><a href="#/"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></h3>
             </div>
           </div>
           <accordion close-others="false">        
@@ -27,34 +73,50 @@
               </accordion-heading>
               <p class="lvl-sidebar"><a href="#/"><i class="fa fa-unlock fa-fw"></i> Public</a></p>
               <p class="lvl-sidebar"><a href="#/"><i class="fa fa-lock fa-fw"></i> Private</a></p>
+            </accordion-group>            
+            <accordion-group is-open="isPapersOpen">
+              <accordion-heading>
+                Papers <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isPapersOpen, 'glyphicon-chevron-right': !isPapersOpen}"></i>
+              </accordion-heading>
+              <p class="lvl-sidebar"><a href="#/"><i class="fa fa-unlock-alt fa-fw"></i> Open access</a></p>
+              <p class="lvl-sidebar"><a href="#/"><i class="fa fa-money fa-fw"></i> Non free</a></p>
             </accordion-group>
-          </accordion>      
-          <div class="panel panel-default">
+            <accordion-group is-open="isIssuesOpen">
+              <accordion-heading>
+                Issues <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isIssuesOpen, 'glyphicon-chevron-right': !isIssuesOpen}"></i>
+              </accordion-heading>
+              <p class="lvl-sidebar"><a href="#/"><i class="fa fa-tasks fa-fw"></i> Tasks</a></p>
+              <p class="lvl-sidebar"><a href="#/"><i class="fa fa-exclamation-triangle fa-fw"></i> Errors</a></p>
+            </accordion-group>
+          </accordion>
+          
+          <div class="panel panel-default" ng-hide="isTipsVisible">
             <div class="panel-heading">
               <div class="row">
                 <div class="col-xs-6">
                   <h3 class="panel-title"><i class="fa fa-lightbulb-o fa-fw"></i> Tips</h3>  
                 </div>
                 <div class="col-xs-6">
-                  <button type="button" class="close" aria-hidden="true">&times;</button>
+                  <button ng-click="isTipsVisible = !isTipsVisible" type="button" class="close" aria-hidden="true">&times;</button>
                 </div>
               </div>
             </div>
             <div class="panel-body">
-              Panel content
+              <p><small>You can do live search to the widget at search box located at top bar. It's very useful if your dashboard is full of widget.</small></p>
+              <p class="text-right"><a href="#">Next tip <i class="fa fa-arrow-circle-right"></i></a></p>
             </div>
           </div>
         </div>  
       </div>
-    </div> <!-- Left column -->
+    </div> <!-- Left column (medium to large devices) -->
     
     <!-- Right column -->
-    <div class="col-md-10 col-xs-8 lvl-top">
+    <div class="col-md-10 col-xs-12 lvl-top">
     
       <!-- Summary -->
       <div class="row">        
         <div class="col-md-3 hidden-sm hidden-xs">
-          <div class="panel panel-success">
+          <div class="panel panel-info">
             <div class="panel-heading">
               <div class="row">
                 <div class="col-xs-6">
@@ -71,13 +133,13 @@
               </div>
             </div>               
             <div class="panel-footer text-center">
-              <a href="#">More info <i class="fa fa-arrow-circle-right"></i></a>        
+              <a href="#">More info <i class="fa fa-arrow-circle-right"></i></a>
             </div>
           </div>
         </div>
     
         <div class="col-md-3 hidden-sm hidden-xs">
-          <div class="panel panel-info">
+          <div class="panel panel-success">
             <div class="panel-heading">
               <div class="row">
                 <div class="col-xs-6">
@@ -92,7 +154,7 @@
                   Stored sequences
                 </div>
               </div>
-            </div>               
+            </div>      
             <div class="panel-footer text-center">
               <a href="#">More info <i class="fa fa-arrow-circle-right"></i></a>        
             </div>
@@ -130,68 +192,278 @@
                   <h1>12</h1>      
                 </div>
                 <div class="col-xs-6 text-right">
-                  <i class="fa fa-check-square fa-5x"></i>
+                  <i class="fa fa-bell fa-5x"></i>
                 </div>     
               </div>
               <div class="row">
                 <div class="col-xs-12">
-                  Pending tasks
+                  Pending issues
                 </div>
               </div>
             </div>               
             <div class="panel-footer text-center">
-              <a href="#">Complete tasks <i class="fa fa-arrow-circle-right"></i></a>        
+              <a href="#">Fix issues <i class="fa fa-arrow-circle-right"></i></a>        
             </div>
           </div>
         </div>
       </div> <!-- Summary -->
       
-      <!-- Users panel -->
+      <!-- Main body -->
       <div class="row">
-        <div class="col-xs-6">
-          <div class="panel panel-default">
-            <div class="panel-heading">Users</div>
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-xs-6">
-                  TODO
-                </div>
-                <div class="col-xs-6">
-                  TODO
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> <!-- Users panel -->
       
-      <!-- Users panel -->
-      <div class="row">
-        <div class="col-xs-6">
-          <div class="panel panel-default">
-            <div class="panel-heading">Users</div>
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-xs-6">
-                  TODO
+        <!-- Main body (left column) -->
+        <div class="col-md-6 col-xs-12">
+            
+          <!-- Users panel -->
+          <div class="row">
+            <div class="col-xs-12">          
+              <div class="panel panel-default">
+                <div class="panel-heading"><i class="fa fa-users fw"></i> Recent users</div>
+                <div class="panel-body">
+                  <div class="table-responsive">
+                    <table class="table table-condensed table-hover">
+                      <thead>
+                        <tr>
+                          <th>Username</th>
+                          <th>Institution</th>
+                          <th>Country</th>
+                          <th>Joining date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><a href="http://localhost:8000/#/user/profile/user123">user123</a></td>
+                          <td>My Institution</td>
+                          <td>France</td>
+                          <td>May/14/2014</td>
+                        </tr>
+                        <tr>
+                          <td><a href="http://localhost:8000/#/user/profile/noname">noname</a></td>
+                          <td>Freelance</td>
+                          <td>Italy</td>
+                          <td>May/18/2014</td>
+                        </tr>
+                        <tr>
+                          <td><a href="http://localhost:8000/#/user/profile/otheruser">otheruser</a></td>
+                          <td>UPV</td>
+                          <td>Spain</td>
+                          <td>May/21/2014</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>                  
                 </div>
-                <div class="col-xs-6">
-                  TODO
-                </div>
-              </div>
+                <div class="panel-footer">
+                  <div class="row">
+                    <div class="col-xs-6 text-left">
+                      <a href="#" tooltip="Refresh"><i class="fa fa-refresh fa-fw" ng-class="{'fa-spin': hover}" ng-mouseenter="hover = true" ng-mouseleave="hover = false" ></i></a>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                      <a href="#">View all users <i class="fa fa-arrow-circle-right"></i></a>
+                    </div>
+                  </div>
+                </div>          
+              </div>          
             </div>
-          </div>
-        </div>
-      </div> <!-- Users panel -->
+          </div> <!-- Users panel -->
+          
+          <!-- Papers panel -->
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="panel panel-default">
+                <div class="panel-heading"><i class="fa fa-file-text fw"></i> Recent papers</div>
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-xs-12">
+                      <div class="table-responsive">
+                        <table class="table table-condensed table-hover">
+                          <thead>
+                            <tr>
+                              <th>DOI</th>
+                              <th>Journal</th>
+                              <th>Publication date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td><a href="http://localhost:8000/#/doi/paper123">paper123</a></td>
+                              <td>JMC</td>
+                              <td>Apr/28/2014</td>
+                            </tr>
+                            <tr>
+                              <td><a href="http://localhost:8000/#/doi/bio.234">bio.234</a></td>
+                              <td>Bioinformatics</td>
+                              <td>Apr/28/2014</td>
+                            </tr>
+                            <tr>
+                              <td><a href="http://localhost:8000/#/doi/EMCJ.o01">EMCJ.o01</a></td>
+                              <td>EMCJ</td>
+                              <td>May/10/2014</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>                
+                </div>
+                <div class="panel-footer">
+                  <div class="row">
+                    <div class="col-xs-6 text-left">
+                      <a href="#" tooltip="Refresh"><i class="fa fa-refresh fa-fw" ng-class="{'fa-spin': hover}" ng-mouseenter="hover = true" ng-mouseleave="hover = false" ></i></a>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                      <a href="#">View all papers <i class="fa fa-arrow-circle-right"></i></a>
+                    </div>
+                  </div>
+                </div>
+              </div>          
+            </div>
+          </div> <!-- Papers panel -->
+            
+        </div> <!-- Main body (left column) -->
+        
+        <!-- Main body (right column) -->
+        <div class="col-md-6 col-xs-12">
+            
+          <!-- Sequences panel -->
+          <div class="row">            
+            <div class="col-xs-12">          
+              <div class="panel panel-default">
+                <div class="panel-heading"><i class="fa fa-bug fw"></i> Recent sequences</div>
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-xs-12">
+                      <div class="table-responsive">
+                        <table class="table table-condensed table-hover">
+                          <thead>
+                            <tr>
+                              <th>Accession</th>
+                              <th>Source</th>
+                              <th>Country</th>
+                              <th>Submission date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td><a href="http://localhost:8000/#/sequence/A123">A123</a></td>
+                              <td>GenBank</td>
+                              <td>Kenya</td>
+                              <td>Apr/11/2014</td>
+                            </tr>
+                            <tr>
+                              <td><a href="http://localhost:8000/#/sequence/D256">D256</a></td>
+                              <td>ISCIII-WHO</td>
+                              <td>Spain</td>
+                              <td>May/02/2014</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>                  
+                </div>
+                <div class="panel-footer">
+                  <div class="row">
+                    <div class="col-xs-6 text-left">
+                      <a href="#" tooltip="Refresh"><i class="fa fa-refresh fa-fw" ng-class="{'fa-spin': hover}" ng-mouseenter="hover = true" ng-mouseleave="hover = false" ></i></a>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                      <a href="#">View all sequences <i class="fa fa-arrow-circle-right"></i></a>
+                    </div>
+                  </div>
+                </div>
+              </div>          
+            </div>            
+          </div> <!-- Sequences panel -->
+            
+          <!-- Alerts panel -->
+          <div class="row">            
+            <div class="col-xs-12">
+              <div class="panel panel-default">
+                <div class="panel-heading"><i class="fa fa-bell fw"></i> Recent alerts</div>
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-xs-12">
+                      <div class="table-responsive">
+                        <table class="table table-condensed table-hover">
+                          <thead>
+                            <tr>
+                              <th>Alert Id</th>
+                              <th>Subject</th>
+                              <th>Severity</th>                              
+                              <th>Reported</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td><a href="http://localhost:8000/#/issue/isue123">issue123</a></td>
+                              <td>Sequence pending for validation</td>
+                              <td>Low</td>
+                              <td>May/03/2014</td>
+                            </tr>
+                            <tr>
+                              <td><a href="http://localhost:8000/#/issue/issue980">issue980</a></td>
+                              <td>Sequence pending for validation</td>
+                              <td>Low</td>
+                              <td>May/03/2014</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel-footer">
+                  <div class="row">
+                    <div class="col-xs-6 text-left">
+                      <a href="#" tooltip="Refresh"><i class="fa fa-refresh fa-fw" ng-class="{'fa-spin': hover}" ng-mouseenter="hover = true" ng-mouseleave="hover = false" ></i></a>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                      <a href="#">View all alerts <i class="fa fa-arrow-circle-right"></i></a>
+                    </div>
+                  </div>
+                </div>
+              </div>          
+            </div>
+          </div> <!-- Alerts panel -->
+           
+        </div> <!-- Main body (right column) -->
       
-      <!-- TODO -->
+      </div> <!-- Main body -->      
+      
+      
+      
+      
+      
+      
+      <!-- TODO
       <div class="row">
         <div class="col-xs-12">
           <div class="well">
             TODO
           </div>
-        </div> 
-      </div><!-- TODO -->
+          
+          <div class="btn-group btn-group-md btn-group-justified">
+            <a href="#" class="btn btn-primary">              
+              <i class="fa fa-plus fa-fw"></i><br />
+              Add
+            </a>
+            <a href="#" class="btn btn-primary">
+              <i class="fa fa-minus fa-fw"></i><br />
+              Remove
+            </a>
+            <a href="#" class="btn btn-primary">
+              <i class="fa fa-list-ul fa-fw"></i><br />
+              List
+            </a>
+            <a href="#" class="btn btn-primary">
+              <i class="fa fa-download fa-fw"></i><br />
+              PDF
+            </a>
+          </div>
+          
+        </div>
+      </div> TODO -->
       
     </div> <!-- Right column -->
     

@@ -57,7 +57,7 @@ angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'chieffancypants.l
 	$routeProvider.when('/', {templateUrl: 'partials/home.html', controller: 'HomeCtrl'});
 	$routeProvider.when('/login/:ref?/:fail?', {templateUrl: 'partials/login.html', controller: 'LoginCtrl'});	
 	$routeProvider.when('/user/validate/:email?/:code?', {templateUrl: 'partials/user_validation.html', controller: 'UserValidationCtrl'});	
-	$routeProvider.when('/user/profile/:username?', {templateUrl: 'partials/user_profile.html', controller: 'UserProfileCtrl'});
+	$routeProvider.whenAuthenticated('/user/profile/:username?', {templateUrl: 'partials/user_profile.html', controller: 'UserProfileCtrl'});
 	$routeProvider.whenAuthenticated('/files', {templateUrl: 'partials/filestore.html', controller: 'FileStoreCtrl'});
 	$routeProvider.whenAuthenticated('/settings', {templateUrl: 'partials/settings.html', controller: 'SettingsCtrl'});
 	$routeProvider.when('/map', {templateUrl: 'partials/mapviewer.html', controller: 'MapViewerCtrl'});
