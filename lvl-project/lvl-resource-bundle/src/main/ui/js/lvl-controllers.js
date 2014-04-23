@@ -33,12 +33,15 @@ angular.module('lvl.controllers', [])
 	};
 }])
 .controller('NavBarCtrl', ['$scope', '$rootScope', '$window', 'ENV', 'CookieFactory', 'Oauth2Factory', function($scope, $rootScope, $window, ENV, CookieFactory, Oauth2Factory) {
+	$scope.user = {
+			'username': ''	
+	};
 	$rootScope.$watch( 
 			function() {
 				return $window.sessionStorage.token; 
 			}, 
 			function(newValue, oldValue) {		
-				$scope.isAuthenticated = (typeof $window.sessionStorage.token !== undefined && $window.sessionStorage.email !== undefined);
+				$scope.isAuthenticated = (typeof $window.sessionStorage.token !== undefined && $window.sessionStorage.email !== undefined);				
 			});
 	$scope.logout = function() {
 		$scope.isAuthenticated = false;
@@ -47,7 +50,7 @@ angular.module('lvl.controllers', [])
 		// clear session
 		delete $window.sessionStorage.token;
 		delete $window.sessionStorage.email;
-		delete $window.sessionStorage.userInfo;
+		delete $window.sessionStorage.removeItem('user');
 		// clear cookies
 		CookieFactory.remove();		
 	};
@@ -142,7 +145,7 @@ angular.module('lvl.controllers', [])
 .controller('UserProfileCtrl', ['$scope', '$routeParams', function($scope, $routeParams) {
 	// default top entries to be visible
 	$scope.isProfileDetailsVisible = true;
-	
+
 	// TODO
 	$scope.user = {
 			'username': 'ertorser',
@@ -151,7 +154,7 @@ angular.module('lvl.controllers', [])
 			'followers': 85
 	};
 	// TODO
-	
+
 }])
 .controller('FileStoreCtrl', ['$scope', function($scope) {
 	// default top entries to be visible
@@ -159,7 +162,7 @@ angular.module('lvl.controllers', [])
 	$scope.toggleTopEntries = function() {
 		$scope.isTopEntriesVisible = ! $scope.isTopEntriesVisible;
 	};
-	
+
 	// TODO
 	$scope.user = {
 			'username': 'ertorser',
@@ -167,6 +170,14 @@ angular.module('lvl.controllers', [])
 			'following': 10,
 			'followers': 85
 	};
+	// TODO
+
+}])
+.controller('SettingsCtrl', ['$scope', function($scope) {
+	$scope.isUsersOpen = true;
+	$scope.isSequencesOpen = true;
+	
+	
 	// TODO
 	
 }])

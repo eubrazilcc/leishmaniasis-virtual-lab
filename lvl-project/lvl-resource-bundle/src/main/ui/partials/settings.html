@@ -1,0 +1,199 @@
+<!-- Content -->
+<div class="container-fluid">
+  <div class="row">
+  
+    <!-- Left column -->
+    <div class="col-md-2 col-xs-4 lvl-top">
+        
+      <!-- Sidebar navigation menu -->
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title"><i class="fa fa-dashboard fa-fw"></i> Dashboard</h3>
+            </div>
+          </div>
+          <accordion close-others="false">        
+            <accordion-group is-open="isUsersOpen">
+              <accordion-heading>
+                Users <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isUsersOpen, 'glyphicon-chevron-right': !isUsersOpen}"></i>
+              </accordion-heading>
+              <p class="lvl-sidebar"><a href="#/"><i class="fa fa-user fa-fw"></i> Active</a></p>
+              <p class="lvl-sidebar"><a href="#/"><i class="fa fa-ban fa-fw"></i> Inactive</a></p>
+            </accordion-group>
+            <accordion-group is-open="isSequencesOpen">
+              <accordion-heading>
+                Sequences <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isSequencesOpen, 'glyphicon-chevron-right': !isSequencesOpen}"></i>
+              </accordion-heading>
+              <p class="lvl-sidebar"><a href="#/"><i class="fa fa-unlock fa-fw"></i> Public</a></p>
+              <p class="lvl-sidebar"><a href="#/"><i class="fa fa-lock fa-fw"></i> Private</a></p>
+            </accordion-group>
+          </accordion>      
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <div class="row">
+                <div class="col-xs-6">
+                  <h3 class="panel-title"><i class="fa fa-lightbulb-o fa-fw"></i> Tips</h3>  
+                </div>
+                <div class="col-xs-6">
+                  <button type="button" class="close" aria-hidden="true">&times;</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel-body">
+              Panel content
+            </div>
+          </div>
+        </div>  
+      </div>
+    </div> <!-- Left column -->
+    
+    <!-- Right column -->
+    <div class="col-md-10 col-xs-8 lvl-top">
+    
+      <!-- Summary -->
+      <div class="row">        
+        <div class="col-md-3 hidden-sm hidden-xs">
+          <div class="panel panel-success">
+            <div class="panel-heading">
+              <div class="row">
+                <div class="col-xs-6">
+                  <h1>58</h1>              
+                </div>
+                <div class="col-xs-6 text-right">
+                  <i class="fa fa-users fa-5x"></i>
+                </div>     
+              </div>
+              <div class="row">
+                <div class="col-xs-12">
+                  Registered users
+                </div>
+              </div>
+            </div>               
+            <div class="panel-footer text-center">
+              <a href="#">More info <i class="fa fa-arrow-circle-right"></i></a>        
+            </div>
+          </div>
+        </div>
+    
+        <div class="col-md-3 hidden-sm hidden-xs">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <div class="row">
+                <div class="col-xs-6">
+                  <h1>231</h1>              
+                </div>
+                <div class="col-xs-6 text-right">
+                  <i class="fa fa-bug fa-5x"></i>
+                </div>     
+              </div>
+              <div class="row">
+                <div class="col-xs-12">
+                  Stored sequences
+                </div>
+              </div>
+            </div>               
+            <div class="panel-footer text-center">
+              <a href="#">More info <i class="fa fa-arrow-circle-right"></i></a>        
+            </div>
+          </div>
+        </div>
+    
+        <div class="col-md-3 hidden-sm hidden-xs">
+          <div class="panel panel-warning">
+            <div class="panel-heading">
+              <div class="row">
+                <div class="col-xs-6">
+                  <h1>123</h1>              
+                </div>
+                <div class="col-xs-6 text-right">
+                  <i class="fa fa-file-text fa-5x"></i>
+                </div>     
+              </div>
+              <div class="row">
+                <div class="col-xs-12">
+                  Shared papers
+                </div>
+              </div>
+            </div>               
+            <div class="panel-footer text-center">
+              <a href="#">More info <i class="fa fa-arrow-circle-right"></i></a>        
+            </div>
+          </div>
+        </div>
+    
+        <div class="col-md-3 hidden-sm hidden-xs">
+          <div class="panel panel-danger">
+            <div class="panel-heading">
+              <div class="row">
+                <div class="col-xs-6">
+                  <h1>12</h1>      
+                </div>
+                <div class="col-xs-6 text-right">
+                  <i class="fa fa-check-square fa-5x"></i>
+                </div>     
+              </div>
+              <div class="row">
+                <div class="col-xs-12">
+                  Pending tasks
+                </div>
+              </div>
+            </div>               
+            <div class="panel-footer text-center">
+              <a href="#">Complete tasks <i class="fa fa-arrow-circle-right"></i></a>        
+            </div>
+          </div>
+        </div>
+      </div> <!-- Summary -->
+      
+      <!-- Users panel -->
+      <div class="row">
+        <div class="col-xs-6">
+          <div class="panel panel-default">
+            <div class="panel-heading">Users</div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-xs-6">
+                  TODO
+                </div>
+                <div class="col-xs-6">
+                  TODO
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Users panel -->
+      
+      <!-- Users panel -->
+      <div class="row">
+        <div class="col-xs-6">
+          <div class="panel panel-default">
+            <div class="panel-heading">Users</div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-xs-6">
+                  TODO
+                </div>
+                <div class="col-xs-6">
+                  TODO
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Users panel -->
+      
+      <!-- TODO -->
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="well">
+            TODO
+          </div>
+        </div> 
+      </div><!-- TODO -->
+      
+    </div> <!-- Right column -->
+    
+  </div>  
+</div> <!-- Content -->

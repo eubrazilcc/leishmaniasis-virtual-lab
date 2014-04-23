@@ -21,16 +21,23 @@ angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'chieffancypants.l
 .config(['$routeProvider', function($routeProvider) {
 	var isLoggedIn = ['$q', '$http', '$window', 'Oauth2Factory', function($q, $http, $window, Oauth2Factory) {
 		var defer = $q.defer();
-		if ($window.sessionStorage.userInfo) {
-			// console.log("User info exists: " + $window.sessionStorage.userInfo);
-			defer.resolve($window.sessionStorage.userInfo);
+		if ($window.sessionStorage.getItem('user')) {
+			// console.log("User info exists: " + $window.sessionStorage.getItem('user'));
+			defer.resolve($window.sessionStorage.getItem('user'));
 		} else {
 			// console.log("Requesting user info...");
 			Oauth2Factory.user().success(function (data, status) {
 				if (data.username != null) {
-					$window.sessionStorage.userInfo = data;
-					// console.log("User info obtained: " + $window.sessionStorage.userInfo);
-					defer.resolve($window.sessionStorage.userInfo);
+					$window.sessionStorage.setItem('user', JSON.stringify(data));
+					/* var obj = JSON.parse($window.sessionStorage.getItem('user'));
+					var str = "";
+					for (var i in obj) {
+						if (obj.hasOwnProperty(i)) {
+							str += "User" + "." + i + " = " + obj[i] + "\n";
+						}
+					}
+					console.log("User info obtained:\n" + str); */					
+					defer.resolve($window.sessionStorage.getItem('user'));
 				} else {
 					// console.log("Failed to get user info");
 					defer.reject({ needsAuthentication: true });
@@ -52,6 +59,7 @@ angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'chieffancypants.l
 	$routeProvider.when('/user/validate/:email?/:code?', {templateUrl: 'partials/user_validation.html', controller: 'UserValidationCtrl'});	
 	$routeProvider.when('/user/profile/:username?', {templateUrl: 'partials/user_profile.html', controller: 'UserProfileCtrl'});
 	$routeProvider.whenAuthenticated('/files', {templateUrl: 'partials/filestore.html', controller: 'FileStoreCtrl'});
+	$routeProvider.whenAuthenticated('/settings', {templateUrl: 'partials/settings.html', controller: 'SettingsCtrl'});
 	$routeProvider.when('/map', {templateUrl: 'partials/mapviewer.html', controller: 'MapViewerCtrl'});
 	$routeProvider.when('/404', {templateUrl: 'partials/404.html', controller: 'PageNotFoundCtrl'});
 	$routeProvider.otherwise({redirectTo: '/404'});
