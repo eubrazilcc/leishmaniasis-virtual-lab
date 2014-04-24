@@ -351,7 +351,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(User.class);
 			assertThat("Get user by username result is not null", user2, notNullValue());
-			assertThat("Get user by username coincides with expected", user2.equalsIgnoreLink(user));
+			assertThat("Get user by username coincides with expected", user2.equalsIgnoreVolatile(user));
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by username result: " + user2.toString());
 
@@ -361,7 +361,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(User.class);
 			assertThat("Get user by email address result is not null", user2, notNullValue());
-			assertThat("Get user by email address coincides with expected", user2.equalsIgnoreLink(user));
+			assertThat("Get user by email address coincides with expected", user2.equalsIgnoreVolatile(user));
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by email address result: " + user2.toString());			
 
@@ -387,7 +387,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(User.class);
 			assertThat("Get user by username after update result is not null", user2, notNullValue());
-			assertThat("Get user by username after update coincides with expected", user2.equalsIgnoreLink(user));
+			assertThat("Get user by username after update coincides with expected", user2.equalsIgnoreVolatile(user));
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by username after update result: " + user2.toString());
 
@@ -462,7 +462,7 @@ public class AuthTest {
 			assertThat("Get user by username after validation result is not null", user2, notNullValue());
 			assertThat("Get user by username after validation scopes is not null", user2.getScopes(), notNullValue());
 			assertThat("Get user by username after validation scopes is not empty", !user2.getScopes().isEmpty());
-			assertThat("Get user by username after validation coincides with expected", user2.equalsIgnoreLink(user));
+			assertThat("Get user by username after validation coincides with expected", user2.equalsIgnoreVolatile(user));
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by username after validation result: " + user2.toString());
 		} catch (Exception e) {

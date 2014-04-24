@@ -36,6 +36,18 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<description>LVL storage connector</description>
 	<url>http://eubrazilcloudconnect.eu/</url>	
 	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.glassfish.jersey</groupId>
+				<artifactId>jersey-bom</artifactId>
+				<version>${jersey.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
 	<dependencies>
 		<!-- LVL modules -->
 		<dependency>
@@ -83,6 +95,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.apache.oltu.oauth2</groupId>
 			<artifactId>org.apache.oltu.oauth2.resourceserver</artifactId>
 			<scope>provided</scope>
+		</dependency>
+		
+		<!-- Jersey core common packages -->
+		<dependency>
+			<groupId>org.glassfish.jersey.core</groupId>
+			<artifactId>jersey-common</artifactId>
+			<scope>test</scope>
 		</dependency>
 		
 		<!-- Logback and SLF4J logging framework -->

@@ -142,17 +142,36 @@ angular.module('lvl.controllers', [])
 		);
 	};	
 }])
-.controller('UserProfileCtrl', ['$scope', '$routeParams', function($scope, $routeParams) {
+.controller('UserProfileCtrl', ['$scope', '$routeParams', '$window', '$location', 'Oauth2Factory', function($scope, $routeParams, $window, $location, Oauth2Factory) {
 	// default top entries to be visible
-	$scope.isProfileDetailsVisible = true;
-
-	// TODO
-	$scope.user = {
-			'username': 'ertorser',
-			'fullname': 'Erik Torres',
-			'following': 10,
-			'followers': 85
+	$scope.isProfileDetailsVisible = true;	
+	var profile = function(userObj) {
+		if (userObj) {
+			$scope.user = {
+					'username': userObj['username'],
+					'fullname': userObj['fullname'],
+					'pictureUrl': userObj['pictureUrl'],
+					'following': 10, // TODO
+					'followers': 85  // TODO
+			};
+		} else {
+			$location.path('/404');
+		}
 	};
+	if ($routeParams.username !== undefined) {
+		Oauth2Factory.profile($routeParams.username).then(
+				function (result) {
+					profile(result ? result['data'] : null);					
+				},
+				function (reason) {
+					profile(null);
+				},
+				null
+		);
+	} else {
+		profile(JSON.parse($window.sessionStorage.getItem('user')));
+	}
+
 	// TODO
 
 }])
@@ -178,10 +197,10 @@ angular.module('lvl.controllers', [])
 	$scope.isSequencesOpen = false;
 	$scope.isPapersOpen = false;
 	$scope.isIssuesOpen = false;
-	
-	
+
+
 	// TODO
-	
+
 }])
 .controller('MapViewerCtrl', ['$scope', function($scope) {
 	// initial setup

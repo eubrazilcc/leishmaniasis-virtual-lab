@@ -29,6 +29,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 
@@ -50,6 +51,7 @@ public class ResourceOwnerCollectionTest {
 		System.out.println("ResourceOwnerCollectionTest.test()");
 		try {
 			final Collection<String> scopes = newArrayList("scope1", "scope2");
+
 			// insert
 			final ResourceOwner resourceOwner = ResourceOwner.builder()
 					.id("username")
@@ -61,19 +63,34 @@ public class ResourceOwnerCollectionTest {
 							.scopes(scopes)
 							.build()).build();
 			ResourceOwnerDAO.INSTANCE.insert(resourceOwner);
+
 			// find
 			ResourceOwner resourceOwner2 = ResourceOwnerDAO.INSTANCE.find(resourceOwner.getOwnerId());
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
 			assertThat("resource owner coincides with original", resourceOwner2, equalTo(resourceOwner));
 			System.out.println(resourceOwner2.toString());
+
+			// find with volatile values
+			resourceOwner2 = ResourceOwnerDAO.INSTANCE.baseUri(new URI("http://localhost/"))
+					.useGravatar(true).find(resourceOwner.getOwnerId());
+			assertThat("resource owner with volatile values is not null", resourceOwner2, notNullValue());
+			assertThat("resource owner link is not null", resourceOwner2.getUser().getLink(), notNullValue());
+			assertThat("resource owner picture URL is not null", resourceOwner2.getUser().getPictureUrl(), notNullValue());
+			assertThat("resource owner picture URL is not empty", isNotBlank(resourceOwner2.getUser().getPictureUrl()));
+			assertThat("resource owner with volatile values coincides with original", 
+					resourceOwner2.getUser().equalsIgnoreVolatile(resourceOwner.getUser()));
+			System.out.println(resourceOwner2.toString());
+
 			// update
 			resourceOwner.getUser().setPassword("new_password");
 			ResourceOwnerDAO.INSTANCE.update(resourceOwner);
+
 			// find after update
-			resourceOwner2 = ResourceOwnerDAO.INSTANCE.find(resourceOwner.getOwnerId());
+			resourceOwner2 = ResourceOwnerDAO.INSTANCE.reset().find(resourceOwner.getOwnerId());
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
 			assertThat("resource owner coincides with original", resourceOwner2, equalTo(resourceOwner));
 			System.out.println(resourceOwner2.toString());
+
 			// check validity using owner Id and username
 			boolean validity = ResourceOwnerDAO.INSTANCE.isValid(resourceOwner.getOwnerId(), 
 					resourceOwner.getUser().getUsername(), 
@@ -81,7 +98,7 @@ public class ResourceOwnerCollectionTest {
 					false, 
 					null);
 			assertThat("resource owner is valid (using owner Id & username)", validity);
-			
+
 			// check validity using email address
 			validity = ResourceOwnerDAO.INSTANCE.isValid(null, 
 					resourceOwner.getUser().getEmail(), 
@@ -89,13 +106,13 @@ public class ResourceOwnerCollectionTest {
 					true, 
 					null);
 			assertThat("resource owner is valid (using email)", validity);			
-			
+
 			// add scopes
 			ResourceOwnerDAO.INSTANCE.addScopes(resourceOwner.getOwnerId(), "scope3");
-			
+
 			// remove scopes
 			ResourceOwnerDAO.INSTANCE.removeScopes(resourceOwner.getOwnerId(), "scope2");
-			
+
 			// get OAuth scope
 			resourceOwner2 = ResourceOwnerDAO.INSTANCE.find(resourceOwner.getOwnerId());
 			final String oauthScope = ResourceOwnerDAO.oauthScope(resourceOwner2, true);
@@ -103,10 +120,10 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner OAuth scope is not blank", isNotBlank(oauthScope));
 			assertThat("resource owner OAuth scope coincided with expected", oauthScope, equalTo("scope1 scope3"));
 			System.out.println("OAuth scope: '" + oauthScope + "'");
-			
+
 			// remove
 			ResourceOwnerDAO.INSTANCE.delete(resourceOwner.getOwnerId());
-			
+
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {

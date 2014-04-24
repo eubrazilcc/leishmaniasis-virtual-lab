@@ -47,6 +47,8 @@ public class User implements Serializable {
 	private static final long serialVersionUID = -8320525767063830149L;
 
 	private Link link;
+	private String pictureUrl;
+	
 	private String username;
 	private String password;
 	private String email;
@@ -61,6 +63,12 @@ public class User implements Serializable {
 	}
 	public void setLink(final Link link) {
 		this.link = link;
+	}
+	public String getPictureUrl() {
+		return pictureUrl;
+	}
+	public void setPictureUrl(final String pictureUrl) {
+		this.pictureUrl = pictureUrl;
 	}
 	public String getUsername() {
 		return username;
@@ -100,10 +108,11 @@ public class User implements Serializable {
 		}
 		final User other = User.class.cast(obj);
 		return Objects.equal(link, other.link)
-				&& equalsIgnoreLink(other);
+				&& Objects.equal(pictureUrl, other.pictureUrl)
+				&& equalsIgnoreVolatile(other);
 	}
 
-	public boolean equalsIgnoreLink(final User other) {
+	public boolean equalsIgnoreVolatile(final User other) {
 		if (other == null) {
 			return false;
 		}
@@ -125,13 +134,14 @@ public class User implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(link, username, password, email, fullname, scopes);
+		return Objects.hashCode(link, pictureUrl, username, password, email, fullname, scopes);
 	}
 
 	@Override
 	public String toString() {
 		return Objects.toStringHelper(this)
 				.add("link", link)
+				.add("pictureUrl", pictureUrl)
 				.add("username", username)
 				.add("password", password)
 				.add("email", email)				
@@ -156,6 +166,11 @@ public class User implements Serializable {
 
 		public Builder link(final Link link) {
 			user.setLink(link);
+			return this;
+		}
+		
+		public Builder pictureUrl(final String pictureUrl) {
+			user.setPictureUrl(pictureUrl);
 			return this;
 		}
 

@@ -33,6 +33,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -59,6 +60,7 @@ import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
+import eu.eubrazilcc.lvl.storage.gravatar.Gravatar;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
@@ -81,12 +83,15 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	private final Morphia morphia = new Morphia();
 
-	private URI baseUri = null;
+	private URI baseUri;
+	private boolean useGravatar;
 
 	private ResourceOwnerDAO() {
 		MongoDBConnector.INSTANCE.createIndex(PRIMARY_KEY, COLLECTION);
 		MongoDBConnector.INSTANCE.createIndex(EMAIL_KEY, COLLECTION);
 		morphia.map(ResourceOwnerEntity.class);
+		// reset parameters to their default values
+		reset();
 		// ensure that at least the administrator account exists in the database
 		final List<ResourceOwner> owners = list(0, 1, null);
 		if (owners == null || owners.isEmpty()) {
@@ -104,6 +109,17 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	public ResourceOwnerDAO baseUri(final URI baseUri) {
 		this.baseUri = baseUri;
+		return this;
+	}
+
+	public ResourceOwnerDAO useGravatar(final boolean useGravatar) {
+		this.useGravatar = useGravatar;
+		return this;
+	}
+	
+	public ResourceOwnerDAO reset() {
+		this.baseUri = null;
+		this.useGravatar = false;
 		return this;
 	}
 
@@ -189,6 +205,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	private ResourceOwner parseBasicDBObject(final BasicDBObject obj) {
 		final ResourceOwner owner = morphia.fromDBObject(ResourceOwnerEntity.class, obj).getResourceOwner();
 		addLink(owner);
+		addGravatar(owner);
 		return owner;
 	}
 
@@ -199,6 +216,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 			if (entity != null) {
 				owner = morphia.fromDBObject(ResourceOwnerEntity.class, obj).getResourceOwner();
 				addLink(owner);
+				addGravatar(owner);
 			}
 		}
 		return owner;
@@ -209,6 +227,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
 		final ResourceOwner owner = morphia.fromDBObject(ResourceOwnerEntity.class, (BasicDBObject) obj2.get("obj")).getResourceOwner();
 		addLink(owner);
+		addGravatar(owner);
 		return owner;
 	}
 
@@ -216,6 +235,17 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		if (baseUri != null) {
 			owner.getUser().setLink(Link.fromUri(UriBuilder.fromUri(baseUri).path(owner.getOwnerId()).build())
 					.rel(LinkRelation.SELF).type(MediaType.APPLICATION_JSON).build());
+		}
+	}
+
+	private void addGravatar(final ResourceOwner owner) {
+		if (useGravatar) {
+			final URL url = Gravatar.builder()
+					.email(owner.getUser().getEmail())
+					.build().imageUrl();
+			if (url != null) {
+				owner.getUser().setPictureUrl(url.toString());
+			}
 		}
 	}
 
@@ -336,6 +366,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public static class ResourceOwnerTransientStore extends TransientStore<ResourceOwner> {
 
 		private Link link;
+		private String prictureUrl;
 
 		public ResourceOwnerTransientStore(final ResourceOwner resourceOwner) {
 			super(resourceOwner);
@@ -345,14 +376,23 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 			return link;
 		}
 
+		public String getPrictureUrl() {
+			return prictureUrl;
+		}
+
 		public ResourceOwner purge() {
+			// store
 			link = element.getUser().getLink();
+			prictureUrl = element.getUser().getPictureUrl();
+			// remove
 			element.getUser().setLink(null);
+			element.getUser().setPictureUrl(null);			
 			return element;
 		}
 
 		public ResourceOwner restore() {
 			element.getUser().setLink(link);
+			element.getUser().setPictureUrl(prictureUrl);
 			return element;
 		}
 

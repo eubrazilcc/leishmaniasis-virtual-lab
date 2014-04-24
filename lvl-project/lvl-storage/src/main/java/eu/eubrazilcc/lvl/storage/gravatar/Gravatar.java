@@ -147,6 +147,18 @@ public class Gravatar {
 
 	/* Fluent API */
 
+	/**
+	 * Creates a {@link Gravatar} builder that uses the following values to initialize
+	 * the fields:<br>
+	 * <br>
+	 * <ul>
+	 *   <li>Image size: {@code 80}</li>
+	 *   <li>Default image: {@link DefaultImage#MISTERY_MAN}</li>
+	 *   <li>Image rating: {@link Rating#GENERAL_AUDIENCES}</li>
+	 *   <li>Use secure access: {@code true}</li>
+	 * </ul>
+	 * @return a {@link Gravatar} builder that uses the default values.
+	 */
 	public static Builder builder() {
 		return new Builder();
 	}

@@ -62,6 +62,13 @@ angular.module('lvl.services', [])
 				params: { 'use_email': 'true' },
 				headers: authNHeaders($window)
 			});
+		},
+		profile: function(username) {
+			return $http({
+				url: ENV.oauth2Endpoint + '/users/' + encodeURIComponent(username),
+				method: 'GET',
+				headers: authNHeaders($window)
+			});
 		}
 	};
 }])
