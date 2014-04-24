@@ -17,7 +17,7 @@ angular.module('lvl.config', [])
 	'lvlCookieId': 'LVL-LeishVirtLab'
 });
 
-angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'chieffancypants.loadingBar', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers', 'lvl.fastclick', 'ui.bootstrap' ])
+angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'ngGrid', 'ui.bootstrap', 'chieffancypants.loadingBar', 'lvl.fastclick', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers' ])
 .config(['$routeProvider', function($routeProvider) {
 	var isLoggedIn = ['$q', '$http', '$window', 'Oauth2Factory', function($q, $http, $window, Oauth2Factory) {
 		var defer = $q.defer();
@@ -59,6 +59,7 @@ angular.module('lvl', [ 'ngRoute', 'ngSanitize', 'ngCookies', 'chieffancypants.l
 	$routeProvider.when('/user/validate/:email?/:code?', {templateUrl: 'partials/user_validation.html', controller: 'UserValidationCtrl'});	
 	$routeProvider.whenAuthenticated('/user/profile/:username?', {templateUrl: 'partials/user_profile.html', controller: 'UserProfileCtrl'});
 	$routeProvider.whenAuthenticated('/files', {templateUrl: 'partials/filestore.html', controller: 'FileStoreCtrl'});
+	$routeProvider.whenAuthenticated('/sequences', {templateUrl: 'partials/sequences.html', controller: 'SequencesCtrl'});	
 	$routeProvider.whenAuthenticated('/settings', {templateUrl: 'partials/settings.html', controller: 'SettingsCtrl'});
 	$routeProvider.when('/map', {templateUrl: 'partials/mapviewer.html', controller: 'MapViewerCtrl'});
 	$routeProvider.when('/404', {templateUrl: 'partials/404.html', controller: 'PageNotFoundCtrl'});

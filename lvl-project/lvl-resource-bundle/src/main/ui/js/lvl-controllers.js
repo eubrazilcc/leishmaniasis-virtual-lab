@@ -202,6 +202,45 @@ angular.module('lvl.controllers', [])
 	// TODO
 
 }])
+.controller('SequencesCtrl', ['$scope', function($scope) {
+	$scope.mySelections = [];
+
+	$scope.myData = [{accession: 'U49845', version: 1, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: 'es'},
+	                 {accession: 'A78394', version: 1, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: ''},
+	                 {accession: 'D34981', version: 1, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: 'es'},
+	                 {accession: 'B89091', version: 2, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: 'es'},
+	                 {accession: 'E23688', version: 1, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: 'es'}];
+
+	var hdrCellTpl = '<div class="ngHeaderSortColumn {{col.headerClass}}" ng-style="{\'cursor\': col.cursor}" ng-class="{ \'ngSorted\': !noSortVisible }"><div ng-click="col.sort($event)" ng-class="\'colt\' + col.index" class="ngHeaderText">{{col.displayName}}</div><div class="ngSortButtonDown" ng-show="col.showSortButtonDown()"></div><div class="ngSortButtonUp" ng-show="col.showSortButtonUp()"></div><div class="ngSortPriority">{{col.sortPriority}}</div><div ng-class="{ ngPinnedIcon: col.pinned, ngUnPinnedIcon: !col.pinned }" ng-click="togglePin(col)" ng-show="col.pinnable"></div></div><div ng-show="col.resizable" class="ngHeaderGrip" ng-click="col.gripClick($event)" ng-mousedown="col.gripOnMouseDown($event)"></div>';
+	var linkCellTpl = '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>' +
+	'<code><a ng-href="#/sequences/{{row.getProperty(col.field)}}">{{row.getProperty(col.field)}}</a></code> ' +
+	'<a ng-href="#/sequences/{{row.getProperty(col.field)}}/edit" tooltip-placement="right" tooltip="edit"><i class="fa fa-pencil-square-o fa-fw"></i></a>' +
+	'<a ng-href="#/sequences/{{row.getProperty(col.field)}}/delete" tooltip-placement="right" tooltip="delete"><i class="fa fa-trash-o fa-fw"></i></a>' +
+	'</span></div>';
+	var countryCellTpl = '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>' +
+	'<img src="img/blank.gif" class="flag flag-{{row.getProperty(col.field)}}" alt="Spain" /> Spain' +
+	'</span></div>';
+
+	$scope.gridOptions = { 
+			data: 'myData',
+			selectedItems: $scope.mySelections,
+			multiSelect: false,
+			keepLastSelected: false,
+			showSelectionCheckbox: true,
+			selectWithCheckboxOnly: true,
+			enableColumnResize: true,
+			showFooter: true,			
+			columnDefs: [{field:'accession', displayName:'Accession', headerCellTemplate:hdrCellTpl, width:'***', cellTemplate:linkCellTpl}, 
+			             {field:'version', displayName:'Version', headerCellTemplate:hdrCellTpl, width:'*'},
+			             {field:'definition', displayName:'Definition', headerCellTemplate:hdrCellTpl, width:'***'},			             
+			             {field:'organism', displayName:'Organism', headerCellTemplate:hdrCellTpl, width:'**'},
+			             {field:'country', displayName:'Country', headerCellTemplate:hdrCellTpl, width:'**', cellTemplate:countryCellTpl}]
+	};
+
+
+	// TODO
+
+}])
 .controller('MapViewerCtrl', ['$scope', function($scope) {
 	// initial setup
 	$scope.longitude = 3.7036;

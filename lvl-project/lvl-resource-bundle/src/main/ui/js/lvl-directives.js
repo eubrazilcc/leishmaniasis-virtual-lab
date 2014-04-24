@@ -78,8 +78,10 @@ angular.module('lvl.directives', [])
 	};
 }])
 .directive('resize', ['$window', function ($window) { // <div ng-style="style()" resize></div>
-	return function (scope, element) {
-		var w = angular.element($window);
+	return function (scope, element, attrs) {		
+		var resizeHeightOffset = (attrs.resizeHeightOffset || 124);
+		var resizeWidth = (attrs.resizeWidth || '100%');		
+		var w = angular.element($window);		
 		scope.$watch(function () {
 			return { 'h': w.height(), 'w': w.width() };
 		}, function (newValue, oldValue) {
@@ -87,12 +89,12 @@ angular.module('lvl.directives', [])
 			scope.windowWidth = newValue.w;
 			scope.style = function () {
 				return { 
-					'height': (newValue.h - 124) + 'px',
-					// 'width': '100%'
-					'width': (newValue.w - 30) + 'px'
+					// 'width': (newValue.w - 30) + 'px'
+					'height': (newValue.h - resizeHeightOffset) + 'px',
+					'width': resizeWidth					
 				};
 			};
-		}, true);	
+		}, true);		
 		w.bind('resize', function () {
 			scope.$apply();
 		});

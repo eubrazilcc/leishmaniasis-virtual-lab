@@ -180,3 +180,14 @@ a.lvl-social:hover {
 	left: auto;
 	border-radius: 4px 0 0 4px
 }
+
+.lvl-grid {
+	border: 1px solid rgb(212, 212, 212);
+	width: 400px;
+	height: 300px
+}
+
+.lvl-grid-bottom {
+	padding-bottom: 1px;
+	margin-bottom: 1px;
+}
