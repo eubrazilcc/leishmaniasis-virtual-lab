@@ -45,6 +45,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<outputDirectory>etc</outputDirectory>
 		</fileSet>
 		<fileSet>
+			<directory>${project.basedir}/src/main/scripts</directory>
+			<outputDirectory>bin</outputDirectory>
+			<fileMode>0755</fileMode>
+		</fileSet>
+		<fileSet>
 			<directory>${project.basedir}/src/main/var</directory>
 			<outputDirectory>var</outputDirectory>
 			<directoryMode>0755</directoryMode>
