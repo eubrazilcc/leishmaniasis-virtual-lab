@@ -214,6 +214,8 @@ angular.module('lvl.controllers', [])
 		return country;
 	};
 
+	$scope.showNotifications = true;
+
 	$scope.selectedSequences = [];
 
 	$scope.seqData = [{accession: 'U49845', version: 1, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: countryFn('es')},
@@ -234,6 +236,24 @@ angular.module('lvl.controllers', [])
 		+ '<div ng-bind-html="row.getProperty(col.field)"></div>'
 		+ '</span></div>';
 
+	var gridLayoutPlugin = new ngGridLayoutPlugin();
+
+	$scope.$watch('showNotifications', function(newVal, oldVal) {
+		if (newVal !== undefined && newVal !== oldVal) {			
+			
+			
+			
+			// $scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
+
+			// gridLayoutPlugin.updateGridLayout();
+
+			// TODO
+			console.log("updateGridLayout");
+			// TODO
+
+		}
+	});
+
 	$scope.gridOptions = {
 			data: 'seqData',
 			selectedItems: $scope.selectedSequences,
@@ -242,12 +262,13 @@ angular.module('lvl.controllers', [])
 			showSelectionCheckbox: true,
 			selectWithCheckboxOnly: true,
 			enableColumnResize: true,
-			showFooter: true,			
+			showFooter: true,
+			plugins: [gridLayoutPlugin],
 			columnDefs: [{field:'accession', displayName:'Accession', headerCellTemplate:hdrCellTpl, width:'***', cellTemplate:linkCellTpl}, 
 			             {field:'version', displayName:'Version', headerCellTemplate:hdrCellTpl, width:'*'},
 			             {field:'definition', displayName:'Definition', headerCellTemplate:hdrCellTpl, width:'***', cellTemplate:definitionCellTpl},			             
 			             {field:'organism', displayName:'Organism', headerCellTemplate:hdrCellTpl, width:'**'},
-			             {field:'country', displayName:'Country', headerCellTemplate:hdrCellTpl, width:'**', cellTemplate:countryCellTpl}]
+			             {field:'country', displayName:'Country', headerCellTemplate:hdrCellTpl, width:'**', cellTemplate:countryCellTpl}]			             
 	};
 
 

@@ -3,9 +3,10 @@
 /* Directives */
 
 angular.module('lvl.directives', [])
-.directive('toggleGrid', [ function () {
+.directive('toggleGrid', [ function () { // possible layouts: 3 or 4
 	function link(scope, element, attrs) {
-		var expr = attrs.toggleGrid;		
+		var expr = attrs.toggleGrid;
+		var layout = (attrs.toggleLayout || 3);
 		var divC = (attrs.toggleGridComplement || "complement");
 		var divT = (attrs.toggleGridToggleable || "toggleable");		
 		var duration = (attrs.toggleGridDuration || "fast");
@@ -21,16 +22,16 @@ angular.module('lvl.directives', [])
 			var toggleable = element.find("div[id='" + divT + "']");
 			if (newVal) {				
 				// show
-				complement.removeClass('col-md-10');
-				complement.addClass('col-md-7');				
+				complement.removeClass(layout == 3 ? 'col-md-10' : 'col-md-12');
+				complement.addClass(layout == 3 ? 'col-md-7' : 'col-md-9');
 				toggleable.addClass('col-md-3');
 				toggleable.removeClass('hidden');
 				toggleable.stop(true, true).slideToggle(duration);
 			} else {				
 				// hide
 				toggleable.stop(true, true).slideToggle(duration, function() {
-					complement.removeClass('col-md-7');
-					complement.addClass('col-md-10');
+					complement.removeClass(layout == 3 ? 'col-md-7' : 'col-md-9');
+					complement.addClass(layout == 3 ? 'col-md-10' : 'col-md-12');
 					toggleable.removeClass('col-md-3');
 					toggleable.addClass('hidden');
 				});

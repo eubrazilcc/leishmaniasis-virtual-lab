@@ -1,7 +1,100 @@
 <!-- Content -->
 <div class="container">  
 
+  <!-- Main layout -->
   <div class="row">
+    <div class="col-xs-12">
+    
+      <!-- Header -->
+      <div class="row">
+        <div class="col-md-9 col-xs-12">
+          <h3>Sequences <small>all published<sup><a href popover-append-to-body="true" popover-placement="right" popover="Sequences were extracted from public databases or supplied by the user."><i class="fa fa-question-circle fa-fw"></i></a></sup></small></h3>
+        </div>        
+        <div class="col-md-3 hidden-sm hidden-xs">
+          <h3 class="text-right"><a href ng-click="showNotifications = !showNotifications"><i class="fa fa-fw" ng-class="{ 'fa-caret-up': showNotifications, 'fa-caret-down': !showNotifications }" tooltip-append-to-body="true" tooltip-placement="bottom" tooltip="notifications"></i></a></h3>
+        </div>
+      </div> <!-- Header -->
+      
+      <!-- Main container -->
+      <div class="row" toggle-grid="showNotifications" toggle-layout="4" toggle-grid-duration="2000">
+      
+        <!-- Grid -->
+        <div id="complement" class="col-md-9 col-xs-12 lvl-grid-bottom">
+        
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="lvl-grid" ng-grid="gridOptions" ng-style="style()" resize-height-offset="178" resize></div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="btn-group btn-group-md btn-group-justified">
+                <a href="#" class="btn btn-primary">              
+                  <i class="fa fa-plus fa-fw"></i><br />
+                  Add
+                </a>        
+                <a ng-href="#/sequences/{{selectedSequences[0].accession}}/delete" class="btn btn-primary" ng-class="{ 'disabled': selectedSequences.length != 1 }">
+                  <i class="fa fa-minus fa-fw"></i><br />
+                  Delete
+                </a>
+                <a ng-href="#/sequences/{{selectedSequences[0].accession}}/edit" class="btn btn-primary" ng-class="{ 'disabled': selectedSequences.length != 1 }">
+                  <i class="fa fa-pencil-square-o fa-fw"></i><br />
+                  Edit
+                </a>
+                <a href="#" class="btn btn-primary">
+                  <i class="fa fa-filter fa-fw"></i><br />
+                  Filter
+                </a>
+                <a ng-href="#/sequences/{{selectedSequences[0].accession}}/link" class="btn btn-primary" ng-class="{ 'disabled': selectedSequences.length != 1 }">
+                  <i class="fa fa-link fa-fw"></i><br />
+                  Link
+                </a>
+                <a ng-href="#/sequences/{{selectedSequences[0].accession}}/export" class="btn btn-primary" ng-class="{ 'disabled': selectedSequences.length != 1 }">
+                  <i class="fa fa-download fa-fw"></i><br />
+                  Export
+                </a>
+              </div>
+            </div>
+          </div>
+        </div> <!-- Grid -->
+        
+        <!-- Notifications -->
+        <div id="toggleable" class="col-md-3 hidden-sm hidden-xs lvl-grid-bottom">
+         
+            <div class="media">
+              <a class="thumbnail pull-left" href="#/user/profile/{{user.username}}">
+                <img class="media-object" src="https://www.gravatar.com/avatar/53f455aea79b19eaca5d54a35390bd49?s=40&r=g&d=mm" height="40" width="40">
+              </a>
+              <div class="media-body">
+                <h4 class="media-heading">Welcome</h4>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="#"><i class="fa fa-external-link fa-fw"></i></a>
+              </div>
+            </div>
+            
+            <div class="media">
+              <a class="thumbnail pull-left" href="#/user/profile/{{user.username}}">
+                <img class="media-object" src="https://www.gravatar.com/avatar/53f455aea79b19eaca5d54a35390bd49?s=40&r=g&d=mm" height="40" width="40">
+              </a>
+              <div class="media-body">
+                <h4 class="media-heading">Media heading</h4>
+                <span class="label label-primary">New</span> Fusce vehicula odio vitae bibendum condimentum. <a href="#"><i class="fa fa-external-link fa-fw"></i></a>
+              </div>
+            </div>
+          
+        </div> <!-- Notifications -->
+        
+      </div>
+    
+    </div>
+  </div> <!-- Main layout -->
+
+
+
+
+
+
+  <!-- <div class="row">
     <div class="col-xs-12">
       <h3>Sequences <small>all published<sup><a href popover-append-to-body="true" popover-placement="right" popover="Sequences were extracted from public databases or supplied by the user."><i class="fa fa-question-circle fa-fw"></i></a></sup></small></h3>
     </div>
@@ -42,6 +135,6 @@
         </a>
       </div>
     </div>
-  </div>
+  </div> -->
 
 </div>
