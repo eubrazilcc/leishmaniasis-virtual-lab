@@ -1,4 +1,4 @@
-/* Auto-generated with cnjs_create.sh on 2014-04-25 12:37 CEST */
+/* Auto-generated with cnjs_create.sh on 2014-04-25 12:46 CEST */
 var cnMap = function() {
     return { 
         "AF":"Afghanistan",

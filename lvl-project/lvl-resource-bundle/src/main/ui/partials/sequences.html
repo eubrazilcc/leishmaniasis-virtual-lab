@@ -3,7 +3,7 @@
 
   <div class="row">
     <div class="col-xs-12">
-      <h3>Sequences <small>all published</small></h3>
+      <h3>Sequences <small>all published<sup><a href popover-append-to-body="true" popover-placement="right" popover="Sequences were extracted from public databases or supplied by the user."><i class="fa fa-question-circle fa-fw"></i></a></sup></small></h3>
     </div>
   </div>
 
@@ -19,12 +19,12 @@
         <a href="#" class="btn btn-primary">              
           <i class="fa fa-plus fa-fw"></i><br />
           Add
-        </a>
-        <a href="#" class="btn btn-primary">
+        </a>        
+        <a ng-href="#/sequences/{{selectedSequences[0].accession}}/delete" class="btn btn-primary" ng-class="{ 'disabled': selectedSequences.length != 1 }">
           <i class="fa fa-minus fa-fw"></i><br />
           Delete
         </a>
-        <a href="#" class="btn btn-primary">
+        <a ng-href="#/sequences/{{selectedSequences[0].accession}}/edit" class="btn btn-primary" ng-class="{ 'disabled': selectedSequences.length != 1 }">
           <i class="fa fa-pencil-square-o fa-fw"></i><br />
           Edit
         </a>
@@ -32,11 +32,11 @@
           <i class="fa fa-filter fa-fw"></i><br />
           Filter
         </a>
-        <a href="#" class="btn btn-primary">
+        <a ng-href="#/sequences/{{selectedSequences[0].accession}}/link" class="btn btn-primary" ng-class="{ 'disabled': selectedSequences.length != 1 }">
           <i class="fa fa-link fa-fw"></i><br />
           Link
         </a>
-        <a href="#" class="btn btn-primary">
+        <a ng-href="#/sequences/{{selectedSequences[0].accession}}/export" class="btn btn-primary" ng-class="{ 'disabled': selectedSequences.length != 1 }">
           <i class="fa fa-download fa-fw"></i><br />
           Export
         </a>
