@@ -5,14 +5,32 @@
 angular.module('lvl.directives', [])
 .directive('refreshGrid', [ '$timeout', function ($timeout) {	
 	return function (scope, element, attrs) {
-		var expr = attrs.refreshGrid;
-		scope.$watch(expr, function(newVal, oldVal) {
+		var divGrid = (attrs.refreshGrid || "dataGrid");
+		var trigger = (attrs.refreshGridTrigger || "showNotifications");		
+		var grid = element.find("div[id='" + divGrid + "']");		
+		scope.$watch(function () {
+			return { 'h': element.height(), 'w': element.width() };
+		}, function(newVal, oldVal) {
 			if (newVal === oldVal) {
 				return;
 			}
-			if (!scope.$eval(expr)) {
-				// evaluate link-time value of the model
-				// nothing to do
+			grid.css('opacity', '0.1');
+			// refresh the grid after the DOM has finished rendering, considering the animations
+			var timer = $timeout(function() {
+				scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
+				scope.gridLayoutPlugin.updateGridLayout();
+				grid.css('opacity', '1');
+			}, 600);
+			scope.$on(
+					"$destroy",
+					function(event) {
+						$timeout.cancel(timer);
+					}
+			);
+		}, true);
+		scope.$watch(trigger, function(newVal, oldVal) {
+			if (newVal === oldVal) {
+				return;
 			}
 			element.css('opacity', '0.1');
 			// refresh the grid after the DOM has finished rendering, considering the animations
@@ -109,7 +127,7 @@ angular.module('lvl.directives', [])
 	return function (scope, element, attrs) {		
 		var resizeHeightOffset = (attrs.resizeHeightOffset || 124);
 		var resizeWidth = (attrs.resizeWidth || '100%');		
-		var w = angular.element($window);		
+		var w = angular.element($window);
 		scope.$watch(function () {
 			return { 'h': w.height(), 'w': w.width() };
 		}, function (newValue, oldValue) {

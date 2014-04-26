@@ -19,11 +19,11 @@
       <div class="row">
       
         <!-- Grid -->
-        <div class="col-xs-12 lvl-grid-bottom lvl-animate-class" ng-class="{ 'col-md-9': showNotifications, 'col-md-12': !showNotifications }">
+        <div class="col-xs-12 lvl-grid-bottom lvl-animate-class" refresh-grid="dataGrid" refresh-grid-trigger="showNotifications" ng-class="{ 'col-md-9': showNotifications, 'col-md-12': !showNotifications }">
         
           <div class="row">
             <div class="col-xs-12">
-              <div class="lvl-grid" ng-grid="gridOptions" refresh-grid="showNotifications" ng-style="style()" resize-height-offset="178" resize></div>
+              <div id="dataGrid" class="lvl-grid" ng-grid="gridOptions" ng-style="style()" resize-height-offset="178" resize></div>
             </div>
           </div>          
           

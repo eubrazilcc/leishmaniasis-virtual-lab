@@ -250,7 +250,7 @@ angular.module('lvl.controllers', [])
 			keepLastSelected: false,
 			showSelectionCheckbox: true,
 			selectWithCheckboxOnly: true,
-			enableColumnResize: false,
+			enableColumnResize: true,
 			showFooter: true,
 			plugins: [$scope.gridLayoutPlugin],
 			columnDefs: [{field:'accession', displayName:'Accession', headerCellTemplate:hdrCellTpl, width:'***', cellTemplate:linkCellTpl}, 
