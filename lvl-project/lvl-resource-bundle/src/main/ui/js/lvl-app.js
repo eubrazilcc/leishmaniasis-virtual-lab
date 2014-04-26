@@ -82,4 +82,21 @@ angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngCookies', 'ngAnim
 		$location.hash($routeParams.scrollTo);
 		$anchorScroll();  
 	});
+}])
+.run(['$templateCache', function($templateCache) {
+	$templateCache.put('shortProfileTemplate.html', 
+			'<div class="media">'
+			+ '  <a class="thumbnail pull-left" href="#/user/profile/{{user.username}}">'
+			+ '    <img class="media-object" src="{{user.pictureUrl}}" height="80" width="80">'
+			+ '  </a>'
+			+ '  <div class="media-body">'              
+			+ '    <h4 class="media-heading">{{user.fullname}} (<a href="#/user/profile/{{user.username}}">{{user.username}}</a>)</h4>'              
+			+ '    <p><span class="label label-info" tooltip="following"><i class="fa fa-eye fa-fw"></i> {{user.following}}</span> <span class="label label-primary" tooltip="followers"><i class="fa fa-users fa-fw"></i> {{user.followers}}</span></p>'
+			+ '    <p>'
+			+ '      <a href="#" class="btn btn-xs btn-default" tooltip="message"><i class="fa fa-comment fa-fw"></i></a>'
+			+ '      <a href="#" class="btn btn-xs btn-default" tooltip="favorite"><i class="fa fa-heart fa-fw"></i></a>'
+			+ '      <a href="#" class="btn btn-xs btn-default" tooltip="unfollow"><i class="fa fa-ban fa-fw"></i></a>'
+			+ '    </p>'
+			+ '  </div>'
+			+ '</div>');
 }]);

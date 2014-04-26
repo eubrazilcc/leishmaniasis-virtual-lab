@@ -105,9 +105,9 @@ angular.module('lvl.directives', [])
 	return {
 		restrict: "A",
 		link: function (scope, element, attrs) {
-			var tplId = (attrs.popoverTemplate || 'popoverTemplate.html');
-			var placement = (attrs.popoverPlacement || 'right');
-			var trigger = (attrs.popoverTrigger || 'click');
+			var tplId = (attrs.htmlPopoverTemplate || 'shortProfileTemplate.html');
+			var placement = (attrs.htmlPopoverPlacement || 'right');
+			var trigger = (attrs.htmlPopoverTrigger || 'click');
 
 			var content = $templateCache.get(tplId);
 			content = $compile("<div>" + content + "</div>")(scope);
