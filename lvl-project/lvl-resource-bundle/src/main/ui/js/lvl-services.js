@@ -16,13 +16,15 @@ angular.module('lvl.services', [])
 				if (existingCookieUser) {
 					$window.sessionStorage.token = existingCookieUser.token;
 					$window.sessionStorage.email = existingCookieUser.email;
+					$window.sessionStorage.setItem('showNotifications', existingCookieUser.showNotifications);
 				}
 			}
 		},
 		store: function() {
 			$cookieStore.put(ENV.lvlCookieId, {
 				'token': $window.sessionStorage.token,
-				'email': $window.sessionStorage.email
+				'email': $window.sessionStorage.email,
+				'showNotifications': $window.sessionStorage.getItem('showNotifications')
 			});
 		},		
 		remove: function() {

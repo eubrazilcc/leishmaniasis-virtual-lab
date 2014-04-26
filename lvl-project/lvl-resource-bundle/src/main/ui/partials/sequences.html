@@ -11,15 +11,15 @@
           <h3>Sequences <small>all published<sup><a href popover-append-to-body="true" popover-placement="right" popover="Sequences were extracted from public databases or supplied by the user."><i class="fa fa-question-circle fa-fw"></i></a></sup></small></h3>
         </div>        
         <div class="col-md-3 hidden-sm hidden-xs">
-          <h3 class="text-right"><a href ng-click="showNotifications = !showNotifications"><i class="fa fa-fw" ng-class="{ 'fa-caret-up': showNotifications, 'fa-caret-down': !showNotifications }" tooltip-append-to-body="true" tooltip-placement="bottom" tooltip="notifications"></i></a></h3>
+          <h3 class="text-right"><a href ng-click="toggleNotifications()"><i class="fa fa-fw" ng-class="{ 'fa-caret-up': showNotifications, 'fa-caret-down': !showNotifications }" tooltip-append-to-body="true" tooltip-placement="bottom" tooltip="notifications"></i></a></h3>
         </div>
       </div> <!-- Header -->
       
       <!-- Main container -->
-      <div class="row" toggle-grid="showNotifications" toggle-layout="4" toggle-grid-duration="2000">
+      <div class="row">
       
         <!-- Grid -->
-        <div id="complement" class="col-md-9 col-xs-12 lvl-grid-bottom">
+        <div class="col-xs-12 lvl-grid-bottom lvl-animate-class" ng-class="{ 'col-md-9': showNotifications, 'col-md-12': !showNotifications }">
         
           <div class="row">
             <div class="col-xs-12">
@@ -60,7 +60,7 @@
         </div> <!-- Grid -->
         
         <!-- Notifications -->
-        <div id="toggleable" class="col-md-3 hidden-sm hidden-xs lvl-grid-bottom">
+        <div class="hidden-sm hidden-xs lvl-grid-bottom lvl-animate-show" ng-show="showNotifications">
          
             <div class="media">
               <a class="thumbnail pull-left" href="#/user/profile/{{user.username}}">

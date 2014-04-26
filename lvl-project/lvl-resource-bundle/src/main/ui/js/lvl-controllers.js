@@ -202,7 +202,7 @@ angular.module('lvl.controllers', [])
 	// TODO
 
 }])
-.controller('SequencesCtrl', ['$scope', '$sce', function($scope, $sce) {
+.controller('SequencesCtrl', ['$scope', '$sce', '$window', function($scope, $sce, $window) {
 	var countryFn = function(countryCode) {
 		var country = '';
 		if (countryCode && typeof countryCode === 'string') {
@@ -214,7 +214,14 @@ angular.module('lvl.controllers', [])
 		return country;
 	};
 
+	// TODO $scope.showNotifications = ($window.sessionStorage.getItem('showNotifications') === 'true' ? true : false);
+	
 	$scope.showNotifications = true;
+	
+	$scope.toggleNotifications = function() {
+		$scope.showNotifications = !$scope.showNotifications;
+		$window.sessionStorage.setItem('showNotifications', $scope.showNotifications ? 'true' : 'false');
+	};
 
 	$scope.selectedSequences = [];
 
@@ -240,12 +247,11 @@ angular.module('lvl.controllers', [])
 
 	$scope.$watch('showNotifications', function(newVal, oldVal) {
 		if (newVal !== undefined && newVal !== oldVal) {			
-			
-			
-			
-			// $scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
 
-			// gridLayoutPlugin.updateGridLayout();
+
+			$scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
+
+			gridLayoutPlugin.updateGridLayout();
 
 			// TODO
 			console.log("updateGridLayout");

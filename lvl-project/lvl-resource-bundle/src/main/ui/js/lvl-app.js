@@ -17,7 +17,7 @@ angular.module('lvl.config', [])
 	'lvlCookieId': 'LVL-LeishVirtLab'
 });
 
-angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngCookies', 'ngGrid', 'ui.bootstrap', 'chieffancypants.loadingBar', 'lvl.fastclick', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers' ])
+angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngCookies', 'ngAnimate', 'ngGrid', 'ui.bootstrap', 'chieffancypants.loadingBar', 'lvl.fastclick', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers' ])
 .config(['$routeProvider', function($routeProvider) {
 	var isLoggedIn = ['$q', '$http', '$window', 'Oauth2Factory', function($q, $http, $window, Oauth2Factory) {
 		var defer = $q.defer();
