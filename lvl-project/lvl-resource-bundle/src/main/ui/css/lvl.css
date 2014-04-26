@@ -90,6 +90,11 @@ a.lvl-social:hover {
 	padding-top: 0px;
 }
 
+.lvl-top-h3 {
+	top: 18px;
+	padding-top: 0px;
+}
+
 .lvl-toolbar-bottom {
 	padding-bottom: 6px;
 	border-bottom: 1px solid #eee;
@@ -205,12 +210,12 @@ a.lvl-social:hover {
 
 .lvl-animate-show.ng-hide-remove {
 	/* fade in */
-	-webkit-transition: all linear 0.5s;
-	transition: all linear 0.5s;
+	-webkit-transition: all linear 0.3s;
+	transition: all linear 0.3s;
 	opacity: 1;
 	/* wait until class are applied to the layout */
-	transition-delay: 0.7s;
-	-webkit-transition-delay: 0.7s;
+	transition-delay: 0.5s;
+	-webkit-transition-delay: 0.5s;
 	display: block !important;
 }
 
@@ -220,6 +225,6 @@ a.lvl-social:hover {
 
 .lvl-animate-class {
 	/* slide from left */
-	-webkit-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
-	transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
+	-webkit-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.3s;
+	transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.3s;
 }

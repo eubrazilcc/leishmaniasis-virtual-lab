@@ -20,7 +20,7 @@ angular.module('lvl.directives', [])
 				scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
 				scope.gridLayoutPlugin.updateGridLayout();
 				grid.css('opacity', '1');
-			}, 600);
+			}, 400);
 			scope.$on(
 					"$destroy",
 					function(event) {
@@ -38,7 +38,7 @@ angular.module('lvl.directives', [])
 				scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
 				scope.gridLayoutPlugin.updateGridLayout();
 				element.css('opacity', '1');
-			}, 600);
+			}, 400);
 			scope.$on(
 					"$destroy",
 					function(event) {
