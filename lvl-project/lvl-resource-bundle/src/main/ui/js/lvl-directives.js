@@ -3,6 +3,33 @@
 /* Directives */
 
 angular.module('lvl.directives', [])
+.directive('refreshGrid', [ '$timeout', function ($timeout) {	
+	return function (scope, element, attrs) {
+		var expr = attrs.refreshGrid;
+		scope.$watch(expr, function(newVal, oldVal) {
+			if (newVal === oldVal) {
+				return;
+			}
+			if (!scope.$eval(expr)) {
+				// evaluate link-time value of the model
+				// nothing to do
+			}
+			element.css('opacity', '0.1');
+			// refresh the grid after the DOM has finished rendering, considering the animations
+			var timer = $timeout(function() {
+				scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
+				scope.gridLayoutPlugin.updateGridLayout();
+				element.css('opacity', '1');
+			}, 600);
+			scope.$on(
+					"$destroy",
+					function(event) {
+						$timeout.cancel(timer);
+					}
+			);					
+		});
+	};
+}])
 .directive('toggleGrid', [ function () { // possible layouts: 3 or 4
 	function link(scope, element, attrs) {
 		var expr = attrs.toggleGrid;
@@ -63,10 +90,10 @@ angular.module('lvl.directives', [])
 			var tplId = (attrs.popoverTemplate || 'popoverTemplate.html');
 			var placement = (attrs.popoverPlacement || 'right');
 			var trigger = (attrs.popoverTrigger || 'click');
-			
+
 			var content = $templateCache.get(tplId);
 			content = $compile("<div>" + content + "</div>")(scope);
-			
+
 			var options = {
 					'content': content,
 					'placement': placement,

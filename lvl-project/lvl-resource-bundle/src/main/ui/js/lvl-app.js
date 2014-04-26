@@ -14,7 +14,7 @@ angular.module('lvl.config', [])
 		'client_id'     : 'lvl_portal',
 		'client_secret' : 'changeit'
 	},
-	'lvlCookieId': 'LVL-LeishVirtLab'
+	'sessionCookie'     : 'LVL_SID'
 });
 
 angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngCookies', 'ngAnimate', 'ngGrid', 'ui.bootstrap', 'chieffancypants.loadingBar', 'lvl.fastclick', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers' ])

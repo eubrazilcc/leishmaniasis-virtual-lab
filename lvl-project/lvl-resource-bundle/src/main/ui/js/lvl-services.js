@@ -12,7 +12,7 @@ angular.module('lvl.services', [])
 	return {
 		load: function() {
 			if (typeof $window.sessionStorage.token === undefined || $window.sessionStorage.email === undefined) {
-				var existingCookieUser = $cookieStore.get(ENV.lvlCookieId);
+				var existingCookieUser = $cookieStore.get(ENV.sessionCookie);
 				if (existingCookieUser) {
 					$window.sessionStorage.token = existingCookieUser.token;
 					$window.sessionStorage.email = existingCookieUser.email;
@@ -21,14 +21,14 @@ angular.module('lvl.services', [])
 			}
 		},
 		store: function() {
-			$cookieStore.put(ENV.lvlCookieId, {
+			$cookieStore.put(ENV.sessionCookie, {
 				'token': $window.sessionStorage.token,
 				'email': $window.sessionStorage.email,
 				'showNotifications': $window.sessionStorage.getItem('showNotifications')
 			});
 		},		
 		remove: function() {
-			$cookieStore.remove(ENV.lvlCookieId);
+			$cookieStore.remove(ENV.sessionCookie);
 		}
 	};
 }])

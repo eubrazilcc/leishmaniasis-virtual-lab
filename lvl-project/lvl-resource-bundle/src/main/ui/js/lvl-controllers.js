@@ -214,10 +214,8 @@ angular.module('lvl.controllers', [])
 		return country;
 	};
 
-	// TODO $scope.showNotifications = ($window.sessionStorage.getItem('showNotifications') === 'true' ? true : false);
-	
-	$scope.showNotifications = true;
-	
+	$scope.showNotifications = ($window.sessionStorage.getItem('showNotifications') === 'true' ? true : false);
+
 	$scope.toggleNotifications = function() {
 		$scope.showNotifications = !$scope.showNotifications;
 		$window.sessionStorage.setItem('showNotifications', $scope.showNotifications ? 'true' : 'false');
@@ -238,27 +236,12 @@ angular.module('lvl.controllers', [])
 		+ '<a ng-href="#/sequences/{{row.getProperty(col.field)}}/delete" tooltip-append-to-body="true" tooltip-placement="right" tooltip="delete"><i class="fa fa-trash-o fa-fw"></i></a>'
 		+ '</span></div>';
 	var definitionCellTpl = '<div class="ngCellText" ng-class="col.colIndex()">' 
-		+ '<span ng-cell-text><a href popover-append-to-body="true" popover-placement="right" popover="{{row.getProperty(col.field)}}"><i class="fa fa-plus-square-o fa-fw"></i></a> {{row.getProperty(col.field)}}</span></div>';
+		+ '<span ng-cell-text><a href popover-trigger="mouseenter" popover-append-to-body="true" popover-placement="right" popover="{{row.getProperty(col.field)}}"><i class="fa fa-plus-square-o fa-fw"></i></a> {{row.getProperty(col.field)}}</span></div>';
 	var countryCellTpl = '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>'
 		+ '<div ng-bind-html="row.getProperty(col.field)"></div>'
 		+ '</span></div>';
 
-	var gridLayoutPlugin = new ngGridLayoutPlugin();
-
-	$scope.$watch('showNotifications', function(newVal, oldVal) {
-		if (newVal !== undefined && newVal !== oldVal) {			
-
-
-			$scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
-
-			gridLayoutPlugin.updateGridLayout();
-
-			// TODO
-			console.log("updateGridLayout");
-			// TODO
-
-		}
-	});
+	$scope.gridLayoutPlugin = new ngGridLayoutPlugin();
 
 	$scope.gridOptions = {
 			data: 'seqData',
@@ -267,9 +250,9 @@ angular.module('lvl.controllers', [])
 			keepLastSelected: false,
 			showSelectionCheckbox: true,
 			selectWithCheckboxOnly: true,
-			enableColumnResize: true,
+			enableColumnResize: false,
 			showFooter: true,
-			plugins: [gridLayoutPlugin],
+			plugins: [$scope.gridLayoutPlugin],
 			columnDefs: [{field:'accession', displayName:'Accession', headerCellTemplate:hdrCellTpl, width:'***', cellTemplate:linkCellTpl}, 
 			             {field:'version', displayName:'Version', headerCellTemplate:hdrCellTpl, width:'*'},
 			             {field:'definition', displayName:'Definition', headerCellTemplate:hdrCellTpl, width:'***', cellTemplate:definitionCellTpl},			             
