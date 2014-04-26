@@ -33,6 +33,7 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 import static java.nio.file.Files.newBufferedReader;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -53,7 +54,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
@@ -120,7 +120,7 @@ public final class EntrezHelper {
 	 * @param directory the directory where the files will be saved.
 	 */
 	public static void saveNucleotides(final String query, final File directory) {
-		checkArgument(StringUtils.isNotBlank(query), "Uninitialized or invalid query");
+		checkArgument(isNotBlank(query), "Uninitialized or invalid query");
 		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
 				"Uninitialized or invalid directory");
 		// list Ids
@@ -139,7 +139,7 @@ public final class EntrezHelper {
 	}
 
 	public static void fecthNucleotide(final String id, final File directory) {
-		checkArgument(StringUtils.isNotBlank(id), "Uninitialized or invalid Id");
+		checkArgument(isNotBlank(id), "Uninitialized or invalid Id");
 		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
 				"Uninitialized or invalid directory");
 		try {
@@ -305,7 +305,7 @@ public final class EntrezHelper {
 					}
 					if (i < ids.size()) {						
 						// write non-empty lines to the file
-						if (StringUtils.isNotBlank(line)) {
+						if (isNotBlank(line)) {
 							sink.write((line + "\n").getBytes(DEFAULT_CHARSET));
 						}
 						// process line
@@ -316,7 +316,7 @@ public final class EntrezHelper {
 							file = null;						
 						}
 					} else {
-						if (StringUtils.isNotBlank(line)) {
+						if (isNotBlank(line)) {
 							LOGGER.info("Ingoring line after all sequences were processed" + line);
 						}
 					}

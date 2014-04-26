@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import java.util.Arrays;
+
 import javax.ws.rs.core.Link;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
@@ -31,8 +33,14 @@ import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.xml.LinkAdapter;
 
 /**
- * GenBank sequence.
+ * Stores a GenBank sequence. GenBank sequences can be annotated with a country feature, however
+ * this annotation is optional and it's often absent. When present, country is represented by a
+ * short name instead of a computer-friendly code. This class solves this limitation including
+ * a two-letter code that represents a country name with ISO 3166-1 alpha-2 standard. The original
+ * GenBank country feature is also included in the class. What is more important, a GeoJSON point
+ * is included that allows callers to georeference the sequence.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="http://opengeocode.org/download.php">Americas Open Geocode (AOG) database</a>
  */
 public class Sequence {
 
@@ -42,6 +50,8 @@ public class Sequence {
 	private String version;
 	private String organism;		
 	private Point location;
+	private char[] country;
+	private String locationDescription;
 
 	public Sequence() { }
 
@@ -94,6 +104,22 @@ public class Sequence {
 		this.location = location;
 	}
 
+	public char[] getCountry() {
+		return country;
+	}
+
+	public void setCountry(final char[] country) {
+		this.country = country;
+	}
+
+	public String getLocationDescription() {
+		return locationDescription;
+	}
+
+	public void setLocationDescription(final String locationDescription) {
+		this.locationDescription = locationDescription;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof Sequence)) {
@@ -112,12 +138,15 @@ public class Sequence {
 				&& Objects.equal(accession, other.accession)
 				&& Objects.equal(version, other.version)
 				&& Objects.equal(organism, other.organism)
-				&& Objects.equal(location, other.location);
+				&& Objects.equal(location, other.location)
+				&& Arrays.equals(country, other.country)
+				&& Objects.equal(locationDescription, other.locationDescription);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(link, definition, accession, version, organism, location);
+		return Objects.hashCode(link, definition, accession, version, organism, location,
+				country, locationDescription);
 	}
 
 	@Override
@@ -128,7 +157,9 @@ public class Sequence {
 				.add("accession", accession)
 				.add("version", version)
 				.add("organism", organism)
-				.add("locations", location)
+				.add("location", location)
+				.add("country", country)
+				.add("locationDescription", locationDescription)
 				.toString();
 	}
 
@@ -169,6 +200,16 @@ public class Sequence {
 
 		public Builder location(final Point location) {
 			sequence.setLocation(location);
+			return this;
+		}
+
+		public Builder country(final char[] country) {
+			sequence.setCountry(country);
+			return this;
+		}
+
+		public Builder locationDescription(final String locationDescription) {
+			sequence.setLocationDescription(locationDescription);
 			return this;
 		}
 

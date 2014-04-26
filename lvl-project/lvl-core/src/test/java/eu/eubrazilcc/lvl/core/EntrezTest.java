@@ -65,6 +65,7 @@ public class EntrezTest {
 			assertThat("ids is not null", ids, notNullValue());
 			assertThat("ids is not empty", !ids.isEmpty());
 			final int count = ids.size();
+			
 			// test save sequences
 			EntrezHelper.saveNucleotides(SMALL_QUERY, TEST_OUTPUT_DIR);
 			final Collection<File> files = listFiles(TEST_OUTPUT_DIR, new String[] { "gb" }, false);

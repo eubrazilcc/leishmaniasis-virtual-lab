@@ -56,26 +56,33 @@ public class SequenceCollectionTest {
 					.definition("definition")
 					.organism("organism")
 					.location(Point.builder().coordinate(-122.913837d, 38.081473d).build())
+					.country(new char[]{ 'e', 's' })
+					.locationDescription("Spain, Madrid")
 					.build();
-			SequenceDAO.INSTANCE.insert(sequence);					
+			SequenceDAO.INSTANCE.insert(sequence);
+			
 			// find
 			Sequence sequence2 = SequenceDAO.INSTANCE.find(sequence.getAccession());
 			assertThat("sequence is not null", sequence2, notNullValue());
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
+			
 			// update
 			sequence.setVersion("4.0");
 			SequenceDAO.INSTANCE.update(sequence);
+			
 			// find after update
 			sequence2 = SequenceDAO.INSTANCE.find(sequence.getAccession());
 			assertThat("sequence is not null", sequence2, notNullValue());
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
+			
 			// search sequences near a point and within a maximum distance
 			List<Sequence> sequences = SequenceDAO.INSTANCE.getNear(Point.builder()
 					.coordinate(-122.90d, 38.08d).build(), 10000.0d);
 			assertThat("sequence is not null", sequences, notNullValue());
 			assertThat("ids is not empty", !sequences.isEmpty());
+			
 			// search sequences within an area
 			sequences = SequenceDAO.INSTANCE.geoWithin(Polygon.builder()
 					.coordinate(-140.0d, 30.0d)
@@ -85,8 +92,10 @@ public class SequenceCollectionTest {
 					.build());
 			assertThat("sequence is not null", sequences, notNullValue());
 			assertThat("ids is not empty", !sequences.isEmpty());
+			
 			// remove
 			SequenceDAO.INSTANCE.delete(sequence.getAccession());
+			
 			// pagination
 			final List<String> ids = Lists.newArrayList();
 			for (int i = 0; i < 11; i++) {

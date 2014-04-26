@@ -41,6 +41,7 @@ import eu.eubrazilcc.lvl.core.mock.CloserServiceMock;
 	UrlUtilsTest.class, NetworkingUtilsTest.class, NamingUtilsTest.class, EntrezTest.class, 
 	SequenceAnalysisTest.class }) */
 @SuiteClasses({ SequenceAnalysisTest.class })
+// TODO @SuiteClasses({ EntrezTest.class })
 public class AllTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

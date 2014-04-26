@@ -102,6 +102,7 @@ public class UrlUtilsTest {
 					}
 				}
 			}
+			
 			// validate URL
 			assertThat("valid URL", isValid("http://www.google.com", true));
 			assertThat("valid URL", !isValid("http://invalidURL^$&%$&^", true));
