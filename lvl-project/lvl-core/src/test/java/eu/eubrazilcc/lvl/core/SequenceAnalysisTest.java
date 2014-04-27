@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.entrez.GenBankSequenceAnalizer.inferCountry;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGenBankFiles;
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -38,7 +39,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 /**
  * Tests biological sequences analysis.
@@ -87,7 +87,7 @@ public class SequenceAnalysisTest {
 				final ImmutableList<Locale> possibleCountries = inferCountry(file);				
 				
 				// TODO
-				System.err.println("\n\n" + Iterables.getOnlyElement(possibleCountries).getDisplayCountry() + "\n\n");
+				System.err.println("\n\n" + getOnlyElement(possibleCountries).getDisplayCountry() + "\n\n");
 				// TODO
 				
 			}

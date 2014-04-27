@@ -64,7 +64,7 @@ public final class GenBankSequenceAnalizer {
 		return inferCountry(file, getOnlyElement(dnaSequences.entrySet()).getValue());
 	}
 
-	// TODO : two-letter code compatible with ISO 3166
+	// TODO : two-letter code compatible with ISO 3166-1 alpha-2
 	private static ImmutableList<Locale> inferCountry(final File file, final DNASequence sequence) throws Exception {
 		final ImmutableList.Builder<Locale> builder = new ImmutableList.Builder<Locale>();		
 		// infer from features
@@ -72,8 +72,13 @@ public final class GenBankSequenceAnalizer {
 		if (locale != null) {
 			builder.add(locale);
 		} else {
+			// infer from definition
+			// TODO
 			
+			// infer from title
+			// TODO
 			
+			// infer from PubMed title and abstract fields
 			// TODO
 		}
 		return builder.build();

@@ -22,7 +22,7 @@
 
 package eu.eubrazilcc.lvl.core;
 
-import java.util.Arrays;
+import java.util.Locale;
 
 import javax.ws.rs.core.Link;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
@@ -38,23 +38,24 @@ import eu.eubrazilcc.lvl.core.xml.SequenceDatabaseAdapter;
  * sequences will come from GenBank. GenBank sequences can be annotated with a country feature, 
  * however this annotation is optional and is often absent. When present, country is represented by a
  * short name instead of a computer-friendly code. This class solves this limitation including
- * a two-letter code that represents a country name with ISO 3166-1 alpha-2 standard. The original
- * GenBank country feature is also included in the class. What is more important, a GeoJSON point
- * is included that allows callers to georeference the sequence.
+ * a Java {@link Locale} that can be used later to export the country as a two-letter code that 
+ * represents a country name with ISO 3166-1 alpha-2 standard. The original GenBank country feature is 
+ * also included in the class. What is more important, a GeoJSON point is included that allows callers 
+ * to georeference the sequence.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://opengeocode.org/download.php">Americas Open Geocode (AOG) database</a>
  */
 public class Sequence {
 
-	private Link link;
-	private SequenceDatabase source;
-	private String definition;
-	private String accession;
-	private String version;
-	private String organism;		
-	private Point location;
-	private char[] country;
-	private String locationDescription;
+	private Link link;               // RESTful link	
+	private SequenceDatabase source; // Database where the original sequence is stored
+	private String definition;       // GenBank definition field
+	private String accession;        // GenBank accession number	
+	private String version;          // GenBank version
+	private String organism;         // GenBank organism
+	private String countryFeature;	 // GenBank country feature
+	private Point location;          // Geospatial location
+	private Locale locale;           // Represents country with standards
 
 	public Sequence() { }
 
@@ -108,6 +109,14 @@ public class Sequence {
 		this.organism = organism;
 	}
 
+	public String getCountryFeature() {
+		return countryFeature;
+	}
+
+	public void setCountryFeature(final String countryFeature) {
+		this.countryFeature = countryFeature;
+	}
+
 	public Point getLocation() {
 		return location;
 	}
@@ -116,20 +125,12 @@ public class Sequence {
 		this.location = location;
 	}
 
-	public char[] getCountry() {
-		return country;
+	public Locale getLocale() {
+		return locale;
 	}
 
-	public void setCountry(final char[] country) {
-		this.country = country;
-	}
-
-	public String getLocationDescription() {
-		return locationDescription;
-	}
-
-	public void setLocationDescription(final String locationDescription) {
-		this.locationDescription = locationDescription;
+	public void setLocale(final Locale locale) {
+		this.locale = locale;
 	}
 
 	@Override
@@ -151,15 +152,15 @@ public class Sequence {
 				&& Objects.equal(accession, other.accession)
 				&& Objects.equal(version, other.version)
 				&& Objects.equal(organism, other.organism)
+				&& Objects.equal(countryFeature, other.countryFeature)
 				&& Objects.equal(location, other.location)
-				&& Arrays.equals(country, other.country)
-				&& Objects.equal(locationDescription, other.locationDescription);
+				&& Objects.equal(locale, other.locale);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(link, source, definition, accession, version, organism, location,
-				country, locationDescription);
+		return Objects.hashCode(link, source, definition, accession, version, organism, countryFeature,
+				location, locale);
 	}
 
 	@Override
@@ -171,9 +172,9 @@ public class Sequence {
 				.add("accession", accession)
 				.add("version", version)
 				.add("organism", organism)
+				.add("countryFeature", countryFeature)
 				.add("location", location)
-				.add("country", country)
-				.add("locationDescription", locationDescription)
+				.add("locale", locale)
 				.toString();
 	}
 
@@ -196,7 +197,7 @@ public class Sequence {
 			sequence.setSource(source);
 			return this;
 		}
-		
+
 		public Builder definition(final String definition) {
 			sequence.setDefinition(definition);
 			return this;
@@ -217,18 +218,18 @@ public class Sequence {
 			return this;
 		}
 
+		public Builder countryFeature(final String countryFeature) {
+			sequence.setCountryFeature(countryFeature);
+			return this;
+		}
+
 		public Builder location(final Point location) {
 			sequence.setLocation(location);
 			return this;
 		}
 
-		public Builder country(final char[] country) {
-			sequence.setCountry(country);
-			return this;
-		}
-
-		public Builder locationDescription(final String locationDescription) {
-			sequence.setLocationDescription(locationDescription);
+		public Builder locale(final Locale locale) {
+			sequence.setLocale(locale);
 			return this;
 		}
 

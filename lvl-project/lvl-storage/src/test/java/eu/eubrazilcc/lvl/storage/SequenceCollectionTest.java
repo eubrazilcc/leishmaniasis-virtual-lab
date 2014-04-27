@@ -28,6 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
@@ -57,9 +58,9 @@ public class SequenceCollectionTest {
 					.version("3.0")
 					.definition("definition")
 					.organism("organism")
+					.countryFeature("Spain: Murcia")
 					.location(Point.builder().coordinate(-122.913837d, 38.081473d).build())
-					.country(new char[]{ 'e', 's' })
-					.locationDescription("Spain, Madrid")
+					.locale(new Locale("es", "ES"))					
 					.build();
 			SequenceDAO.INSTANCE.insert(sequence);
 			

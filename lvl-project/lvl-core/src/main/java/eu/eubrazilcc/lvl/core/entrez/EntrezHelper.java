@@ -117,7 +117,8 @@ public final class EntrezHelper {
 	
 	/**
 	 * Searches all occurrences of phlebotomus in the nucleotide database and saves them to the
-	 * specified directory.
+	 * specified directory. The saved files are named id.gb, where id is the original sequence
+	 * accession identifier.
 	 * @param directory the directory where the files will be saved.
 	 */
 	public static void saveAllPhlebotomines(final File directory) {
@@ -128,7 +129,8 @@ public final class EntrezHelper {
 	 * Searches for sequences in the nucleotide database and saves the entries in the specified
 	 * directory. Searching the nucleotide database with general text queries will produce links 
 	 * to results in Nucleotide, Genome Survey Sequence (GSS), and Expressed Sequence Tag (EST) 
-	 * databases.
+	 * databases. The saved files are named id.gb, where id is the original sequence accession 
+	 * identifier.
 	 * @param query - Entrez query.
 	 * @param directory - the directory where the files will be saved.
 	 */
@@ -144,7 +146,8 @@ public final class EntrezHelper {
 	}
 	
 	/**
-	 * Fetch the sequences identified by their accession ids and saves them in the specified directory.
+	 * Fetches the sequences identified by their accession ids and saves them in the specified directory.
+	 * The saved files are named id.gb, where id is the original sequence accession identifier.
 	 * @param ids - accession identifiers.
 	 * @param directory - the directory where the files will be saved.
 	 */
@@ -163,6 +166,11 @@ public final class EntrezHelper {
 		}
 	}
 
+	/**
+	 * Fetches the sequence identified by its accession id and seves it in the specified directory.
+	 * @param id - accession identifier.
+	 * @param directory - the directory where the file will be saved.
+	 */
 	public static void fecthNucleotide(final String id, final File directory) {
 		checkArgument(isNotBlank(id), "Uninitialized or invalid Id");
 		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
