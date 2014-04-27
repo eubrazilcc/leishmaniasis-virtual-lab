@@ -31,10 +31,12 @@ import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.xml.LinkAdapter;
+import eu.eubrazilcc.lvl.core.xml.SequenceDatabaseAdapter;
 
 /**
- * Stores a GenBank sequence. GenBank sequences can be annotated with a country feature, however
- * this annotation is optional and it's often absent. When present, country is represented by a
+ * Stores a nucleotide sequence as a subset of GenBank fields with additional fields, since most 
+ * sequences will come from GenBank. GenBank sequences can be annotated with a country feature, 
+ * however this annotation is optional and is often absent. When present, country is represented by a
  * short name instead of a computer-friendly code. This class solves this limitation including
  * a two-letter code that represents a country name with ISO 3166-1 alpha-2 standard. The original
  * GenBank country feature is also included in the class. What is more important, a GeoJSON point
@@ -45,6 +47,7 @@ import eu.eubrazilcc.lvl.core.xml.LinkAdapter;
 public class Sequence {
 
 	private Link link;
+	private SequenceDatabase source;
 	private String definition;
 	private String accession;
 	private String version;
@@ -62,6 +65,15 @@ public class Sequence {
 
 	public void setLink(final Link link) {
 		this.link = link;
+	}
+
+	@XmlJavaTypeAdapter(SequenceDatabaseAdapter.class)
+	public SequenceDatabase getSource() {
+		return source;
+	}
+
+	public void setSource(final SequenceDatabase source) {
+		this.source = source;
 	}
 
 	public String getDefinition() {
@@ -134,7 +146,8 @@ public class Sequence {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(definition, other.definition)
+		return Objects.equal(source, other.source)
+				&& Objects.equal(definition, other.definition)
 				&& Objects.equal(accession, other.accession)
 				&& Objects.equal(version, other.version)
 				&& Objects.equal(organism, other.organism)
@@ -145,7 +158,7 @@ public class Sequence {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(link, definition, accession, version, organism, location,
+		return Objects.hashCode(link, source, definition, accession, version, organism, location,
 				country, locationDescription);
 	}
 
@@ -153,6 +166,7 @@ public class Sequence {
 	public String toString() {
 		return Objects.toStringHelper(this)
 				.add("link", link)
+				.add("source", source)
 				.add("definition", definition)
 				.add("accession", accession)
 				.add("version", version)
@@ -178,6 +192,11 @@ public class Sequence {
 			return this;
 		}
 
+		public Builder source(final SequenceDatabase source) {
+			sequence.setSource(source);
+			return this;
+		}
+		
 		public Builder definition(final String definition) {
 			sequence.setDefinition(definition);
 			return this;

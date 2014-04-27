@@ -230,7 +230,7 @@ public class Gravatar {
 
 		private String code;
 
-		private DefaultImage(String code) {
+		private DefaultImage(final String code) {
 			this.code = code;
 		}
 		public String getCode() {

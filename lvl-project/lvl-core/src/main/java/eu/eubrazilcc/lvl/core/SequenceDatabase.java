@@ -20,25 +20,24 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core.xml;
-
-import javax.ws.rs.core.Link;
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+package eu.eubrazilcc.lvl.core;
 
 /**
- * {@link Link} adapter for XML/JSON data binding.
+ * Stores sequence database names.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class LinkAdapter extends XmlAdapter<String, Link> {
+public enum SequenceDatabase {
 
-	@Override
-	public String marshal(final Link link) throws Exception {
-		return link != null ? link.toString() : null;
+	GENBANK("GenBank"),
+	ISCIII("ISCIII-WHO-CCL");
+
+	private String name;
+
+	private SequenceDatabase(final String name) {
+		this.name = name;
 	}
-	
-	@Override
-	public Link unmarshal(final String str) throws Exception {
-		return str != null ? Link.valueOf(str) : null;
+	public String getName() {
+		return name;
 	}
 	
 }
