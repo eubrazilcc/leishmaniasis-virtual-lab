@@ -31,6 +31,8 @@ import java.util.Queue;
 import com.google.common.util.concurrent.Monitor;
 
 import eu.eubrazilcc.lvl.core.CloserServiceIf;
+import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
+import eu.eubrazilcc.lvl.core.concurrent.TaskScheduler;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 
@@ -53,9 +55,14 @@ public enum CloserService implements CloserServiceIf {
 		// load configuration
 		ConfigurationManager.INSTANCE.setup(findConfigurationFiles());
 		ConfigurationManager.INSTANCE.preload();
+		// load task runner and task scheduler
+		TaskRunner.INSTANCE.preload();
+		register(TaskRunner.INSTANCE);
+		TaskScheduler.INSTANCE.preload();
+		register(TaskScheduler.INSTANCE);
 		// load MongoDB connector and register it for closing
 		MongoDBConnector.INSTANCE.preload();
-		register(MongoDBConnector.INSTANCE);
+		register(MongoDBConnector.INSTANCE);		
 	}
 
 	@Override

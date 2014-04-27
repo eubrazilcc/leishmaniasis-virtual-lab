@@ -99,25 +99,38 @@ public final class EntrezHelper {
 	public static final String XPATH_TO_ESEARCH_IDS = 
 			"/*[local-name()=\"eSearchResult\"]"
 					+ "/*[local-name()=\"IdList\"]"
-					+ "/*[local-name()=\"Id\"]";	
+					+ "/*[local-name()=\"Id\"]";
 
 	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
-
+	
+	public static final String PHLEBOTOMUS_QUERY = "phlebotomus[Organism]";	
+	
 	/**
-	 * Searches all occurrences of phlebotomus in the nucleotide database.
+	 * Searches all occurrences of phlebotomus in the nucleotide database and returns their accession
+	 * identifiers in a {@link Set}.
+	 * @return a {@link Set} with the accession identifiers of all the phlebotomus found in the
+	 *         nucleotide database.
+	 */
+	public static Set<String> listAllPhlebotomines() {
+		return listNucleotideIds(PHLEBOTOMUS_QUERY);
+	}
+	
+	/**
+	 * Searches all occurrences of phlebotomus in the nucleotide database and saves them to the
+	 * specified directory.
 	 * @param directory the directory where the files will be saved.
 	 */
-	public static void savePhlebotomines(final File directory) {
-		saveNucleotides("phlebotomus[Organism]", directory);
-	}
+	public static void saveAllPhlebotomines(final File directory) {
+		saveNucleotides(PHLEBOTOMUS_QUERY, directory);
+	}	
 
 	/**
 	 * Searches for sequences in the nucleotide database and saves the entries in the specified
 	 * directory. Searching the nucleotide database with general text queries will produce links 
 	 * to results in Nucleotide, Genome Survey Sequence (GSS), and Expressed Sequence Tag (EST) 
 	 * databases.
-	 * @param query Entrez query.
-	 * @param directory the directory where the files will be saved.
+	 * @param query - Entrez query.
+	 * @param directory - the directory where the files will be saved.
 	 */
 	public static void saveNucleotides(final String query, final File directory) {
 		checkArgument(isNotBlank(query), "Uninitialized or invalid query");
@@ -127,6 +140,18 @@ public final class EntrezHelper {
 		final Set<String> ids = listNucleotideIds(query);
 		checkState(ids != null && !ids.isEmpty(), "No sequences were found");
 		// save sequences
+		saveNucleotides(ids, directory);
+	}
+	
+	/**
+	 * Fetch the sequences identified by their accession ids and saves them in the specified directory.
+	 * @param ids - accession identifiers.
+	 * @param directory - the directory where the files will be saved.
+	 */
+	public static void saveNucleotides(final Set<String> ids, final File directory) {
+		checkState(ids != null && !ids.isEmpty(), "Uninitialized or invalid sequence ids");
+		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
+				"Uninitialized or invalid directory");
 		try {
 			final int retstart = 0, retmax = 10000; // maximum 100,000
 			final Iterable<List<String>> partitions = partition(ids, retmax);
@@ -150,8 +175,10 @@ public final class EntrezHelper {
 	}
 
 	/**
-	 * Lists the identifiers of the sequences found in the nucleotide database.
-	 * @param query Entrez query.
+	 * Lists the identifiers of the sequences found in the nucleotide database. Searching the nucleotide 
+	 * database with general text queries will produce links to results in Nucleotide, Genome Survey 
+	 * Sequence (GSS), and Expressed Sequence Tag (EST) databases.
+	 * @param query - Entrez query.
 	 * @return a collection of ids with no duplications.
 	 */
 	public static Set<String> listNucleotideIds(final String query) {
