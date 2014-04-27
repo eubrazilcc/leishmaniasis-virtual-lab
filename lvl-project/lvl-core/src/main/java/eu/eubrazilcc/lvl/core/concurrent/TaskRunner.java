@@ -22,33 +22,43 @@
 
 package eu.eubrazilcc.lvl.core.concurrent;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static com.google.common.util.concurrent.MoreExecutors.shutdownAndAwaitTermination;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
 
 /**
- * Runs tasks in a pool of threads that must be disposed as part of the application termination.
+ * Runs tasks in a pool of threads that must be disposed as part of the application termination. Tasks
+ * are submitted to the pool of threads for execution and a {@link ListenableFuture} is returned to the
+ * caller.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="https://code.google.com/p/guava-libraries/wiki/ListenableFutureExplained">ListenableFutureExplained</a>
  */
 public enum TaskRunner implements Closeable2 {
 
 	INSTANCE;
-	
+
 	private final static Logger LOGGER = LoggerFactory.getLogger(TaskRunner.class);
 
 	public static final String THREAD_NAME_PATTERN = "lvl-runner-%d";
+
+	private static final int TIMEOUT_SECS = 20;
 
 	private final ListeningExecutorService runner = listeningDecorator(newCachedThreadPool(
 			new ThreadFactoryBuilder()
@@ -59,7 +69,12 @@ public enum TaskRunner implements Closeable2 {
 
 	private AtomicBoolean shouldRun = new AtomicBoolean(false);
 
-	private TaskRunner() { }	
+	private TaskRunner() { }
+
+	public <T> ListenableFuture<T> submit(final Callable<T> task) {
+		checkState(shouldRun.get(), "Task runner uninitialized");
+		return runner.submit(task);
+	}
 
 	@Override
 	public void setup(final Collection<URL> urls) {
@@ -79,9 +94,13 @@ public enum TaskRunner implements Closeable2 {
 	@Override
 	public void close() throws IOException {
 		shouldRun.set(false);
-		
-		
-		// TODO		
+		try {
+			if (!shutdownAndAwaitTermination(runner, TIMEOUT_SECS, TimeUnit.SECONDS)) {
+				runner.shutdownNow();
+			}		
+		} finally {
+			LOGGER.info("Task runner shutdown successfully");	
+		}
 	}
 
 }

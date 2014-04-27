@@ -38,9 +38,10 @@ import eu.eubrazilcc.lvl.core.mock.CloserServiceMock;
 
 @RunWith(Suite.class)
 /* TODO @SuiteClasses({ LogManagerTest.class, GeospatialTest.class, XmlBindingTest.class, 
-	UrlUtilsTest.class, NetworkingUtilsTest.class, NamingUtilsTest.class, EntrezTest.class, 
-	SequenceAnalysisTest.class }) */
-@SuiteClasses({ SequenceAnalysisTest.class })
+	UrlUtilsTest.class, NetworkingUtilsTest.class, NamingUtilsTest.class, ConcurrencyTest.class,
+	EntrezTest.class, SequenceAnalysisTest.class }) */
+@SuiteClasses({ ConcurrencyTest.class })
+// TODO @SuiteClasses({ SequenceAnalysisTest.class })
 // TODO @SuiteClasses({ EntrezTest.class })
 public class AllTests {
 

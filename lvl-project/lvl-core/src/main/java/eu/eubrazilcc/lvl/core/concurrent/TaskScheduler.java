@@ -22,46 +22,75 @@
 
 package eu.eubrazilcc.lvl.core.concurrent;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static com.google.common.util.concurrent.MoreExecutors.shutdownAndAwaitTermination;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.util.concurrent.ListenableScheduledFuture;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
 
 /**
- * Schedules tasks to run periodically.
+ * Schedules tasks to run periodically. Tasks are scheduled with a pool of threads for periodic execution 
+ * and a {@link ListenableScheduledFuture} is returned to the caller.
  * @author Erik Torres <ertorser@upv.es>
  */
 public enum TaskScheduler implements Closeable2 {
-
+	
 	INSTANCE;
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(TaskScheduler.class);
 
 	public static final String THREAD_NAME_PATTERN = "lvl-scheduler-%d";
-	private static final int MIN_NUM_THREADS = 2;	
+	private static final int MIN_NUM_THREADS = 2;
 
-	private final ListeningScheduledExecutorService scheduler = listeningDecorator(new ScheduledThreadPoolExecutor(
-			Math.max(MIN_NUM_THREADS, Runtime.getRuntime().availableProcessors()), 
-			new ThreadFactoryBuilder()
-			.setNameFormat(THREAD_NAME_PATTERN)
-			.setDaemon(false)
-			.setUncaughtExceptionHandler(TaskUncaughtExceptionHandler.INSTANCE)
-			.build()));
+	private static final int TIMEOUT_SECS = 20;
+
+	private final ListeningScheduledExecutorService scheduler;
 
 	private AtomicBoolean shouldRun = new AtomicBoolean(false);
 
-	private TaskScheduler() { }
+	private TaskScheduler() { 
+		final ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(
+				Math.max(MIN_NUM_THREADS, Runtime.getRuntime().availableProcessors()), 
+				new ThreadFactoryBuilder()
+				.setNameFormat(THREAD_NAME_PATTERN)
+				.setDaemon(false)
+				.setUncaughtExceptionHandler(TaskUncaughtExceptionHandler.INSTANCE)
+				.build());
+		scheduledThreadPoolExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+		scheduledThreadPoolExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+		scheduledThreadPoolExecutor.setRemoveOnCancelPolicy(true);
+		scheduler = listeningDecorator(scheduledThreadPoolExecutor);
+	}
+
+	/**
+	 * See description of {@link java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate}
+	 */
+	public ListenableScheduledFuture<?> scheduleAtFixedRate(final Runnable command, final long initialDelay, final long period, final TimeUnit unit) {
+		checkState(shouldRun.get(), "Task scheduler uninitialized");
+		return scheduler.scheduleAtFixedRate(command, initialDelay, period, unit);
+	}
+	
+	/**
+	 * See description of {@link java.util.concurrent.ScheduledExecutorService#scheduleWithFixedDelay}
+	 */
+	public ListenableScheduledFuture<?> scheduleWithFixedDelay(final Runnable command, final long initialDelay, final long delay, final TimeUnit unit) {
+		checkState(shouldRun.get(), "Task scheduler uninitialized");
+		return scheduler.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+	}
 
 	@Override
 	public void setup(final Collection<URL> urls) {
@@ -80,11 +109,14 @@ public enum TaskScheduler implements Closeable2 {
 
 	@Override
 	public void close() throws IOException {
-		shouldRun.set(false);
-		
-		
-		
-		// TODO		
+		shouldRun.set(false);		
+		try {
+			if (!shutdownAndAwaitTermination(scheduler, TIMEOUT_SECS, TimeUnit.SECONDS)) {
+				scheduler.shutdownNow();
+			}		
+		} finally {
+			LOGGER.info("Task scheduler shutdown successfully");	
+		}
 	}
 
 }

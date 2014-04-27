@@ -22,12 +22,14 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.toAsciiSafeName;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.fail;
 
-import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
@@ -51,11 +53,11 @@ public class NamingUtilsTest {
 					"bioclim", "climate_space_model", "enfa_ecological_niche_factor_analysis",
 					"r_al", NamingUtils.NO_NAME };
 			for (int i = 0; i < names.length; i++) {
-				final String safeName = NamingUtils.toAsciiSafeName(names[i]);
+				final String safeName = toAsciiSafeName(names[i]);
 				System.out.println(" >> '" + names[i] + "' => "
-						+ (StringUtils.isNotEmpty(safeName) ? "'" + safeName + "'" : "NULL"));
+						+ (isNotEmpty(safeName) ? "'" + safeName + "'" : "NULL"));
 				assertThat("ASCII safe name is not null", safeName, notNullValue());
-				assertThat("ASCII safe name is not empty", StringUtils.isNotBlank(safeName));
+				assertThat("ASCII safe name is not empty", isNotBlank(safeName));
 				assertThat("ASCII safe name coincides with original", safeName, equalTo(safeNames[i]));				
 			}			
 		} catch (Exception e) {

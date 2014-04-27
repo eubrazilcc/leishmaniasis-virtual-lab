@@ -44,9 +44,11 @@ public class LogManagerTest {
 					LogManagerTest.class.getCanonicalName());
 			julLogger.setLevel(java.util.logging.Level.INFO);
 			julLogger.info("This message was generated with j.u.l., logged with Logback+SL4J");
+			
 			// SLF4J logger
 			final org.slf4j.Logger slf4jLogger = org.slf4j.LoggerFactory.getLogger(LogManagerTest.class);
 			slf4jLogger.info("This message was generated with SL4J, logged with Logback+SL4J");
+			
 			// print logback internal state 
 			final LoggerContext loggerContext = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
 			StatusPrinter.print(loggerContext);
