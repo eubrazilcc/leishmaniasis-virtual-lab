@@ -139,7 +139,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency>
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
-				<version>16.0</version>
+				<version>17.0</version>
 			</dependency>
 
 			<!-- JSR305 Annotations from Findbugs -->
