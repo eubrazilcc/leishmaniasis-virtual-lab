@@ -22,13 +22,16 @@
 
 package eu.eubrazilcc.lvl.core.entrez;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.countryFeature;
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
+import static org.apache.commons.io.FileUtils.listFiles;
 import static org.biojava3.core.sequence.io.GenbankReaderHelper.readGenbankDNASequence;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 
@@ -36,11 +39,43 @@ import org.biojava3.core.sequence.DNASequence;
 
 import com.google.common.collect.ImmutableMultimap;
 
+import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.SequenceDataSource;
+import eu.eubrazilcc.lvl.core.geospatial.Point;
+
 /**
  * Analyzes GenBank sequences.
  * @author Erik Torres <ertorser@upv.es>
  */
 public final class GenBankSequenceAnalizer {
+
+	/**
+	 * Lists the GenBank sequences found in the specified directory (subdirectories are not searched).
+	 * @param directory - the directory to search for sequences in
+	 * @return
+	 */
+	public static Collection<File> listSequences(final File directory) {
+		checkArgument(directory != null && directory.isDirectory() && directory.canRead(), 
+				"Uninitialized or invalid directory");
+		return listFiles(directory, new String[] { "gb" }, false);
+	}
+
+	public static Sequence importSequence(final File file) throws Exception {
+		final DNASequence dnaSequence = loadSequence(file);
+
+		return Sequence.builder()
+				.source(SequenceDataSource.GENBANK)
+				.accession(dnaSequence.getAccession().getID())
+				
+				
+				.version("3.0")
+				.definition("definition")
+				.organism("organism")
+				.countryFeature("Spain: Murcia")
+				.location(Point.builder().coordinate(-122.913837d, 38.081473d).build())
+				.locale(new Locale("es", "ES"))	
+				.build();
+	}
 
 	/**
 	 * Infers the possible countries of the species from which the DNA sequence was obtained and 
@@ -56,34 +91,47 @@ public final class GenBankSequenceAnalizer {
 	 * </ol>
 	 * Java {@link Locale} allows latter to export the country to several different formats, including a 
 	 * two-letter code compatible with ISO 3166-1 alpha-2 standard.
-	 * @param file sequence file.
+	 * @param file - sequence file.
 	 * @return a Java {@link Locale} inferred from the sequence file.
 	 * @throws Exception if an error occurs.
 	 */
-	public static ImmutableMultimap<GenBankField, Locale> inferCountry(final File file) throws Exception {		
-		final LinkedHashMap<String, DNASequence> dnaSequences = readGenbankDNASequence(file);		
-		checkState(dnaSequences != null && !dnaSequences.isEmpty(), "No DNA sequences found");
-		checkState(dnaSequences.size() == 1, "More than one DNA sequences found");
-		return inferCountry(file, getOnlyElement(dnaSequences.entrySet()).getValue());
+	public static final ImmutableMultimap<GenBankField, Locale> inferCountry(final File file) throws Exception {
+		return inferCountry(file, loadSequence(file));
 	}
 
-	private static ImmutableMultimap<GenBankField, Locale> inferCountry(final File file, final DNASequence sequence) throws Exception {
+	public static final ImmutableMultimap<GenBankField, Locale> inferCountry(final File file, final DNASequence dnaSequence) throws Exception {
+		checkArgument(file != null && file.canRead(), "Uninitialized or invalid file");		
 		final ImmutableMultimap.Builder<GenBankField, Locale> builder = new ImmutableMultimap.Builder<GenBankField, Locale>();		
 		// infer from features
 		final Locale locale = getLocale(countryFeature(file));
 		if (locale != null) {
 			builder.put(GenBankField.COUNTRY_FEATURE, locale);
-		} else {
+		} else {			
 			// infer from definition
 			// TODO
-			
+
 			// infer from title
 			// TODO
-			
+
 			// infer from PubMed title and abstract fields
 			// TODO
 		}
 		return builder.build();
+	}
+
+	/**
+	 * Loads a sequence from a GenBank file.
+	 * @param file - sequence file.
+	 * @return a {@link DNASequence} that contains the information of the sequence read from the input file.
+	 * @throws Exception if an error occurs.
+	 */
+	public static final DNASequence loadSequence(final File file) throws Exception {
+		final LinkedHashMap<String, DNASequence> dnaSequences = readGenbankDNASequence(file);		
+		checkState(dnaSequences != null && !dnaSequences.isEmpty(), "No DNA sequences found");
+		checkState(dnaSequences.size() == 1, "More than one DNA sequences found");		
+		final DNASequence dnaSequence = getOnlyElement(dnaSequences.entrySet()).getValue();
+		checkArgument(dnaSequence != null, "Input file does not contain a valid GenBank sequence");		
+		return dnaSequence;
 	}
 
 	/**
@@ -97,5 +145,5 @@ public final class GenBankSequenceAnalizer {
 		PUBMED_TITLE,
 		PUBMED_ABSTRACT		
 	}
-	
+
 }

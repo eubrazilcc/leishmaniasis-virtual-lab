@@ -94,8 +94,7 @@ public class SequenceAnalysisTest {
 					final ImmutableCollection<Locale> locales = possibleCountries.get(field);
 					for (final Locale locale : locales) {
 						System.err.println(" >> " + field.toString() + "=" + locale.getDisplayCountry());
-					}
-					
+					}					
 				}
 				System.err.println("\n\n");
 				// TODO

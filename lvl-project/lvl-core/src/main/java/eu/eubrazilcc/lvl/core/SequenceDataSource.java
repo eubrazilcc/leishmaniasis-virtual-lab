@@ -23,17 +23,19 @@
 package eu.eubrazilcc.lvl.core;
 
 /**
- * Stores sequence database names.
+ * Stores sequence database names. This class provides an alternative to BioJava 
+ * {@link org.biojava3.core.sequence.DataSource}, which is more convenient than BioJava to exchange 
+ * information to a client application where BioJava is not available (for example, a Web application).
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum SequenceDatabase {
+public enum SequenceDataSource {
 
 	GENBANK("GenBank"),
 	ISCIII("ISCIII-WHO-CCL");
 
 	private String name;
 
-	private SequenceDatabase(final String name) {
+	private SequenceDataSource(final String name) {
 		this.name = name;
 	}
 	public String getName() {

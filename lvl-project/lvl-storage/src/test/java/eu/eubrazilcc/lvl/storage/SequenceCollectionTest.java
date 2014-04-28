@@ -36,7 +36,7 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.SequenceDatabase;
+import eu.eubrazilcc.lvl.core.SequenceDataSource;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
@@ -53,7 +53,7 @@ public class SequenceCollectionTest {
 		try {
 			// insert
 			final Sequence sequence = Sequence.builder()
-					.source(SequenceDatabase.GENBANK)
+					.source(SequenceDataSource.GENBANK)
 					.accession("12345678")
 					.version("3.0")
 					.definition("definition")

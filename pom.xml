@@ -36,10 +36,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<lvl.version>${project.version}</lvl.version>
-		<logback.version>1.1.1</logback.version>
-		<slf4j.version>1.7.6</slf4j.version>
-		<mongodb.driver.version>2.11.4</mongodb.driver.version>
-		<mongodb.morphia.version>0.106</mongodb.morphia.version>
+		<logback.version>1.1.2</logback.version>
+		<slf4j.version>1.7.7</slf4j.version>
+		<org.apache.httpcomponents.version>4.3.1</org.apache.httpcomponents.version> <!-- must coincide with the version BioJava uses -->
+		<mongodb.driver.version>2.12.0</mongodb.driver.version>
+		<mongodb.morphia.version>0.107</mongodb.morphia.version>
 		<jackson-mapper.version>1.9.13</jackson-mapper.version>		
 	</properties>
 
@@ -78,19 +79,18 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<version>2.4</version>
 			</dependency>
 
-			<!-- Apache HttpComponents: HTTP/1.1 compliant HTTP agents (version must 
-				coincide with the version BioJava uses) -->
+			<!-- Apache HttpComponents: HTTP/1.1 compliant HTTP agents -->
 
 			<dependency> <!-- HTTP client -->
 				<groupId>org.apache.httpcomponents</groupId>
 				<artifactId>httpclient</artifactId>
-				<version>4.3.1</version>
+				<version>${org.apache.httpcomponents.version}</version>
 			</dependency>
 			
 			<dependency> <!-- Client fluent API -->
 				<groupId>org.apache.httpcomponents</groupId>
 				<artifactId>fluent-hc</artifactId>
-				<version>4.3.1</version>
+				<version>${org.apache.httpcomponents.version}</version>
 			</dependency>
 			
 			<!-- Apache Oltu: implements OAuth 2.0 -->

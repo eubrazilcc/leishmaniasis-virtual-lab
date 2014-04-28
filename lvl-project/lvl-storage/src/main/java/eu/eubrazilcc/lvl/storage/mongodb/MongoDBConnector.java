@@ -150,7 +150,7 @@ public enum MongoDBConnector implements Closeable2 {
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-			dbcol.ensureIndex(new BasicDBObject(field, descending ? -1 : 1), new BasicDBObject("unique", true));
+			dbcol.createIndex(new BasicDBObject(field, descending ? -1 : 1), new BasicDBObject("unique", true));
 		} finally {
 			db.requestDone();
 		}
@@ -169,7 +169,7 @@ public enum MongoDBConnector implements Closeable2 {
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-			dbcol.ensureIndex(new BasicDBObject(field, "2dsphere"));
+			dbcol.createIndex(new BasicDBObject(field, "2dsphere"));
 		} finally {
 			db.requestDone();
 		}

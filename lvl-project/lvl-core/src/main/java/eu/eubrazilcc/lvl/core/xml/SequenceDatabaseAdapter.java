@@ -24,22 +24,22 @@ package eu.eubrazilcc.lvl.core.xml;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
-import eu.eubrazilcc.lvl.core.SequenceDatabase;
+import eu.eubrazilcc.lvl.core.SequenceDataSource;
 
 /**
- * {@link SequenceDatabase} adapter for XML/JSON data binding.
+ * {@link SequenceDataSource} adapter for XML/JSON data binding.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SequenceDatabaseAdapter extends XmlAdapter<String, SequenceDatabase> {
+public class SequenceDatabaseAdapter extends XmlAdapter<String, SequenceDataSource> {
 
 	@Override
-	public String marshal(final SequenceDatabase source) throws Exception {
+	public String marshal(final SequenceDataSource source) throws Exception {
 		return source != null ? source.name() : null;		
 	}
 	
 	@Override
-	public SequenceDatabase unmarshal(final String str) throws Exception {
-		return str != null ? SequenceDatabase.valueOf(str) : null;		
+	public SequenceDataSource unmarshal(final String str) throws Exception {
+		return str != null ? SequenceDataSource.valueOf(str) : null;		
 	}
 	
 }

@@ -48,7 +48,7 @@ import eu.eubrazilcc.lvl.core.xml.SequenceDatabaseAdapter;
 public class Sequence {
 
 	private Link link;               // RESTful link	
-	private SequenceDatabase source; // Database where the original sequence is stored
+	private SequenceDataSource source; // Database where the original sequence is stored
 	private String definition;       // GenBank definition field
 	private String accession;        // GenBank accession number	
 	private String version;          // GenBank version
@@ -69,11 +69,11 @@ public class Sequence {
 	}
 
 	@XmlJavaTypeAdapter(SequenceDatabaseAdapter.class)
-	public SequenceDatabase getSource() {
+	public SequenceDataSource getSource() {
 		return source;
 	}
 
-	public void setSource(final SequenceDatabase source) {
+	public void setSource(final SequenceDataSource source) {
 		this.source = source;
 	}
 
@@ -193,7 +193,7 @@ public class Sequence {
 			return this;
 		}
 
-		public Builder source(final SequenceDatabase source) {
+		public Builder source(final SequenceDataSource source) {
 			sequence.setSource(source);
 			return this;
 		}
