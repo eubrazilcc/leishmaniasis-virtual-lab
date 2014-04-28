@@ -31,6 +31,7 @@ import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.saveNucleotides;
 import static eu.eubrazilcc.lvl.core.entrez.GenBankSequenceAnalizer.listSequences;
 import static java.nio.file.Files.createTempDirectory;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.File;
 import java.util.Collection;
@@ -41,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 
-import eu.eubrazilcc.lvl.core.SequenceDataSource;
+import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
 
 /**
@@ -55,16 +56,14 @@ public final class SequenceHelper {
 
 	/**
 	 * Imports sequences from external databases into the application's database.
-	 * @param database - source database, for example, GenBank
+	 * @param dataSource - source database, for example, GenBank
 	 */
-	public static final void importSequences(final SequenceDataSource database) {
-		checkArgument(database != null, "Uninitialized database");
-		switch (database) {
-		case GENBANK:
+	public static final void importSequences(final String dataSource) {
+		checkArgument(isNotBlank(dataSource), "Uninitialized data source");
+		if (DataSource.GENBANK.equals(dataSource)) {
 			importSequencesFromGenBank();
-			break;
-		default:
-			throw new IllegalArgumentException("Unsupported database: " + database);
+		} else {
+			throw new IllegalArgumentException("Unsupported data source: " + dataSource);
 		}
 	}
 
@@ -77,16 +76,19 @@ public final class SequenceHelper {
 			final Set<String> missingIds = from(ids).transform(new Function<String, String>() {
 				@Override
 				public String apply(final String id) {
-					return SequenceDAO.INSTANCE.find(id) == null ? id : null;					
-				}				
+					return SequenceDAO.INSTANCE.find(SequenceKey.builder()
+							.dataSource(DataSource.GENBANK)
+							.accession(id)
+							.build()) == null ? id : null;					
+				}
 			}).filter(notNull()).toSet();
 			// fetch missing sequences
 			tmpDir = createTempDirectory("tmp_sequences").toFile();
 			saveNucleotides(missingIds, tmpDir);
 			final Collection<File> files = listSequences(tmpDir);
 			for (final File file : files) {
-				
-				
+
+
 				// TODO
 			}
 		} catch (Exception e) {

@@ -23,7 +23,10 @@
 package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.entrez.GenBankSequenceAnalizer.inferCountry;
+import static eu.eubrazilcc.lvl.core.entrez.GenBankSequenceAnalizer.loadSequence;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGenBankFiles;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -33,6 +36,7 @@ import java.util.Locale;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.biojava3.core.sequence.DNASequence;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +64,17 @@ public class SequenceAnalysisTest {
 	public void test() {
 		System.out.println("SequenceAnalysisTest.test()");
 		try {
+			// test load GenBank sequence
+			final Collection<File> files = getGenBankFiles();
+			for (final File file : files) {
+				System.out.println(" >> GenBank sequence file: " + file.getCanonicalPath());
+				final DNASequence dnaSequence = loadSequence(file);
+				assertThat("GenBank sequence is not null", dnaSequence, notNullValue());
+				System.out.println(" >> Accession: " + dnaSequence.getAccession().getID());
+				
 
+				// TODO
+			}
 
 			/*
 			// TODO
@@ -82,10 +96,9 @@ public class SequenceAnalysisTest {
 			 */
 
 
-			// test country inference
-			final Collection<File> files = getGenBankFiles();
+			// test country inference			
 			for (final File file : files) {
-				System.out.println(" >> Sequence file: " + file.getCanonicalPath());
+				System.out.println(" >> GenBank sequence file: " + file.getCanonicalPath());
 				final ImmutableMultimap<GenBankField, Locale> possibleCountries = inferCountry(file);				
 
 				// TODO

@@ -41,7 +41,7 @@ import eu.eubrazilcc.lvl.storage.mock.CloserServiceMock;
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
-@SuiteClasses({ MappingUtilsTest.class, ScopeManagerTest.class, GravatarTest.class })
+@SuiteClasses({ SequenceKeyTest.class, MappingUtilsTest.class, ScopeManagerTest.class, GravatarTest.class })
 public class AllJUnitTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

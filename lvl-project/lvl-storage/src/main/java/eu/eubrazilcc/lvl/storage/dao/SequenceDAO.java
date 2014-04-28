@@ -45,6 +45,8 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexes;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -53,6 +55,7 @@ import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
+import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 
@@ -60,12 +63,13 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
  * Sequence DAO.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum SequenceDAO implements BaseDAO<String, Sequence> {
+public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	INSTANCE;
 
 	public static final String COLLECTION = "sequences";
-	public static final String PRIMARY_KEY = "sequence.accession";
+	public static final String PRIMARY_KEY_PART1 = "sequence.dataSource";
+	public static final String PRIMARY_KEY_PART2 = "sequence.accession";
 	public static final String GEOLOCATION_KEY = "sequence.location";
 
 	private final Morphia morphia = new Morphia();
@@ -73,7 +77,7 @@ public enum SequenceDAO implements BaseDAO<String, Sequence> {
 	private URI baseUri = null;
 
 	private SequenceDAO() {
-		MongoDBConnector.INSTANCE.createIndex(PRIMARY_KEY, COLLECTION);
+		MongoDBConnector.INSTANCE.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
 		MongoDBConnector.INSTANCE.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
 		morphia.map(SequenceEntity.class);
 	}
@@ -99,14 +103,17 @@ public enum SequenceDAO implements BaseDAO<String, Sequence> {
 		// remove transient fields from the element before saving it to the database
 		final SequenceTransientStore store = SequenceTransientStore.start(sequence);
 		final DBObject obj = morphia.toDBObject(new SequenceEntity(store.purge()));
-		MongoDBConnector.INSTANCE.update(obj, key(sequence.getAccession()), COLLECTION);
+		MongoDBConnector.INSTANCE.update(obj, key(SequenceKey.builder()
+				.dataSource(sequence.getDataSource())
+				.accession(sequence.getAccession())
+				.build()), COLLECTION);
 		// restore transient fields
 		store.restore();
 	}
 
 	@Override
-	public void delete(final String accession) {
-		MongoDBConnector.INSTANCE.remove(key(accession), COLLECTION);
+	public void delete(final SequenceKey sequenceKey) {
+		MongoDBConnector.INSTANCE.remove(key(sequenceKey), COLLECTION);
 	}
 
 	@Override
@@ -115,8 +122,8 @@ public enum SequenceDAO implements BaseDAO<String, Sequence> {
 	}
 
 	@Override
-	public Sequence find(final String accession) {
-		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(key(accession), COLLECTION);
+	public Sequence find(final SequenceKey sequenceKey) {
+		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(key(sequenceKey), COLLECTION);
 		return parseBasicDBObjectOrNull(obj);
 	}
 
@@ -161,12 +168,13 @@ public enum SequenceDAO implements BaseDAO<String, Sequence> {
 		MongoDBConnector.INSTANCE.stats(os, COLLECTION);
 	}
 
-	private BasicDBObject key(final String key) {
-		return new BasicDBObject(PRIMARY_KEY, key);		
+	private BasicDBObject key(final SequenceKey key) {
+		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, key.getDataSource(), 
+				PRIMARY_KEY_PART2, key.getAccession()));		
 	}
 
 	private BasicDBObject sortCriteria() {
-		return new BasicDBObject(PRIMARY_KEY, 1);
+		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, 1, PRIMARY_KEY_PART2, 1));
 	}
 
 	private Sequence parseBasicDBObject(final BasicDBObject obj) {
@@ -241,7 +249,7 @@ public enum SequenceDAO implements BaseDAO<String, Sequence> {
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
 	@Entity(value=COLLECTION, noClassnameStored=true)
-	@Indexes({@Index(PRIMARY_KEY)})
+	@Indexes(@Index(PRIMARY_KEY_PART1 + ", " + PRIMARY_KEY_PART2))
 	public static class SequenceEntity {
 
 		@Id

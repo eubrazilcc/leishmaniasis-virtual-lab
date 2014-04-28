@@ -39,8 +39,8 @@ import org.biojava3.core.sequence.DNASequence;
 
 import com.google.common.collect.ImmutableMultimap;
 
+import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.SequenceDataSource;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 
 /**
@@ -63,17 +63,17 @@ public final class GenBankSequenceAnalizer {
 	public static Sequence importSequence(final File file) throws Exception {
 		final DNASequence dnaSequence = loadSequence(file);
 
+		// TODO
+		
 		return Sequence.builder()
-				.source(SequenceDataSource.GENBANK)
+				.dataSource(DataSource.GENBANK)
 				.accession(dnaSequence.getAccession().getID())
-				
-				
-				.version("3.0")
-				.definition("definition")
-				.organism("organism")
-				.countryFeature("Spain: Murcia")
-				.location(Point.builder().coordinate(-122.913837d, 38.081473d).build())
-				.locale(new Locale("es", "ES"))	
+				.version("3.0") // TODO
+				.definition("definition") // TODO
+				.organism("organism") // TODO
+				.countryFeature("Spain: Murcia") // TODO
+				.location(Point.builder().coordinate(-122.913837d, 38.081473d).build()) // TODO
+				.locale(new Locale("es", "ES"))	// TODO
 				.build();
 	}
 
@@ -100,7 +100,7 @@ public final class GenBankSequenceAnalizer {
 	}
 
 	public static final ImmutableMultimap<GenBankField, Locale> inferCountry(final File file, final DNASequence dnaSequence) throws Exception {
-		checkArgument(file != null && file.canRead(), "Uninitialized or invalid file");		
+		checkArgument(file != null && file.canRead(), "Uninitialized or invalid file");
 		final ImmutableMultimap.Builder<GenBankField, Locale> builder = new ImmutableMultimap.Builder<GenBankField, Locale>();		
 		// infer from features
 		final Locale locale = getLocale(countryFeature(file));

@@ -28,6 +28,7 @@ import static com.google.common.base.Predicates.notNull;
 import static com.google.common.base.Splitter.on;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.toMap;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -49,6 +50,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -70,8 +73,9 @@ import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 
 /**
- * Data connector.
+ * Data connector based on mongoDB.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="https://www.mongodb.org/">mongoDB</a>
  */
 public enum MongoDBConnector implements Closeable2 {
 
@@ -137,27 +141,56 @@ public enum MongoDBConnector implements Closeable2 {
 	}
 
 	/**
-	 * Creates a new index in a collection.
+	 * Creates an index on a field, if one does not already exist on the specified collection. Indexes 
+	 * created with this method are created in the background and stores unique elements.
 	 * @param field - field that is used to index the elements
 	 * @param collection - collection where the index is created
 	 * @param descending - (optional) sort the elements of the index in descending order
 	 */
 	public void createIndex(final String field, final String collection, final boolean descending) {
 		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
+		createIndex(ImmutableList.of(field), collection, descending);
+	}
+
+	/**
+	 * Creates an index on a set of fields, if one does not already exist on the specified collection, 
+	 * sorting the elements in ascending order. Indexes created with this method are created in the 
+	 * background and stores unique elements.
+	 * @param fields - fields that are used to index the elements
+	 * @param collection - collection where the index is created
+	 */
+	public void createIndex(final List<String> fields, final String collection) {
+		createIndex(fields, collection, false);
+	}
+	
+	/**
+	 * Creates an index on a set of fields, if one does not already exist on the specified collection.
+	 * Indexes created with this method are created in the background and stores unique elements.
+	 * @param fields - fields that are used to index the elements
+	 * @param collection - collection where the index is created
+	 * @param descending - (optional) sort the elements of the index in descending order
+	 */
+	public void createIndex(final List<String> fields, final String collection, final boolean descending) {
+		checkArgument(fields != null && !fields.isEmpty(), "Uninitialized or invalid fields");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-			dbcol.createIndex(new BasicDBObject(field, descending ? -1 : 1), new BasicDBObject("unique", true));
+			dbcol.createIndex(new BasicDBObject(toMap(fields, new Function<String, Integer>() {
+				@Override
+				public Integer apply(final String field) {
+					return descending ? -1 : 1;
+				}				
+			})), new BasicDBObject(ImmutableMap.of("unique", true, "background", true)));
 		} finally {
 			db.requestDone();
 		}
 	}
 
 	/**
-	 * Creates a new geospatial index in a collection.
+	 * Creates a new geospatial index in a collection. Indexes are created in the background.
 	 * @param field - field that is used to index the elements
 	 * @param collection - collection where the index is created
 	 */
@@ -169,7 +202,7 @@ public enum MongoDBConnector implements Closeable2 {
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-			dbcol.createIndex(new BasicDBObject(field, "2dsphere"));
+			dbcol.createIndex(new BasicDBObject(field, "2dsphere"), new BasicDBObject("background", true));
 		} finally {
 			db.requestDone();
 		}

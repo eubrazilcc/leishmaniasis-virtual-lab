@@ -31,13 +31,13 @@ import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.xml.LinkAdapter;
-import eu.eubrazilcc.lvl.core.xml.SequenceDatabaseAdapter;
 
 /**
- * Stores a nucleotide sequence as a subset of GenBank fields with additional fields, since most 
- * sequences will come from GenBank. GenBank sequences can be annotated with a country feature, 
- * however this annotation is optional and is often absent. When present, country is represented by a
- * short name instead of a computer-friendly code. This class solves this limitation including
+ * Stores a nucleotide sequence as a subset of GenBank fields (since most sequences comes from GenBank) 
+ * annotated with additional fields. A sequence is uniquely identified by the combination of the data
+ * source and the accession (i.e. GenBank, U49845). GenBank sequences can be annotated with a country 
+ * feature, however this annotation is optional and is often absent. When present, country is represented 
+ * by a short name instead of a computer-friendly code. This class solves this limitation including
  * a Java {@link Locale} that can be used later to export the country as a two-letter code that 
  * represents a country name with ISO 3166-1 alpha-2 standard. The original GenBank country feature is 
  * also included in the class. What is more important, a GeoJSON point is included that allows callers 
@@ -47,15 +47,15 @@ import eu.eubrazilcc.lvl.core.xml.SequenceDatabaseAdapter;
  */
 public class Sequence {
 
-	private Link link;               // RESTful link	
-	private SequenceDataSource source; // Database where the original sequence is stored
-	private String definition;       // GenBank definition field
-	private String accession;        // GenBank accession number	
-	private String version;          // GenBank version
-	private String organism;         // GenBank organism
-	private String countryFeature;	 // GenBank country feature
-	private Point location;          // Geospatial location
-	private Locale locale;           // Represents country with standards
+	private Link link;             // RESTful link
+	private String dataSource;     // Database where the original sequence is stored
+	private String definition;     // GenBank definition field
+	private String accession;      // GenBank accession number	
+	private String version;        // GenBank version
+	private String organism;       // GenBank organism
+	private String countryFeature; // GenBank country feature
+	private Point location;        // Geospatial location
+	private Locale locale;         // Represents country with standards
 
 	public Sequence() { }
 
@@ -68,13 +68,12 @@ public class Sequence {
 		this.link = link;
 	}
 
-	@XmlJavaTypeAdapter(SequenceDatabaseAdapter.class)
-	public SequenceDataSource getSource() {
-		return source;
+	public String getDataSource() {
+		return dataSource;
 	}
 
-	public void setSource(final SequenceDataSource source) {
-		this.source = source;
+	public void setDataSource(final String dataSource) {
+		this.dataSource = dataSource;
 	}
 
 	public String getDefinition() {
@@ -147,7 +146,7 @@ public class Sequence {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(source, other.source)
+		return Objects.equal(dataSource, other.dataSource)
 				&& Objects.equal(definition, other.definition)
 				&& Objects.equal(accession, other.accession)
 				&& Objects.equal(version, other.version)
@@ -159,15 +158,15 @@ public class Sequence {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(link, source, definition, accession, version, organism, countryFeature,
-				location, locale);
+		return Objects.hashCode(link, dataSource, definition, accession, version, organism, 
+				countryFeature, location, locale);
 	}
 
 	@Override
 	public String toString() {
 		return Objects.toStringHelper(this)
 				.add("link", link)
-				.add("source", source)
+				.add("dataSource", dataSource)
 				.add("definition", definition)
 				.add("accession", accession)
 				.add("version", version)
@@ -193,8 +192,8 @@ public class Sequence {
 			return this;
 		}
 
-		public Builder source(final SequenceDataSource source) {
-			sequence.setSource(source);
+		public Builder dataSource(final String dataSource) {
+			sequence.setDataSource(dataSource);
 			return this;
 		}
 

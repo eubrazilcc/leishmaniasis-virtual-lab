@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.net.URI;
 import java.util.List;
@@ -48,7 +49,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableLong;
 
 import eu.eubrazilcc.lvl.core.Paginable;
@@ -58,18 +58,31 @@ import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geospatial.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
+import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 
 /**
- * Sequences resource.
+ * Sequences resource. Since a sequence is uniquely identified by the combination of the data source and 
+ * the accession (i.e. GenBank, U49845), this class uses the reserved character ',' allowed in an URI 
+ * segment to delimit or dereference the sequence identifier. For example, the following URIs are valid
+ * and identifies the previous sequence:
+ * <ul>
+ * <li>https://localhost/webapp/sequences/GenBank,U49845</li>
+ * </ul>
+ * Identifiers that don't follow this convention will be rejected by this server with an HTTP Error 400 
+ * (Bad request).
  * @author Erik Torres <ertorser@upv.es>
+ * @see {@link Sequence} class
+ * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.3">RFC3986 - Uniform Resource Identifier (URI): Generic Syntax; Section 3.3 - Path</a>
  */
 @Path("/sequences")
 public class SequenceResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence Resource";
 	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);
+	
+	public static final char ID_SEPARATOR = ',';
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -107,16 +120,18 @@ public class SequenceResource {
 	}
 
 	@GET
-	@Path("{id}")
+	@Path("{id: [a-zA-Z_0-9]+,[a-zA-Z_0-9]+}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Sequence getSequence(@PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
-		if (StringUtils.isBlank(id)) {
+		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final Sequence sequence = SequenceDAO.INSTANCE.baseUri(uriInfo.getBaseUri()).find(id);
+		final Sequence sequence = SequenceDAO.INSTANCE
+				.baseUri(uriInfo.getBaseUri())
+				.find(SequenceKey.builder().parse(id, ID_SEPARATOR));
 		if (sequence == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
@@ -128,7 +143,7 @@ public class SequenceResource {
 	public Response createSequence(final Sequence sequence, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
-		if (sequence == null || StringUtils.isBlank(sequence.getAccession())) {
+		if (sequence == null || isBlank(sequence.getAccession())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// create sequence in the database
@@ -138,16 +153,21 @@ public class SequenceResource {
 	}
 
 	@PUT
-	@Path("{id}")
+	@Path("{id: [a-zA-Z_0-9]+,[a-zA-Z_0-9]+}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void updateSequence(final @PathParam("id") String id, final Sequence update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
-		if (StringUtils.isBlank(id) || !id.equals(update.getAccession())) {
+		if (isBlank(id)) {
+			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+		}		
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_SEPARATOR);
+		if (sequenceKey == null || !sequenceKey.getDataSource().equals(update.getDataSource()) 
+				|| !sequenceKey.getAccession().equals(update.getAccession())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final Sequence current = SequenceDAO.INSTANCE.find(id);
+		final Sequence current = SequenceDAO.INSTANCE.find(sequenceKey);
 		if (current == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
@@ -156,20 +176,21 @@ public class SequenceResource {
 	}
 
 	@DELETE
-	@Path("{id}")
+	@Path("{id: [a-zA-Z_0-9]+,[a-zA-Z_0-9]+}")
 	public void deleteSequence(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
-		if (StringUtils.isBlank(id)) {
+		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_SEPARATOR);
 		// get from database
-		final Sequence current = SequenceDAO.INSTANCE.find(id);
+		final Sequence current = SequenceDAO.INSTANCE.find(sequenceKey);
 		if (current == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		// delete
-		SequenceDAO.INSTANCE.delete(id);
+		SequenceDAO.INSTANCE.delete(sequenceKey);
 	}
 
 	@GET
@@ -189,6 +210,6 @@ public class SequenceResource {
 			builder.feature(sequence.getLocation());
 		}
 		return builder.build();
-	}
+	}	
 
 }

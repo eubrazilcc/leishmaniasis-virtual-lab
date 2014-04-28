@@ -49,12 +49,14 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sequences;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geospatial.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
+import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
@@ -116,11 +118,16 @@ public class ServiceTest {
 			final Path path = SequenceResource.class.getAnnotation(Path.class);
 			// test create new sequence
 			final Sequence sequence = Sequence.builder()
+					.dataSource(DataSource.GENBANK)
 					.definition("Example sequence")
 					.accession("LVL00000")
 					.version("0.0")
 					.organism("Example organism")
 					.location(Point.builder().coordinate(1.2d, 3.4d).build())
+					.build();
+			final SequenceKey sequenceKey = SequenceKey.builder()
+					.dataSource(sequence.getDataSource())
+					.accession(sequence.getAccession())
 					.build();
 			Response response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
@@ -161,8 +168,8 @@ public class ServiceTest {
 			/* uncomment for additional output */			
 			System.out.println("Get sequences result: " + sequences.toString());
 
-			// test get sequence by accession number
-			Sequence sequence2 = target.path(path.value()).path(sequence.getAccession())
+			// test get sequence by data source + accession number
+			Sequence sequence2 = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
 					.request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequence.class);
@@ -173,7 +180,8 @@ public class ServiceTest {
 
 			// test update sequence
 			sequence.setDefinition("Modified example sequence");
-			response = target.path(path.value()).path(sequence.getAccession()).request()
+			response = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
+					.request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.put(Entity.entity(sequence, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("Update sequence response is not null", response, notNullValue());
@@ -188,7 +196,7 @@ public class ServiceTest {
 			System.out.println("Update sequence HTTP headers: " + response.getStringHeaders());
 
 			// test get sequence by accession number after update
-			sequence2 = target.path(path.value()).path(sequence.getAccession())
+			sequence2 = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
 					.request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequence.class);
@@ -210,7 +218,8 @@ public class ServiceTest {
 			System.out.println("Get nearby sequences result: " + featCol.toString());
 
 			// test delete sequence
-			response = target.path(path.value()).path(sequence.getAccession()).request()
+			response = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
+					.request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.delete();
 			assertThat("Delete sequence response is not null", response, notNullValue());
