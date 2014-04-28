@@ -34,7 +34,7 @@ import java.util.Locale;
 
 import org.biojava3.core.sequence.DNASequence;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 
 /**
  * Analyzes GenBank sequences.
@@ -43,9 +43,10 @@ import com.google.common.collect.ImmutableList;
 public final class GenBankSequenceAnalizer {
 
 	/**
-	 * Infers the possible countries of the species from which the DNA sequence was obtained 
-	 * and returns a list of Java {@link Locale}. The country is inferred from the annotations 
-	 * of the GenBank file format, using the fields in the following order:
+	 * Infers the possible countries of the species from which the DNA sequence was obtained and 
+	 * returns a map of Java {@link Locale} where the key of the map is the GenBank field that was
+	 * used to infer the country. The country is inferred from the annotations of the GenBank file 
+	 * format, using the fields in the following order:
 	 * <ol>
 	 * <li>If a /country entry exists in the FEATURES of the file, then this is returned to 
 	 * the caller and no other check is performed;</li>
@@ -53,24 +54,25 @@ public final class GenBankSequenceAnalizer {
 	 * <li>TITLE; or</li>
 	 * <li>Check PUBMED title and abstract fields.</li>
 	 * </ol>
+	 * Java {@link Locale} allows latter to export the country to several different formats, including a 
+	 * two-letter code compatible with ISO 3166-1 alpha-2 standard.
 	 * @param file sequence file.
 	 * @return a Java {@link Locale} inferred from the sequence file.
 	 * @throws Exception if an error occurs.
 	 */
-	public static ImmutableList<Locale> inferCountry(final File file) throws Exception {		
+	public static ImmutableMultimap<GenBankField, Locale> inferCountry(final File file) throws Exception {		
 		final LinkedHashMap<String, DNASequence> dnaSequences = readGenbankDNASequence(file);		
 		checkState(dnaSequences != null && !dnaSequences.isEmpty(), "No DNA sequences found");
 		checkState(dnaSequences.size() == 1, "More than one DNA sequences found");
 		return inferCountry(file, getOnlyElement(dnaSequences.entrySet()).getValue());
 	}
 
-	// TODO : two-letter code compatible with ISO 3166-1 alpha-2
-	private static ImmutableList<Locale> inferCountry(final File file, final DNASequence sequence) throws Exception {
-		final ImmutableList.Builder<Locale> builder = new ImmutableList.Builder<Locale>();		
+	private static ImmutableMultimap<GenBankField, Locale> inferCountry(final File file, final DNASequence sequence) throws Exception {
+		final ImmutableMultimap.Builder<GenBankField, Locale> builder = new ImmutableMultimap.Builder<GenBankField, Locale>();		
 		// infer from features
 		final Locale locale = getLocale(countryFeature(file));
 		if (locale != null) {
-			builder.add(locale);
+			builder.put(GenBankField.COUNTRY_FEATURE, locale);
 		} else {
 			// infer from definition
 			// TODO
@@ -82,6 +84,18 @@ public final class GenBankSequenceAnalizer {
 			// TODO
 		}
 		return builder.build();
-	}	
+	}
 
+	/**
+	 * Represents a GenBank field, for example, the field that was used to infer the country of a sequence.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public static enum GenBankField {		
+		COUNTRY_FEATURE,
+		DEFINITION,
+		TITLE,
+		PUBMED_TITLE,
+		PUBMED_ABSTRACT		
+	}
+	
 }

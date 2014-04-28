@@ -24,7 +24,6 @@ package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.entrez.GenBankSequenceAnalizer.inferCountry;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGenBankFiles;
-import static com.google.common.collect.Iterables.getOnlyElement;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -38,7 +37,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMultimap;
+
+import eu.eubrazilcc.lvl.core.entrez.GenBankSequenceAnalizer.GenBankField;
 
 /**
  * Tests biological sequences analysis.
@@ -58,8 +60,8 @@ public class SequenceAnalysisTest {
 	public void test() {
 		System.out.println("SequenceAnalysisTest.test()");
 		try {
-			
-			
+
+
 			/*
 			// TODO
 			final File dir = new File("/home/etorres/KK/entrez/phlebotomus");
@@ -67,29 +69,37 @@ public class SequenceAnalysisTest {
 			for (final File file : files2) {
 				System.out.println(" >> Sequence file: " + file.getCanonicalPath());
 				final ImmutableList<Locale> possibleCountries = inferCountry(file);
-				
+
 				// TODO
 				System.err.println("\n\n" + Iterables.getFirst(possibleCountries, null).getDisplayCountry() + "\n\n");
 				// TODO
-				
+
 			}
 			if (true) {
 				return;
 			}
 			// TODO
-			*/
-			
-			
+			 */
+
+
 			// test country inference
 			final Collection<File> files = getGenBankFiles();
 			for (final File file : files) {
 				System.out.println(" >> Sequence file: " + file.getCanonicalPath());
-				final ImmutableList<Locale> possibleCountries = inferCountry(file);				
-				
+				final ImmutableMultimap<GenBankField, Locale> possibleCountries = inferCountry(file);				
+
 				// TODO
-				System.err.println("\n\n" + getOnlyElement(possibleCountries).getDisplayCountry() + "\n\n");
+				System.err.println("\n\n");
+				for (final GenBankField field : possibleCountries.keySet()) {
+					final ImmutableCollection<Locale> locales = possibleCountries.get(field);
+					for (final Locale locale : locales) {
+						System.err.println(" >> " + field.toString() + "=" + locale.getDisplayCountry());
+					}
+					
+				}
+				System.err.println("\n\n");
 				// TODO
-				
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
