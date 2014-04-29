@@ -26,7 +26,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
-import static com.google.common.util.concurrent.Futures.addCallback;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.util.concurrent.Futures.allAsList;
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.google.common.util.concurrent.Futures.transform;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
@@ -38,7 +40,9 @@ import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +53,6 @@ import org.w3c.dom.Document;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import eu.eubrazilcc.lvl.core.DataSource;
@@ -71,7 +74,7 @@ public enum SequenceManager {
 	public final static ImmutableList<String> DEFAULT_DATA_SOURCES = ImmutableList.of(DataSource.GENBANK);
 
 	public final static long FETCH_TIMEOUT_SECONDS     = 900l; // 15 minutes
-	public final static long DB_IMPORT_TIMEOUT_SECONDS = 300l; // 5 minutes
+	public final static long DB_IMPORT_TIMEOUT_SECONDS = 600l; // 10 minutes
 
 	private SequenceManager() { }
 
@@ -102,6 +105,7 @@ public enum SequenceManager {
 		try {
 			int retstart = 0, count = 0;
 			final int retmax = EntrezHelper.MAX_RECORDS_LISTED;
+			final List<ListenableFuture<Integer>> futures = newArrayList();
 			do {
 				final Document results = esearch(EntrezHelper.PHLEBOTOMUS_QUERY, retstart, retmax);
 				if (esearchResultCount < 0) {
@@ -114,10 +118,14 @@ public enum SequenceManager {
 				// are filtered, a new task is submitted to fetch the sequences from GenBank. A callback function is called
 				// every time a bulk of sequences is fetched and this function submits a new task to import the sequences into
 				// the database
-				addCallback(transform(TaskRunner.INSTANCE.submit(filterMissingIds(ids)), fetchGBFlatFiles()), importGBFlatFiles());
+				futures.add(transform(transform(TaskRunner.INSTANCE.submit(filterMissingIds(ids)), fetchGBFlatFiles()), importGBFlatFiles()));
 				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records");
 				retstart += count;
 			} while (count > 0 && retstart < esearchResultCount);
+			final ListenableFuture<List<Integer>> combinedFuture = allAsList(futures);
+			final List<Integer> list = combinedFuture.get();
+			checkState(list != null, "No sequences imported");			
+			LOGGER.info(list.size() + " sequences imported");
 		} catch (Exception e) {
 			LOGGER.error("Listing nucleotide ids failed", e);
 		}
@@ -157,62 +165,72 @@ public enum SequenceManager {
 		return new Function<List<String>, Collection<File>>() {
 			@Override
 			public Collection<File> apply(final List<String> ids) {
-				final ListenableFuture<Collection<File>> future = TaskRunner.INSTANCE.submit(new Callable<Collection<File>>() {
-					@Override
-					public Collection<File> call() throws Exception {
-						File tmpDir = null;
-						boolean shouldClean = false;
-						try {
-							tmpDir = createTempDirectory("tmp_sequences").toFile();
-							efetch(ids, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir, Format.FLAT_FILE);
-							final Collection<File> files = listFiles(tmpDir, new String[] { "gb" }, false);
-							checkState(files != null && files.size() == ids.size(), "No all sequences were fetched");					
-							return files;
-						} catch (Exception e) {
-							shouldClean = true;
-							throw new IllegalStateException("Failed to import nucleotide sequences from GenBank", e);
-						} finally {
-							if (shouldClean) {
-								deleteQuietly(tmpDir);
-							}
-						}
-					}					
-				});
+				final ListenableFuture<Collection<File>> future = (!ids.isEmpty() ? TaskRunner.INSTANCE.submit(fetchTask(ids)) 
+						: immediateFuture(Collections.checkedCollection(new ArrayList<File>(), File.class)));
 				try {
 					return future.get(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 				} catch (Exception e) {
 					throw new IllegalStateException("Failed to fecth sequences from GenBank using flat file format", e);
 				}
 			}
-		};		
+		};
 	}
 
-	private static FutureCallback<Collection<File>> importGBFlatFiles() {
-		return new FutureCallback<Collection<File>>() {
+	private static Callable<Collection<File>> fetchTask(final List<String> ids) {
+		return new Callable<Collection<File>>() {
 			@Override
-			public void onSuccess(final Collection<File> files) {
-				final ListenableFuture<Void> future = TaskRunner.INSTANCE.submit(new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						for (final File file : files) {
+			public Collection<File> call() throws Exception {
+				File tmpDir = null;
+				boolean shouldClean = false;
+				try {
+
+					// TODO
+					System.err.println("\n\nIDS=" + ids + "\n\n");
+					// TODO
+
+					tmpDir = createTempDirectory("tmp_sequences").toFile();
+					efetch(ids, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir, Format.FLAT_FILE);
+					final Collection<File> files = listFiles(tmpDir, new String[] { "gb" }, false);
+					checkState(files != null && files.size() == ids.size(), "No all sequences were fetched");					
+					return files;
+				} catch (Exception e) {
+					shouldClean = true;
+					throw new IllegalStateException("Failed to import nucleotide sequences from GenBank", e);
+				} finally {
+					if (shouldClean) {
+						deleteQuietly(tmpDir);
+					}
+				}
+			}
+		};
+	}
+
+	private static Function<Collection<File>, Integer> importGBFlatFiles() {
+		return new Function<Collection<File>, Integer>() {
+			@Override
+			public Integer apply(final Collection<File> files) {
+				final List<ListenableFuture<String>> futures = newArrayList();
+				for (final File file : files) {
+					final ListenableFuture<String> future = TaskRunner.INSTANCE.submit(new Callable<String>() {
+						@Override
+						public String call() throws Exception {
 
 							// TODO
 							System.err.println("\n\nImport file: " + file + "\n\n");
 							// TODO
 
+							return file.getName();
 						}
-						return null;
-					}
-				});
+					});
+					futures.add(future);
+				}
+				final ListenableFuture<List<String>> combinedFuture = allAsList(futures);
 				try {
-					future.get(DB_IMPORT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+					final List<String> list = combinedFuture.get(DB_IMPORT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+					return list != null ? list.size() : 0;
 				} catch (Exception e) {
 					throw new IllegalStateException(e);
 				}
-			}
-			@Override
-			public void onFailure(final Throwable cause) {
-				throw new IllegalStateException("Failed to import sequences from GenBank using flat file format", cause);
 			}
 		};
 	}

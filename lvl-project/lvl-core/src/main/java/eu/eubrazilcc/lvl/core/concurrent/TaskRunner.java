@@ -97,7 +97,7 @@ public enum TaskRunner implements Closeable2 {
 		try {
 			if (!shutdownAndAwaitTermination(runner, TIMEOUT_SECS, TimeUnit.SECONDS)) {
 				runner.shutdownNow();
-			}		
+			}
 		} finally {
 			LOGGER.info("Task runner shutdown successfully");	
 		}

@@ -38,7 +38,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<lvl.version>${project.version}</lvl.version>
 		<logback.version>1.1.2</logback.version>
 		<slf4j.version>1.7.7</slf4j.version>
-		<org.apache.httpcomponents.version>4.3.1</org.apache.httpcomponents.version> <!-- must coincide with the version BioJava uses -->
+		<org.apache.httpcomponents.version>4.3.2</org.apache.httpcomponents.version> <!-- must coincide with the version BioJava uses (3.0.8 uses 4.3.1) -->
 		<mongodb.driver.version>2.12.0</mongodb.driver.version>
 		<mongodb.morphia.version>0.107</mongodb.morphia.version>
 		<jackson-mapper.version>1.9.13</jackson-mapper.version>		

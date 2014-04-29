@@ -90,7 +90,7 @@ public final class EntrezHelper {
 
 	public static final String ESEARCH_BASE_URI = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
 	public static final String EFETCH_BASE_URI = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
-	
+
 	public static final int MAX_RECORDS_LISTED = 10000;  // esearch maximum 100,000
 	public static final int MAX_RECORDS_FETCHED = 10000; // efetch maximum 100,000
 
@@ -106,22 +106,22 @@ public final class EntrezHelper {
 	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
 	public static final String PHLEBOTOMUS_QUERY = "phlebotomus[Organism]";
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	// TODO : OLD API BEGINS HERE
 
 	/**
@@ -301,7 +301,8 @@ public final class EntrezHelper {
 				}
 				final ContentType contentType = ContentType.getOrDefault(entity);
 				final String mimeType = contentType.getMimeType();
-				if (!mimeType.equals(ContentType.APPLICATION_OCTET_STREAM.getMimeType())) {
+				if (!mimeType.equals(ContentType.APPLICATION_OCTET_STREAM.getMimeType())
+						&& !mimeType.equals(ContentType.TEXT_PLAIN.getMimeType())) {
 					throw new ClientProtocolException("Unexpected content type:" + contentType);
 				}
 				Charset charset = contentType.getCharset();
@@ -330,10 +331,14 @@ public final class EntrezHelper {
 						sink = asByteSink(file, FileWriteMode.APPEND);
 						LOGGER.info("Processing file: " + file.getCanonicalPath());
 					}
-					if (i < ids.size()) {						
+					if (i < ids.size()) {
 						// write non-empty lines to the file
 						if (isNotBlank(line)) {
-							sink.write((line + "\n").getBytes(DEFAULT_CHARSET));
+							if (sink != null) {
+								sink.write((line + "\n").getBytes(DEFAULT_CHARSET));
+							} else {
+								LOGGER.warn("Ingoring line when all files were closed: " + line);	
+							}
 						}
 						// process line
 						if (line.startsWith("VERSION    ")) {
@@ -344,7 +349,7 @@ public final class EntrezHelper {
 						}
 					} else {
 						if (isNotBlank(line)) {
-							LOGGER.info("Ingoring line after all sequences were processed" + line);
+							LOGGER.warn("Ingoring line after all sequences were processed: " + line);
 						}
 					}
 				}
@@ -360,6 +365,13 @@ public final class EntrezHelper {
 			}
 			@Override
 			public void onFailure(final Throwable error) {
+
+				// TODO
+				System.err.println("\n\n >> HERE >>\n");
+				error.printStackTrace(System.err);
+				System.err.println("\n << HERE << \n\n");
+				// TODO
+
 				LOGGER.error("Failed to process bulk sequence file " + tmpFile.getName(), error);
 			}
 		});
