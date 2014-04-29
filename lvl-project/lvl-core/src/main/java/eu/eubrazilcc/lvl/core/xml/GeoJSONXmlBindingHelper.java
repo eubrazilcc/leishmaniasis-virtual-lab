@@ -38,10 +38,10 @@ import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 
 /**
- * XML binding helper.
+ * GeoJSON XML binding helper.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class XmlBindingHelper {
+public final class GeoJSONXmlBindingHelper {
 
 	private static final Class<?>[] SUPPORTED_CLASSES = {
 		Point.class,

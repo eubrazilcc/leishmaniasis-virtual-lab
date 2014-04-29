@@ -58,4 +58,9 @@ public class TestUtils {
 		return FileUtils.listFiles(dir, new String[] { "gb" }, false);
 	}
 	
+	public static Collection<File> getGBSeqXMLFiles() {
+		final File dir = new File(FilenameUtils.concat(AllTests.TEST_RESOURCES_PATH, GENBANK_FOLDER));
+		return FileUtils.listFiles(dir, new String[] { "xml" }, false);
+	}
+	
 }

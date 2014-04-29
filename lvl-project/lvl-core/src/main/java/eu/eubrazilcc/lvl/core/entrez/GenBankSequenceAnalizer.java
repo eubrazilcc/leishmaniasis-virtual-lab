@@ -23,25 +23,15 @@
 package eu.eubrazilcc.lvl.core.entrez;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.getOnlyElement;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.countryFeature;
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static org.apache.commons.io.FileUtils.listFiles;
-import static org.biojava3.core.sequence.io.GenbankReaderHelper.readGenbankDNASequence;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 
-import org.biojava3.core.sequence.DNASequence;
-
 import com.google.common.collect.ImmutableMultimap;
-
-import eu.eubrazilcc.lvl.core.DataSource;
-import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.geospatial.Point;
 
 /**
  * Analyzes GenBank sequences.
@@ -54,27 +44,16 @@ public final class GenBankSequenceAnalizer {
 	 * @param directory - the directory to search for sequences in
 	 * @return
 	 */
-	public static Collection<File> listSequences(final File directory) {
+	public static Collection<File> listGBFlatFiles(final File directory) {
 		checkArgument(directory != null && directory.isDirectory() && directory.canRead(), 
 				"Uninitialized or invalid directory");
 		return listFiles(directory, new String[] { "gb" }, false);
 	}
-
-	public static Sequence importSequence(final File file) throws Exception {
-		final DNASequence dnaSequence = loadSequence(file);
-
-		// TODO
-		
-		return Sequence.builder()
-				.dataSource(DataSource.GENBANK)
-				.accession(dnaSequence.getAccession().getID())
-				.version("3.0") // TODO
-				.definition("definition") // TODO
-				.organism("organism") // TODO
-				.countryFeature("Spain: Murcia") // TODO
-				.location(Point.builder().coordinate(-122.913837d, 38.081473d).build()) // TODO
-				.locale(new Locale("es", "ES"))	// TODO
-				.build();
+	
+	public static Collection<File> listGBSeqXMLFiles(final File directory) {
+		checkArgument(directory != null && directory.isDirectory() && directory.canRead(), 
+				"Uninitialized or invalid directory");
+		return listFiles(directory, new String[] { "xml" }, false);
 	}
 
 	/**
@@ -94,12 +73,8 @@ public final class GenBankSequenceAnalizer {
 	 * @param file - sequence file.
 	 * @return a Java {@link Locale} inferred from the sequence file.
 	 * @throws Exception if an error occurs.
-	 */
+	 */	
 	public static final ImmutableMultimap<GenBankField, Locale> inferCountry(final File file) throws Exception {
-		return inferCountry(file, loadSequence(file));
-	}
-
-	public static final ImmutableMultimap<GenBankField, Locale> inferCountry(final File file, final DNASequence dnaSequence) throws Exception {
 		checkArgument(file != null && file.canRead(), "Uninitialized or invalid file");
 		final ImmutableMultimap.Builder<GenBankField, Locale> builder = new ImmutableMultimap.Builder<GenBankField, Locale>();		
 		// infer from features
@@ -117,21 +92,6 @@ public final class GenBankSequenceAnalizer {
 			// TODO
 		}
 		return builder.build();
-	}
-
-	/**
-	 * Loads a sequence from a GenBank file.
-	 * @param file - sequence file.
-	 * @return a {@link DNASequence} that contains the information of the sequence read from the input file.
-	 * @throws Exception if an error occurs.
-	 */
-	public static final DNASequence loadSequence(final File file) throws Exception {
-		final LinkedHashMap<String, DNASequence> dnaSequences = readGenbankDNASequence(file);		
-		checkState(dnaSequences != null && !dnaSequences.isEmpty(), "No DNA sequences found");
-		checkState(dnaSequences.size() == 1, "More than one DNA sequences found");		
-		final DNASequence dnaSequence = getOnlyElement(dnaSequences.entrySet()).getValue();
-		checkArgument(dnaSequence != null, "Input file does not contain a valid GenBank sequence");		
-		return dnaSequence;
 	}
 
 	/**

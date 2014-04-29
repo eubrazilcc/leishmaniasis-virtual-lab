@@ -33,7 +33,7 @@ import org.junit.Test;
 import eu.eubrazilcc.lvl.core.geospatial.Line;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.geospatial.Polygon;
-import eu.eubrazilcc.lvl.core.xml.XmlBindingHelper;
+import eu.eubrazilcc.lvl.core.xml.GeoJSONXmlBindingHelper;
 
 /**
  * Test XML to/from Java object binding.
@@ -50,10 +50,10 @@ public class XmlBindingTest {
 					.coordinate(1.0d, 1.0d)
 					.build();
 			assertThat("point is not null", point, notNullValue());
-			String payload = XmlBindingHelper.typeToXml(point);
+			String payload = GeoJSONXmlBindingHelper.typeToXml(point);
 			assertThat("point payload is not null", payload, notNullValue());
 			assertThat("point payload is not empty", isNotBlank(payload));
-			final Point point2 = XmlBindingHelper.typeFromXml(payload);
+			final Point point2 = GeoJSONXmlBindingHelper.typeFromXml(payload);
 			assertThat("point back is not null", point2, notNullValue());
 			assertThat("point back coincides with original", point2, equalTo(point));
 			System.out.println("point: " + point.toString());
@@ -64,10 +64,10 @@ public class XmlBindingTest {
 					.coordinate(1.0d, 1.0d)
 					.coordinate(2.0d, 2.0d)
 					.build();
-			payload = XmlBindingHelper.typeToXml(line);
+			payload = GeoJSONXmlBindingHelper.typeToXml(line);
 			assertThat("line payload is not null", payload, notNullValue());
 			assertThat("line payload is not empty", isNotBlank(payload));
-			final Line line2 = XmlBindingHelper.typeFromXml(payload);
+			final Line line2 = GeoJSONXmlBindingHelper.typeFromXml(payload);
 			assertThat("line back is not null", line2, notNullValue());
 			assertThat("line back coincides with original", line2, equalTo(line));
 			System.out.println("line: " + line.toString());
@@ -80,10 +80,10 @@ public class XmlBindingTest {
 					.coordinate(3.0d, 3.0d)
 					.coordinate(1.0d, 1.0d)
 					.build();
-			payload = XmlBindingHelper.typeToXml(polygon);
+			payload = GeoJSONXmlBindingHelper.typeToXml(polygon);
 			assertThat("polygon payload is not null", payload, notNullValue());
 			assertThat("polygon payload is not empty", isNotBlank(payload));
-			final Polygon polygon2 = XmlBindingHelper.typeFromXml(payload);
+			final Polygon polygon2 = GeoJSONXmlBindingHelper.typeFromXml(payload);
 			assertThat("polygon back is not null", polygon2, notNullValue());
 			assertThat("polygon back coincides with original", polygon2, equalTo(polygon));
 			System.out.println("polygon: " + polygon.toString());

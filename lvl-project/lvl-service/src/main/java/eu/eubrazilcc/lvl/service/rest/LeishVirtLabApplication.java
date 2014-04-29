@@ -61,7 +61,8 @@ public class LeishVirtLabApplication extends Application {
 		// start service
 		SingletonService.INSTANCE.service();		
 		// create LVL resources
-		instances.add(new SequenceResource());		
+		instances.add(new SequenceResource());
+		instances.add(new TaskResource());
 		// add additional JAX-RS providers
 		classes.add(MoxyJsonFeature.class);
 		LOGGER.info(SERVICE_NAME + " initialized successfully, registered resources: " + objectsClassNames(instances));

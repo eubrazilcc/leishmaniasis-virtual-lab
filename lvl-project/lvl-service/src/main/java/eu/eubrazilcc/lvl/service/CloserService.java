@@ -62,7 +62,7 @@ public enum CloserService implements CloserServiceIf {
 		register(TaskScheduler.INSTANCE);
 		// load MongoDB connector and register it for closing
 		MongoDBConnector.INSTANCE.preload();
-		register(MongoDBConnector.INSTANCE);		
+		register(MongoDBConnector.INSTANCE);
 	}
 
 	@Override

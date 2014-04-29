@@ -61,6 +61,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
   <li><a href="#database">Database</a>
     <ul>
       <li><a href="#database_configuration">Configuration</a></li>
+      <li><a href="#database_compatibility_with_genBank">Compatibility with GenBank</a></li>
     </ul>
   </li>
   <li><a href="#restful_api">RESTful API</a>
@@ -609,6 +610,37 @@ $ keytool -import -alias serverCert -file ./server.cert -keystore ./client-trust
 
 <p>In this case we setup a minimal MongoDB installation on Ubuntu: 
 <a href="http://docs.mongodb.org/manual/tutorial/install-mongodb-on-ubuntu/" target="_blank">Install MongoDB on Ubuntu</a>.</p>
+
+<h3><a id="database_compatibility_with_genBank">Compatibility with GenBank</a></h3>
+
+<p>The LVL database resembles other open-access nucleotide databases, in particular GenBank. Indeed,
+   GenBank references are included in the LVL database. Sequences are fetched from the Nucleotide
+   database in GBSeqXML format. There are future plans to fetch TinySeqXML sequences to check for 
+   updates. This format offers less information than GenBank flat files or GBSeqXML, but the size of 
+   TinySeqXML records is 40% less than GenBank flat files and 60% less than GBSeqXML.</p>
+
+<p>GBSeqXML format is specified in DTD the following files:</p>
+
+<code>
+$ wget http://www.ncbi.nlm.nih.gov/dtd/NCBI_GBSeq.dtd
+<br />
+$ wget http://www.ncbi.nlm.nih.gov/dtd/NCBI_Entity.mod.dtd
+<br />
+$ wget http://www.ncbi.nlm.nih.gov/dtd/NCBI_GBSeq.mod.dtd
+</code>
+
+<p>JAXB Binding Compiler (xjc) can be used to generate the Java binding classes (output directory should
+   exist before calling xjc):</p>
+
+<code>
+$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi -mark-generated NCBI_Entity.mod.dtd
+<br />
+$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi -mark-generated NCBI_GBSeq.mod.dtd
+<br />
+$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi -mark-generated NCBI_GBSeq.dtd
+</code>
+
+<p>Generated files are copied to the project <em>lvl-core</em>.</p>
 
 <h2><a id="restful_api">RESTful API</a></h2>
 

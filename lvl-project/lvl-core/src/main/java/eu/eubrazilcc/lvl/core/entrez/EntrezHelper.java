@@ -29,9 +29,8 @@ import static com.google.common.collect.Iterables.partition;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.io.Files.asByteSink;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static com.google.common.util.concurrent.Futures.addCallback;
 import static java.nio.file.Files.newBufferedReader;
-import static java.util.concurrent.Executors.newCachedThreadPool;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -76,9 +75,9 @@ import com.google.common.base.Joiner;
 import com.google.common.io.ByteSink;
 import com.google.common.io.FileWriteMode;
 import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
+
+import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
 
 /**
  * Utilities to interact with the Entrez NCBI search system.
@@ -91,6 +90,9 @@ public final class EntrezHelper {
 
 	public static final String ESEARCH_BASE_URI = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
 	public static final String EFETCH_BASE_URI = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
+	
+	public static final int MAX_RECORDS_LISTED = 10000;  // esearch maximum 100,000
+	public static final int MAX_RECORDS_FETCHED = 10000; // efetch maximum 100,000
 
 	public static final String XPATH_TO_ESEARCH_COUNT = 
 			"/*[local-name()=\"eSearchResult\"]"
@@ -102,84 +104,34 @@ public final class EntrezHelper {
 					+ "/*[local-name()=\"Id\"]";
 
 	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+
+	public static final String PHLEBOTOMUS_QUERY = "phlebotomus[Organism]";
 	
-	public static final String PHLEBOTOMUS_QUERY = "phlebotomus[Organism]";	
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// TODO : OLD API BEGINS HERE
+
 	/**
 	 * Searches all occurrences of phlebotomus in the nucleotide database and returns their accession
 	 * identifiers in a {@link Set}.
 	 * @return a {@link Set} with the accession identifiers of all the phlebotomus found in the
 	 *         nucleotide database.
 	 */
-	public static Set<String> listAllPhlebotomines() {
-		return listNucleotideIds(PHLEBOTOMUS_QUERY);
-	}
-	
-	/**
-	 * Searches all occurrences of phlebotomus in the nucleotide database and saves them to the
-	 * specified directory. The saved files are named id.gb, where id is the original sequence
-	 * accession identifier.
-	 * @param directory the directory where the files will be saved.
-	 */
-	public static void saveAllPhlebotomines(final File directory) {
-		saveNucleotides(PHLEBOTOMUS_QUERY, directory);
-	}	
-
-	/**
-	 * Searches for sequences in the nucleotide database and saves the entries in the specified
-	 * directory. Searching the nucleotide database with general text queries will produce links 
-	 * to results in Nucleotide, Genome Survey Sequence (GSS), and Expressed Sequence Tag (EST) 
-	 * databases. The saved files are named id.gb, where id is the original sequence accession 
-	 * identifier.
-	 * @param query - Entrez query.
-	 * @param directory - the directory where the files will be saved.
-	 */
-	public static void saveNucleotides(final String query, final File directory) {
-		checkArgument(isNotBlank(query), "Uninitialized or invalid query");
-		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
-				"Uninitialized or invalid directory");
-		// list Ids
-		final Set<String> ids = listNucleotideIds(query);
-		checkState(ids != null && !ids.isEmpty(), "No sequences were found");
-		// save sequences
-		saveNucleotides(ids, directory);
-	}
-	
-	/**
-	 * Fetches the sequences identified by their accession ids and saves them in the specified directory.
-	 * The saved files are named id.gb, where id is the original sequence accession identifier.
-	 * @param ids - accession identifiers.
-	 * @param directory - the directory where the files will be saved.
-	 */
-	public static void saveNucleotides(final Set<String> ids, final File directory) {
-		checkState(ids != null && !ids.isEmpty(), "Uninitialized or invalid sequence ids");
-		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
-				"Uninitialized or invalid directory");
-		try {
-			final int retstart = 0, retmax = 10000; // maximum 100,000
-			final Iterable<List<String>> partitions = partition(ids, retmax);
-			for (final List<String> chunk : partitions) {
-				efetch(chunk, retstart, retmax, directory);			
-			}
-		} catch (Exception e) {
-			LOGGER.error("Saving nucleotide sequences failed", e);
-		}
-	}
-
-	/**
-	 * Fetches the sequence identified by its accession id and seves it in the specified directory.
-	 * @param id - accession identifier.
-	 * @param directory - the directory where the file will be saved.
-	 */
-	public static void fecthNucleotide(final String id, final File directory) {
-		checkArgument(isNotBlank(id), "Uninitialized or invalid Id");
-		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
-				"Uninitialized or invalid directory");
-		try {
-			efetch(newArrayList(id), 0, 1, directory);
-		} catch (Exception e) {
-			LOGGER.error("Fetching nucleotide sequence failed", e);
-		}
+	public static Set<String> listPhlebotomines() {
+		return listNucleotides(PHLEBOTOMUS_QUERY);
 	}
 
 	/**
@@ -189,12 +141,12 @@ public final class EntrezHelper {
 	 * @param query - Entrez query.
 	 * @return a collection of ids with no duplications.
 	 */
-	public static Set<String> listNucleotideIds(final String query) {
+	public static Set<String> listNucleotides(final String query) {
 		final Set<String> ids = newHashSet();
 		int esearchResultCount = -1;
 		try {
 			int retstart = 0, count = 0;
-			final int retmax = 10000; // maximum 100,000
+			final int retmax = MAX_RECORDS_LISTED;
 			do {
 				final Document results = esearch(query, retstart, retmax);
 				if (esearchResultCount < 0) {
@@ -212,6 +164,46 @@ public final class EntrezHelper {
 		}
 		checkState(ids.size() == esearchResultCount, "No all ids were imported");
 		return ids;
+	}	
+
+	/**
+	 * Fetches the sequences identified by their accession identifiers and saves them in the specified directory,
+	 * using the specified data format. The saved files are named 'id.ext', where 'id' is the original sequence 
+	 * accession identifier and 'ext' the .
+	 * @param ids - accession identifiers.
+	 * @param directory - the directory where the files will be saved.
+	 * @param format - the format that will be used to store the files.
+	 */
+	public static void saveNucleotides(final Set<String> ids, final File directory, final Format format) {
+		checkState(ids != null && !ids.isEmpty(), "Uninitialized or invalid sequence ids");
+		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
+				"Uninitialized or invalid directory");
+		try {
+			final int retstart = 0, retmax = MAX_RECORDS_FETCHED;
+			final Iterable<List<String>> partitions = partition(ids, retmax);
+			for (final List<String> chunk : partitions) {
+				efetch(chunk, retstart, retmax, directory, format);
+			}
+		} catch (Exception e) {
+			LOGGER.error("Saving nucleotide sequences failed", e);
+		}
+	}
+
+	/**
+	 * Fetches the sequence identified by its accession id and saves it in the specified directory.
+	 * @param id - accession identifier.
+	 * @param directory - the directory where the file will be saved.
+	 * @param format - the format that will be used to store the file.
+	 */
+	public static void fecthNucleotide(final String id, final File directory, final Format format) {
+		checkArgument(isNotBlank(id), "Uninitialized or invalid Id");
+		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
+				"Uninitialized or invalid directory");
+		try {
+			efetch(newArrayList(id), 0, 1, directory, format);
+		} catch (Exception e) {
+			LOGGER.error("Fetching nucleotide sequence failed", e);
+		}
 	}
 
 	private static Form esearchForm(final String query, final int retstart, final int retmax) {
@@ -222,7 +214,7 @@ public final class EntrezHelper {
 				.add("retmax", Integer.toString(retmax));
 	}
 
-	private static Document esearch(final String query, final int retstart, final int retmax) throws Exception {
+	public static Document esearch(final String query, final int retstart, final int retmax) throws Exception {
 		return Request.Post(ESEARCH_BASE_URI)
 				.useExpectContinue() // execute a POST with the 'expect-continue' handshake
 				.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
@@ -260,7 +252,7 @@ public final class EntrezHelper {
 				});
 	}
 
-	private static int parseEsearchResponseCount(final Document document) throws Exception {
+	public static int parseEsearchResponseCount(final Document document) throws Exception {
 		checkNotNull(document, "Uninitialized document");
 		final XPath xPath = XPathFactory.newInstance().newXPath();
 		final XPathExpression xPathExpression = xPath.compile(XPATH_TO_ESEARCH_COUNT);
@@ -269,7 +261,7 @@ public final class EntrezHelper {
 		return Integer.parseInt(node.getTextContent());
 	}
 
-	private static List<String> parseEsearchResponseIds(final Document document) throws Exception {
+	public static List<String> parseEsearchResponseIds(final Document document) throws Exception {
 		checkNotNull(document, "Uninitialized document");
 		final XPath xPath = XPathFactory.newInstance().newXPath();
 		final XPathExpression xPathExpression = xPath.compile(XPATH_TO_ESEARCH_IDS);
@@ -286,7 +278,8 @@ public final class EntrezHelper {
 		return ids;
 	}
 
-	private static void efetch(final List<String> ids, final int retstart, final int retmax, final File directory) throws Exception {
+	// TODO final String extension = (format == null || format.equals(Format.FLAT_FILE) ? ".gb" : ".xml");
+	public static void efetch(final List<String> ids, final int retstart, final int retmax, final File directory, final Format format) throws Exception {
 		// save the bulk of files to a temporary file
 		final File tmpFile = File.createTempFile("gb-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
@@ -321,8 +314,7 @@ public final class EntrezHelper {
 			}
 		});
 		// go over the file extracting the sequences
-		final ListeningExecutorService executorService = listeningDecorator(newCachedThreadPool());
-		final ListenableFuture<String[]> future = executorService.submit(new Callable<String[]>() {
+		final ListenableFuture<String[]> future = TaskRunner.INSTANCE.submit(new Callable<String[]>() {
 			@Override
 			public String[] call() throws Exception {
 				final Set<String> files = newHashSet();
@@ -359,7 +351,7 @@ public final class EntrezHelper {
 				return files.toArray(new String[files.size()]);
 			}
 		});
-		Futures.addCallback(future, new FutureCallback<String[]>() {
+		addCallback(future, new FutureCallback<String[]>() {
 			@Override
 			public void onSuccess(final String[] result) {
 				LOGGER.info("One bulk sequence file was processed successfully: " + tmpFile.getName()
@@ -419,6 +411,16 @@ public final class EntrezHelper {
 			}			
 		}
 		return country;
+	}
+
+	/**
+	 * GenBank formats.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public enum Format {
+		FLAT_FILE,   // GenBank Flat Files
+		GB_SEQ_XML,  // GBSeqXML
+		TINY_SEQ_XML // TinySeqXML
 	}
 
 }

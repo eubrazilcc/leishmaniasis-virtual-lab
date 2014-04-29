@@ -56,6 +56,7 @@ import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geospatial.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
+import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO;
@@ -115,6 +116,27 @@ public class ServiceTest {
 	public void test() {
 		System.out.println("ServiceTest.test()");
 		try {
+			
+			
+			// TODO
+			final Path path2 = TaskResource.class.getAnnotation(Path.class);
+			// test run new task
+			final Task task = new Task();
+			Response response44 = target.path(path2.value()).request()
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.post(Entity.entity(task, MediaType.APPLICATION_JSON_TYPE));
+			
+			System.err.println("\n\n" + response44.readEntity(String.class) + "\n\n");
+			
+			
+			if (true) {
+				return;
+			}
+			// TODO
+			
+			
+			
+			
 			final Path path = SequenceResource.class.getAnnotation(Path.class);
 			// test create new sequence
 			final Sequence sequence = Sequence.builder()

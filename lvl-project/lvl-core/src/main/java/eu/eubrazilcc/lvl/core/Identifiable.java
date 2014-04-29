@@ -20,39 +20,16 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core.xml;
+package eu.eubrazilcc.lvl.core;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-
-import javax.xml.bind.annotation.adapters.XmlAdapter;
-
-import eu.eubrazilcc.lvl.core.geospatial.Line;
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import java.util.UUID;
 
 /**
- * Geometry adapter for XML/JSON data binding.
+ * Instances of this class are provided with a unique identifier.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class GeometryAdapter extends XmlAdapter<String, Object> {
+public interface Identifiable {
 
-	@Override
-	public String marshal(final Object geometry) throws Exception {
-		if (geometry != null) {
-			checkArgument(geometry instanceof Point || geometry instanceof Line || geometry instanceof Polygon, 
-					"Unsupported geometry: " + geometry.getClass().getCanonicalName());
-			return GeoJSONXmlBindingHelper.typeToXml(geometry);
-		}
-		return null;
-	}
-
-	@Override
-	public Object unmarshal(final String payload) throws Exception {
-		if (isNotBlank(payload)) {
-			return GeoJSONXmlBindingHelper.typeFromXml(payload);
-		}
-		return null;
-	}
-
+	UUID getId();
+	
 }

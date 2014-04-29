@@ -23,8 +23,9 @@
 package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.entrez.GenBankSequenceAnalizer.inferCountry;
-import static eu.eubrazilcc.lvl.core.entrez.GenBankSequenceAnalizer.loadSequence;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGenBankFiles;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
@@ -36,7 +37,6 @@ import java.util.Locale;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.RandomStringUtils;
-import org.biojava3.core.sequence.DNASequence;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +45,9 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMultimap;
 
 import eu.eubrazilcc.lvl.core.entrez.GenBankSequenceAnalizer.GenBankField;
+import eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper;
+import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
+import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
 
 /**
  * Tests biological sequences analysis.
@@ -63,18 +66,36 @@ public class SequenceAnalysisTest {
 	@Test
 	public void test() {
 		System.out.println("SequenceAnalysisTest.test()");
-		try {
-			// test load GenBank sequence
-			final Collection<File> files = getGenBankFiles();
-			for (final File file : files) {
-				System.out.println(" >> GenBank sequence file: " + file.getCanonicalPath());
-				final DNASequence dnaSequence = loadSequence(file);
-				assertThat("GenBank sequence is not null", dnaSequence, notNullValue());
-				System.out.println(" >> Accession: " + dnaSequence.getAccession().getID());
+		try {			
+			// test import GenBank XML
+			final Collection<File> files2 = getGBSeqXMLFiles();
+			for (final File file : files2) {
+				System.out.println(" >> GenBank sequence XML file: " + file.getCanonicalPath());
+				final GBSet gbSet = NCBIXmlBindingHelper.typeFromFile(file);
+				assertThat("GenBank XML set is not null", gbSet, notNullValue());
+				assertThat("GenBank XML sequences is not null", gbSet.getGBSeq(), notNullValue());
+				assertThat("GenBank XML sequences is not empty", !gbSet.getGBSeq().isEmpty());				
+				for (final GBSeq seq : gbSet.getGBSeq()) {
+					assertThat("GenBank XML sequence accession is not empty", isNotBlank(seq.getGBSeqPrimaryAccession()));
+					assertThat("GenBank XML sequence definition is not empty", isNotBlank(seq.getGBSeqDefinition()));
+					assertThat("GenBank XML sequence version is not empty", isNotBlank(seq.getGBSeqAccessionVersion()));
+					assertThat("GenBank XML sequence organism is not empty", isNotBlank(seq.getGBSeqOrganism()));
+					
+					// TODO
+					
+					/* Uncomment for additional output */
+					System.out.println(" >> Accession  : " + seq.getGBSeqPrimaryAccession());
+					System.out.println(" >> Definition : " + seq.getGBSeqDefinition());
+					System.out.println(" >> Version    : " + seq.getGBSeqAccessionVersion());
+					System.out.println(" >> Organism   : " + seq.getGBSeqOrganism());
+					
+					// TODO
+				}
 				
-
-				// TODO
+				
+				
 			}
+
 
 			/*
 			// TODO
@@ -95,24 +116,6 @@ public class SequenceAnalysisTest {
 			// TODO
 			 */
 
-
-			// test country inference			
-			for (final File file : files) {
-				System.out.println(" >> GenBank sequence file: " + file.getCanonicalPath());
-				final ImmutableMultimap<GenBankField, Locale> possibleCountries = inferCountry(file);				
-
-				// TODO
-				System.err.println("\n\n");
-				for (final GenBankField field : possibleCountries.keySet()) {
-					final ImmutableCollection<Locale> locales = possibleCountries.get(field);
-					for (final Locale locale : locales) {
-						System.err.println(" >> " + field.toString() + "=" + locale.getDisplayCountry());
-					}					
-				}
-				System.err.println("\n\n");
-				// TODO
-
-			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("SequenceAnalysisTest.test() failed: " + e.getMessage());

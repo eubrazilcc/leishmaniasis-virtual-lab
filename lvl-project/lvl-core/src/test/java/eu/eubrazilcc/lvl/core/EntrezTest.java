@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.listNucleotides;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.saveNucleotides;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -38,7 +40,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
+import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 
 /**
  * Tests Entrez utilities.
@@ -61,13 +63,13 @@ public class EntrezTest {
 		System.out.println("EntrezTest.test()");
 		try {
 			// test list Ids
-			final Set<String> ids = EntrezHelper.listNucleotideIds(SMALL_QUERY);
+			final Set<String> ids = listNucleotides(SMALL_QUERY);
 			assertThat("ids is not null", ids, notNullValue());
 			assertThat("ids is not empty", !ids.isEmpty());
 			final int count = ids.size();
-			
+
 			// test save sequences
-			EntrezHelper.saveNucleotides(SMALL_QUERY, TEST_OUTPUT_DIR);
+			saveNucleotides(ids, TEST_OUTPUT_DIR, Format.FLAT_FILE);			
 			final Collection<File> files = listFiles(TEST_OUTPUT_DIR, new String[] { "gb" }, false);
 			assertThat("GenBank files is not null", files, notNullValue());
 			assertThat("GenBank files is not empty", !files.isEmpty());
