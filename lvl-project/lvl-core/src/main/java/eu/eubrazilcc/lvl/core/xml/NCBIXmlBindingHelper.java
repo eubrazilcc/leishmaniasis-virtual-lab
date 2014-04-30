@@ -23,7 +23,6 @@
 package eu.eubrazilcc.lvl.core.xml;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.countryFeature;
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static org.apache.commons.lang.StringUtils.isNumeric;
 import static org.apache.commons.lang.StringUtils.trimToNull;
@@ -50,7 +49,8 @@ import javax.xml.transform.stream.StreamSource;
 
 import com.google.common.collect.ImmutableMultimap;
 
-import eu.eubrazilcc.lvl.core.entrez.GenBankFlatFileHelper.GenBankField;
+import eu.eubrazilcc.lvl.core.xml.ncbi.GBFeature;
+import eu.eubrazilcc.lvl.core.xml.ncbi.GBQualifier;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeqid;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
@@ -179,9 +179,22 @@ public final class NCBIXmlBindingHelper {
 		checkArgument(sequence != null, "Uninitialized or invalid sequence");
 		final ImmutableMultimap.Builder<String, Locale> builder = new ImmutableMultimap.Builder<String, Locale>();		
 		// infer from features
-		/* final Locale locale = getLocale(countryFeature(file));
+		Locale locale = null;
+		if (sequence.getGBSeqFeatureTable() != null && sequence.getGBSeqFeatureTable().getGBFeature() != null) {
+			final List<GBFeature> features = sequence.getGBSeqFeatureTable().getGBFeature();
+			for (final GBFeature feature : features) {
+				if (feature.getGBFeatureQuals() != null && feature.getGBFeatureQuals().getGBQualifier() != null) {
+					final List<GBQualifier> qualifiers = feature.getGBFeatureQuals().getGBQualifier();
+					for (final GBQualifier qualifier : qualifiers) {
+						if ("country".equals(qualifier.getGBQualifierName())) {							
+							locale = getLocale(qualifier.getGBQualifierValue().replace(":.*", ""));
+						}
+					}
+				}
+			}
+		}
 		if (locale != null) {
-			builder.put(GenBankField.COUNTRY_FEATURE, locale);
+			builder.put("features", locale);
 		} else {			
 			// infer from definition
 			// TODO
@@ -191,7 +204,7 @@ public final class NCBIXmlBindingHelper {
 
 			// infer from PubMed title and abstract fields
 			// TODO
-		} */
+		}
 		return builder.build();
 	}
 

@@ -22,8 +22,10 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.getGenInfoIdentifier;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.inferCountry;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -32,8 +34,11 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Locale;
 
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableMultimap;
 
 import eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
@@ -49,16 +54,38 @@ public class NCBIXmlBindingTest {
 	public void test() {
 		System.out.println("NCBIXmlBindingTest.test()");
 		try {
-			// test parse GenInfo identifier
+			// test GenInfo identifier parsing
 			final String[] ids = { "gb|JQ790522.1|", "gi|384562886", "gi|", "gi|JQ790522", "gi" };
 			final Integer[] gis = { null, 384562886, null, null, null };
 			final GBSeq gbSeq = NCBIXmlBindingHelper.FACTORY.createGBSeq();
 			gbSeq.setGBSeqOtherSeqids(NCBIXmlBindingHelper.FACTORY.createGBSeqOtherSeqids());
 			gbSeq.getGBSeqOtherSeqids().getGBSeqid().add(NCBIXmlBindingHelper.FACTORY.createGBSeqid());
-			for (int i = 0; i < ids.length; i++) {				
+			for (int i = 0; i < ids.length; i++) {
 				gbSeq.getGBSeqOtherSeqids().getGBSeqid().get(0).setvalue(ids[i]);		
 				final Integer gi = getGenInfoIdentifier(gbSeq);
 				assertThat("gi coincides with expected", gi, equalTo(gis[i]));
+			}
+
+			// test country feature parsing
+			final String[] features = { "Italy", "Spain:Almeria", "Sudan: Sirougia, Khartoum State" };
+			final Locale[] countries = { getLocale("Italy"), getLocale("Spain"), getLocale("Sudan") };
+			gbSeq.setGBSeqFeatureTable(NCBIXmlBindingHelper.FACTORY.createGBSeqFeatureTable());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().add(NCBIXmlBindingHelper.FACTORY.createGBFeature());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).setGBFeatureQuals(NCBIXmlBindingHelper.FACTORY.createGBFeatureQuals());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().add(NCBIXmlBindingHelper.FACTORY.createGBQualifier());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().get(0).setGBQualifierName("country");
+			for (int i = 0; i < features.length; i++) {	
+				gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().get(0).setGBQualifierValue(features[i]);
+				final ImmutableMultimap<String, Locale> countries2 = inferCountry(gbSeq);
+				assertThat("inferred countries is not null", countries2, notNullValue());
+				assertThat("inferred countries is not empty", !countries2.isEmpty());				
+				for (final String key : countries2.keySet()) {
+					for (final Locale locale : countries2.get(key)) {
+						assertThat("inferred country coincides with expected", locale, equalTo(countries[i]));
+						/* uncomment to display additional output */
+						System.out.println("Inferred country: field=" + key + ", country=" + locale.getDisplayCountry());
+					}
+				}
 			}
 
 			// test import GenBank XML

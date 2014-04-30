@@ -35,7 +35,6 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.util.Collection;
 import java.util.Locale;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -71,9 +70,10 @@ public class GenBankFlatFileTest {
 				assertThat("inferred countries is not empty", !countries.isEmpty());
 				/* uncomment to display additional output */
 				System.out.println("Inferred countries: ");
-				for (final Map.Entry<GenBankField, Locale> entry : countries.entries()) {
-					System.out.println("Field=" + entry.getKey().toString() + ", country="
-							+ entry.getValue().getDisplayCountry());
+				for (final GenBankField key : countries.keySet()) {
+					for (final Locale locale : countries.get(key)) {
+						System.out.println("Field=" + key + ", country=" + locale.getDisplayCountry());
+					}
 				}
 			}
 		} catch (Exception e) {
