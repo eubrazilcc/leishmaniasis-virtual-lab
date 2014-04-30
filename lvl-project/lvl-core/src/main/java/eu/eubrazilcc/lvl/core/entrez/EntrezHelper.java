@@ -30,6 +30,9 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.io.Files.asByteSink;
 import static com.google.common.util.concurrent.Futures.addCallback;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.getGenInfoIdentifier;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.typeFromFile;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.typeToFile;
 import static java.nio.file.Files.newBufferedReader;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -78,6 +81,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
+import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
+import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
 
 /**
  * Utilities to interact with the Entrez NCBI search system.
@@ -106,23 +111,6 @@ public final class EntrezHelper {
 	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
 	public static final String PHLEBOTOMUS_QUERY = "phlebotomus[Organism]";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// TODO : OLD API BEGINS HERE
 
 	/**
 	 * Searches all occurrences of phlebotomus in the nucleotide database and returns their accession
@@ -278,8 +266,20 @@ public final class EntrezHelper {
 		return ids;
 	}
 
-	// TODO final String extension = (format == null || format.equals(Format.FLAT_FILE) ? ".gb" : ".xml");
 	public static void efetch(final List<String> ids, final int retstart, final int retmax, final File directory, final Format format) throws Exception {
+		switch (format) {
+		case FLAT_FILE:
+			efetchFlatFile(ids, retstart, retmax, directory);
+			break;
+		case GB_SEQ_XML:
+			efetchGBSeqXMLFiles(ids, retstart, retmax, directory);			
+			break;
+		default:
+			throw new IllegalArgumentException("Unsupported file format: " + format);
+		}
+	}
+
+	private static void efetchGBSeqXMLFiles(final List<String> ids, final int retstart, final int retmax, final File directory) throws Exception {
 		// save the bulk of files to a temporary file
 		final File tmpFile = File.createTempFile("gb-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
@@ -288,7 +288,81 @@ public final class EntrezHelper {
 		Request.Post(EFETCH_BASE_URI)
 		.useExpectContinue() // execute a POST with the 'expect-continue' handshake
 		.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
-		.bodyForm(efetchForm(idsParam, retstart, retmax).build()).execute().handleResponse(new ResponseHandler<Void>() {
+		.bodyForm(efetchForm(idsParam, retstart, retmax, "xml").build()).execute().handleResponse(new ResponseHandler<Void>() {
+			@Override
+			public Void handleResponse(final HttpResponse response) throws IOException {
+				final StatusLine statusLine = response.getStatusLine();
+				final HttpEntity entity = response.getEntity();
+				if (statusLine.getStatusCode() >= 300) {
+					throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+				}
+				if (entity == null) {
+					throw new ClientProtocolException("Response contains no content");
+				}
+				final ContentType contentType = ContentType.getOrDefault(entity);
+				final String mimeType = contentType.getMimeType();
+				if (!mimeType.equals(ContentType.APPLICATION_OCTET_STREAM.getMimeType())) {
+					throw new ClientProtocolException("Unexpected content type:" + contentType);
+				}
+				Charset charset = contentType.getCharset();
+				if (charset == null) {
+					charset = HTTP.DEF_CONTENT_CHARSET;
+				}
+				final ByteSink sink = asByteSink(tmpFile);
+				sink.writeFrom(entity.getContent());
+				return null;
+			}
+		});
+		// go over the file extracting the sequences
+		final ListenableFuture<String[]> future = TaskRunner.INSTANCE.submit(new Callable<String[]>() {
+			@Override
+			public String[] call() throws Exception {
+				final Set<String> files = newHashSet();
+				final GBSet gbSet = typeFromFile(tmpFile);
+				checkState(gbSet != null, "Expected GBSeqXML, but no content read from temporary file downloaded with efetch");
+				if (gbSet.getGBSeq() != null) {
+					for (final GBSeq gbSeq : gbSet.getGBSeq()) {
+						final Integer gi = getGenInfoIdentifier(gbSeq);
+						if (gi != null) {							
+							final File file = new File(directory, gi.toString() + ".xml");							
+							typeToFile(gbSeq, file);
+							files.add(file.getCanonicalPath());
+						} else {
+							LOGGER.warn("Ingoring malformed sequence (gi not found) in efetch response");
+						}
+					}
+				} else {
+					LOGGER.warn("Ingoring malformed sequence (GBSeq not found) in efetch response");
+				}
+				return files.toArray(new String[files.size()]);
+			}
+		});
+		addCallback(future, new FutureCallback<String[]>() {
+			@Override
+			public void onSuccess(final String[] result) {
+				LOGGER.info("One bulk sequence file was processed successfully: " + tmpFile.getName()
+						+ ", number of created files: " + result.length);
+				deleteQuietly(tmpFile);
+			}
+			@Override
+			public void onFailure(final Throwable error) {
+				LOGGER.error("Failed to process bulk sequence file " + tmpFile.getName(), error);
+			}
+		});
+		// wait for files to be processed
+		future.get();
+	}
+
+	private static void efetchFlatFile(final List<String> ids, final int retstart, final int retmax, final File directory) throws Exception {
+		// save the bulk of files to a temporary file
+		final File tmpFile = File.createTempFile("gb-", ".tmp", directory);
+		final String idsParam = Joiner.on(",").skipNulls().join(ids);
+		LOGGER.trace("Fetching files from GenBank: ids=" + idsParam + ", retstart=" + retstart + ", retmax=" + retmax
+				+ ", file=" + tmpFile.getPath());
+		Request.Post(EFETCH_BASE_URI)
+		.useExpectContinue() // execute a POST with the 'expect-continue' handshake
+		.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
+		.bodyForm(efetchForm(idsParam, retstart, retmax, "text").build()).execute().handleResponse(new ResponseHandler<Void>() {
 			@Override
 			public Void handleResponse(final HttpResponse response) throws IOException {
 				final StatusLine statusLine = response.getStatusLine();
@@ -365,13 +439,6 @@ public final class EntrezHelper {
 			}
 			@Override
 			public void onFailure(final Throwable error) {
-
-				// TODO
-				System.err.println("\n\n >> HERE >>\n");
-				error.printStackTrace(System.err);
-				System.err.println("\n << HERE << \n\n");
-				// TODO
-
 				LOGGER.error("Failed to process bulk sequence file " + tmpFile.getName(), error);
 			}
 		});
@@ -379,7 +446,7 @@ public final class EntrezHelper {
 		future.get();
 	}
 
-	private static Form efetchForm(final String ids, final int retstart, final int retmax) {
+	private static Form efetchForm(final String ids, final int retstart, final int retmax, final String retmode) {
 		return Form.form()
 				.add("db", "nuccore")
 				.add("id", ids)
@@ -387,7 +454,7 @@ public final class EntrezHelper {
 				.add("retmax", Integer.toString(retmax))
 				// GenBank flat file
 				.add("rettype", "gb") // use gbwithparts to download the file with the full sequence (this could produce huge files)
-				.add("retmode", "text");
+				.add("retmode", retmode);
 	}
 
 	/**

@@ -36,10 +36,10 @@ import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 import eu.eubrazilcc.lvl.core.xml.GeoJSONXmlBindingHelper;
 
 /**
- * Test XML to/from Java object binding.
+ * Test XML to/from GeoJSON Java object binding.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class XmlBindingTest {
+public class GeoJSONXmlBindingTest {
 
 	@Test
 	public void test() {

@@ -66,6 +66,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
+import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 
 /**
  * Manages configuration.
@@ -150,18 +151,32 @@ public enum ConfigurationManager implements Closeable2 {
 	public String getPortalEndpoint() {
 		return configuration().getPortalEndpoint().or("");
 	}
+	
+	public File getGenBankDir(final Format format) {
+		switch (format) {
+		case GB_SEQ_XML:
+			return new File(getRootDir(), "sequences/genbank/xml");			
+		case FLAT_FILE:
+			return new File(getRootDir(), "sequences/genbank/text");			
+		default:
+			throw new IllegalArgumentException("Unsupported GenBank format: " + format);
+		}
+	}
 
 	@Override
 	public void setup(final @Nullable Collection<URL> urls) {		
 		this.dont_use = null;
-		this.urls = (urls != null && !urls.isEmpty() ? urls 
-				: ConfigurationManager.getDefaultConfiguration());
+		this.urls = (urls != null && !urls.isEmpty() ? urls : getDefaultConfiguration());
 	}
 
 	@Override
 	public void preload() {
-		// lazy load, so initial access is needed
-		ConfigurationManager.INSTANCE.getRootDir();
+		// an initial access is needed due to lazy load, we create the application environment
+		for (final File file : ImmutableList.of(getGenBankDir(Format.GB_SEQ_XML))) {
+			try {
+				file.mkdirs();
+			} catch (Exception e) { }
+		}		
 	}
 
 	@Override

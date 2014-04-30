@@ -22,6 +22,10 @@
 
 package eu.eubrazilcc.lvl.core.xml;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.commons.lang.StringUtils.isNumeric;
+import static org.apache.commons.lang.StringUtils.trimToNull;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +33,11 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -38,6 +46,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.transform.stream.StreamSource;
 
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
+import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeqid;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
 import eu.eubrazilcc.lvl.core.xml.ncbi.ObjectFactory;
 
@@ -126,6 +135,21 @@ public final class NCBIXmlBindingHelper {
 			throw new IllegalArgumentException("Unsupported type: " + clazz.getCanonicalName());
 		}
 		return (JAXBElement<T>) element;
-	}	
+	}
+
+	public static final @Nullable Integer getGenInfoIdentifier(final GBSeq gbSeq) {
+		checkArgument(gbSeq != null && gbSeq.getGBSeqOtherSeqids() != null && gbSeq.getGBSeqOtherSeqids().getGBSeqid() != null, 
+				"Uninitialized or invalid sequence");
+		String gi = null;
+		final List<GBSeqid> ids = gbSeq.getGBSeqOtherSeqids().getGBSeqid();
+		for (int i = 0; i < ids.size() && gi == null; i++) {
+			final Pattern pattern = Pattern.compile("(gi\\|\\d+)");
+			final Matcher matcher = pattern.matcher(ids.get(i).getvalue());
+			if (matcher.find()) {
+				gi = trimToNull(matcher.group().substring(3));
+			}
+		}
+		return isNumeric(gi) ? Integer.parseInt(gi) : null;
+	}
 
 }

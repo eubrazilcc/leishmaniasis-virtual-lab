@@ -34,12 +34,15 @@ import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseCount;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseIds;
+import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,6 +60,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
+import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 
@@ -74,7 +78,7 @@ public enum SequenceManager {
 	public final static ImmutableList<String> DEFAULT_DATA_SOURCES = ImmutableList.of(DataSource.GENBANK);
 
 	public final static long FETCH_TIMEOUT_SECONDS     = 900l; // 15 minutes
-	public final static long DB_IMPORT_TIMEOUT_SECONDS = 600l; // 10 minutes
+	public final static long DB_IMPORT_TIMEOUT_SECONDS = 600l; // 10 minutes	
 
 	private SequenceManager() { }
 
@@ -101,6 +105,8 @@ public enum SequenceManager {
 	}
 
 	private void importGenBankSequences() {
+		final Format format = Format.GB_SEQ_XML; // GenBank file format
+		final String extension = "xml"; // GenBank file extension
 		int esearchResultCount = -1, totalIds = 0;
 		try {
 			int retstart = 0, count = 0;
@@ -118,7 +124,7 @@ public enum SequenceManager {
 				// are filtered, a new task is submitted to fetch the sequences from GenBank. A callback function is called
 				// every time a bulk of sequences is fetched and this function submits a new task to import the sequences into
 				// the database
-				futures.add(transform(transform(TaskRunner.INSTANCE.submit(filterMissingIds(ids)), fetchGBFlatFiles()), importGBFlatFiles()));
+				futures.add(transform(transform(TaskRunner.INSTANCE.submit(filterMissingIds(ids)), fetchGBFiles(format, extension)), importGBFiles(format)));
 				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records");
 				retstart += count;
 			} while (count > 0 && retstart < esearchResultCount);
@@ -130,6 +136,7 @@ public enum SequenceManager {
 			LOGGER.error("Listing nucleotide ids failed", e);
 		}
 		checkState(esearchResultCount == -1 || totalIds == esearchResultCount, "No all ids were imported");
+		// TODO: send notification on completion or error
 	}
 
 	/**
@@ -148,7 +155,18 @@ public enum SequenceManager {
 					public String apply(final String id) {
 
 						// TODO
-						return ("353470160".equals(id) || "353483325".equals(id) || "353481165".equals(id) ? id : null);
+						return ("353470160".equals(id) 
+								|| "353483325".equals(id) 
+								|| "353481165".equals(id)
+								|| "545910417".equals(id)
+								|| "545910416".equals(id)
+								|| "545910415".equals(id)
+								|| "545910387".equals(id)
+								|| "545910370".equals(id)
+								|| "507528205".equals(id)
+								|| "430902590".equals(id)
+								|| "451935057".equals(id)
+								? id : null);
 						// TODO
 
 						/* return SequenceDAO.INSTANCE.find(SequenceKey.builder()
@@ -161,36 +179,31 @@ public enum SequenceManager {
 		};		
 	}
 
-	private static Function<List<String>, Collection<File>> fetchGBFlatFiles() {
+	private static Function<List<String>, Collection<File>> fetchGBFiles(final Format format, final String extension) {
 		return new Function<List<String>, Collection<File>>() {
 			@Override
 			public Collection<File> apply(final List<String> ids) {
-				final ListenableFuture<Collection<File>> future = (!ids.isEmpty() ? TaskRunner.INSTANCE.submit(fetchTask(ids)) 
+				final ListenableFuture<Collection<File>> future = (!ids.isEmpty() ? TaskRunner.INSTANCE.submit(fetchTask(ids, format, extension)) 
 						: immediateFuture(Collections.checkedCollection(new ArrayList<File>(), File.class)));
 				try {
 					return future.get(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 				} catch (Exception e) {
-					throw new IllegalStateException("Failed to fecth sequences from GenBank using flat file format", e);
+					throw new IllegalStateException("Failed to fecth sequences from GenBank using format: " + format, e);
 				}
 			}
 		};
 	}
 
-	private static Callable<Collection<File>> fetchTask(final List<String> ids) {
+	private static Callable<Collection<File>> fetchTask(final List<String> ids, final Format format, final String extension) {
 		return new Callable<Collection<File>>() {
 			@Override
 			public Collection<File> call() throws Exception {
 				File tmpDir = null;
 				boolean shouldClean = false;
 				try {
-
-					// TODO
-					System.err.println("\n\nIDS=" + ids + "\n\n");
-					// TODO
-
 					tmpDir = createTempDirectory("tmp_sequences").toFile();
-					efetch(ids, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir, Format.FLAT_FILE);
-					final Collection<File> files = listFiles(tmpDir, new String[] { "gb" }, false);
+					efetch(ids, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir, format);
+					final Collection<File> files = listFiles(tmpDir, new String[] { extension }, false);
 					checkState(files != null && files.size() == ids.size(), "No all sequences were fetched");					
 					return files;
 				} catch (Exception e) {
@@ -204,22 +217,36 @@ public enum SequenceManager {
 			}
 		};
 	}
+	
+	private static Function<Collection<File>, Integer> importGBFiles(final Format format) {
+		switch (format) {
+		case GB_SEQ_XML:
+			return importGBSeqXMLFiles();
+		default:
+			throw new IllegalStateException("Unsupported format: " + format);
+		}
+	}
 
-	private static Function<Collection<File>, Integer> importGBFlatFiles() {
+	private static Function<Collection<File>, Integer> importGBSeqXMLFiles() {
 		return new Function<Collection<File>, Integer>() {
 			@Override
 			public Integer apply(final Collection<File> files) {
 				final List<ListenableFuture<String>> futures = newArrayList();
+				final Path dir = ConfigurationManager.INSTANCE.getGenBankDir(Format.GB_SEQ_XML).toPath();
 				for (final File file : files) {
 					final ListenableFuture<String> future = TaskRunner.INSTANCE.submit(new Callable<String>() {
 						@Override
 						public String call() throws Exception {
+							final Path source = file.toPath();
+							final Path target = dir.resolve(source.getFileName());
+							copy(source, target, REPLACE_EXISTING);
+							LOGGER.trace("Copy GBSeqXML file to: " + target.toString());
 
 							// TODO
-							System.err.println("\n\nImport file: " + file + "\n\n");
+							System.err.println("\n\nCopy file: " + source + ", to: " + target + "\n\n");
 							// TODO
 
-							return file.getName();
+							return target.toString();
 						}
 					});
 					futures.add(future);
