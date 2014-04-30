@@ -35,12 +35,14 @@ import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.typeFromFile;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.typeToFile;
 import static java.nio.file.Files.newBufferedReader;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -490,6 +492,30 @@ public final class EntrezHelper {
 			}			
 		}
 		return country;
+	}
+
+	/**
+	 * Lists the GenBank sequences found in the specified directory (subdirectories are not searched).
+	 * @param directory - the directory to search for sequences in
+	 * @return 
+	 */
+	public static Collection<File> listGBFiles(final File directory, final Format format) {
+		checkArgument(directory != null && directory.isDirectory() && directory.canRead(), 
+				"Uninitialized or invalid directory");
+		String extension;
+		switch (format) {
+		case GB_SEQ_XML:
+			extension = "xml";
+			break;
+		case FLAT_FILE:
+			extension = "gb";
+			break;
+		default:
+			extension = null;
+			break;
+		}
+		checkArgument (isNotBlank(extension), "Unsupported GenBank format: " + format);
+		return listFiles(directory, new String[] { extension }, false);
 	}
 
 	/**

@@ -25,36 +25,17 @@ package eu.eubrazilcc.lvl.core.entrez;
 import static com.google.common.base.Preconditions.checkArgument;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.countryFeature;
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
-import static org.apache.commons.io.FileUtils.listFiles;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.Locale;
 
 import com.google.common.collect.ImmutableMultimap;
 
 /**
- * Analyzes GenBank sequences.
+ * Utility class to deal with sequences stored in GenBank flat file format.
  * @author Erik Torres <ertorser@upv.es>
  */
-public final class GenBankSequenceAnalizer {
-
-	/**
-	 * Lists the GenBank sequences found in the specified directory (subdirectories are not searched).
-	 * @param directory - the directory to search for sequences in
-	 * @return
-	 */
-	public static Collection<File> listGBFlatFiles(final File directory) {
-		checkArgument(directory != null && directory.isDirectory() && directory.canRead(), 
-				"Uninitialized or invalid directory");
-		return listFiles(directory, new String[] { "gb" }, false);
-	}
-	
-	public static Collection<File> listGBSeqXMLFiles(final File directory) {
-		checkArgument(directory != null && directory.isDirectory() && directory.canRead(), 
-				"Uninitialized or invalid directory");
-		return listFiles(directory, new String[] { "xml" }, false);
-	}
+public final class GenBankFlatFileHelper {
 
 	/**
 	 * Infers the possible countries of the species from which the DNA sequence was obtained and 

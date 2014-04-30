@@ -53,7 +53,7 @@ public class TestUtils {
 		RESOURCES_FOLDER = anchorFile.getParent();
 	}
 
-	public static Collection<File> getGenBankFiles() {
+	public static Collection<File> getGenBankFlatFiles() {
 		final File dir = new File(FilenameUtils.concat(AllTests.TEST_RESOURCES_PATH, GENBANK_FOLDER));
 		return FileUtils.listFiles(dir, new String[] { "gb" }, false);
 	}

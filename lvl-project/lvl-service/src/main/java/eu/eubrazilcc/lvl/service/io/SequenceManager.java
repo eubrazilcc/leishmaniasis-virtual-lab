@@ -166,6 +166,7 @@ public enum SequenceManager {
 								|| "507528205".equals(id)
 								|| "430902590".equals(id)
 								|| "451935057".equals(id)
+								|| "384562886".equals(id)
 								? id : null);
 						// TODO
 
@@ -217,7 +218,7 @@ public enum SequenceManager {
 			}
 		};
 	}
-	
+
 	private static Function<Collection<File>, Integer> importGBFiles(final Format format) {
 		switch (format) {
 		case GB_SEQ_XML:
@@ -237,16 +238,18 @@ public enum SequenceManager {
 					final ListenableFuture<String> future = TaskRunner.INSTANCE.submit(new Callable<String>() {
 						@Override
 						public String call() throws Exception {
-							final Path source = file.toPath();
-							final Path target = dir.resolve(source.getFileName());
-							copy(source, target, REPLACE_EXISTING);
-							LOGGER.trace("Copy GBSeqXML file to: " + target.toString());
+							try {
+								final Path source = file.toPath();
+								final Path target = dir.resolve(source.getFileName());
+								copy(source, target, REPLACE_EXISTING);
+								LOGGER.trace("Copy GBSeqXML file to: " + target.toString());
 
-							// TODO
-							System.err.println("\n\nCopy file: " + source + ", to: " + target + "\n\n");
-							// TODO
+								// TODO
 
-							return target.toString();
+								return target.toString();
+							} finally {
+								deleteQuietly(file);
+							}
 						}
 					});
 					futures.add(future);

@@ -37,10 +37,9 @@ import eu.eubrazilcc.lvl.core.conf.LogManager;
 import eu.eubrazilcc.lvl.core.mock.CloserServiceMock;
 
 @RunWith(Suite.class)
-/* TODO @SuiteClasses({ LogManagerTest.class, GeospatialTest.class, GeoJSONXmlBindingTest.class, NCBIXmlBindingTest.class, 
-	UrlUtilsTest.class, NetworkingUtilsTest.class, NamingUtilsTest.class, ConcurrencyTest.class, EntrezTest.class, 
-	SequenceAnalysisTest.class }) */
-//TODO @SuiteClasses({ SequenceAnalysisTest.class })
+/* TODO @SuiteClasses({ LogManagerTest.class, GeospatialTest.class, GeoJSONXmlBindingTest.class, 
+	NCBIXmlBindingTest.class, UrlUtilsTest.class, NetworkingUtilsTest.class, NamingUtilsTest.class, 
+	ConcurrencyTest.class, EntrezTest.class, GenBankFlatFileTest.class }) */
 @SuiteClasses({ NCBIXmlBindingTest.class })
 //TODO @SuiteClasses({ EntrezTest.class })
 public class AllTests {
