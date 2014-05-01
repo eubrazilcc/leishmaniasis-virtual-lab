@@ -36,12 +36,18 @@ import org.junit.runners.Suite.SuiteClasses;
 import eu.eubrazilcc.lvl.core.conf.LogManager;
 import eu.eubrazilcc.lvl.core.mock.CloserServiceMock;
 
+/**
+ * Test suite executed on Maven test cycle. TEST ORDER IS IMPORTANT! {@link ConcurrencyTest} will test
+ * the task runner and task scheduler, starting them. Other tests that uses this classes 
+ * (i.e {@link EntrezTest}) must be executed after the {@link ConcurrencyTest} is executed or they will
+ * fail to find an available task runner/scheduler.
+ * @author Erik Torres <ertorser@upv.es>
+ */
 @RunWith(Suite.class)
-/* TODO @SuiteClasses({ LogManagerTest.class, GeospatialTest.class, GeoJSONXmlBindingTest.class, 
-	NCBIXmlBindingTest.class, UrlUtilsTest.class, NetworkingUtilsTest.class, NamingUtilsTest.class, 
-	ConcurrencyTest.class, EntrezTest.class, GenBankFlatFileTest.class }) */
-@SuiteClasses({ NCBIXmlBindingTest.class })
-//TODO @SuiteClasses({ EntrezTest.class })
+@SuiteClasses({ LogManagerTest.class, ConcurrencyTest.class, GeospatialTest.class, 
+	GeoJSONXmlBindingTest.class, GeocodingTest.class, NCBIXmlBindingTest.class, 
+	UrlUtilsTest.class, NetworkingUtilsTest.class, NamingUtilsTest.class, EntrezTest.class, 
+	GenBankFlatFileTest.class })
 public class AllTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

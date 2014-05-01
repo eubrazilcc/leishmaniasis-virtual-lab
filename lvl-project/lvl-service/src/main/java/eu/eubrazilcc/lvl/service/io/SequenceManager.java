@@ -34,6 +34,8 @@ import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseCount;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseIds;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.parse;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.typeFromFile;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -59,10 +61,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import eu.eubrazilcc.lvl.core.DataSource;
+import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
+import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
+import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
 
 /**
  * Manages the sequences in the LVL collection, participating in the discovering, importation
@@ -239,13 +244,14 @@ public enum SequenceManager {
 						@Override
 						public String call() throws Exception {
 							try {
+								// copy sequence to storage
 								final Path source = file.toPath();
 								final Path target = dir.resolve(source.getFileName());
 								copy(source, target, REPLACE_EXISTING);
-								LOGGER.trace("Copy GBSeqXML file to: " + target.toString());
-
-								// TODO
-
+								LOGGER.info("New GBSeqXML file stored: " + target.toString());
+								// insert sequence in the database
+								final Sequence sequence = parse((GBSeq)typeFromFile(target.toFile()));
+								SequenceDAO.INSTANCE.insert(sequence);
 								return target.toString();
 							} finally {
 								deleteQuietly(file);

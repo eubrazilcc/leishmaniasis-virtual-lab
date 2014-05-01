@@ -30,6 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 
@@ -54,7 +55,12 @@ public class EntrezTest {
 	private static final String SMALL_QUERY = "(phlebotomus[Organism])+AND+(\"Phlebotomus+alexandri\"[porgn:__txid94477])";
 
 	@Before
-	public void setUp() {
+	public void setUp() {		
+		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);
+	}
+	
+	@After
+	public void cleanUp() throws IOException {
 		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);		
 	}
 
@@ -69,7 +75,7 @@ public class EntrezTest {
 			final int count = ids.size();
 
 			// test save sequences
-			saveNucleotides(ids, TEST_OUTPUT_DIR, Format.FLAT_FILE);			
+			saveNucleotides(ids, TEST_OUTPUT_DIR, Format.FLAT_FILE);
 			final Collection<File> files = listFiles(TEST_OUTPUT_DIR, new String[] { "gb" }, false);
 			assertThat("GenBank files is not null", files, notNullValue());
 			assertThat("GenBank files is not empty", !files.isEmpty());
@@ -80,11 +86,6 @@ public class EntrezTest {
 		} finally {			
 			System.out.println("EntrezTest.test() has finished");
 		}
-	}
-
-	@After
-	public void cleanUp() {
-		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);
-	}
+	}	
 
 }

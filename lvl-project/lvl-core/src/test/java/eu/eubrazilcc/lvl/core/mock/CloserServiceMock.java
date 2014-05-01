@@ -29,6 +29,8 @@ import java.util.Queue;
 import com.google.common.util.concurrent.Monitor;
 
 import eu.eubrazilcc.lvl.core.CloserServiceIf;
+import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
+import eu.eubrazilcc.lvl.core.concurrent.TaskScheduler;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 
 /**
@@ -36,7 +38,7 @@ import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
  * @author Erik Torres <ertorser@upv.es>
  */
 public enum CloserServiceMock implements CloserServiceIf {
-	
+
 	INSTANCE;
 
 	private final Monitor monitor = new Monitor();
@@ -44,11 +46,15 @@ public enum CloserServiceMock implements CloserServiceIf {
 	private final Queue<Closeable> queue = new LinkedList<Closeable>();
 
 	private CloserServiceMock() { }
-	
+
 	@Override
 	public void preload() {		
 		// load default configuration
 		ConfigurationManager.INSTANCE.preload();
+		// register task runner for clean up (initialization will be performed as part of the 
+		// concurrency tests)
+		register(TaskRunner.INSTANCE);
+		register(TaskScheduler.INSTANCE);
 	}
 
 	@Override

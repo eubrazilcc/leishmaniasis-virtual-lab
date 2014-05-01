@@ -23,7 +23,9 @@
 package eu.eubrazilcc.lvl.core.xml;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static eu.eubrazilcc.lvl.core.geocoding.GeocodingHelper.geocode;
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNumeric;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 
@@ -49,6 +51,8 @@ import javax.xml.transform.stream.StreamSource;
 
 import com.google.common.collect.ImmutableMultimap;
 
+import eu.eubrazilcc.lvl.core.DataSource;
+import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBFeature;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBQualifier;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
@@ -157,7 +161,33 @@ public final class NCBIXmlBindingHelper {
 		}
 		return isNumeric(gi) ? Integer.parseInt(gi) : null;
 	}
-	
+
+	/**
+	 * Gets the country feature from a sequence.
+	 * @param sequence - sequence to be analyzed
+	 * @return the value of the country feature or {@code null}.
+	 */
+	public static final @Nullable String countryFeature(final GBSeq sequence) {
+		checkArgument(sequence != null, "Uninitialized or invalid sequence");
+		String country = null;
+		if (sequence.getGBSeqFeatureTable() != null && sequence.getGBSeqFeatureTable().getGBFeature() != null) {
+			final List<GBFeature> features = sequence.getGBSeqFeatureTable().getGBFeature();
+			for (int i = 0; i < features.size() && country == null; i++) {
+				final GBFeature feature = features.get(i);
+				if (feature.getGBFeatureQuals() != null && feature.getGBFeatureQuals().getGBQualifier() != null) {
+					final List<GBQualifier> qualifiers = feature.getGBFeatureQuals().getGBQualifier();
+					for (int j = 0; j < qualifiers.size() && country == null; j++) {
+						final GBQualifier qualifier = qualifiers.get(j);
+						if ("country".equals(qualifier.getGBQualifierName())) {							
+							country = qualifier.getGBQualifierValue();
+						}
+					}
+				}
+			}
+		}
+		return trimToNull(country);
+	}
+
 	/**
 	 * Infers the possible countries of the species from which the DNA sequence was obtained and 
 	 * returns a map of Java {@link Locale} where the key of the map is the GenBank field that was
@@ -170,29 +200,16 @@ public final class NCBIXmlBindingHelper {
 	 * <li>Title field; or</li>
 	 * <li>Check PubMed title and abstract fields.</li>
 	 * </ol>
-	 * Java {@link Locale} allows latter to export the country to several different formats, including a 
-	 * two-letter code compatible with ISO 3166-1 alpha-2 standard.
-	 * @param sequence - sequence to be analyzed.
-	 * @return a Java {@link Locale} inferred from the input sequence.
+	 * @param sequence - sequence to be analyzed
+	 * @return a map of Java {@link Locale} inferred from the input sequence, where the key of the map
+	 *         is the GenBank field used to infer the country.
 	 */	
 	public static final ImmutableMultimap<String, Locale> inferCountry(final GBSeq sequence) {
 		checkArgument(sequence != null, "Uninitialized or invalid sequence");
 		final ImmutableMultimap.Builder<String, Locale> builder = new ImmutableMultimap.Builder<String, Locale>();		
 		// infer from features
-		Locale locale = null;
-		if (sequence.getGBSeqFeatureTable() != null && sequence.getGBSeqFeatureTable().getGBFeature() != null) {
-			final List<GBFeature> features = sequence.getGBSeqFeatureTable().getGBFeature();
-			for (final GBFeature feature : features) {
-				if (feature.getGBFeatureQuals() != null && feature.getGBFeatureQuals().getGBQualifier() != null) {
-					final List<GBQualifier> qualifiers = feature.getGBFeatureQuals().getGBQualifier();
-					for (final GBQualifier qualifier : qualifiers) {
-						if ("country".equals(qualifier.getGBQualifierName())) {							
-							locale = getLocale(qualifier.getGBQualifierValue().replace(":.*", ""));
-						}
-					}
-				}
-			}
-		}
+		final String countryFeature = countryFeature(sequence);
+		Locale locale = isNotBlank(countryFeature) ? countryFeatureToLocale(countryFeature) : null;
 		if (locale != null) {
 			builder.put("features", locale);
 		} else {			
@@ -206,6 +223,33 @@ public final class NCBIXmlBindingHelper {
 			// TODO
 		}
 		return builder.build();
+	}
+
+	/**
+	 * Converts country feature to Java {@link Locale}. Java {@link Locale} allows latter to export the 
+	 * country to several different formats, including a two-letter code compatible with ISO 3166-1 
+	 * alpha-2 standard.
+	 * @param countryFeature - value of country feature field
+	 * @return a Java {@link Locale} inferred from the input sequence.
+	 */
+	public static final Locale countryFeatureToLocale(final String countryFeature) {
+		checkArgument(isNotBlank(countryFeature), "Uninitialized or invalid country feature");
+		return getLocale(countryFeature.replace(":.*", ""));
+	}
+
+	public static final Sequence parse(final GBSeq gbSeq) {
+		checkArgument(gbSeq != null, "Uninitialized or invalid sequence");
+		final String countryFeature = countryFeature(gbSeq);		
+		return Sequence.builder()
+				.dataSource(DataSource.GENBANK)
+				.definition(gbSeq.getGBSeqDefinition())
+				.accession(gbSeq.getGBSeqPrimaryAccession())
+				.version(gbSeq.getGBSeqAccessionVersion())
+				.organism(gbSeq.getGBSeqOrganism())
+				.countryFeature(countryFeature)
+				.location(isNotBlank(countryFeature) ? geocode(countryFeature) : null)
+				.locale(isNotBlank(countryFeature) ? countryFeatureToLocale(countryFeature) : null)
+				.build();
 	}
 
 }

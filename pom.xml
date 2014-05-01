@@ -216,6 +216,14 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<artifactId>jackson-mapper-asl</artifactId>
 				<version>${jackson-mapper.version}</version>
 			</dependency>
+			
+			<!-- Java API for Google Geocoding API v3 -->
+			
+			<dependency>
+				<groupId>com.google.code.geocoder-java</groupId>
+				<artifactId>geocoder-java</artifactId>
+				<version>0.16</version>
+			</dependency>
 
 			<!-- Logback -->
 

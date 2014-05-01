@@ -26,6 +26,7 @@ import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.getGenInfoIdentifier;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.inferCountry;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.parse;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -106,8 +107,18 @@ public class NCBIXmlBindingTest {
 					System.out.println(" >> Definition : " + seq.getGBSeqDefinition());
 					System.out.println(" >> Version    : " + seq.getGBSeqAccessionVersion());
 					System.out.println(" >> Organism   : " + seq.getGBSeqOrganism());
+					
+					final Sequence sequence = parse(seq);
+					assertThat("Sequence is not null", sequence, notNullValue());
+					assertThat("Sequence data source is not empty", isNotBlank(sequence.getDataSource()));
+					assertThat("Sequence accession is not empty", isNotBlank(sequence.getAccession()));
+					assertThat("Sequence definition is not empty", isNotBlank(sequence.getDefinition()));
+					assertThat("Sequence version is not empty", isNotBlank(sequence.getVersion()));
+					assertThat("Sequence organism is not empty", isNotBlank(sequence.getOrganism()));
+					/* Uncomment for additional output */
+					System.out.println(" >> Sequence  : " + sequence.toString());
 				}
-			}
+			}			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("NCBIXmlBindingTest.test() failed: " + e.getMessage());

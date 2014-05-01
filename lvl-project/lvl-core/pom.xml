@@ -115,6 +115,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<artifactId>javax.servlet-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		
+		<!-- Java API for Google Geocoding API v3 -->
+		<dependency>
+			<groupId>com.google.code.geocoder-java</groupId>
+			<artifactId>geocoder-java</artifactId>
+		</dependency>
 
 		<!-- Logback and SLF4J logging framework -->
 		<dependency>

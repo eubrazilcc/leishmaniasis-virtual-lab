@@ -55,7 +55,7 @@ public class ConcurrencyTest {
 	
 	@After
 	public void cleanUp() throws IOException {
-		TaskRunner.INSTANCE.close();
+		// don't close the task runner here since it will be used in other tests
 		TaskScheduler.INSTANCE.close();
 	}
 	
