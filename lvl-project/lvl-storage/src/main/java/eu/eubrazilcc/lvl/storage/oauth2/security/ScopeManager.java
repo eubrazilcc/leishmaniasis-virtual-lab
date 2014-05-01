@@ -68,6 +68,7 @@ public final class ScopeManager {
 	public static final String PENDING_SEQUENCES = "pending_sequences";
 	public static final String MY_SEQUENCES      = "my_sequences";
 	public static final String PIPELINES         = "pipelines";
+	public static final String TASKS             = "tasks";
 
 	public static final String ALL               = "*";
 
@@ -86,7 +87,8 @@ public final class ScopeManager {
 				grantFullAccess(SEQUENCES), 
 				grantFullAccess(PENDING_SEQUENCES),
 				grantFullAccess(inherit(MY_SEQUENCES, ALL)),
-				grantFullAccess(PIPELINES));
+				grantFullAccess(PIPELINES),
+				grantFullAccess(TASKS));
 	}
 
 	public static final String user(final String username) {

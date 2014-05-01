@@ -22,10 +22,100 @@
 
 package eu.eubrazilcc.lvl.service;
 
+import java.util.List;
+import java.util.UUID;
+
+import com.google.common.base.Objects;
+
 /**
- * Tasks.
+ * Task.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class Task {
+
+	private UUID uuid;
+	private TaskType type;
+	private List<String> ids;
+
+	public UUID getUuid() {
+		return uuid;
+	}
+	public void setUuid(final UUID uuid) {
+		this.uuid = uuid;
+	}
+	public TaskType getType() {
+		return type;
+	}
+	public void setType(final TaskType type) {
+		this.type = type;
+	}
+	public List<String> getIds() {
+		return ids;
+	}
+	public void setIds(final List<String> ids) {
+		this.ids = ids;
+	}
+	
+	@Override
+	public boolean equals(final Object obj) {
+		if (obj == null || !(obj instanceof Task)) {
+			return false;
+		}
+		final Task other = Task.class.cast(obj);
+		return Objects.equal(uuid, other.uuid)
+				&& Objects.equal(type, other.type)
+				&& Objects.equal(ids, other.ids);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(uuid, type, ids);
+	}
+
+	@Override
+	public String toString() {
+		return Objects.toStringHelper(this)
+				.add("uuid", uuid)
+				.add("type", type)
+				.add("ids", ids)
+				.toString();
+	}
+
+	/* Task types */
+
+	public static enum TaskType {
+		IMPORT_SEQUENCES;
+	}
+
+	/* Fluent API */
+
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public static class Builder {
+
+		private final Task task = new Task();
+
+		public Builder uuid(final UUID uuid) {
+			task.setUuid(uuid);
+			return this;
+		}
+
+		public Builder type(final TaskType type) {
+			task.setType(type);
+			return this;
+		}
+
+		public Builder ids(final List<String> ids) {
+			task.setIds(ids);
+			return this;
+		}
+
+		public Task build() {
+			return task;
+		}
+
+	}	
 
 }

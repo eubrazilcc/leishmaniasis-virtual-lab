@@ -74,9 +74,7 @@ import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
  * and update of the sequences in the database.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum SequenceManager {
-
-	INSTANCE;
+public class SequenceManager {
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(SequenceManager.class);
 
@@ -85,7 +83,18 @@ public enum SequenceManager {
 	public final static long FETCH_TIMEOUT_SECONDS     = 900l; // 15 minutes
 	public final static long DB_IMPORT_TIMEOUT_SECONDS = 600l; // 10 minutes	
 
-	private SequenceManager() { }
+	private ImmutableList<SequenceFilter> filters = ImmutableList.of();
+
+	public SequenceManager() { }	
+
+	public ImmutableList<SequenceFilter> getFilters() {
+		return filters;
+	}
+
+	public void setFilters(final Iterable<SequenceFilter> filters) {
+		final ImmutableList.Builder<SequenceFilter> builder = new ImmutableList.Builder<SequenceFilter>();
+		this.filters = (filters != null ? builder.addAll(filters).build() : builder.build());
+	}
 
 	/**
 	 * Imports sequences from default, external databases into the application's database.
@@ -94,7 +103,7 @@ public enum SequenceManager {
 		for (final String dataSource : DEFAULT_DATA_SOURCES) {
 			importSequences(dataSource);
 		}		
-	}
+	}	
 
 	/**
 	 * Imports sequences from external databases into the application's database.
@@ -131,13 +140,13 @@ public enum SequenceManager {
 				// are filtered, a new task is submitted to fetch the sequences from GenBank. A callback function is called
 				// every time a bulk of sequences is fetched and this function submits a new task to import the sequences into
 				// the database
-				futures.add(transform(transform(TaskRunner.INSTANCE.submit(filterMissingIds(ids)), fetchGBFiles(format, extension, tmpDir)), importGBFiles(format)));
+				futures.add(transform(transform(TaskRunner.INSTANCE.submit(filterGBMissingIds(ids)), fetchGBFiles(format, extension, tmpDir)), importGBFiles(format)));
 				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records");
 				retstart += count;
 			} while (count > 0 && retstart < esearchResultCount);
 			final ListenableFuture<List<Integer>> combinedFuture = allAsList(futures);
 			final List<Integer> list = combinedFuture.get();
-			checkState(list != null, "No sequences imported");			
+			checkState(list != null, "No sequences imported");
 			LOGGER.info(list.size() + " sequences imported");
 		} catch (Exception e) {
 			LOGGER.error("Importing GenBank sequences failed", e);
@@ -155,41 +164,28 @@ public enum SequenceManager {
 	 * @param ids - the list of sequence identifiers to filter
 	 * @return the list of unique identifiers that are missing from the database
 	 */
-	private static Callable<List<String>> filterMissingIds(final List<String> ids) {
+	private Callable<List<String>> filterGBMissingIds(final List<String> ids) {
 		return new Callable<List<String>>() {
 			@Override
 			public List<String> call() throws Exception {
 				return from(ids).transform(new Function<String, String>() {
 					@Override
 					public String apply(final String id) {
-
-						// TODO
-						return ("353470160".equals(id) 
-								|| "353483325".equals(id) 
-								|| "353481165".equals(id)
-								|| "545910417".equals(id)
-								|| "545910416".equals(id)
-								|| "545910415".equals(id)
-								|| "545910387".equals(id)
-								|| "545910370".equals(id)
-								|| "507528205".equals(id)
-								|| "430902590".equals(id)
-								|| "451935057".equals(id)
-								|| "384562886".equals(id)
-								? id : null);
-						// TODO
-
-						/* return SequenceDAO.INSTANCE.find(SequenceKey.builder()
-								.dataSource(DataSource.GENBANK)
-								.accession(id)
-								.build()) == null ? id : null; */
+						String result = id;
+						for (int i = 0; i < filters.size() && result != null; i++) {
+							final SequenceFilter filter = filters.get(i);
+							if (filter.canBeApplied(DataSource.GENBANK)) {
+								result = filters.get(i).filterById(id);
+							}
+						}
+						return result;
 					}
 				}).filter(notNull()).toSet().asList();
 			}					
-		};		
+		};
 	}
 
-	private static Function<List<String>, Collection<File>> fetchGBFiles(final Format format, final String extension, final File directory) {
+	private Function<List<String>, Collection<File>> fetchGBFiles(final Format format, final String extension, final File directory) {
 		return new Function<List<String>, Collection<File>>() {
 			@Override
 			public Collection<File> apply(final List<String> ids) {
@@ -204,7 +200,7 @@ public enum SequenceManager {
 		};
 	}
 
-	private static Callable<Collection<File>> fetchTask(final List<String> ids, final Format format, final String extension, final File directory) {
+	private Callable<Collection<File>> fetchTask(final List<String> ids, final Format format, final String extension, final File directory) {
 		return new Callable<Collection<File>>() {
 			@Override
 			public Collection<File> call() throws Exception {
@@ -221,7 +217,7 @@ public enum SequenceManager {
 		};
 	}
 
-	private static Function<Collection<File>, Integer> importGBFiles(final Format format) {
+	private Function<Collection<File>, Integer> importGBFiles(final Format format) {
 		switch (format) {
 		case GB_SEQ_XML:
 			return importGBSeqXMLFiles();
@@ -230,7 +226,7 @@ public enum SequenceManager {
 		}
 	}
 
-	private static Function<Collection<File>, Integer> importGBSeqXMLFiles() {
+	private Function<Collection<File>, Integer> importGBSeqXMLFiles() {
 		return new Function<Collection<File>, Integer>() {
 			@Override
 			public Integer apply(final Collection<File> files) {
@@ -266,6 +262,32 @@ public enum SequenceManager {
 				}
 			}
 		};
+	}
+
+	/* Fluent API */
+
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public static class Builder {
+
+		private final SequenceManager sequenceManager = new SequenceManager();
+
+		public Builder filter(final SequenceFilter filter) {
+			sequenceManager.setFilters(ImmutableList.of(filter));
+			return this;
+		}
+		
+		public Builder filters(final Iterable<SequenceFilter> filters) {
+			sequenceManager.setFilters(filters);
+			return this;
+		}
+
+		public SequenceManager build() {
+			return sequenceManager;
+		}
+
 	}
 
 }

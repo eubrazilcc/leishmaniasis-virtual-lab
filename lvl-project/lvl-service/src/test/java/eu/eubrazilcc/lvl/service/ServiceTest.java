@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.service;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -55,6 +56,7 @@ import eu.eubrazilcc.lvl.core.Sequences;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geospatial.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
+import eu.eubrazilcc.lvl.service.Task.TaskType;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
@@ -116,29 +118,28 @@ public class ServiceTest {
 	public void test() {
 		System.out.println("ServiceTest.test()");
 		try {
-			
-			
-			// TODO
-			final Path path2 = TaskResource.class.getAnnotation(Path.class);
-			// test run new task
-			final Task task = new Task();
-			Response response44 = target.path(path2.value()).request()
+			// test import sequences task
+			Path path = TaskResource.class.getAnnotation(Path.class);			
+			final Task task = Task.builder()
+					.type(TaskType.IMPORT_SEQUENCES)
+					.ids(newArrayList("353470160", "353483325", "384562886"))
+					.build();
+			Response response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.post(Entity.entity(task, MediaType.APPLICATION_JSON_TYPE));
-			
-			System.err.println("\n\n" + response44.readEntity(String.class) + "\n\n");
-			
-			
-			if (true) {
-				return;
-			}
-			// TODO
-			
-			
-			
-			
-			final Path path = SequenceResource.class.getAnnotation(Path.class);
+			assertThat("Create import sequences task response is not null", response, notNullValue());
+			assertThat("Create import sequences task response is CREATED", response.getStatus() == Response.Status.CREATED.getStatusCode());
+			assertThat("Create import sequences task response is not empty", response.getEntity(), notNullValue());
+			String payload = response.readEntity(String.class);
+			assertThat("Create import sequences task response entity is not null", payload, notNullValue());
+			assertThat("Create import sequences task response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println("Create import sequences task response body (JSON), empty is OK: " + payload);
+			System.out.println("Create import sequences task response JAX-RS object: " + response);
+			System.out.println("Create import sequences task HTTP headers: " + response.getStringHeaders());
+
 			// test create new sequence
+			path = SequenceResource.class.getAnnotation(Path.class);
 			final Sequence sequence = Sequence.builder()
 					.dataSource(DataSource.GENBANK)
 					.definition("Example sequence")
@@ -151,13 +152,13 @@ public class ServiceTest {
 					.dataSource(sequence.getDataSource())
 					.accession(sequence.getAccession())
 					.build();
-			Response response = target.path(path.value()).request()
+			response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.post(Entity.entity(sequence, MediaType.APPLICATION_JSON_TYPE));			
 			assertThat("Create new sequence response is not null", response, notNullValue());
 			assertThat("Create new sequence response is CREATED", response.getStatus() == Response.Status.CREATED.getStatusCode());
 			assertThat("Create new sequence response is not empty", response.getEntity(), notNullValue());
-			String payload = response.readEntity(String.class);
+			payload = response.readEntity(String.class);
 			assertThat("Create new sequence response entity is not null", payload, notNullValue());
 			assertThat("Create new sequence response entity is empty", isBlank(payload));
 			/* uncomment for additional output */			

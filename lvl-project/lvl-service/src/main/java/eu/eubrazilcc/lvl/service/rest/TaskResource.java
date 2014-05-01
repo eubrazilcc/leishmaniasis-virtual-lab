@@ -23,11 +23,15 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
+import static java.util.UUID.randomUUID;
+
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -37,7 +41,10 @@ import javax.ws.rs.core.UriInfo;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.service.Task;
+import eu.eubrazilcc.lvl.service.io.DbNotFoundSequenceFilter;
+import eu.eubrazilcc.lvl.service.io.MatchSequenceFilter;
 import eu.eubrazilcc.lvl.service.io.SequenceManager;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 
 /**
  * Tasks resource.
@@ -48,21 +55,33 @@ public class TaskResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Task Resource";
 	public static final String RESOURCE_SCOPE = resourceScope(TaskResource.class);
-	
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createTask(final Task task, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
+		if (task == null) {
+			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+		}
+		switch (task.getType()) {
+		case IMPORT_SEQUENCES:
+			final List<String> ids = task.getIds();
+			SequenceManager.builder()
+			.filter(ids == null || ids.isEmpty() ? new DbNotFoundSequenceFilter() : new MatchSequenceFilter(ids))
+			.build()
+			.importSequences();
+			break;
+		default:
+			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+		}
+		// create task in the database
+		task.setUuid(randomUUID());
 		
 		// TODO
-		final String taskId = "112";
-		
-		SequenceManager.INSTANCE.importSequences();
-		
-		// TODO
-		
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(taskId);		
+
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(task.getUuid().toString());		
 		return Response.created(uriBuilder.build()).build();		
 	}
-	
+
 }
