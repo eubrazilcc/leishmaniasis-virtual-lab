@@ -27,6 +27,11 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.Locale;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +41,12 @@ import com.google.code.geocoder.GeocoderRequestBuilder;
 import com.google.code.geocoder.model.GeocodeResponse;
 import com.google.code.geocoder.model.GeocoderResult;
 import com.google.code.geocoder.model.GeocoderStatus;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.ListenableFuture;
 
+import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 
 /**
@@ -47,13 +57,34 @@ public final class GeocodingHelper {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(GeocodingHelper.class);
 
+	public static final int MAX_CACHED_ELEMENTS = 1000;
+	public static final int CACHE_EXPIRATION_SECONDS = 86400; // one day
+
+	private static final LoadingCache<String, Point> CACHE = CacheBuilder.newBuilder()
+			.maximumSize(MAX_CACHED_ELEMENTS)
+			.refreshAfterWrite(CACHE_EXPIRATION_SECONDS, TimeUnit.SECONDS)
+			.build(new CacheLoader<String, Point>() {
+				@Override
+				public Point load(final String key) throws ExecutionException {
+					return geocodeFromGoogle(key);
+				}
+				@Override
+				public ListenableFuture<Point> reload(final String key, final Point oldValue) throws Exception {
+					return TaskRunner.INSTANCE.submit(new Callable<Point>() {
+						public Point call() {
+							return geocodeFromGoogle(key);
+						}
+					});					
+				}
+			});
+
 	/**
 	 * Converts a Java {@link Locale} to geographic coordinates.
 	 * @param locale - the locale to be converted
-	 * @return a {@link Point} that represents a geospatial location in GeoJSON format using
-	 *         WGS84 coordinate reference system (CRS).
+	 * @return a {@link Point} that represents a geospatial location in GeoJSON format using WGS84 
+	 *         coordinate reference system (CRS), or {@code null} if the locale cannot be found.
 	 */
-	public static final Point geocode(final Locale locale) {
+	public static final @Nullable Point geocode(final Locale locale) {
 		checkArgument(locale != null, "Uninitialized or invalid locale");
 		return geocode(locale.getDisplayCountry(Locale.ENGLISH));
 	}
@@ -61,10 +92,27 @@ public final class GeocodingHelper {
 	/**
 	 * Converts an address to geographic coordinates.
 	 * @param address - the address to be converted
-	 * @return a {@link Point} that represents a geospatial location in GeoJSON format using
-	 *         WGS84 coordinate reference system (CRS).
+	 * @return a {@link Point} that represents a geospatial location in GeoJSON format using WGS84 
+	 *         coordinate reference system (CRS), or {@code null} if the address cannot be found.
 	 */
-	public static final Point geocode(final String address) {
+	public static final @Nullable Point geocode(final String address) {
+		checkArgument(isNotBlank(address), "Uninitialized or invalid address");
+		Point point = null;
+		try {
+			point = CACHE.get(address.trim());
+		} catch (Exception e) {
+			LOGGER.error("Failed to get geospatial location from cache", e);
+		}
+		return point;
+	}
+
+	/**
+	 * Converts an address to geographic coordinates.
+	 * @param address - the address to be converted
+	 * @return a {@link Point} that represents a geospatial location in GeoJSON format using WGS84 
+	 *         coordinate reference system (CRS), or {@code null} if the address cannot be found.
+	 */
+	private static final Point geocodeFromGoogle(final String address) {
 		checkArgument(isNotBlank(address), "Uninitialized or invalid address");
 		Point point = null;
 		try {
