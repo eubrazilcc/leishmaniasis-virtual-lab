@@ -285,7 +285,7 @@ public final class EntrezHelper {
 		// save the bulk of files to a temporary file
 		final File tmpFile = File.createTempFile("gb-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
-		LOGGER.trace("Fetching files from GenBank: ids=" + idsParam + ", retstart=" + retstart + ", retmax=" + retmax
+		LOGGER.trace("Fetching " + ids.size() + " files from GenBank, retstart=" + retstart + ", retmax=" + retmax
 				+ ", file=" + tmpFile.getPath());
 		Request.Post(EFETCH_BASE_URI)
 		.useExpectContinue() // execute a POST with the 'expect-continue' handshake
@@ -359,7 +359,7 @@ public final class EntrezHelper {
 		// save the bulk of files to a temporary file
 		final File tmpFile = File.createTempFile("gb-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
-		LOGGER.trace("Fetching files from GenBank: ids=" + idsParam + ", retstart=" + retstart + ", retmax=" + retmax
+		LOGGER.trace("Fetching " + ids.size() + " files from GenBank, retstart=" + retstart + ", retmax=" + retmax
 				+ ", file=" + tmpFile.getPath());
 		Request.Post(EFETCH_BASE_URI)
 		.useExpectContinue() // execute a POST with the 'expect-continue' handshake

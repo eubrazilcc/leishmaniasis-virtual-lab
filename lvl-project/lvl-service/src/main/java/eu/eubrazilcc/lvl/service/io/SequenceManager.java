@@ -34,20 +34,18 @@ import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseCount;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseIds;
+import static eu.eubrazilcc.lvl.core.util.FileUtils.list;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.parse;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.typeFromFile;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
-import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -185,12 +183,12 @@ public class SequenceManager {
 		};
 	}
 
-	private Function<List<String>, Collection<File>> fetchGBFiles(final Format format, final String extension, final File directory) {
-		return new Function<List<String>, Collection<File>>() {
+	private Function<List<String>, String[]> fetchGBFiles(final Format format, final String extension, final File directory) {
+		return new Function<List<String>, String[]>() {
 			@Override
-			public Collection<File> apply(final List<String> ids) {
-				final ListenableFuture<Collection<File>> future = (!ids.isEmpty() ? TaskRunner.INSTANCE.submit(fetchTask(ids, format, extension, directory)) 
-						: immediateFuture(Collections.checkedCollection(new ArrayList<File>(), File.class)));
+			public String[] apply(final List<String> ids) {
+				final ListenableFuture<String[]> future = (!ids.isEmpty() ? TaskRunner.INSTANCE.submit(fetchTask(ids, format, extension, directory)) 
+						: immediateFuture(new String[]{ }));
 				try {
 					return future.get(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 				} catch (Exception e) {
@@ -200,15 +198,15 @@ public class SequenceManager {
 		};
 	}
 
-	private Callable<Collection<File>> fetchTask(final List<String> ids, final Format format, final String extension, final File directory) {
-		return new Callable<Collection<File>>() {
+	private Callable<String[]> fetchTask(final List<String> ids, final Format format, final String extension, final File directory) {
+		return new Callable<String[]>() {
 			@Override
-			public Collection<File> call() throws Exception {
+			public String[] call() throws Exception {
 				try {
 					final File directory2 = createTempDirectory(directory.toPath(), "fetch_task_").toFile();
-					efetch(ids, 0, EntrezHelper.MAX_RECORDS_FETCHED, directory2, format);
-					final Collection<File> files = listFiles(directory2, new String[] { extension }, false);
-					checkState(files != null && files.size() == ids.size(), "No all sequences were fetched");					
+					efetch(ids, 0, EntrezHelper.MAX_RECORDS_FETCHED, directory2, format);					
+					final String[] files = list(directory2, extension);					
+					checkState(files != null && files.length == ids.size(), "No all sequences were fetched");					
 					return files;
 				} catch (Exception e) {
 					throw new IllegalStateException("Failed to import nucleotide sequences from GenBank", e);
@@ -217,7 +215,7 @@ public class SequenceManager {
 		};
 	}
 
-	private Function<Collection<File>, Integer> importGBFiles(final Format format) {
+	private Function<String[], Integer> importGBFiles(final Format format) {
 		switch (format) {
 		case GB_SEQ_XML:
 			return importGBSeqXMLFiles();
@@ -226,19 +224,19 @@ public class SequenceManager {
 		}
 	}
 
-	private Function<Collection<File>, Integer> importGBSeqXMLFiles() {
-		return new Function<Collection<File>, Integer>() {
+	private Function<String[], Integer> importGBSeqXMLFiles() {
+		return new Function<String[], Integer>() {
 			@Override
-			public Integer apply(final Collection<File> files) {
+			public Integer apply(final String[] files) {
 				final List<ListenableFuture<String>> futures = newArrayList();
 				final Path dir = ConfigurationManager.INSTANCE.getGenBankDir(Format.GB_SEQ_XML).toPath();
-				for (final File file : files) {
+				for (final String file : files) {
+					final Path source = Paths.get(file);
 					final ListenableFuture<String> future = TaskRunner.INSTANCE.submit(new Callable<String>() {
 						@Override
 						public String call() throws Exception {
 							try {
-								// copy sequence to storage
-								final Path source = file.toPath();
+								// copy sequence to storage								
 								final Path target = dir.resolve(source.getFileName());
 								copy(source, target, REPLACE_EXISTING);
 								LOGGER.info("New GBSeqXML file stored: " + target.toString());
@@ -247,7 +245,7 @@ public class SequenceManager {
 								SequenceDAO.INSTANCE.insert(sequence);
 								return target.toString();
 							} finally {
-								deleteQuietly(file);
+								deleteQuietly(source.toFile());
 							}
 						}
 					});
@@ -278,7 +276,7 @@ public class SequenceManager {
 			sequenceManager.setFilters(ImmutableList.of(filter));
 			return this;
 		}
-		
+
 		public Builder filters(final Iterable<SequenceFilter> filters) {
 			sequenceManager.setFilters(filters);
 			return this;

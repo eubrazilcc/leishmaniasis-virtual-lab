@@ -22,14 +22,30 @@
 
 package eu.eubrazilcc.lvl.core.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.io.FilenameUtils.getExtension;
+
+import java.io.File;
+import java.io.FilenameFilter;
+
 /**
- * Leishmaniasis Virtual Laboratory tool.
+ * Utility class to deal with file-system related problems.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class LeishTool {
+public final class FileUtils {
 
-	public static final void main(final String[] args) {
-		// TODO
+	public static final String[] list(final File directory, final String extension) {
+		checkArgument(directory != null && directory.isDirectory() && directory.canRead(), 
+				"Uninitialized or invalid directory");
+		checkArgument(isNotBlank(extension), "Uninitialized or invalid extension");
+		return directory.list(new FilenameFilter() {
+			@Override
+			public boolean accept(final File dir, final String name) {
+				final String currentExtension = getExtension(name);
+				return isNotBlank(currentExtension) && currentExtension.equalsIgnoreCase(extension);
+			}
+		});		
 	}
-	
+
 }
