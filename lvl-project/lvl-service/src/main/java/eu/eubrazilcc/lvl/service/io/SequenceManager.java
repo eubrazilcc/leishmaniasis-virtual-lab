@@ -112,8 +112,10 @@ public enum SequenceManager {
 	private void importGenBankSequences() {
 		final Format format = Format.GB_SEQ_XML; // GenBank file format
 		final String extension = "xml"; // GenBank file extension
+		File tmpDir = null;
 		int esearchResultCount = -1, totalIds = 0;
 		try {
+			tmpDir = createTempDirectory("tmp_sequences_").toFile();
 			int retstart = 0, count = 0;
 			final int retmax = EntrezHelper.MAX_RECORDS_LISTED;
 			final List<ListenableFuture<Integer>> futures = newArrayList();
@@ -129,7 +131,7 @@ public enum SequenceManager {
 				// are filtered, a new task is submitted to fetch the sequences from GenBank. A callback function is called
 				// every time a bulk of sequences is fetched and this function submits a new task to import the sequences into
 				// the database
-				futures.add(transform(transform(TaskRunner.INSTANCE.submit(filterMissingIds(ids)), fetchGBFiles(format, extension)), importGBFiles(format)));
+				futures.add(transform(transform(TaskRunner.INSTANCE.submit(filterMissingIds(ids)), fetchGBFiles(format, extension, tmpDir)), importGBFiles(format)));
 				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records");
 				retstart += count;
 			} while (count > 0 && retstart < esearchResultCount);
@@ -138,7 +140,9 @@ public enum SequenceManager {
 			checkState(list != null, "No sequences imported");			
 			LOGGER.info(list.size() + " sequences imported");
 		} catch (Exception e) {
-			LOGGER.error("Listing nucleotide ids failed", e);
+			LOGGER.error("Importing GenBank sequences failed", e);
+		} finally {
+			deleteQuietly(tmpDir);
 		}
 		checkState(esearchResultCount == -1 || totalIds == esearchResultCount, "No all ids were imported");
 		// TODO: send notification on completion or error
@@ -185,11 +189,11 @@ public enum SequenceManager {
 		};		
 	}
 
-	private static Function<List<String>, Collection<File>> fetchGBFiles(final Format format, final String extension) {
+	private static Function<List<String>, Collection<File>> fetchGBFiles(final Format format, final String extension, final File directory) {
 		return new Function<List<String>, Collection<File>>() {
 			@Override
 			public Collection<File> apply(final List<String> ids) {
-				final ListenableFuture<Collection<File>> future = (!ids.isEmpty() ? TaskRunner.INSTANCE.submit(fetchTask(ids, format, extension)) 
+				final ListenableFuture<Collection<File>> future = (!ids.isEmpty() ? TaskRunner.INSTANCE.submit(fetchTask(ids, format, extension, directory)) 
 						: immediateFuture(Collections.checkedCollection(new ArrayList<File>(), File.class)));
 				try {
 					return future.get(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -200,25 +204,18 @@ public enum SequenceManager {
 		};
 	}
 
-	private static Callable<Collection<File>> fetchTask(final List<String> ids, final Format format, final String extension) {
+	private static Callable<Collection<File>> fetchTask(final List<String> ids, final Format format, final String extension, final File directory) {
 		return new Callable<Collection<File>>() {
 			@Override
 			public Collection<File> call() throws Exception {
-				File tmpDir = null;
-				boolean shouldClean = false;
 				try {
-					tmpDir = createTempDirectory("tmp_sequences").toFile();
-					efetch(ids, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir, format);
-					final Collection<File> files = listFiles(tmpDir, new String[] { extension }, false);
+					final File directory2 = createTempDirectory(directory.toPath(), "fetch_task_").toFile();
+					efetch(ids, 0, EntrezHelper.MAX_RECORDS_FETCHED, directory2, format);
+					final Collection<File> files = listFiles(directory2, new String[] { extension }, false);
 					checkState(files != null && files.size() == ids.size(), "No all sequences were fetched");					
 					return files;
 				} catch (Exception e) {
-					shouldClean = true;
 					throw new IllegalStateException("Failed to import nucleotide sequences from GenBank", e);
-				} finally {
-					if (shouldClean) {
-						deleteQuietly(tmpDir);
-					}
 				}
 			}
 		};
