@@ -23,6 +23,8 @@
 package eu.eubrazilcc.lvl.oauth2;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.findConfigurationFiles;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 
 import java.io.Closeable;
 import java.util.LinkedList;
@@ -31,8 +33,6 @@ import java.util.Queue;
 import com.google.common.util.concurrent.Monitor;
 
 import eu.eubrazilcc.lvl.core.CloserServiceIf;
-import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 
 /**
  * Close registered resources when it is closed.
@@ -40,7 +40,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
  */
 public enum CloserService implements CloserServiceIf {
 
-	INSTANCE;
+	CLOSER_SERVICE;
 
 	private final Monitor monitor = new Monitor();
 
@@ -51,11 +51,11 @@ public enum CloserService implements CloserServiceIf {
 	@Override
 	public void preload() {		
 		// load configuration
-		ConfigurationManager.INSTANCE.setup(findConfigurationFiles());
-		ConfigurationManager.INSTANCE.preload();
+		CONFIG_MANAGER.setup(findConfigurationFiles());
+		CONFIG_MANAGER.preload();
 		// load MongoDB connector and register it for closing
-		MongoDBConnector.INSTANCE.preload();
-		register(MongoDBConnector.INSTANCE);
+		MONGODB_CONN.preload();
+		register(MONGODB_CONN);
 	}
 
 	@Override

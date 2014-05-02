@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -62,16 +63,16 @@ public class ResourceOwnerCollectionTest {
 							.fullname("Fullname")
 							.scopes(scopes)
 							.build()).build();
-			ResourceOwnerDAO.INSTANCE.insert(resourceOwner);
+			RESOURCE_OWNER_DAO.insert(resourceOwner);
 
 			// find
-			ResourceOwner resourceOwner2 = ResourceOwnerDAO.INSTANCE.find(resourceOwner.getOwnerId());
+			ResourceOwner resourceOwner2 = RESOURCE_OWNER_DAO.find(resourceOwner.getOwnerId());
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
 			assertThat("resource owner coincides with original", resourceOwner2, equalTo(resourceOwner));
 			System.out.println(resourceOwner2.toString());
 
 			// find with volatile values
-			resourceOwner2 = ResourceOwnerDAO.INSTANCE.baseUri(new URI("http://localhost/"))
+			resourceOwner2 = RESOURCE_OWNER_DAO.baseUri(new URI("http://localhost/"))
 					.useGravatar(true).find(resourceOwner.getOwnerId());
 			assertThat("resource owner with volatile values is not null", resourceOwner2, notNullValue());
 			assertThat("resource owner link is not null", resourceOwner2.getUser().getLink(), notNullValue());
@@ -83,16 +84,16 @@ public class ResourceOwnerCollectionTest {
 
 			// update
 			resourceOwner.getUser().setPassword("new_password");
-			ResourceOwnerDAO.INSTANCE.update(resourceOwner);
+			RESOURCE_OWNER_DAO.update(resourceOwner);
 
 			// find after update
-			resourceOwner2 = ResourceOwnerDAO.INSTANCE.reset().find(resourceOwner.getOwnerId());
+			resourceOwner2 = RESOURCE_OWNER_DAO.reset().find(resourceOwner.getOwnerId());
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
 			assertThat("resource owner coincides with original", resourceOwner2, equalTo(resourceOwner));
 			System.out.println(resourceOwner2.toString());
 
 			// check validity using owner Id and username
-			boolean validity = ResourceOwnerDAO.INSTANCE.isValid(resourceOwner.getOwnerId(), 
+			boolean validity = RESOURCE_OWNER_DAO.isValid(resourceOwner.getOwnerId(), 
 					resourceOwner.getUser().getUsername(), 
 					resourceOwner.getUser().getPassword(), 
 					false, 
@@ -100,7 +101,7 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner is valid (using owner Id & username)", validity);
 
 			// check validity using email address
-			validity = ResourceOwnerDAO.INSTANCE.isValid(null, 
+			validity = RESOURCE_OWNER_DAO.isValid(null, 
 					resourceOwner.getUser().getEmail(), 
 					resourceOwner.getUser().getPassword(), 
 					true, 
@@ -108,13 +109,13 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner is valid (using email)", validity);			
 
 			// add scopes
-			ResourceOwnerDAO.INSTANCE.addScopes(resourceOwner.getOwnerId(), "scope3");
+			RESOURCE_OWNER_DAO.addScopes(resourceOwner.getOwnerId(), "scope3");
 
 			// remove scopes
-			ResourceOwnerDAO.INSTANCE.removeScopes(resourceOwner.getOwnerId(), "scope2");
+			RESOURCE_OWNER_DAO.removeScopes(resourceOwner.getOwnerId(), "scope2");
 
 			// get OAuth scope
-			resourceOwner2 = ResourceOwnerDAO.INSTANCE.find(resourceOwner.getOwnerId());
+			resourceOwner2 = RESOURCE_OWNER_DAO.find(resourceOwner.getOwnerId());
 			final String oauthScope = ResourceOwnerDAO.oauthScope(resourceOwner2, true);
 			assertThat("resource owner OAuth scope is not null", oauthScope, notNullValue());
 			assertThat("resource owner OAuth scope is not blank", isNotBlank(oauthScope));
@@ -122,7 +123,7 @@ public class ResourceOwnerCollectionTest {
 			System.out.println("OAuth scope: '" + oauthScope + "'");
 
 			// remove
-			ResourceOwnerDAO.INSTANCE.delete(resourceOwner.getOwnerId());
+			RESOURCE_OWNER_DAO.delete(resourceOwner.getOwnerId());
 
 			// pagination
 			final List<String> ids = newArrayList();
@@ -137,23 +138,23 @@ public class ResourceOwnerCollectionTest {
 								.scopes(scopes)
 								.build()).build();								
 				ids.add(resourceOwner3.getOwnerId());
-				ResourceOwnerDAO.INSTANCE.insert(resourceOwner3);
+				RESOURCE_OWNER_DAO.insert(resourceOwner3);
 			}
 			final int size = 3;
 			int start = 0;
 			List<ResourceOwner> resourceOwners = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				resourceOwners = ResourceOwnerDAO.INSTANCE.list(start, size, count);
+				resourceOwners = RESOURCE_OWNER_DAO.list(start, size, count);
 				if (resourceOwners.size() != 0) {
 					System.out.println("Paging " + start + " - " + resourceOwners.size() + " of " + count.getValue());
 				}
 				start += resourceOwners.size();
 			} while (!resourceOwners.isEmpty());
 			for (final String id2 : ids) {			
-				ResourceOwnerDAO.INSTANCE.delete(id2);
+				RESOURCE_OWNER_DAO.delete(id2);
 			}
-			ResourceOwnerDAO.INSTANCE.stats(System.out);
+			RESOURCE_OWNER_DAO.stats(System.out);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("ResourceOwnerCollectionTest.test() failed: " + e.getMessage());

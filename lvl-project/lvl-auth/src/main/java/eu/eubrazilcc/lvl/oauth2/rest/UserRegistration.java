@@ -22,6 +22,10 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.oauth2.mail.EmailSender.EMAIL_SENDER;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asSet;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
@@ -54,12 +58,9 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.oauth2.mail.EmailSender;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
 
 /**
  * Provides new user sign-up logic to identity provider (IdP).
@@ -88,7 +89,7 @@ public class UserRegistration {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final PendingUser pendingUser = PendingUserDAO.INSTANCE.findByEmail(email);		
+		final PendingUser pendingUser = PENDING_USER_DAO.findByEmail(email);		
 		if (pendingUser == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
@@ -108,7 +109,7 @@ public class UserRegistration {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// verify that no other user exists in the database with the same username or email address
-		if (ResourceOwnerDAO.INSTANCE.find(user.getUsername()) != null || ResourceOwnerDAO.INSTANCE.findByEmail(user.getEmail()) != null) {
+		if (RESOURCE_OWNER_DAO.find(user.getUsername()) != null || RESOURCE_OWNER_DAO.findByEmail(user.getEmail()) != null) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// set the correct scopes that the new user must have
@@ -121,7 +122,7 @@ public class UserRegistration {
 				.id(user.getUsername())
 				.user(user)
 				.build();
-		PendingUserDAO.INSTANCE.insert(pendingUser);
+		PENDING_USER_DAO.insert(pendingUser);
 		// send activation code by email
 		if (!skipActivation) {
 			final URI baseUri = uriInfo.getBaseUriBuilder().clone().build();
@@ -141,33 +142,33 @@ public class UserRegistration {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final PendingUser pendingUser = PendingUserDAO.INSTANCE.findByEmail(email);		
+		final PendingUser pendingUser = PENDING_USER_DAO.findByEmail(email);		
 		if (pendingUser == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
-		if (!PendingUserDAO.INSTANCE.isValid(pendingUser.getPendingUserId(), pendingUser.getUser().getUsername(), 
+		if (!PENDING_USER_DAO.isValid(pendingUser.getPendingUserId(), pendingUser.getUser().getUsername(), 
 				update.getActivationCode(), false)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// create regular user in the database		
-		ResourceOwnerDAO.INSTANCE.insert(ResourceOwner.builder()
+		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder()
 				.id(pendingUser.getUser().getUsername())
 				.user(pendingUser.getUser())
 				.build());
 		// delete pending user from database
-		PendingUserDAO.INSTANCE.delete(pendingUser.getPendingUserId());
+		PENDING_USER_DAO.delete(pendingUser.getPendingUserId());
 	}
 
 	private static final void sendActivation(final URI baseUri, final PendingUser pendingUser) {		
 		URI portalUri = null;
 		try {
-			final String portalEndpoint = ConfigurationManager.INSTANCE.getPortalEndpoint();
+			final String portalEndpoint = CONFIG_MANAGER.getPortalEndpoint();
 			portalUri = isNotBlank(portalEndpoint) ? new URI(portalEndpoint.replaceAll("/$", "")) 
 			: new URI(baseUri.getScheme(), baseUri.getAuthority(), null, null, null);
 		} catch (URISyntaxException e) {
 			LOGGER.error("Failed to create LVL portal endpoint", e);
 		}
-		EmailSender.INSTANCE.sendTextEmail(pendingUser.getUser().getEmail(), emailActivationSubject(), 
+		EMAIL_SENDER.sendTextEmail(pendingUser.getUser().getEmail(), emailActivationSubject(), 
 				emailActivationMessage(pendingUser.getUser().getUsername(), pendingUser.getUser().getEmail(), pendingUser.getActivationCode(), portalUri));
 	}
 

@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.core.event;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newLinkedList;
+import static eu.eubrazilcc.lvl.core.event.EventHandler.EVENT_HANDLER;
 
 import java.util.NoSuchElementException;
 import java.util.Queue;
@@ -47,7 +48,7 @@ public class TaskQueue<T> {
 		monitor.enter();
 		try {
 			queue.add(request);
-			EventHandler.INSTANCE.post(event);			
+			EVENT_HANDLER.post(event);			
 		} finally {
 			monitor.leave();
 		}

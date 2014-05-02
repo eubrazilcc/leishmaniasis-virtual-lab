@@ -40,7 +40,7 @@ import eu.eubrazilcc.lvl.core.Closeable2;
  */
 public enum LogManager implements Closeable2 {
 
-	INSTANCE;
+	LOG_MANAGER;
 
 	private final static Logger LOGGER = getLogger(LogManager.class);
 

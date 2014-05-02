@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.core.event;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Queues.newArrayDeque;
 import static com.google.common.collect.Queues.synchronizedDeque;
+import static eu.eubrazilcc.lvl.core.event.DeadEventListener.DEAD_EVENT_LISTENER;
 
 import java.io.IOException;
 import java.net.URL;
@@ -43,7 +44,7 @@ import eu.eubrazilcc.lvl.core.Closeable2;
  */
 public enum EventHandler implements Closeable2 {
 
-	INSTANCE;
+	EVENT_HANDLER;
 
 	public static final String EVENT_BUS_NAME = "lvl-service";
 
@@ -54,7 +55,7 @@ public enum EventHandler implements Closeable2 {
 	private EventHandler() {
 		eventBus = new EventBus(EVENT_BUS_NAME);
 		// register dead event listener
-		register(DeadEventListener.INSTANCE);
+		register(DEAD_EVENT_LISTENER);
 	}
 
 	public void register(final Object object) {

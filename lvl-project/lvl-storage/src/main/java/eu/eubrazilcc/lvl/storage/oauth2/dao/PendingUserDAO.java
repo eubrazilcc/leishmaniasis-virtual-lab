@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.IOException;
@@ -54,7 +55,6 @@ import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 
 /**
@@ -63,7 +63,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
  */
 public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
-	INSTANCE;
+	PENDING_USER_DAO;
 
 	public static final String COLLECTION  = "pending_users";
 	public static final String PRIMARY_KEY = "pendingUser.pendingUserId";
@@ -74,8 +74,8 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	private URI baseUri = null;
 
 	private PendingUserDAO() {
-		MongoDBConnector.INSTANCE.createIndex(PRIMARY_KEY, COLLECTION);
-		MongoDBConnector.INSTANCE.createIndex(EMAIL_KEY, COLLECTION);
+		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
+		MONGODB_CONN.createIndex(EMAIL_KEY, COLLECTION);
 		morphia.map(PendingUserEntity.class);
 	}
 
@@ -89,7 +89,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 		// remove transient fields from the element before saving it to the database
 		final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
 		final DBObject obj = morphia.toDBObject(new PendingUserEntity(store.purge()));
-		final String id = MongoDBConnector.INSTANCE.insert(obj, COLLECTION);
+		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
 		return id;
@@ -100,14 +100,14 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 		// remove transient fields from the element before saving it to the database
 		final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
 		final DBObject obj = morphia.toDBObject(new PendingUserEntity(store.purge()));
-		MongoDBConnector.INSTANCE.update(obj, key(pendingUser.getPendingUserId()), COLLECTION);
+		MONGODB_CONN.update(obj, key(pendingUser.getPendingUserId()), COLLECTION);
 		// restore transient fields
 		store.restore();
 	}
 
 	@Override
 	public void delete(final String pendingUserId) {
-		MongoDBConnector.INSTANCE.remove(key(pendingUserId), COLLECTION);
+		MONGODB_CONN.remove(key(pendingUserId), COLLECTION);
 	}
 
 	@Override
@@ -117,13 +117,13 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
 	@Override
 	public PendingUser find(final String pendingUserId) {
-		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(key(pendingUserId), COLLECTION);		
+		final BasicDBObject obj = MONGODB_CONN.get(key(pendingUserId), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
 	public List<PendingUser> list(final int start, final int size, final @Nullable MutableLong count) {
-		return transform(MongoDBConnector.INSTANCE.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, PendingUser>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, PendingUser>() {
 			@Override
 			public PendingUser apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
@@ -133,7 +133,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
 	@Override
 	public long count() {
-		return MongoDBConnector.INSTANCE.count(COLLECTION);
+		return MONGODB_CONN.count(COLLECTION);
 	}
 
 	@Override
@@ -148,7 +148,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
 	@Override
 	public void stats(final OutputStream os) throws IOException {
-		MongoDBConnector.INSTANCE.stats(os, COLLECTION);
+		MONGODB_CONN.stats(os, COLLECTION);
 	}
 
 	private BasicDBObject key(final String key) {
@@ -203,7 +203,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	 *         the database, or {@code null} if the database contains no entry for the email
 	 */
 	public PendingUser findByEmail(final String email) {
-		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(emailKey(email), COLLECTION);		
+		final BasicDBObject obj = MONGODB_CONN.get(emailKey(email), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 

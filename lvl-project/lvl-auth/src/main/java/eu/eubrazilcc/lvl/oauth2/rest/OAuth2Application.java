@@ -25,6 +25,8 @@ package eu.eubrazilcc.lvl.oauth2.rest;
 import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
+import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
+import static eu.eubrazilcc.lvl.oauth2.SingletonService.OAUTH2_SERVICE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Arrays;
@@ -39,8 +41,6 @@ import org.slf4j.Logger;
 import com.google.common.base.Function;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.core.conf.LogManager;
-import eu.eubrazilcc.lvl.oauth2.SingletonService;
 
 /**
  * OAuth2 JAX-RS application.
@@ -57,9 +57,9 @@ public class OAuth2Application extends Application {
 
 	public OAuth2Application() {
 		// load logging bridges
-		LogManager.INSTANCE.preload();
+		LOG_MANAGER.preload();
 		// start service
-		SingletonService.INSTANCE.service();
+		OAUTH2_SERVICE.service();
 		// create LVL resources
 		instances.add(new OAuth2Registration());
 		instances.add(new OAuth2AuthzServer());

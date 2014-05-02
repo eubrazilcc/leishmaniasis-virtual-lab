@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.AuthCodeDAO.AUTH_CODE_DAO;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,7 +35,6 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.storage.oauth2.AuthCode;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.AuthCodeDAO;
 
 /**
  * Tests OAuth2 authorization code collection in the database.
@@ -52,48 +52,48 @@ public class AuthCodeCollectionTest {
 					.issuedAt(System.currentTimeMillis() / 1000l)
 					.expiresIn(23l)
 					.build();			
-			AuthCodeDAO.INSTANCE.insert(authCode);
+			AUTH_CODE_DAO.insert(authCode);
 			// find
-			AuthCode authCode2 = AuthCodeDAO.INSTANCE.find(authCode.getCode());
+			AuthCode authCode2 = AUTH_CODE_DAO.find(authCode.getCode());
 			assertThat("authorization code is not null", authCode2, notNullValue());
 			assertThat("authorization code coincides with original", authCode2, equalTo(authCode));
 			System.out.println(authCode2.toString());
 			// update
 			authCode.setExpiresIn(3600l);
-			AuthCodeDAO.INSTANCE.update(authCode);
+			AUTH_CODE_DAO.update(authCode);
 			// find after update
-			authCode2 = AuthCodeDAO.INSTANCE.find(authCode.getCode());
+			authCode2 = AUTH_CODE_DAO.find(authCode.getCode());
 			assertThat("authorization code is not null", authCode2, notNullValue());
 			assertThat("authorization code coincides with original", authCode2, equalTo(authCode));
 			System.out.println(authCode2.toString());
 			// check validity
-			final boolean validity = AuthCodeDAO.INSTANCE.isValid(authCode.getCode());
+			final boolean validity = AUTH_CODE_DAO.isValid(authCode.getCode());
 			assertThat("authorization code is valid", validity);
 			// remove
-			AuthCodeDAO.INSTANCE.delete(authCode.getCode());
+			AUTH_CODE_DAO.delete(authCode.getCode());
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {
 				final AuthCode authCode3 = AuthCode.builder()
 						.code(Integer.toString(i)).build();
 				ids.add(authCode3.getCode());
-				AuthCodeDAO.INSTANCE.insert(authCode3);
+				AUTH_CODE_DAO.insert(authCode3);
 			}
 			final int size = 3;
 			int start = 0;
 			List<AuthCode> authCodes = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				authCodes = AuthCodeDAO.INSTANCE.list(start, size, count);
+				authCodes = AUTH_CODE_DAO.list(start, size, count);
 				if (authCodes.size() != 0) {
 					System.out.println("Paging " + start + " - " + authCodes.size() + " of " + count.getValue());
 				}
 				start += authCodes.size();
 			} while (!authCodes.isEmpty());
 			for (final String id2 : ids) {
-				AuthCodeDAO.INSTANCE.delete(id2);
+				AUTH_CODE_DAO.delete(id2);
 			}
-			AuthCodeDAO.INSTANCE.stats(System.out);
+			AUTH_CODE_DAO.stats(System.out);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("AuthCodeCollectionTest.test() failed: " + e.getMessage());

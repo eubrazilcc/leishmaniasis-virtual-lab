@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.IOException;
@@ -50,7 +51,6 @@ import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 import eu.eubrazilcc.lvl.storage.oauth2.ClientApp;
 
 /**
@@ -59,7 +59,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.ClientApp;
  */
 public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 
-	INSTANCE;
+	CLIENT_APP_DAO;
 
 	public static final String COLLECTION = "client_apps";
 	public static final String PRIMARY_KEY = "clientApp.clientId";
@@ -71,7 +71,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	private final Morphia morphia = new Morphia();
 
 	private ClientAppDAO() {		
-		MongoDBConnector.INSTANCE.createIndex(PRIMARY_KEY, COLLECTION);
+		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		morphia.map(ClientAppEntity.class);
 		// ensure that at least the administrator account exists in the database
 		final List<ClientApp> clientApps = list(0, 1, null);
@@ -95,7 +95,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 		// remove transient fields from the element before saving it to the database
 		final ClientAppTransientStore store = ClientAppTransientStore.start(clientApp);
 		final DBObject obj = morphia.toDBObject(new ClientAppEntity(store.purge()));
-		final String id = MongoDBConnector.INSTANCE.insert(obj, COLLECTION);
+		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
 		return id;
@@ -106,14 +106,14 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 		// remove transient fields from the element before saving it to the database
 		final ClientAppTransientStore store = ClientAppTransientStore.start(clientApp);
 		final DBObject obj = morphia.toDBObject(new ClientAppEntity(store.purge()));
-		MongoDBConnector.INSTANCE.update(obj, key(clientApp.getClientId()), COLLECTION);
+		MONGODB_CONN.update(obj, key(clientApp.getClientId()), COLLECTION);
 		// restore transient fields
 		store.restore();
 	}
 
 	@Override
 	public void delete(final String clientId) {
-		MongoDBConnector.INSTANCE.remove(key(clientId), COLLECTION);
+		MONGODB_CONN.remove(key(clientId), COLLECTION);
 	}
 
 	@Override
@@ -123,13 +123,13 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 
 	@Override
 	public ClientApp find(final String clientId) {
-		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(key(clientId), COLLECTION);		
+		final BasicDBObject obj = MONGODB_CONN.get(key(clientId), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
 	public List<ClientApp> list(final int start, final int size, final @Nullable MutableLong count) {
-		return transform(MongoDBConnector.INSTANCE.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, ClientApp>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, ClientApp>() {
 			@Override
 			public ClientApp apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
@@ -139,7 +139,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 
 	@Override
 	public long count() {
-		return MongoDBConnector.INSTANCE.count(COLLECTION);
+		return MONGODB_CONN.count(COLLECTION);
 	}
 
 	@Override
@@ -154,7 +154,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 
 	@Override
 	public void stats(final OutputStream os) throws IOException {
-		MongoDBConnector.INSTANCE.stats(os, COLLECTION);
+		MONGODB_CONN.stats(os, COLLECTION);
 	}
 
 	private BasicDBObject key(final String key) {

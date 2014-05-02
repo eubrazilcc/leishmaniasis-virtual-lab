@@ -36,7 +36,7 @@ import com.google.common.eventbus.Subscribe;
  */
 public enum DeadEventListener {
 
-	INSTANCE;
+	DEAD_EVENT_LISTENER;
 
 	private final static Logger LOGGER = getLogger(DeadEventListener.class);
 

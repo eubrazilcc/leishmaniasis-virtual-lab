@@ -28,7 +28,7 @@ package eu.eubrazilcc.lvl.oauth2;
  */
 public enum SingletonService {
 
-	INSTANCE;
+	OAUTH2_SERVICE;
 	
 	private OAuth2Service service = null;
 

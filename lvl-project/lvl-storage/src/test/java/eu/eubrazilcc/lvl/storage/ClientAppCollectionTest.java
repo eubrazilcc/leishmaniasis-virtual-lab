@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO.CLIENT_APP_DAO;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,7 +36,6 @@ import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
 import eu.eubrazilcc.lvl.storage.oauth2.ClientApp;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO;
 
 /**
  * Tests OAuth2 client application collection in the database.
@@ -59,27 +59,27 @@ public class ClientAppCollectionTest {
 					.issuedAt(1000l)
 					.expiresIn(2000l)
 					.build();
-			ClientAppDAO.INSTANCE.insert(clientApp);
+			CLIENT_APP_DAO.insert(clientApp);
 			// find
-			ClientApp clientApp2 = ClientAppDAO.INSTANCE.find(clientApp.getClientId());
+			ClientApp clientApp2 = CLIENT_APP_DAO.find(clientApp.getClientId());
 			assertThat("client application is not null", clientApp2, notNullValue());
 			assertThat("client application coincides with original", clientApp2, equalTo(clientApp));
 			System.out.println(clientApp2.toString());
 			// update
 			clientApp.setExpiresIn(4000l);
-			ClientAppDAO.INSTANCE.update(clientApp);
+			CLIENT_APP_DAO.update(clientApp);
 			// check validity
-			boolean validity = ClientAppDAO.INSTANCE.isValid(clientApp.getClientId());
+			boolean validity = CLIENT_APP_DAO.isValid(clientApp.getClientId());
 			assertThat("client application is valid (secret excluded)", validity);
-			validity = ClientAppDAO.INSTANCE.isValid(clientApp.getClientId(), clientApp.getClientSecret());
+			validity = CLIENT_APP_DAO.isValid(clientApp.getClientId(), clientApp.getClientSecret());
 			assertThat("client application is valid (secret included)", validity);
 			// find after update
-			clientApp2 = ClientAppDAO.INSTANCE.find(clientApp.getClientId());
+			clientApp2 = CLIENT_APP_DAO.find(clientApp.getClientId());
 			assertThat("client application is not null", clientApp2, notNullValue());
 			assertThat("client application coincides with original", clientApp2, equalTo(clientApp));
 			System.out.println(clientApp2.toString());
 			// remove
-			ClientAppDAO.INSTANCE.delete(clientApp.getClientId());
+			CLIENT_APP_DAO.delete(clientApp.getClientId());
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {				
@@ -95,23 +95,23 @@ public class ClientAppCollectionTest {
 						.expiresIn(2000l)						
 						.build();
 				ids.add(clientApp3.getClientId());
-				ClientAppDAO.INSTANCE.insert(clientApp3);
+				CLIENT_APP_DAO.insert(clientApp3);
 			}
 			final int size = 3;
 			int start = 0;
 			List<ClientApp> clientApps = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				clientApps = ClientAppDAO.INSTANCE.list(start, size, count);
+				clientApps = CLIENT_APP_DAO.list(start, size, count);
 				if (clientApps.size() != 0) {
 					System.out.println("Paging " + start + " - " + clientApps.size() + " of " + count.getValue());
 				}
 				start += clientApps.size();
 			} while (!clientApps.isEmpty());
 			for (final String id2 : ids) {			
-				ClientAppDAO.INSTANCE.delete(id2);
+				CLIENT_APP_DAO.delete(id2);
 			}
-			ClientAppDAO.INSTANCE.stats(System.out);
+			CLIENT_APP_DAO.stats(System.out);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("ClientAppCollectionTest.test() failed: " + e.getMessage());

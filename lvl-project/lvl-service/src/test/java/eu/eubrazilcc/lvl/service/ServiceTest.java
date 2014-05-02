@@ -23,7 +23,12 @@
 package eu.eubrazilcc.lvl.service;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
+import static java.lang.System.getProperty;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -41,8 +46,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.junit.After;
 import org.junit.Before;
@@ -61,7 +64,6 @@ import eu.eubrazilcc.lvl.service.rest.SequenceResource;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
 import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
@@ -71,7 +73,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
  */
 public class ServiceTest {
 
-	private static final File TEST_OUTPUT_DIR = new File(FilenameUtils.concat(System.getProperty("java.io.tmpdir"),
+	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
 			"lvl-service-test-Hf330xKUcsn7vnlKQXFndptow52MvZNKWxxpbnVqAA"));
 
 	private static final String BASE_URI = "https://localhost:8443/lvl-service/rest/v1";
@@ -91,16 +93,16 @@ public class ServiceTest {
 				builder.add(this.getClass().getResource("/config/lvl-service.xml"));
 			}
 		}
-		ConfigurationManager.INSTANCE.setup(builder.build());
-		ConfigurationManager.INSTANCE.preload();
+		CONFIG_MANAGER.setup(builder.build());
+		CONFIG_MANAGER.preload();
 		// setup test file-system environment
-		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);		
+		deleteQuietly(TEST_OUTPUT_DIR);		
 		// prepare client
 		final Client client = ClientBuilder.newBuilder().register(MoxyJsonFeature.class).build();
 		// configure Web target
 		target = client.target(BASE_URI);
 		// insert valid token in the database
-		TokenDAO.INSTANCE.insert(AccessToken.builder()
+		TOKEN_DAO.insert(AccessToken.builder()
 				.token(token)
 				.issuedAt(System.currentTimeMillis() / 1000l)
 				.expiresIn(604800l)
@@ -111,7 +113,7 @@ public class ServiceTest {
 	@After
 	public void cleanUp() {
 		// cleanup test file-system environment
-		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);
+		deleteQuietly(TEST_OUTPUT_DIR);
 	}
 
 	@Test
@@ -122,7 +124,7 @@ public class ServiceTest {
 			Path path = TaskResource.class.getAnnotation(Path.class);			
 			final Task task = Task.builder()
 					.type(TaskType.IMPORT_SEQUENCES)
-					// TODO .ids(newArrayList("353470160", "353483325", "384562886"))
+					.ids(newArrayList("353470160", "353483325", "384562886")) // TODO 
 					.build();
 			Response response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))

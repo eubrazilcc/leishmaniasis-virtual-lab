@@ -22,6 +22,9 @@
 
 package eu.eubrazilcc.lvl.storage;
 
+import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
+import static eu.eubrazilcc.lvl.storage.mock.CloserServiceMock.CLOSER_SERVICE_MOCK;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -32,9 +35,6 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-
-import eu.eubrazilcc.lvl.core.conf.LogManager;
-import eu.eubrazilcc.lvl.storage.mock.CloserServiceMock;
 
 @RunWith(Suite.class)
 @SuiteClasses({ SequenceCollectionTest.class, TokenCollectionTest.class, AuthCodeCollectionTest.class, 
@@ -66,14 +66,14 @@ public class AllIntegrationTests {
 		}
 		System.out.println("Test resources pathname: " + TEST_RESOURCES_PATH);
 		// load logging bridges
-		LogManager.INSTANCE.preload();
+		LOG_MANAGER.preload();
 		// system pre-loading
-		CloserServiceMock.INSTANCE.preload();
+		CLOSER_SERVICE_MOCK.preload();
 	}
 
 	@AfterClass
 	public static void release() {
-		CloserServiceMock.INSTANCE.close();
+		CLOSER_SERVICE_MOCK.close();
 	}
 
 	public static String TEST_RESOURCES_PATH;

@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.shutdownAndAwaitTermination;
 import static org.slf4j.LoggerFactory.getLogger;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskUncaughtExceptionHandler.TASK_UNCAUGHT_EXCEPTION_HANDLER;
 
 import java.io.IOException;
 import java.net.URL;
@@ -49,7 +50,7 @@ import eu.eubrazilcc.lvl.core.Closeable2;
  */
 public enum TaskScheduler implements Closeable2 {
 	
-	INSTANCE;
+	TASK_SCHEDULER;
 
 	private final static Logger LOGGER = getLogger(TaskScheduler.class);
 
@@ -68,7 +69,7 @@ public enum TaskScheduler implements Closeable2 {
 				new ThreadFactoryBuilder()
 				.setNameFormat(THREAD_NAME_PATTERN)
 				.setDaemon(false)
-				.setUncaughtExceptionHandler(TaskUncaughtExceptionHandler.INSTANCE)
+				.setUncaughtExceptionHandler(TASK_UNCAUGHT_EXCEPTION_HANDLER)
 				.build());
 		scheduledThreadPoolExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
 		scheduledThreadPoolExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);

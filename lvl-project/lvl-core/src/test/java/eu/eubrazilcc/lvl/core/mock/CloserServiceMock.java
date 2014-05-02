@@ -22,6 +22,10 @@
 
 package eu.eubrazilcc.lvl.core.mock;
 
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+
 import java.io.Closeable;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -29,9 +33,6 @@ import java.util.Queue;
 import com.google.common.util.concurrent.Monitor;
 
 import eu.eubrazilcc.lvl.core.CloserServiceIf;
-import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
-import eu.eubrazilcc.lvl.core.concurrent.TaskScheduler;
-import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 
 /**
  * Close registered resources when it is closed.
@@ -39,7 +40,7 @@ import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
  */
 public enum CloserServiceMock implements CloserServiceIf {
 
-	INSTANCE;
+	CLOSER_SERVICE_MOCK;
 
 	private final Monitor monitor = new Monitor();
 
@@ -50,11 +51,11 @@ public enum CloserServiceMock implements CloserServiceIf {
 	@Override
 	public void preload() {		
 		// load default configuration
-		ConfigurationManager.INSTANCE.preload();
+		CONFIG_MANAGER.preload();
 		// register task runner for clean up (initialization will be performed as part of the 
 		// concurrency tests)
-		register(TaskRunner.INSTANCE);
-		register(TaskScheduler.INSTANCE);
+		register(TASK_RUNNER);
+		register(TASK_SCHEDULER);
 	}
 
 	@Override

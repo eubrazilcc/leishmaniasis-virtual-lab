@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.storage;
 
+import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,7 +40,6 @@ import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.geospatial.Polygon;
-import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
 
 /**
  * Tests sequence collection in the database.
@@ -66,32 +66,32 @@ public class SequenceCollectionTest {
 					.dataSource(sequence.getDataSource())
 					.accession(sequence.getAccession())
 					.build();
-			SequenceDAO.INSTANCE.insert(sequence);
+			SEQUENCE_DAO.insert(sequence);
 
 			// find
-			Sequence sequence2 = SequenceDAO.INSTANCE.find(sequenceKey);
+			Sequence sequence2 = SEQUENCE_DAO.find(sequenceKey);
 			assertThat("sequence is not null", sequence2, notNullValue());
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
 
 			// update
 			sequence.setVersion("4.0");
-			SequenceDAO.INSTANCE.update(sequence);
+			SEQUENCE_DAO.update(sequence);
 
 			// find after update
-			sequence2 = SequenceDAO.INSTANCE.find(sequenceKey);
+			sequence2 = SEQUENCE_DAO.find(sequenceKey);
 			assertThat("sequence is not null", sequence2, notNullValue());
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
 
 			// search sequences near a point and within a maximum distance
-			List<Sequence> sequences = SequenceDAO.INSTANCE.getNear(Point.builder()
+			List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
 					.coordinate(-122.90d, 38.08d).build(), 10000.0d);
 			assertThat("sequence is not null", sequences, notNullValue());
 			assertThat("ids is not empty", !sequences.isEmpty());
 
 			// search sequences within an area
-			sequences = SequenceDAO.INSTANCE.geoWithin(Polygon.builder()
+			sequences = SEQUENCE_DAO.geoWithin(Polygon.builder()
 					.coordinate(-140.0d, 30.0d)
 					.coordinate(-110.0d, 30.0d)
 					.coordinate(-110.0d, 50.0d)
@@ -101,7 +101,7 @@ public class SequenceCollectionTest {
 			assertThat("ids is not empty", !sequences.isEmpty());
 
 			// remove
-			SequenceDAO.INSTANCE.delete(sequenceKey);
+			SEQUENCE_DAO.delete(sequenceKey);
 
 			// pagination
 			final List<String> ids = Lists.newArrayList();
@@ -110,26 +110,26 @@ public class SequenceCollectionTest {
 						.dataSource(DataSource.GENBANK)
 						.accession(Integer.toString(i)).build();
 				ids.add(sequence3.getAccession());
-				SequenceDAO.INSTANCE.insert(sequence3);
+				SEQUENCE_DAO.insert(sequence3);
 			}
 			final int size = 3;
 			int start = 0;
 			sequences = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				sequences = SequenceDAO.INSTANCE.list(start, size, count);
+				sequences = SEQUENCE_DAO.list(start, size, count);
 				if (sequences.size() != 0) {
 					System.out.println("Paging " + start + " - " + sequences.size() + " of " + count.getValue());
 				}
 				start += sequences.size();
 			} while (!sequences.isEmpty());
 			for (final String id2 : ids) {			
-				SequenceDAO.INSTANCE.delete(SequenceKey.builder()
+				SEQUENCE_DAO.delete(SequenceKey.builder()
 						.dataSource(DataSource.GENBANK)
 						.accession(id2)
 						.build());
 			}
-			SequenceDAO.INSTANCE.stats(System.out);			
+			SEQUENCE_DAO.stats(System.out);			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("SequenceCollectionTest.test() failed: " + e.getMessage());

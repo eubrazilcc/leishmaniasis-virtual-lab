@@ -22,6 +22,9 @@
 
 package eu.eubrazilcc.lvl.oauth2;
 
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
@@ -87,8 +90,6 @@ import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.Users;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
 import eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider;
 
@@ -117,8 +118,8 @@ public class AuthTest {
 				builder.add(this.getClass().getResource("/config/lvl-auth.xml"));
 			}
 		}
-		ConfigurationManager.INSTANCE.setup(builder.build());
-		ConfigurationManager.INSTANCE.preload();
+		CONFIG_MANAGER.setup(builder.build());
+		CONFIG_MANAGER.preload();
 		// setup test file-system environment
 		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);
 		// prepare client
@@ -149,7 +150,7 @@ public class AuthTest {
 							.fullname("Fullname")
 							.scopes(asList(scope))
 							.build()).build();			
-			ResourceOwnerDAO.INSTANCE.insert(resourceOwner);
+			RESOURCE_OWNER_DAO.insert(resourceOwner);
 
 			// test client registration
 			URI uri = UriBuilder.fromUri(BASE_URI).path(OAuth2Registration.class).build();
@@ -434,7 +435,7 @@ public class AuthTest {
 			System.out.println("     >> Create pending user HTTP headers: " + response3.getStringHeaders());
 
 			// test user registration new user activation
-			final PendingUser pendingUser = PendingUserDAO.INSTANCE.findByEmail(user.getEmail());
+			final PendingUser pendingUser = PENDING_USER_DAO.findByEmail(user.getEmail());
 			final PendingUser pendingUser2 = PendingUser.builder()
 					.user(User.builder().email(user.getEmail()).build())
 					.activationCode(pendingUser.getActivationCode())

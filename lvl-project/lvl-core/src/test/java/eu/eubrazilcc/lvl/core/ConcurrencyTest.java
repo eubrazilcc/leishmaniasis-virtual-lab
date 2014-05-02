@@ -23,6 +23,8 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -41,9 +43,6 @@ import org.junit.Test;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableScheduledFuture;
 
-import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
-import eu.eubrazilcc.lvl.core.concurrent.TaskScheduler;
-
 public class ConcurrencyTest {
 
 	private boolean isCompleted;
@@ -56,7 +55,7 @@ public class ConcurrencyTest {
 	@After
 	public void cleanUp() throws IOException {
 		// don't close the task runner here since it will be used in other tests
-		TaskScheduler.INSTANCE.close();
+		TASK_SCHEDULER.close();
 	}
 	
 	@Test
@@ -67,7 +66,7 @@ public class ConcurrencyTest {
 
 			// test uninitialized task runner			
 			try {
-				TaskRunner.INSTANCE.submit(new Callable<String>() {
+				TASK_RUNNER.submit(new Callable<String>() {
 					@Override
 					public String call() throws Exception {
 						return success;
@@ -79,8 +78,8 @@ public class ConcurrencyTest {
 			}
 
 			// test run task
-			TaskRunner.INSTANCE.preload();
-			final ListenableFuture<String> future = TaskRunner.INSTANCE.submit(new Callable<String>() {
+			TASK_RUNNER.preload();
+			final ListenableFuture<String> future = TASK_RUNNER.submit(new Callable<String>() {
 				@Override
 				public String call() throws Exception {
 					return success;
@@ -94,7 +93,7 @@ public class ConcurrencyTest {
 
 			// test uninitialized task scheduler
 			try {
-				TaskScheduler.INSTANCE.scheduleAtFixedRate(new Runnable() {					
+				TASK_SCHEDULER.scheduleAtFixedRate(new Runnable() {					
 					@Override
 					public void run() {
 						System.out.println(" >> Scheluded job runs");
@@ -106,8 +105,8 @@ public class ConcurrencyTest {
 			}
 
 			// test schedule task
-			TaskScheduler.INSTANCE.preload();
-			final ListenableScheduledFuture<?> future2 = TaskScheduler.INSTANCE.scheduleAtFixedRate(new Runnable() {					
+			TASK_SCHEDULER.preload();
+			final ListenableScheduledFuture<?> future2 = TASK_SCHEDULER.scheduleAtFixedRate(new Runnable() {					
 				@Override
 				public void run() {
 					System.out.println(" >> Scheluded job runs");

@@ -22,6 +22,11 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.AuthCodeDAO.AUTH_CODE_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO.CLIENT_APP_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
+
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,10 +53,6 @@ import org.apache.oltu.oauth2.common.message.types.GrantType;
 import eu.eubrazilcc.lvl.core.servlet.OAuth2RequestWrapper;
 import eu.eubrazilcc.lvl.oauth2.security.OAuth2TokenGenerator;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.AuthCodeDAO;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
 /**
@@ -82,7 +83,7 @@ public class OAuth2Token {
 			String scope = null;
 
 			// check if client id is valid
-			if (!ClientAppDAO.INSTANCE.isValid(oauthRequest.getClientId())) {
+			if (!CLIENT_APP_DAO.isValid(oauthRequest.getClientId())) {
 				final OAuthResponse response = OAuthASResponse
 						.errorResponse(HttpServletResponse.SC_BAD_REQUEST)
 						.setError(OAuthError.TokenResponse.INVALID_CLIENT)
@@ -92,7 +93,7 @@ public class OAuth2Token {
 			}			
 
 			// check if client secret is valid
-			if (!ClientAppDAO.INSTANCE.isValid(oauthRequest.getClientId(), oauthRequest.getClientSecret())) {
+			if (!CLIENT_APP_DAO.isValid(oauthRequest.getClientId(), oauthRequest.getClientSecret())) {
 				final OAuthResponse response = OAuthASResponse
 						.errorResponse(HttpServletResponse.SC_UNAUTHORIZED)
 						.setError(OAuthError.TokenResponse.UNAUTHORIZED_CLIENT)
@@ -103,7 +104,7 @@ public class OAuth2Token {
 
 			// do checking for different grant types
 			if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.AUTHORIZATION_CODE.toString())) {
-				if (!AuthCodeDAO.INSTANCE.isValid(oauthRequest.getParam(OAuth.OAUTH_CODE))) {
+				if (!AUTH_CODE_DAO.isValid(oauthRequest.getParam(OAuth.OAUTH_CODE))) {
 					final OAuthResponse response = OAuthASResponse
 							.errorResponse(HttpServletResponse.SC_BAD_REQUEST)
 							.setError(OAuthError.TokenResponse.INVALID_GRANT)
@@ -113,7 +114,7 @@ public class OAuth2Token {
 				}
 			} else if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.PASSWORD.toString())) {
 				final AtomicReference<String> scopeRef = new AtomicReference<String>();
-				if (!ResourceOwnerDAO.INSTANCE.isValid(oauthRequest.getUsername(), oauthRequest.getUsername(), oauthRequest.getPassword(), 
+				if (!RESOURCE_OWNER_DAO.isValid(oauthRequest.getUsername(), oauthRequest.getUsername(), oauthRequest.getPassword(), 
 						"true".equalsIgnoreCase(oauthRequest.getParam(USE_EMAIL)), scopeRef)) {
 					final OAuthResponse response = OAuthASResponse
 							.errorResponse(HttpServletResponse.SC_BAD_REQUEST)
@@ -149,7 +150,7 @@ public class OAuth2Token {
 					.expiresIn(TOKEN_EXPIRATION_SECONDS)
 					.scope(ScopeManager.asList(scope))
 					.build();
-			TokenDAO.INSTANCE.insert(accessToken);
+			TOKEN_DAO.insert(accessToken);
 
 			final OAuthResponse response = OAuthASResponse
 					.tokenResponse(HttpServletResponse.SC_OK)

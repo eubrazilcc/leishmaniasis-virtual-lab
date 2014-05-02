@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
+import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -59,7 +60,6 @@ import eu.eubrazilcc.lvl.core.geospatial.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
-import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 
 /**
@@ -95,7 +95,7 @@ public class SequenceResource {
 				.queryParam("size", "{size}");
 		// get sequences from database
 		final MutableLong count = new MutableLong(0l);
-		final List<Sequence> sequences = SequenceDAO.INSTANCE.baseUri(uriInfo.getAbsolutePath()).list(start, size, count);
+		final List<Sequence> sequences = SEQUENCE_DAO.baseUri(uriInfo.getAbsolutePath()).list(start, size, count);
 		final int total = ((Long)count.getValue()).intValue();
 		// previous link
 		final Paginable paginable = new Paginable();
@@ -129,7 +129,7 @@ public class SequenceResource {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final Sequence sequence = SequenceDAO.INSTANCE
+		final Sequence sequence = SEQUENCE_DAO
 				.baseUri(uriInfo.getBaseUri())
 				.find(SequenceKey.builder().parse(id, ID_SEPARATOR));
 		if (sequence == null) {
@@ -147,7 +147,7 @@ public class SequenceResource {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// create sequence in the database
-		SequenceDAO.INSTANCE.insert(sequence);
+		SEQUENCE_DAO.insert(sequence);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sequence.getAccession());		
 		return Response.created(uriBuilder.build()).build();
 	}
@@ -167,12 +167,12 @@ public class SequenceResource {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final Sequence current = SequenceDAO.INSTANCE.find(sequenceKey);
+		final Sequence current = SEQUENCE_DAO.find(sequenceKey);
 		if (current == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		// update
-		SequenceDAO.INSTANCE.update(update);			
+		SEQUENCE_DAO.update(update);			
 	}
 
 	@DELETE
@@ -185,12 +185,12 @@ public class SequenceResource {
 		}
 		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_SEPARATOR);
 		// get from database
-		final Sequence current = SequenceDAO.INSTANCE.find(sequenceKey);
+		final Sequence current = SEQUENCE_DAO.find(sequenceKey);
 		if (current == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		// delete
-		SequenceDAO.INSTANCE.delete(sequenceKey);
+		SEQUENCE_DAO.delete(sequenceKey);
 	}
 
 	@GET
@@ -203,7 +203,7 @@ public class SequenceResource {
 			final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		// get from database
-		final List<Sequence> sequences = SequenceDAO.INSTANCE.getNear(Point.builder()
+		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
 				.coordinate(longitude, latitude).build(), maxDistance);
 		final FeatureCollection.Builder builder = FeatureCollection.builder().wgs84();
 		for (final Sequence sequence : sequences) {

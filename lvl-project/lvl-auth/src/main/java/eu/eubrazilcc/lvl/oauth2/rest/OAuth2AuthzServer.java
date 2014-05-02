@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.AuthCodeDAO.AUTH_CODE_DAO;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -45,7 +47,6 @@ import org.apache.oltu.oauth2.common.utils.OAuthUtils;
 
 import eu.eubrazilcc.lvl.oauth2.security.OAuth2TokenGenerator;
 import eu.eubrazilcc.lvl.storage.oauth2.AuthCode;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.AuthCodeDAO;
 
 /**
  * Implements the OAuth 2.0 End User Authorization Endpoint using Apache Oltu.
@@ -77,7 +78,7 @@ public class OAuth2AuthzServer {
 				final AuthCode authCode = AuthCode.builder()
 						.code(oauthIssuerImpl.authorizationCode())
 						.build();
-				AuthCodeDAO.INSTANCE.insert(authCode);
+				AUTH_CODE_DAO.insert(authCode);
 				builder.setCode(authCode.getCode());
 			}
 			if (responseType.equals(ResponseType.TOKEN.toString())) {
@@ -86,7 +87,7 @@ public class OAuth2AuthzServer {
 						.issuedAt(System.currentTimeMillis() / 1000l)
 						.expiresIn(ACCESS_TOKEN_EXPIRATION_SECONDS)
 						.build();
-				AuthCodeDAO.INSTANCE.insert(accessToken);
+				AUTH_CODE_DAO.insert(accessToken);
 				builder.setAccessToken(accessToken.getCode());
 				builder.setExpiresIn(accessToken.getExpiresIn());
 			}

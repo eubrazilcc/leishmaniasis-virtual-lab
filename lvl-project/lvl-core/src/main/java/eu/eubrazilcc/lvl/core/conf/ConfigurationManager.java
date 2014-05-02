@@ -74,7 +74,7 @@ import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
  */
 public enum ConfigurationManager implements Closeable2 {
 
-	INSTANCE;
+	CONFIG_MANAGER;
 
 	private final static Logger LOGGER = getLogger(ConfigurationManager.class);
 

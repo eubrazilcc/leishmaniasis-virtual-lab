@@ -29,7 +29,7 @@ package eu.eubrazilcc.lvl.service;
  */
 public enum SingletonService {
 
-	INSTANCE;
+	LVL_SERVICE;
 
 	private LeishVirtLabService service = null;
 

@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.service.io;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.ImmutableList.of;
+import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.List;
@@ -33,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
-import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
 
 /**
  * Implements a {@link SequenceFilter} that filters out the sequences that are already stored 
@@ -59,7 +59,7 @@ public class DbNotFoundSequenceFilter implements SequenceFilter {
 	@Override
 	public String filterById(final String id) {
 		checkArgument(isNotBlank(id), "Uninitialized or invalid identifier");
-		return SequenceDAO.INSTANCE.find(SequenceKey.builder()
+		return SEQUENCE_DAO.find(SequenceKey.builder()
 				.dataSource(DataSource.GENBANK)
 				.accession(id)
 				.build()) == null ? id : null;

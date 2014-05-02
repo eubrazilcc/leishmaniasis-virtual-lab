@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -57,7 +58,6 @@ import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.TransientStore;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 
 /**
  * Sequence DAO.
@@ -65,7 +65,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
  */
 public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
-	INSTANCE;
+	SEQUENCE_DAO;
 
 	public static final String COLLECTION = "sequences";
 	public static final String PRIMARY_KEY_PART1 = "sequence.dataSource";
@@ -77,8 +77,8 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	private URI baseUri = null;
 
 	private SequenceDAO() {
-		MongoDBConnector.INSTANCE.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
-		MongoDBConnector.INSTANCE.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
+		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
+		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
 		morphia.map(SequenceEntity.class);
 	}
 
@@ -92,7 +92,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		// remove transient fields from the element before saving it to the database
 		final SequenceTransientStore store = SequenceTransientStore.start(sequence);
 		final DBObject obj = morphia.toDBObject(new SequenceEntity(store.purge()));
-		final String id = MongoDBConnector.INSTANCE.insert(obj, COLLECTION);
+		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
 		return id;
@@ -103,7 +103,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		// remove transient fields from the element before saving it to the database
 		final SequenceTransientStore store = SequenceTransientStore.start(sequence);
 		final DBObject obj = morphia.toDBObject(new SequenceEntity(store.purge()));
-		MongoDBConnector.INSTANCE.update(obj, key(SequenceKey.builder()
+		MONGODB_CONN.update(obj, key(SequenceKey.builder()
 				.dataSource(sequence.getDataSource())
 				.accession(sequence.getAccession())
 				.build()), COLLECTION);
@@ -113,7 +113,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	@Override
 	public void delete(final SequenceKey sequenceKey) {
-		MongoDBConnector.INSTANCE.remove(key(sequenceKey), COLLECTION);
+		MONGODB_CONN.remove(key(sequenceKey), COLLECTION);
 	}
 
 	@Override
@@ -123,13 +123,13 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	@Override
 	public Sequence find(final SequenceKey sequenceKey) {
-		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(key(sequenceKey), COLLECTION);
+		final BasicDBObject obj = MONGODB_CONN.get(key(sequenceKey), COLLECTION);
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
 	public List<Sequence> list(final int start, final int size, final @Nullable MutableLong count) {
-		return transform(MongoDBConnector.INSTANCE.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, Sequence>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, Sequence>() {
 			@Override
 			public Sequence apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);
@@ -139,13 +139,13 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	@Override
 	public long count() {
-		return MongoDBConnector.INSTANCE.count(COLLECTION);
+		return MONGODB_CONN.count(COLLECTION);
 	}
 
 	@Override
 	public List<Sequence> getNear(final Point point, final double maxDistance) {
 		final List<Sequence> sequences = newArrayList();
-		final BasicDBList list = MongoDBConnector.INSTANCE.geoNear(COLLECTION, point.getCoordinates()[0], 
+		final BasicDBList list = MONGODB_CONN.geoNear(COLLECTION, point.getCoordinates()[0], 
 				point.getCoordinates()[1], maxDistance);
 		for (int i = 0; i < list.size(); i++) {
 			sequences.add(parseObject(list.get(i)));
@@ -155,7 +155,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	@Override
 	public List<Sequence> geoWithin(final Polygon polygon) {
-		return transform(MongoDBConnector.INSTANCE.geoWithin(GEOLOCATION_KEY, COLLECTION, polygon), new Function<BasicDBObject, Sequence>() {
+		return transform(MONGODB_CONN.geoWithin(GEOLOCATION_KEY, COLLECTION, polygon), new Function<BasicDBObject, Sequence>() {
 			@Override
 			public Sequence apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
@@ -165,7 +165,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	@Override
 	public void stats(final OutputStream os) throws IOException {
-		MongoDBConnector.INSTANCE.stats(os, COLLECTION);
+		MONGODB_CONN.stats(os, COLLECTION);
 	}
 
 	private BasicDBObject key(final SequenceKey key) {

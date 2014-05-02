@@ -30,6 +30,7 @@ import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.toMap;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -69,7 +70,6 @@ import com.mongodb.WriteConcern;
 import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
-import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 
 /**
@@ -79,7 +79,7 @@ import eu.eubrazilcc.lvl.core.geospatial.Polygon;
  */
 public enum MongoDBConnector implements Closeable2 {
 
-	INSTANCE;
+	MONGODB_CONN;
 
 	private final static Logger LOGGER = getLogger(MongoDBConnector.class);
 
@@ -94,7 +94,7 @@ public enum MongoDBConnector implements Closeable2 {
 						.readPreference(ReadPreference.nearest())
 						.writeConcern(WriteConcern.ACKNOWLEDGED).build();
 				final Splitter splitter = on(':').trimResults().omitEmptyStrings().limit(2);
-				final List<ServerAddress> seeds = from(ConfigurationManager.INSTANCE.getDbHosts()).transform(new Function<String, ServerAddress>() {						
+				final List<ServerAddress> seeds = from(CONFIG_MANAGER.getDbHosts()).transform(new Function<String, ServerAddress>() {						
 					@Override
 					public ServerAddress apply(final String entry) {
 						ServerAddress seed = null;						
@@ -119,9 +119,9 @@ public enum MongoDBConnector implements Closeable2 {
 				}).filter(notNull()).toList();
 				// enable/disable authentication (requires MongoDB server to be configured to support authentication)
 				final List<MongoCredential> credentials = newArrayList();
-				if (!ConfigurationManager.INSTANCE.isAnonymousDbAccess()) {
-					credentials.add(createMongoCRCredential(ConfigurationManager.INSTANCE.getDbUsername(), 
-							ConfigurationManager.INSTANCE.getDbName(), ConfigurationManager.INSTANCE.getDbPassword().toCharArray()));
+				if (!CONFIG_MANAGER.isAnonymousDbAccess()) {
+					credentials.add(createMongoCRCredential(CONFIG_MANAGER.getDbUsername(), 
+							CONFIG_MANAGER.getDbName(), CONFIG_MANAGER.getDbPassword().toCharArray()));
 				}
 				__client = new MongoClient(seeds, credentials, options);
 			}
@@ -173,7 +173,7 @@ public enum MongoDBConnector implements Closeable2 {
 	public void createIndex(final List<String> fields, final String collection, final boolean descending) {
 		checkArgument(fields != null && !fields.isEmpty(), "Uninitialized or invalid fields");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
@@ -197,7 +197,7 @@ public enum MongoDBConnector implements Closeable2 {
 	public void createGeospatialIndex(final String field, final String collection) {
 		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
@@ -217,7 +217,7 @@ public enum MongoDBConnector implements Closeable2 {
 	public String insert(final DBObject obj, final String collection) {
 		checkArgument(obj != null, "Uninitialized object");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
@@ -238,7 +238,7 @@ public enum MongoDBConnector implements Closeable2 {
 	public BasicDBObject get(final DBObject query, final String collection) {
 		checkArgument(query != null, "Uninitialized query");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
@@ -265,7 +265,7 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(sortCriteria != null, "Uninitialized sort criteria");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final List<BasicDBObject> list = newArrayList();
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
@@ -296,7 +296,7 @@ public enum MongoDBConnector implements Closeable2 {
 	 */
 	public long count(final String collection) {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
@@ -322,7 +322,7 @@ public enum MongoDBConnector implements Closeable2 {
 	public BasicDBList geoNear(final String collection, final double longitude, final double latitude, 
 			final double maxDistance) {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
@@ -346,7 +346,7 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		checkArgument(polygon != null, "Uninitialized polygon");
 		final List<BasicDBObject> list = newArrayList();
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
@@ -378,7 +378,7 @@ public enum MongoDBConnector implements Closeable2 {
 	public void update(final DBObject obj, final DBObject query, final String collection) {
 		checkArgument(obj != null, "Uninitialized object");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
@@ -399,7 +399,7 @@ public enum MongoDBConnector implements Closeable2 {
 	public void remove(final DBObject query, final String collection) {
 		checkArgument(query != null, "Uninitialized query");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {
@@ -419,7 +419,7 @@ public enum MongoDBConnector implements Closeable2 {
 	public void stats(final OutputStream os, final String collection) throws IOException {
 		checkArgument(os != null, "Uninitialized output stream");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
-		final DB db = client().getDB(ConfigurationManager.INSTANCE.getDbName());
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		db.requestStart();
 		try {

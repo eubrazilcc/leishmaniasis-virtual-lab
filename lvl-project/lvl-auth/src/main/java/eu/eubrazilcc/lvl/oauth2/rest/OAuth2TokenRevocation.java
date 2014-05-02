@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO.CLIENT_APP_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import javax.servlet.http.HttpServletRequest;
@@ -42,8 +44,6 @@ import org.apache.oltu.oauth2.common.message.OAuthResponse;
 
 import eu.eubrazilcc.lvl.core.servlet.OAuth2RequestWrapper;
 import eu.eubrazilcc.lvl.oauth2.revocation.OAuthTokenRevocationRequest;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO;
 
 /**
  * Implements the OAuth 2.0 Token Endpoint. This functionality is not supported natively by 
@@ -66,7 +66,7 @@ public class OAuth2TokenRevocation {
 			final OAuthTokenRevocationRequest oauthRequest = new OAuthTokenRevocationRequest(new OAuth2RequestWrapper(request, form, null));			
 
 			// check if client id is valid
-			if (!ClientAppDAO.INSTANCE.isValid(oauthRequest.getClientId())) {
+			if (!CLIENT_APP_DAO.isValid(oauthRequest.getClientId())) {
 				final OAuthResponse response = OAuthASResponse
 						.errorResponse(HttpServletResponse.SC_BAD_REQUEST)
 						.setError(OAuthError.TokenResponse.INVALID_CLIENT)
@@ -76,7 +76,7 @@ public class OAuth2TokenRevocation {
 			}
 
 			// check if client secret is valid
-			if (!ClientAppDAO.INSTANCE.isValid(oauthRequest.getClientId(), oauthRequest.getClientSecret())) {
+			if (!CLIENT_APP_DAO.isValid(oauthRequest.getClientId(), oauthRequest.getClientSecret())) {
 				final OAuthResponse response = OAuthASResponse
 						.errorResponse(HttpServletResponse.SC_UNAUTHORIZED)
 						.setError(OAuthError.TokenResponse.UNAUTHORIZED_CLIENT)
@@ -88,7 +88,7 @@ public class OAuth2TokenRevocation {
 			// do revoking for different token types
 			if (isEmpty(oauthRequest.getParam(OAuthTokenRevocationRequest.TOKEN_TYPE_HINT)) 
 					|| oauthRequest.getParam(OAuthTokenRevocationRequest.TOKEN_TYPE_HINT).equals(OAuthTokenRevocationRequest.ACCESS_TOKEN)) {
-				TokenDAO.INSTANCE.delete(oauthRequest.getParam(OAuthTokenRevocationRequest.TOKEN));
+				TOKEN_DAO.delete(oauthRequest.getParam(OAuthTokenRevocationRequest.TOKEN));
 			} else if (oauthRequest.getParam(OAuthTokenRevocationRequest.TOKEN_TYPE_HINT).equals(OAuthTokenRevocationRequest.REFRESH_TOKEN)) {
 				// refresh token is not supported in this implementation
 				final OAuthResponse response = OAuthASResponse

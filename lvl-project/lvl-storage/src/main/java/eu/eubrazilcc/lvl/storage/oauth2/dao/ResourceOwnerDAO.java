@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asOAuthString;
@@ -61,7 +62,6 @@ import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.gravatar.Gravatar;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 
@@ -71,7 +71,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.User;
  */
 public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
-	INSTANCE;
+	RESOURCE_OWNER_DAO;
 
 	public static final String COLLECTION  = "resource_owners";
 	public static final String PRIMARY_KEY = "resourceOwner.ownerId";
@@ -87,8 +87,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	private boolean useGravatar;
 
 	private ResourceOwnerDAO() {
-		MongoDBConnector.INSTANCE.createIndex(PRIMARY_KEY, COLLECTION);
-		MongoDBConnector.INSTANCE.createIndex(EMAIL_KEY, COLLECTION);
+		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
+		MONGODB_CONN.createIndex(EMAIL_KEY, COLLECTION);
 		morphia.map(ResourceOwnerEntity.class);
 		// reset parameters to their default values
 		reset();
@@ -128,7 +128,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		// remove transient fields from the element before saving it to the database
 		final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
 		final DBObject obj = morphia.toDBObject(new ResourceOwnerEntity(store.purge()));
-		final String id = MongoDBConnector.INSTANCE.insert(obj, COLLECTION);
+		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
 		return id;
@@ -139,14 +139,14 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		// remove transient fields from the element before saving it to the database
 		final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
 		final DBObject obj = morphia.toDBObject(new ResourceOwnerEntity(store.purge()));
-		MongoDBConnector.INSTANCE.update(obj, key(resourceOwner.getOwnerId()), COLLECTION);
+		MONGODB_CONN.update(obj, key(resourceOwner.getOwnerId()), COLLECTION);
 		// restore transient fields
 		store.restore();
 	}
 
 	@Override
 	public void delete(final String resourceOwnerId) {
-		MongoDBConnector.INSTANCE.remove(key(resourceOwnerId), COLLECTION);
+		MONGODB_CONN.remove(key(resourceOwnerId), COLLECTION);
 	}
 
 	@Override
@@ -156,13 +156,13 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	@Override
 	public ResourceOwner find(final String ownerId) {
-		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(key(ownerId), COLLECTION);		
+		final BasicDBObject obj = MONGODB_CONN.get(key(ownerId), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
 	public List<ResourceOwner> list(final int start, final int size, final @Nullable MutableLong count) {
-		return transform(MongoDBConnector.INSTANCE.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, ResourceOwner>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, ResourceOwner>() {
 			@Override
 			public ResourceOwner apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
@@ -172,7 +172,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	@Override
 	public long count() {
-		return MongoDBConnector.INSTANCE.count(COLLECTION);
+		return MONGODB_CONN.count(COLLECTION);
 	}
 
 	@Override
@@ -187,7 +187,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	@Override
 	public void stats(final OutputStream os) throws IOException {
-		MongoDBConnector.INSTANCE.stats(os, COLLECTION);
+		MONGODB_CONN.stats(os, COLLECTION);
 	}
 
 	private BasicDBObject key(final String key) {
@@ -256,7 +256,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 *         the database, or {@code null} if the database contains no entry for the email
 	 */
 	public ResourceOwner findByEmail(final String email) {
-		final BasicDBObject obj = MongoDBConnector.INSTANCE.get(emailKey(email), COLLECTION);		
+		final BasicDBObject obj = MONGODB_CONN.get(emailKey(email), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 

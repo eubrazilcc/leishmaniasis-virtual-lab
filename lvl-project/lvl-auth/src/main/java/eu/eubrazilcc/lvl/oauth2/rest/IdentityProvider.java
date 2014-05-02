@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.oauth2.rest;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.inherit;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -60,7 +61,6 @@ import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.Users;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer;
 import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.AnonymizationLevel;
@@ -90,7 +90,7 @@ public class IdentityProvider {
 				.queryParam("size", "{size}");
 		// get sequences from database
 		final MutableLong count = new MutableLong(0l);
-		final List<ResourceOwner> owners = ResourceOwnerDAO.INSTANCE.baseUri(uriInfo.getAbsolutePath()).useGravatar(true).list(start, size, count);
+		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.baseUri(uriInfo.getAbsolutePath()).useGravatar(true).list(start, size, count);
 		final int total = ((Long)count.getValue()).intValue();
 		// previous link
 		final Paginable paginable = new Paginable();
@@ -127,8 +127,8 @@ public class IdentityProvider {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get effective user (this is an exception since we always want to check authorization before)
-		final ResourceOwner owner = (!useEmail ? ResourceOwnerDAO.INSTANCE.baseUri(uriInfo.getBaseUri()).useGravatar(true).find(id)
-				: ResourceOwnerDAO.INSTANCE.baseUri(uriInfo.getBaseUri()).useGravatar(true).findByEmail(id));
+		final ResourceOwner owner = (!useEmail ? RESOURCE_OWNER_DAO.baseUri(uriInfo.getBaseUri()).useGravatar(true).find(id)
+				: RESOURCE_OWNER_DAO.baseUri(uriInfo.getBaseUri()).useGravatar(true).findByEmail(id));
 		if (owner == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
@@ -147,7 +147,7 @@ public class IdentityProvider {
 		}
 		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, user.getUsername()), true, RESOURCE_NAME);
 		// create user in the database
-		ResourceOwnerDAO.INSTANCE.insert(ResourceOwner.builder().id(user.getUsername()).user(user).build());
+		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder().id(user.getUsername()).user(user).build());
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(user.getUsername());		
 		return Response.created(uriBuilder.build()).build();
 	}
@@ -162,12 +162,12 @@ public class IdentityProvider {
 		}
 		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, RESOURCE_NAME);
 		// get from database
-		final ResourceOwner current = ResourceOwnerDAO.INSTANCE.find(id);
+		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		// update
-		ResourceOwnerDAO.INSTANCE.update(ResourceOwner.builder().id(update.getUsername()).user(update).build());			
+		RESOURCE_OWNER_DAO.update(ResourceOwner.builder().id(update.getUsername()).user(update).build());			
 	}
 
 	@DELETE
@@ -179,12 +179,12 @@ public class IdentityProvider {
 		}
 		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, RESOURCE_NAME);
 		// get from database
-		final ResourceOwner current = ResourceOwnerDAO.INSTANCE.find(id);
+		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		// delete
-		ResourceOwnerDAO.INSTANCE.delete(id);
+		RESOURCE_OWNER_DAO.delete(id);
 	}
 
 }

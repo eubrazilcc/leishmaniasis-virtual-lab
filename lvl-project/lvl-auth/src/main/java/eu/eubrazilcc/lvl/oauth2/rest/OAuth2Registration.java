@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO.CLIENT_APP_DAO;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -40,7 +42,6 @@ import org.apache.oltu.oauth2.ext.dynamicreg.server.response.OAuthServerRegistra
 
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
 import eu.eubrazilcc.lvl.storage.oauth2.ClientApp;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO;
 import eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider;
 
 /**
@@ -77,7 +78,7 @@ public class OAuth2Registration {
 					.issuedAt(System.currentTimeMillis() / 1000l)
 					.expiresIn(REGISTRATION_EXPIRATION_SECONDS)
 					.build();
-			ClientAppDAO.INSTANCE.insert(clientApp);
+			CLIENT_APP_DAO.insert(clientApp);
 
 			final OAuthResponse response = OAuthServerRegistrationResponse
 					.status(HttpServletResponse.SC_OK)

@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,7 +36,6 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO;
 
 /**
  * Tests OAuth2 access token collection in the database.
@@ -55,50 +55,50 @@ public class TokenCollectionTest {
 					.expiresIn(23l)
 					.scope(scopes)
 					.build();
-			TokenDAO.INSTANCE.insert(accessToken);
+			TOKEN_DAO.insert(accessToken);
 			// find
-			AccessToken accessToken2 = TokenDAO.INSTANCE.find(accessToken.getToken());
+			AccessToken accessToken2 = TOKEN_DAO.find(accessToken.getToken());
 			assertThat("access token is not null", accessToken2, notNullValue());
 			assertThat("access token coincides with original", accessToken2, equalTo(accessToken));
 			System.out.println(accessToken2.toString());
 			// update
 			accessToken.setExpiresIn(604800l);
-			TokenDAO.INSTANCE.update(accessToken);
+			TOKEN_DAO.update(accessToken);
 			// find after update
-			accessToken2 = TokenDAO.INSTANCE.find(accessToken.getToken());
+			accessToken2 = TOKEN_DAO.find(accessToken.getToken());
 			assertThat("access token is not null", accessToken2, notNullValue());
 			assertThat("access token coincides with original", accessToken2, equalTo(accessToken));
 			System.out.println(accessToken2.toString());
 			// check validity
-			boolean validity = TokenDAO.INSTANCE.isValid(accessToken.getToken());
+			boolean validity = TOKEN_DAO.isValid(accessToken.getToken());
 			assertThat("access token is valid", validity);
-			validity = TokenDAO.INSTANCE.isValid(accessToken.getToken(), "scope2", false);
+			validity = TOKEN_DAO.isValid(accessToken.getToken(), "scope2", false);
 			assertThat("access token is valid using target scope", validity);
 			// remove
-			TokenDAO.INSTANCE.delete(accessToken.getToken());
+			TOKEN_DAO.delete(accessToken.getToken());
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {
 				final AccessToken accessToken3 = AccessToken.builder()
 						.token(Integer.toString(i)).build();
 				ids.add(accessToken3.getToken());
-				TokenDAO.INSTANCE.insert(accessToken3);
+				TOKEN_DAO.insert(accessToken3);
 			}
 			final int size = 3;
 			int start = 0;
 			List<AccessToken> accessTokens = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				accessTokens = TokenDAO.INSTANCE.list(start, size, count);
+				accessTokens = TOKEN_DAO.list(start, size, count);
 				if (accessTokens.size() != 0) {
 					System.out.println("Paging " + start + " - " + accessTokens.size() + " of " + count.getValue());
 				}
 				start += accessTokens.size();
 			} while (!accessTokens.isEmpty());
 			for (final String id2 : ids) {			
-				TokenDAO.INSTANCE.delete(id2);
+				TOKEN_DAO.delete(id2);
 			}
-			TokenDAO.INSTANCE.stats(System.out);
+			TOKEN_DAO.stats(System.out);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("TokenCollectionTest.test() failed: " + e.getMessage());

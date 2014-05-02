@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.core.geocoding;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -46,7 +47,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 
 /**
@@ -70,7 +70,7 @@ public final class GeocodingHelper {
 				}
 				@Override
 				public ListenableFuture<Point> reload(final String key, final Point oldValue) throws Exception {
-					return TaskRunner.INSTANCE.submit(new Callable<Point>() {
+					return TASK_RUNNER.submit(new Callable<Point>() {
 						public Point call() {
 							return geocodeFromGoogle(key);
 						}

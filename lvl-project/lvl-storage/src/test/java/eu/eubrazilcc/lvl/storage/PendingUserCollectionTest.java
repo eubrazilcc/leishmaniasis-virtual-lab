@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -36,7 +37,6 @@ import org.junit.Test;
 
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO;
 
 /**
  * Tests pending user collection in the database.
@@ -62,40 +62,40 @@ public class PendingUserCollectionTest {
 							.fullname("Fullname")
 							.scopes(scopes)
 							.build()).build();
-			PendingUserDAO.INSTANCE.insert(pendingUser);
+			PENDING_USER_DAO.insert(pendingUser);
 			
 			// find
-			PendingUser pendingUser2 = PendingUserDAO.INSTANCE.find(pendingUser.getPendingUserId());
+			PendingUser pendingUser2 = PENDING_USER_DAO.find(pendingUser.getPendingUserId());
 			assertThat("pending user is not null", pendingUser2, notNullValue());
 			assertThat("pending user coincides with original", pendingUser2, equalTo(pendingUser));
 			System.out.println(pendingUser2.toString());
 			
 			// update
 			pendingUser.getUser().setPassword("new_password");
-			PendingUserDAO.INSTANCE.update(pendingUser);
+			PENDING_USER_DAO.update(pendingUser);
 			
 			// find after update
-			pendingUser2 = PendingUserDAO.INSTANCE.find(pendingUser.getPendingUserId());
+			pendingUser2 = PENDING_USER_DAO.find(pendingUser.getPendingUserId());
 			assertThat("pending user is not null", pendingUser2, notNullValue());
 			assertThat("pending user coincides with original", pendingUser2, equalTo(pendingUser));
 			System.out.println(pendingUser2.toString());
 			
 			// check validity using pending user Id and username
-			boolean validity = PendingUserDAO.INSTANCE.isValid(pendingUser.getPendingUserId(), 
+			boolean validity = PENDING_USER_DAO.isValid(pendingUser.getPendingUserId(), 
 					pendingUser.getUser().getUsername(), 
 					pendingUser.getActivationCode(), 
 					false);
 			assertThat("pending user is valid (using owner Id & username)", validity);
 
 			// check validity using email address
-			validity = PendingUserDAO.INSTANCE.isValid(null, 
+			validity = PENDING_USER_DAO.isValid(null, 
 					pendingUser.getUser().getEmail(), 
 					pendingUser.getActivationCode(), 
 					true);
 			assertThat("pending user is valid (using email)", validity);			
 
 			// remove
-			PendingUserDAO.INSTANCE.delete(pendingUser.getPendingUserId());
+			PENDING_USER_DAO.delete(pendingUser.getPendingUserId());
 
 			// pagination
 			final List<String> ids = newArrayList();
@@ -113,23 +113,23 @@ public class PendingUserCollectionTest {
 								.scopes(scopes)
 								.build()).build();								
 				ids.add(pendingUser3.getPendingUserId());
-				PendingUserDAO.INSTANCE.insert(pendingUser3);
+				PENDING_USER_DAO.insert(pendingUser3);
 			}
 			final int size = 3;
 			int start = 0;
 			List<PendingUser> pendingUsers = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				pendingUsers = PendingUserDAO.INSTANCE.list(start, size, count);
+				pendingUsers = PENDING_USER_DAO.list(start, size, count);
 				if (pendingUsers.size() != 0) {
 					System.out.println("Paging " + start + " - " + pendingUsers.size() + " of " + count.getValue());
 				}
 				start += pendingUsers.size();
 			} while (!pendingUsers.isEmpty());
 			for (final String id2 : ids) {			
-				PendingUserDAO.INSTANCE.delete(id2);
+				PENDING_USER_DAO.delete(id2);
 			}
-			PendingUserDAO.INSTANCE.stats(System.out);
+			PENDING_USER_DAO.stats(System.out);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("PendingUserCollectionTest.test() failed: " + e.getMessage());

@@ -35,7 +35,7 @@ import org.slf4j.Logger;
  */
 public enum TaskUncaughtExceptionHandler implements UncaughtExceptionHandler {
 
-	INSTANCE;
+	TASK_UNCAUGHT_EXCEPTION_HANDLER;
 	
 	private final static Logger LOGGER = getLogger(TaskUncaughtExceptionHandler.class);
 	

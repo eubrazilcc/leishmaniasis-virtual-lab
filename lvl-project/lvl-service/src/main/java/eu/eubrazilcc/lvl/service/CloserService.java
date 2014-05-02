@@ -22,7 +22,11 @@
 
 package eu.eubrazilcc.lvl.service;
 
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.findConfigurationFiles;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 
 import java.io.Closeable;
 import java.util.LinkedList;
@@ -31,10 +35,6 @@ import java.util.Queue;
 import com.google.common.util.concurrent.Monitor;
 
 import eu.eubrazilcc.lvl.core.CloserServiceIf;
-import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
-import eu.eubrazilcc.lvl.core.concurrent.TaskScheduler;
-import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
 
 /**
  * Close registered resources when it is closed.
@@ -42,7 +42,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector;
  */
 public enum CloserService implements CloserServiceIf {
 
-	INSTANCE;
+	CLOSER_SERVICE;
 
 	private final Monitor monitor = new Monitor();
 
@@ -53,16 +53,16 @@ public enum CloserService implements CloserServiceIf {
 	@Override
 	public void preload() {		
 		// load configuration
-		ConfigurationManager.INSTANCE.setup(findConfigurationFiles());
-		ConfigurationManager.INSTANCE.preload();
+		CONFIG_MANAGER.setup(findConfigurationFiles());
+		CONFIG_MANAGER.preload();
 		// load task runner and task scheduler
-		TaskRunner.INSTANCE.preload();
-		register(TaskRunner.INSTANCE);
-		TaskScheduler.INSTANCE.preload();
-		register(TaskScheduler.INSTANCE);
+		TASK_RUNNER.preload();
+		register(TASK_RUNNER);
+		TASK_SCHEDULER.preload();
+		register(TASK_SCHEDULER);
 		// load MongoDB connector and register it for closing
-		MongoDBConnector.INSTANCE.preload();
-		register(MongoDBConnector.INSTANCE);
+		MONGODB_CONN.preload();
+		register(MONGODB_CONN);
 	}
 
 	@Override

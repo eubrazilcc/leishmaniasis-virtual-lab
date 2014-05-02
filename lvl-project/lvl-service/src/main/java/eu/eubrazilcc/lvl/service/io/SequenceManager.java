@@ -29,17 +29,21 @@ import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.util.concurrent.Futures.allAsList;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseCount;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseIds;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.parse;
+import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -55,12 +59,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
-import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
-import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
 
 /**
  * Manages the sequences in the LVL collection, participating in the discovering, importation
@@ -130,16 +131,16 @@ public class SequenceManager {
 				// are filtered, a new task is submitted to fetch the sequences from GenBank. A callback function is called
 				// every time a bulk of sequences is fetched and this function submits a new task to import the sequences into
 				// the database
-				futures.add(TaskRunner.INSTANCE.submit(fetchGenBankSequences(ids, tmpDir, format, extension)));
+				futures.add(TASK_RUNNER.submit(fetchGenBankSequences(ids, tmpDir, format, extension)));
 				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records");
 				retstart += count;
 			} while (count > 0 && retstart < esearchCount);
 
-
+			// TODO : make async
 
 			final ListenableFuture<List<Integer>> combinedFuture = allAsList(futures);
 			final List<Integer> list = combinedFuture.get();
-			checkState(list != null, "No sequences imported");			
+			checkState(list != null, "No sequences imported");
 			for (int i = 0; i < list.size(); i++) {
 				efetchCount += (list.get(i) != null ? list.get(i) : 0);
 			}
@@ -183,7 +184,7 @@ public class SequenceManager {
 				final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_task_");
 				efetch(ids2, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
 				// copy sequence files to their final location and import them to the database
-				final Path seqPath = ConfigurationManager.INSTANCE.getGenBankDir(format).toPath();
+				final Path seqPath = CONFIG_MANAGER.getGenBankDir(format).toPath();
 				for (final String id : ids2) {
 					final Path source = tmpDir2.resolve(id + "." + extension);
 					try {
@@ -192,8 +193,8 @@ public class SequenceManager {
 						copy(source, target, REPLACE_EXISTING);
 						LOGGER.info("New GBSeqXML file stored: " + target.toString());
 						// insert sequence in the database
-						final Sequence sequence = GB_SEQXML.parse((GBSeq)GB_SEQXML.typeFromFile(target.toFile()));
-						SequenceDAO.INSTANCE.insert(sequence);
+						final Sequence sequence = parse((GBSeq)GB_SEQXML.typeFromFile(target.toFile()));
+						SEQUENCE_DAO.insert(sequence);
 						count++;
 					} catch (Exception e) {
 						LOGGER.warn("Failed to import sequence from file: " + source.getFileName(), e);

@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.oauth2.mail;
 
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Properties;
@@ -35,15 +36,13 @@ import javax.mail.internet.MimeMessage;
 
 import org.slf4j.Logger;
 
-import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-
 /**
  * Sends e-mails.
  * @author Erik Torres <ertorser@upv.es>
  */
 public enum EmailSender {
 
-	INSTANCE;
+	EMAIL_SENDER;
 
 	private static final Logger LOGGER = getLogger(EmailSender.class);
 
@@ -58,10 +57,10 @@ public enum EmailSender {
 	private void sendEmail(final String emailDestinatary, final String subject, final String body, final boolean useHtml) {
 		try {
 			final Properties properties = System.getProperties();
-			properties.setProperty("mail.smtp.host", ConfigurationManager.INSTANCE.getSmtpHost());
+			properties.setProperty("mail.smtp.host", CONFIG_MANAGER.getSmtpHost());
 			final Session session = Session.getDefaultInstance(properties);
 			final MimeMessage message = new MimeMessage(session);
-			message.setFrom(new InternetAddress(ConfigurationManager.INSTANCE.getSmtpNoreplyEmail()));
+			message.setFrom(new InternetAddress(CONFIG_MANAGER.getSmtpNoreplyEmail()));
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress(emailDestinatary));
 			message.setSubject(subject);
 			if (useHtml) {

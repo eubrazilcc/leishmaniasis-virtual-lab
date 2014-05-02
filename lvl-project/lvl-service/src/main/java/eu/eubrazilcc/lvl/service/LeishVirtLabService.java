@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.service;
 
+import static eu.eubrazilcc.lvl.service.CloserService.CLOSER_SERVICE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public class LeishVirtLabService extends AbstractIdleService {
 	@Override
 	protected void startUp() throws Exception {
 		// load configuration and core services
-		CloserService.INSTANCE.preload();
+		CLOSER_SERVICE.preload();
 		// register for termination
 		ContextListener.getServiceStopper().add(this);
 		LOGGER.info(SERVICE_NAME + " started");
@@ -57,7 +58,7 @@ public class LeishVirtLabService extends AbstractIdleService {
 	@Override
 	protected void shutDown() throws Exception {		
 		// close core services
-		CloserService.INSTANCE.close();
+		CLOSER_SERVICE.close();
 		LOGGER.info(SERVICE_NAME + " terminated");
 	}
 

@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage.oauth2.security;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -46,7 +47,6 @@ import org.apache.oltu.oauth2.rs.response.OAuthRSResponse;
 import org.slf4j.Logger;
 
 import eu.eubrazilcc.lvl.core.servlet.OAuth2RequestWrapper;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO;
 
 /**
  * OAuth2 gatekeeper that validates the access token and grant access to the resource. It receives 
@@ -95,7 +95,7 @@ public final class OAuth2Gatekeeper {
 			final String accessToken = oauthRequest.getAccessToken();
 
 			// validate the access token
-			if (!TokenDAO.INSTANCE.isValid(accessToken, resourceScope, requestFullAccess)) {
+			if (!TOKEN_DAO.isValid(accessToken, resourceScope, requestFullAccess)) {
 				// setup the OAuth error message
 				final OAuthResponse oauthResponse = OAuthRSResponse
 						.errorResponse(HttpServletResponse.SC_UNAUTHORIZED)

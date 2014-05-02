@@ -30,8 +30,9 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.io.Files.asByteSink;
 import static com.google.common.util.concurrent.Futures.addCallback;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.getGenInfoIdentifier;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.getGenInfoIdentifier;
 import static java.nio.file.Files.newBufferedReader;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
@@ -81,7 +82,6 @@ import com.google.common.io.FileWriteMode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import eu.eubrazilcc.lvl.core.concurrent.TaskRunner;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
 
@@ -313,7 +313,7 @@ public final class EntrezHelper {
 				return null;
 			}
 		});
-		final ListenableFuture<String[]> future = TaskRunner.INSTANCE.submit(new Callable<String[]>() {
+		final ListenableFuture<String[]> future = TASK_RUNNER.submit(new Callable<String[]>() {
 			@Override
 			public String[] call() throws Exception {
 				final Set<String> files = newHashSet();
@@ -389,7 +389,7 @@ public final class EntrezHelper {
 			}
 		});
 		// go over the file extracting the sequences
-		final ListenableFuture<String[]> future = TaskRunner.INSTANCE.submit(new Callable<String[]>() {
+		final ListenableFuture<String[]> future = TASK_RUNNER.submit(new Callable<String[]>() {
 			@Override
 			public String[] call() throws Exception {
 				final Set<String> files = newHashSet();
