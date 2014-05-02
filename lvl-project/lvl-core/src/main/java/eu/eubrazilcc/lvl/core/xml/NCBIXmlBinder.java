@@ -46,15 +46,15 @@ import com.google.common.collect.ImmutableMultimap;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBFeature;
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBQualifier;
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeqid;
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
-import eu.eubrazilcc.lvl.core.xml.ncbi.ObjectFactory;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBFeature;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBQualifier;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeqid;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSet;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.ObjectFactory;
 
 /**
- * NCBI XML binding helper.
+ * NCBI GenBank Sequence XML binding helper.
  * @author Erik Torres <ertorser@upv.es>
  */
 public final class NCBIXmlBinder extends XmlBinder {	

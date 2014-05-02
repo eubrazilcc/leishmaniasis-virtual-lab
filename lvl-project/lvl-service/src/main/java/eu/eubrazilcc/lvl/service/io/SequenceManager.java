@@ -33,8 +33,8 @@ import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseCount;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseIds;
+import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getCount;
+import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getIds;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.parse;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
-import org.w3c.dom.Document;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -61,7 +60,8 @@ import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
+import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.ESearchResult;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 
 /**
  * Manages the sequences in the LVL collection, participating in the discovering, importation
@@ -120,11 +120,11 @@ public class SequenceManager {
 			final int retmax = EntrezHelper.MAX_RECORDS_LISTED;
 			final List<ListenableFuture<Integer>> futures = newArrayList();
 			do {
-				final Document results = esearch(EntrezHelper.PHLEBOTOMUS_QUERY, retstart, retmax);
+				final ESearchResult result = esearch(EntrezHelper.PHLEBOTOMUS_QUERY, retstart, retmax);
 				if (esearchCount < 0) {
-					esearchCount = parseEsearchResponseCount(results);
+					esearchCount = getCount(result);
 				}
-				final List<String> ids = parseEsearchResponseIds(results);
+				final List<String> ids = getIds(result);
 				count = ids.size();
 				totalIds += count;				
 				// submit a new task to filter out the identifiers already stored in the database. Once that the identifiers
@@ -148,20 +148,16 @@ public class SequenceManager {
 		} catch (Exception e) {
 			LOGGER.error("Importing GenBank sequences failed", e);
 		} finally {
-
-			// TODO : this is not happening
-
 			deleteQuietly(tmpDir);
-		}
-		checkState(esearchCount == -1 || totalIds == esearchCount, "No all ids were imported");
-		checkState(efetchCount == -1 || totalIds == efetchCount, "No all sequences were imported");
+		}		
+		checkState(esearchCount == -1 || totalIds == esearchCount, "No all ids were imported");		
 		// TODO: send notification on completion or error
 	}
 
 	private Callable<Integer> fetchGenBankSequences(final List<String> ids, final File tmpDir,
 			final Format format, final String extension) {
 		return new Callable<Integer>() {
-			private int count = 0;
+			private int efetchCount = 0;
 			@Override
 			public Integer call() throws Exception {
 				// filter out the sequence that are already stored in the database, creating a new set
@@ -180,29 +176,32 @@ public class SequenceManager {
 						return result;
 					}
 				}).filter(notNull()).toSet().asList();
-				// fetch sequence files
-				final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_task_");
-				efetch(ids2, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
-				// copy sequence files to their final location and import them to the database
-				final Path seqPath = CONFIG_MANAGER.getGenBankDir(format).toPath();
-				for (final String id : ids2) {
-					final Path source = tmpDir2.resolve(id + "." + extension);
-					try {
-						// copy sequence to storage						
-						final Path target = seqPath.resolve(source.getFileName());
-						copy(source, target, REPLACE_EXISTING);
-						LOGGER.info("New GBSeqXML file stored: " + target.toString());
-						// insert sequence in the database
-						final Sequence sequence = parse((GBSeq)GB_SEQXML.typeFromFile(target.toFile()));
-						SEQUENCE_DAO.insert(sequence);
-						count++;
-					} catch (Exception e) {
-						LOGGER.warn("Failed to import sequence from file: " + source.getFileName(), e);
-					} finally {
-						deleteQuietly(source.toFile());
+				if (ids2.size() > 0) {
+					// fetch sequence files
+					final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_task_");
+					efetch(ids2, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
+					// copy sequence files to their final location and import them to the database
+					final Path seqPath = CONFIG_MANAGER.getGenBankDir(format).toPath();
+					for (final String id : ids2) {
+						final Path source = tmpDir2.resolve(id + "." + extension);
+						try {
+							// copy sequence to storage						
+							final Path target = seqPath.resolve(source.getFileName());
+							copy(source, target, REPLACE_EXISTING);
+							LOGGER.info("New GBSeqXML file stored: " + target.toString());
+							// insert sequence in the database
+							final Sequence sequence = parse((GBSeq)GB_SEQXML.typeFromFile(target.toFile()));
+							SEQUENCE_DAO.insert(sequence);
+							efetchCount++;
+						} catch (Exception e) {
+							LOGGER.warn("Failed to import sequence from file: " + source.getFileName(), e);
+						} finally {
+							deleteQuietly(source.toFile());
+						}
 					}
 				}
-				return count;
+				checkState(ids2.size() == efetchCount, "No all sequences were imported");
+				return efetchCount;
 			}
 		};
 	}

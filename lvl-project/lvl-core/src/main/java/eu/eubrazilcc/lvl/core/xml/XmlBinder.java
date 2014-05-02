@@ -26,6 +26,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 
@@ -43,14 +47,14 @@ public abstract class XmlBinder {
 
 	protected JAXBContext context;
 	protected JAXBIntrospector introspector;
-	
+
 	public XmlBinder(final JAXBContext context, final JAXBIntrospector introspector) {
 		this.context = context;
 		this.introspector = introspector;
 	}
 
 	protected abstract <T> JAXBElement<T> createType(final T obj);
-	
+
 	public <T> String typeToXml(final T obj) throws IOException {
 		try (final StringWriter writer = new StringWriter()) {
 			final Marshaller marshaller = context.createMarshaller();
@@ -71,11 +75,33 @@ public abstract class XmlBinder {
 			return (T) JAXBIntrospector.getValue(context.createUnmarshaller().unmarshal(reader));
 		} catch (Exception e) {
 			throw new IOException(e);
-		}		
+		}
 	}
 
 	public <T> void typeToFile(final T obj, final File file) throws IOException {
 		try (final FileWriter writer = new FileWriter(file, false)) {
+			final Marshaller marshaller = context.createMarshaller();			
+			if (null == introspector.getElementName(obj)) {
+				marshaller.marshal(createType(obj), writer);
+			} else {
+				marshaller.marshal(obj, writer);
+			}			
+		} catch (JAXBException e) {
+			throw new IOException(e);
+		}		
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T typeFromInputStream(final InputStream is) throws IOException {
+		try (final InputStreamReader reader = new InputStreamReader(is)) {
+			return (T) JAXBIntrospector.getValue(context.createUnmarshaller().unmarshal(reader));
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
+	
+	public <T> void typeToOutputStream(final T obj, final OutputStream os) throws IOException {
+		try (final OutputStreamWriter writer = new OutputStreamWriter(os)) {
 			final Marshaller marshaller = context.createMarshaller();			
 			if (null == introspector.getElementName(obj)) {
 				marshaller.marshal(createType(obj), writer);
@@ -95,5 +121,5 @@ public abstract class XmlBinder {
 			throw new IOException(e);
 		}		
 	}
-	
+
 }

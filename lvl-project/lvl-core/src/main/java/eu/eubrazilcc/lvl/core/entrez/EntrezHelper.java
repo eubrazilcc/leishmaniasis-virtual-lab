@@ -23,7 +23,6 @@
 package eu.eubrazilcc.lvl.core.entrez;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.partition;
 import static com.google.common.collect.Lists.newArrayList;
@@ -31,12 +30,20 @@ import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.io.Files.asByteSink;
 import static com.google.common.util.concurrent.Futures.addCallback;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.ESEARCH_XML;
+import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getCount;
+import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getIds;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.getGenInfoIdentifier;
 import static java.nio.file.Files.newBufferedReader;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.http.entity.ContentType.APPLICATION_OCTET_STREAM;
+import static org.apache.http.entity.ContentType.APPLICATION_XML;
+import static org.apache.http.entity.ContentType.TEXT_PLAIN;
+import static org.apache.http.entity.ContentType.TEXT_XML;
+import static org.apache.http.entity.ContentType.getOrDefault;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.BufferedReader;
@@ -51,13 +58,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -71,10 +71,6 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import com.google.common.base.Joiner;
 import com.google.common.io.ByteSink;
@@ -82,8 +78,9 @@ import com.google.common.io.FileWriteMode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
+import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.ESearchResult;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSet;
 
 /**
  * Utilities to interact with the Entrez NCBI search system.
@@ -99,15 +96,6 @@ public final class EntrezHelper {
 
 	public static final int MAX_RECORDS_LISTED = 10000;  // esearch maximum 100,000
 	public static final int MAX_RECORDS_FETCHED = 10000; // efetch maximum 100,000
-
-	public static final String XPATH_TO_ESEARCH_COUNT = 
-			"/*[local-name()=\"eSearchResult\"]"
-					+ "/*[local-name()=\"Count\"]";
-
-	public static final String XPATH_TO_ESEARCH_IDS = 
-			"/*[local-name()=\"eSearchResult\"]"
-					+ "/*[local-name()=\"IdList\"]"
-					+ "/*[local-name()=\"Id\"]";
 
 	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
@@ -137,11 +125,11 @@ public final class EntrezHelper {
 			int retstart = 0, count = 0;
 			final int retmax = MAX_RECORDS_LISTED;
 			do {
-				final Document results = esearch(query, retstart, retmax);
+				final ESearchResult result = esearch(query, retstart, retmax);
 				if (esearchResultCount < 0) {
-					esearchResultCount = parseEsearchResponseCount(results);
+					esearchResultCount = getCount(result);
 				}
-				final List<String> moreIds = parseEsearchResponseIds(results);
+				final List<String> moreIds = getIds(result);
 				count = moreIds.size();
 				ids.addAll(moreIds);			
 				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " 
@@ -153,7 +141,7 @@ public final class EntrezHelper {
 		}
 		checkState(ids.size() == esearchResultCount, "No all ids were imported");
 		return ids;
-	}	
+	}
 
 	/**
 	 * Fetches the sequences identified by their accession identifiers and saves them in the specified directory,
@@ -203,13 +191,13 @@ public final class EntrezHelper {
 				.add("retmax", Integer.toString(retmax));
 	}
 
-	public static Document esearch(final String query, final int retstart, final int retmax) throws Exception {
+	public static ESearchResult esearch(final String query, final int retstart, final int retmax) throws Exception {
 		return Request.Post(ESEARCH_BASE_URI)
 				.useExpectContinue() // execute a POST with the 'expect-continue' handshake
 				.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
-				.bodyForm(esearchForm(query, retstart, retmax).build()).execute().handleResponse(new ResponseHandler<Document>() {
+				.bodyForm(esearchForm(query, retstart, retmax).build()).execute().handleResponse(new ResponseHandler<ESearchResult>() {
 					@Override
-					public Document handleResponse(final HttpResponse response) throws IOException {
+					public ESearchResult handleResponse(final HttpResponse response) throws IOException {
 						final StatusLine statusLine = response.getStatusLine();
 						final HttpEntity entity = response.getEntity();
 						if (statusLine.getStatusCode() >= 300) {
@@ -218,53 +206,18 @@ public final class EntrezHelper {
 						if (entity == null) {
 							throw new ClientProtocolException("Response contains no content");
 						}
-						final DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
-						try {
-							final DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
-							final ContentType contentType = ContentType.getOrDefault(entity);
-							final String mimeType = contentType.getMimeType();
-							if (!mimeType.equals(ContentType.APPLICATION_XML.getMimeType()) 
-									&& !mimeType.equals(ContentType.TEXT_XML.getMimeType())) {
-								throw new ClientProtocolException("Unexpected content type:" + contentType);
-							}
-							Charset charset = contentType.getCharset();
-							if (charset == null) {
-								charset = HTTP.DEF_CONTENT_CHARSET;
-							}
-							return docBuilder.parse(entity.getContent(), charset.name());
-						} catch (ParserConfigurationException ex) {
-							throw new IllegalStateException(ex);
-						} catch (SAXException ex) {
-							throw new ClientProtocolException("Malformed XML document", ex);
+						final ContentType contentType = getOrDefault(entity);
+						final String mimeType = contentType.getMimeType();
+						if (!mimeType.equals(APPLICATION_XML.getMimeType()) && !mimeType.equals(TEXT_XML.getMimeType())) {
+							throw new ClientProtocolException("Unexpected content type:" + contentType);
 						}
+						Charset charset = contentType.getCharset();
+						if (charset == null) {
+							charset = HTTP.DEF_CONTENT_CHARSET;
+						}
+						return ESEARCH_XML.typeFromInputStream(entity.getContent());
 					}
 				});
-	}
-
-	public static int parseEsearchResponseCount(final Document document) throws Exception {
-		checkNotNull(document, "Uninitialized document");
-		final XPath xPath = XPathFactory.newInstance().newXPath();
-		final XPathExpression xPathExpression = xPath.compile(XPATH_TO_ESEARCH_COUNT);
-		final Node node = (Node) xPathExpression.evaluate(document, XPathConstants.NODE);
-		checkState(node != null, "No count node found");
-		return Integer.parseInt(node.getTextContent());
-	}
-
-	public static List<String> parseEsearchResponseIds(final Document document) throws Exception {
-		checkNotNull(document, "Uninitialized document");
-		final XPath xPath = XPathFactory.newInstance().newXPath();
-		final XPathExpression xPathExpression = xPath.compile(XPATH_TO_ESEARCH_IDS);
-		final NodeList nodes = (NodeList) xPathExpression.evaluate(document, XPathConstants.NODESET);
-		final List<String> ids = newArrayList();
-		if (nodes != null) {
-			for (int i = 0; i < nodes.getLength(); i++) {
-				ids.add(nodes.item(i).getTextContent().trim());
-			}
-		}
-		/* if (LOGGER.isTraceEnabled()) {
-			LOGGER.trace(eu.eubrazilcc.lvl.core.xml.XmlHelper.documentToStringOmitXmlDeclaration(document));
-		} */
-		return ids;
 	}
 
 	public static void efetch(final List<String> ids, final int retstart, final int retmax, final File directory, final Format format) throws Exception {
@@ -299,9 +252,9 @@ public final class EntrezHelper {
 				if (entity == null) {
 					throw new ClientProtocolException("Response contains no content");
 				}
-				final ContentType contentType = ContentType.getOrDefault(entity);
+				final ContentType contentType = getOrDefault(entity);
 				final String mimeType = contentType.getMimeType();
-				if (!mimeType.equals(ContentType.APPLICATION_OCTET_STREAM.getMimeType())) {
+				if (!mimeType.equals(APPLICATION_OCTET_STREAM.getMimeType()) && !mimeType.equals(TEXT_XML.getMimeType())) {
 					throw new ClientProtocolException("Unexpected content type:" + contentType);
 				}
 				Charset charset = contentType.getCharset();
@@ -373,10 +326,9 @@ public final class EntrezHelper {
 				if (entity == null) {
 					throw new ClientProtocolException("Response contains no content");
 				}
-				final ContentType contentType = ContentType.getOrDefault(entity);
+				final ContentType contentType = getOrDefault(entity);
 				final String mimeType = contentType.getMimeType();
-				if (!mimeType.equals(ContentType.APPLICATION_OCTET_STREAM.getMimeType())
-						&& !mimeType.equals(ContentType.TEXT_PLAIN.getMimeType())) {
+				if (!mimeType.equals(APPLICATION_OCTET_STREAM.getMimeType()) && !mimeType.equals(TEXT_PLAIN.getMimeType())) {
 					throw new ClientProtocolException("Unexpected content type:" + contentType);
 				}
 				Charset charset = contentType.getCharset();

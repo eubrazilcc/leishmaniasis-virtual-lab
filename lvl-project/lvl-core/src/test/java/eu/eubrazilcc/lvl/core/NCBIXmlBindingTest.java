@@ -43,8 +43,8 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMultimap;
 
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
-import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSet;
 
 /**
  * Test XML to/from NCBI Java object binding.

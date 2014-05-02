@@ -54,6 +54,9 @@ import eu.eubrazilcc.lvl.core.Closeable2;
  */
 public enum TaskRunner implements Closeable2 {
 
+	/**
+	 * Singleton instance of {@link TaskRunner} that executes short-living tasks in a pool of threads.
+	 */
 	TASK_RUNNER;
 
 	private final static Logger LOGGER = getLogger(TaskRunner.class);
