@@ -633,14 +633,22 @@ $ wget http://www.ncbi.nlm.nih.gov/dtd/NCBI_GBSeq.mod.dtd
    exist before calling xjc):</p>
 
 <code>
-$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi -mark-generated NCBI_Entity.mod.dtd
+$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi.gb -mark-generated NCBI_Entity.mod.dtd
 <br />
-$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi -mark-generated NCBI_GBSeq.mod.dtd
+$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi.gb -mark-generated NCBI_GBSeq.mod.dtd
 <br />
-$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi -mark-generated NCBI_GBSeq.dtd
+$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi.gb -mark-generated NCBI_GBSeq.dtd
 </code>
 
 <p>Generated files are copied to the project <em>lvl-core</em>.</p>
+
+<p>XML binding classes are generated in the same manner for Entrez <em>ESearch</em> utility application:</p>
+
+<code>
+$ wget http://www.ncbi.nlm.nih.gov/corehtml/query/DTD/eSearch_020511.dtd
+<br />
+$ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi.esearch -mark-generated eSearch_020511.dtd
+</code>
 
 <h2><a id="restful_api">RESTful API</a></h2>
 
