@@ -39,6 +39,7 @@ import static org.apache.commons.lang.StringUtils.startsWith;
 import static org.apache.commons.lang.StringUtils.substring;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,7 +50,6 @@ import java.util.Set;
 import javax.ws.rs.Path;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -61,7 +61,7 @@ import com.google.common.base.Splitter;
  */
 public final class ScopeManager {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(ScopeManager.class);
+	private final static Logger LOGGER = getLogger(ScopeManager.class);
 
 	public static final String USERS             = "users";
 	public static final String SEQUENCES         = "sequences";

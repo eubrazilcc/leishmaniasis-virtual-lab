@@ -29,13 +29,13 @@ import static java.lang.System.getenv;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +47,7 @@ import com.google.common.collect.ImmutableList;
  */
 public final class ConfigurationFinder {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(ConfigurationFinder.class);
+	private final static Logger LOGGER = getLogger(ConfigurationFinder.class);
 
 	public static final String ENV_HOME_VAR = "LVL_HOME";
 	public static final String DEFAULT_LOCATION = "/opt/lvl";

@@ -22,13 +22,15 @@
 
 package eu.eubrazilcc.lvl.core.conf;
 
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.slf4j.bridge.SLF4JBridgeHandler.install;
+import static org.slf4j.bridge.SLF4JBridgeHandler.removeHandlersForRootLogger;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
 
@@ -40,15 +42,15 @@ public enum LogManager implements Closeable2 {
 
 	INSTANCE;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(LogManager.class);
+	private final static Logger LOGGER = getLogger(LogManager.class);
 
 	private LogManager() {
 		// remove existing handlers attached to j.u.l root logger
-		SLF4JBridgeHandler.removeHandlersForRootLogger();
+		removeHandlersForRootLogger();
 
 		// add SLF4JBridgeHandler to j.u.l's root logger, should be done once during the 
 		// initialization phase of the application
-		SLF4JBridgeHandler.install();
+		install();
 	}
 
 	@Override

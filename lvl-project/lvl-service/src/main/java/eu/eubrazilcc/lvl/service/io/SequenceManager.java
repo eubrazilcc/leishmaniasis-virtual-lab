@@ -26,32 +26,27 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
+import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.util.concurrent.Futures.allAsList;
-import static com.google.common.util.concurrent.Futures.immediateFuture;
-import static com.google.common.util.concurrent.Futures.transform;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseCount;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.parseEsearchResponseIds;
-import static eu.eubrazilcc.lvl.core.util.FileUtils.list;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.parse;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.typeFromFile;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import com.google.common.base.Function;
@@ -74,14 +69,11 @@ import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
  */
 public class SequenceManager {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(SequenceManager.class);
+	private final static Logger LOGGER = getLogger(SequenceManager.class);
 
-	public final static ImmutableList<String> DEFAULT_DATA_SOURCES = ImmutableList.of(DataSource.GENBANK);
+	public final static ImmutableList<String> DEFAULT_DATA_SOURCES = of(DataSource.GENBANK);
 
-	public final static long FETCH_TIMEOUT_SECONDS     = 900l; // 15 minutes
-	public final static long DB_IMPORT_TIMEOUT_SECONDS = 600l; // 10 minutes	
-
-	private ImmutableList<SequenceFilter> filters = ImmutableList.of();
+	private ImmutableList<SequenceFilter> filters = of();
 
 	public SequenceManager() { }	
 
@@ -120,7 +112,7 @@ public class SequenceManager {
 		final Format format = Format.GB_SEQ_XML; // GenBank file format
 		final String extension = "xml"; // GenBank file extension
 		File tmpDir = null;
-		int esearchResultCount = -1, totalIds = 0;
+		int esearchCount = -1, efetchCount = 0, totalIds = 0;
 		try {
 			tmpDir = createTempDirectory("tmp_sequences_").toFile();
 			int retstart = 0, count = 0;
@@ -128,8 +120,8 @@ public class SequenceManager {
 			final List<ListenableFuture<Integer>> futures = newArrayList();
 			do {
 				final Document results = esearch(EntrezHelper.PHLEBOTOMUS_QUERY, retstart, retmax);
-				if (esearchResultCount < 0) {
-					esearchResultCount = parseEsearchResponseCount(results);
+				if (esearchCount < 0) {
+					esearchCount = parseEsearchResponseCount(results);
 				}
 				final List<String> ids = parseEsearchResponseIds(results);
 				count = ids.size();
@@ -138,35 +130,43 @@ public class SequenceManager {
 				// are filtered, a new task is submitted to fetch the sequences from GenBank. A callback function is called
 				// every time a bulk of sequences is fetched and this function submits a new task to import the sequences into
 				// the database
-				futures.add(transform(transform(TaskRunner.INSTANCE.submit(filterGBMissingIds(ids)), fetchGBFiles(format, extension, tmpDir)), importGBFiles(format)));
+				futures.add(TaskRunner.INSTANCE.submit(fetchGenBankSequences(ids, tmpDir, format, extension)));
 				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records");
 				retstart += count;
-			} while (count > 0 && retstart < esearchResultCount);
+			} while (count > 0 && retstart < esearchCount);
+
+
+
 			final ListenableFuture<List<Integer>> combinedFuture = allAsList(futures);
 			final List<Integer> list = combinedFuture.get();
-			checkState(list != null, "No sequences imported");
-			LOGGER.info(list.size() + " sequences imported");
+			checkState(list != null, "No sequences imported");			
+			for (int i = 0; i < list.size(); i++) {
+				efetchCount += (list.get(i) != null ? list.get(i) : 0);
+			}
+			LOGGER.info(efetchCount + " sequences imported");
 		} catch (Exception e) {
 			LOGGER.error("Importing GenBank sequences failed", e);
 		} finally {
+
+			// TODO : this is not happening
+
 			deleteQuietly(tmpDir);
 		}
-		checkState(esearchResultCount == -1 || totalIds == esearchResultCount, "No all ids were imported");
+		checkState(esearchCount == -1 || totalIds == esearchCount, "No all ids were imported");
+		checkState(efetchCount == -1 || totalIds == efetchCount, "No all sequences were imported");
 		// TODO: send notification on completion or error
 	}
 
-	/**
-	 * Filters out the sequence that are already stored in the database, returning to the caller
-	 * the list of identifiers that are missing from the database. Duplicate identifiers are also
-	 * removed from the original list.
-	 * @param ids - the list of sequence identifiers to filter
-	 * @return the list of unique identifiers that are missing from the database
-	 */
-	private Callable<List<String>> filterGBMissingIds(final List<String> ids) {
-		return new Callable<List<String>>() {
+	private Callable<Integer> fetchGenBankSequences(final List<String> ids, final File tmpDir,
+			final Format format, final String extension) {
+		return new Callable<Integer>() {
+			private int count = 0;
 			@Override
-			public List<String> call() throws Exception {
-				return from(ids).transform(new Function<String, String>() {
+			public Integer call() throws Exception {
+				// filter out the sequence that are already stored in the database, creating a new set
+				// with the identifiers that are missing from the database. Using a set ensures that 
+				// duplicate identifiers are also removed from the original list
+				final List<String> ids2 = from(ids).transform(new Function<String, String>() {
 					@Override
 					public String apply(final String id) {
 						String result = id;
@@ -179,85 +179,29 @@ public class SequenceManager {
 						return result;
 					}
 				}).filter(notNull()).toSet().asList();
-			}					
-		};
-	}
-
-	private Function<List<String>, String[]> fetchGBFiles(final Format format, final String extension, final File directory) {
-		return new Function<List<String>, String[]>() {
-			@Override
-			public String[] apply(final List<String> ids) {
-				final ListenableFuture<String[]> future = (!ids.isEmpty() ? TaskRunner.INSTANCE.submit(fetchTask(ids, format, extension, directory)) 
-						: immediateFuture(new String[]{ }));
-				try {
-					return future.get(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-				} catch (Exception e) {
-					throw new IllegalStateException("Failed to fecth sequences from GenBank using format: " + format, e);
+				// fetch sequence files
+				final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_task_");
+				efetch(ids2, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
+				// copy sequence files to their final location and import them to the database
+				final Path seqPath = ConfigurationManager.INSTANCE.getGenBankDir(format).toPath();
+				for (final String id : ids2) {
+					final Path source = tmpDir2.resolve(id + "." + extension);
+					try {
+						// copy sequence to storage						
+						final Path target = seqPath.resolve(source.getFileName());
+						copy(source, target, REPLACE_EXISTING);
+						LOGGER.info("New GBSeqXML file stored: " + target.toString());
+						// insert sequence in the database
+						final Sequence sequence = GB_SEQXML.parse((GBSeq)GB_SEQXML.typeFromFile(target.toFile()));
+						SequenceDAO.INSTANCE.insert(sequence);
+						count++;
+					} catch (Exception e) {
+						LOGGER.warn("Failed to import sequence from file: " + source.getFileName(), e);
+					} finally {
+						deleteQuietly(source.toFile());
+					}
 				}
-			}
-		};
-	}
-
-	private Callable<String[]> fetchTask(final List<String> ids, final Format format, final String extension, final File directory) {
-		return new Callable<String[]>() {
-			@Override
-			public String[] call() throws Exception {
-				try {
-					final File directory2 = createTempDirectory(directory.toPath(), "fetch_task_").toFile();
-					efetch(ids, 0, EntrezHelper.MAX_RECORDS_FETCHED, directory2, format);					
-					final String[] files = list(directory2, extension);					
-					checkState(files != null && files.length == ids.size(), "No all sequences were fetched");					
-					return files;
-				} catch (Exception e) {
-					throw new IllegalStateException("Failed to import nucleotide sequences from GenBank", e);
-				}
-			}
-		};
-	}
-
-	private Function<String[], Integer> importGBFiles(final Format format) {
-		switch (format) {
-		case GB_SEQ_XML:
-			return importGBSeqXMLFiles();
-		default:
-			throw new IllegalStateException("Unsupported format: " + format);
-		}
-	}
-
-	private Function<String[], Integer> importGBSeqXMLFiles() {
-		return new Function<String[], Integer>() {
-			@Override
-			public Integer apply(final String[] files) {
-				final List<ListenableFuture<String>> futures = newArrayList();
-				final Path dir = ConfigurationManager.INSTANCE.getGenBankDir(Format.GB_SEQ_XML).toPath();
-				for (final String file : files) {
-					final Path source = Paths.get(file);
-					final ListenableFuture<String> future = TaskRunner.INSTANCE.submit(new Callable<String>() {
-						@Override
-						public String call() throws Exception {
-							try {
-								// copy sequence to storage								
-								final Path target = dir.resolve(source.getFileName());
-								copy(source, target, REPLACE_EXISTING);
-								LOGGER.info("New GBSeqXML file stored: " + target.toString());
-								// insert sequence in the database
-								final Sequence sequence = parse((GBSeq)typeFromFile(target.toFile()));
-								SequenceDAO.INSTANCE.insert(sequence);
-								return target.toString();
-							} finally {
-								deleteQuietly(source.toFile());
-							}
-						}
-					});
-					futures.add(future);
-				}
-				final ListenableFuture<List<String>> combinedFuture = allAsList(futures);
-				try {
-					final List<String> list = combinedFuture.get(DB_IMPORT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-					return list != null ? list.size() : 0;
-				} catch (Exception e) {
-					throw new IllegalStateException(e);
-				}
+				return count;
 			}
 		};
 	}

@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.oauth2.mail;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.util.Properties;
 
 import javax.mail.Message;
@@ -32,7 +34,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 
@@ -44,7 +45,7 @@ public enum EmailSender {
 
 	INSTANCE;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(EmailSender.class);
+	private static final Logger LOGGER = getLogger(EmailSender.class);
 
 	public void sendTextEmail(final String emailDestinatary, final String subject, final String body) {
 		sendEmail(emailDestinatary, subject, body, false);

@@ -23,12 +23,12 @@
 package eu.eubrazilcc.lvl.core.servlet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AbstractIdleService;
@@ -42,7 +42,7 @@ import eu.eubrazilcc.lvl.core.ShutdownHook;
  */
 public class ServiceStopper {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ServiceStopper.class);
+	private static final Logger LOGGER = getLogger(ServiceStopper.class);
 
 	private final Deque<ServiceHook> stack = new ArrayDeque<ServiceHook>(1);
 

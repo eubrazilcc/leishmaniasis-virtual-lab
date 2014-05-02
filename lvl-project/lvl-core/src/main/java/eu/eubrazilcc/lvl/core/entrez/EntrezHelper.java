@@ -30,13 +30,13 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.io.Files.asByteSink;
 import static com.google.common.util.concurrent.Futures.addCallback;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.getGenInfoIdentifier;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.typeFromFile;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.typeToFile;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.getGenInfoIdentifier;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
 import static java.nio.file.Files.newBufferedReader;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -70,7 +70,6 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -93,7 +92,7 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
  */
 public final class EntrezHelper {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(EntrezHelper.class);
+	private static final Logger LOGGER = getLogger(EntrezHelper.class);
 
 	public static final String ESEARCH_BASE_URI = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
 	public static final String EFETCH_BASE_URI = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
@@ -285,8 +284,7 @@ public final class EntrezHelper {
 		// save the bulk of files to a temporary file
 		final File tmpFile = File.createTempFile("gb-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
-		LOGGER.trace("Fetching " + ids.size() + " files from GenBank, retstart=" + retstart + ", retmax=" + retmax
-				+ ", file=" + tmpFile.getPath());
+		LOGGER.trace("Fetching " + ids.size() + " files from GenBank, retstart=" + retstart + ", retmax=" + retmax + ", file=" + tmpFile.getPath());
 		Request.Post(EFETCH_BASE_URI)
 		.useExpectContinue() // execute a POST with the 'expect-continue' handshake
 		.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
@@ -315,19 +313,19 @@ public final class EntrezHelper {
 				return null;
 			}
 		});
-		// go over the file extracting the sequences
 		final ListenableFuture<String[]> future = TaskRunner.INSTANCE.submit(new Callable<String[]>() {
 			@Override
 			public String[] call() throws Exception {
 				final Set<String> files = newHashSet();
-				final GBSet gbSet = typeFromFile(tmpFile);
+				final GBSet gbSet = GB_SEQXML.typeFromFile(tmpFile);
 				checkState(gbSet != null, "Expected GBSeqXML, but no content read from temporary file downloaded with efetch");
 				if (gbSet.getGBSeq() != null) {
-					for (final GBSeq gbSeq : gbSet.getGBSeq()) {
+					final List<GBSeq> gbSeqs = gbSet.getGBSeq();
+					for (final GBSeq gbSeq : gbSeqs) {
 						final Integer gi = getGenInfoIdentifier(gbSeq);
 						if (gi != null) {							
 							final File file = new File(directory, gi.toString() + ".xml");							
-							typeToFile(gbSeq, file);
+							GB_SEQXML.typeToFile(gbSeq, file);
 							files.add(file.getCanonicalPath());
 						} else {
 							LOGGER.warn("Ingoring malformed sequence (gi not found) in efetch response");

@@ -27,6 +27,7 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceSco
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -51,7 +52,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.oauth2.mail.EmailSender;
@@ -68,7 +68,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
 @Path("/pending_users")
 public class UserRegistration {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(UserRegistration.class);
+	private final static Logger LOGGER = getLogger(UserRegistration.class);
 
 	/**
 	 * The lifetime in seconds of the confirmation code.

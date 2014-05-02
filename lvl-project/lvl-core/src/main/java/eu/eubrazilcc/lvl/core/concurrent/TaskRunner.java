@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.core.concurrent;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.shutdownAndAwaitTermination;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.net.URL;
@@ -36,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -55,7 +55,7 @@ public enum TaskRunner implements Closeable2 {
 
 	INSTANCE;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(TaskRunner.class);
+	private final static Logger LOGGER = getLogger(TaskRunner.class);
 
 	public static final String THREAD_NAME_PATTERN = "lvl-runner-%d";
 

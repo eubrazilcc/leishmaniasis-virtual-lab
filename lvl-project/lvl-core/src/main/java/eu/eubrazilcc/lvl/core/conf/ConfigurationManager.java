@@ -28,6 +28,7 @@ import static com.google.common.base.Predicates.and;
 import static com.google.common.base.Predicates.contains;
 import static com.google.common.base.Predicates.notNull;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.parseURL;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +54,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -76,7 +76,7 @@ public enum ConfigurationManager implements Closeable2 {
 
 	INSTANCE;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(ConfigurationManager.class);
+	private final static Logger LOGGER = getLogger(ConfigurationManager.class);
 
 	public static final String MAIN_CONFIG         = "lvl.xml";
 	public static final String REST_SERVICE_CONFIG = "lvl-service.xml";

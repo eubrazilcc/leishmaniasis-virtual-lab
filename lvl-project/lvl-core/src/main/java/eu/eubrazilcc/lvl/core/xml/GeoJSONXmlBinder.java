@@ -22,16 +22,11 @@
 
 package eu.eubrazilcc.lvl.core.xml;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.HashMap;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.JAXBIntrospector;
-import javax.xml.bind.Marshaller;
 
 import eu.eubrazilcc.lvl.core.geospatial.Line;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
@@ -41,7 +36,7 @@ import eu.eubrazilcc.lvl.core.geospatial.Polygon;
  * GeoJSON XML binding helper.
  * @author Erik Torres <ertorser@upv.es>
  */
-public final class GeoJSONXmlBindingHelper {
+public final class GeoJSONXmlBinder extends XmlBinder {
 
 	private static final Class<?>[] SUPPORTED_CLASSES = {
 		Point.class,
@@ -61,32 +56,15 @@ public final class GeoJSONXmlBindingHelper {
 		} catch (Exception e) { }
 	}
 
-	public static <T> String typeToXml(final T obj) throws IOException {
-		try {
-			final Marshaller marshaller = CONTEXT.createMarshaller();
-			final StringWriter stringWriter = new StringWriter();
-			if (null == INTROSPECTOR.getElementName(obj)) {
-				marshaller.marshal(createType(obj), stringWriter);
-			} else {
-				marshaller.marshal(obj, stringWriter);
-			}
-			return stringWriter.toString();
-		} catch (JAXBException e) {
-			throw new IOException(e);
-		}
-	}
+	public static final GeoJSONXmlBinder GEOJSON_XML = new GeoJSONXmlBinder();
 
-	@SuppressWarnings("unchecked")
-	public static <T> T typeFromXml(final String payload) throws IOException {
-		try {
-			return (T) JAXBIntrospector.getValue(CONTEXT.createUnmarshaller().unmarshal(new StringReader(payload)));
-		} catch (Exception e) {
-			throw new IOException(e);
-		}
-	}
+	private GeoJSONXmlBinder() {
+		super(CONTEXT, INTROSPECTOR);
+	}	
 
+	@Override
 	@SuppressWarnings("unchecked")
-	private static <T> JAXBElement<T> createType(final T obj) {
+	protected <T> JAXBElement<T> createType(final T obj) {
 		Object element = null;
 		Class<? extends Object> clazz = obj.getClass();
 		if (clazz.equals(Point.class)) {

@@ -22,10 +22,11 @@
 
 package eu.eubrazilcc.lvl.core.concurrent;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.lang.Thread.UncaughtExceptionHandler;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Handles possible uncaught {@link RuntimeException} thrown by threaded tasks. When a thread terminates 
@@ -36,7 +37,7 @@ public enum TaskUncaughtExceptionHandler implements UncaughtExceptionHandler {
 
 	INSTANCE;
 	
-	private final static Logger LOGGER = LoggerFactory.getLogger(TaskUncaughtExceptionHandler.class);
+	private final static Logger LOGGER = getLogger(TaskUncaughtExceptionHandler.class);
 	
 	@Override
 	public void uncaughtException(final Thread thread, final Throwable cause) {

@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.core.xml;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.StringWriter;
 
@@ -33,16 +34,15 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 /**
  * Utilities to handle XML documents and fragments.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class XmlHelper {
+public final class XmlHelper {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(XmlHelper.class);
+	private static final Logger LOGGER = getLogger(XmlHelper.class);
 	
 	/**
 	 * Obtains a String representation of a XML document, omitting the XML declaration.

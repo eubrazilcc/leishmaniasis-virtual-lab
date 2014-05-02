@@ -24,9 +24,11 @@ package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.getGenInfoIdentifier;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.inferCountry;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper.parse;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML_FACTORY;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.getGenInfoIdentifier;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.inferCountry;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.parse;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -41,7 +43,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMultimap;
 
-import eu.eubrazilcc.lvl.core.xml.NCBIXmlBindingHelper;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.GBSet;
 
@@ -58,9 +59,9 @@ public class NCBIXmlBindingTest {
 			// test GenInfo identifier parsing
 			final String[] ids = { "gb|JQ790522.1|", "gi|384562886", "gi|", "gi|JQ790522", "gi" };
 			final Integer[] gis = { null, 384562886, null, null, null };
-			final GBSeq gbSeq = NCBIXmlBindingHelper.FACTORY.createGBSeq();
-			gbSeq.setGBSeqOtherSeqids(NCBIXmlBindingHelper.FACTORY.createGBSeqOtherSeqids());
-			gbSeq.getGBSeqOtherSeqids().getGBSeqid().add(NCBIXmlBindingHelper.FACTORY.createGBSeqid());
+			final GBSeq gbSeq = GB_SEQXML_FACTORY.createGBSeq();
+			gbSeq.setGBSeqOtherSeqids(GB_SEQXML_FACTORY.createGBSeqOtherSeqids());
+			gbSeq.getGBSeqOtherSeqids().getGBSeqid().add(GB_SEQXML_FACTORY.createGBSeqid());
 			for (int i = 0; i < ids.length; i++) {
 				gbSeq.getGBSeqOtherSeqids().getGBSeqid().get(0).setvalue(ids[i]);		
 				final Integer gi = getGenInfoIdentifier(gbSeq);
@@ -70,10 +71,10 @@ public class NCBIXmlBindingTest {
 			// test country feature parsing
 			final String[] features = { "Italy", "Spain:Almeria", "Sudan: Sirougia, Khartoum State" };
 			final Locale[] countries = { getLocale("Italy"), getLocale("Spain"), getLocale("Sudan") };
-			gbSeq.setGBSeqFeatureTable(NCBIXmlBindingHelper.FACTORY.createGBSeqFeatureTable());
-			gbSeq.getGBSeqFeatureTable().getGBFeature().add(NCBIXmlBindingHelper.FACTORY.createGBFeature());
-			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).setGBFeatureQuals(NCBIXmlBindingHelper.FACTORY.createGBFeatureQuals());
-			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().add(NCBIXmlBindingHelper.FACTORY.createGBQualifier());
+			gbSeq.setGBSeqFeatureTable(GB_SEQXML_FACTORY.createGBSeqFeatureTable());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().add(GB_SEQXML_FACTORY.createGBFeature());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).setGBFeatureQuals(GB_SEQXML_FACTORY.createGBFeatureQuals());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().add(GB_SEQXML_FACTORY.createGBQualifier());
 			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().get(0).setGBQualifierName("country");
 			for (int i = 0; i < features.length; i++) {	
 				gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().get(0).setGBQualifierValue(features[i]);
@@ -93,7 +94,7 @@ public class NCBIXmlBindingTest {
 			final Collection<File> files2 = getGBSeqXMLFiles();
 			for (final File file : files2) {
 				System.out.println(" >> GenBank sequence XML file: " + file.getCanonicalPath());
-				final GBSet gbSet = NCBIXmlBindingHelper.typeFromFile(file);
+				final GBSet gbSet = GB_SEQXML.typeFromFile(file);
 				assertThat("GenBank XML set is not null", gbSet, notNullValue());
 				assertThat("GenBank XML sequences is not null", gbSet.getGBSeq(), notNullValue());
 				assertThat("GenBank XML sequences is not empty", !gbSet.getGBSeq().isEmpty());				

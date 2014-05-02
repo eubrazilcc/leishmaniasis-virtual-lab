@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.core.util;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -33,7 +35,6 @@ import java.util.Random;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utilities to discover networking configuration.
@@ -41,7 +42,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class NetworkingUtils {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(NetworkingUtils.class);
+	private final static Logger LOGGER = getLogger(NetworkingUtils.class);
 
 	/**
 	 * Gets the first public IP address of the host. If no public address are found, one of the private

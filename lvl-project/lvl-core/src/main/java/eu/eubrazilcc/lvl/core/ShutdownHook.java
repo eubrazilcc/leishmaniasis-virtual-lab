@@ -24,12 +24,12 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Collections.synchronizedMap;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 
@@ -40,7 +40,7 @@ import com.google.common.util.concurrent.AbstractIdleService;
  */
 public class ShutdownHook {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(ShutdownHook.class);
+	private final static Logger LOGGER = getLogger(ShutdownHook.class);
 
 	private final Thread hook;
 

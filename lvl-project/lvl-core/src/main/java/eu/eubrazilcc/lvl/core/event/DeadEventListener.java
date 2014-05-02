@@ -22,8 +22,9 @@
 
 package eu.eubrazilcc.lvl.core.event;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.eventbus.DeadEvent;
@@ -37,7 +38,7 @@ public enum DeadEventListener {
 
 	INSTANCE;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(DeadEventListener.class);
+	private final static Logger LOGGER = getLogger(DeadEventListener.class);
 
 	@Subscribe
 	public void listen(final DeadEvent deadEvent) {

@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.core.geocoding;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Locale;
 import java.util.concurrent.Callable;
@@ -34,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.code.geocoder.Geocoder;
 import com.google.code.geocoder.GeocoderRequestBuilder;
@@ -55,7 +55,7 @@ import eu.eubrazilcc.lvl.core.geospatial.Point;
  */
 public final class GeocodingHelper {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(GeocodingHelper.class);
+	private static final Logger LOGGER = getLogger(GeocodingHelper.class);
 
 	public static final int MAX_CACHED_ELEMENTS = 1000;
 	public static final int CACHE_EXPIRATION_SECONDS = 86400; // one day

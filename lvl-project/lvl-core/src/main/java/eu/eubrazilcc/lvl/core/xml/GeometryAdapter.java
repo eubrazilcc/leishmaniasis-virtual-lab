@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.core.xml;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static eu.eubrazilcc.lvl.core.xml.GeoJSONXmlBinder.GEOJSON_XML;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
@@ -42,7 +43,7 @@ public class GeometryAdapter extends XmlAdapter<String, Object> {
 		if (geometry != null) {
 			checkArgument(geometry instanceof Point || geometry instanceof Line || geometry instanceof Polygon, 
 					"Unsupported geometry: " + geometry.getClass().getCanonicalName());
-			return GeoJSONXmlBindingHelper.typeToXml(geometry);
+			return GEOJSON_XML.typeToXml(geometry);
 		}
 		return null;
 	}
@@ -50,7 +51,7 @@ public class GeometryAdapter extends XmlAdapter<String, Object> {
 	@Override
 	public Object unmarshal(final String payload) throws Exception {
 		if (isNotBlank(payload)) {
-			return GeoJSONXmlBindingHelper.typeFromXml(payload);
+			return GEOJSON_XML.typeFromXml(payload);
 		}
 		return null;
 	}

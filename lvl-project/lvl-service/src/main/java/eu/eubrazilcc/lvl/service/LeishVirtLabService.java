@@ -22,8 +22,9 @@
 
 package eu.eubrazilcc.lvl.service;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 
@@ -36,7 +37,7 @@ import eu.eubrazilcc.lvl.core.servlet.ContextListener;
  */
 public class LeishVirtLabService extends AbstractIdleService {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(LeishVirtLabService.class);
+	private final static Logger LOGGER = getLogger(LeishVirtLabService.class);
 
 	public static final String SERVICE_NAME = ConfigurationManager.LVL_NAME + " service";
 

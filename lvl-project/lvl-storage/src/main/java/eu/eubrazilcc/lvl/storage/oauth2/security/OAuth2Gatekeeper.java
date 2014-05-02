@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.oauth2.security;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +44,6 @@ import org.apache.oltu.oauth2.common.utils.OAuthUtils;
 import org.apache.oltu.oauth2.rs.request.OAuthAccessResourceRequest;
 import org.apache.oltu.oauth2.rs.response.OAuthRSResponse;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import eu.eubrazilcc.lvl.core.servlet.OAuth2RequestWrapper;
 import eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO;
@@ -57,7 +57,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO;
  */
 public final class OAuth2Gatekeeper {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(OAuth2Gatekeeper.class);
+	private static final Logger LOGGER = getLogger(OAuth2Gatekeeper.class);
 
 	public static final String bearerHeader(final String token) {
 		checkArgument(isNotBlank(token), "Uninitialized or invalid token");

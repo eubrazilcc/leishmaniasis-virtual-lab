@@ -32,6 +32,7 @@ import static com.google.common.collect.Maps.toMap;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -46,7 +47,6 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
@@ -81,7 +81,7 @@ public enum MongoDBConnector implements Closeable2 {
 
 	INSTANCE;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(MongoDBConnector.class);
+	private final static Logger LOGGER = getLogger(MongoDBConnector.class);
 
 	private Lock mutex = new ReentrantLock();
 	private MongoClient __client = null;
