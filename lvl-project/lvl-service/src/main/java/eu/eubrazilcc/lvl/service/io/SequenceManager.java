@@ -54,6 +54,8 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import eu.eubrazilcc.lvl.core.DataSource;
@@ -91,67 +93,78 @@ public class SequenceManager {
 	 * Imports sequences from default, external databases into the application's database.
 	 */
 	public void importSequences() {
+		final File tmpDir = createTmpDir();
+		final List<ListenableFuture<Integer>> futures = newArrayList();		
 		for (final String dataSource : DEFAULT_DATA_SOURCES) {
-			importSequences(dataSource);
-		}		
-	}	
+			futures.addAll(importSequences(dataSource, tmpDir));
+		}
+		Futures.addCallback(allAsList(futures), new FutureCallback<List<Integer>>() {
+			@Override
+			public void onSuccess(final List<Integer> result) {
+				deleteQuietly(tmpDir);
+				checkState(result != null, "No sequences imported");
+				int efetchCount = 0;
+				for (int i = 0; i < result.size(); i++) {
+					efetchCount += (result.get(i) != null ? result.get(i) : 0);
+				}
+				LOGGER.info(efetchCount + " sequences imported");
+				// TODO: send notification, update database
+			}
+			@Override
+			public void onFailure(final Throwable cause) {
+				deleteQuietly(tmpDir);
+				LOGGER.error("Error while importing sequences", cause);
+				// TODO: send notification, update database
+			}				
+		});
+		// TODO : final List<Integer> list = combinedFuture.get();
+	}
+
+	private File createTmpDir() {
+		File tmpDir = null;
+		try {
+			tmpDir = createTempDirectory("tmp_sequences_").toFile();
+		} catch (Exception e) {
+			throw new IllegalStateException("Failed to create temporary directory", e);
+		}
+		return tmpDir;
+	}
 
 	/**
 	 * Imports sequences from external databases into the application's database.
 	 * @param dataSource - source database, for example, GenBank
 	 */
-	public void importSequences(final String dataSource) {
+	public List<ListenableFuture<Integer>> importSequences(final String dataSource, final File tmpDir) {
 		checkArgument(isNotBlank(dataSource), "Uninitialized data source");
 		if (DataSource.GENBANK.equals(dataSource)) {
-			importGenBankSequences();
+			return importGenBankSequences(tmpDir);
 		} else {
 			throw new IllegalArgumentException("Unsupported data source: " + dataSource);
 		}
 	}
 
-	private void importGenBankSequences() {
-		final Format format = Format.GB_SEQ_XML; // GenBank file format
-		final String extension = "xml"; // GenBank file extension
-		File tmpDir = null;
-		int esearchCount = -1, efetchCount = 0, totalIds = 0;
-		try {
-			tmpDir = createTempDirectory("tmp_sequences_").toFile();
-			int retstart = 0, count = 0;
-			final int retmax = EntrezHelper.MAX_RECORDS_LISTED;
-			final List<ListenableFuture<Integer>> futures = newArrayList();
-			do {
+	private List<ListenableFuture<Integer>> importGenBankSequences(final File tmpDir) {
+		final List<ListenableFuture<Integer>> futures = newArrayList();
+		int esearchCount = -1, retstart = 0, count = 0, retries = 0;
+		final int retmax = EntrezHelper.MAX_RECORDS_LISTED;
+		do {
+			try {
 				final ESearchResult result = esearch(EntrezHelper.PHLEBOTOMUS_QUERY, retstart, retmax);
 				if (esearchCount < 0) {
 					esearchCount = getCount(result);
 				}
 				final List<String> ids = getIds(result);
 				count = ids.size();
-				totalIds += count;				
-				// submit a new task to filter out the identifiers already stored in the database. Once that the identifiers
-				// are filtered, a new task is submitted to fetch the sequences from GenBank. A callback function is called
-				// every time a bulk of sequences is fetched and this function submits a new task to import the sequences into
-				// the database
-				futures.add(TASK_RUNNER.submit(fetchGenBankSequences(ids, tmpDir, format, extension)));
+				futures.add(TASK_RUNNER.submit(fetchGenBankSequences(ids, tmpDir, Format.GB_SEQ_XML, "xml")));
 				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records");
 				retstart += count;
-			} while (count > 0 && retstart < esearchCount);
-
-			// TODO : make async
-
-			final ListenableFuture<List<Integer>> combinedFuture = allAsList(futures);
-			final List<Integer> list = combinedFuture.get();
-			checkState(list != null, "No sequences imported");
-			for (int i = 0; i < list.size(); i++) {
-				efetchCount += (list.get(i) != null ? list.get(i) : 0);
+			} catch (Exception e) {
+				if (++retries > 3) {
+					throw new IllegalStateException("Failed to import GenBank sequences", e);
+				}
 			}
-			LOGGER.info(efetchCount + " sequences imported");
-		} catch (Exception e) {
-			LOGGER.error("Importing GenBank sequences failed", e);
-		} finally {
-			deleteQuietly(tmpDir);
-		}		
-		checkState(esearchCount == -1 || totalIds == esearchCount, "No all ids were imported");		
-		// TODO: send notification on completion or error
+		} while (count > 0 && retstart < esearchCount);
+		return futures;
 	}
 
 	private Callable<Integer> fetchGenBankSequences(final List<String> ids, final File tmpDir,

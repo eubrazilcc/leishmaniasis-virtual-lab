@@ -32,7 +32,7 @@ angular.module('lvl.controllers', [])
 		);
 	};
 }])
-.controller('NavBarCtrl', ['$scope', '$rootScope', '$window', 'ENV', 'CookieFactory', 'Oauth2Factory', function($scope, $rootScope, $window, ENV, CookieFactory, Oauth2Factory) {
+.controller('NavBarCtrl', ['$scope', '$rootScope', '$window', 'LocalStorageFactory', 'Oauth2Factory', function($scope, $rootScope, $window, LocalStorageFactory, Oauth2Factory) {
 	$scope.user = {
 			'username': ''	
 	};
@@ -51,11 +51,11 @@ angular.module('lvl.controllers', [])
 		delete $window.sessionStorage.token;
 		delete $window.sessionStorage.email;
 		delete $window.sessionStorage.removeItem('user');
-		// clear cookies
-		CookieFactory.remove();		
+		// clear permanent storage
+		LocalStorageFactory.remove();		
 	};
 }])
-.controller('LoginCtrl', ['$scope', '$routeParams', '$window', '$location', 'ENV', 'AccessTokenFactory', 'CookieFactory', function($scope, $routeParams, $window, $location, ENV, AccessTokenFactory, CookieFactory) {
+.controller('LoginCtrl', ['$scope', '$routeParams', '$window', '$location', 'AccessTokenFactory', 'LocalStorageFactory', function($scope, $routeParams, $window, $location, AccessTokenFactory, LocalStorageFactory) {
 	$scope.rememberme = true;
 	var referrer = $routeParams.ref !== undefined ? $routeParams.ref : '/';
 	$scope.showAlert = $routeParams.fail !== undefined;
@@ -81,9 +81,9 @@ angular.module('lvl.controllers', [])
 						$window.sessionStorage.token = accessToken;
 						$window.sessionStorage.email = $scope.user.email;
 						if ($scope.rememberme === true) {
-							CookieFactory.store();
+							LocalStorageFactory.store();
 						} else {
-							CookieFactory.remove();
+							LocalStorageFactory.remove();
 						}
 						$location.path(referrer);
 					} else {
@@ -214,7 +214,7 @@ angular.module('lvl.controllers', [])
 		return country;
 	};
 
-	$scope.showNotifications = ($window.sessionStorage.getItem('showNotifications') === 'true' ? true : false);
+	$scope.showNotifications = ($window.sessionStorage.getItem('showNotifications') === 'false' ? false : true);
 
 	$scope.toggleNotifications = function() {
 		$scope.showNotifications = !$scope.showNotifications;

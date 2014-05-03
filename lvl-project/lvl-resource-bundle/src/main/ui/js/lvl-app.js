@@ -13,14 +13,13 @@ angular.module('lvl.config', [])
 	'oauth2ClientApp'   : {
 		'client_id'     : 'lvl_portal',
 		'client_secret' : 'changeit'
-	},
-	'sessionCookie'     : 'LVL_SID'
+	}
 });
 
-angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngCookies', 'ngAnimate', 'ngGrid', 'ui.bootstrap', 'chieffancypants.loadingBar', 'lvl.fastclick', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers' ])
+angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngAnimate', 'ngGrid', 'ui.bootstrap', 'chieffancypants.loadingBar', 'lvl.fastclick', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers' ])
 .config(['$routeProvider', function($routeProvider) {
 	var isLoggedIn = ['$q', '$http', '$window', 'Oauth2Factory', function($q, $http, $window, Oauth2Factory) {
-		var defer = $q.defer();
+		var defer = $q.defer();		
 		if ($window.sessionStorage.getItem('user')) {
 			// console.log("User info exists: " + $window.sessionStorage.getItem('user'));
 			defer.resolve($window.sessionStorage.getItem('user'));
@@ -65,8 +64,8 @@ angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngCookies', 'ngAnim
 	$routeProvider.when('/404', {templateUrl: 'partials/404.html', controller: 'PageNotFoundCtrl'});
 	$routeProvider.otherwise({redirectTo: '/404'});
 }])
-.run(['$rootScope', 'CookieFactory', function($rootScope, CookieFactory) {
-	CookieFactory.load();
+.run(['$rootScope', 'LocalStorageFactory', function($rootScope, LocalStorageFactory) {
+	LocalStorageFactory.load();
 }])
 .run(['$rootScope', '$location', '$route', function($rootScope, $location, $route) {
 	$rootScope.$on('$routeChangeError', function(ev, current, previous, rejection) {

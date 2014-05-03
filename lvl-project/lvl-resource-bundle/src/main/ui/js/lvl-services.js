@@ -8,27 +8,28 @@ var authNHeaders = function($window) {
 }
 
 angular.module('lvl.services', [])
-.factory('CookieFactory', [ '$window', '$cookieStore', 'ENV', function($window, $cookieStore, ENV) {
+.factory('LocalStorageFactory', [ '$window', function($window) {
 	return {
 		load: function() {
 			if (typeof $window.sessionStorage.token === undefined || $window.sessionStorage.email === undefined) {
-				var existingCookieUser = $cookieStore.get(ENV.sessionCookie);
-				if (existingCookieUser) {
-					$window.sessionStorage.token = existingCookieUser.token;
-					$window.sessionStorage.email = existingCookieUser.email;
-					$window.sessionStorage.setItem('showNotifications', existingCookieUser.showNotifications);
-				}
+				var obj = $window.localStorage.getItem('user');
+				if (obj) {					
+					var existingUser = JSON.parse(obj);
+					$window.sessionStorage.token = existingUser.token;
+					$window.sessionStorage.email = existingUser.email;
+					$window.sessionStorage.setItem('showNotifications', existingUser.showNotifications);
+				}				
 			}
 		},
-		store: function() {
-			$cookieStore.put(ENV.sessionCookie, {
+		store: function() {			
+			$window.localStorage.setItem('user', JSON.stringify({
 				'token': $window.sessionStorage.token,
 				'email': $window.sessionStorage.email,
 				'showNotifications': $window.sessionStorage.getItem('showNotifications')
-			});
+			}));			
 		},		
 		remove: function() {
-			$cookieStore.remove(ENV.sessionCookie);
+			$window.localStorage.removeItem('user');
 		}
 	};
 }])

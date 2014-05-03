@@ -124,7 +124,7 @@ public class ServiceTest {
 			Path path = TaskResource.class.getAnnotation(Path.class);			
 			final Task task = Task.builder()
 					.type(TaskType.IMPORT_SEQUENCES)
-					.ids(newArrayList("353470160", "353483325", "384562886")) // TODO 
+					.ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
 			Response response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
