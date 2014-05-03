@@ -5,6 +5,11 @@
 angular.module('lvl.controllers', [])
 .controller('HomeCtrl', ['$scope', '$rootScope', '$window', '$location', 'UserRegistrationFactory', function($scope, $rootScope, $window, $location, UserRegistrationFactory) {
 	$scope.alerts = [];
+	$scope.user = {
+			'username': '',
+			'email': '',
+			'password': ''
+	};
 	$scope.addAlert = function(msg, type) {
 		$scope.alerts.push({'type': type || 'danger', 'msg': msg});
 	};
