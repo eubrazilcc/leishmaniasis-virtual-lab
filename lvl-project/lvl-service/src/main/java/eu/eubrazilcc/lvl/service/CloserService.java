@@ -22,15 +22,16 @@
 
 package eu.eubrazilcc.lvl.service;
 
+import static com.google.common.collect.Queues.newArrayDeque;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.findConfigurationFiles;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 
 import java.io.Closeable;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.Deque;
 
 import com.google.common.util.concurrent.Monitor;
 
@@ -46,7 +47,7 @@ public enum CloserService implements CloserServiceIf {
 
 	private final Monitor monitor = new Monitor();
 
-	private final Queue<Closeable> queue = new LinkedList<Closeable>();
+	private final Deque<Closeable> stack = newArrayDeque();
 
 	private CloserService() { }
 
@@ -55,21 +56,23 @@ public enum CloserService implements CloserServiceIf {
 		// load configuration
 		CONFIG_MANAGER.setup(findConfigurationFiles());
 		CONFIG_MANAGER.preload();
-		// load task runner and task scheduler
+		// load MongoDB connector and register it for closing
+		MONGODB_CONN.preload();
+		register(MONGODB_CONN);
+		// load task runner, task scheduler and task storage
 		TASK_RUNNER.preload();
 		register(TASK_RUNNER);
 		TASK_SCHEDULER.preload();
 		register(TASK_SCHEDULER);
-		// load MongoDB connector and register it for closing
-		MONGODB_CONN.preload();
-		register(MONGODB_CONN);
+		TASK_STORAGE.preload();
+		register(TASK_STORAGE);		
 	}
 
 	@Override
 	public void register(final Closeable closeable) {
 		monitor.enter();
 		try {
-			queue.add(closeable);
+			stack.push(closeable);
 		} finally {
 			monitor.leave();
 		}
@@ -79,10 +82,10 @@ public enum CloserService implements CloserServiceIf {
 	public void close() {
 		monitor.enter();
 		try {
-			while (!queue.isEmpty()) {
+			while (!stack.isEmpty()) {
 				try {
-					queue.remove().close();
-				} catch (Exception ignore) { }
+					stack.pop().close();
+				} catch (Exception ignored) { }
 			}
 		} finally {
 			monitor.leave();

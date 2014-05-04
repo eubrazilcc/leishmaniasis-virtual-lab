@@ -22,8 +22,9 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
-import static java.util.UUID.randomUUID;
 
 import java.util.List;
 
@@ -40,10 +41,9 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.service.Task;
+import eu.eubrazilcc.lvl.service.ImportSequencesTask;
 import eu.eubrazilcc.lvl.service.io.DbNotFoundSequenceFilter;
 import eu.eubrazilcc.lvl.service.io.MatchSequenceFilter;
-import eu.eubrazilcc.lvl.service.io.SequenceManager;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 
 /**
@@ -67,19 +67,16 @@ public class TaskResource {
 		switch (task.getType()) {
 		case IMPORT_SEQUENCES:
 			final List<String> ids = task.getIds();
-			SequenceManager.builder()
-			.filter(ids == null || ids.isEmpty() ? new DbNotFoundSequenceFilter() : new MatchSequenceFilter(ids))
-			.build()
-			.importSequences();
+			final ImportSequencesTask importSequencesTask = ImportSequencesTask.builder()
+					.filter(ids == null || ids.isEmpty() ? new DbNotFoundSequenceFilter() : new MatchSequenceFilter(ids))
+					.build();
+			TASK_RUNNER.execute(importSequencesTask);
+			TASK_STORAGE.add(importSequencesTask);
+			task.setUuid(importSequencesTask.getUuid());
 			break;
 		default:
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		// create task in the database
-		task.setUuid(randomUUID());
-		
-		// TODO
-
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(task.getUuid().toString());		
 		return Response.created(uriBuilder.build()).build();		
 	}

@@ -34,10 +34,11 @@ import javax.annotation.Nullable;
 import com.google.common.util.concurrent.Monitor;
 
 /**
- * Stores the files that will be downloaded.
+ * Provides a FIFO queue that stores requests sent to the system for fulfillment. This class can be
+ * combined with the event bus to handle such a requests.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class TaskQueue<T> {
+public class RequestQueue<T> {
 
 	private final Monitor monitor = new Monitor();
 

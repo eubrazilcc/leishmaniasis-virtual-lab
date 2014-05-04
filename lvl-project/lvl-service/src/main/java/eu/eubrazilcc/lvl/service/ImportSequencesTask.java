@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service.io;
+package eu.eubrazilcc.lvl.service;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -28,8 +28,8 @@ import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.util.concurrent.Futures.addCallback;
 import static com.google.common.util.concurrent.Futures.allAsList;
+import static com.google.common.util.concurrent.ListenableFutureTask.create;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
@@ -54,31 +54,35 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.ESearchResult;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
+import eu.eubrazilcc.lvl.service.io.SequenceFilter;
 
 /**
- * Manages the sequences in the LVL collection, participating in the discovering, importation
- * and update of the sequences in the database.
+ * Discovers and imports new sequences in the LVL collection. Sequences are discovered from public
+ * databases, such as GenBank.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SequenceManager {
+public class ImportSequencesTask extends CancellableTask<Integer> {
 
-	private final static Logger LOGGER = getLogger(SequenceManager.class);
+	private final static Logger LOGGER = getLogger(ImportSequencesTask.class);
 
 	public final static ImmutableList<String> DEFAULT_DATA_SOURCES = of(DataSource.GENBANK);
 
 	private ImmutableList<SequenceFilter> filters = of();
 
-	public SequenceManager() { }	
+	public ImportSequencesTask() {
+		this.task = create(importSequencesTask());
+	}
 
 	public ImmutableList<SequenceFilter> getFilters() {
 		return filters;
@@ -92,49 +96,45 @@ public class SequenceManager {
 	/**
 	 * Imports sequences from default, external databases into the application's database.
 	 */
-	public void importSequences() {
-		final File tmpDir = createTmpDir();
-		final List<ListenableFuture<Integer>> futures = newArrayList();		
-		for (final String dataSource : DEFAULT_DATA_SOURCES) {
-			futures.addAll(importSequences(dataSource, tmpDir));
-		}
-		addCallback(allAsList(futures), new FutureCallback<List<Integer>>() {
+	private Callable<Integer> importSequencesTask() {
+		return new Callable<Integer>() {
 			@Override
-			public void onSuccess(final List<Integer> result) {
-				deleteQuietly(tmpDir);
-				checkState(result != null, "No sequences imported");
-				int efetchCount = 0;
-				for (int i = 0; i < result.size(); i++) {
-					efetchCount += (result.get(i) != null ? result.get(i) : 0);
+			public Integer call() throws Exception {
+				LOGGER.info("Importing new sequences from: " + DEFAULT_DATA_SOURCES);
+				int importedSequencesCount = 0;
+				final File tmpDir = createTmpDir();
+				try {
+					final List<ListenableFuture<Integer>> futures = newArrayList();
+					for (final String dataSource : DEFAULT_DATA_SOURCES) {
+						futures.addAll(importSequences(dataSource, tmpDir));
+					}
+					final ListenableFuture<List<Integer>> futuresList = allAsList(futures);
+					final List<Integer> results = futuresList.get();
+					if(results != null) {
+						for (final Integer item : results) {
+							if (item != null) {
+								importedSequencesCount += (item != null ? item : 0);
+							}
+						}
+					}
+				} catch (Exception e) {
+					LOGGER.error("Error while importing sequences", e);
+					// TODO: send notification
+				} finally {
+					deleteQuietly(tmpDir);
 				}
-				LOGGER.info(efetchCount + " sequences imported");
-				// TODO: send notification, update database
-			}
-			@Override
-			public void onFailure(final Throwable cause) {
-				deleteQuietly(tmpDir);
-				LOGGER.error("Error while importing sequences", cause);
-				// TODO: send notification, update database
-			}				
-		});
-		// TODO : final List<Integer> list = combinedFuture.get();
-	}
-
-	private File createTmpDir() {
-		File tmpDir = null;
-		try {
-			tmpDir = createTempDirectory("tmp_sequences_").toFile();
-		} catch (Exception e) {
-			throw new IllegalStateException("Failed to create temporary directory", e);
-		}
-		return tmpDir;
+				LOGGER.info(importedSequencesCount + " sequences imported");
+				// TODO: send notification
+				return new Integer(importedSequencesCount);
+			}			
+		};
 	}
 
 	/**
 	 * Imports sequences from external databases into the application's database.
 	 * @param dataSource - source database, for example, GenBank
 	 */
-	public List<ListenableFuture<Integer>> importSequences(final String dataSource, final File tmpDir) {
+	private List<ListenableFuture<Integer>> importSequences(final String dataSource, final File tmpDir) {
 		checkArgument(isNotBlank(dataSource), "Uninitialized data source");
 		if (DataSource.GENBANK.equals(dataSource)) {
 			return importGenBankSequences(tmpDir);
@@ -219,6 +219,23 @@ public class SequenceManager {
 		};
 	}
 
+	private static File createTmpDir() {
+		File tmpDir = null;
+		try {
+			tmpDir = createTempDirectory("tmp_sequences_").toFile();
+		} catch (Exception e) {
+			throw new IllegalStateException("Failed to create temporary directory", e);
+		}
+		return tmpDir;
+	}
+
+	@Override
+	public String toString() {
+		return Objects.toStringHelper(this)
+				.addValue(super.toString())
+				.toString();
+	}
+	
 	/* Fluent API */
 
 	public static Builder builder() {
@@ -227,20 +244,20 @@ public class SequenceManager {
 
 	public static class Builder {
 
-		private final SequenceManager sequenceManager = new SequenceManager();
+		private final ImportSequencesTask instance = new ImportSequencesTask();
 
 		public Builder filter(final SequenceFilter filter) {
-			sequenceManager.setFilters(ImmutableList.of(filter));
+			instance.setFilters(ImmutableList.of(filter));
 			return this;
 		}
 
 		public Builder filters(final Iterable<SequenceFilter> filters) {
-			sequenceManager.setFilters(filters);
+			instance.setFilters(filters);
 			return this;
 		}
 
-		public SequenceManager build() {
-			return sequenceManager;
+		public ImportSequencesTask build() {
+			return instance;
 		}
 
 	}

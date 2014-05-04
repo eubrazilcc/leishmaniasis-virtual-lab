@@ -23,10 +23,11 @@
 package eu.eubrazilcc.lvl.core.concurrent;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.shutdownAndAwaitTermination;
-import static org.slf4j.LoggerFactory.getLogger;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskUncaughtExceptionHandler.TASK_UNCAUGHT_EXCEPTION_HANDLER;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.net.URL;
@@ -40,6 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -79,9 +81,34 @@ public enum TaskRunner implements Closeable2 {
 
 	private TaskRunner() { }
 
+	/**
+	 * Submits a new task for execution to the pool of threads managed by this class.
+	 * @param task - task to be executed
+	 * @return a {@link ListenableFuture} that the caller can use to track the execution of the
+	 *         task and to register a callback function.
+	 */
 	public <T> ListenableFuture<T> submit(final Callable<T> task) {
 		checkState(shouldRun.get(), "Task runner uninitialized");
 		return runner.submit(task);
+	}
+
+	/**
+	 * Executes a new task that supports cancellation.
+	 * @param task - task to be executed
+	 */
+	public <T> void execute(final ListenableFutureTask<T> task) {
+		checkState(shouldRun.get(), "Task runner uninitialized");
+		runner.execute(task);
+	}
+	
+	/**
+	 * Executes a new task that supports cancellation and provides a unique identifier.
+	 * @param task - task to be executed
+	 */
+	public <T> void execute(final CancellableTask<T> task) {
+		checkState(shouldRun.get(), "Task runner uninitialized");
+		checkArgument(task != null, "Uninitialized task");
+		runner.execute(task.getTask());
 	}
 
 	@Override

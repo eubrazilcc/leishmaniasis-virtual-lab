@@ -22,13 +22,13 @@
 
 package eu.eubrazilcc.lvl.core.mock;
 
+import static com.google.common.collect.Queues.newArrayDeque;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 
 import java.io.Closeable;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.Deque;
 
 import com.google.common.util.concurrent.Monitor;
 
@@ -44,7 +44,7 @@ public enum CloserServiceMock implements CloserServiceIf {
 
 	private final Monitor monitor = new Monitor();
 
-	private final Queue<Closeable> queue = new LinkedList<Closeable>();
+	private final Deque<Closeable> stack = newArrayDeque();
 
 	private CloserServiceMock() { }
 
@@ -62,7 +62,7 @@ public enum CloserServiceMock implements CloserServiceIf {
 	public void register(final Closeable closeable) {
 		monitor.enter();
 		try {
-			queue.add(closeable);
+			stack.push(closeable);
 		} finally {
 			monitor.leave();
 		}
@@ -72,10 +72,10 @@ public enum CloserServiceMock implements CloserServiceIf {
 	public void close() {
 		monitor.enter();
 		try {
-			while (!queue.isEmpty()) {
+			while (!stack.isEmpty()) {
 				try {
-					queue.remove().close();
-				} catch (Exception ignore) { }
+					stack.pop().close();
+				} catch (Exception ignored) { }
 			}
 		} finally {
 			monitor.leave();

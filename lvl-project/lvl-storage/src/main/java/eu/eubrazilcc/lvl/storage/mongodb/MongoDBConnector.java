@@ -441,7 +441,9 @@ public enum MongoDBConnector implements Closeable2 {
 	public void setup(final Collection<URL> urls) { }
 
 	@Override
-	public void preload() { }
+	public void preload() {
+		LOGGER.info("MongoDB connector initialized successfully");
+	}
 
 	@Override
 	public void close() throws IOException {
@@ -453,6 +455,7 @@ public enum MongoDBConnector implements Closeable2 {
 			}
 		} finally {
 			mutex.unlock();
+			LOGGER.info("MongoDB connector shutdown successfully");
 		}
 	}
 

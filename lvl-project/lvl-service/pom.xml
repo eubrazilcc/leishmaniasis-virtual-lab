@@ -82,6 +82,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-moxy</artifactId>
 		</dependency>
+		<dependency> <!-- Add Server-Sent Events (SSE) support -->
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-sse</artifactId>
+		</dependency>
 		<dependency> <!-- Jersey Test Framework with external container -->
 			<groupId>org.glassfish.jersey.test-framework.providers</groupId>
 			<artifactId>jersey-test-framework-provider-external</artifactId>
@@ -93,7 +97,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
 			<scope>provided</scope>
-		</dependency>
+		</dependency>		
 		
 		<!-- Morphia: library for mapping Java objects to/from MongoDB -->
 		<dependency>

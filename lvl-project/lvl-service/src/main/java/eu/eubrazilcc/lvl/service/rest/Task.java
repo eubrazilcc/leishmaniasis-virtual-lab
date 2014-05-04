@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service;
+package eu.eubrazilcc.lvl.service.rest;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,7 +28,8 @@ import java.util.UUID;
 import com.google.common.base.Objects;
 
 /**
- * Task.
+ * Encapsulates a task for communicating with a client. Requested tasks are internally converted to classes
+ * that can be executed in the background of the application.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class Task {
