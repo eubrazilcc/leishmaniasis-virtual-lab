@@ -49,7 +49,7 @@ import eu.eubrazilcc.lvl.core.Closeable2;
  * @author Erik Torres <ertorser@upv.es>
  */
 public enum TaskScheduler implements Closeable2 {
-	
+
 	TASK_SCHEDULER;
 
 	private final static Logger LOGGER = getLogger(TaskScheduler.class);
@@ -78,15 +78,23 @@ public enum TaskScheduler implements Closeable2 {
 	}
 
 	/**
-	 * See description of {@link java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate}
+	 * See description of {@link java.util.concurrent.ScheduledExecutorService#schedule(Runnable, long, TimeUnit)}
+	 */
+	public ListenableScheduledFuture<?> schedule(final Runnable command, final long delay, final TimeUnit unit) {
+		checkState(shouldRun.get(), "Task scheduler uninitialized");
+		return scheduler.schedule(command, delay, unit);
+	}
+	
+	/**
+	 * See description of {@link java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)}
 	 */
 	public ListenableScheduledFuture<?> scheduleAtFixedRate(final Runnable command, final long initialDelay, final long period, final TimeUnit unit) {
 		checkState(shouldRun.get(), "Task scheduler uninitialized");
 		return scheduler.scheduleAtFixedRate(command, initialDelay, period, unit);
 	}
-	
+
 	/**
-	 * See description of {@link java.util.concurrent.ScheduledExecutorService#scheduleWithFixedDelay}
+	 * See description of {@link java.util.concurrent.ScheduledExecutorService#scheduleWithFixedDelay(Runnable, long, long, TimeUnit)}
 	 */
 	public ListenableScheduledFuture<?> scheduleWithFixedDelay(final Runnable command, final long initialDelay, final long delay, final TimeUnit unit) {
 		checkState(shouldRun.get(), "Task scheduler uninitialized");
@@ -110,11 +118,17 @@ public enum TaskScheduler implements Closeable2 {
 
 	@Override
 	public void close() throws IOException {
-		shouldRun.set(false);		
+		shouldRun.set(false);
 		try {
 			if (!shutdownAndAwaitTermination(scheduler, TIMEOUT_SECS, TimeUnit.SECONDS)) {
 				scheduler.shutdownNow();
-			}		
+			}
+		} catch (Exception e) {
+			// force shutdown if current thread also interrupted, preserving interrupt status
+			scheduler.shutdownNow();
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
+			}
 		} finally {
 			LOGGER.info("Task scheduler shutdown successfully");	
 		}

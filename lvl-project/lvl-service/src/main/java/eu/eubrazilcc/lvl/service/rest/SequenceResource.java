@@ -122,7 +122,7 @@ public class SequenceResource {
 	@GET
 	@Path("{id: [a-zA-Z_0-9]+,[a-zA-Z_0-9]+}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Sequence getSequence(@PathParam("id") String id, final @Context UriInfo uriInfo,
+	public Sequence getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		if (isBlank(id)) {

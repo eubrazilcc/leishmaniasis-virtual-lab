@@ -30,6 +30,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<servlet>
 		<servlet-name>eu.eubrazilcc.lvl.service.rest.LeishVirtLabApplication</servlet-name>	
 		<load-on-startup>1</load-on-startup>
+		<async-supported>true</async-supported>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>eu.eubrazilcc.lvl.service.rest.LeishVirtLabApplication</servlet-name>
@@ -39,6 +40,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<filter>
 		<filter-name>CorsFilter</filter-name>
 		<filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
+		<async-supported>true</async-supported>
 		<init-param>
 			<param-name>cors.allowed.origins</param-name>
 			<param-value>*</param-value>

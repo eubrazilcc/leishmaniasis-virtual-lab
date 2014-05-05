@@ -22,8 +22,8 @@
 
 package eu.eubrazilcc.lvl.core.concurrent;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.shutdownAndAwaitTermination;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskUncaughtExceptionHandler.TASK_UNCAUGHT_EXCEPTION_HANDLER;
@@ -41,7 +41,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -93,15 +92,6 @@ public enum TaskRunner implements Closeable2 {
 	}
 
 	/**
-	 * Executes a new task that supports cancellation.
-	 * @param task - task to be executed
-	 */
-	public <T> void execute(final ListenableFutureTask<T> task) {
-		checkState(shouldRun.get(), "Task runner uninitialized");
-		runner.execute(task);
-	}
-	
-	/**
 	 * Executes a new task that supports cancellation and provides a unique identifier.
 	 * @param task - task to be executed
 	 */
@@ -132,6 +122,12 @@ public enum TaskRunner implements Closeable2 {
 		try {
 			if (!shutdownAndAwaitTermination(runner, TIMEOUT_SECS, TimeUnit.SECONDS)) {
 				runner.shutdownNow();
+			}
+		} catch (Exception e) {
+			// force shutdown if current thread also interrupted, preserving interrupt status
+			runner.shutdownNow();
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
 			}
 		} finally {
 			LOGGER.info("Task runner shutdown successfully");	

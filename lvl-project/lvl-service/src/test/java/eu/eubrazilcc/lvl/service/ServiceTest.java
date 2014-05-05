@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerH
 import static java.lang.System.getProperty;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
+import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -36,7 +37,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.net.URI;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
@@ -46,6 +50,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.media.sse.EventInput;
+import org.glassfish.jersey.media.sse.InboundEvent;
+import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.junit.After;
 import org.junit.Before;
@@ -59,10 +66,9 @@ import eu.eubrazilcc.lvl.core.Sequences;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geospatial.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
+import eu.eubrazilcc.lvl.service.Task.TaskType;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
-import eu.eubrazilcc.lvl.service.rest.Task;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
-import eu.eubrazilcc.lvl.service.rest.Task.TaskType;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
@@ -99,7 +105,10 @@ public class ServiceTest {
 		// setup test file-system environment
 		deleteQuietly(TEST_OUTPUT_DIR);		
 		// prepare client
-		final Client client = ClientBuilder.newBuilder().register(MoxyJsonFeature.class).build();
+		final Client client = ClientBuilder.newBuilder()
+				.register(MoxyJsonFeature.class)
+				.register(SseFeature.class)
+				.build();
 		// configure Web target
 		target = client.target(BASE_URI);
 		// insert valid token in the database
@@ -125,7 +134,7 @@ public class ServiceTest {
 			Path path = TaskResource.class.getAnnotation(Path.class);			
 			final Task task = Task.builder()
 					.type(TaskType.IMPORT_SEQUENCES)
-					.ids(newArrayList("353470160", "353483325", "384562886"))
+					// TODO .ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
 			Response response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
@@ -140,6 +149,34 @@ public class ServiceTest {
 			System.out.println("Create import sequences task response body (JSON), empty is OK: " + payload);
 			System.out.println("Create import sequences task response JAX-RS object: " + response);
 			System.out.println("Create import sequences task HTTP headers: " + response.getStringHeaders());
+			final URI location = new URI((String)response.getHeaders().get("Location").get(0));
+
+			// test import sequences task progress
+			final EventInput eventInput = target.path(path.value()).path("progress").path(getName(location.getPath())).request()
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.get(EventInput.class);
+			while (!eventInput.isClosed()) {
+				final InboundEvent inboundEvent = eventInput.read();
+				if (inboundEvent == null) {
+
+					// TODO
+					System.err.println("\n\nEVENT CLOSED\n\n");
+					// TODO
+
+					// connection has been closed
+					break;
+				}
+				System.out.println(" EVENT [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "]: " 
+						+ inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
+			}
+
+
+
+
+			// TODO
+
+
+
 
 			// test create new sequence
 			path = SequenceResource.class.getAnnotation(Path.class);

@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service.rest;
+package eu.eubrazilcc.lvl.service;
 
 import java.util.List;
 import java.util.UUID;
