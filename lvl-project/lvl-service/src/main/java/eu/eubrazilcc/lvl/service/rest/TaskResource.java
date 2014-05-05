@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static com.google.common.collect.Range.closed;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
@@ -32,16 +33,19 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -50,13 +54,18 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.slf4j.Logger;
 
+import com.google.common.collect.Range;
+import com.google.common.util.concurrent.ListenableScheduledFuture;
+
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
+import eu.eubrazilcc.lvl.service.Progress;
 import eu.eubrazilcc.lvl.service.Task;
 import eu.eubrazilcc.lvl.service.io.DbNotFoundSequenceFilter;
 import eu.eubrazilcc.lvl.service.io.ImportSequencesTask;
@@ -75,11 +84,11 @@ public class TaskResource {
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Task Resource";
 	public static final String RESOURCE_SCOPE = resourceScope(TaskResource.class);
 
-	public static final String IS_DONE_EVENT  = "is_done";
 	public static final String PROGRESS_EVENT = "progress";
-	public static final String STATUS_EVENT   = "status";
 
-	public static final int REFRESH_SECONDS = 10;
+	public static final Range<Integer> REFRESH_RANGE = closed(1, 86400); // from 1 second to 1 day
+
+	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -109,10 +118,10 @@ public class TaskResource {
 	@Path("progress/{id}")
 	@GET
 	@Produces(SseFeature.SERVER_SENT_EVENTS)
-	public EventOutput getServerSentEvents(final @PathParam("id") String id, final @Context HttpServletRequest request, 
-			final @Context HttpHeaders headers) {
+	public EventOutput getServerSentEvents(final @PathParam("id") String id, final @QueryParam("refresh") @DefaultValue("30") int refresh,
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
-		if (isBlank(id)) {
+		if (isBlank(id) || !REFRESH_RANGE.contains(refresh)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from task storage
@@ -122,36 +131,39 @@ public class TaskResource {
 		}
 		final AtomicBoolean isInitial = new AtomicBoolean(true);
 		final EventOutput eventOutput = new EventOutput();
-		try {
-			do {
-				TASK_SCHEDULER.schedule(checkTaskProgress(eventOutput, task), 
-						isInitial.getAndSet(false) ? 0 : REFRESH_SECONDS, TimeUnit.SECONDS).get();
-			} while (!task.isDone());
-		} catch (Exception e) {
-			LOGGER.error("Failed to get task status", e);
-		} finally {
-			try {
-				eventOutput.close();
-			} catch (Exception ignored) { }
-		}
+		TASK_RUNNER.submit(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				try {
+					do {
+						final ListenableScheduledFuture<?> future = TASK_SCHEDULER.schedule(checkTaskProgress(eventOutput, task), 
+								isInitial.getAndSet(false) ? 0 : refresh, TimeUnit.SECONDS);
+						future.get();
+					} while (!task.isDone());
+				} catch (Exception e) {
+					LOGGER.error("Failed to get task status", e);
+				} finally {
+					try {
+						eventOutput.close();
+					} catch (Exception ignored) { }
+				}				return null;
+			}			
+		});
 		return eventOutput;
 	}
 
 	private static Runnable checkTaskProgress(final EventOutput eventOutput, final CancellableTask<?> task) {
-		return new Runnable() {			
+		return new Runnable() {
 			@Override
 			public void run() {
 				try {
-					final OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-					eventOutput.write(eventBuilder.name(IS_DONE_EVENT)
-							.data(Boolean.class, task.isDone())
-							.build());
-					eventOutput.write(eventBuilder.name(PROGRESS_EVENT)
-							.data(Integer.class, task.getProgress())
-							.build());
-					eventOutput.write(eventBuilder.name(STATUS_EVENT)
-							.data(String.class, task.getStatus())
-							.build());
+					eventOutput.write(new OutboundEvent.Builder().name(PROGRESS_EVENT)
+							.data(String.class, JSON_MAPPER.writeValueAsString(Progress.builder()
+									.done(task.isDone())
+									.progress(task.getProgress())
+									.status(task.getStatus())
+									.build()))
+									.build());
 				} catch (IOException e) {
 					throw new RuntimeException("Error when writing the event", e);
 				}

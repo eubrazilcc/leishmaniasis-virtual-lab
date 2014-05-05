@@ -50,6 +50,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.SseFeature;
@@ -87,6 +88,8 @@ public class ServiceTest {
 
 	private WebTarget target;
 	private static final String token = "1234567890abcdEFGhiJKlMnOpqrstUVWxyZ";
+	
+	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
 	@Before
 	public void setUp() throws Exception {
@@ -134,7 +137,7 @@ public class ServiceTest {
 			Path path = TaskResource.class.getAnnotation(Path.class);			
 			final Task task = Task.builder()
 					.type(TaskType.IMPORT_SEQUENCES)
-					// TODO .ids(newArrayList("353470160", "353483325", "384562886"))
+					.ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
 			Response response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
@@ -152,22 +155,26 @@ public class ServiceTest {
 			final URI location = new URI((String)response.getHeaders().get("Location").get(0));
 
 			// test import sequences task progress
-			final EventInput eventInput = target.path(path.value()).path("progress").path(getName(location.getPath())).request()
+			final EventInput eventInput = target.path(path.value())
+					.path("progress")
+					.path(getName(location.getPath()))
+					.queryParam("refresh", 1)
+					.request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(EventInput.class);
 			while (!eventInput.isClosed()) {
 				final InboundEvent inboundEvent = eventInput.read();
 				if (inboundEvent == null) {
-
-					// TODO
-					System.err.println("\n\nEVENT CLOSED\n\n");
-					// TODO
-
 					// connection has been closed
 					break;
 				}
-				System.out.println(" EVENT [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "]: " 
-						+ inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
+				final String name = inboundEvent.getName();
+				final String data = inboundEvent.readData(String.class);
+				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);
+				
+				
+				System.out.println(" EVENT [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: " 
+						+ name + "; " + data + "; " + progress);
 			}
 
 

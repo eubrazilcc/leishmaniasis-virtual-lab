@@ -22,70 +22,62 @@
 
 package eu.eubrazilcc.lvl.service;
 
-import java.util.List;
-import java.util.UUID;
-
 import com.google.common.base.Objects;
 
 /**
- * Encapsulates a task for communicating with a client. Requested tasks are internally converted to classes
- * that can be executed in the background of the application.
+ * Encapsulates a task progress for communicating with a client.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Task {
+public class Progress {
 
-	private UUID uuid;
-	private TaskType type;
-	private List<String> ids;
+	private boolean done;
+	private double progress;
+	private String status;
 
-	public UUID getUuid() {
-		return uuid;
+	public Progress() { }
+
+	public boolean isDone() {
+		return done;
 	}
-	public void setUuid(final UUID uuid) {
-		this.uuid = uuid;
+	public void setDone(final boolean done) {
+		this.done = done;
 	}
-	public TaskType getType() {
-		return type;
+	public double getProgress() {
+		return progress;
 	}
-	public void setType(final TaskType type) {
-		this.type = type;
+	public void setProgress(final double progress) {
+		this.progress = progress;
 	}
-	public List<String> getIds() {
-		return ids;
+	public String getStatus() {
+		return status;
 	}
-	public void setIds(final List<String> ids) {
-		this.ids = ids;
+	public void setStatus(final String status) {
+		this.status = status;
 	}
-	
+
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof Task)) {
+		if (obj == null || !(obj instanceof Progress)) {
 			return false;
 		}
-		final Task other = Task.class.cast(obj);
-		return Objects.equal(uuid, other.uuid)
-				&& Objects.equal(type, other.type)
-				&& Objects.equal(ids, other.ids);
+		final Progress other = Progress.class.cast(obj);
+		return Objects.equal(done, other.done)
+				&& Objects.equal(progress, other.progress)
+				&& Objects.equal(status, other.status);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(uuid, type, ids);
+		return Objects.hashCode(done, progress, status);
 	}
 
 	@Override
 	public String toString() {
 		return Objects.toStringHelper(this)
-				.add("uuid", uuid)
-				.add("type", type)
-				.add("ids", ids)
+				.add("done", done)
+				.add("progress", progress)
+				.add("status", status)
 				.toString();
-	}
-
-	/* Task types */
-
-	public static enum TaskType {
-		IMPORT_SEQUENCES;
 	}
 
 	/* Fluent API */
@@ -96,25 +88,25 @@ public class Task {
 
 	public static class Builder {
 
-		private final Task task = new Task();
+		private final Progress instance = new Progress();
 
-		public Builder uuid(final UUID uuid) {
-			task.setUuid(uuid);
+		public Builder done(final boolean done) {
+			instance.setDone(done);
 			return this;
 		}
 
-		public Builder type(final TaskType type) {
-			task.setType(type);
+		public Builder progress(final double progress) {
+			instance.setProgress(progress);
 			return this;
 		}
 
-		public Builder ids(final List<String> ids) {
-			task.setIds(ids);
+		public Builder status(final String status) {
+			instance.setStatus(status);
 			return this;
 		}
 
-		public Task build() {
-			return task;
+		public Progress build() {
+			return instance;
 		}
 
 	}
