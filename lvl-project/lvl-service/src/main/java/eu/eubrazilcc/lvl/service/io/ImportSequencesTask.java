@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.service.io;
 
+import static com.google.common.base.Joiner.on;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
@@ -50,6 +51,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 
@@ -79,6 +81,9 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 
 	private ImmutableList<SequenceFilter> filters = of();
 
+	private AtomicInteger pending = new AtomicInteger(0);
+	private AtomicInteger fetched = new AtomicInteger(0);
+	
 	public ImportSequencesTask() {
 		this.task = create(importSequencesTask());
 	}
@@ -104,7 +109,7 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 				final File tmpDir = createTmpDir();
 				try {
 					final List<ListenableFuture<Integer>> futures = newArrayList();
-					for (final String dataSource : DEFAULT_DATA_SOURCES) {
+					for (final String dataSource : DEFAULT_DATA_SOURCES) {						
 						futures.addAll(importSequences(dataSource, tmpDir));
 					}
 					final ListenableFuture<List<Integer>> futuresList = allAsList(futures);
@@ -116,10 +121,12 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 							}
 						}
 					}
+					setStatus(importedSequencesCount + " sequences imported from: " + on(", ").join(DEFAULT_DATA_SOURCES));
 				} catch (Exception e) {
+					setStatus("Error while importing sequences: some sequences might have been skipped to avoid data integrity problems.");
 					LOGGER.error("Error while importing sequences", e);
 					// TODO: send notification
-				} finally {
+				} finally {					
 					deleteQuietly(tmpDir);
 				}
 				LOGGER.info(importedSequencesCount + " sequences imported");
@@ -142,11 +149,12 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 		}
 	}
 
-	private List<ListenableFuture<Integer>> importGenBankSequences(final File tmpDir) {
+	private List<ListenableFuture<Integer>> importGenBankSequences(final File tmpDir) {		
 		final List<ListenableFuture<Integer>> futures = newArrayList();
 		int esearchCount = -1, retstart = 0, count = 0, retries = 0;
-		final int retmax = EntrezHelper.MAX_RECORDS_LISTED;
+		final int retmax = EntrezHelper.MAX_RECORDS_LISTED;		
 		do {
+			setStatus("Searching GenBank for sequence identifiers");
 			try {
 				final ESearchResult result = esearch(EntrezHelper.PHLEBOTOMUS_QUERY, retstart, retmax);
 				if (esearchCount < 0) {
@@ -172,6 +180,7 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 			private int efetchCount = 0;
 			@Override
 			public Integer call() throws Exception {
+				setStatus("Finding missing sequences between GenBank and the local collection");
 				// filter out the sequence that are already stored in the database, creating a new set
 				// with the identifiers that are missing from the database. Using a set ensures that 
 				// duplicate identifiers are also removed from the original list
@@ -189,12 +198,17 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 					}
 				}).filter(notNull()).toSet().asList();
 				if (ids2.size() > 0) {
+					setStatus("Fetching sequences from GenBank");
+					// update progress
+					int pendingCount = pending.addAndGet(ids2.size());
+					setProgress(100.0d * fetched.get() / pendingCount);
 					// fetch sequence files
 					final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_task_");
 					efetch(ids2, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
 					// copy sequence files to their final location and import them to the database
 					final Path seqPath = CONFIG_MANAGER.getGenBankDir(format).toPath();
 					for (final String id : ids2) {
+						setStatus("Importing GenBank sequences into local collection");
 						final Path source = tmpDir2.resolve(id + "." + extension);
 						try {
 							// copy sequence to storage						
@@ -205,6 +219,9 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 							final Sequence sequence = parse((GBSeq)GB_SEQXML.typeFromFile(target.toFile()));
 							SEQUENCE_DAO.insert(sequence);
 							efetchCount++;
+							// update progress							
+							int fetchedCount = fetched.incrementAndGet();
+							setProgress(100.0d * fetchedCount / pending.get());
 						} catch (Exception e) {
 							LOGGER.warn("Failed to import sequence from file: " + source.getFileName(), e);
 						} finally {
