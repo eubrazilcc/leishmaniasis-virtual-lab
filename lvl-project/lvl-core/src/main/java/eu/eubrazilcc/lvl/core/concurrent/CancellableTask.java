@@ -45,14 +45,13 @@ public class CancellableTask<V> {
 
 	public static final Range<Double> PROGRESS_RANGE = closed(0.0d, 100.0d);
 
-	private final UUID uuid;
+	private final UUID uuid = randomUUID();
 	protected ListenableFutureTask<V> task;
 	private double progress = PROGRESS_RANGE.lowerEndpoint();
 	private String status;
+	private boolean hasErrors = false;
 
-	public CancellableTask() {
-		this.uuid = randomUUID();		
-	}
+	public CancellableTask() { }
 
 	public UUID getUuid() {
 		return uuid;
@@ -89,6 +88,14 @@ public class CancellableTask<V> {
 	
 	public boolean isDone() {
 		return task.isDone();
+	}	
+
+	public boolean hasErrors() {
+		return hasErrors;
+	}
+
+	public void setHasErrors(final boolean hasErrors) {
+		this.hasErrors = hasErrors;
 	}
 
 	@Override

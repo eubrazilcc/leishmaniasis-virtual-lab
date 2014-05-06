@@ -33,6 +33,7 @@ public class Progress {
 	private boolean done;
 	private double progress;
 	private String status;
+	private boolean hasErrors;
 
 	public Progress() { }
 
@@ -54,6 +55,12 @@ public class Progress {
 	public void setStatus(final String status) {
 		this.status = status;
 	}
+	public boolean isHasErrors() {
+		return hasErrors;
+	}
+	public void setHasErrors(final boolean hasErrors) {
+		this.hasErrors = hasErrors;
+	}
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -63,12 +70,13 @@ public class Progress {
 		final Progress other = Progress.class.cast(obj);
 		return Objects.equal(done, other.done)
 				&& Objects.equal(progress, other.progress)
-				&& Objects.equal(status, other.status);
+				&& Objects.equal(status, other.status)
+				&& Objects.equal(hasErrors, other.hasErrors);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(done, progress, status);
+		return Objects.hashCode(done, progress, status, hasErrors);
 	}
 
 	@Override
@@ -77,6 +85,7 @@ public class Progress {
 				.add("done", done)
 				.add("progress", progress)
 				.add("status", status)
+				.add("hasErrors", hasErrors)
 				.toString();
 	}
 
@@ -102,6 +111,11 @@ public class Progress {
 
 		public Builder status(final String status) {
 			instance.setStatus(status);
+			return this;
+		}
+
+		public Builder hasErrors(final boolean hasErrors) {
+			instance.setHasErrors(hasErrors);
 			return this;
 		}
 

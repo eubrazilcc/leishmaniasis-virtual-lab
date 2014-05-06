@@ -162,6 +162,7 @@ public class TaskResource {
 									.done(task.isDone())
 									.progress(task.getProgress())
 									.status(task.getStatus())
+									.hasErrors(task.hasErrors())
 									.build()))
 									.build());
 				} catch (IOException e) {

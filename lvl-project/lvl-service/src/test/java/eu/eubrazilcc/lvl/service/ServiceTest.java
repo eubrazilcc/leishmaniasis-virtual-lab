@@ -148,13 +148,14 @@ public class ServiceTest {
 			String payload = response.readEntity(String.class);
 			assertThat("Create import sequences task response entity is not null", payload, notNullValue());
 			assertThat("Create import sequences task response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			/* uncomment for additional output */
 			System.out.println("Create import sequences task response body (JSON), empty is OK: " + payload);
 			System.out.println("Create import sequences task response JAX-RS object: " + response);
 			System.out.println("Create import sequences task HTTP headers: " + response.getStringHeaders());
 			final URI location = new URI((String)response.getHeaders().get("Location").get(0));
 
 			// test import sequences task progress
+			boolean hasErrors = false;
 			final EventInput eventInput = target.path(path.value())
 					.path("progress")
 					.path(getName(location.getPath()))
@@ -169,21 +170,18 @@ public class ServiceTest {
 					break;
 				}
 				final String name = inboundEvent.getName();
+				assertThat("Progress event name is not null", name, notNullValue());
+				assertThat("Progress event name is not empty", isNotBlank(name));
 				final String data = inboundEvent.readData(String.class);
+				assertThat("Progress event data is not null", data, notNullValue());
+				assertThat("Progress event data is not empty", isNotBlank(data));
 				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);
-				
-				
-				System.out.println(" EVENT [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: " 
-						+ name + "; " + data + "; " + progress);
+				assertThat("Progress event decoded object is not null", progress, notNullValue());
+				assertThat("Import sequences task does not have errors (so far as the progress that was made)", !hasErrors);				
+				/* uncomment for additional output */				
+				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: name=" 
+						+ name + "; data=" + data + "; object=" + progress);
 			}
-
-
-
-
-			// TODO
-
-
-
 
 			// test create new sequence
 			path = SequenceResource.class.getAnnotation(Path.class);

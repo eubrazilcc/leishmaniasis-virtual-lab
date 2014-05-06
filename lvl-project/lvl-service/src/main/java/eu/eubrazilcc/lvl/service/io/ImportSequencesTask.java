@@ -123,6 +123,7 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 					}
 					setStatus(importedSequencesCount + " sequences imported from: " + on(", ").join(DEFAULT_DATA_SOURCES));
 				} catch (Exception e) {
+					setHasErrors(true);
 					setStatus("Error while importing sequences: some sequences might have been skipped to avoid data integrity problems.");
 					LOGGER.error("Error while importing sequences", e);
 					// TODO: send notification
