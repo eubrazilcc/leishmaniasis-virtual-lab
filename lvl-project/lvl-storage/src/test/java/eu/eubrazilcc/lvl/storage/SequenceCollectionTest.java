@@ -73,6 +73,14 @@ public class SequenceCollectionTest {
 			assertThat("sequence is not null", sequence2, notNullValue());
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
+			
+			// duplicates are not allowed
+			try {
+				SEQUENCE_DAO.insert(sequence2);
+				fail("Duplicate sequences are not allowed");
+			} catch (Exception e) {
+				System.out.println("Exception caught while trying to insert a duplicate sequence");
+			}
 
 			// update
 			sequence.setVersion("4.0");

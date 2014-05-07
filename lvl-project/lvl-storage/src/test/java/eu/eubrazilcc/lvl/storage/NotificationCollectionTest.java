@@ -23,11 +23,13 @@ package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.storage.dao.NotificationDAO.NOTIFICATION_DAO;
+import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
+import static java.util.Collections.shuffle;
 
 import java.util.List;
 
@@ -99,8 +101,36 @@ public class NotificationCollectionTest {
 				NOTIFICATION_DAO.delete(id2);
 			}
 			NOTIFICATION_DAO.stats(System.out);
-
-			// TODO
+			
+			// test notification manager
+			final List<Notification> notifications2 = newArrayList();
+			for (int i = 0; i < 200; i++) {
+				Priority priority;
+				if (i < 50) {
+					priority = Priority.CRITICAL;
+				} else if (i >= 50 && i < 100) {
+					priority = Priority.HIGH;
+				} else if (i >= 100 && i < 150) {
+					priority = Priority.NORMAL;
+				} else {
+					priority = Priority.LOW;
+				}
+				final Notification notification3 = Notification.builder()
+						.priority(priority)
+						.message(Integer.toString(i)).build();
+				notifications2.add(notification3);
+			}
+			shuffle(notifications2);
+			for (final Notification notification3 : notifications2) {
+				NOTIFICATION_MANAGER.sendNotification(notification3);
+			}
+			int tries = 0;
+			while (NOTIFICATION_MANAGER.hasPendingNotifications() && tries++ < 30) {
+				Thread.sleep(1000l);
+			}
+			notifications = NOTIFICATION_DAO.list(0, 200, null);
+			assertThat("notifications is not null", notifications, notNullValue());
+			assertThat("notifications size coincides with expected", notifications.size(), equalTo(200));
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("NotificationCollectionTest.test() failed: " + e.getMessage());

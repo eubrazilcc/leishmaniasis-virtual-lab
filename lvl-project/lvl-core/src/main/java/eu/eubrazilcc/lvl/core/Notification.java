@@ -212,19 +212,29 @@ public class Notification {
 		/**
 		 * Highest priority, for items that require the receiver's prompt attention.
 		 */
-		CRITICAL,
+		CRITICAL(1),
 		/**
 		 * Higher priority, for important alerts.
 		 */
-		HIGH,
+		HIGH(2),
 		/**
 		 * Default notification priority.
 		 */
-		NORMAL,
+		NORMAL(3),
 		/**
 		 * Lower priority, for items that are less important.
 		 */
-		LOW
+		LOW(4);
+
+		private int numVal;
+
+		private Priority(int numVal) {
+			this.numVal = numVal;
+		}
+
+		public int getNumVal() {
+			return numVal;
+		}		
 	}
 
 }
