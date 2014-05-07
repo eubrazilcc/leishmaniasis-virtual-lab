@@ -60,7 +60,7 @@ import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 
 /**
- * Sequence DAO.
+ * {@link Sequence} DAO.
  * @author Erik Torres <ertorser@upv.es>
  */
 public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
@@ -188,7 +188,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		if (obj != null) {
 			final SequenceEntity entity = morphia.fromDBObject(SequenceEntity.class, obj);
 			if (entity != null) {
-				sequence = morphia.fromDBObject(SequenceEntity.class, obj).getSequence();
+				sequence = entity.getSequence();
 				addLink(sequence);
 			}
 		}

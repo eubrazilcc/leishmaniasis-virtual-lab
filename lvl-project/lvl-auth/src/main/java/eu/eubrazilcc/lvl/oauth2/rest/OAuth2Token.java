@@ -26,6 +26,7 @@ import static eu.eubrazilcc.lvl.storage.oauth2.dao.AuthCodeDAO.AUTH_CODE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO.CLIENT_APP_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
+import static java.lang.System.currentTimeMillis;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -146,7 +147,7 @@ public class OAuth2Token {
 
 			final AccessToken accessToken = AccessToken.builder()
 					.token(oauthIssuerImpl.accessToken())
-					.issuedAt(System.currentTimeMillis() / 1000l)
+					.issuedAt(currentTimeMillis() / 1000l)
 					.expiresIn(TOKEN_EXPIRATION_SECONDS)
 					.scope(ScopeManager.asList(scope))
 					.build();

@@ -155,7 +155,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		if (obj != null) {
 			final AccessTokenEntity entity = morphia.fromDBObject(AccessTokenEntity.class, obj);
 			if (entity != null) {
-				token = morphia.fromDBObject(AccessTokenEntity.class, obj).getAccessToken();
+				token = entity.getAccessToken();
 			}
 		}
 		return token;

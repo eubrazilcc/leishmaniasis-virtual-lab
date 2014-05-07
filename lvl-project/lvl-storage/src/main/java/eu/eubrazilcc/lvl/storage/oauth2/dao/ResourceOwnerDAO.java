@@ -214,7 +214,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		if (obj != null) {
 			final ResourceOwnerEntity entity = morphia.fromDBObject(ResourceOwnerEntity.class, obj);
 			if (entity != null) {
-				owner = morphia.fromDBObject(ResourceOwnerEntity.class, obj).getResourceOwner();
+				owner = entity.getResourceOwner();
 				addLink(owner);
 				addGravatar(owner);
 			}

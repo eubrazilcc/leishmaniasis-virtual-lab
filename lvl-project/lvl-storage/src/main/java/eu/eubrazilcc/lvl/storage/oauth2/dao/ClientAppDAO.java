@@ -174,7 +174,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 		if (obj != null) {
 			final ClientAppEntity entity = morphia.fromDBObject(ClientAppEntity.class, obj);
 			if (entity != null) {
-				clientApp = morphia.fromDBObject(ClientAppEntity.class, obj).getClientApp();
+				clientApp = entity.getClientApp();
 			}
 		}
 		return clientApp;

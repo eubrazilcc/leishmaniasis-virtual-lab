@@ -174,7 +174,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 		if (obj != null) {
 			final PendingUserEntity entity = morphia.fromDBObject(PendingUserEntity.class, obj);
 			if (entity != null) {
-				pendingUser = morphia.fromDBObject(PendingUserEntity.class, obj).getPendingUser();
+				pendingUser = entity.getPendingUser();
 				addLink(pendingUser);
 			}
 		}

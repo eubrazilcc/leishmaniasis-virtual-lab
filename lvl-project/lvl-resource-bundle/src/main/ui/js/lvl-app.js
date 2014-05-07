@@ -1,11 +1,5 @@
 'use strict';
 
-/* integrates FastClick */
-angular.module('lvl.fastclick', [])
-.run(function() {
-	FastClick.attach(document.body);
-});
-
 /* global configuration */
 angular.module('lvl.config', [])
 .constant('ENV', {
@@ -16,7 +10,7 @@ angular.module('lvl.config', [])
 	}
 });
 
-angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngAnimate', 'ngGrid', 'ui.bootstrap', 'chieffancypants.loadingBar', 'lvl.fastclick', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers' ])
+angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngAnimate', 'ngGrid', 'ui.bootstrap', 'chieffancypants.loadingBar', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers' ])
 .config(['$routeProvider', function($routeProvider) {
 	var isLoggedIn = ['$q', '$http', '$window', 'Oauth2Factory', function($q, $http, $window, Oauth2Factory) {
 		var defer = $q.defer();		

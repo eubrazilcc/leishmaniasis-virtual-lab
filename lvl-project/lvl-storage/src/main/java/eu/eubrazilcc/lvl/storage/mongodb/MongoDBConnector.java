@@ -149,7 +149,7 @@ public enum MongoDBConnector implements Closeable2 {
 	 */
 	public void createIndex(final String field, final String collection, final boolean descending) {
 		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
-		createIndex(ImmutableList.of(field), collection, descending);
+		createIndex(ImmutableList.of(field), collection, true, descending);
 	}
 
 	/**
@@ -160,9 +160,20 @@ public enum MongoDBConnector implements Closeable2 {
 	 * @param collection - collection where the index is created
 	 */
 	public void createIndex(final List<String> fields, final String collection) {
-		createIndex(fields, collection, false);
+		createIndex(fields, collection, true, false);
 	}
-	
+
+	/**
+	 * Creates an index on a field, if one does not already exist on the specified collection. Indexes 
+	 * created with this method are created in the background and allow storing duplicated elements.
+	 * @param field - field that is used to index the elements
+	 * @param collection - collection where the index is created
+	 * @param descending - (optional) sort the elements of the index in descending order
+	 */
+	public void createNonUniqueIndex(final String field, final String collection, final boolean descending) {
+		createIndex(ImmutableList.of(field), collection, false, descending);
+	}
+
 	/**
 	 * Creates an index on a set of fields, if one does not already exist on the specified collection.
 	 * Indexes created with this method are created in the background and stores unique elements.
@@ -170,7 +181,7 @@ public enum MongoDBConnector implements Closeable2 {
 	 * @param collection - collection where the index is created
 	 * @param descending - (optional) sort the elements of the index in descending order
 	 */
-	public void createIndex(final List<String> fields, final String collection, final boolean descending) {
+	public void createIndex(final List<String> fields, final String collection, final boolean unique, final boolean descending) {
 		checkArgument(fields != null && !fields.isEmpty(), "Uninitialized or invalid fields");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
@@ -183,11 +194,11 @@ public enum MongoDBConnector implements Closeable2 {
 				public Integer apply(final String field) {
 					return descending ? -1 : 1;
 				}				
-			})), new BasicDBObject(ImmutableMap.of("unique", true, "background", true)));
+			})), new BasicDBObject(unique ? ImmutableMap.of("unique", true, "background", true) : ImmutableMap.of("background", true)));
 		} finally {
 			db.requestDone();
 		}
-	}
+	}	
 
 	/**
 	 * Creates a new geospatial index in a collection. Indexes are created in the background.

@@ -56,26 +56,32 @@ public class TokenCollectionTest {
 					.scope(scopes)
 					.build();
 			TOKEN_DAO.insert(accessToken);
+			
 			// find
 			AccessToken accessToken2 = TOKEN_DAO.find(accessToken.getToken());
 			assertThat("access token is not null", accessToken2, notNullValue());
 			assertThat("access token coincides with original", accessToken2, equalTo(accessToken));
 			System.out.println(accessToken2.toString());
+			
 			// update
 			accessToken.setExpiresIn(604800l);
 			TOKEN_DAO.update(accessToken);
+			
 			// find after update
 			accessToken2 = TOKEN_DAO.find(accessToken.getToken());
 			assertThat("access token is not null", accessToken2, notNullValue());
 			assertThat("access token coincides with original", accessToken2, equalTo(accessToken));
 			System.out.println(accessToken2.toString());
+			
 			// check validity
 			boolean validity = TOKEN_DAO.isValid(accessToken.getToken());
 			assertThat("access token is valid", validity);
 			validity = TOKEN_DAO.isValid(accessToken.getToken(), "scope2", false);
 			assertThat("access token is valid using target scope", validity);
+			
 			// remove
 			TOKEN_DAO.delete(accessToken.getToken());
+			
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {

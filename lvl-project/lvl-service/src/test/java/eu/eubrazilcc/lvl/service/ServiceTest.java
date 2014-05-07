@@ -177,7 +177,7 @@ public class ServiceTest {
 				assertThat("Progress event data is not empty", isNotBlank(data));
 				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);
 				assertThat("Progress event decoded object is not null", progress, notNullValue());
-				assertThat("Import sequences task does not have errors (so far as the progress that was made)", !hasErrors);				
+				assertThat("Import sequences task does not have errors", !hasErrors);				
 				/* uncomment for additional output */				
 				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: name=" 
 						+ name + "; data=" + data + "; object=" + progress);

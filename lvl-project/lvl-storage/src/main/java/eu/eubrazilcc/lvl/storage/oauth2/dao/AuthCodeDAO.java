@@ -154,7 +154,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 		if (obj != null) {
 			final AuthCodeEntity entity = morphia.fromDBObject(AuthCodeEntity.class, obj);
 			if (entity != null) {
-				authCode = morphia.fromDBObject(AuthCodeEntity.class, obj).getAuthCode();
+				authCode = entity.getAuthCode();
 			}
 		}
 		return authCode;
