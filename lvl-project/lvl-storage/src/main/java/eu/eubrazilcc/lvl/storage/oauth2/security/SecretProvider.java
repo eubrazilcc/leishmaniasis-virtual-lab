@@ -22,6 +22,10 @@
 
 package eu.eubrazilcc.lvl.storage.oauth2.security;
 
+import static java.lang.System.arraycopy;
+import static java.security.MessageDigest.getInstance;
+import static org.apache.commons.codec.binary.Base64.encodeBase64;
+
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -30,7 +34,6 @@ import java.util.Date;
 import javax.annotation.Nullable;
 
 import org.apache.commons.codec.binary.Base32;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  * Provides secret token generation.
@@ -54,13 +57,13 @@ public final class SecretProvider {
 			final int numTokens = (tokens != null ? tokens.length : 0);
 			final String[] tokenArr = new String[numTokens + 1];
 			if (numTokens > 0) {
-				System.arraycopy(tokens, 0, tokenArr, 0, numTokens);
+				arraycopy(tokens, 0, tokenArr, 0, numTokens);
 			}
 			// add random salt to defend against dictionary attacks
 			tokenArr[tokenArr.length - 1] = new String(generateSalt(DEFAULT_STRENGTH));
 			// compute secret and encode it with Base64 before returning to the caller
 			final byte[] digest = digest(tokenArr, new Date[]{ new Date() });
-			return new String(Base64.encodeBase64(digest, false, false));
+			return new String(encodeBase64(digest, false, false));
 		} catch (IOException e) {
 			throw new IllegalStateException("Failed to generate secret", e);
 		}
@@ -74,9 +77,9 @@ public final class SecretProvider {
 	 * @see <a href="http://www.ietf.org/rfc/rfc4648.txt">RFC4648</a>
 	 */
 	public static String generateFastUrlSafeSecret() {
-		return new Base32().encodeAsString(SecretProvider.generateSalt(8));
+		return new Base32().encodeAsString(generateSalt(8));
 	}
-
+	
 	/**
 	 * Creates a random salt of the specified bytes, selected by a {@link SecureRandom} that can 
 	 * be passed as input parameter to a function that hashes a password to protect the generated 
@@ -113,7 +116,7 @@ public final class SecretProvider {
 			}
 			// compute digest
 			final byte[] bytesOfMixName = mixName.getBytes("UTF-8");
-			final MessageDigest md = MessageDigest.getInstance("SHA-256");
+			final MessageDigest md = getInstance("SHA-256");
 			return md.digest(bytesOfMixName);			
 		} catch (Exception e) {			
 			throw new IOException("Digest computation has failed", e);

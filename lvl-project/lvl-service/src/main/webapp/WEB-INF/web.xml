@@ -69,5 +69,5 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<filter-mapping>
 		<filter-name>CorsFilter</filter-name>
 		<url-pattern>/*</url-pattern>
-	</filter-mapping>
+	</filter-mapping>	
 </web-app>

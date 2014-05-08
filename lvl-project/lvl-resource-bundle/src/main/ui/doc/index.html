@@ -684,6 +684,15 @@ Access-Control-Max-Age: 604800
    <a href="http://tomcat.apache.org/tomcat-7.0-doc/config/filter.html#CORS_Filter" target="_blank"> Tomcat filter</a>
    adds support for CORS in Tomcat (starting from Tomcat version 7.0.41).</p>
 
+<p><a href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)" target="_blank">Cross-Site Request Forgery (CSRF)</a> is an attack that
+   can compromise end user data and operation or even the entire Web application if the targeted end user is the administrator account. To protect the
+   RESTful API from this kind of attack, the server activates this 
+   <a href="http://tomcat.apache.org/tomcat-7.0-doc/config/filter.html#CSRF_Prevention_Filter" target="_blank"> Tomcat filter</a>. </p>
+
+https://jersey.java.net/documentation/latest/client.html#d0e4689
+
+CsrfProtectionFilter: Cross-site request forgery protection filter (adds X-Requested-By to each state changing request).
+
 <h3><a id="restful_api_resources">Resources</a></h3>
 
 <p><em>TODO</em>: Get new publications from PubMed and new sequences from GenBank: the system must periodically inspect these resources for new records on Leishmaniasis. Users with administrator role are notified when new records are found.

@@ -37,6 +37,7 @@ import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
+import org.glassfish.jersey.server.filter.CsrfProtectionFilter;
 import org.slf4j.Logger;
 
 import com.google.common.base.Function;
@@ -62,11 +63,13 @@ public class LeishVirtLabApplication extends Application {
 		// start service
 		LVL_SERVICE.service();		
 		// create LVL resources
+		instances.add(new SessionResource());
 		instances.add(new SequenceResource());
 		instances.add(new TaskResource());
 		// add additional JAX-RS providers
 		classes.add(MoxyJsonFeature.class);
 		classes.add(SseFeature.class);
+		classes.add(CsrfProtectionFilter.class);
 		LOGGER.info(SERVICE_NAME + " initialized successfully, registered resources: " + objectsClassNames(instances));
 	}
 
