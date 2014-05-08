@@ -39,6 +39,7 @@ import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getCount;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getIds;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.parse;
+import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
@@ -61,12 +62,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import eu.eubrazilcc.lvl.core.DataSource;
+import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.ESearchResult;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
+import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
 /**
  * Discovers and imports new sequences in the LVL collection. Sequences are discovered from public
@@ -125,13 +128,17 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 				} catch (Exception e) {
 					setHasErrors(true);
 					setStatus("Error while importing sequences: some sequences might have been skipped to avoid data integrity problems.");
+					NOTIFICATION_MANAGER.broadcast(Notification.builder()
+							.scope(ScopeManager.SEQUENCES)
+							.message("Error while importing sequences: " + e.getMessage()).build());
 					LOGGER.error("Error while importing sequences", e);
-					// TODO: send notification
 				} finally {					
 					deleteQuietly(tmpDir);
 				}
-				LOGGER.info(importedSequencesCount + " sequences imported");
-				// TODO: send notification
+				NOTIFICATION_MANAGER.broadcast(Notification.builder()
+						.scope(ScopeManager.SEQUENCES)
+						.message(importedSequencesCount + " new sequences were imported from: " + DEFAULT_DATA_SOURCES).build());
+				LOGGER.info(importedSequencesCount + " new sequences were imported from: " + DEFAULT_DATA_SOURCES);
 				return new Integer(importedSequencesCount);
 			}			
 		};

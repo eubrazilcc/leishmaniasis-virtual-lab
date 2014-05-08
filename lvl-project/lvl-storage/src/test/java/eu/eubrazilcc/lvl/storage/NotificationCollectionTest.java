@@ -39,6 +39,8 @@ import org.junit.Test;
 import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.Notification.Action;
 import eu.eubrazilcc.lvl.core.Notification.Priority;
+import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
+import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
 /**
  * Tests notification collection in the database.
@@ -102,7 +104,7 @@ public class NotificationCollectionTest {
 			}
 			NOTIFICATION_DAO.stats(System.out);
 			
-			// test notification manager
+			// test notification sending
 			final List<Notification> notifications2 = newArrayList();
 			for (int i = 0; i < 200; i++) {
 				Priority priority;
@@ -117,12 +119,13 @@ public class NotificationCollectionTest {
 				}
 				final Notification notification3 = Notification.builder()
 						.priority(priority)
+						.addressee(ResourceOwnerDAO.ADMIN_USER)
 						.message(Integer.toString(i)).build();
 				notifications2.add(notification3);
 			}
 			shuffle(notifications2);
 			for (final Notification notification3 : notifications2) {
-				NOTIFICATION_MANAGER.sendNotification(notification3);
+				NOTIFICATION_MANAGER.send(notification3);
 			}
 			int tries = 0;
 			while (NOTIFICATION_MANAGER.hasPendingNotifications() && tries++ < 30) {
@@ -131,6 +134,19 @@ public class NotificationCollectionTest {
 			notifications = NOTIFICATION_DAO.list(0, 200, null);
 			assertThat("notifications is not null", notifications, notNullValue());
 			assertThat("notifications size coincides with expected", notifications.size(), equalTo(200));
+			
+			// test notification broadcasting
+			final Notification notification3 = Notification.builder()
+					.scope(ScopeManager.SEQUENCES)
+					.message("Notification to all users with full access to the sequences").build();
+			NOTIFICATION_MANAGER.broadcast(notification3);
+			tries = 0;
+			while (NOTIFICATION_MANAGER.hasPendingNotifications() && tries++ < 30) {
+				Thread.sleep(1000l);
+			}
+			notifications = NOTIFICATION_DAO.list(0, 201, null);
+			assertThat("notifications (including broadcasted) is not null", notifications, notNullValue());
+			assertThat("notifications (including broadcasted) size coincides with expected", notifications.size(), equalTo(201));			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("NotificationCollectionTest.test() failed: " + e.getMessage());

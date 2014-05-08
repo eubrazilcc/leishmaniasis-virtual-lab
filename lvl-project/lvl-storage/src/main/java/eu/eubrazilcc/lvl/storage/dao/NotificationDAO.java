@@ -58,13 +58,15 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	public static final String COLLECTION = "notifications";
 	public static final String MORPHIA_KEY = "_id";
 	public static final String PRIORITY_INDEX = "priority";
+	public static final String ADDRESSE_INDEX = "addressee";
 	public static final String ISSUED_AT_INDEX = "issuedAt";
 
 	private final Morphia morphia = new Morphia();	
 
 	private NotificationDAO() {
 		MONGODB_CONN.createNonUniqueIndex(PRIORITY_INDEX, COLLECTION, false);
-		MONGODB_CONN.createNonUniqueIndex(ISSUED_AT_INDEX, COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(ADDRESSE_INDEX, COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(ISSUED_AT_INDEX, COLLECTION, false);		
 		morphia.map(NotificationEntity.class);
 	}
 

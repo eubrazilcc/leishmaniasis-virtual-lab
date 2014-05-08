@@ -261,16 +261,15 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	/**
-	 * Checks whether or not the specified user name and password coincides with 
-	 * those stored for resource owner identified by the provided id.
+	 * Checks whether or not the specified user name and password coincides with those stored for resource 
+	 * owner identified by the provided id.
 	 * @param ownerId - identifier of the resource owner
 	 * @param username - user name to be validated, or email address if {@code useEmail}
 	 *        is set to true
 	 * @param password - password to be validated
 	 * @param useEmail - use email address to search the database, instead of owner Id
-	 * @param scopeRef - if set and the resource owner is valid, then the scopes associated 
-	 *        with the resource owner are concatenated and returned to the caller to be used
-	 *        with OAuth 
+	 * @param scopeRef - if set and the resource owner is valid, then the scopes associated with the resource 
+	 *        owner are concatenated and returned to the caller to be used with OAuth 
 	 * @return {@code true} only if the provided user name and password coincides
 	 *        with those stored for the resource owner. Otherwise, returns {@code false}.
 	 */
@@ -305,6 +304,28 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 			scopeRef.set(oauthScope(resourceOwner, false));
 		}
 		return isValid;
+	}
+	
+	/**
+	 * Checks whether or not the specified user exists (the specified username coincides with the 
+	 * username stored for the resource owner identified by the provided id).
+	 * @param ownerId - identifier of the resource owner
+	 * @param username - user name to be validated, or email address if {@code useEmail} is set to true
+	 * @param scopeRef - if set and the resource owner is valid, then the scopes associated with the resource 
+	 *        owner are concatenated and returned to the caller to be used with OAuth 
+	 * @return {@code true} only if the provided user name and password coincides
+	 *        with those stored for the resource owner. Otherwise, returns {@code false}.
+	 */
+	public boolean exist(final String ownerId, final String username, final @Nullable AtomicReference<String> scopeRef) {
+		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
+		checkArgument(isNotBlank(username), "Uninitialized or invalid username");
+		final ResourceOwner resourceOwner = find(ownerId);
+		final boolean exist = (resourceOwner != null && resourceOwner.getUser() != null 
+				&& username.equals(resourceOwner.getUser().getUsername()));
+		if (exist && scopeRef != null) {
+			scopeRef.set(oauthScope(resourceOwner, false));
+		}
+		return exist;		
 	}
 
 	/**

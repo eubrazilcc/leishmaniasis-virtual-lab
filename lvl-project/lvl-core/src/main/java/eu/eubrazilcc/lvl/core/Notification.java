@@ -36,8 +36,10 @@ import com.google.common.base.Objects;
  */
 public class Notification {
 
-	private String id; // optional identifier that is normally assigned to store the notification permanently
+	private String id; // optional identifier that is normally assigned to store the notification permanently	
 	private Priority priority;
+	private String addressee;
+	private String scope;
 	private long issuedAt;
 	private String message;
 	private Action action;
@@ -59,6 +61,18 @@ public class Notification {
 	public void setPriority(final Priority priority) {
 		this.priority = priority;
 	}	
+	public String getAddressee() {
+		return addressee;
+	}
+	public void setAddressee(final String addressee) {
+		this.addressee = addressee;
+	}
+	public String getScope() {
+		return scope;
+	}
+	public void setScope(final String scope) {
+		this.scope = scope;
+	}
 	public long getIssuedAt() {
 		return issuedAt;
 	}
@@ -93,6 +107,8 @@ public class Notification {
 			return false;
 		}
 		return Objects.equal(priority, other.priority)
+				&& Objects.equal(addressee, other.addressee)
+				&& Objects.equal(scope, other.scope)
 				&& Objects.equal(issuedAt, other.issuedAt)
 				&& Objects.equal(message, other.message)
 				&& Objects.equal(action, other.action);
@@ -100,7 +116,7 @@ public class Notification {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(id, priority, issuedAt, message, action);
+		return Objects.hashCode(id, priority, addressee, scope, issuedAt, message, action);
 	}
 
 	@Override
@@ -108,6 +124,8 @@ public class Notification {
 		return Objects.toStringHelper(this)
 				.add("id", id)
 				.add("priority", priority)
+				.add("addressee", addressee)
+				.add("scope", scope)
 				.add("issuedAt", issuedAt)
 				.add("message", message)
 				.add("action", action)
@@ -134,6 +152,16 @@ public class Notification {
 			return this;
 		}
 
+		public Builder addressee(final String addressee) {
+			instance.setAddressee(addressee);
+			return this;
+		}
+
+		public Builder scope(final String scope) {
+			instance.setScope(scope);
+			return this;
+		}
+		
 		public Builder issuedAt(final long issuedAt) {
 			checkArgument(issuedAt >= 0l, "Invalid issued at");
 			instance.setIssuedAt(issuedAt);
