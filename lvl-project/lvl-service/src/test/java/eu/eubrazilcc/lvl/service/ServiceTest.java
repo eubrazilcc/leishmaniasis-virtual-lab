@@ -49,7 +49,6 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -71,7 +70,6 @@ import eu.eubrazilcc.lvl.core.geospatial.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.service.Task.TaskType;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
-import eu.eubrazilcc.lvl.service.rest.SessionResource;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
@@ -88,8 +86,6 @@ public class ServiceTest {
 			"lvl-service-test-Hf330xKUcsn7vnlKQXFndptow52MvZNKWxxpbnVqAA"));
 
 	private static final String BASE_URI = "https://localhost:8443/lvl-service/rest/v1";
-
-	private static final String XSRF_NAME = "X-Requested-By";
 
 	private WebTarget target;
 	private static final String token = "1234567890abcdEFGhiJKlMnOpqrstUVWxyZ";
@@ -138,28 +134,14 @@ public class ServiceTest {
 	public void test() {
 		System.out.println("ServiceTest.test()");
 		try {
-			// open session (this will create a cookie in the client with the objective of using it with operations that modify the state of the resource)
-			Path path = SessionResource.class.getAnnotation(Path.class);
-			Response response = target.path(path.value()).request().get();
-			assertThat("Open session is not null", response, notNullValue());
-			assertThat("Open session response is OK", response.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
-			final NewCookie xsrf = response.getCookies().get(XSRF_NAME);
-			assertThat("XSRF cookie is not null", xsrf, notNullValue());
-			assertThat("XSRF cookie is not empty", isNotBlank(xsrf.getValue()));
-			/* uncomment for additional output */
-			System.out.println("Open session response, empty is OK: " + response);
-			System.out.println("Open session HTTP headers: " + response.getStringHeaders());
-			System.out.println("Open session XSRF cookie: " + xsrf.getName() + "=" + xsrf.getValue());
-
 			// test import sequences task
-			path = TaskResource.class.getAnnotation(Path.class);			
+			Path path = TaskResource.class.getAnnotation(Path.class);			
 			final Task task = Task.builder()
 					.type(TaskType.IMPORT_SEQUENCES)
 					.ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
-			response = target.path(path.value()).request()
+			Response response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-					.header(xsrf.getName(), xsrf.getValue())
 					.post(Entity.entity(task, MediaType.APPLICATION_JSON_TYPE));
 
 			assertThat("Create import sequences task response is not null", response, notNullValue());
@@ -219,7 +201,6 @@ public class ServiceTest {
 					.build();
 			response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-					.header(xsrf.getName(), xsrf.getValue())
 					.post(Entity.entity(sequence, MediaType.APPLICATION_JSON_TYPE));			
 			assertThat("Create new sequence response is not null", response, notNullValue());
 			assertThat("Create new sequence response is CREATED", response.getStatus(), equalTo(Response.Status.CREATED.getStatusCode()));
@@ -272,7 +253,6 @@ public class ServiceTest {
 			response = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
 					.request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-					.header(xsrf.getName(), xsrf.getValue())
 					.put(Entity.entity(sequence, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("Update sequence response is not null", response, notNullValue());
 			assertThat("Update sequence response is NO_CONTENT", response.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
@@ -311,7 +291,6 @@ public class ServiceTest {
 			response = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
 					.request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-					.header(xsrf.getName(), xsrf.getValue())
 					.delete();
 			assertThat("Delete sequence response is not null", response, notNullValue());
 			assertThat("Delete sequence response is NO_CONTENT", response.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));

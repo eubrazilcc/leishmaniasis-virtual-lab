@@ -124,7 +124,7 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 							}
 						}
 					}
-					setStatus(importedSequencesCount + " sequences imported from: " + on(", ").join(DEFAULT_DATA_SOURCES));
+					setStatus(importedSequencesCount + " new sequences were imported from: " + on(", ").join(DEFAULT_DATA_SOURCES));
 				} catch (Exception e) {
 					setHasErrors(true);
 					setStatus("Error while importing sequences: some sequences might have been skipped to avoid data integrity problems.");
@@ -137,8 +137,8 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 				}
 				NOTIFICATION_MANAGER.broadcast(Notification.builder()
 						.scope(ScopeManager.SEQUENCES)
-						.message(importedSequencesCount + " new sequences were imported from: " + DEFAULT_DATA_SOURCES).build());
-				LOGGER.info(importedSequencesCount + " new sequences were imported from: " + DEFAULT_DATA_SOURCES);
+						.message(importedSequencesCount + " new sequences were imported from: " + on(", ").join(DEFAULT_DATA_SOURCES)).build());
+				LOGGER.info(importedSequencesCount + " new sequences were imported from: " + on(", ").join(DEFAULT_DATA_SOURCES));
 				return new Integer(importedSequencesCount);
 			}			
 		};

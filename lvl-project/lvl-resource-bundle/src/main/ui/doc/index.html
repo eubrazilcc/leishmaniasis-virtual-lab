@@ -684,14 +684,16 @@ Access-Control-Max-Age: 604800
    <a href="http://tomcat.apache.org/tomcat-7.0-doc/config/filter.html#CORS_Filter" target="_blank"> Tomcat filter</a>
    adds support for CORS in Tomcat (starting from Tomcat version 7.0.41).</p>
 
-<p><a href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)" target="_blank">Cross-Site Request Forgery (CSRF)</a> is an attack that
-   can compromise end user data and operation or even the entire Web application if the targeted end user is the administrator account. To protect the
-   RESTful API from this kind of attack, the server activates this 
-   <a href="http://tomcat.apache.org/tomcat-7.0-doc/config/filter.html#CSRF_Prevention_Filter" target="_blank"> Tomcat filter</a>. </p>
-
-https://jersey.java.net/documentation/latest/client.html#d0e4689
-
-CsrfProtectionFilter: Cross-site request forgery protection filter (adds X-Requested-By to each state changing request).
+<p><a href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)" target="_blank">Cross-Site Request Forgery (CSRF)</a> 
+   is an attack that can compromise end user data and operation or even the entire Web application if the targeted end user is the 
+   administrator account. To protect the RESTful API from this kind of attack, the server may activates the    
+   <a href="https://jersey.java.net/documentation/latest/client.html#d0e4689" target="_blank">CsrfProtectionFilter</a>
+   Jersey filter, which adds the <em>X-Requested-By</em> header to each state changing request. This filter may be combined with the
+   AngularJS <a href="https://code.angularjs.org/1.2.16/docs/api/ng/service/$http" target="_blank">$http service</a>, which
+   provides protection to CSRF. An alternative could be to activate the Tomcat   
+   <a href="http://tomcat.apache.org/tomcat-7.0-doc/config/filter.html#CSRF_Prevention_Filter" target="_blank">CSRF Prevention Filter</a>. 
+   However, this filter has very specific and strong requirements that are difficult to meet in client applications.
+   </p>
 
 <h3><a id="restful_api_resources">Resources</a></h3>
 
