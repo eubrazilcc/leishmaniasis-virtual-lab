@@ -225,6 +225,7 @@ angular.module('lvl.controllers', [])
 		}
 		return tplUrl;
 	}
+	$scope.progress = 21;
 	$scope.importSequences = function() {
 		TaskFactory.importSequences().then(
 				function (data) {

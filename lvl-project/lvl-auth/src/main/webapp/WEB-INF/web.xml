@@ -49,12 +49,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		</init-param>
 		<init-param>
 			<param-name>cors.allowed.headers</param-name>
-			<param-value>Content-Type,X-Requested-With,accept,authorization,Origin,Access-Control-Request-Method,Access-Control-Request-Headers,Location</param-value>
+			<param-value>Content-Type,X-Requested-With,accept,authorization,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
 		</init-param>
-		<!-- <init-param>
+		<init-param>
 			<param-name>cors.exposed.headers</param-name>
-			<param-value>Access-Control-Allow-Origin,Access-Control-Allow-Headers,Access-Control-Allow-Credentials,Access-Control-Allow-Methods,Access-Control-Max-Age</param-value>
-		</init-param> -->
+			<param-value>Location</param-value>
+		</init-param>
 		<init-param>
 			<param-name>cors.support.credentials</param-name>
 			<param-value>true</param-value>

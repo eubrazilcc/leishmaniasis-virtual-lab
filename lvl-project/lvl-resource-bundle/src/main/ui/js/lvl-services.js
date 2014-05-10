@@ -112,20 +112,22 @@ angular.module('lvl.services', [])
 				data: { 'type' : 'IMPORT_SEQUENCES', 'ids' : [ '353470160', '353483325', '384562886' ] },
 				headers: authNHeaders($window)				
 			}).success(function (data, status, headers) {
-
-				console.log("STATUS: " + status + ", HEADER: " + headers()['Location']);
-
-				/* if (headers()['Location']) {
-					defer.resolve(headers()['Location']);	
+				if (headers('Location')) {
+					defer.resolve(headers('Location'));
+					/* var uri = headers('Location');
+					console.log('Task id: ' + uri.substring(uri.lastIndexOf("tasks/") + 6)); */
 				} else {
 					defer.reject(data);
-				} */
+				}
 				defer.resolve(data);
 			}).error(function (data, status) {
 				defer.reject(data);
 			});
 			return defer.promise;
-		}	
+		},
+		progress: function(uri) {
+			
+		}
 	};
 }])
 .factory('AccessTokenFactory', [ '$q', '$window', 'Oauth2Factory', function ($q, $window, Oauth2Factory) {

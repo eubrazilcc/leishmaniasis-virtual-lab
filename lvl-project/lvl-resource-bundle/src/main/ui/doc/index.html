@@ -87,7 +87,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
           <li><a href="#examples_restful_api_update_sequence">Update a sequence</a></li>
           <li><a href="#examples_restful_api_delete_sequence">Delete a sequence</a></li>
           <li><a href="#examples_restful_api_list_sequences">List sequences</a></li>
-          <li><a href="#examples_restful_api_find_nearby_equences">Find nearby sequences</a></li>
+          <li><a href="#examples_restful_api_find_nearby_sequences">Find nearby sequences</a></li>
+          <li><a href="#examples_restful_api_import_sequences">Import new sequences into the database</a></li>
         </ul>
       </li>
       <li><a href="#examples_oauth2">OAuth2 examples</a>
@@ -904,7 +905,7 @@ $ curl -v http://127.0.0.1:8080/lvl/sequences
  {"accession":"8","definition":"example sequence","organism":"unknown","version":"1.0"}]}
 </pre>
 
-<h4><a id="examples_restful_api_find_nearby_equences">Find the sequences in the database that are within the specified distance (in meters) from the center 
+<h4><a id="examples_restful_api_find_nearby_sequences">Find the sequences in the database that are within the specified distance (in meters) from the center 
 point specified (using WGS84):</a></h4>
 
 <p>It uses coordinates order longitude, latitude. Response is a GeoJSON Features Collection.</p>
@@ -915,6 +916,35 @@ $ curl -v http://127.0.0.1:8080/lvl/sequences/nearby/-1.0/1.0?maxDistance=2000.0
 
 <pre>
 <em>TODO</em>
+</pre>
+
+<h4><a id="examples_restful_api_import_sequences">Import new sequences into the database:</a></h4>
+
+<code>
+$ curl -v -X POST -H 'Authorization: Bearer 4NYglPbKiSx3aNKSY8aIrSnpa3tOj2WytUP+MIaSDB0=' -H 'Content-Type: application/json' -d '{ "type" : "IMPORT_SEQUENCES", "ids" : [ "353470160", "353483325", "384562886" ] }' http://lvl.i3m.upv.es/lvl-service/rest/v1/tasks
+</code>
+
+<pre>
+* About to connect() to lvl.i3m.upv.es port 80 (#0)
+*   Trying 158.42.105.62... connected
+&gt; POST /lvl-service/rest/v1/tasks HTTP/1.1
+&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
+&gt; Host: lvl.i3m.upv.es
+&gt; Accept: */*
+&gt; Authorization: Bearer 4NYglPbKiSx3aNKSY8aIrSnpa3tOj2WytUP+MIaSDB0=
+&gt; Content-Type: application/json
+&gt; Content-Length: 82
+&gt; 
+* upload completely sent off: 82out of 82 bytes
+&lt; HTTP/1.1 201 Created
+&lt; Server: nginx/1.4.6 (Ubuntu)
+&lt; Date: Sat, 10 May 2014 14:31:15 GMT
+&lt; Content-Length: 0
+&lt; Connection: keep-alive
+&lt; Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/tasks/d0464bbc-305a-442c-8b67-34a21fc41af9
+&lt; 
+* Connection #0 to host lvl.i3m.upv.es left intact
+* Closing connection #0
 </pre>
 
 <h3><a id="examples_oauth2">OAuth2 examples</a></h3>
