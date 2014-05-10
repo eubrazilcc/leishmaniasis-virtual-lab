@@ -113,9 +113,7 @@ angular.module('lvl.services', [])
 				headers: authNHeaders($window)				
 			}).success(function (data, status, headers) {
 				if (headers('Location')) {
-					defer.resolve(headers('Location'));
-					/* var uri = headers('Location');
-					console.log('Task id: ' + uri.substring(uri.lastIndexOf("tasks/") + 6)); */
+					defer.resolve(headers('Location'));					
 				} else {
 					defer.reject(data);
 				}
@@ -125,8 +123,8 @@ angular.module('lvl.services', [])
 			});
 			return defer.promise;
 		},
-		progress: function(uri) {
-			
+		progress: function(id) {
+			return new EventSource(ENV.lvlEndpoint + '/tasks/progress/' + id);
 		}
 	};
 }])

@@ -225,18 +225,30 @@ angular.module('lvl.controllers', [])
 		}
 		return tplUrl;
 	}
-	$scope.progress = 21;
+	$scope.isImportDisabled = false;
+	$scope.max = 100;
+	$scope.progress = 0;
 	$scope.importSequences = function() {
+		$scope.isImportDisabled = true;
 		TaskFactory.importSequences().then(
-				function (data) {
+				function (uri) {
+					uri.substring(uri.lastIndexOf("tasks/") + 6));
+					
+					var source = new EventSource(uri);
+					source.addEventListener("progress", function(e) {
+						var obj = JSON.parse(e.data);
+						console.log("EVENT: " + obj.progress);
+					}, false);
+				    
+					
 					// TODO
-					console.log("SUCCESS: " + data);
+					console.log("SUCCESS: " + uri);
 					// TODO
+					
+					// $scope.isImportDisabled = false;
 				},
 				function (reason) {
-					// TODO
-					console.log("ERROR: " + reason);
-					// TODO
+					$scope.isImportDisabled = false;
 				},
 				null
 		);		

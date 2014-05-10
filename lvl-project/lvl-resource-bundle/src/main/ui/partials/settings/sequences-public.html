@@ -1,12 +1,21 @@
 <div class="row">
 
   <div class="col-xs-12">
-    <p>Public sequences</p>
+    <h4>Public sequences</h4>
   </div>
   
   <div class="col-xs-12">
-    <button type="button" class="btn btn-default" ng-click="importSequences()">Import sequences</button>
-    <progressbar value="progress" type="success"><b>{{progress}}%</b></progressbar>
+    
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Import sequences</h3>
+      </div>
+      <div class="panel-body">
+        <progressbar class="progress-striped active" max="max" value="progress" type="primary"><b>{{progress}}%</b></progressbar>
+        <button ng-disabled="isImportDisabled" type="button" class="btn btn-default" ng-click="importSequences()">Import</button>
+      </div>
+    </div>
+    
   </div>
 
 </div>

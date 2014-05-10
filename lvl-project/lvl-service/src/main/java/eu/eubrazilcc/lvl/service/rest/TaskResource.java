@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -120,7 +120,7 @@ public class TaskResource {
 	@Produces(SseFeature.SERVER_SENT_EVENTS)
 	public EventOutput getServerSentEvents(final @PathParam("id") String id, final @QueryParam("refresh") @DefaultValue("30") int refresh,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME); // TODO
 		if (isBlank(id) || !REFRESH_RANGE.contains(refresh)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
@@ -129,15 +129,15 @@ public class TaskResource {
 		if (task == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
-		final AtomicBoolean isInitial = new AtomicBoolean(true);
+		final AtomicLong eventId = new AtomicLong(0l);
 		final EventOutput eventOutput = new EventOutput();
 		TASK_RUNNER.submit(new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
 				try {
 					do {
-						final ListenableScheduledFuture<?> future = TASK_SCHEDULER.schedule(checkTaskProgress(eventOutput, task), 
-								isInitial.getAndSet(false) ? 0 : refresh, TimeUnit.SECONDS);
+						final ListenableScheduledFuture<?> future = TASK_SCHEDULER.schedule(checkTaskProgress(eventOutput, eventId, task), 
+								eventId.getAndIncrement() == 0 ? 0 : refresh, TimeUnit.SECONDS);
 						future.get();
 					} while (!task.isDone());
 				} catch (Exception e) {
@@ -152,12 +152,13 @@ public class TaskResource {
 		return eventOutput;
 	}
 
-	private static Runnable checkTaskProgress(final EventOutput eventOutput, final CancellableTask<?> task) {
+	private static Runnable checkTaskProgress(final EventOutput eventOutput, final AtomicLong eventId, final CancellableTask<?> task) {
 		return new Runnable() {
 			@Override
 			public void run() {
 				try {
 					eventOutput.write(new OutboundEvent.Builder().name(PROGRESS_EVENT)
+							.id(Long.toString(eventId.get()))
 							.data(String.class, JSON_MAPPER.writeValueAsString(Progress.builder()
 									.done(task.isDone())
 									.progress(task.getProgress())
