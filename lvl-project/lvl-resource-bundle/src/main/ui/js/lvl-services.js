@@ -124,7 +124,7 @@ angular.module('lvl.services', [])
 			return defer.promise;
 		},
 		progress: function(id) {
-			return new EventSource(ENV.lvlEndpoint + '/tasks/progress/' + id);
+			return new EventSource(ENV.lvlEndpoint + '/tasks/progress/' + id + "?refresh=" + ENV.refresh);
 		}
 	};
 }])

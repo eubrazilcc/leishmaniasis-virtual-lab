@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage.oauth2.security;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -32,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -62,6 +64,13 @@ public final class OAuth2Gatekeeper {
 	public static final String bearerHeader(final String token) {
 		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
 		return OAuth2Common.AUTHORIZATION_HEADER_OAUTH2 + token;
+	}
+
+	public static MultivaluedMap<String, String> authzHeader(final String token) {
+		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
+		final MultivaluedMap<String, String> map = new MultivaluedHashMap<String, String>();
+		map.put(OAuth2Common.HEADER_AUTHORIZATION, newArrayList(bearerHeader(token)));
+		return map;
 	}
 
 	public static final void authorize(final HttpServletRequest request, 

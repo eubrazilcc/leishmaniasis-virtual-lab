@@ -232,19 +232,23 @@ angular.module('lvl.controllers', [])
 		$scope.isImportDisabled = true;
 		TaskFactory.importSequences().then(
 				function (uri) {
-					uri.substring(uri.lastIndexOf("tasks/") + 6));
-					
-					var source = new EventSource(uri);
-					source.addEventListener("progress", function(e) {
+					var eventSrc = TaskFactory.progress(uri.substring(uri.lastIndexOf("tasks/") + 6));
+					eventSrc.addEventListener("progress", function(e) {
 						var obj = JSON.parse(e.data);
 						console.log("EVENT: " + obj.progress);
 					}, false);
-				    
-					
+					eventSrc.onerror = function(e) {
+						$scope.isImportDisabled = false;
+						
+						// TODO
+						console.log("ERROR: " + e);
+						// TODO
+					};
+
 					// TODO
 					console.log("SUCCESS: " + uri);
 					// TODO
-					
+
 					// $scope.isImportDisabled = false;
 				},
 				function (reason) {

@@ -8,7 +8,8 @@ angular.module('lvl.config', [])
 	'oauth2ClientApp'   : {
 		'client_id'     : 'lvl_portal',
 		'client_secret' : 'changeit'
-	}
+	},
+	'refresh': 2
 });
 
 angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngAnimate', 'ngGrid', 'ui.bootstrap', 'chieffancypants.loadingBar', 'lvl.config', 'lvl.filters', 'lvl.services', 'lvl.directives', 'lvl.controllers' ])

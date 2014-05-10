@@ -32,6 +32,7 @@ import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -171,6 +172,7 @@ public class ServiceTest {
 					// connection has been closed
 					break;
 				}
+				final String id = trimToEmpty(inboundEvent.getId()); // Last-Event-ID is optional				
 				final String name = inboundEvent.getName();
 				assertThat("Progress event name is not null", name, notNullValue());
 				assertThat("Progress event name is not empty", isNotBlank(name));
@@ -181,8 +183,8 @@ public class ServiceTest {
 				assertThat("Progress event decoded object is not null", progress, notNullValue());
 				assertThat("Import sequences task does not have errors", !hasErrors);				
 				/* uncomment for additional output */				
-				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: name=" 
-						+ name + "; data=" + data + "; object=" + progress);
+				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: id=" 
+						+ id + "; name=" + name + "; data=" + data + "; object=" + progress);
 			}
 
 			// test create new sequence

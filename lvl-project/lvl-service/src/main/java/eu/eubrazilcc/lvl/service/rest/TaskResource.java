@@ -26,6 +26,9 @@ import static com.google.common.collect.Range.closed;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
+import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getClientAddress;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authzHeader;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static java.util.UUID.fromString;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -70,7 +73,6 @@ import eu.eubrazilcc.lvl.service.Task;
 import eu.eubrazilcc.lvl.service.io.DbNotFoundSequenceFilter;
 import eu.eubrazilcc.lvl.service.io.ImportSequencesTask;
 import eu.eubrazilcc.lvl.service.io.MatchSequenceFilter;
-import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 
 /**
  * Tasks resource.
@@ -94,7 +96,7 @@ public class TaskResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createTask(final Task task, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
 		if (task == null) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
@@ -119,8 +121,14 @@ public class TaskResource {
 	@GET
 	@Produces(SseFeature.SERVER_SENT_EVENTS)
 	public EventOutput getServerSentEvents(final @PathParam("id") String id, final @QueryParam("refresh") @DefaultValue("30") int refresh,
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME); // TODO
+			final @QueryParam("token") @DefaultValue("") String token, final @Context HttpServletRequest request, 
+			final @Context HttpHeaders headers) {
+
+		// TODO
+		LOGGER.trace("Client subscribing to progress events: " + getClientAddress(request));
+		// TODO
+
+		authorize(request, isBlank(token) ? null : authzHeader(token), headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		if (isBlank(id) || !REFRESH_RANGE.contains(refresh)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
@@ -129,6 +137,11 @@ public class TaskResource {
 		if (task == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
+
+		// TODO
+		LOGGER.trace("Client subscribed to progress events: " + getClientAddress(request));
+		// TODO
+
 		final AtomicLong eventId = new AtomicLong(0l);
 		final EventOutput eventOutput = new EventOutput();
 		TASK_RUNNER.submit(new Callable<Void>() {

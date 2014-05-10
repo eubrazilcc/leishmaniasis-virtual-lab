@@ -26,6 +26,7 @@ import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.inherit;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -61,7 +62,6 @@ import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.Users;
-import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer;
 import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.AnonymizationLevel;
 
@@ -84,7 +84,7 @@ public class IdentityProvider {
 			final @QueryParam("size") @DefaultValue("10") int size, 
 			final @QueryParam("plain") @DefaultValue("false") boolean plain, 
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
 				.queryParam("start", "{start}")
 				.queryParam("size", "{size}");
@@ -133,7 +133,7 @@ public class IdentityProvider {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		// check authorization
-		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, owner.getOwnerId()), false, RESOURCE_NAME);
+		authorize(request, null, headers, inherit(RESOURCE_SCOPE, owner.getOwnerId()), false, RESOURCE_NAME);
 		// get from database		
 		return UserAnonymizer.start(plain ? AnonymizationLevel.NONE : AnonymizationLevel.HARD).apply(owner);
 	}
@@ -145,7 +145,7 @@ public class IdentityProvider {
 		if (user == null || isBlank(user.getUsername())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, user.getUsername()), true, RESOURCE_NAME);
+		authorize(request, null, headers, inherit(RESOURCE_SCOPE, user.getUsername()), true, RESOURCE_NAME);
 		// create user in the database
 		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder().id(user.getUsername()).user(user).build());
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(user.getUsername());		
@@ -160,7 +160,7 @@ public class IdentityProvider {
 		if (isBlank(id) || update == null || !id.equals(update.getUsername())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, RESOURCE_NAME);
+		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, RESOURCE_NAME);
 		// get from database
 		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {
@@ -177,7 +177,7 @@ public class IdentityProvider {
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		OAuth2Gatekeeper.authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, RESOURCE_NAME);
+		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, RESOURCE_NAME);
 		// get from database
 		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {
