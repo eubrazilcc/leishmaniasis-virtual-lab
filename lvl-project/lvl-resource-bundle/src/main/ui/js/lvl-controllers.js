@@ -197,12 +197,49 @@ angular.module('lvl.controllers', [])
 	// TODO
 
 }])
-.controller('SettingsCtrl', ['$scope', function($scope) {
-	$scope.isUsersOpen = true;
-	$scope.isSequencesOpen = false;
-	$scope.isPapersOpen = false;
-	$scope.isIssuesOpen = false;
-
+.controller('SettingsCtrl', ['$scope', '$routeParams', 'TaskFactory', function($scope, $routeParams, TaskFactory) {	
+	var tpl = '';
+	if ($routeParams.section !== undefined && $routeParams.subsection !== undefined) {
+		tpl = $routeParams.section + '-' + $routeParams.subsection;			
+	}	
+	$scope.isUsersOpen = $routeParams.section === 'users';
+	$scope.isSequencesOpen = $routeParams.section === 'sequences'; 
+	$scope.isPapersOpen = $routeParams.section === 'papers'; 
+	$scope.isIssuesOpen = $routeParams.section === 'issues';
+	$scope.isTipsVisible = true;
+	$scope.getTemplate = function() {
+		var tplUrl = '';
+		switch (tpl) {
+		case 'users-active':
+		case 'users-inactive':
+		case 'sequences-public':
+		case 'sequences-private':
+		case 'papers-open_access':
+		case 'papers-non_free':
+		case 'issues-tasks':
+		case 'issues-errors':
+			tplUrl = 'partials/settings/' + tpl + '.html';
+			break;
+		default:
+			tplUrl = 'partials/settings/index.html';
+		}
+		return tplUrl;
+	}
+	$scope.importSequences = function() {
+		TaskFactory.importSequences().then(
+				function (data) {
+					// TODO
+					console.log("SUCCESS: " + data);
+					// TODO
+				},
+				function (reason) {
+					// TODO
+					console.log("ERROR: " + reason);
+					// TODO
+				},
+				null
+		);		
+	}
 
 	// TODO
 

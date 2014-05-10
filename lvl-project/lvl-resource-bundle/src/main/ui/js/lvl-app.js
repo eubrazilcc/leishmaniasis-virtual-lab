@@ -4,6 +4,7 @@
 angular.module('lvl.config', [])
 .constant('ENV', {
 	'oauth2Endpoint'    : 'http://lvl.i3m.upv.es/lvl-auth/oauth2/v1',
+	'lvlEndpoint'       : 'http://lvl.i3m.upv.es/lvl-service/rest/v1',
 	'oauth2ClientApp'   : {
 		'client_id'     : 'lvl_portal',
 		'client_secret' : 'changeit'
@@ -53,7 +54,7 @@ angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngAnimate', 'ngGrid
 	$routeProvider.whenAuthenticated('/user/profile/:username?', {templateUrl: 'partials/user_profile.html', controller: 'UserProfileCtrl'});
 	$routeProvider.whenAuthenticated('/files', {templateUrl: 'partials/filestore.html', controller: 'FileStoreCtrl'});
 	$routeProvider.whenAuthenticated('/sequences', {templateUrl: 'partials/sequences.html', controller: 'SequencesCtrl'});	
-	$routeProvider.whenAuthenticated('/settings', {templateUrl: 'partials/settings.html', controller: 'SettingsCtrl'});
+	$routeProvider.whenAuthenticated('/settings/:section?/:subsection?', {templateUrl: 'partials/settings.html', controller: 'SettingsCtrl'});
 	$routeProvider.when('/map', {templateUrl: 'partials/mapviewer.html', controller: 'MapViewerCtrl'});
 	$routeProvider.when('/404', {templateUrl: 'partials/404.html', controller: 'PageNotFoundCtrl'});
 	$routeProvider.otherwise({redirectTo: '/404'});

@@ -102,6 +102,32 @@ angular.module('lvl.services', [])
 		}
 	};
 }])
+.factory('TaskFactory', [ '$http', '$q', '$window', 'ENV', function($http, $q, $window, ENV) {	
+	return {
+		importSequences: function() {
+			var defer = $q.defer();
+			$http({
+				url: ENV.lvlEndpoint + '/tasks',
+				method: 'POST',
+				data: { 'type' : 'IMPORT_SEQUENCES', 'ids' : [ '353470160', '353483325', '384562886' ] },
+				headers: authNHeaders($window)				
+			}).success(function (data, status, headers) {
+
+				console.log("STATUS: " + status + ", HEADER: " + headers()['Location']);
+
+				/* if (headers()['Location']) {
+					defer.resolve(headers()['Location']);	
+				} else {
+					defer.reject(data);
+				} */
+				defer.resolve(data);
+			}).error(function (data, status) {
+				defer.reject(data);
+			});
+			return defer.promise;
+		}	
+	};
+}])
 .factory('AccessTokenFactory', [ '$q', '$window', 'Oauth2Factory', function ($q, $window, Oauth2Factory) {
 	return function (user) {
 		var defer = $q.defer();
