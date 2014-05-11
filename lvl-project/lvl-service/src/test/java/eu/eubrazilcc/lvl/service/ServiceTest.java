@@ -137,7 +137,7 @@ public class ServiceTest {
 		try {
 			// test import sequences task
 			Path path = TaskResource.class.getAnnotation(Path.class);			
-			final Task task = Task.builder()
+			Task task = Task.builder()
 					.type(TaskType.IMPORT_SEQUENCES)
 					.ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
@@ -155,11 +155,10 @@ public class ServiceTest {
 			System.out.println("Create import sequences task response body (JSON), empty is OK: " + payload);
 			System.out.println("Create import sequences task response JAX-RS object: " + response);
 			System.out.println("Create import sequences task HTTP headers: " + response.getStringHeaders());
-			final URI location = new URI((String)response.getHeaders().get("Location").get(0));
+			URI location = new URI((String)response.getHeaders().get("Location").get(0));
 
 			// test import sequences task progress
-			boolean hasErrors = false;
-			final EventInput eventInput = target.path(path.value())
+			EventInput eventInput = target.path(path.value())
 					.path("progress")
 					.path(getName(location.getPath()))
 					.queryParam("refresh", 1)
@@ -181,11 +180,48 @@ public class ServiceTest {
 				assertThat("Progress event data is not empty", isNotBlank(data));
 				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);
 				assertThat("Progress event decoded object is not null", progress, notNullValue());
-				assertThat("Import sequences task does not have errors", !hasErrors);				
+				assertThat("Import sequences task does not have errors", !progress.isHasErrors());
 				/* uncomment for additional output */				
 				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: id=" 
 						+ id + "; name=" + name + "; data=" + data + "; object=" + progress);
 			}
+			
+			// repeat the import new sequences task to test how the subscription is made from a client using the JavaScript EventSource interface
+			task = Task.builder()
+					.type(TaskType.IMPORT_SEQUENCES)
+					.ids(newArrayList("430902590"))
+					.build();
+			response = target.path(path.value()).request()
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.post(Entity.entity(task, MediaType.APPLICATION_JSON_TYPE));
+			assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(Response.Status.CREATED.getStatusCode()));
+			/* uncomment for additional output */
+			System.out.println("Create import sequences task response body (JSON), empty is OK: " + payload);
+			System.out.println("Create import sequences task response JAX-RS object: " + response);
+			System.out.println("Create import sequences task HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));
+			
+			eventInput = target.path(path.value())
+					.path("progress")
+					.path(getName(location.getPath()))
+					.queryParam("refresh", 1)
+					.queryParam("token", token) // token attribute replaces HTTP header to overcome this EventSource limitation
+					.request()
+					.get(EventInput.class);
+			while (!eventInput.isClosed()) {
+				final InboundEvent inboundEvent = eventInput.read();
+				if (inboundEvent == null) {
+					// connection has been closed
+					break;
+				}
+				final String data = inboundEvent.readData(String.class);
+				assertThat("Progress event data is not empty", isNotBlank(data));
+				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);
+				assertThat("Progress event decoded object is not null", progress, notNullValue());
+				assertThat("Import sequences task does not have errors", !progress.isHasErrors());
+				/* uncomment for additional output */				
+				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
+			}			
 
 			// test create new sequence
 			path = SequenceResource.class.getAnnotation(Path.class);

@@ -43,7 +43,7 @@ angular.module('lvl.services', [])
 				+ '&client_secret=' + encodeURIComponent(ENV.oauth2ClientApp.client_secret)
 				+ '&grant_type=password'
 				+ '&username=' + encodeURIComponent(user.email)
-				+ '&password=' + encodeURIComponent(user.password)
+				+ '&password=' + encodeURIComponent(user.password) // TODO: CryptoJS.SHA256("Message");
 				+ '&use_email=true',
 				headers: {'Content-Type': 'application/x-www-form-urlencoded'}			
 			});
@@ -124,7 +124,8 @@ angular.module('lvl.services', [])
 			return defer.promise;
 		},
 		progress: function(id) {
-			return new EventSource(ENV.lvlEndpoint + '/tasks/progress/' + id + "?refresh=" + ENV.refresh);
+			return new EventSource(ENV.lvlEndpoint + '/tasks/progress/' + id + "?refresh=" + ENV.refresh
+					+ '&token=' + encodeURIComponent($window.sessionStorage.token));
 		}
 	};
 }])

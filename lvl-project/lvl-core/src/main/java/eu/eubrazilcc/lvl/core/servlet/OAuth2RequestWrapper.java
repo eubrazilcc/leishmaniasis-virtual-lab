@@ -30,10 +30,9 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
- * Workaround to deal with {@link HttpServletRequest} in Jersey-based post methods,
- * where the form is passed as a {@link MultivaluedMap}. This wrapper class gets 
- * the form parameters from the servlet request or the map. Apache Oltu OAuth2 
- * implementation needs a {@link HttpServletRequest}.
+ * Workaround to deal with {@link HttpServletRequest} in Jersey-based post methods, where the form 
+ * is passed as a {@link MultivaluedMap}. This wrapper class gets the form parameters from the servlet 
+ * request or the map. Apache Oltu OAuth2 implementation needs a {@link HttpServletRequest}.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class OAuth2RequestWrapper extends HttpServletRequestWrapper {

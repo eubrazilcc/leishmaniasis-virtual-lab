@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.oauth2.security;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getClientAddress;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -52,7 +53,8 @@ import eu.eubrazilcc.lvl.core.servlet.OAuth2RequestWrapper;
 
 /**
  * OAuth2 gatekeeper that validates the access token and grant access to the resource. It receives 
- * the validating token in the header of the request.
+ * the validating token in the header of the request. Tokens sent in the body of the request are silently
+ * ignored.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="https://cwiki.apache.org/confluence/display/OLTU/OAuth+2.0+Authorization+Server">OAuth 2.0 Authorization Server</a>
  * @see <a href="http://tools.ietf.org/html/rfc6749">RFC6749</a> - The OAuth 2.0 Authorization Framework
@@ -111,7 +113,7 @@ public final class OAuth2Gatekeeper {
 						.setRealm(resourceName)
 						.setError(OAuthError.ResourceResponse.INVALID_TOKEN)
 						.buildHeaderMessage();
-
+				LOGGER.warn("Access from " + getClientAddress(request) + " is denied due to: invalid credentials");
 				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
 						.header(OAuth.HeaderType.WWW_AUTHENTICATE, oauthResponse.getHeader(OAuth.HeaderType.WWW_AUTHENTICATE))
 						.build());
@@ -125,7 +127,7 @@ public final class OAuth2Gatekeeper {
 						.errorResponse(HttpServletResponse.SC_UNAUTHORIZED)
 						.setRealm(resourceName)
 						.buildHeaderMessage();
-
+				LOGGER.warn("Access from " + getClientAddress(request) + " is denied due to: bad request");
 				// if no error code then throw a standard 401 unauthorized error
 				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
 						.header(OAuth.HeaderType.WWW_AUTHENTICATE, oauthResponse.getHeader(OAuth.HeaderType.WWW_AUTHENTICATE))
@@ -139,7 +141,7 @@ public final class OAuth2Gatekeeper {
 					.setErrorDescription(e.getDescription())
 					.setErrorUri(e.getUri())
 					.buildHeaderMessage();
-
+			LOGGER.warn("Access from " + getClientAddress(request) + " is denied due to: " + e.getError() + "(" + e.getDescription() + ")");
 			throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
 					.header(OAuth.HeaderType.WWW_AUTHENTICATE, oauthResponse.getHeader(OAuth.HeaderType.WWW_AUTHENTICATE))
 					.build());

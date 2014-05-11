@@ -28,8 +28,8 @@ import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getClientAddress;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authzHeader;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.SseSubscriptionHttpHeaders.ssehHttpHeaders;
 import static java.util.UUID.fromString;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -125,10 +125,12 @@ public class TaskResource {
 			final @Context HttpHeaders headers) {
 
 		// TODO
-		LOGGER.trace("Client subscribing to progress events: " + getClientAddress(request));
+		LOGGER.trace("Subscribing to progress events: " + getClientAddress(request)
+				+ "; REQUEST IS NULL: " + (request == null) + "; TOKEN: "+ token + "; HEADERS IS NULL: " + (headers != null)
+				+ "; ID: " + id + "; REFRESH: " + refresh);
 		// TODO
 
-		authorize(request, isBlank(token) ? null : authzHeader(token), headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, isBlank(token) ? headers : ssehHttpHeaders(token), RESOURCE_SCOPE, false, RESOURCE_NAME);
 		if (isBlank(id) || !REFRESH_RANGE.contains(refresh)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
@@ -139,7 +141,7 @@ public class TaskResource {
 		}
 
 		// TODO
-		LOGGER.trace("Client subscribed to progress events: " + getClientAddress(request));
+		LOGGER.trace("Subscribed to progress events: " + getClientAddress(request));
 		// TODO
 
 		final AtomicLong eventId = new AtomicLong(0l);
