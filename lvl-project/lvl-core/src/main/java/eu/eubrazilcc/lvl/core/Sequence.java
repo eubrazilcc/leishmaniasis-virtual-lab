@@ -52,6 +52,7 @@ public class Sequence {
 	private String definition;     // GenBank definition field
 	private String accession;      // GenBank accession number	
 	private String version;        // GenBank version
+	private int gi;                // GenBank GenInfo Identifier (Entrez default search field)
 	private String organism;       // GenBank organism
 	private String countryFeature; // GenBank country feature
 	private Point location;        // Geospatial location
@@ -98,6 +99,14 @@ public class Sequence {
 
 	public void setVersion(final String version) {
 		this.version = version;
+	}
+
+	public int getGi() {
+		return gi;
+	}
+
+	public void setGi(final int gi) {
+		this.gi = gi;
 	}
 
 	public String getOrganism() {
@@ -150,6 +159,7 @@ public class Sequence {
 				&& Objects.equal(definition, other.definition)
 				&& Objects.equal(accession, other.accession)
 				&& Objects.equal(version, other.version)
+				&& Objects.equal(gi, other.gi)
 				&& Objects.equal(organism, other.organism)
 				&& Objects.equal(countryFeature, other.countryFeature)
 				&& Objects.equal(location, other.location)
@@ -158,7 +168,7 @@ public class Sequence {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(link, dataSource, definition, accession, version, organism, 
+		return Objects.hashCode(link, dataSource, definition, accession, version, gi, organism, 
 				countryFeature, location, locale);
 	}
 
@@ -170,6 +180,7 @@ public class Sequence {
 				.add("definition", definition)
 				.add("accession", accession)
 				.add("version", version)
+				.add("gi", gi)
 				.add("organism", organism)
 				.add("countryFeature", countryFeature)
 				.add("location", location)
@@ -209,6 +220,11 @@ public class Sequence {
 
 		public Builder version(final String version) {
 			sequence.setVersion(version);
+			return this;
+		}
+		
+		public Builder gi(final int gi) {
+			sequence.setGi(gi);
 			return this;
 		}
 

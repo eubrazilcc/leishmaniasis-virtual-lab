@@ -202,6 +202,7 @@ public final class NCBIXmlBinder extends XmlBinder {
 				.definition(gbSeq.getGBSeqDefinition())
 				.accession(gbSeq.getGBSeqPrimaryAccession())
 				.version(gbSeq.getGBSeqAccessionVersion())
+				.gi(getGenInfoIdentifier(gbSeq))
 				.organism(gbSeq.getGBSeqOrganism())
 				.countryFeature(countryFeature)
 				.location(isNotBlank(countryFeature) ? geocode(countryFeature) : null)

@@ -22,23 +22,17 @@
 
 package eu.eubrazilcc.lvl.storage;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static com.google.common.base.Splitter.on;
-
-import java.util.List;
-
 import com.google.common.base.Objects;
 
 /**
- * Stores a sequence key that can be used to transmit over the network and to store it in the database.
+ * Stores sequence key that is based on the GenBank GenInfo Identifier instead of the GenBank 
+ * accession number.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SequenceKey {
+public class SequenceGiKey {
 
 	private String dataSource;
-	private String accession;
+	private int gi;
 
 	public String getDataSource() {
 		return dataSource;
@@ -48,39 +42,35 @@ public class SequenceKey {
 		this.dataSource = dataSource;
 	}
 
-	public String getAccession() {
-		return accession;
+	public int getGi() {
+		return gi;
 	}
 
-	public void setAccession(final String accession) {
-		this.accession = accession;
+	public void setGi(final int gi) {
+		this.gi = gi;
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof SequenceKey)) {
+		if (obj == null || !(obj instanceof SequenceGiKey)) {
 			return false;
 		}
-		final SequenceKey other = SequenceKey.class.cast(obj);
+		final SequenceGiKey other = SequenceGiKey.class.cast(obj);
 		return Objects.equal(dataSource, other.dataSource)
-				&& Objects.equal(accession, other.accession);
+				&& Objects.equal(gi, other.gi);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(dataSource, accession);
+		return Objects.hashCode(dataSource, gi);
 	}
 
 	@Override
 	public String toString() {
 		return Objects.toStringHelper(this)
 				.add("dataSource", dataSource)
-				.add("accession", accession)
+				.add("gi", gi)
 				.toString();
-	}
-	
-	public String toId(final char separator) {
-		return dataSource + separator + accession;
 	}
 
 	/* Fluent API */
@@ -91,33 +81,20 @@ public class SequenceKey {
 
 	public static class Builder {
 
-		private final SequenceKey instance = new SequenceKey();
+		private final SequenceGiKey instance = new SequenceGiKey();
 
 		public Builder dataSource(final String dataSource) {
 			instance.setDataSource(dataSource);
 			return this;
 		}
 
-		public Builder accession(final String accession) {
-			instance.setAccession(accession);
+		public Builder gi(final int gi) {
+			instance.setGi(gi);
 			return this;
 		}
 
-		public SequenceKey build() {
+		public SequenceGiKey build() {
 			return instance;
-		}
-
-		public SequenceKey parse(final String id, final char separator) {
-			checkArgument(isNotBlank(id) && id.matches("[a-zA-Z_0-9]+" + separator + "[a-zA-Z_0-9]+"), 
-					"Uninitialized or invalid id");
-			final List<String> tokens = on(separator)
-					.omitEmptyStrings()
-					.trimResults()
-					.splitToList(id);
-			checkState(tokens != null && tokens.size() == 2, "Invalid id or separator");
-			return dataSource(tokens.get(0))
-					.accession(tokens.get(1))
-					.build();
 		}
 
 	}

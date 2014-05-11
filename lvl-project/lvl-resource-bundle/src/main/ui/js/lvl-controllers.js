@@ -239,12 +239,12 @@ angular.module('lvl.controllers', [])
 		$scope.progressMsg = "Importing new sequences from external databases";
 		TaskFactory.importSequences().then(				
 				function (uri) {
-					$scope.progress = 1;
+					$scope.progress = 0;
 					var eventSrc = TaskFactory.progress(uri.substring(uri.lastIndexOf("tasks/") + 6));
 					eventSrc.addEventListener("progress", function(e) {
 						var obj = JSON.parse(e.data);
 						$scope.$apply(function () {
-							$scope.progress = obj.progress;
+							$scope.progress = obj.progress.toFixed(0);
 							$scope.progressMsg = obj.status;
 							$scope.hasErrors = obj.hasErrors && obj.hasErrors === true;
 						});

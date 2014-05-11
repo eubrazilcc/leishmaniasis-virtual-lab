@@ -132,7 +132,8 @@ public class TaskResource {
 		if (task == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
-		LOGGER.trace("Subscribed to progress events: " + getClientAddress(request));
+		final String client = getClientAddress(request);
+		LOGGER.info("Subscribed to progress events: " + client);
 		final AtomicLong eventId = new AtomicLong(0l);
 		final EventOutput eventOutput = new EventOutput();
 		TASK_RUNNER.submit(new Callable<Void>() {
@@ -150,7 +151,9 @@ public class TaskResource {
 					try {
 						eventOutput.close();
 					} catch (Exception ignored) { }
-				}				return null;
+					LOGGER.info("Closing progress events where subscriber is: " + client);
+				}
+				return null;
 			}			
 		});
 		return eventOutput;

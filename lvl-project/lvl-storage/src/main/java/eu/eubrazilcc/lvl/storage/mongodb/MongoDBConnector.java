@@ -176,6 +176,18 @@ public enum MongoDBConnector implements Closeable2 {
 
 	/**
 	 * Creates an index on a set of fields, if one does not already exist on the specified collection.
+	 * Indexes created with this method are created in the background and allow storing duplicated 
+	 * elements.
+	 * @param fields - fields that are used to index the elements
+	 * @param collection - collection where the index is created
+	 * @param descending - (optional) sort the elements of the index in descending order
+	 */
+	public void createNonUniqueIndex(final List<String> fields, final String collection, final boolean descending) {
+		createIndex(fields, collection, false, descending);
+	}
+
+	/**
+	 * Creates an index on a set of fields, if one does not already exist on the specified collection.
 	 * Indexes created with this method are created in the background and stores unique elements.
 	 * @param fields - fields that are used to index the elements
 	 * @param collection - collection where the index is created

@@ -54,8 +54,9 @@ public class SequenceCollectionTest {
 			// insert
 			final Sequence sequence = Sequence.builder()
 					.dataSource(DataSource.GENBANK)
-					.accession("12345678")
+					.accession("ABC12345678")
 					.version("3.0")
+					.gi(Integer.MAX_VALUE)
 					.definition("definition")
 					.organism("organism")
 					.countryFeature("Spain: Murcia")
@@ -73,6 +74,17 @@ public class SequenceCollectionTest {
 			assertThat("sequence is not null", sequence2, notNullValue());
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
+			
+			// find by GenBank GenInfo Identifier
+			sequence2 = SEQUENCE_DAO.find(SequenceGiKey.builder()
+					.dataSource(sequence.getDataSource())
+					.gi(sequence.getGi())
+					.build());
+			assertThat("sequence is not null", sequence2, notNullValue());
+			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
+			System.out.println(sequence2.toString());
+			
+			// TODO
 			
 			// duplicates are not allowed
 			try {
@@ -116,7 +128,8 @@ public class SequenceCollectionTest {
 			for (int i = 0; i < 11; i++) {
 				final Sequence sequence3 = Sequence.builder()
 						.dataSource(DataSource.GENBANK)
-						.accession(Integer.toString(i)).build();
+						.accession(Integer.toString(i))
+						.gi(i).build();
 				ids.add(sequence3.getAccession());
 				SEQUENCE_DAO.insert(sequence3);
 			}

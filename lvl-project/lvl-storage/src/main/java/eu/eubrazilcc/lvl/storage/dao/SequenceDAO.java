@@ -56,6 +56,7 @@ import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.geospatial.Point;
 import eu.eubrazilcc.lvl.core.geospatial.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
+import eu.eubrazilcc.lvl.storage.SequenceGiKey;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 
@@ -67,10 +68,11 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	SEQUENCE_DAO;
 
-	public static final String COLLECTION = "sequences";
+	public static final String COLLECTION        = "sequences";
 	public static final String PRIMARY_KEY_PART1 = "sequence.dataSource";
 	public static final String PRIMARY_KEY_PART2 = "sequence.accession";
-	public static final String GEOLOCATION_KEY = "sequence.location";
+	public static final String GI_KEY            = "sequence.gi";
+	public static final String GEOLOCATION_KEY   = "sequence.location";
 
 	private final Morphia morphia = new Morphia();
 
@@ -78,6 +80,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	private SequenceDAO() {
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
+		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, GI_KEY), COLLECTION);
 		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
 		morphia.map(SequenceEntity.class);
 	}
@@ -168,9 +171,19 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		MONGODB_CONN.stats(os, COLLECTION);
 	}
 
+	public Sequence find(final SequenceGiKey sequenceGiKey) {
+		final BasicDBObject obj = MONGODB_CONN.get(keyGi(sequenceGiKey), COLLECTION);
+		return parseBasicDBObjectOrNull(obj);
+	}
+	
 	private BasicDBObject key(final SequenceKey key) {
 		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, key.getDataSource(), 
 				PRIMARY_KEY_PART2, key.getAccession()));		
+	}
+	
+	private BasicDBObject keyGi(final SequenceGiKey key) {
+		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, key.getDataSource(), 
+				GI_KEY, key.getGi()));
 	}
 
 	private BasicDBObject sortCriteria() {
@@ -249,7 +262,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
 	@Entity(value=COLLECTION, noClassnameStored=true)
-	@Indexes(@Index(PRIMARY_KEY_PART1 + ", " + PRIMARY_KEY_PART2))
+	@Indexes({ @Index(PRIMARY_KEY_PART1 + ", " + PRIMARY_KEY_PART2), @Index(PRIMARY_KEY_PART1 + ", " + GI_KEY) })
 	public static class SequenceEntity {
 
 		@Id

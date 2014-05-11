@@ -33,7 +33,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
-import eu.eubrazilcc.lvl.storage.SequenceKey;
+import eu.eubrazilcc.lvl.storage.SequenceGiKey;
 
 /**
  * Implements a {@link SequenceFilter} that filters out the sequences that are already stored 
@@ -59,9 +59,9 @@ public class DbNotFoundSequenceFilter implements SequenceFilter {
 	@Override
 	public String filterById(final String id) {
 		checkArgument(isNotBlank(id), "Uninitialized or invalid identifier");
-		return SEQUENCE_DAO.find(SequenceKey.builder()
+		return SEQUENCE_DAO.find(SequenceGiKey.builder()
 				.dataSource(DataSource.GENBANK)
-				.accession(id)
+				.gi(Integer.valueOf(id))
 				.build()) == null ? id : null;
 	}	
 
