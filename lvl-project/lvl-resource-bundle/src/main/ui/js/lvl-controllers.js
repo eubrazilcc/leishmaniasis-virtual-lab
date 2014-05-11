@@ -224,38 +224,67 @@ angular.module('lvl.controllers', [])
 			tplUrl = 'partials/settings/index.html';
 		}
 		return tplUrl;
-	}
+	}	
+	$scope.resetProgress = function() {		
+		$scope.progress = 0;
+		$scope.max = 100;
+		$scope.progressMsg = "";
+		$scope.hasErrors = false;
+	};
 	$scope.isImportDisabled = false;
-	$scope.max = 100;
-	$scope.progress = 0;
-	$scope.importSequences = function() {
+	$scope.resetProgress();
+	$scope.importSequences = function() {		
+		$scope.resetProgress();
 		$scope.isImportDisabled = true;
-		TaskFactory.importSequences().then(
+		$scope.progressMsg = "Importing new sequences from external databases";
+		TaskFactory.importSequences().then(				
 				function (uri) {
+					$scope.progress = 1;
 					var eventSrc = TaskFactory.progress(uri.substring(uri.lastIndexOf("tasks/") + 6));
 					eventSrc.addEventListener("progress", function(e) {
 						var obj = JSON.parse(e.data);
-						console.log("EVENT: " + obj.progress);
+						$scope.$apply(function () {
+							$scope.progress = obj.progress;
+							$scope.progressMsg = obj.status;
+							$scope.hasErrors = obj.hasErrors && obj.hasErrors === true;
+						});
+						if (obj.done && obj.done === true) {
+							eventSrc.close();
+							$scope.isImportDisabled = false;
+						}
+
+						// TODO
+						console.log("EVENT: done=" + obj.done + "; progress=" + obj.progress + "; status=" + obj.status
+								+ "; hasErrors=" + obj.hasErrors);
+						// TODO
+
 					}, false);
 					eventSrc.onerror = function(e) {
 						$scope.isImportDisabled = false;
-						
+
 						// TODO
-						console.log("ERROR: " + e);
+						var obj = e;
+						var str = "";
+						for (var i in obj) {
+							if (obj.hasOwnProperty(i)) {
+								str += "Error" + "." + i + " = " + obj[i] + "\n";
+							}
+						}
+						console.log("Error caught:\n" + str);
 						// TODO
+
 					};
 
 					// TODO
 					console.log("SUCCESS: " + uri);
 					// TODO
 
-					// $scope.isImportDisabled = false;
 				},
 				function (reason) {
 					$scope.isImportDisabled = false;
-				},
+				}, 
 				null
-		);		
+		);
 	}
 
 	// TODO

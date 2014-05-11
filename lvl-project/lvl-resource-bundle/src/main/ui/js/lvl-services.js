@@ -8,6 +8,13 @@ var authNHeaders = function($window) {
 }
 
 angular.module('lvl.services', [])
+.factory('EncryptFactory', function() {
+	return {
+		hash: function(msg) {
+			return CryptoJS.SHA256(msg);
+		}
+	};
+})
 .factory('LocalStorageFactory', [ '$window', function($window) {
 	return {
 		load: function() {

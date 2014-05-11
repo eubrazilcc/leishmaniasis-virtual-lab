@@ -123,13 +123,6 @@ public class TaskResource {
 	public EventOutput getServerSentEvents(final @PathParam("id") String id, final @QueryParam("refresh") @DefaultValue("30") int refresh,
 			final @QueryParam("token") @DefaultValue("") String token, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-
-		// TODO
-		LOGGER.trace("Subscribing to progress events: " + getClientAddress(request)
-				+ "; REQUEST IS NULL: " + (request == null) + "; TOKEN: "+ token + "; HEADERS IS NULL: " + (headers != null)
-				+ "; ID: " + id + "; REFRESH: " + refresh);
-		// TODO
-
 		authorize(request, null, isBlank(token) ? headers : ssehHttpHeaders(token), RESOURCE_SCOPE, false, RESOURCE_NAME);
 		if (isBlank(id) || !REFRESH_RANGE.contains(refresh)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
@@ -139,11 +132,7 @@ public class TaskResource {
 		if (task == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
-
-		// TODO
 		LOGGER.trace("Subscribed to progress events: " + getClientAddress(request));
-		// TODO
-
 		final AtomicLong eventId = new AtomicLong(0l);
 		final EventOutput eventOutput = new EventOutput();
 		TASK_RUNNER.submit(new Callable<Void>() {

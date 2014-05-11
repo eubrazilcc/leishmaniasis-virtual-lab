@@ -31,7 +31,7 @@ angular.module('lvl', [ 'ngRoute', 'ngTouch', 'ngSanitize', 'ngAnimate', 'ngGrid
 							str += "User" + "." + i + " = " + obj[i] + "\n";
 						}
 					}
-					console.log("User info obtained:\n" + str); */					
+					console.log("User info obtained:\n" + str); */
 					defer.resolve($window.sessionStorage.getItem('user'));
 				} else {
 					// console.log("Failed to get user info");
