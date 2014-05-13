@@ -116,7 +116,7 @@ angular.module('lvl.services', [])
 			$http({
 				url: ENV.lvlEndpoint + '/tasks',
 				method: 'POST',
-				// TODO data: { 'type' : 'IMPORT_SEQUENCES', 'ids' : [ '353470160', '353483325', '384562886' ] },
+				// data: { 'type' : 'IMPORT_SEQUENCES', 'ids' : [ '353470160', '353483325', '384562886' ] },
 				data: { 'type' : 'IMPORT_SEQUENCES' },
 				headers: authNHeaders($window)				
 			}).success(function (data, status, headers) {

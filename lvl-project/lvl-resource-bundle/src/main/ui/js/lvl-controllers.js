@@ -290,7 +290,7 @@ angular.module('lvl.controllers', [])
 	// TODO
 
 }])
-.controller('SequencesCtrl', ['$scope', '$sce', '$window', function($scope, $sce, $window) {
+.controller('SequencesCtrl', ['$scope', '$sce', '$window', '$http', function($scope, $sce, $window, $http) {
 	var countryFn = function(countryCode) {
 		var country = '';
 		if (countryCode && typeof countryCode === 'string') {
@@ -357,7 +357,6 @@ angular.module('lvl.controllers', [])
 			             {field:'organism', displayName:'Organism', headerCellTemplate:hdrCellTpl, width:'**'},
 			             {field:'country', displayName:'Country', headerCellTemplate:hdrCellTpl, width:'**', cellTemplate:countryCellTpl}]			             
 	};
-
 
 	// TODO
 
