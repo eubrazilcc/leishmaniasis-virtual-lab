@@ -350,7 +350,7 @@ angular.module('lvl.controllers', [])
 			'followers': 85
 	};
 	// TODO
-	
+
 }])
 .controller('MapViewerCtrl', ['$scope', function($scope) {
 	// initial setup
@@ -429,6 +429,22 @@ angular.module('lvl.controllers', [])
 		// display error message
 		$scope.addAlert('Export PNG feature requires a browser that supports the <a class="alert-link" href="http://caniuse.com/#feat=download" target="_blank">link download</a> attribute.');
 	}
+	// add my location functionallity
+	var geolocation = new ol.Geolocation();
+	geolocation.bindTo('projection', map.getView());	
+	geolocation.on('error', function(error) {
+		// TODO
+		console.log("Geolocation error: " + error.message);
+		// TODO
+	});
+	geolocation.setTracking(true);
+	$scope.myLocation = function() {
+		var mylocation = geolocation.getPosition();
+		if (mylocation) {
+			map.getView().getView2D().setCenter(mylocation);
+			map.getView().getView2D().setZoom(12);
+		}
+	};	
 }])
 .controller('PageNotFoundCtrl', function() {
 	// nothing yet
