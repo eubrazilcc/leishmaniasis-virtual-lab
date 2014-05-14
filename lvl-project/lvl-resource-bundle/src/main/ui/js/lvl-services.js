@@ -15,6 +15,31 @@ angular.module('lvl.services', [])
 		}
 	};
 })
+.factory('UrlFactory', function() {
+	return {
+		linkParams: function(url) {
+			var params = {}, i, tmp;
+			if (url) {
+				var queries = url.substring(url.indexOf('?') + 1).split("&");
+				
+				for (i = 0; i < queries.length; i++) {
+					tmp = queries[i].split('=');
+					params[tmp[0]] = tmp[1];					
+					// console.log("Param." + tmp[0] + "=" + params[tmp[0]]);					
+				}
+			}
+			return params;
+		},
+		getUrl: function(link) {
+			var url = '';
+			if (link) {
+				var url = link.split(";")[0];
+				url = url.substring(1, url.length - 1);
+			}
+			return url;
+		}
+	};
+})
 .factory('LocalStorageFactory', [ '$window', function($window) {
 	return {
 		load: function() {
@@ -137,6 +162,36 @@ angular.module('lvl.services', [])
 		}
 	};
 }])
+
+
+
+//TODO
+.factory('SequencesFactory', [ '$http', '$q', '$window', 'ENV', function($http, $q, $window, ENV) {
+	return {
+		list: function(start, size) {
+			var defer = $q.defer();
+			$http({
+				url: ENV.lvlEndpoint + '/sequences',
+				method: 'GET',
+				params: { 'start': start || 0, 'size': size || 10 },
+				headers: authNHeaders($window)				
+			}).success(function (data, status) {
+				if (data !== undefined) {
+					defer.resolve(data);
+				} else {
+					defer.reject(500);
+				}
+			}).error(function (data, status) {
+				defer.reject(data);
+			});
+			return defer.promise;
+		}
+	};
+}])	
+//TODO
+
+
+
 .factory('AccessTokenFactory', [ '$q', '$window', 'Oauth2Factory', function ($q, $window, Oauth2Factory) {
 	return function (user) {
 		var defer = $q.defer();

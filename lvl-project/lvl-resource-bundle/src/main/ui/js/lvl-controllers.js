@@ -201,7 +201,7 @@ angular.module('lvl.controllers', [])
 	var tpl = '';
 	if ($routeParams.section !== undefined && $routeParams.subsection !== undefined) {
 		tpl = $routeParams.section + '-' + $routeParams.subsection;			
-	}	
+	}
 	$scope.isUsersOpen = $routeParams.section === 'users';
 	$scope.isSequencesOpen = $routeParams.section === 'sequences'; 
 	$scope.isPapersOpen = $routeParams.section === 'papers'; 
@@ -290,32 +290,56 @@ angular.module('lvl.controllers', [])
 	// TODO
 
 }])
-.controller('SequencesCtrl', ['$scope', '$sce', '$window', '$http', function($scope, $sce, $window, $http) {
-	var countryFn = function(countryCode) {
-		var country = '';
-		if (countryCode && typeof countryCode === 'string') {
-			var countryName = cnMap()[countryCode.toUpperCase()];
-			if (countryName) {
-				country = $sce.trustAsHtml('<img src="img/blank.gif" class="flag flag-' + countryCode.toLowerCase() + '" alt="' + countryName + '" /> ' + countryName);
-			}
-		}
-		return country;
+.controller('SequencesCtrl', ['$scope', '$window', '$anchorScroll', 'SequencesFactory', 'UrlFactory', function($scope, $window, $anchorScroll, SequencesFactory, UrlFactory) {
+	// tools
+	$scope.showTools = false;
+	$scope.toggleTools = function() {
+		$scope.showTools = !$scope.showTools
 	};
-
+	// notifications
 	$scope.showNotifications = ($window.sessionStorage.getItem('showNotifications') === 'false' ? false : true);
-
 	$scope.toggleNotifications = function() {
 		$scope.showNotifications = !$scope.showNotifications;
 		$window.sessionStorage.setItem('showNotifications', $scope.showNotifications ? 'true' : 'false');
 	};
-
+	// selected items
 	$scope.selectedSequences = [];
+	// pagination	
+	$scope.pageSizes = [ { 'size':20 }, { 'size':50 }, { 'size':100 } ];
+	$scope.pageSize = $scope.pageSizes[0];
+	$scope.totalItems = 0;
+	$scope.currentPage = 1;
+	$scope.maxSize = 7;
+	$scope.itemsPerPage = $scope.pageSize.size;
+	// data
+	$scope.reload = function() {
+		SequencesFactory.list(($scope.currentPage - 1) * $scope.pageSize.size, $scope.pageSize.size).then(
+				function (resource) {
+					var params = UrlFactory.linkParams(UrlFactory.getUrl(resource.last));
+					$scope.itemsPerPage = $scope.pageSize.size;
+					$scope.totalItems = (params && params.start ? params.start : $scope.totalItems);					
+					$scope.sequences = resource.sequences;					
+					var str = "";
+					for (var i in resource) {
+						if (resource.hasOwnProperty(i)) {
+							str += "Sequence" + "." + i + " = " + resource[i] + "\n";
+						}
+					}
+					console.log(">> Page " + $scope.currentPage + ":\n" + str);
+				},
+				function (reason) {
+					// TODO
+					console.log("ERROR: " + reason);
+					// TODO
+				}, 
+				null
+		);
+		$anchorScroll();
+	};
+	// initial load
+	$scope.reload();
 
-	$scope.seqData = [{accession: 'U49845', version: 1, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: countryFn('es')},
-	                  {accession: 'A78394', version: 1, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: countryFn('')},
-	                  {accession: 'D34981', version: 1, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: countryFn('in')},
-	                  {accession: 'B89091', version: 2, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: countryFn('es')},
-	                  {accession: 'E23688', version: 1, definition: 'Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p (AXL2) and Rev7p (REV7) genes, complete cds.', organism: 'Saccharomyces cerevisiae', country: countryFn('bi')}];
+
 
 	// TODO
 	$scope.user = {
@@ -326,40 +350,7 @@ angular.module('lvl.controllers', [])
 			'followers': 85
 	};
 	// TODO
-
-	var hdrCellTpl = '<div class="ngHeaderSortColumn {{col.headerClass}}" ng-style="{\'cursor\': col.cursor}" ng-class="{ \'ngSorted\': !noSortVisible }"><div ng-click="col.sort($event)" ng-class="\'colt\' + col.index" class="ngHeaderText">{{col.displayName}}</div><div class="ngSortButtonDown" ng-show="col.showSortButtonDown()"></div><div class="ngSortButtonUp" ng-show="col.showSortButtonUp()"></div><div class="ngSortPriority">{{col.sortPriority}}</div><div ng-class="{ ngPinnedIcon: col.pinned, ngUnPinnedIcon: !col.pinned }" ng-click="togglePin(col)" ng-show="col.pinnable"></div></div><div ng-show="col.resizable" class="ngHeaderGrip" ng-click="col.gripClick($event)" ng-mousedown="col.gripOnMouseDown($event)"></div>';
-	var linkCellTpl = '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>' 
-		+ '<code><a ng-href="#/sequences/{{row.getProperty(col.field)}}">{{row.getProperty(col.field)}}</a></code> '
-		+ '<a ng-href="#/sequences/{{row.getProperty(col.field)}}/edit" tooltip-append-to-body="true" tooltip-placement="right" tooltip="edit"><i class="fa fa-pencil-square-o fa-fw"></i></a>'
-		+ '<a ng-href="#/sequences/{{row.getProperty(col.field)}}/delete" tooltip-append-to-body="true" tooltip-placement="right" tooltip="delete"><i class="fa fa-trash-o fa-fw"></i></a>'
-		+ '</span></div>';
-	var definitionCellTpl = '<div class="ngCellText" ng-class="col.colIndex()">' 
-		+ '<span ng-cell-text><a href popover-trigger="mouseenter" popover-append-to-body="true" popover-placement="right" popover="{{row.getProperty(col.field)}}"><i class="fa fa-plus-square-o fa-fw"></i></a> {{row.getProperty(col.field)}}</span></div>';
-	var countryCellTpl = '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>'
-		+ '<div ng-bind-html="row.getProperty(col.field)"></div>'
-		+ '</span></div>';
-
-	$scope.gridLayoutPlugin = new ngGridLayoutPlugin();
-
-	$scope.gridOptions = {
-			data: 'seqData',
-			selectedItems: $scope.selectedSequences,
-			multiSelect: false,
-			keepLastSelected: false,
-			showSelectionCheckbox: true,
-			selectWithCheckboxOnly: true,
-			enableColumnResize: true,
-			showFooter: true,
-			plugins: [$scope.gridLayoutPlugin],
-			columnDefs: [{field:'accession', displayName:'Accession', headerCellTemplate:hdrCellTpl, width:'***', cellTemplate:linkCellTpl}, 
-			             {field:'version', displayName:'Version', headerCellTemplate:hdrCellTpl, width:'*'},
-			             {field:'definition', displayName:'Definition', headerCellTemplate:hdrCellTpl, width:'***', cellTemplate:definitionCellTpl},			             
-			             {field:'organism', displayName:'Organism', headerCellTemplate:hdrCellTpl, width:'**'},
-			             {field:'country', displayName:'Country', headerCellTemplate:hdrCellTpl, width:'**', cellTemplate:countryCellTpl}]			             
-	};
-
-	// TODO
-
+	
 }])
 .controller('MapViewerCtrl', ['$scope', function($scope) {
 	// initial setup

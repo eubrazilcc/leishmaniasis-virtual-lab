@@ -3,7 +3,7 @@
 /* Directives */
 
 angular.module('lvl.directives', [])
-.directive('refreshGrid', [ '$timeout', function ($timeout) {	
+.directive('refreshGrid', [ '$timeout', function ($timeout) {
 	return function (scope, element, attrs) {
 		var divGrid = (attrs.refreshGrid || "dataGrid");
 		var trigger = (attrs.refreshGridTrigger || "showNotifications");		
@@ -14,13 +14,11 @@ angular.module('lvl.directives', [])
 			if (newVal === oldVal) {
 				return;
 			}
-			grid.css('opacity', '0.1');
+			grid.css('opacity', '0.5');
 			// refresh the grid after the DOM has finished rendering, considering the animations
-			var timer = $timeout(function() {
-				scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
-				scope.gridLayoutPlugin.updateGridLayout();
+			var timer = $timeout(function() {				
 				grid.css('opacity', '1');
-			}, 400);
+			}, 200);
 			scope.$on(
 					"$destroy",
 					function(event) {
@@ -32,13 +30,11 @@ angular.module('lvl.directives', [])
 			if (newVal === oldVal) {
 				return;
 			}
-			element.css('opacity', '0.1');
+			element.css('opacity', '0.5');
 			// refresh the grid after the DOM has finished rendering, considering the animations
-			var timer = $timeout(function() {
-				scope.gridOptions.$gridScope.hasUserChangedGridColumnWidths = false;
-				scope.gridLayoutPlugin.updateGridLayout();
+			var timer = $timeout(function() {				
 				element.css('opacity', '1');
-			}, 400);
+			}, 200);
 			scope.$on(
 					"$destroy",
 					function(event) {
@@ -111,7 +107,7 @@ angular.module('lvl.directives', [])
 
 			var content = $templateCache.get(tplId);
 			content = $compile("<div>" + content + "</div>")(scope);
-
+			
 			var options = {
 					'content': content,
 					'placement': placement,
@@ -126,7 +122,7 @@ angular.module('lvl.directives', [])
 .directive('resize', ['$window', function ($window) { // <div ng-style="style()" resize></div>
 	return function (scope, element, attrs) {		
 		var resizeHeightOffset = (attrs.resizeHeightOffset || 124);
-		var resizeWidth = (attrs.resizeWidth || '100%');		
+		var resizeWidth = (attrs.resizeWidth || '100%');
 		var w = angular.element($window);
 		scope.$watch(function () {
 			return { 'h': w.height(), 'w': w.width() };
@@ -137,10 +133,12 @@ angular.module('lvl.directives', [])
 				return { 
 					// 'width': (newValue.w - 30) + 'px'
 					'height': (newValue.h - resizeHeightOffset) + 'px',
-					'width': resizeWidth					
+					'width': resizeWidth,
+					// 'border': 'solid red 1px',
+					'overflow': 'auto'
 				};
 			};
-		}, true);		
+		}, true);
 		w.bind('resize', function () {
 			scope.$apply();
 		});

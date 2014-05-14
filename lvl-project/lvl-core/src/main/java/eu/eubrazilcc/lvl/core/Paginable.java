@@ -86,7 +86,7 @@ public class Paginable {
 
 	public void setLast(final Link last) {
 		this.last = last;
-	}
+	}	
 
 	@Override
 	public String toString() {

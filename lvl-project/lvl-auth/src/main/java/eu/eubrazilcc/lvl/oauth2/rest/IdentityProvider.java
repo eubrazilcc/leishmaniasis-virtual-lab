@@ -108,7 +108,7 @@ public class IdentityProvider {
 			final URI nextUri = uriBuilder.clone().build(next, size);
 			paginable.setNext(Link.fromUri(nextUri).rel(LinkRelation.NEXT).type(MediaType.APPLICATION_JSON).build());
 			final int pages = roundUp(total, size);
-			final URI lastUri = uriBuilder.clone().build(pages, size);
+			final URI lastUri = uriBuilder.clone().build(pages * size, size);
 			paginable.setLast(Link.fromUri(lastUri).rel(LinkRelation.LAST).type(MediaType.APPLICATION_JSON).build());
 		}
 		return Users.start().paginable(paginable)

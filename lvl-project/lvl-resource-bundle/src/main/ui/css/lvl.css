@@ -16,9 +16,9 @@ img.lvl-logo-header {
 }
 
 .lvl-footer {
-	padding-top: 40px;
+	padding-top: 10px;
 	padding-bottom: 40px;
-	margin-top: 100px;
+	margin-top: 10px;
 	color: #777;
 	text-align: center;
 	border-top: 1px solid #e5e5e5;
@@ -197,11 +197,21 @@ a.lvl-social:hover {
 	margin-bottom: 1px;
 }
 
+.lvl-fit {
+	padding-bottom: 0px !important;
+	margin-bottom: 0px !important;
+}
+
+.lvl-inline-form-bottom {
+	margin-bottom: 6px;
+}
+
 /**
  * Animations
  */
 .lvl-animate-show {
 	/* no general setup */
+	
 }
 
 .lvl-animate-show.ng-hide-add {
@@ -210,12 +220,12 @@ a.lvl-social:hover {
 
 .lvl-animate-show.ng-hide-remove {
 	/* fade in */
-	-webkit-transition: all linear 0.3s;
-	transition: all linear 0.3s;
+	-webkit-transition: all linear 0.1s;
+	transition: all linear 0.1s;
 	opacity: 1;
 	/* wait until class are applied to the layout */
-	transition-delay: 0.5s;
-	-webkit-transition-delay: 0.5s;
+	transition-delay: 0.3s;
+	-webkit-transition-delay: 0.3s;
 	display: block !important;
 }
 
@@ -225,6 +235,6 @@ a.lvl-social:hover {
 
 .lvl-animate-class {
 	/* slide from left */
-	-webkit-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.3s;
-	transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.3s;
+	-webkit-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.1s;
+	transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.1s;
 }
