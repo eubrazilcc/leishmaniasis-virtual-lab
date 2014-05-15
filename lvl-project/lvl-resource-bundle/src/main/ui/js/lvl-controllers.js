@@ -364,29 +364,29 @@ angular.module('lvl.controllers', [])
 	$scope.closeAlert = function(index) {
 		$scope.alerts.splice(index, 1);
 	};
+	
 	// setup map
 	var center = ol.proj.transform([$scope.longitude, $scope.latitude], 'EPSG:4326', 'EPSG:3857');
 	var map = new ol.Map({
 		controls: ol.control.defaults().extend([ new ol.control.FullScreen(), new ol.control.ScaleLine({ units: 'metric' }) ]),
-		layers: [
-		         new ol.layer.Tile({
-		        	 preload: Infinity,
-		        	 source: new ol.source.OSM()
-		         })
-		         ],
-		         renderer: 'canvas', // fastest renderer, other renderers: 'webgl', ol.RendererHints.createFromQueryData()
-		         target: 'map',      // div HTML element with id='map'
-		         view: new ol.View2D({
-		        	 center: center,
-		        	 zoom: $scope.zoom
-		         }),
-		         ol3Logo: false
+		layers: [ new ol.layer.Tile({
+			preload: Infinity,
+			source: new ol.source.OSM()
+		}) ],
+		renderer: 'canvas', // fastest renderer, other renderers: 'webgl', ol.RendererHints.createFromQueryData()
+		target: 'map',      // div HTML element with id='map'
+		view: new ol.View2D({
+			center: center,
+			zoom: $scope.zoom
+		}),
+		ol3Logo: false
 	});
 	/*// add zoom to extent control
 	var extent = map.getView().getView2D().calculateExtent(map.getSize());
 	var bottomLeft = ol.extent.getBottomLeft(extent);
 	var topRight = ol.extent.getTopRight(extent);
 	map.addControl(new ol.control.ZoomToExtent({ extent: [ bottomLeft[0], bottomLeft[1], topRight[0], topRight[1] ] })); */
+	
 	// add custom control to return map home
 	var MapHomeControl = function(opt_options) {
 		var options = opt_options || {};
@@ -415,30 +415,32 @@ angular.module('lvl.controllers', [])
 	};
 	ol.inherits(MapHomeControl, ol.control.Control);
 	map.addControl(new MapHomeControl());
+	
 	// add export PNG functionality
-	var exportPNGElement = document.getElementById('export-png');
-	if ('download' in exportPNGElement) {
-		exportPNGElement.addEventListener('click', function(e) {
+	$scope.showDownload = false;
+	$scope.exportPng = function() {		
+		var element = document.getElementById('export-png');
+		if ('download' in element) {
 			map.once('postcompose', function(event) {
 				var canvas = event.context.canvas;
-				exportPNGElement.href = canvas.toDataURL('image/png');
+				element.href = canvas.toDataURL('image/png');
 			});
-			map.render();			
-		}, false);
-	} else {
-		// display error message
-		$scope.addAlert('Export PNG feature requires a browser that supports the <a class="alert-link" href="http://caniuse.com/#feat=download" target="_blank">link download</a> attribute.');
-	}
+			map.render();
+			$scope.showDownload = true;
+		} else {
+			// display error message
+			$scope.addAlert('Export PNG feature requires a browser that supports the <a class="alert-link" href="http://caniuse.com/#feat=download" target="_blank">link download</a> attribute.');
+		}	
+	};
+	
 	// add my location functionallity
 	var geolocation = new ol.Geolocation();
 	geolocation.bindTo('projection', map.getView());	
 	geolocation.on('error', function(error) {
-		// TODO
-		console.log("Geolocation error: " + error.message);
-		// TODO
-	});
-	geolocation.setTracking(true);
-	$scope.myLocation = function() {
+		$scope.addAlert('Location cannot be determined: ' + error.message);
+	});		
+	geolocation.setTracking(true);	
+	$scope.myLocation = function() {		
 		var mylocation = geolocation.getPosition();
 		if (mylocation) {
 			map.getView().getView2D().setCenter(mylocation);

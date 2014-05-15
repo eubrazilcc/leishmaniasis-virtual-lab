@@ -107,7 +107,7 @@ angular.module('lvl.directives', [])
 
 			var content = $templateCache.get(tplId);
 			content = $compile("<div>" + content + "</div>")(scope);
-			
+
 			var options = {
 					'content': content,
 					'placement': placement,
