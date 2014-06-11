@@ -84,8 +84,6 @@ public class SequenceCollectionTest {
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
 			
-			// TODO
-			
 			// duplicates are not allowed
 			try {
 				SEQUENCE_DAO.insert(sequence2);

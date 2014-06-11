@@ -64,7 +64,7 @@ public class FeatureCollection {
 	public void setCrs(final Crs crs) {
 		this.crs = crs;
 	}
-	
+
 	public Feature[] getFeatures() {
 		return features;
 	}
@@ -125,7 +125,7 @@ public class FeatureCollection {
 			return crs(Wgs84Validator.LEGACY_CRS);
 		}
 
-		public Builder feature(final Object geometry) {
+		public Builder feature(final Geometry geometry) {
 			checkArgument(geometry != null && (geometry instanceof Point 
 					|| geometry instanceof Line || geometry instanceof Polygon),
 					"Uninitalized or invalid geometry");
@@ -237,11 +237,13 @@ public class FeatureCollection {
 	/**
 	 * An object with known geospatial location.
 	 * @author Erik Torres <ertorser@upv.es>
-	 */
+	 */	
 	public static class Feature {
 
 		private String type;
-		private Object geometry;
+
+		@XmlJavaTypeAdapter(GeometryAdapter.class)
+		private Geometry geometry;
 
 		public String getType() {
 			return type;
@@ -251,12 +253,11 @@ public class FeatureCollection {
 			this.type = type;
 		}
 
-		@XmlJavaTypeAdapter(GeometryAdapter.class)
 		public Object getGeometry() {
 			return geometry;
 		}
 
-		public void setGeometry(final Object geometry) {
+		public void setGeometry(final Geometry geometry) {
 			this.geometry = geometry;
 		}
 

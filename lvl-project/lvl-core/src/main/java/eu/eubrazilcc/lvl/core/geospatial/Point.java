@@ -38,7 +38,7 @@ import com.google.common.base.Objects;
  * @see <a href="http://geojson.org/">GeoJSON -- JSON Geometry and Feature Description</a>
  */
 @XmlRootElement(name = "point")
-public class Point {
+public class Point implements Geometry {
 
 	public static final String POINT = "Point";
 

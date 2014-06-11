@@ -52,6 +52,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.client.fluent.Request;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.InboundEvent;
@@ -185,7 +186,7 @@ public class ServiceTest {
 				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: id=" 
 						+ id + "; name=" + name + "; data=" + data + "; object=" + progress);
 			}
-			
+
 			// repeat the import new sequences task to test how the subscription is made from a client using the JavaScript EventSource interface
 			task = Task.builder()
 					.type(TaskType.IMPORT_SEQUENCES)
@@ -200,7 +201,7 @@ public class ServiceTest {
 			System.out.println("Create import sequences task response JAX-RS object: " + response);
 			System.out.println("Create import sequences task HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));
-			
+
 			eventInput = target.path(path.value())
 					.path("progress")
 					.path(getName(location.getPath()))
@@ -314,7 +315,7 @@ public class ServiceTest {
 			System.out.println("Get sequence by accession number after update result: " + sequence2.toString());			
 
 			// test find sequences near to a location
-			final FeatureCollection featCol = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
+			FeatureCollection featCol = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d)
 					.request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
@@ -325,11 +326,35 @@ public class ServiceTest {
 			/* uncomment for additional output */			
 			System.out.println("Get nearby sequences result: " + featCol.toString());
 
+			// test find sequences near to a location (using plain REST, no Jersey client)
+			final URI uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
+					.queryParam("maxDistance", 4000.0d).getUri();
+			final String response2 = Request.Get(uri)
+					.addHeader(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.execute()
+					.returnContent()
+					.asString();
+			assertThat("Get nearby sequences result (plain) is not null", response2, notNullValue());
+			assertThat("Get nearby sequences result (plain) is not empty", isNotBlank(response2));
+			/* uncomment for additional output */
+			System.out.println("Get nearby sequences result (plain): " + response2);
+			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
+			assertThat("Get nearby sequences result (plain) is not null", featCol, notNullValue());
+			assertThat("Get nearby sequences (plain) list is not null", featCol.getFeatures(), notNullValue());
+			assertThat("Get nearby sequences (plain) list is not empty", featCol.getFeatures().length > 0);
+			/* uncomment for additional output */			
+			System.out.println("Get nearby sequences result (plain): " + featCol.toString());
+			
+			
+			// TODO
+
+
+
 			// test delete sequence
 			response = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
-					.request()
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-					.delete();
+			.request()
+			.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+			.delete();
 			assertThat("Delete sequence response is not null", response, notNullValue());
 			assertThat("Delete sequence response is NO_CONTENT", response.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
 			assertThat("Delete sequence response is not empty", response.getEntity(), notNullValue());

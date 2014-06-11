@@ -40,7 +40,7 @@ import com.google.common.base.Objects;
  * @see <a href="http://geojson.org/">GeoJSON -- JSON Geometry and Feature Description</a>
  */
 @XmlRootElement(name = "line")
-public class Line {
+public class Line implements Geometry {
 
 	public static final String LINE = "LineString";
 
