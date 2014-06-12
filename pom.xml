@@ -41,7 +41,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<org.apache.httpcomponents.version>4.3.2</org.apache.httpcomponents.version> <!-- must coincide with the version BioJava uses (3.0.8 uses 4.3.1) -->
 		<mongodb.driver.version>2.12.0</mongodb.driver.version>
 		<mongodb.morphia.version>0.107</mongodb.morphia.version>
-		<jackson-mapper.version>1.9.13</jackson-mapper.version>		
+		<jackson-mapper.version>2.4.0</jackson-mapper.version>
 	</properties>
 
 	<dependencyManagement>
@@ -212,8 +212,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<!-- Data binding package built on Jackson JSON processor -->
 			
 			<dependency>
-				<groupId>org.codehaus.jackson</groupId>
-				<artifactId>jackson-mapper-asl</artifactId>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
 				<version>${jackson-mapper.version}</version>
 			</dependency>
 			

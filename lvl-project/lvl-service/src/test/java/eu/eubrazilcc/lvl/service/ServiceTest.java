@@ -53,7 +53,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.client.fluent.Request;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.SseFeature;
@@ -62,6 +61,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
@@ -342,7 +342,7 @@ public class ServiceTest {
 			assertThat("Get nearby sequences result (plain) is not null", featCol, notNullValue());
 			assertThat("Get nearby sequences (plain) list is not null", featCol.getFeatures(), notNullValue());
 			assertThat("Get nearby sequences (plain) list is not empty", featCol.getFeatures().length > 0);
-			/* uncomment for additional output */			
+			/* uncomment for additional output */
 			System.out.println("Get nearby sequences result (plain): " + featCol.toString());
 			
 			

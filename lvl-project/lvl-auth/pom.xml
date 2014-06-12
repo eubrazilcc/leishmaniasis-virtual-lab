@@ -127,10 +127,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<scope>provided</scope>
 		</dependency>
 		
-		<!-- Data binding package built on Jackson JSON processor -->
+		<!-- Data binding package built on Jackson JSON processor -->		
 		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		
@@ -227,10 +227,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						<groupId>org.mongodb.morphia</groupId>
 						<artifactId>morphia</artifactId>
 						<version>${mongodb.morphia.version}</version>
-					</dependency>
+					</dependency>					
 					<dependency>
-						<groupId>org.codehaus.jackson</groupId>
-						<artifactId>jackson-mapper-asl</artifactId>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-databind</artifactId>
 						<version>${jackson-mapper.version}</version>
 					</dependency>
 				</dependencies>

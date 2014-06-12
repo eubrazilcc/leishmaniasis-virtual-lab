@@ -106,14 +106,14 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<scope>provided</scope>
 		</dependency>
 		
-		<!-- Data binding package built on Jackson JSON processor -->
+		<!-- Data binding package built on Jackson JSON processor -->		
 		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- Apache Oltu -->		
+		<!-- Apache Oltu -->
 		<dependency>
 			<groupId>org.apache.oltu.oauth2</groupId>
 			<artifactId>org.apache.oltu.oauth2.resourceserver</artifactId>
@@ -208,10 +208,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						<version>${mongodb.morphia.version}</version>
 					</dependency>
 					<dependency>
-						<groupId>org.codehaus.jackson</groupId>
-						<artifactId>jackson-mapper-asl</artifactId>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-databind</artifactId>
 						<version>${jackson-mapper.version}</version>
-					</dependency>
+					</dependency>					
 				</dependencies>				
 			</plugin>
 			<plugin>
