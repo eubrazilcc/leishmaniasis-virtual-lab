@@ -331,6 +331,7 @@ public class ServiceTest {
 			final URI uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d).getUri();
 			final String response2 = Request.Get(uri)
+					.addHeader("Accept", "application/json")
 					.addHeader(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.execute()
 					.returnContent()
@@ -345,13 +346,6 @@ public class ServiceTest {
 			assertThat("Get nearby sequences (plain) list is not empty", featCol.getFeatures().size() > 0);
 			/* uncomment for additional output */
 			System.out.println("Get nearby sequences result (plain): " + featCol.toString());
-
-
-			// TODO
-
-
-
-
 
 			// test delete sequence
 			response = target.path(path.value()).path(sequenceKey.toId())
