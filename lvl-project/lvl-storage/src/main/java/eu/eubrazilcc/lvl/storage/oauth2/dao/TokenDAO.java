@@ -25,7 +25,9 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,21 +37,23 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.Indexes;
+import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
@@ -61,21 +65,20 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 
 	TOKEN_DAO;
 
+	private final static Logger LOGGER = getLogger(TokenDAO.class);
+
 	public static final String COLLECTION = "access_tokens";
 	public static final String PRIMARY_KEY = "accessToken.token";
 
-	private final Morphia morphia = new Morphia();	
-
 	private TokenDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
-		morphia.map(AccessTokenEntity.class);
 	}
 
 	@Override
 	public String insert(final AccessToken accessToken) {
 		// remove transient fields from the element before saving it to the database
 		final AccessTokenTransientStore store = AccessTokenTransientStore.start(accessToken);
-		final DBObject obj = morphia.toDBObject(new AccessTokenEntity(store.purge()));
+		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -86,7 +89,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	public void update(final AccessToken accessToken) {
 		// remove transient fields from the element before saving it to the database
 		final AccessTokenTransientStore store = AccessTokenTransientStore.start(accessToken);
-		final DBObject obj = morphia.toDBObject(new AccessTokenEntity(store.purge()));
+		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(accessToken.getToken()), COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -147,18 +150,38 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	}	
 
 	private AccessToken parseBasicDBObject(final BasicDBObject obj) {
-		return morphia.fromDBObject(AccessTokenEntity.class, obj).getAccessToken();
+		return map(obj).getAccessToken();
 	}
 
 	private AccessToken parseBasicDBObjectOrNull(final BasicDBObject obj) {
 		AccessToken token = null;		
 		if (obj != null) {
-			final AccessTokenEntity entity = morphia.fromDBObject(AccessTokenEntity.class, obj);
+			final AccessTokenEntity entity = map(obj);
 			if (entity != null) {
 				token = entity.getAccessToken();
 			}
 		}
 		return token;
+	}
+
+	private DBObject map(final AccessTokenTransientStore store) {
+		DBObject obj = null;
+		try {
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new AccessTokenEntity(store.purge())));
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Failed to write access token to DB object", e);
+		}
+		return obj;
+	}
+
+	private AccessTokenEntity map(final BasicDBObject obj) {
+		AccessTokenEntity entity = null;
+		try {
+			entity = JSON_MAPPER.readValue(obj.toString(), AccessTokenEntity.class);		
+		} catch (IOException e) {
+			LOGGER.error("Failed to read access token from DB object", e);
+		}
+		return entity;
 	}
 
 	/**
@@ -197,7 +220,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		return (accessToken != null && accessToken.getToken() != null && token.equals(accessToken.getToken())
 				&& (accessToken.getIssuedAt() + accessToken.getExpiresIn()) > (System.currentTimeMillis() / 1000l)
 				&& ScopeManager.isAccessible(targetScope, accessToken.getScopes(), requestFullAccess));
-	}
+	}	
 
 	/**
 	 * Extracts from an entity the fields that depends on the service (e.g. links)
@@ -226,17 +249,16 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	}
 
 	/**
-	 * Token Morphia entity.
+	 * Token entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	@Entity(value=COLLECTION, noClassnameStored=true)
-	@Indexes({@Index(PRIMARY_KEY)})
 	public static class AccessTokenEntity {
 
-		@Id
+		@JsonSerialize(using = ObjectIdSerializer.class)
+		@JsonDeserialize(using = ObjectIdDeserializer.class)
+		@JsonProperty("_id")
 		private ObjectId id;
-
-		@Embedded
+		
 		private AccessToken accessToken;
 
 		public AccessTokenEntity() { }

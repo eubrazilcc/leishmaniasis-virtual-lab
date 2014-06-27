@@ -39,9 +39,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<logback.version>1.1.2</logback.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<org.apache.httpcomponents.version>4.3.2</org.apache.httpcomponents.version> <!-- must coincide with the version BioJava uses (3.0.8 uses 4.3.1) -->
-		<mongodb.driver.version>2.12.0</mongodb.driver.version>
-		<mongodb.morphia.version>0.107</mongodb.morphia.version>
-		<jackson-mapper.version>2.4.0</jackson-mapper.version>
+		<mongodb.driver.version>2.12.0</mongodb.driver.version>		
 	</properties>
 
 	<dependencyManagement>
@@ -199,23 +197,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>org.mongodb</groupId>
 				<artifactId>mongo-java-driver</artifactId>
 				<version>${mongodb.driver.version}</version>
-			</dependency>
-			
-			<!-- Morphia: library for mapping Java objects to/from MongoDB -->
-			
-			<dependency>
-				<groupId>org.mongodb.morphia</groupId>
-				<artifactId>morphia</artifactId>
-				<version>${mongodb.morphia.version}</version>
-			</dependency>
-			
-			<!-- Data binding package built on Jackson JSON processor -->
-			
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-databind</artifactId>
-				<version>${jackson-mapper.version}</version>
-			</dependency>
+			</dependency>			
 			
 			<!-- Java API for Google Geocoding API v3 -->
 			

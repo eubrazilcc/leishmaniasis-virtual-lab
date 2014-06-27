@@ -32,16 +32,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.Link.JaxbAdapter;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.google.common.base.Objects;
 
-import eu.eubrazilcc.lvl.core.xml.LinkAdapter;
-
 /**
- * User identity provider.
+ * User identity provider. Include JAXB annotations to serialize this class to XML and JSON.
+ * Many JSON processing libraries like Jackson support these JAXB annotations.
  * @author Erik Torres <ertorser@upv.es>
  */
+@XmlRootElement
 public class User implements Serializable {
 
 	private static final long serialVersionUID = -8320525767063830149L;
@@ -57,7 +60,8 @@ public class User implements Serializable {
 
 	public User() { }
 
-	@XmlJavaTypeAdapter(LinkAdapter.class)
+	@XmlElement(name="link")
+	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public Link getLink() {
 		return link;
 	}

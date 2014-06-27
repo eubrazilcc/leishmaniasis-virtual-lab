@@ -27,9 +27,13 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+
+import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
@@ -38,8 +42,9 @@ import com.google.common.collect.Lists;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 
 /**
  * Tests sequence collection in the database.
@@ -60,7 +65,7 @@ public class SequenceCollectionTest {
 					.definition("definition")
 					.organism("organism")
 					.countryFeature("Spain: Murcia")
-					.location(Point.builder().coordinate(-122.913837d, 38.081473d).build())
+					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build())
 					.locale(new Locale("es", "ES"))					
 					.build();
 			final SequenceKey sequenceKey = SequenceKey.builder()
@@ -74,7 +79,7 @@ public class SequenceCollectionTest {
 			assertThat("sequence is not null", sequence2, notNullValue());
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
-			
+
 			// find by GenBank GenInfo Identifier
 			sequence2 = SEQUENCE_DAO.find(SequenceGiKey.builder()
 					.dataSource(sequence.getDataSource())
@@ -83,7 +88,23 @@ public class SequenceCollectionTest {
 			assertThat("sequence is not null", sequence2, notNullValue());
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
-			
+						
+			// find and append link to found records
+			final URI baseUri = new URI("https://localhost:8080/service/resource");
+			SEQUENCE_DAO.baseUri(baseUri);
+			sequence2 = SEQUENCE_DAO.find(sequenceKey);
+			assertThat("sequence with link is not null", sequence2, notNullValue());
+			assertThat("sequence with link coincides with original", sequence2.equalsIgnoreLink(sequence));
+			final Link link = sequence2.getLink();
+			assertThat("sequence link is not null", link, notNullValue());
+			assertThat("sequence link URI is not null", link.getUri(), notNullValue());
+			assertThat("sequence link relation type is not null", link.getRel(), notNullValue());
+			assertThat("sequence link relation type is not empty", isNotBlank(link.getRel()));
+			assertThat("sequence link type is not null", link.getType(), notNullValue());
+			assertThat("sequence link type is not empty", isNotBlank(link.getType()));
+			System.out.println(sequence2.toString());
+			SEQUENCE_DAO.baseUri(null);			
+
 			// duplicates are not allowed
 			try {
 				SEQUENCE_DAO.insert(sequence2);
@@ -104,17 +125,17 @@ public class SequenceCollectionTest {
 
 			// search sequences near a point and within a maximum distance
 			List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
-					.coordinate(-122.90d, 38.08d).build(), 10000.0d);
+					.coordinates(LngLatAlt.builder().coordinates(-122.90d, 38.08d).build()).build(), 
+					10000.0d);
 			assertThat("sequence is not null", sequences, notNullValue());
 			assertThat("ids is not empty", !sequences.isEmpty());
 
 			// search sequences within an area
 			sequences = SEQUENCE_DAO.geoWithin(Polygon.builder()
-					.coordinate(-140.0d, 30.0d)
-					.coordinate(-110.0d, 30.0d)
-					.coordinate(-110.0d, 50.0d)
-					.coordinate(-140.0d, 30.0d)
-					.build());
+					.exteriorRing(LngLatAlt.builder().coordinates(-140.0d, 30.0d).build(),
+							LngLatAlt.builder().coordinates(-110.0d, 30.0d).build(),
+							LngLatAlt.builder().coordinates(-110.0d, 50.0d).build(),
+							LngLatAlt.builder().coordinates(-140.0d, 30.0d).build()).build());
 			assertThat("sequence is not null", sequences, notNullValue());
 			assertThat("ids is not empty", !sequences.isEmpty());
 

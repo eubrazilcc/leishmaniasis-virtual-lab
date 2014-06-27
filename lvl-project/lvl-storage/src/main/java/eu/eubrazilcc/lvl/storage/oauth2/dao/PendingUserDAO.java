@@ -25,7 +25,9 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -39,22 +41,24 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.Indexes;
+import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 
 /**
@@ -65,18 +69,17 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
 	PENDING_USER_DAO;
 
+	private final static Logger LOGGER = getLogger(PendingUserDAO.class);
+
 	public static final String COLLECTION  = "pending_users";
 	public static final String PRIMARY_KEY = "pendingUser.pendingUserId";
 	public static final String EMAIL_KEY   = "pendingUser.user.email";
-
-	private final Morphia morphia = new Morphia();
 
 	private URI baseUri = null;
 
 	private PendingUserDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		MONGODB_CONN.createIndex(EMAIL_KEY, COLLECTION);
-		morphia.map(PendingUserEntity.class);
 	}
 
 	public PendingUserDAO baseUri(final URI baseUri) {
@@ -88,7 +91,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	public String insert(final PendingUser pendingUser) {
 		// remove transient fields from the element before saving it to the database
 		final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
-		final DBObject obj = morphia.toDBObject(new PendingUserEntity(store.purge()));
+		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -99,7 +102,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	public void update(final PendingUser pendingUser) {
 		// remove transient fields from the element before saving it to the database
 		final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
-		final DBObject obj = morphia.toDBObject(new PendingUserEntity(store.purge()));
+		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(pendingUser.getPendingUserId()), COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -164,7 +167,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	}
 
 	private PendingUser parseBasicDBObject(final BasicDBObject obj) {
-		final PendingUser pendingUser = morphia.fromDBObject(PendingUserEntity.class, obj).getPendingUser();
+		final PendingUser pendingUser = map(obj).getPendingUser();
 		addLink(pendingUser);
 		return pendingUser;
 	}
@@ -172,7 +175,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	private PendingUser parseBasicDBObjectOrNull(final BasicDBObject obj) {
 		PendingUser pendingUser = null;
 		if (obj != null) {
-			final PendingUserEntity entity = morphia.fromDBObject(PendingUserEntity.class, obj);
+			final PendingUserEntity entity = map(obj);
 			if (entity != null) {
 				pendingUser = entity.getPendingUser();
 				addLink(pendingUser);
@@ -184,7 +187,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	@SuppressWarnings("unused")
 	private PendingUser parseObject(final Object obj) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
-		final PendingUser pendingUser = morphia.fromDBObject(PendingUserEntity.class, (BasicDBObject) obj2.get("obj")).getPendingUser();
+		final PendingUser pendingUser = map((BasicDBObject) obj2.get("obj")).getPendingUser();
 		addLink(pendingUser);
 		return pendingUser;
 	}
@@ -194,6 +197,26 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 			pendingUser.getUser().setLink(Link.fromUri(UriBuilder.fromUri(baseUri).path(pendingUser.getPendingUserId()).build())
 					.rel(LinkRelation.SELF).type(MediaType.APPLICATION_JSON).build());
 		}
+	}
+
+	private DBObject map(final PendingUserTransientStore store) {
+		DBObject obj = null;
+		try {
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new PendingUserEntity(store.purge())));
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Failed to write pending user to DB object", e);
+		}
+		return obj;
+	}
+
+	private PendingUserEntity map(final BasicDBObject obj) {
+		PendingUserEntity entity = null;
+		try {
+			entity = JSON_MAPPER.readValue(obj.toString(), PendingUserEntity.class);		
+		} catch (IOException e) {
+			LOGGER.error("Failed to read pending user from DB object", e);
+		}
+		return entity;
 	}
 
 	/**
@@ -243,7 +266,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 				&& email.equals(pendingUser.getUser().getEmail())
 				&& activationCode.equals(pendingUser.getActivationCode()));
 		return isValid;
-	}
+	}	
 
 	/**
 	 * Extracts from an entity the fields that depends on the service (e.g. links)
@@ -281,17 +304,16 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	}
 
 	/**
-	 * Pending user Morphia entity.
+	 * Pending user entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	@Entity(value=COLLECTION, noClassnameStored=true)
-	@Indexes({@Index(PRIMARY_KEY)})
 	public static class PendingUserEntity {
 
-		@Id
+		@JsonSerialize(using = ObjectIdSerializer.class)
+		@JsonDeserialize(using = ObjectIdDeserializer.class)
+		@JsonProperty("_id")
 		private ObjectId id;
 
-		@Embedded
 		private PendingUser pendingUser;
 
 		public PendingUserEntity() { }

@@ -20,66 +20,59 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.oauth2;
+package eu.eubrazilcc.lvl.core.geojson;
 
-import static com.google.common.base.Objects.toStringHelper;
-import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import eu.eubrazilcc.lvl.core.Paginable;
+import com.google.common.base.Objects;
 
 /**
- * Wraps a collection of {@link User}.
+ * Stores geospatial locations in GeoJSON format.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="http://geojson.org/">GeoJSON -- JSON Geometry and Feature Description</a>
  */
-public class Users extends Paginable {
+public abstract class Geometry<T> extends GeoJsonObject {
 
-	private List<User> users = newArrayList();	
+	protected List<T> coordinates = new ArrayList<T>();
 
-	public List<User> getUsers() {
-		return users;
+	public List<T> getCoordinates() {
+		return coordinates;
+	}
+	public void setCoordinates(final List<T> coordinates) {
+		this.coordinates = coordinates;
+	}	
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (obj == null || !(obj instanceof Geometry)) {
+			return false;
+		}
+		final Geometry<?> other = Geometry.class.cast(obj);
+		return super.equals(obj)
+				&& Objects.equal(coordinates, other.coordinates);
 	}
 
-	public void setUsers(final List<User> users) {
-		this.users = newArrayList(users);
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(super.hashCode(), coordinates);
 	}
 
 	@Override
 	public String toString() {
-		return toStringHelper(this)
-				.add("paginable", super.toString())
-				.add("users", collectionToString(users))
+		return Objects.toStringHelper(this)
+				.add("geojson_obj", super.toString())
+				.add("coordinates", coordinates != null ? collectionToString(coordinates) : null)
 				.toString();
 	}
 
-	public static UsersBuilder start() {
-		return new UsersBuilder();
-	}
+	/* Fluent API */
 
-	public static class UsersBuilder {
-
-		private final Users users;
-
-		public UsersBuilder() {
-			users = new Users();
-		}
-
-		public UsersBuilder paginable(final Paginable paginable) {
-			users.push(paginable);
-			return this;
-		}
-
-		public UsersBuilder users(final List<User> userList) {
-			users.setUsers(userList);
-			return this;			
-		}
-
-		public Users build() {
-			return users;
-		}
-
+	public Geometry<T> add(final T coordinate) {
+		coordinates.add(coordinate);
+		return this;
 	}
 
 }

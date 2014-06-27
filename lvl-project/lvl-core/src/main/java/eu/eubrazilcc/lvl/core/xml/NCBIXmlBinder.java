@@ -31,16 +31,13 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNumeric;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBIntrospector;
 
 import com.google.common.collect.ImmutableMultimap;
 
@@ -64,24 +61,12 @@ public final class NCBIXmlBinder extends XmlBinder {
 		GBSeq.class
 	};
 	
-	private static JAXBContext CONTEXT;
-	private static JAXBIntrospector INTROSPECTOR;
-	
-	static {
-		try {
-			// context
-			CONTEXT = JAXBContext.newInstance(SUPPORTED_CLASSES, new HashMap<String, Object>());
-			// introspector
-			INTROSPECTOR = CONTEXT.createJAXBIntrospector();
-		} catch (Exception e) { }
-	}
-
 	public static final ObjectFactory GB_SEQXML_FACTORY = new ObjectFactory();	
 	
 	public static final NCBIXmlBinder GB_SEQXML = new NCBIXmlBinder();
 	
 	private NCBIXmlBinder() {
-		super(CONTEXT, INTROSPECTOR);
+		super(SUPPORTED_CLASSES);
 	}
 
 	@Override

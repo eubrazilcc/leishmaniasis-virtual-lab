@@ -32,7 +32,7 @@ import java.util.Locale;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.geocoding.GeocodingHelper;
-import eu.eubrazilcc.lvl.core.geospatial.Point;
+import eu.eubrazilcc.lvl.core.geojson.Point;
 
 /**
  * Tests Geocoding utilities.

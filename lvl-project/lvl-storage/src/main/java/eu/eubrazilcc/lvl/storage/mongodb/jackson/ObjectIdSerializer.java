@@ -20,40 +20,35 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core.xml;
+package eu.eubrazilcc.lvl.storage.mongodb.jackson;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static eu.eubrazilcc.lvl.core.xml.GeoJSONXmlBinder.GEOJSON_XML;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import java.io.IOException;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import org.bson.types.ObjectId;
 
-import eu.eubrazilcc.lvl.core.geospatial.Line;
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 /**
- * Geometry adapter for XML/JSON data binding.
+ * Serialize MongoDB identifiers from {@link ObjectId} Java class to JSON.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class GeometryAdapter extends XmlAdapter<String, Object> {
+public final class ObjectIdSerializer extends StdSerializer<ObjectId> {
 
-	@Override
-	public String marshal(final Object geometry) throws Exception {
-		if (geometry != null) {
-			checkArgument(geometry instanceof Point || geometry instanceof Line || geometry instanceof Polygon, 
-					"Unsupported geometry: " + geometry.getClass().getCanonicalName());
-			return GEOJSON_XML.typeToXml(geometry);
-		}
-		return null;
+	protected ObjectIdSerializer() {
+		super(ObjectId.class);
 	}
 
 	@Override
-	public Object unmarshal(final String payload) throws Exception {
-		if (isNotBlank(payload)) {
-			return GEOJSON_XML.typeFromXml(payload);
+	public void serialize(final ObjectId value, final JsonGenerator jgen, final SerializerProvider provider) throws IOException, 
+	JsonProcessingException {
+		if (value == null) {
+			jgen.writeNull();
+		} else {
+			jgen.writeString(value.toString());
 		}
-		return null;
 	}
 
 }

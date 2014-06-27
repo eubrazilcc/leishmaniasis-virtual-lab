@@ -30,8 +30,8 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang.mutable.MutableLong;
 
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 
 /**
  * Base DAO.
@@ -39,8 +39,8 @@ import eu.eubrazilcc.lvl.core.geospatial.Polygon;
  * @param <K> - the type of keys used in the database to identify the elements
  * @param <E> - the type of elements in this DAO
  */
-public interface BaseDAO<K, E> {
-
+public interface BaseDAO<K, E> {	
+	
 	/**
 	 * Inserts a new element in the database.
 	 * @param e - element to be inserted in the database

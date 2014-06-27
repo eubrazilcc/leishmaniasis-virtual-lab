@@ -30,7 +30,9 @@ import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.toMap;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
+import static com.mongodb.util.JSON.parse;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -49,6 +51,7 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -70,7 +73,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 
 /**
  * Data connector based on mongoDB.
@@ -375,8 +378,7 @@ public enum MongoDBConnector implements Closeable2 {
 		try {
 			db.requestEnsureConnection();
 			final BasicDBObject query = new BasicDBObject(locationField, new BasicDBObject("$geoWithin", 
-					new BasicDBObject("$geometry", new BasicDBObject("type", "Polygon")
-					.append("coordinates", polygon.getCoordinates()))));
+					new BasicDBObject("$geometry", (DBObject) parse(JSON_MAPPER.writeValueAsString(polygon)))));
 			LOGGER.trace("geoWithin query: " + JSON.serialize(query));
 			final DBCursor cursor = dbcol.find(query);
 			try {
@@ -386,7 +388,9 @@ public enum MongoDBConnector implements Closeable2 {
 			} finally {
 				cursor.close();
 			}
-			return list;		
+			return list;
+		} catch (JsonProcessingException e) {
+			throw new IllegalStateException("Failed to parse request parameters", e);			
 		} finally {
 			db.requestDone();
 		}

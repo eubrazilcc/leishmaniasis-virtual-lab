@@ -60,19 +60,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
 			<scope>provided</scope>
-		</dependency>
+		</dependency>		
 		
-		<!-- Morphia: library for mapping Java objects to/from MongoDB -->
+		<!-- Transitively includes Jackson JSON processor from Jersey. Jackson must be 
+			provided in production (e.g. with Jersey) -->
 		<dependency>
-			<groupId>org.mongodb.morphia</groupId>
-			<artifactId>morphia</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		
-		<!-- Data binding package built on Jackson JSON processor -->		
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		

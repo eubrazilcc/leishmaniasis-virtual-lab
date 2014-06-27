@@ -24,8 +24,8 @@ package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
+import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.getGenInfoIdentifier;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.inferCountry;
 import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.parse;

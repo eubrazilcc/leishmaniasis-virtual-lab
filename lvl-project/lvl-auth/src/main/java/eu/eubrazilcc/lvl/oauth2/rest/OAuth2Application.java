@@ -35,7 +35,7 @@ import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.slf4j.Logger;
 
 import com.google.common.base.Function;
@@ -68,7 +68,7 @@ public class OAuth2Application extends Application {
 		instances.add(new IdentityProvider());
 		instances.add(new UserRegistration());
 		// add additional JAX-RS providers
-		classes.add(MoxyJsonFeature.class);
+		classes.add(JacksonFeature.class);
 		LOGGER.info(SERVICE_NAME + " initialized successfully, registered resources: " + objectsClassNames(instances));
 	}
 

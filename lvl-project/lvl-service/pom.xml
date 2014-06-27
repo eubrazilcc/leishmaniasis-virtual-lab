@@ -80,7 +80,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		</dependency>
 		<dependency> <!-- Add JSON support -->
 			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-moxy</artifactId>
+			<artifactId>jersey-media-json-jackson</artifactId>
 		</dependency>
 		<dependency> <!-- Add Server-Sent Events (SSE) support -->
 			<groupId>org.glassfish.jersey.media</groupId>
@@ -98,20 +98,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<artifactId>mongo-java-driver</artifactId>
 			<scope>provided</scope>
 		</dependency>		
-		
-		<!-- Morphia: library for mapping Java objects to/from MongoDB -->
-		<dependency>
-			<groupId>org.mongodb.morphia</groupId>
-			<artifactId>morphia</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		
-		<!-- Data binding package built on Jackson JSON processor -->		
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<scope>provided</scope>
-		</dependency>
 
 		<!-- Apache Oltu -->
 		<dependency>
@@ -201,17 +187,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						<groupId>org.mongodb</groupId>
 						<artifactId>mongo-java-driver</artifactId>
 						<version>${mongodb.driver.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>org.mongodb.morphia</groupId>
-						<artifactId>morphia</artifactId>
-						<version>${mongodb.morphia.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-databind</artifactId>
-						<version>${jackson-mapper.version}</version>
-					</dependency>					
+					</dependency>								
 				</dependencies>				
 			</plugin>
 			<plugin>

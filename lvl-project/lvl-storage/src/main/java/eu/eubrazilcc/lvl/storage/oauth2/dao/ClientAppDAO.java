@@ -25,7 +25,9 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,22 +37,24 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.Indexes;
+import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.ClientApp;
 
 /**
@@ -61,6 +65,8 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 
 	CLIENT_APP_DAO;
 
+	private final static Logger LOGGER = getLogger(ClientAppDAO.class);
+
 	public static final String COLLECTION = "client_apps";
 	public static final String PRIMARY_KEY = "clientApp.clientId";
 
@@ -68,11 +74,8 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	public static final String LVL_PORTAL_SECRET      = "changeit";
 	public static final String LVL_PORTAL_DESCRIPTION = "LVL Web portal";
 
-	private final Morphia morphia = new Morphia();
-
 	private ClientAppDAO() {		
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
-		morphia.map(ClientAppEntity.class);
 		// ensure that at least the administrator account exists in the database
 		final List<ClientApp> clientApps = list(0, 1, null);
 		if (clientApps == null || clientApps.isEmpty()) {
@@ -94,7 +97,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	public String insert(final ClientApp clientApp) {
 		// remove transient fields from the element before saving it to the database
 		final ClientAppTransientStore store = ClientAppTransientStore.start(clientApp);
-		final DBObject obj = morphia.toDBObject(new ClientAppEntity(store.purge()));
+		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -105,7 +108,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	public void update(final ClientApp clientApp) {
 		// remove transient fields from the element before saving it to the database
 		final ClientAppTransientStore store = ClientAppTransientStore.start(clientApp);
-		final DBObject obj = morphia.toDBObject(new ClientAppEntity(store.purge()));
+		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(clientApp.getClientId()), COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -166,19 +169,39 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	}
 
 	private ClientApp parseBasicDBObject(final BasicDBObject obj) {
-		return morphia.fromDBObject(ClientAppEntity.class, obj).getClientApp();
+		return map(obj).getClientApp();
 	}
 
 	private ClientApp parseBasicDBObjectOrNull(final BasicDBObject obj) {
 		ClientApp clientApp = null;
 		if (obj != null) {
-			final ClientAppEntity entity = morphia.fromDBObject(ClientAppEntity.class, obj);
+			final ClientAppEntity entity = map(obj);
 			if (entity != null) {
 				clientApp = entity.getClientApp();
 			}
 		}
 		return clientApp;
-	}	
+	}
+
+	private DBObject map(final ClientAppTransientStore store) {
+		DBObject obj = null;
+		try {
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new ClientAppEntity(store.purge())));
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Failed to write client app to DB object", e);
+		}
+		return obj;
+	}
+
+	private ClientAppEntity map(final BasicDBObject obj) {
+		ClientAppEntity entity = null;
+		try {
+			entity = JSON_MAPPER.readValue(obj.toString(), ClientAppEntity.class);		
+		} catch (IOException e) {
+			LOGGER.error("Failed to read client app from DB object", e);
+		}
+		return entity;
+	}
 
 	/**
 	 * Checks whether or not the specified client Id were previously stored (registered).
@@ -233,17 +256,16 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	}
 
 	/**
-	 * Client application Morphia entity.
+	 * Client application entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	@Entity(value=COLLECTION, noClassnameStored=true)
-	@Indexes({@Index(PRIMARY_KEY)})
 	public static class ClientAppEntity {
 
-		@Id
+		@JsonSerialize(using = ObjectIdSerializer.class)
+		@JsonDeserialize(using = ObjectIdDeserializer.class)
+		@JsonProperty("_id")
 		private ObjectId id;
-
-		@Embedded
+		
 		private ClientApp clientApp;
 
 		public ClientAppEntity() { }

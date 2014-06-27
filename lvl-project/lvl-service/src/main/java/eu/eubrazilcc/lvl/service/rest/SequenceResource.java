@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
@@ -52,12 +54,17 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.mutable.MutableLong;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sequences;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.core.geospatial.FeatureCollection;
-import eu.eubrazilcc.lvl.core.geospatial.Point;
+import eu.eubrazilcc.lvl.core.geojson.Crs;
+import eu.eubrazilcc.lvl.core.geojson.Feature;
+import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
+import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
+import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
@@ -80,10 +87,8 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 public class SequenceResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);
-	
-	public static final char ID_SEPARATOR = ',';
-	
+	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);	
+
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Sequences getSequences(final @QueryParam("start") @DefaultValue("0") int start,
@@ -131,7 +136,7 @@ public class SequenceResource {
 		// get from database
 		final Sequence sequence = SEQUENCE_DAO
 				.baseUri(uriInfo.getBaseUri())
-				.find(SequenceKey.builder().parse(id, ID_SEPARATOR));
+				.find(SequenceKey.builder().parse(id, URI_ID_SEPARATOR));
 		if (sequence == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
@@ -161,7 +166,7 @@ public class SequenceResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}		
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_SEPARATOR);
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, URI_ID_SEPARATOR);
 		if (sequenceKey == null || !sequenceKey.getDataSource().equals(update.getDataSource()) 
 				|| !sequenceKey.getAccession().equals(update.getAccession())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
@@ -183,7 +188,7 @@ public class SequenceResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_SEPARATOR);
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, URI_ID_SEPARATOR);
 		// get from database
 		final Sequence current = SEQUENCE_DAO.find(sequenceKey);
 		if (current == null) {
@@ -204,12 +209,26 @@ public class SequenceResource {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		// get from database
 		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
-				.coordinate(longitude, latitude).build(), maxDistance);
-		final FeatureCollection.Builder builder = FeatureCollection.builder().wgs84();
+				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build())
+				.build(), maxDistance);
+		final List<Feature> features = newArrayList();
 		for (final Sequence sequence : sequences) {
-			builder.feature(sequence.getLocation());
+			features.add(Feature.builder().geometry(sequence.getLocation()).build());
 		}
-		return builder.build();
-	}	
+
+		/*
+		// TODO
+		try {
+			final FeatureCollection collection = FeatureCollection.builder().crs(Crs.builder().wgs84().build()).features(features).build();
+			System.err.println("\n\n >> COLLECTION: " + collection.toString() + "\n\n");
+			System.err.println("\n\n >> JSON: " + (new ObjectMapper()).writeValueAsString(collection) + "\n\n");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// TODO
+		*/
+
+		return FeatureCollection.builder().crs(Crs.builder().wgs84().build()).features(features).build();
+	}
 
 }

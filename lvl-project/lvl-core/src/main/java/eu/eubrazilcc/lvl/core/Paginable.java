@@ -26,15 +26,19 @@ import static com.google.common.base.Objects.toStringHelper;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.Link.JaxbAdapter;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import eu.eubrazilcc.lvl.core.xml.LinkAdapter;
 
 /**
  * Any collection that can be returned to the client as a series of pages that
- * contains a part of the collection.
+ * contains a part of the collection. Include JAXB annotations to serialize this 
+ * class to XML and JSON. Many JSON processing libraries like Jackson support 
+ * these JAXB annotations.
  * @author Erik Torres <ertorser@upv.es>
  */
+@XmlRootElement
 public class Paginable {
 
 	private Link previous;
@@ -52,7 +56,8 @@ public class Paginable {
 		this.last = other.last;
 	}
 
-	@XmlJavaTypeAdapter(LinkAdapter.class)
+	@XmlElement(name="previous")
+	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public @Nullable Link getPrevious() {
 		return previous;
 	}
@@ -61,7 +66,8 @@ public class Paginable {
 		this.previous = previous;
 	}
 
-	@XmlJavaTypeAdapter(LinkAdapter.class)
+	@XmlElement(name="next")
+	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public @Nullable Link getNext() {
 		return next;
 	}
@@ -70,7 +76,8 @@ public class Paginable {
 		this.next = next;
 	}
 
-	@XmlJavaTypeAdapter(LinkAdapter.class)
+	@XmlElement(name="first")
+	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public @Nullable Link getFirst() {
 		return first;
 	}
@@ -79,7 +86,8 @@ public class Paginable {
 		this.first = first;
 	}
 
-	@XmlJavaTypeAdapter(LinkAdapter.class)
+	@XmlElement(name="last")
+	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public @Nullable Link getLast() {
 		return last;
 	}

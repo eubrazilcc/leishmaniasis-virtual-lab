@@ -20,25 +20,16 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core.xml;
+package eu.eubrazilcc.lvl.storage.mongodb.jackson;
 
-import javax.ws.rs.core.Link;
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * {@link Link} adapter for XML/JSON data binding.
+ * Binds Java objects to/from MongoDB using the Jackson JSON processor.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class LinkAdapter extends XmlAdapter<String, Link> {
-
-	@Override
-	public String marshal(final Link link) throws Exception {
-		return link != null ? link.toString() : null;
-	}
+public final class MongoDBJsonMapper {
 	
-	@Override
-	public Link unmarshal(final String str) throws Exception {
-		return str != null ? Link.valueOf(str) : null;
-	}
+	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();	
 	
 }

@@ -24,20 +24,17 @@ package eu.eubrazilcc.lvl.core.xml;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static org.apache.commons.lang.StringUtils.trimToNull;
 import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.FluentIterable.from;
+import static com.google.common.collect.Lists.newArrayList;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 
-import java.util.HashMap;
 import java.util.List;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBIntrospector;
 
 import com.google.common.base.Function;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.FluentIterable.from;
 import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.Count;
 import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.ESearchResult;
 import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.Id;
@@ -54,24 +51,12 @@ public class ESearchXmlBinder extends XmlBinder {
 		ESearchResult.class
 	};
 
-	private static JAXBContext CONTEXT;
-	private static JAXBIntrospector INTROSPECTOR;
-
-	static {
-		try {
-			// context
-			CONTEXT = JAXBContext.newInstance(SUPPORTED_CLASSES, new HashMap<String, Object>());
-			// introspector
-			INTROSPECTOR = CONTEXT.createJAXBIntrospector();
-		} catch (Exception e) { }
-	}
-
 	public static final ObjectFactory ESEARCH_XML_FACTORY = new ObjectFactory();	
 
 	public static final ESearchXmlBinder ESEARCH_XML = new ESearchXmlBinder();
 
 	private ESearchXmlBinder() {
-		super(CONTEXT, INTROSPECTOR);
+		super(SUPPORTED_CLASSES);
 	}
 
 	@Override

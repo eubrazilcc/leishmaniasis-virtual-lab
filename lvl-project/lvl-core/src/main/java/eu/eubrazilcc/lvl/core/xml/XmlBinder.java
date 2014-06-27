@@ -22,6 +22,10 @@
 
 package eu.eubrazilcc.lvl.core.xml;
 
+import static javax.xml.bind.JAXBContext.newInstance;
+import static javax.xml.bind.JAXBIntrospector.getValue;
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -32,6 +36,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.HashMap;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -39,18 +44,28 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.JAXBIntrospector;
 import javax.xml.bind.Marshaller;
 
+import org.slf4j.Logger;
+
 /**
  * Provides a template for implementing XML binding classes.
  * @author Erik Torres <ertorser@upv.es>
  */
 public abstract class XmlBinder {
 
+	private final static Logger LOGGER = getLogger(XmlBinder.class);
+
 	protected JAXBContext context;
 	protected JAXBIntrospector introspector;
 
-	public XmlBinder(final JAXBContext context, final JAXBIntrospector introspector) {
-		this.context = context;
-		this.introspector = introspector;
+	public XmlBinder(final Class<?>[] supportedClasses) {
+		try {
+			// context
+			context = newInstance(supportedClasses, new HashMap<String, Object>());
+			// introspector
+			introspector = context.createJAXBIntrospector();
+		} catch (Exception e) {
+			LOGGER.error("Failed to configure XML binding", e);
+		}
 	}
 
 	protected abstract <T> JAXBElement<T> createType(final T obj);
@@ -72,7 +87,7 @@ public abstract class XmlBinder {
 	@SuppressWarnings("unchecked")
 	public <T> T typeFromXml(final String payload) throws IOException {
 		try (final StringReader reader = new StringReader(payload)) {
-			return (T) JAXBIntrospector.getValue(context.createUnmarshaller().unmarshal(reader));
+			return (T) getValue(context.createUnmarshaller().unmarshal(reader));
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
@@ -92,14 +107,23 @@ public abstract class XmlBinder {
 	}
 
 	@SuppressWarnings("unchecked")
+	public <T> T typeFromFile(final File file) throws IOException {
+		try (final FileReader reader = new FileReader(file)) {
+			return (T) getValue(context.createUnmarshaller().unmarshal(reader));
+		} catch (JAXBException e) {
+			throw new IOException(e);
+		}		
+	}
+
+	@SuppressWarnings("unchecked")
 	public <T> T typeFromInputStream(final InputStream is) throws IOException {
 		try (final InputStreamReader reader = new InputStreamReader(is)) {
-			return (T) JAXBIntrospector.getValue(context.createUnmarshaller().unmarshal(reader));
+			return (T) getValue(context.createUnmarshaller().unmarshal(reader));
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
 	}
-	
+
 	public <T> void typeToOutputStream(final T obj, final OutputStream os) throws IOException {
 		try (final OutputStreamWriter writer = new OutputStreamWriter(os)) {
 			final Marshaller marshaller = context.createMarshaller();			
@@ -108,15 +132,6 @@ public abstract class XmlBinder {
 			} else {
 				marshaller.marshal(obj, writer);
 			}			
-		} catch (JAXBException e) {
-			throw new IOException(e);
-		}		
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T> T typeFromFile(final File file) throws IOException {
-		try (final FileReader reader = new FileReader(file)) {
-			return (T) JAXBIntrospector.getValue(context.createUnmarshaller().unmarshal(reader));
 		} catch (JAXBException e) {
 			throw new IOException(e);
 		}		

@@ -35,8 +35,8 @@ import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.sse.SseFeature;
-import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.slf4j.Logger;
 
 import com.google.common.base.Function;
@@ -65,7 +65,7 @@ public class LeishVirtLabApplication extends Application {
 		instances.add(new SequenceResource());
 		instances.add(new TaskResource());
 		// add additional JAX-RS providers
-		classes.add(MoxyJsonFeature.class);
+		classes.add(JacksonFeature.class);
 		classes.add(SseFeature.class);
 		LOGGER.info(SERVICE_NAME + " initialized successfully, registered resources: " + objectsClassNames(instances));
 	}

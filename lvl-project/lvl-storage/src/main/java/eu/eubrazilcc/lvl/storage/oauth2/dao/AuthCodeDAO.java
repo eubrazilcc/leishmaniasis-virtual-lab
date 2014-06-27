@@ -25,7 +25,9 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,21 +37,23 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.Indexes;
+import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.AuthCode;
 
 /**
@@ -60,21 +64,20 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 
 	AUTH_CODE_DAO;
 
+	private final static Logger LOGGER = getLogger(AuthCodeDAO.class);
+
 	public static final String COLLECTION = "authz_codes";
 	public static final String PRIMARY_KEY = "authCode.code";
 
-	private final Morphia morphia = new Morphia();	
-
 	private AuthCodeDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
-		morphia.map(AuthCodeEntity.class);
 	}
 
 	@Override
 	public String insert(final AuthCode authCode) {
 		// remove transient fields from the element before saving it to the database
 		final AuthCodeTransientStore store = AuthCodeTransientStore.start(authCode);
-		final DBObject obj = morphia.toDBObject(new AuthCodeEntity(store.purge()));
+		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -85,7 +88,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	public void update(final AuthCode authCode) {
 		// remove transient fields from the element before saving it to the database
 		final AuthCodeTransientStore store = AuthCodeTransientStore.start(authCode);
-		final DBObject obj = morphia.toDBObject(new AuthCodeEntity(store.purge()));
+		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(authCode.getCode()), COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -146,18 +149,38 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	}
 
 	private AuthCode parseBasicDBObject(final BasicDBObject obj) {
-		return morphia.fromDBObject(AuthCodeEntity.class, obj).getAuthCode();
+		return map(obj).getAuthCode();
 	}
 
 	private AuthCode parseBasicDBObjectOrNull(final BasicDBObject obj) {
 		AuthCode authCode = null;
 		if (obj != null) {
-			final AuthCodeEntity entity = morphia.fromDBObject(AuthCodeEntity.class, obj);
+			final AuthCodeEntity entity = map(obj);
 			if (entity != null) {
 				authCode = entity.getAuthCode();
 			}
 		}
 		return authCode;
+	}
+
+	private DBObject map(final AuthCodeTransientStore store) {
+		DBObject obj = null;
+		try {
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new AuthCodeEntity(store.purge())));
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Failed to write authN code to DB object", e);
+		}
+		return obj;
+	}
+
+	private AuthCodeEntity map(final BasicDBObject obj) {
+		AuthCodeEntity entity = null;
+		try {
+			entity = JSON_MAPPER.readValue(obj.toString(), AuthCodeEntity.class);		
+		} catch (IOException e) {
+			LOGGER.error("Failed to read authN code from DB object", e);
+		}
+		return entity;
 	}
 
 	/**
@@ -173,7 +196,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 		final AuthCode authCode = find(code);		
 		return (authCode != null && authCode.getCode() != null && code.equals(authCode.getCode())
 				&& (authCode.getIssuedAt() + authCode.getExpiresIn()) > (System.currentTimeMillis() / 1000l));
-	}
+	}	
 
 	/**
 	 * Extracts from an entity the fields that depends on the service (e.g. links)
@@ -202,17 +225,16 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	}
 
 	/**
-	 * AuthCode Morphia entity.
+	 * AuthCode entity.
 	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	@Entity(value=COLLECTION, noClassnameStored=true)
-	@Indexes({@Index(PRIMARY_KEY)})
+	 */	
 	public static class AuthCodeEntity {
 
-		@Id
+		@JsonSerialize(using = ObjectIdSerializer.class)
+		@JsonDeserialize(using = ObjectIdDeserializer.class)
+		@JsonProperty("_id")
 		private ObjectId id;
 
-		@Embedded
 		private AuthCode authCode;
 
 		public AuthCodeEntity() { }

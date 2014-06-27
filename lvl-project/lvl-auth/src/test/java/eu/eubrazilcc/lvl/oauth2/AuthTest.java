@@ -72,7 +72,7 @@ import org.apache.oltu.oauth2.ext.dynamicreg.client.OAuthRegistrationClient;
 import org.apache.oltu.oauth2.ext.dynamicreg.client.request.OAuthClientRegistrationRequest;
 import org.apache.oltu.oauth2.ext.dynamicreg.client.response.OAuthClientRegistrationResponse;
 import org.apache.oltu.oauth2.ext.dynamicreg.common.OAuthRegistration;
-import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -123,7 +123,7 @@ public class AuthTest {
 		// setup test file-system environment
 		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);
 		// prepare client
-		final Client client = ClientBuilder.newBuilder().register(MoxyJsonFeature.class).build();
+		final Client client = ClientBuilder.newBuilder().register(JacksonFeature.class).build();
 		// configure Web target
 		target = client.target(BASE_URI);
 	}
@@ -337,7 +337,7 @@ public class AuthTest {
 			System.out.println("     >> Get users HTTP headers: " + response3.getStringHeaders());
 
 			// test identity provider (IdP) get users (Java object)
-			final Users users = target.path(path.value()).request(MediaType.APPLICATION_JSON)
+			final Users users = target.path(path.value()).request(MediaType.APPLICATION_JSON)  // TODO
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(Users.class);
 			assertThat("Get users result is not null", users, notNullValue());

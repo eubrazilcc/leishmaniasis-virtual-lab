@@ -47,7 +47,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import eu.eubrazilcc.lvl.core.geospatial.Point;
+import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
+import eu.eubrazilcc.lvl.core.geojson.Point;
 
 /**
  * Converts addresses into geographic coordinates using the Google Geocoding API v3.
@@ -132,8 +133,10 @@ public final class GeocodingHelper {
 							&& result.getGeometry().getLocation().getLng() != null
 							&& result.getGeometry().getLocation().getLat() != null) {
 						point = Point.builder()
-								.coordinate(result.getGeometry().getLocation().getLng().doubleValue(), 
-										result.getGeometry().getLocation().getLat().doubleValue())
+								.coordinates(LngLatAlt.builder()
+										.longitude(result.getGeometry().getLocation().getLng().doubleValue())
+										.latitude(result.getGeometry().getLocation().getLat().doubleValue())
+										.build())
 										.build();
 					}
 				}

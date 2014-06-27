@@ -31,6 +31,8 @@ import java.util.List;
 
 import com.google.common.base.Objects;
 
+import eu.eubrazilcc.lvl.core.util.NamingUtils;
+
 /**
  * Stores a sequence key that can be used to transmit over the network and to store it in the database.
  * @author Erik Torres <ertorser@upv.es>
@@ -79,6 +81,22 @@ public class SequenceKey {
 				.toString();
 	}
 	
+	/**
+	 * Creates an identifier that uniquely identifies the sequence in the LVL. This identifier 
+	 * is computed from the data source and the accession fields. This method uses the default
+	 * character to separate these particles in the created identifier.
+	 * @return an identifier that uniquely identifies the sequence in the LVL.
+	 */
+	public String toId() {
+		return dataSource + NamingUtils.URI_ID_SEPARATOR + accession;
+	}
+	
+	/**
+	 * Creates an identifier that uniquely identifies the sequence in the LVL. This identifier 
+	 * is computed from the data source and the accession fields.
+	 * @param separator Character that separates components of a sequence identifier.
+	 * @return an identifier that uniquely identifies the sequence in the LVL.
+	 */
 	public String toId(final char separator) {
 		return dataSource + separator + accession;
 	}

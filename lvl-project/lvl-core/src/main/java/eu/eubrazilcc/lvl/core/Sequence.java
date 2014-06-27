@@ -25,12 +25,14 @@ package eu.eubrazilcc.lvl.core;
 import java.util.Locale;
 
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.Link.JaxbAdapter;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.google.common.base.Objects;
 
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.xml.LinkAdapter;
+import eu.eubrazilcc.lvl.core.geojson.Point;
 
 /**
  * Stores a nucleotide sequence as a subset of GenBank fields (since most sequences comes from GenBank) 
@@ -41,10 +43,12 @@ import eu.eubrazilcc.lvl.core.xml.LinkAdapter;
  * a Java {@link Locale} that can be used later to export the country as a two-letter code that 
  * represents a country name with ISO 3166-1 alpha-2 standard. The original GenBank country feature is 
  * also included in the class. What is more important, a GeoJSON point is included that allows callers 
- * to georeference the sequence.
+ * to georeference the sequence. Include JAXB annotations to serialize this class to XML and JSON.
+ * Many JSON processing libraries like Jackson support these JAXB annotations.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://opengeocode.org/download.php">Americas Open Geocode (AOG) database</a>
  */
+@XmlRootElement
 public class Sequence {
 
 	private Link link;             // RESTful link
@@ -60,7 +64,8 @@ public class Sequence {
 
 	public Sequence() { }
 
-	@XmlJavaTypeAdapter(LinkAdapter.class)
+	@XmlElement(name="link")
+	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public Link getLink() {
 		return link;
 	}

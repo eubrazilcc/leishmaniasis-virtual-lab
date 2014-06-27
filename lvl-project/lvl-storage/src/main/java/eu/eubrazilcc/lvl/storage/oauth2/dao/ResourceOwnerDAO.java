@@ -26,10 +26,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asOAuthString;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,23 +47,25 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.Indexes;
+import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.gravatar.Gravatar;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 
@@ -73,6 +77,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	RESOURCE_OWNER_DAO;
 
+	private final static Logger LOGGER = getLogger(ResourceOwnerDAO.class);
+
 	public static final String COLLECTION  = "resource_owners";
 	public static final String PRIMARY_KEY = "resourceOwner.ownerId";
 	public static final String EMAIL_KEY   = "resourceOwner.user.email";
@@ -81,15 +87,12 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public static final String ADMIN_DEFAULT_PASSWD = "changeit";
 	public static final String ADMIN_DEFAULT_EMAIL  = "root@example.com";
 
-	private final Morphia morphia = new Morphia();
-
 	private URI baseUri;
 	private boolean useGravatar;
 
 	private ResourceOwnerDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		MONGODB_CONN.createIndex(EMAIL_KEY, COLLECTION);
-		morphia.map(ResourceOwnerEntity.class);
 		// reset parameters to their default values
 		reset();
 		// ensure that at least the administrator account exists in the database
@@ -116,7 +119,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		this.useGravatar = useGravatar;
 		return this;
 	}
-	
+
 	public ResourceOwnerDAO reset() {
 		this.baseUri = null;
 		this.useGravatar = false;
@@ -127,7 +130,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public String insert(final ResourceOwner resourceOwner) {
 		// remove transient fields from the element before saving it to the database
 		final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
-		final DBObject obj = morphia.toDBObject(new ResourceOwnerEntity(store.purge()));
+		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -138,7 +141,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public void update(final ResourceOwner resourceOwner) {
 		// remove transient fields from the element before saving it to the database
 		final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
-		final DBObject obj = morphia.toDBObject(new ResourceOwnerEntity(store.purge()));
+		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(resourceOwner.getOwnerId()), COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -203,7 +206,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	private ResourceOwner parseBasicDBObject(final BasicDBObject obj) {
-		final ResourceOwner owner = morphia.fromDBObject(ResourceOwnerEntity.class, obj).getResourceOwner();
+		final ResourceOwner owner = map(obj).getResourceOwner();
 		addLink(owner);
 		addGravatar(owner);
 		return owner;
@@ -212,7 +215,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	private ResourceOwner parseBasicDBObjectOrNull(final BasicDBObject obj) {
 		ResourceOwner owner = null;
 		if (obj != null) {
-			final ResourceOwnerEntity entity = morphia.fromDBObject(ResourceOwnerEntity.class, obj);
+			final ResourceOwnerEntity entity = map(obj);
 			if (entity != null) {
 				owner = entity.getResourceOwner();
 				addLink(owner);
@@ -225,7 +228,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	@SuppressWarnings("unused")
 	private ResourceOwner parseObject(final Object obj) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
-		final ResourceOwner owner = morphia.fromDBObject(ResourceOwnerEntity.class, (BasicDBObject) obj2.get("obj")).getResourceOwner();
+		final ResourceOwner owner = map((BasicDBObject) obj2.get("obj")).getResourceOwner();
 		addLink(owner);
 		addGravatar(owner);
 		return owner;
@@ -247,6 +250,26 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 				owner.getUser().setPictureUrl(url.toString());
 			}
 		}
+	}
+
+	private DBObject map(final ResourceOwnerTransientStore store) {
+		DBObject obj = null;
+		try {
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new ResourceOwnerEntity(store.purge())));
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Failed to write resource owner to DB object", e);
+		}
+		return obj;
+	}
+
+	private ResourceOwnerEntity map(final BasicDBObject obj) {
+		ResourceOwnerEntity entity = null;
+		try {
+			entity = JSON_MAPPER.readValue(obj.toString(), ResourceOwnerEntity.class);		
+		} catch (IOException e) {
+			LOGGER.error("Failed to read resource owner from DB object", e);
+		}
+		return entity;
 	}
 
 	/**
@@ -305,7 +328,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		}
 		return isValid;
 	}
-	
+
 	/**
 	 * Checks whether or not the specified user exists (the specified username coincides with the 
 	 * username stored for the resource owner identified by the provided id).
@@ -376,7 +399,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		checkArgument(resourceOwner != null, "Uninitialized or invalid resource owner");		
 		return (resourceOwner.getUser() != null && resourceOwner.getUser().getScopes() != null 
 				? asOAuthString(resourceOwner.getUser().getScopes(), sort) : null);
-	}
+	}	
 
 	/**
 	 * Extracts from an entity the fields that depends on the service (e.g. links)
@@ -424,17 +447,16 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	/**
-	 * Resource owner Morphia entity.
+	 * Resource owner entity.
 	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	@Entity(value=COLLECTION, noClassnameStored=true)
-	@Indexes({@Index(PRIMARY_KEY)})
+	 */	
 	public static class ResourceOwnerEntity {
 
-		@Id
+		@JsonSerialize(using = ObjectIdSerializer.class)
+		@JsonDeserialize(using = ObjectIdDeserializer.class)
+		@JsonProperty("_id")
 		private ObjectId id;
 
-		@Embedded
 		private ResourceOwner resourceOwner;
 
 		public ResourceOwnerEntity() { }

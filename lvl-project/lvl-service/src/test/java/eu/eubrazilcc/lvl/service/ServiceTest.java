@@ -53,10 +53,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.client.fluent.Request;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.SseFeature;
-import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,8 +68,9 @@ import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sequences;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.core.geospatial.FeatureCollection;
-import eu.eubrazilcc.lvl.core.geospatial.Point;
+import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
+import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
+import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.service.Task.TaskType;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
@@ -112,7 +113,7 @@ public class ServiceTest {
 		deleteQuietly(TEST_OUTPUT_DIR);		
 		// prepare client
 		final Client client = ClientBuilder.newBuilder()
-				.register(MoxyJsonFeature.class)
+				.register(JacksonFeature.class)
 				.register(SseFeature.class)
 				.build();
 		// configure Web target
@@ -232,12 +233,12 @@ public class ServiceTest {
 					.accession("LVL00000")
 					.version("0.0")
 					.organism("Example organism")
-					.location(Point.builder().coordinate(1.2d, 3.4d).build())
+					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(1.2d, 3.4d).build()).build())
 					.build();
 			final SequenceKey sequenceKey = SequenceKey.builder()
 					.dataSource(sequence.getDataSource())
 					.accession(sequence.getAccession())
-					.build();
+					.build();			
 			response = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.post(Entity.entity(sequence, MediaType.APPLICATION_JSON_TYPE));			
@@ -278,7 +279,7 @@ public class ServiceTest {
 			System.out.println("Get sequences result: " + sequences.toString());
 
 			// test get sequence by data source + accession number
-			Sequence sequence2 = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
+			Sequence sequence2 = target.path(path.value()).path(sequenceKey.toId())
 					.request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequence.class);
@@ -289,7 +290,7 @@ public class ServiceTest {
 
 			// test update sequence
 			sequence.setDefinition("Modified example sequence");
-			response = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
+			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.put(Entity.entity(sequence, MediaType.APPLICATION_JSON_TYPE));
@@ -305,7 +306,7 @@ public class ServiceTest {
 			System.out.println("Update sequence HTTP headers: " + response.getStringHeaders());
 
 			// test get sequence by accession number after update
-			sequence2 = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
+			sequence2 = target.path(path.value()).path(sequenceKey.toId())
 					.request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequence.class);
@@ -322,7 +323,7 @@ public class ServiceTest {
 					.get(FeatureCollection.class);
 			assertThat("Get nearby sequences result is not null", featCol, notNullValue());
 			assertThat("Get nearby sequences list is not null", featCol.getFeatures(), notNullValue());
-			assertThat("Get nearby sequences list is not empty", featCol.getFeatures().length > 0);
+			assertThat("Get nearby sequences list is not empty", featCol.getFeatures().size() > 0);
 			/* uncomment for additional output */			
 			System.out.println("Get nearby sequences result: " + featCol.toString());
 
@@ -341,20 +342,22 @@ public class ServiceTest {
 			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
 			assertThat("Get nearby sequences result (plain) is not null", featCol, notNullValue());
 			assertThat("Get nearby sequences (plain) list is not null", featCol.getFeatures(), notNullValue());
-			assertThat("Get nearby sequences (plain) list is not empty", featCol.getFeatures().length > 0);
+			assertThat("Get nearby sequences (plain) list is not empty", featCol.getFeatures().size() > 0);
 			/* uncomment for additional output */
 			System.out.println("Get nearby sequences result (plain): " + featCol.toString());
-			
-			
+
+
 			// TODO
 
 
 
+
+
 			// test delete sequence
-			response = target.path(path.value()).path(sequenceKey.toId(SequenceResource.ID_SEPARATOR))
-			.request()
-			.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-			.delete();
+			response = target.path(path.value()).path(sequenceKey.toId())
+					.request()
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.delete();
 			assertThat("Delete sequence response is not null", response, notNullValue());
 			assertThat("Delete sequence response is NO_CONTENT", response.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
 			assertThat("Delete sequence response is not empty", response.getEntity(), notNullValue());

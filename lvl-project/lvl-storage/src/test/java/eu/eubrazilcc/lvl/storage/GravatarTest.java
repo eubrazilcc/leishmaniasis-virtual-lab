@@ -52,11 +52,13 @@ public class GravatarTest {
 			assertThat("image URL is not null", url, notNullValue());
 			assertThat("image URL is not empty", isNotBlank(url.toString()));			
 			System.out.println(url.toString());
+			
 			// test JSON profile
 			url = gravatar.jsonProfileUrl();
 			assertThat("JSON profile URL is not null", url, notNullValue());
-			assertThat("JSON profile is not empty", isNotBlank(url.toString()));			
+			assertThat("JSON profile is not empty", isNotBlank(url.toString()));
 			System.out.println(url.toString());
+			
 			// test JSON profile with callback function
 			gravatar = Gravatar.builder()
 					.email(email)

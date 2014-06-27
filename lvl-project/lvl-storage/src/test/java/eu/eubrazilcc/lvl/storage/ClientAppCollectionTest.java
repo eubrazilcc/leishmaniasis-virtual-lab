@@ -60,6 +60,7 @@ public class ClientAppCollectionTest {
 					.expiresIn(2000l)
 					.build();
 			CLIENT_APP_DAO.insert(clientApp);
+			
 			// find
 			ClientApp clientApp2 = CLIENT_APP_DAO.find(clientApp.getClientId());
 			assertThat("client application is not null", clientApp2, notNullValue());
@@ -68,18 +69,22 @@ public class ClientAppCollectionTest {
 			// update
 			clientApp.setExpiresIn(4000l);
 			CLIENT_APP_DAO.update(clientApp);
+			
 			// check validity
 			boolean validity = CLIENT_APP_DAO.isValid(clientApp.getClientId());
 			assertThat("client application is valid (secret excluded)", validity);
 			validity = CLIENT_APP_DAO.isValid(clientApp.getClientId(), clientApp.getClientSecret());
 			assertThat("client application is valid (secret included)", validity);
+			
 			// find after update
 			clientApp2 = CLIENT_APP_DAO.find(clientApp.getClientId());
 			assertThat("client application is not null", clientApp2, notNullValue());
 			assertThat("client application coincides with original", clientApp2, equalTo(clientApp));
 			System.out.println(clientApp2.toString());
+			
 			// remove
 			CLIENT_APP_DAO.delete(clientApp.getClientId());
+			
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {				

@@ -24,6 +24,8 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,19 +35,23 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
+import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.Notification;
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.storage.TransientStore;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 
 /**
  * {@link Notification} DAO.
@@ -55,26 +61,25 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 
 	NOTIFICATION_DAO;
 
+	private final static Logger LOGGER = getLogger(NotificationDAO.class);
+
 	public static final String COLLECTION = "notifications";
 	public static final String MORPHIA_KEY = "_id";
 	public static final String PRIORITY_KEY = "priority";
 	public static final String ADDRESSE_KEY = "addressee";
 	public static final String ISSUED_AT_KEY = "issuedAt";
 
-	private final Morphia morphia = new Morphia();	
-
 	private NotificationDAO() {
 		MONGODB_CONN.createNonUniqueIndex(PRIORITY_KEY, COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(ADDRESSE_KEY, COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(ISSUED_AT_KEY, COLLECTION, false);		
-		morphia.map(NotificationEntity.class);
 	}
 
 	@Override
 	public String insert(final Notification notification) {
 		// remove transient fields from the element before saving it to the database
 		final NotificationTransientStore store = NotificationTransientStore.start(notification);
-		final DBObject obj = morphia.toDBObject(new NotificationEntity(store.purge()));
+		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -85,7 +90,7 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	public void update(final Notification notification) {
 		// remove transient fields from the element before saving it to the database
 		final NotificationTransientStore store = NotificationTransientStore.start(notification);
-		final DBObject obj = morphia.toDBObject(new NotificationEntity(store.purge()));
+		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(store.getId()), COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -146,7 +151,7 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	}	
 
 	private Notification parseBasicDBObject(final BasicDBObject obj) {
-		final NotificationEntity entity = morphia.fromDBObject(NotificationEntity.class, obj);
+		final NotificationEntity entity = map(obj);
 		final Notification notification = entity.getNotification();
 		notification.setId(entity.getId().toHexString());
 		return notification;
@@ -155,13 +160,33 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	private Notification parseBasicDBObjectOrNull(final BasicDBObject obj) {
 		Notification notification = null;		
 		if (obj != null) {
-			final NotificationEntity entity = morphia.fromDBObject(NotificationEntity.class, obj);
+			final NotificationEntity entity = map(obj);
 			if (entity != null) {
 				notification = entity.getNotification();
 				notification.setId(entity.getId().toHexString());
 			}
 		}
 		return notification;
+	}
+
+	private DBObject map(final NotificationTransientStore store) {
+		DBObject obj = null;
+		try {
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new NotificationEntity(store.purge())));
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Failed to write notification to DB object", e);
+		}
+		return obj;
+	}
+
+	private NotificationEntity map(final BasicDBObject obj) {
+		NotificationEntity entity = null;
+		try {
+			entity = JSON_MAPPER.readValue(obj.toString(), NotificationEntity.class);		
+		} catch (IOException e) {
+			LOGGER.error("Failed to read notification from DB object", e);
+		}
+		return entity;
 	}
 
 	/**
@@ -200,16 +225,16 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	}
 
 	/**
-	 * Notification Morphia entity.
+	 * Notification entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	@Entity(value=COLLECTION, noClassnameStored=true)
 	public static class NotificationEntity {
 
-		@Id
+		@JsonSerialize(using = ObjectIdSerializer.class)
+		@JsonDeserialize(using = ObjectIdDeserializer.class)
+		@JsonProperty("_id")
 		private ObjectId id;
 
-		@Embedded
 		private Notification notification;
 
 		public NotificationEntity() { }

@@ -20,32 +20,13 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core.util;
-
-import org.apache.commons.lang.StringUtils;
-
 /**
- * Utility class to work with user-supplied text (e.g. names) and convert them into
- * safe strings that can be used for example to name files in a file-system.
+ * Provides classes to store geospatial locations in GeoJSON format, which are based on the 
+ * GeoJson POJOs for Jackson from Adrian Stabiszewski (grundid). Besides POJOs, a fluent API 
+ * is also provided. Common object methods (equals, hashCode and toString) are also provided 
+ * using Google Guava programming style.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="http://geojson.org/">GeoJSON -- JSON Geometry and Feature Description</a>
+ * @see <a href="https://github.com/opendatalab-de/geojson-jackson">GeoJson POJOs for Jackson</a>
  */
-public final class NamingUtils {
-
-	public static final String NO_NAME = "noname";
-	public static final char URI_ID_SEPARATOR = ',';
-
-	/**
-	 * Replaces non-printable Unicode characters from an specified name, producing a 
-	 * short representation of the name that does not contains any spaces. The produced
-	 * name can be used for example to name files in a file-system.
-	 * @param name - the name to be converted.
-	 * @return an ASCII printable representation.
-	 */
-	public static String toAsciiSafeName(final String name) {
-		final String safeName = StringUtils.isNotBlank(name) ? name : "";
-		return StringUtils.defaultIfEmpty(safeName.trim().replaceAll("\\p{C}", "?")
-				.replaceAll("\\W+", "_").replaceFirst("[_]+$", "").replaceFirst("^[_]+", "")
-				.toLowerCase(), NO_NAME);
-	}	
-
-}
+package eu.eubrazilcc.lvl.core.geojson;

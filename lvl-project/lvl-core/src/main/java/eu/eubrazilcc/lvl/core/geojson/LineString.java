@@ -20,66 +20,56 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.oauth2;
+package eu.eubrazilcc.lvl.core.geojson;
 
-import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import eu.eubrazilcc.lvl.core.Paginable;
+import com.google.common.base.Objects;
 
 /**
- * Wraps a collection of {@link User}.
+ * Stores geospatial locations in GeoJSON format. For type "LineString", the "coordinates" member must be 
+ * an array of two or more positions.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="http://geojson.org/">GeoJSON -- JSON Geometry and Feature Description</a>
  */
-public class Users extends Paginable {
-
-	private List<User> users = newArrayList();	
-
-	public List<User> getUsers() {
-		return users;
-	}
-
-	public void setUsers(final List<User> users) {
-		this.users = newArrayList(users);
-	}
-
+public class LineString extends Geometry<LngLatAlt> {	
+	
 	@Override
 	public String toString() {
-		return toStringHelper(this)
-				.add("paginable", super.toString())
-				.add("users", collectionToString(users))
+		return Objects.toStringHelper(this)
+				.add("geometry", super.toString())
 				.toString();
 	}
+	
+	/* Fluent API */
 
-	public static UsersBuilder start() {
-		return new UsersBuilder();
+	public static Builder builder() {
+		return new Builder();
 	}
 
-	public static class UsersBuilder {
+	public static class Builder {
 
-		private final Users users;
+		private LineString instance = new LineString();
 
-		public UsersBuilder() {
-			users = new Users();
+		public Builder coordinates(final LngLatAlt... coordinates) {			
+			return coordinates(newArrayList(coordinates));
 		}
-
-		public UsersBuilder paginable(final Paginable paginable) {
-			users.push(paginable);
+		
+		public Builder coordinates(final List<LngLatAlt> coordinates) {
+			instance.setCoordinates(coordinates != null ? coordinates : new ArrayList<LngLatAlt>());
 			return this;
 		}
 
-		public UsersBuilder users(final List<User> userList) {
-			users.setUsers(userList);
-			return this;			
-		}
-
-		public Users build() {
-			return users;
+		public LineString build() {
+			final List<LngLatAlt> coordinates = instance.getCoordinates();
+			checkState(coordinates != null && coordinates.size() >= 2, "Lines need at least two coordinate pairs");
+			return instance;
 		}
 
 	}
-
+	
 }

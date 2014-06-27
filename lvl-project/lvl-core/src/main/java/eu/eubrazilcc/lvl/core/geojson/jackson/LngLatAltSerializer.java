@@ -20,13 +20,34 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core.geospatial;
+package eu.eubrazilcc.lvl.core.geojson.jackson;
+
+import java.io.IOException;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+
+import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 
 /**
  * Stores geospatial locations in GeoJSON format.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://geojson.org/">GeoJSON -- JSON Geometry and Feature Description</a>
  */
-public interface Geometry {
+public class LngLatAltSerializer extends JsonSerializer<LngLatAlt> {
+
+	@Override
+	public void serialize(final LngLatAlt value, final JsonGenerator generator, final SerializerProvider provider) 
+			throws IOException, JsonProcessingException {
+		generator.writeStartArray();
+		generator.writeNumber(value.getLongitude());
+		generator.writeNumber(value.getLatitude());
+		if (value.hasAltitude()) {
+			generator.writeNumber(value.getAltitude());
+		}
+		generator.writeEndArray();		
+	}
 
 }

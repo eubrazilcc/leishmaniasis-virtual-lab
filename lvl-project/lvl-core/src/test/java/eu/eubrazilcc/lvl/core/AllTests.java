@@ -44,10 +44,9 @@ import org.junit.runners.Suite.SuiteClasses;
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
-@SuiteClasses({ LogManagerTest.class, ConcurrencyTest.class, GeospatialTest.class, 
-	GeoJSONXmlBindingTest.class, GeocodingTest.class, NCBIXmlBindingTest.class, 
-	UrlUtilsTest.class, NetworkingUtilsTest.class, NamingUtilsTest.class, EntrezTest.class, 
-	GenBankFlatFileTest.class })
+@SuiteClasses({ LogManagerTest.class, ConcurrencyTest.class, GeoJsonBindingTest.class, GeocodingTest.class,
+	NCBIXmlBindingTest.class, UrlUtilsTest.class, NetworkingUtilsTest.class, NamingUtilsTest.class, 
+	EntrezTest.class, GenBankFlatFileTest.class })
 public class AllTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

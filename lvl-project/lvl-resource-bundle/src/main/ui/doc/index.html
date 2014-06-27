@@ -33,7 +33,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 <h1>Leishmaniasis Virtual Laboratory (LVL) Administration &amp; Development Guide</h1>
 
 <p>Version 0.0.1</p>
-<p>April 2014</p>
+<p>June 2014</p>
 
 <h2>Abstract</h2>
 
@@ -68,7 +68,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
     <ul>
       <li><a href="#restful_api_resources">Resources</a></li>
       <li><a href="#restful_api_endpoints">Endpoints</a></li>
-      <li><a href="#restful_api_geojson_support">GeoJSON support</a></li>
+      <li><a href="#restful_api_json_support">JSON support</a>
+        <ul>
+          <li><a href="#restful_api_geojson_support">GeoJSON support</a></li>
+        </ul>
+      </li>
     </ul>
   </li>
   <li><a href="#user_interface">User Interface</a>
@@ -108,7 +112,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 <h3><a id="installation_requirements">Requirements</a></h3>
 
 <p>In order to install a complete LVL system, you need at least one server running Linux (Ubuntu, Debian, CentOS). Currently, the recommended platform
-   to run LVL is <a href="http://www.ubuntu.com/download/server" target="_blank">Ubuntu 12.04 LTS</a>. It is highly recommended to use a separate server
+   to run LVL is <a href="http://www.ubuntu.com/download/server" target="_blank">Ubuntu 14.04 LTS</a>. It is highly recommended to use a separate server
    instance (virtual or physical) for the LVL collection to obtain better performance.</p>
 
 <p>A minimum LVL installation includes the following components:</p>
@@ -116,12 +120,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 <ul>
   <li>LVL collection: a database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>
     <ul>
-      <li>Recommended version: 2.6.0</li>
+      <li>Recommended version: 2.6.1</li>
     </ul>  
   </li>
   <li>LVL identity provider &amp; authorization server: a Java servlet application that runs in a servlet container
     <ul>
-      <li>Recommended setup: <a href="http://tomcat.apache.org/" target="_blank">Apache Tomcat</a> 7.0.26</li>
+      <li>Recommended setup: <a href="http://tomcat.apache.org/" target="_blank">Apache Tomcat</a> 7.0.52</li>
     </ul>
   </li>
   <li>LVL service: a servlet-based REST service
@@ -132,7 +136,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
   </li>
   <li>LVL Web portal: a pure-JavaScript application that needs an HTTP server
     <ul>
-      <li>Recommended setup: <a href="http://nginx.org/" target="_blank">nginx</a> 1.1.19
+      <li>Recommended setup: <a href="http://nginx.org/" target="_blank">nginx</a> 1.4.6
         <ul>
           <li>Optionally, you can include <a href="https://github.com/nbs-system/naxsi/wiki" target="_blank">Naxsi</a> with nginx to protect your 
               server against XSS &amp; SQL injection</li>
@@ -208,7 +212,7 @@ $ sudo chown -R tomcat7.tomcat7 /opt/lvl
    which are known to perform better when loaded only once within the same JVM. For example:</p>
 
 <code>
-$ ln -s /opt/lvl/lib/java/mongo-java-driver-2.11.4.jar /usr/share/tomcat7/lib/mongo-java-driver-2.11.4.jar
+$ ln -s /opt/lvl/lib/java/mongo-java-driver-2.12.0.jar /usr/share/tomcat7/lib/mongo-java-driver-2.12.0.jar
 </code>
 
 <p>The following script is an example of how this task can be done in an automatic manner:</p>
@@ -708,7 +712,24 @@ Provide assisted data import: user with administrator role imports references fr
   <li>Production endpoint: <em>TODO</em></li>
 </ul>
 
-<h3><a id="restful_api_geojson_support">GeoJSON support</a></h3>
+<h3><a id="restful_api_json_support">JSON support</a></h3>
+
+<p>JSON processing is built on top of the <a href="http://wiki.fasterxml.com/JacksonHome" target="_blank">Jackson JSON processor</a> to provide unified 
+   annotations across all layers (database records, REST calls, etc.). This includes data binding capabilities to read and write Java objects in a seamless
+   way that does not require application developers to adapt their practices to use JSON with the LVL.</p>
+   
+<p>Jackson is also used as the JSON provider for the JAX-RS 2.0 web service. Currently, the LVL include this <a href="https://jersey.java.net/documentation/latest/media.html#json.jackson" target="_blank">Jersey module</a> 
+   that supports JSON binding in Jersey via Jackson.</p>
+
+<p>JAX-RS contains a very useful representation of the <a href="http://www.iana.org/assignments/link-relations/link-relations.xhtml" target="_blank">Link Relation</a>
+   that can be serialised with a <a href="https://jax-rs-spec.java.net/nonav/2.0/apidocs/javax/ws/rs/core/Link.JaxbAdapter.html" target="_blank">JAXB adapter</a>
+   into XML and JSON. LVL resources use this representation to provide the necessary links as well as reading and writing JAX-RS Link objects. Many JSON processing
+   libraries like <a href="http://wiki.fasterxml.com/JacksonFAQ#JAXB" target="_blank">Jackson support JAXB annotations</a>.</p>
+
+<p>MongoDB stores data in JSON documents. Instead on using a library for mapping Java objects to/from MongoDB, classes are annotated with Jackson and JAXB 
+   annotations and serialization/deserialization occurs on the fly using Jackson.</p>
+
+<h4><a id="restful_api_geojson_support">GeoJSON support</a></h4>
 
 <p>Currently, LVL supports the following GeoJSON geometries: point, line and polygon. For a complete 
    description: <a href="http://geojson.org/" target="_blank">GeoJSON -- JSON Geometry and Feature 

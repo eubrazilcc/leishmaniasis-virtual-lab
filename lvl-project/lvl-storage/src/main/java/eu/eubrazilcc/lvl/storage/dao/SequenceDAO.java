@@ -24,7 +24,10 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
+import static com.mongodb.util.JSON.parse;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -38,13 +41,12 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.Indexes;
+import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,12 +55,14 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.geospatial.Point;
-import eu.eubrazilcc.lvl.core.geospatial.Polygon;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.SequenceGiKey;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.TransientStore;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 
 /**
  * {@link Sequence} DAO.
@@ -68,13 +72,13 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	SEQUENCE_DAO;
 
+	private final static Logger LOGGER = getLogger(SequenceDAO.class);
+
 	public static final String COLLECTION        = "sequences";
 	public static final String PRIMARY_KEY_PART1 = "sequence.dataSource";
 	public static final String PRIMARY_KEY_PART2 = "sequence.accession";
 	public static final String GI_KEY            = "sequence.gi";
 	public static final String GEOLOCATION_KEY   = "sequence.location";
-
-	private final Morphia morphia = new Morphia();
 
 	private URI baseUri = null;
 
@@ -82,7 +86,6 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, GI_KEY), COLLECTION);
 		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
-		morphia.map(SequenceEntity.class);
 	}
 
 	public SequenceDAO baseUri(final URI baseUri) {
@@ -94,7 +97,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	public String insert(final Sequence sequence) {
 		// remove transient fields from the element before saving it to the database
 		final SequenceTransientStore store = SequenceTransientStore.start(sequence);
-		final DBObject obj = morphia.toDBObject(new SequenceEntity(store.purge()));
+		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
@@ -105,7 +108,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	public void update(final Sequence sequence) {
 		// remove transient fields from the element before saving it to the database
 		final SequenceTransientStore store = SequenceTransientStore.start(sequence);
-		final DBObject obj = morphia.toDBObject(new SequenceEntity(store.purge()));
+		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(SequenceKey.builder()
 				.dataSource(sequence.getDataSource())
 				.accession(sequence.getAccession())
@@ -148,8 +151,8 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	@Override
 	public List<Sequence> getNear(final Point point, final double maxDistance) {
 		final List<Sequence> sequences = newArrayList();
-		final BasicDBList list = MONGODB_CONN.geoNear(COLLECTION, point.getCoordinates()[0], 
-				point.getCoordinates()[1], maxDistance);
+		final BasicDBList list = MONGODB_CONN.geoNear(COLLECTION, point.getCoordinates().getLongitude(), 
+				point.getCoordinates().getLatitude(), maxDistance);
 		for (int i = 0; i < list.size(); i++) {
 			sequences.add(parseObject(list.get(i)));
 		}
@@ -175,12 +178,12 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		final BasicDBObject obj = MONGODB_CONN.get(keyGi(sequenceGiKey), COLLECTION);
 		return parseBasicDBObjectOrNull(obj);
 	}
-	
+
 	private BasicDBObject key(final SequenceKey key) {
 		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, key.getDataSource(), 
 				PRIMARY_KEY_PART2, key.getAccession()));		
 	}
-	
+
 	private BasicDBObject keyGi(final SequenceGiKey key) {
 		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, key.getDataSource(), 
 				GI_KEY, key.getGi()));
@@ -191,7 +194,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	}
 
 	private Sequence parseBasicDBObject(final BasicDBObject obj) {
-		final Sequence sequence = morphia.fromDBObject(SequenceEntity.class, obj).getSequence();
+		final Sequence sequence = map(obj).getSequence();
 		addLink(sequence);
 		return sequence;
 	}
@@ -199,7 +202,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	private Sequence parseBasicDBObjectOrNull(final BasicDBObject obj) {
 		Sequence sequence = null;
 		if (obj != null) {
-			final SequenceEntity entity = morphia.fromDBObject(SequenceEntity.class, obj);
+			final SequenceEntity entity = map(obj);
 			if (entity != null) {
 				sequence = entity.getSequence();
 				addLink(sequence);
@@ -210,16 +213,40 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	private Sequence parseObject(final Object obj) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
-		final Sequence sequence = morphia.fromDBObject(SequenceEntity.class, (BasicDBObject) obj2.get("obj")).getSequence();
+		final Sequence sequence = map((BasicDBObject) obj2.get("obj")).getSequence();
 		addLink(sequence);
 		return sequence;
-	}	
+	}
 
 	private void addLink(final Sequence sequence) {
 		if (baseUri != null) {
-			sequence.setLink(Link.fromUri(UriBuilder.fromUri(baseUri).path(sequence.getAccession()).build())
+			final SequenceKey sequenceKey = SequenceKey.builder()
+					.dataSource(sequence.getDataSource())
+					.accession(sequence.getAccession())
+					.build();
+			sequence.setLink(Link.fromUri(UriBuilder.fromUri(baseUri).path(sequenceKey.toId()).build())
 					.rel(LinkRelation.SELF).type(MediaType.APPLICATION_JSON).build());
 		}
+	}
+
+	private DBObject map(final SequenceTransientStore store) {
+		DBObject obj = null;
+		try {
+			obj = (DBObject) parse(JSON_MAPPER.writeValueAsString(new SequenceEntity(store.purge())));
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Failed to write sequence to DB object", e);
+		}
+		return obj;
+	}
+
+	private SequenceEntity map(final BasicDBObject obj) {
+		SequenceEntity entity = null;
+		try {
+			entity = JSON_MAPPER.readValue(obj.toString(), SequenceEntity.class);
+		} catch (IOException e) {
+			LOGGER.error("Failed to read sequence from DB object", e);
+		}
+		return entity;
 	}
 
 	/**
@@ -258,17 +285,16 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	}
 
 	/**
-	 * Sequence Morphia entity.
+	 * Sequence entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	@Entity(value=COLLECTION, noClassnameStored=true)
-	@Indexes({ @Index(PRIMARY_KEY_PART1 + ", " + PRIMARY_KEY_PART2), @Index(PRIMARY_KEY_PART1 + ", " + GI_KEY) })
 	public static class SequenceEntity {
-
-		@Id
+		
+		@JsonSerialize(using = ObjectIdSerializer.class)
+		@JsonDeserialize(using = ObjectIdDeserializer.class)
+		@JsonProperty("_id")
 		private ObjectId id;
 
-		@Embedded
 		private Sequence sequence;
 
 		public SequenceEntity() { }
