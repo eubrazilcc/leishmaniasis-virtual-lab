@@ -67,7 +67,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<!-- Convenience properties to set library versions -->
-		<jersey.version>2.9.1</jersey.version>
+		<jersey.version>2.10</jersey.version>
 		<junit.version>4.11</junit.version>
 		<mockito.version>1.9.5</mockito.version>
 
@@ -84,7 +84,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<maven-war-plugin.version>2.4</maven-war-plugin.version>
 		<tomcat7-maven-plugin.version>2.2</tomcat7-maven-plugin.version>
 		<embedmongo-maven-plugin.version>0.1.10</embedmongo-maven-plugin.version>
-		<embedmongo-maven-plugin.mongodb.version>2.6.1</embedmongo-maven-plugin.mongodb.version>
+		<embedmongo-maven-plugin.mongodb.version>2.6.3</embedmongo-maven-plugin.mongodb.version>
 		<embedmongo-maven-plugin.download.path>http://dedalo.i3m.upv.es/mongodb/</embedmongo-maven-plugin.download.path>
 	</properties>
 
