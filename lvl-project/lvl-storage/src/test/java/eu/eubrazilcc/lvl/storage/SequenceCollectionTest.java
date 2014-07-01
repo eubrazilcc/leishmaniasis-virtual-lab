@@ -66,7 +66,7 @@ public class SequenceCollectionTest {
 					.organism("organism")
 					.countryFeature("Spain: Murcia")
 					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build())
-					.locale(new Locale("es", "ES"))					
+					.locale(new Locale("es", "ES"))
 					.build();
 			final SequenceKey sequenceKey = SequenceKey.builder()
 					.dataSource(sequence.getDataSource())

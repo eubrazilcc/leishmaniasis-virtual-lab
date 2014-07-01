@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.core.util;
 
+import static java.util.Locale.getISOCountries;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.Locale;
@@ -51,7 +52,7 @@ public final class LocaleUtils {
 			synchronized (LocaleUtils.class) {
 				if (availableLocaleList == null) {
 					final ImmutableList.Builder<Locale> builder = new ImmutableList.Builder<Locale>();
-					final String[] locales = Locale.getISOCountries();
+					final String[] locales = getISOCountries();
 					for (final String countryCode : locales) {
 						builder.add(new Locale("", countryCode));			
 					}

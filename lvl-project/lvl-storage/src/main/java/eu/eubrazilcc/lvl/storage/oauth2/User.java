@@ -41,7 +41,7 @@ import com.google.common.base.Objects;
 
 /**
  * User identity provider. Include JAXB annotations to serialize this class to XML and JSON.
- * Many JSON processing libraries like Jackson support these JAXB annotations.
+ * Most JSON processing libraries like Jackson support these JAXB annotations.
  * @author Erik Torres <ertorser@upv.es>
  */
 @XmlRootElement

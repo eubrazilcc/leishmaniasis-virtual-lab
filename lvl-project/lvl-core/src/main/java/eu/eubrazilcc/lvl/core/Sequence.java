@@ -44,7 +44,7 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
  * represents a country name with ISO 3166-1 alpha-2 standard. The original GenBank country feature is 
  * also included in the class. What is more important, a GeoJSON point is included that allows callers 
  * to georeference the sequence. Include JAXB annotations to serialize this class to XML and JSON.
- * Many JSON processing libraries like Jackson support these JAXB annotations.
+ * Most JSON processing libraries like Jackson support these JAXB annotations.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://opengeocode.org/download.php">Americas Open Geocode (AOG) database</a>
  */

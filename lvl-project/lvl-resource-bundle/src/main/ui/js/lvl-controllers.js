@@ -325,7 +325,7 @@ angular.module('lvl.controllers', [])
 							str += "Sequence" + "." + i + " = " + resource[i] + "\n";
 						}
 					}
-					console.log(">> Page " + $scope.currentPage + ":\n" + str);
+					// TODO console.log(">> Page " + $scope.currentPage + ":\n" + str);
 				},
 				function (reason) {
 					// TODO

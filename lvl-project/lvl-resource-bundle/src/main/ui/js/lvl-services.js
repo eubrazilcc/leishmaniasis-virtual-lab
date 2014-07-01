@@ -33,8 +33,9 @@ angular.module('lvl.services', [])
 		getUrl: function(link) {
 			var url = '';
 			if (link) {
-				var url = link.split(";")[0];
-				url = url.substring(1, url.length - 1);
+				/* var url = link.split(";")[0];
+				url = url.substring(1, url.length - 1); */
+				url = link.href;
 			}
 			return url;
 		}

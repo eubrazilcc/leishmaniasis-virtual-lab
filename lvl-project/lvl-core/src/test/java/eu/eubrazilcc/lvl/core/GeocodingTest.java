@@ -22,16 +22,16 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static eu.eubrazilcc.lvl.core.geocoding.GeocodingHelper.geocode;
+import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
-import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 
 import java.util.Locale;
 
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.core.geocoding.GeocodingHelper;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 
 /**
@@ -46,14 +46,14 @@ public class GeocodingTest {
 		try {
 			// test converting address into geographic coordinates
 			final String address = "Spain:Valencia";
-			Point point = GeocodingHelper.geocode(address);
+			Point point = geocode(address);
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
 			System.out.println(" >> Address: " + address + ", Location: " + point.toString());
-			
+
 			// test converting locale into geographic coordinates
 			final Locale locale = getLocale("Spain");
-			point = GeocodingHelper.geocode(locale);
+			point = geocode(locale);
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
 			System.out.println(" >> Locale: " + locale.getDisplayCountry() + ", Location: " + point.toString());

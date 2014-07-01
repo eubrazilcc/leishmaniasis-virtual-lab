@@ -7,9 +7,11 @@ angular.module('lvl.filters', [])
 	return function(code) {
 		var country = '';
 		if (code && typeof code === 'string') {
-			var countryName = cnMap()[code.toUpperCase()];
-			if (countryName) {
-				country = $sce.trustAsHtml('<img src="img/blank.gif" class="flag flag-' + code.toLowerCase() 
+			var twoLetterCode = code.split("_")[1];
+			var code2 = twoLetterCode ? twoLetterCode.toUpperCase() : '';
+			var countryName = cnMap()[code2];
+			if (countryName) {								
+				country = $sce.trustAsHtml('<img src="img/blank.gif" class="flag flag-' + code2.toLowerCase() 
 						+ '" alt="' + countryName + '" /> ' + countryName);
 			}
 		}

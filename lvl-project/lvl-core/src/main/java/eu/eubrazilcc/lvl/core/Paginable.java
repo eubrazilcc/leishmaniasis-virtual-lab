@@ -34,7 +34,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 /**
  * Any collection that can be returned to the client as a series of pages that
  * contains a part of the collection. Include JAXB annotations to serialize this 
- * class to XML and JSON. Many JSON processing libraries like Jackson support 
+ * class to XML and JSON. Most JSON processing libraries like Jackson support 
  * these JAXB annotations.
  * @author Erik Torres <ertorser@upv.es>
  */
