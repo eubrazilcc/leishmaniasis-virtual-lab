@@ -198,6 +198,7 @@ public class SequenceResource {
 
 	@GET
 	@Path("nearby/{longitude}/{latitude}")
+	@Produces(MediaType.APPLICATION_JSON)
 	public FeatureCollection findNearbySequences(final @PathParam("longitude") double longitude, 
 			final @PathParam("latitude") double latitude, 
 			final @QueryParam("maxDistance") @DefaultValue("1000.0d") double maxDistance, 
