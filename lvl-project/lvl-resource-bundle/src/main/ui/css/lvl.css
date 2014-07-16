@@ -1,0 +1,52 @@
+@CHARSET "UTF-8";
+
+.lvl-login-body {
+  background-color: #1abc9c;
+}
+
+.lvl-main-container {
+  padding-top: 50px;
+}
+
+.lvl-jumbo-top {
+  height: 12px;
+  width: 100%;
+  clear: both;
+}
+
+.lvl-jumbo-bottom {
+  height: 2px;
+  width: 100%;
+  clear: both;
+}
+
+.lvl-jumbo {
+  padding-top: 23px;
+  padding-bottom: 23px;
+  opacity: 0.8;
+  filter: alpha(opacity = 80);
+  background-image: url("../img/bg.svg");
+  background-size: auto 100%;
+  background-origin: content-box;
+  background-repeat: no-repeat;
+  background-position: center top;
+}
+
+.lvl-tiles-top {
+  margin-top: 23px;
+}
+
+.lvl-tiles-bottom {
+  margin-bottom: 23px;
+}
+
+.lvl-footer {
+  box-shadow: 0px 500px 0px 500px #34495E;
+  margin-top: 23px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+#tab-nav {
+  position: fixed;
+}
