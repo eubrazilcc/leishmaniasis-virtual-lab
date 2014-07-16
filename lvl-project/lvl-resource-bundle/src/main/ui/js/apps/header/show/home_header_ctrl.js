@@ -8,9 +8,21 @@ define([ 'app', 'apps/header/show/home_header_view' ], function(Lvl, View) {
         'use strict';
         Home.Controller = {
             showHeader : function() {
-                var view = new View.Header();
-                Lvl.headerRegion.show(view);
-                return View.Header.id;
+                require([ 'entities/navigation' ], function() {
+                    var links = Lvl.request('navigation:external:entities');
+
+                    // TODO
+                    console.log(JSON.stringify(links));
+                    // TODO
+
+                    var view = new View.Header({
+                        collection : links
+                    });
+
+
+                    Lvl.headerRegion.show(view);
+                    return View.Header.id;
+                });
             }
         }
     });

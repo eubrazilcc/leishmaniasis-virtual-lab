@@ -7,7 +7,7 @@ define([ 'marionette', 'tpl!apps/header/show/templates/home_header', 'flatui-che
     return {
         Header : Marionette.ItemView.extend({
             id : 'home',
-            template : HomeHeaderTpl            
+            template : HomeHeaderTpl
         })
     };
 

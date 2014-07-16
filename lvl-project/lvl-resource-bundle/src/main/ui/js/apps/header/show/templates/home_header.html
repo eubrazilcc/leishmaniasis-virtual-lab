@@ -15,9 +15,9 @@
           <li class="active"><a href="/#login">Sign in</a></li>
           <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Resources<span class="caret"></span></a>
             <ul class="dropdown-menu" role="menu">
-              <li><a href="/doc/" target="_blank"><i class="fa fa-book fa-fw"></i> Server documentation</a></li>
-              <li class="divider"></li>
-              <li><a href="http://www.eubrazilcloudconnect.eu/" target="_blank"><i class="fa fa-cloud fa-fw"></i> EU-Brazil Cloud Connect</a></li>
+              <% _.each(items, function(item){ %>
+              <li><a href="<%= item.href %>" target="_blank"><i class="fa <%= item.icon %> fa-fw"></i> <%= item.text %></a></li>
+              <% }); %>
             </ul></li>
         </ul>
       </div>
