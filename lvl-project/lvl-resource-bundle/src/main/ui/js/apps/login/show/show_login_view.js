@@ -10,6 +10,7 @@ define([ 'marionette', 'tpl!apps/login/show/templates/login', 'flatui-checkbox',
             onShow : function() {
                 $('body').addClass('lvl-login-body');
                 $(':checkbox').checkbox();
+                $('#login-email').focus();
             },
             onClose : function() {
                 $('body').removeClass('lvl-login-body');

@@ -58,7 +58,8 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
     Lvl.on('start', function() {
         if (Backbone.history) {
             Backbone.history instanceof History || (Backbone.history = new History());
-            require([ 'apps/header/header_app', 'apps/footer/footer_app', 'apps/home/home_router', 'apps/login/login_router' ], function() {
+            require([ 'apps/header/header_app', 'apps/footer/footer_app', 'apps/home/home_router', 'apps/login/login_router',
+                    'apps/collection/collection_router' ], function() {
                 Backbone.history.start();
                 if (Lvl.getCurrentRoute() === '') {
                     Lvl.navigate('home', {

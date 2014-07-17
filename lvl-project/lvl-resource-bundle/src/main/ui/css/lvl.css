@@ -8,6 +8,25 @@
   padding-top: 50px;
 }
 
+.lvl-nav-tabs-wrapper {
+  width: 100%;
+  padding: 0%;
+  margin: 0%;
+}
+
+.lvl-nav-tabs {
+  position: fixed;
+  z-index: +1;
+  width: inherit;
+  background-color: #ECF0F1;
+}
+
+.lvl-tab-content {
+  position: relative;
+  top: 110px;
+  z-index: -1;
+}
+
 .lvl-jumbo-top {
   height: 12px;
   width: 100%;

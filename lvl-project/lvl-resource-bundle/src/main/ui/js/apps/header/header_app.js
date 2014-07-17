@@ -26,7 +26,9 @@ define([ 'app' ], function(Lvl) {
                         HeaderApp.currentHeader = HomeHeaderCtrl.showHeader();
                     });
                 } else if (id === 'workspace') {
-                    // TODO
+                    require([ 'apps/header/show/workspace_header_ctrl' ], function(WorkspaceHeaderCtrl) {                        
+                        HeaderApp.currentHeader = WorkspaceHeaderCtrl.showHeader();
+                    });
                 } else {
                     Lvl.headerRegion.reset();
                     HeaderApp.currentHeader = null;
