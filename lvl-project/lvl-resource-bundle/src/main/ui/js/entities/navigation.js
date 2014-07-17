@@ -34,7 +34,7 @@ define([ 'app' ], function(Lvl) {
 
         Entities.NavigationCollection = Backbone.Collection.extend({
             model : Entities.Navigation,
-            comparator : 'href'
+            comparator : 'id'
         });
 
         var iniNavigationLinks = function() {

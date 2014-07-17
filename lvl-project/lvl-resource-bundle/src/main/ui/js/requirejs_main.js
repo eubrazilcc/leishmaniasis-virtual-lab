@@ -3,19 +3,20 @@
  */
 
 requirejs.config({
-    urlArgs : "bust=" + (new Date()).getTime(), // avoids cache. Remove on
-    // production!
+    /* avoids cache. Remove on production! */
+    urlArgs : "bust=" + (new Date()).getTime(),
     baseUrl : "js",
     paths : {
         /* jQuery JavaScript library */
         'jquery' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min', 'vendor/cached/jquery.min' ],
         'jquery-ui' : [ '//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min', 'vendor/cached/jquery-ui.min' ],
-        /* Boostrap front-end framework + Flat-UI theme */
+        /* Boostrap front-end framework */
         'jquery.ui.touch-punch' : [ '//cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min',
                 'vendor/cached/jquery.ui.touch-punch.min' ],
         'bootstrap' : [ '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min', 'vendor/cached/bootstrap.min' ],
         'bootstrap-select' : [ '//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.5.4/bootstrap-select.min', 'vendor/cached/bootstrap-select.min' ],
         'bootstrap-switch' : [ '//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.0.2/js/bootstrap-switch.min', 'vendor/cached/bootstrap-switch.min' ],
+        /* Flat-UI theme (http://designmodo.github.io/Flat-UI/) */
         'flatui-checkbox' : 'vendor/provided/flatui-checkbox',
         'flatui-radio' : 'vendor/provided/flatui-radio',
         'jquery.tagsinput' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery-tagsinput/1.3.3/jquery.tagsinput.min', 'vendor/cached/jquery.tagsinput.min' ],

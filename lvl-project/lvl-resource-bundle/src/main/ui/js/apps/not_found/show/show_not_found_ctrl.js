@@ -8,8 +8,14 @@ define([ 'app', 'apps/not_found/show/show_not_found_view' ], function(Lvl, View)
         'use strict';
         Show.Controller = {
             showNotFound : function() {
-                var view = new View.Content();
-                Lvl.mainRegion.show(view);
+                require([ 'entities/navigation' ], function() {
+                    var view = new View.Content({
+                        navigation : Lvl.request('navigation:links:entities'),
+                        settings : Lvl.request('navigation:settings:entities'),
+                        external : Lvl.request('navigation:external:entities')
+                    });
+                    Lvl.mainRegion.show(view);
+                });
             }
         }
     });
