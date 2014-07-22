@@ -27,6 +27,7 @@ requirejs.config({
         'marionette' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.marionette/1.8.8/backbone.marionette.min', 'vendor/cached/backbone.marionette.min' ],
         /* Useful backbone plug-ins */
         'routefilter' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.routefilter/0.2.0/backbone.routefilter.min', 'vendor/cached/backbone.routefilter.min' ],
+        'backbone.picky' : 'vendor/provided/backbone.picky.min',
         /* Add support for underscore templates */
         'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
         'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
@@ -44,9 +45,8 @@ requirejs.config({
             deps : [ 'jquery', 'underscore' ],
             exports : 'Backbone'
         },
-        'routefilter' : {
-            deps : [ 'backbone' ],
-        },
+        'routefilter' : [ 'backbone' ],
+        'backbone.picky' : [ 'backbone' ],
         'marionette' : {
             deps : [ 'backbone' ],
             exports : 'Marionette'

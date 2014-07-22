@@ -3,13 +3,13 @@
  */
 
 define([ 'app' ], function(Lvl) {
-
     Lvl.module('Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
         Entities.Navigation = Backbone.Model.extend({
             defaults : {
                 href : '/#home',
                 icon : 'fa-chain-broken',
-                text : 'Unknown'
+                text : 'Unknown',
+                isFisrt : '' /* labels the first element of a collection */
             },
             validate : function(attrs, options) {
                 var errors = {};
@@ -38,11 +38,12 @@ define([ 'app' ], function(Lvl) {
         });
 
         var iniNavigationLinks = function() {
-            var links = new Entities.NavigationCollection([ {
+            Entities.navigationLinks = new Entities.NavigationCollection([ {
                 id : 1,
                 href : '/#home',
                 icon : 'fa-home',
-                text : 'Home'
+                text : 'Home',
+                isFisrt : 'navigation'
             }, {
                 id : 2,
                 href : '/#social',
@@ -69,51 +70,65 @@ define([ 'app' ], function(Lvl) {
                 icon : 'fa-globe',
                 text : 'Ecological Niche Modelling'
             } ]);
-            return links;
         };
 
         var iniSettingsLinks = function() {
-            var links = new Entities.NavigationCollection([ {
-                id : 1,
+            Entities.settingsLinks = new Entities.NavigationCollection([ {
+                id : 7,
                 href : '/#account',
                 icon : 'fa-user',
-                text : 'Account'
+                text : 'Account',
+                isFisrt : 'settings'
             }, {
-                id : 2,
+                id : 8,
                 href : '/#settings',
                 icon : 'fa-cog',
                 text : 'Settings'
             } ]);
-            return links;
         };
 
         var iniExternalLinks = function() {
-            var links = new Entities.NavigationCollection([ {
-                id : 1,
+            Entities.externalLinks = new Entities.NavigationCollection([ {
+                id : 9,
                 href : 'http://www.eubrazilcloudconnect.eu/',
                 icon : 'fa-cloud',
-                text : 'EU-Brazil Cloud Connect'
+                text : 'EU-Brazil Cloud Connect',
+                isFisrt : 'external'
             }, {
-                id : 2,
+                id : 10,
                 href : '/doc/',
                 icon : 'fa-book',
                 text : 'Server documentation'
             } ]);
-            return links;
         };
 
         var API = {
             getNavigationEntities : function() {
-                var links = iniNavigationLinks();
-                return links;
+                if (Entities.navigationLinks === undefined) {
+                    iniNavigationLinks();
+                }
+                return Entities.navigationLinks;
             },
             getSettingEntities : function() {
-                var links = iniSettingsLinks();
-                return links;
+                if (Entities.settingsLinks === undefined) {
+                    iniSettingsLinks();
+                }
+                return Entities.settingsLinks;
             },
             getExternalEntities : function() {
-                var links = iniExternalLinks();
-                return links;
+                if (Entities.externalLinks === undefined) {
+                    iniExternalLinks();
+                }
+                return Entities.externalLinks;
+            },
+            getNavigationSettingEntities : function() {
+                if (Entities.navigationLinks === undefined) {
+                    iniNavigationLinks();
+                }
+                if (Entities.settingsLinks === undefined) {
+                    iniSettingsLinks();
+                }
+                return new Entities.NavigationCollection(Entities.navigationLinks.toJSON().concat(Entities.settingsLinks.toJSON()));
             }
         }
 
@@ -127,6 +142,10 @@ define([ 'app' ], function(Lvl) {
 
         Lvl.reqres.setHandler('navigation:external:entities', function() {
             return API.getExternalEntities();
+        });
+
+        Lvl.reqres.setHandler('navigation:links+settings:entities', function() {
+            return API.getNavigationSettingEntities();
         });
     });
 

@@ -1,0 +1,13 @@
+<div class="dropdown">
+  <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+    <i class="fa fa-home fa-fw"></i> Home <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownNavMenu">
+    <% _.each(items, function(item){ %>
+    <% if ( item.isFisrt === 'settings' ){ %>
+    <li role="presentation" class="divider"></li>
+    <% } %>
+    <li role="presentation"><a role="menuitem" tabindex="-1" href="<%= item.href %>"><i class="fa <%= item.icon %> fa-fw"></i> <%= item.text %></a></li>    
+    <% }); %>
+  </ul>
+</div>

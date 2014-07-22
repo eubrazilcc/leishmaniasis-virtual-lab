@@ -3,10 +3,8 @@
  */
 
 define([ 'app', 'routefilter' ], function(Lvl) {
-
     Lvl.module('Routers.HomeApp', function(HomeAppRouter, Lvl, Backbone, Marionette, $, _) {
         'use strict';
-
         var Router = Backbone.Router.extend({
             routes : {
                 'home' : 'showHome'
@@ -27,5 +25,4 @@ define([ 'app', 'routefilter' ], function(Lvl) {
             var router = new Router();
         });
     });
-
 });

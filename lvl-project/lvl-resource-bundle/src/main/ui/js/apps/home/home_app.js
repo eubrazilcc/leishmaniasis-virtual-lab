@@ -3,7 +3,6 @@
  */
 
 define([ 'app' ], function(Lvl) {
-
     Lvl.module('HomeApp', function(HomeApp, Lvl, Backbone, Marionette, $, _) {
         'use strict';
 
@@ -20,11 +19,9 @@ define([ 'app' ], function(Lvl) {
 
         /* Commands and events */
         Lvl.commands.setHandler('show:home', function() {
-            require([ 'apps/home/show/show_home_ctrl' ], function(ShowController) {
+            require([ 'apps/home/show/home_show_ctrl' ], function(ShowController) {
                 ShowController.showHome();
             });
         });
-
     });
-
 });

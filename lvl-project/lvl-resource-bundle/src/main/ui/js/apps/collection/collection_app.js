@@ -3,7 +3,6 @@
  */
 
 define([ 'app' ], function(Lvl) {
-
     Lvl.module('CollectionApp', function(CollectionApp, Lvl, Backbone, Marionette, $, _) {
         'use strict';
 
@@ -18,13 +17,21 @@ define([ 'app' ], function(Lvl) {
             console.log('stopping CollectionApp');
         };
 
+        CollectionApp.currentSection = null;
+
         /* Commands and events */
-        Lvl.commands.setHandler('browse:collection', function() {
-            require([ 'apps/collection/browse/browse_collection_ctrl' ], function(BrowseController) {
-                BrowseController.browseCollection();
-            });
+        Lvl.commands.setHandler('collection:set:active', function(section) {
+            section = section || 'default';
+            if (CollectionApp.currentSection !== section) {
+                if (section === 'browse' || section === 'map' || section === 'stats' || section === 'submit') {
+                    require([ 'apps/collection/layout/collection_layout_ctrl' ], function(LayoutController) {
+                        CollectionApp.currentSection = LayoutController.showLayout(section);
+                    });
+                } else {
+                    Lvl.mainRegion.currentView.reset();
+                    CollectionApp.currentSection = null;
+                }
+            }
         });
-
     });
-
 });

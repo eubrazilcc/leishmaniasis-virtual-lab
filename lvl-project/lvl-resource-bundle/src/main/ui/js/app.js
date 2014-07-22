@@ -43,7 +43,7 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
             var match = Backbone.History.prototype.loadUrl.apply(this, arguments);
             if (!match) {
                 if (Lvl.getCurrentRoute() !== '') {
-                    require([ 'apps/not_found/not_found_app' ], function() {
+                    require([ 'apps/not-found/not-found_app' ], function() {
                         Lvl.execute('set:active:header', 'home');
                         Lvl.execute('set:active:footer', 'home');
                         Lvl.startSubApp('NotFoundApp');

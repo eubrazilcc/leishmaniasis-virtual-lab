@@ -3,13 +3,15 @@
  */
 
 define([ 'app', 'routefilter' ], function(Lvl) {
-
     Lvl.module('Routers.CollectionApp', function(CollectionAppRouter, Lvl, Backbone, Marionette, $, _) {
         'use strict';
-
         var Router = Backbone.Router.extend({
             routes : {
-                'collection' : 'browseCollection'
+                'collection' : 'browseCollection',
+                'collection-browse' : 'browseCollection',
+                'collection-map' : 'mapCollection',
+                'collection-stats' : 'statsCollection',
+                'collection-submit' : 'submitCollection'
             },
             before : function() {
                 require([ 'apps/collection/collection_app' ], function() {
@@ -19,7 +21,16 @@ define([ 'app', 'routefilter' ], function(Lvl) {
                 });
             },
             browseCollection : function() {
-                Lvl.execute('browse:collection');
+                Lvl.execute('collection:set:active', 'browse');
+            },
+            mapCollection : function() {
+                Lvl.execute('collection:set:active', 'map');
+            },
+            statsCollection : function() {
+                Lvl.execute('collection:set:active', 'stats');
+            },
+            submitCollection : function() {
+                Lvl.execute('collection:set:active', 'submit');
             }
         });
 
@@ -27,5 +38,4 @@ define([ 'app', 'routefilter' ], function(Lvl) {
             var router = new Router();
         });
     });
-
 });

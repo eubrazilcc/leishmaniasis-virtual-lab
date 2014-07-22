@@ -3,10 +3,8 @@
  */
 
 define([ 'app', 'routefilter' ], function(Lvl) {
-
     Lvl.module('Routers.LoginApp', function(LoginAppRouter, Lvl, Backbone, Marionette, $, _) {
         'use strict';
-
         var Router = Backbone.Router.extend({
             routes : {
                 'login' : 'showLogin'
@@ -22,10 +20,8 @@ define([ 'app', 'routefilter' ], function(Lvl) {
                 Lvl.execute('show:login');
             }
         });
-
         Lvl.addInitializer(function() {
             var router = new Router();
         });
     });
-
 });

@@ -3,7 +3,6 @@
  */
 
 define([ 'app' ], function(Lvl) {
-
     Lvl.module('HeaderApp', function(HeaderApp, Lvl, Backbone, Marionette, $, _) {
         'use strict';
         HeaderApp.startWithParent = true;
@@ -22,11 +21,11 @@ define([ 'app' ], function(Lvl) {
             id = id || 'default';
             if (HeaderApp.currentHeader !== id) {
                 if (id === 'home') {
-                    require([ 'apps/header/show/home_header_ctrl' ], function(HomeHeaderCtrl) {                        
+                    require([ 'apps/header/show/header_home_ctrl' ], function(HomeHeaderCtrl) {
                         HeaderApp.currentHeader = HomeHeaderCtrl.showHeader();
                     });
                 } else if (id === 'workspace') {
-                    require([ 'apps/header/show/workspace_header_ctrl' ], function(WorkspaceHeaderCtrl) {                        
+                    require([ 'apps/header/show/header_workspace_ctrl' ], function(WorkspaceHeaderCtrl) {
                         HeaderApp.currentHeader = WorkspaceHeaderCtrl.showHeader();
                     });
                 } else {
@@ -36,6 +35,5 @@ define([ 'app' ], function(Lvl) {
             }
         });
     });
-
     return Lvl.HeaderApp;
 });

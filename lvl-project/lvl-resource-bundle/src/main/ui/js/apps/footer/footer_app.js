@@ -3,7 +3,6 @@
  */
 
 define([ 'app' ], function(Lvl) {
-
     Lvl.module('FooterApp', function(FooterApp, Lvl, Backbone, Marionette, $, _) {
         'use strict';
         FooterApp.startWithParent = true;
@@ -25,13 +24,12 @@ define([ 'app' ], function(Lvl) {
                     Lvl.footerRegion.reset();
                     FooterApp.currentFooter = null;
                 } else {
-                    require([ 'apps/footer/show/show_footer_ctrl' ], function(FooterCtrl) {                        
+                    require([ 'apps/footer/show/footer_show_ctrl' ], function(FooterCtrl) {
                         FooterApp.currentFooter = FooterCtrl.showFooter();
                     });
                 }
             }
         });
     });
-
     return Lvl.FooterApp;
 });

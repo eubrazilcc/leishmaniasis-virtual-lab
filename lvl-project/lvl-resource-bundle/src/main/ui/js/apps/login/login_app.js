@@ -3,7 +3,6 @@
  */
 
 define([ 'app' ], function(Lvl) {
-
     Lvl.module('LoginApp', function(LoginApp, Lvl, Backbone, Marionette, $, _) {
         'use strict';
 
@@ -17,13 +16,12 @@ define([ 'app' ], function(Lvl) {
         LoginApp.onStop = function() {
             console.log('stopping LoginApp');
         };
-        
+
         /* Commands and events */
         Lvl.commands.setHandler('show:login', function() {
-            require([ 'apps/login/show/show_login_ctrl' ], function(ShowController) {
+            require([ 'apps/login/show/login_show_ctrl' ], function(ShowController) {
                 ShowController.showLogin();
             });
         });
     });
-
 });
