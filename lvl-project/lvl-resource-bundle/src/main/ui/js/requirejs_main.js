@@ -4,8 +4,8 @@
 
 requirejs.config({
     /* avoids cache. Remove on production! */
-    urlArgs : "bust=" + (new Date()).getTime(),
-    baseUrl : "js",
+    urlArgs : 'bust=' + (new Date()).getTime(),
+    baseUrl : 'js',
     paths : {
         /* jQuery JavaScript library */
         'jquery' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min', 'vendor/cached/jquery.min' ],
@@ -28,6 +28,12 @@ requirejs.config({
         /* Useful backbone plug-ins */
         'routefilter' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.routefilter/0.2.0/backbone.routefilter.min', 'vendor/cached/backbone.routefilter.min' ],
         'backbone.picky' : 'vendor/provided/backbone.picky.min',
+        'backbone.paginator' : 'vendor/provided/backbone.paginator.min',
+        /* Data grid based on Backbone */
+        'backgrid' : [ '//cdnjs.cloudflare.com/ajax/libs/backgrid.js/0.3.5/backgrid.min', 'vendor/cached/backgrid.min' ],
+        'backgrid-paginator' : 'vendor/provided/backgrid-paginator.min',
+        'backgrid-select-all' : 'vendor/provided/backgrid-select-all.min',
+        'backgrid-filter' : 'vendor/provided/backgrid-filter.min',
         /* Add support for underscore templates */
         'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
         'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
@@ -47,11 +53,19 @@ requirejs.config({
         },
         'routefilter' : [ 'backbone' ],
         'backbone.picky' : [ 'backbone' ],
+        'backbone.paginator' : [ 'backbone' ],
+        'backgrid' : {
+            deps : [ 'backbone' ],
+            exports : 'Backgrid'
+        },
+        'backgrid-paginator' : [ 'backgrid', 'backbone.paginator' ],
+        'backgrid-select-all' : [ 'backgrid' ],
+        'backgrid-filter' : [ 'backgrid' ],
         'marionette' : {
             deps : [ 'backbone' ],
             exports : 'Marionette'
         },
-        tpl : [ 'text' ]
+        'tpl' : [ 'text' ]
     }
 });
 

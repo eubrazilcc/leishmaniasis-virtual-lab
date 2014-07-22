@@ -1,0 +1,400 @@
+[
+    {
+        "page": 1, 
+        "per_page": 15, 
+        "total_entries": 20, 
+        "total_pages": 2
+    }, 
+    [
+        {
+            "accession": "AF091530", 
+            "countryFeature": "Kenya", 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus mireillae 28S ribosomal RNA gene, partial sequence", 
+            "gi": 4322583, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AF091530", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": "_KE", 
+            "location": {
+                "coordinates": [
+                    37.906193, 
+                    -0.023559
+                ], 
+                "type": "Point"
+            }, 
+            "organism": "Phlebotomus mireillae", 
+            "version": "AF091530.1"
+        }, 
+        {
+            "accession": "AF091531", 
+            "countryFeature": "Senegal", 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus duboscqi 28S ribosomal RNA gene, partial sequence", 
+            "gi": 4322584, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AF091531", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": "_SN", 
+            "location": {
+                "coordinates": [
+                    -14.452362, 
+                    14.497401
+                ], 
+                "type": "Point"
+            }, 
+            "organism": "Phlebotomus duboscqi", 
+            "version": "AF091531.1"
+        }, 
+        {
+            "accession": "AF091532", 
+            "countryFeature": "Pakistan", 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus sergenti 28S ribosomal RNA gene, partial sequence", 
+            "gi": 4322585, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AF091532", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": "_PK", 
+            "location": {
+                "coordinates": [
+                    69.34511599999999, 
+                    30.375321
+                ], 
+                "type": "Point"
+            }, 
+            "organism": "Phlebotomus sergenti", 
+            "version": "AF091532.1"
+        }, 
+        {
+            "accession": "AF091533", 
+            "countryFeature": "Italy", 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus perniciosus 28S ribosomal RNA gene, partial sequence", 
+            "gi": 4322586, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AF091533", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": "_IT", 
+            "location": {
+                "coordinates": [
+                    12.56738, 
+                    41.87194
+                ], 
+                "type": "Point"
+            }, 
+            "organism": "Phlebotomus perniciosus", 
+            "version": "AF091533.1"
+        }, 
+        {
+            "accession": "AF091534", 
+            "countryFeature": "Greece: Macedonia", 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus neglectus 28S ribosomal RNA gene, partial sequence", 
+            "gi": 4322587, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AF091534", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": "_GR", 
+            "location": {
+                "coordinates": [
+                    22.8527142, 
+                    40.8176812
+                ], 
+                "type": "Point"
+            }, 
+            "organism": "Phlebotomus neglectus", 
+            "version": "AF091534.1"
+        }, 
+        {
+            "accession": "AC238558", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-7H12 from chromosome unknown, complete sequence", 
+            "gi": 260764140, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238558", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238558.1"
+        }, 
+        {
+            "accession": "AC238775", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-10H12 from chromosome unknown, complete sequence", 
+            "gi": 262073197, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238775", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238775.1"
+        }, 
+        {
+            "accession": "AC238776", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-12H12 from chromosome unknown, complete sequence", 
+            "gi": 262073198, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238776", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238776.1"
+        }, 
+        {
+            "accession": "AC238777", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-15H12 from chromosome unknown, complete sequence", 
+            "gi": 262073199, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238777", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238777.1"
+        }, 
+        {
+            "accession": "AC238778", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-16H12 from chromosome unknown, complete sequence", 
+            "gi": 262073200, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238778", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238778.1"
+        }, 
+        {
+            "accession": "AC238779", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-19H12 from chromosome unknown, complete sequence", 
+            "gi": 262073201, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238779", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238779.1"
+        }, 
+        {
+            "accession": "AC238780", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-20H12 from chromosome unknown, complete sequence", 
+            "gi": 262073202, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238780", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238780.1"
+        }, 
+        {
+            "accession": "AC238781", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-21H12 from chromosome unknown, complete sequence", 
+            "gi": 262073203, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238781", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238781.1"
+        }, 
+        {
+            "accession": "AC238782", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-22H12 from chromosome unknown, complete sequence", 
+            "gi": 262073204, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238782", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238782.1"
+        }, 
+        {
+            "accession": "AC238783", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-24H12 from chromosome unknown, complete sequence", 
+            "gi": 262073205, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238783", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238783.1"
+        }, 
+        {
+            "accession": "AC238784", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-25H12 from chromosome unknown, complete sequence", 
+            "gi": 262073206, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238784", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238784.1"
+        }, 
+        {
+            "accession": "AC238785", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-6H12 from chromosome unknown, complete sequence", 
+            "gi": 262073207, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238785", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238785.1"
+        }, 
+        {
+            "accession": "AC238786", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-8H12 from chromosome unknown, complete sequence", 
+            "gi": 262073208, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238786", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238786.1"
+        }, 
+        {
+            "accession": "AC238810", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-14H12 from chromosome unknown, complete sequence", 
+            "gi": 262118371, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238810", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238810.1"
+        }, 
+        {
+            "accession": "AC238951", 
+            "countryFeature": null, 
+            "dataSource": "GenBank", 
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-18H12 from chromosome unknown, complete sequence", 
+            "gi": 264681633, 
+            "link": {
+                "href": "http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/GenBank,AC238951", 
+                "params": {
+                    "rel": "self", 
+                    "type": "application/json"
+                }
+            }, 
+            "locale": null, 
+            "location": null, 
+            "organism": "Phlebotomus papatasi", 
+            "version": "AC238951.1"
+        }
+    ]
+]
