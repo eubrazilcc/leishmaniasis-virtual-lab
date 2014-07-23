@@ -2,8 +2,9 @@
  * RequireJS module that defines the view: collection->layout.
  */
 
-define([ 'app', 'common/regions', 'tpl!apps/collection/layout/templates/collection-layout', 'tpl!apps/collection/layout/templates/tab-list',
-        'tpl!apps/collection/layout/templates/tab-link', 'flatui-checkbox', 'flatui-radio' ], function(Lvl, CommonRegions, LayoutTpl, TabListTpl, TabLinkTpl) {
+define([ 'app', 'apps/config/marionette/regions/fadein', 'tpl!apps/collection/layout/templates/collection-layout',
+        'tpl!apps/collection/layout/templates/tab-list', 'tpl!apps/collection/layout/templates/tab-link', 'flatui-checkbox', 'flatui-radio' ], function(Lvl,
+        FadeInRegion, LayoutTpl, TabListTpl, TabLinkTpl) {
     Lvl.module('CollectionApp.Layout.View', function(View, Lvl, Backbone, Marionette, $, _) {
         View.TabLink = Marionette.ItemView.extend({
             tagName : 'li',
@@ -25,7 +26,7 @@ define([ 'app', 'common/regions', 'tpl!apps/collection/layout/templates/collecti
             template : LayoutTpl,
             regions : {
                 tabList : '#section-tab-list',
-                tabContent : CommonRegions.FadeInRegion.extend({
+                tabContent : FadeInRegion.extend({
                     el : '#section-tab-content'
                 })
             },

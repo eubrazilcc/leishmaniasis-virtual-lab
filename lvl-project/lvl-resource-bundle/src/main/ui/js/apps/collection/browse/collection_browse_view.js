@@ -2,8 +2,8 @@
  * RequireJS module that defines the view: collection->browse.
  */
 
-define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'common/utils', 'flatui-checkbox', 'flatui-radio', 'backgrid', 'backgrid-paginator',
-        'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, Utils) {
+define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/config/marionette/styles/style', 'flatui-checkbox', 'flatui-radio', 'backgrid',
+        'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, Style) {
     Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
 
         // TODO : controller
@@ -64,13 +64,11 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'commo
             template : BrowseTpl,
             onBeforeRender : function() {
                 require([ 'entities/styles' ], function() {
-                    Utils.loadCss(Lvl.request('styles:backgrid:entities').toJSON());
+                    new Style().loadCss(Lvl.request('styles:backgrid:entities').toJSON());
                 });
             },
             onClose : function() {
-                require([ 'entities/styles' ], function() {
-                    Utils.deleteCss(Lvl.request('styles:backgrid:entities').toJSON());
-                });
+                /* don't remove the styles in order to enable them to be reused */
             },
             onRender : function() {
                 var gridContainer = this.$('#grid-container');
