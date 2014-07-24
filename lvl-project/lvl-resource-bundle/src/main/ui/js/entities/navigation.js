@@ -2,14 +2,18 @@
  * RequireJS module that defines the entity: navigation link.
  */
 
-define([ 'app' ], function(Lvl) {
+define([ 'app', 'backbone.picky' ], function(Lvl) {
     Lvl.module('Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
         Entities.Navigation = Backbone.Model.extend({
             defaults : {
                 href : '/#home',
                 icon : 'fa-chain-broken',
                 text : 'Unknown',
-                isFisrt : '' /* labels the first element of a collection */
+                isFirst : '' /* labels the first element of a collection */
+            },
+            initialize : function() {
+                var selectable = new Backbone.Picky.Selectable(this);
+                _.extend(this, selectable);
             },
             validate : function(attrs, options) {
                 var errors = {};
@@ -34,7 +38,11 @@ define([ 'app' ], function(Lvl) {
 
         Entities.NavigationCollection = Backbone.Collection.extend({
             model : Entities.Navigation,
-            comparator : 'id'
+            comparator : 'id',
+            initialize : function() {
+                var singleSelect = new Backbone.Picky.SingleSelect(this);
+                _.extend(this, singleSelect);
+            }
         });
 
         var iniNavigationLinks = function() {
@@ -43,7 +51,7 @@ define([ 'app' ], function(Lvl) {
                 href : '/#home',
                 icon : 'fa-home',
                 text : 'Home',
-                isFisrt : 'navigation'
+                isFirst : 'navigation'
             }, {
                 id : 2,
                 href : '/#social',
@@ -56,7 +64,7 @@ define([ 'app' ], function(Lvl) {
                 text : 'Collection'
             }, {
                 id : 4,
-                href : '/#ecompendium',
+                href : '/#e-compendium',
                 icon : 'fa-file-text',
                 text : 'e-Compendium'
             }, {
@@ -78,7 +86,7 @@ define([ 'app' ], function(Lvl) {
                 href : '/#account',
                 icon : 'fa-user',
                 text : 'Account',
-                isFisrt : 'settings'
+                isFirst : 'settings'
             }, {
                 id : 8,
                 href : '/#settings',
@@ -93,7 +101,7 @@ define([ 'app' ], function(Lvl) {
                 href : 'http://www.eubrazilcloudconnect.eu/',
                 icon : 'fa-cloud',
                 text : 'EU-Brazil Cloud Connect',
-                isFisrt : 'external'
+                isFirst : 'external'
             }, {
                 id : 10,
                 href : '/doc/',

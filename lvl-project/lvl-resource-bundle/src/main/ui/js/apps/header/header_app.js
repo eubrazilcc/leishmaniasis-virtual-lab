@@ -15,10 +15,21 @@ define([ 'app' ], function(Lvl) {
             console.log('stopping HeaderApp');
         };
 
+        require([ 'entities/navigation' ], function() {
+            HeaderApp.navLinks = Lvl.request('navigation:links+settings:entities');
+        });
+
         HeaderApp.currentHeader = null;
 
-        Lvl.commands.setHandler('set:active:header', function(id, section) {
+        /**
+         * Sets the active header. The 'id' parameter defines the header type:
+         * home, workspace or default (no header). The 'application' parameter
+         * defines the current application: DNA sequence collection, social
+         * network, e-compendium, etc.
+         */
+        Lvl.commands.setHandler('set:active:header', function(id, application) {
             id = id || 'default';
+            application = application || 'home';
             if (HeaderApp.currentHeader !== id) {
                 if (id === 'home') {
                     require([ 'apps/header/show/header_home_ctrl' ], function(HomeHeaderCtrl) {
@@ -26,12 +37,19 @@ define([ 'app' ], function(Lvl) {
                     });
                 } else if (id === 'workspace') {
                     require([ 'apps/header/show/header_workspace_ctrl' ], function(WorkspaceHeaderCtrl) {
-                        HeaderApp.currentHeader = WorkspaceHeaderCtrl.showHeader();
+                        HeaderApp.currentHeader = WorkspaceHeaderCtrl.showHeader(HeaderApp.navLinks);
                     });
                 } else {
                     Lvl.headerRegion.reset();
                     HeaderApp.currentHeader = null;
                 }
+            }
+            if (id === 'workspace' && (HeaderApp.navLinks.selected === undefined || HeaderApp.navLinks.selected.get('href') !== '/#' + application)) {
+                var navLinkToSelect = HeaderApp.navLinks.find(function(link) {
+                    return link.get('href') === '/#' + application;
+                });
+                navLinkToSelect.select();
+                HeaderApp.navLinks.trigger('reset');
             }
         });
     });

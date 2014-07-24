@@ -15,7 +15,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
             },
             before : function() {
                 require([ 'apps/collection/collection_app' ], function() {
-                    Lvl.execute('set:active:header', 'workspace');
+                    Lvl.execute('set:active:header', 'workspace', 'collection');
                     Lvl.execute('set:active:footer', 'workspace');
                     Lvl.startSubApp('CollectionApp');
                 });

@@ -82,7 +82,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 
                 var filter = new Backgrid.Extension.ClientSideFilter({
                     collection : sequences,
-                    fields : [ 'definition' ]
+                    fields : [ 'definition' ],
+                    placeholder: 'filter by definition'
                 });
 
                 gridContainer.before(filter.render().el);
