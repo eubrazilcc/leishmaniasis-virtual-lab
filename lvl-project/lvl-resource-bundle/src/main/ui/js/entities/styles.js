@@ -55,6 +55,13 @@ define([ 'app' ], function(Lvl) {
             } ]);
         };
 
+        var iniJQueryToolbarStyles = function() {
+            Entities.jQueryToolbarStyles = new Entities.StyleCollection([ {
+                id : 'jquery.toolbar',
+                url : '/css/jquery.toolbars.css'
+            } ]);
+        };
+
         var API = {
             getBackgridStyles : function() {
                 if (Entities.backgridStyles === undefined) {
@@ -67,6 +74,12 @@ define([ 'app' ], function(Lvl) {
                     iniOpenLayersStyles();
                 }
                 return Entities.openLayersStyles;
+            },
+            getJQueryToolbarStyles : function() {
+                if (Entities.jQueryToolbarStyles === undefined) {
+                    iniJQueryToolbarStyles();
+                }
+                return Entities.jQueryToolbarStyles;
             }
         }
 
@@ -76,6 +89,10 @@ define([ 'app' ], function(Lvl) {
 
         Lvl.reqres.setHandler('styles:openlayers:entities', function() {
             return API.getOpenLayersStyles();
+        });
+
+        Lvl.reqres.setHandler('styles:jquery.toolbar:entities', function() {
+            return API.getJQueryToolbarStyles();
         });
 
         return;

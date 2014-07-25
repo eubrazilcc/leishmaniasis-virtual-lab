@@ -10,6 +10,7 @@ requirejs.config({
         /* jQuery JavaScript library */
         'jquery' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min', 'vendor/cached/jquery.min' ],
         'jquery-ui' : [ '//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min', 'vendor/cached/jquery-ui.min' ],
+        'jquery.toolbar' : 'vendor/provided/jquery.toolbar.min',
         /* Boostrap front-end framework */
         'jquery.ui.touch-punch' : [ '//cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min',
                 'vendor/cached/jquery.ui.touch-punch.min' ],
@@ -35,6 +36,8 @@ requirejs.config({
         'backgrid-filter' : 'vendor/provided/backgrid-filter.min',
         /* OpenLayers */
         'openlayers' : 'vendor/provided/ol',
+        /* Moment.js */
+        'moment' : [ '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.7.0/moment.min', 'vendor/cached/moment.min' ],
         /* Add support for underscore templates */
         'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
         'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
@@ -42,6 +45,7 @@ requirejs.config({
     shim : {
         'jquery-ui' : [ 'jquery' ],
         'jquery.ui.touch-punch' : [ 'jquery', 'jquery-ui' ],
+        'jquery.toolbar' : [ 'jquery' ],
         'bootstrap' : [ 'jquery', 'jquery-ui', 'jquery.ui.touch-punch' ],
         'flatui-checkbox' : [ 'bootstrap', 'bootstrap-switch', 'jquery.tagsinput', 'jquery.placeholder' ],
         'flatui-radio' : [ 'bootstrap', 'bootstrap-switch', 'jquery.tagsinput', 'jquery.placeholder' ],
@@ -70,6 +74,7 @@ requirejs.config({
             deps : [ 'jquery' ],
             exports : 'ol'
         },
+        'moment' : [ 'jquery' ],
         'tpl' : [ 'text' ]
     }
 });

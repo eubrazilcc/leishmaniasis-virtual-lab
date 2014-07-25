@@ -94,11 +94,11 @@
   background: url(../img/textured_paper.jpg) repeat;
 }
 
-.lvl-map-home {
+.lvl-map-menu {
   top: 4.643em;
   left: .5em
 }
 
-.lvl-map-home button {
+.lvl-map-menu button {
   line-height: 1.4em
 }
