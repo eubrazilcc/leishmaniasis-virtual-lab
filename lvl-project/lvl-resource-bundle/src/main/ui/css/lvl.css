@@ -68,7 +68,7 @@
 }
 
 .lvl-nav-tabs-shadow {
-  margin-top: 98px;
+  margin-top: 97px;
   height: 10px;
   position: fixed;
   z-index: +1;
@@ -85,4 +85,20 @@
 
 #tab-nav {
   position: fixed;
+}
+
+/* OpenLayers */
+.lvl-map {
+  height: 400px;
+  width: 100%;
+  background: url(../img/textured_paper.jpg) repeat;
+}
+
+.lvl-map-home {
+  top: 4.643em;
+  left: .5em
+}
+
+.lvl-map-home button {
+  line-height: 1.4em
 }

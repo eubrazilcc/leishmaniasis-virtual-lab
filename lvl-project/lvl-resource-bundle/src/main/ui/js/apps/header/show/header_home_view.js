@@ -6,7 +6,6 @@ define([ 'app', 'tpl!apps/header/show/templates/header_home', 'flatui-checkbox',
     Lvl.module('HeaderApp.Home.View', function(View, Lvl, Backbone, Marionette, $, _) {
         View.id = 'home';
         View.Header = Marionette.ItemView.extend({
-            id : 'home',
             template : HomeHeaderTpl
         });
     });

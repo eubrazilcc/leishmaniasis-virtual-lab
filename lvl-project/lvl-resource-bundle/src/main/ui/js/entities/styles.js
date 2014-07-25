@@ -48,17 +48,34 @@ define([ 'app' ], function(Lvl) {
             } ]);
         };
 
+        var iniOpenLayersStyles = function() {
+            Entities.openLayersStyles = new Entities.StyleCollection([ {
+                id : 'ol',
+                url : '/css/ol.css'
+            } ]);
+        };
+
         var API = {
             getBackgridStyles : function() {
                 if (Entities.backgridStyles === undefined) {
                     iniBackgridStyles();
                 }
                 return Entities.backgridStyles;
+            },
+            getOpenLayersStyles : function() {
+                if (Entities.openLayersStyles === undefined) {
+                    iniOpenLayersStyles();
+                }
+                return Entities.openLayersStyles;
             }
         }
 
         Lvl.reqres.setHandler('styles:backgrid:entities', function() {
             return API.getBackgridStyles();
+        });
+
+        Lvl.reqres.setHandler('styles:openlayers:entities', function() {
+            return API.getOpenLayersStyles();
         });
 
         return;

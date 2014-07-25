@@ -33,6 +33,8 @@ requirejs.config({
         'backgrid-paginator' : 'vendor/provided/backgrid-paginator.min',
         'backgrid-select-all' : 'vendor/provided/backgrid-select-all.min',
         'backgrid-filter' : 'vendor/provided/backgrid-filter.min',
+        /* OpenLayers */
+        'openlayers' : 'vendor/provided/ol',
         /* Add support for underscore templates */
         'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
         'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
@@ -63,6 +65,10 @@ requirejs.config({
         'marionette' : {
             deps : [ 'backbone' ],
             exports : 'Marionette'
+        },
+        'openlayers' : {
+            deps : [ 'jquery' ],
+            exports : 'ol'
         },
         'tpl' : [ 'text' ]
     }
