@@ -1,25 +1,29 @@
 /**
- * Define styles that are dynamically loaded in the application.
+ * Define styles that are dynamically loaded in the application. Note that this
+ * module uses the 'requirejs.s.contexts._.config' hack to read values of
+ * configuration that could change or disappear in the next versions of
+ * RequireJS without warning.
  */
 
 define([ 'marionette', 'jquery-ui' ], function(Marionette) {
+    var bust = requirejs.s.contexts._.config.urlArgs ? '?' + requirejs.s.contexts._.config.urlArgs : '';
     Marionette.Controller.Style = Marionette.Controller.extend({
         initialize : function(options) {
             this.baseStyles = [ {
                 id : 'bootstrap',
-                url : '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'
+                url : '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css' + bust
             }, {
                 id : 'font-awesome',
-                url : '//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css'
+                url : '//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css' + bust
             }, {
                 id : 'google_fonts',
-                url : '//fonts.googleapis.com/css?family=Lato:300,400,700,900,400italic,700italic'
+                url : '//fonts.googleapis.com/css?family=Lato:300,400,700,900,400italic,700italic' + bust
             }, {
                 id : 'flat-ui',
-                url : '/css/flat-ui.css'
+                url : '/css/flat-ui.css' + bust
             }, {
                 id : 'lvl',
-                url : '/css/lvl.css'
+                url : '/css/lvl.css' + bust
             } ];
         },
         loadSingleCss : function(id, url) {
