@@ -7,7 +7,8 @@ define([ 'app', 'routefilter' ], function(Lvl) {
         'use strict';
         var Router = Backbone.Router.extend({
             routes : {
-                'login' : 'showLogin'
+                'login' : 'showLogin',
+                'register' : 'showRegistration'
             },
             before : function() {
                 require([ 'apps/login/login_app' ], function() {
@@ -18,6 +19,9 @@ define([ 'app', 'routefilter' ], function(Lvl) {
             },
             showLogin : function() {
                 Lvl.execute('show:login');
+            },
+            showRegistration : function() {
+                Lvl.execute('show:registration');
             }
         });
         Lvl.addInitializer(function() {

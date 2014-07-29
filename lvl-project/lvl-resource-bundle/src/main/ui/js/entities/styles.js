@@ -32,6 +32,13 @@ define([ 'app' ], function(Lvl) {
             comparator : 'id'
         });
 
+        var iniFormValidationStyles = function() {
+            Entities.formValidationStyles = new Entities.StyleCollection([ {
+                id : 'bootstrapvalidator',
+                url : '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.0/css/bootstrapValidator.min.css'
+            } ]);
+        };
+
         var iniBackgridStyles = function() {
             Entities.backgridStyles = new Entities.StyleCollection([ {
                 id : 'backgrid',
@@ -63,6 +70,12 @@ define([ 'app' ], function(Lvl) {
         };
 
         var API = {
+            getFormValidationStyles : function() {
+                if (Entities.formValidationStyles === undefined) {
+                    iniFormValidationStyles();
+                }
+                return Entities.formValidationStyles;
+            },
             getBackgridStyles : function() {
                 if (Entities.backgridStyles === undefined) {
                     iniBackgridStyles();
@@ -82,6 +95,10 @@ define([ 'app' ], function(Lvl) {
                 return Entities.jQueryToolbarStyles;
             }
         }
+
+        Lvl.reqres.setHandler('styles:form-validation:entities', function() {
+            return API.getFormValidationStyles();
+        });
 
         Lvl.reqres.setHandler('styles:backgrid:entities', function() {
             return API.getBackgridStyles();

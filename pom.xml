@@ -151,6 +151,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<!-- The javax.inject API: declare this dependency (provided) to be able 
 				to compile an application when no specific implementation of dependency injection 
 				is required (provides annotations, for example, @Inject) -->
+				
 			<dependency>
 				<groupId>javax.inject</groupId>
 				<artifactId>javax.inject</artifactId>

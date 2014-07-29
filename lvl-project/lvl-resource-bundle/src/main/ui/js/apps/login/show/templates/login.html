@@ -1,38 +1,43 @@
-  <!-- Content -->
-  <div class="container lvl-main-container">
-    <div class="row text-center">
-      <div class="col-md-offset-4 col-md-4 col-xs-12">
-        <h4>
-          Sign in to <span style="color: #2C3E50;">L<span class="text-danger">ei</span>sh VirtLab</span>
-        </h4>
-      </div>
+<div class="container lvl-main-container">
+  <div class="row text-center">
+    <div class="col-md-offset-4 col-md-4 col-xs-12">
+      <h4>
+        Sign in to <span style="color: #2C3E50;">L<span class="text-danger">ei</span>sh VirtLab</span>
+      </h4>
     </div>
-    <div class="row">
-      <div class="col-md-offset-4 col-md-4 col-xs-12">
-        <div class="panel" style="background-color: #ECF0F1;">
-          <div class="panel-body">
-            <form class="form-signin" autocomplete="on" action="" role="form">
-              <div class="login-form">
-                <div class="form-group">
-                  <input type="text" class="form-control login-field" value="" placeholder="Enter email" id="login-email" required autofocus />
-                  <label class="login-field-icon fui-mail" for="login-email"></label>
-                </div>
-                <div class="form-group">
-                  <input type="password" class="form-control login-field" value="" placeholder="Password" id="login-pass" required />
-                  <label class="login-field-icon fui-lock" for="login-pass"></label>
-                </div>
-                <div class="form-group">
-                  <label class="checkbox" for="login-remember">
-                    <input type="checkbox" class="form-control login-field" value="" id="login-remember" checked="checked" data-toggle="checkbox"> Remember me
-                  </label>
-                </div>
-                <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-                <a class="login-link" href="/#account_recovery/password_recovery">Lost your password?</a>
-                <a class="login-link" href="/#registration"><i class="fa fa-sign-in"></i> Don't have an account yet? Sign up <strong>now</strong>.</a>
+  </div>
+  <div class="row">
+    <div class="col-md-offset-4 col-md-4 col-xs-12">
+      <div class="panel lvl-login-form">
+        <div class="panel-body">
+          <form id="formSignin" autocomplete="on" action="" role="form">
+            <div class="login-form">
+              <div class="form-group">
+                <input type="text" class="form-control login-field" value="" placeholder="Enter email" id="login-email" required autofocus /> <label
+                  class="login-field-icon fui-mail" for="login-email"></label>
               </div>
-            </form>
-          </div>
+              <div class="form-group">
+                <input type="password" class="form-control login-field" value="" placeholder="Password" id="login-pass" required /> <label
+                  class="login-field-icon fui-lock" for="login-pass"></label>
+              </div>
+              <div class="form-group">
+                <label class="checkbox" for="login-remember"> <input type="checkbox" class="form-control login-field" value="" id="login-remember"
+                  checked="checked" data-toggle="checkbox"> Remember me
+                </label>
+              </div>
+              <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+              <p class="text-center">
+                <a class="login-link" href="/#account_recovery/password_recovery">Lost your password?</a> <a class="login-link" href="/#register"><i
+                  class="fa fa-sign-in"></i> Don't have an account yet? Sign up <strong>now</strong>.</a>
+              </p>
+              <p class="text-center">- OR -</p>
+              <button class="btn btn-info btn-sm btn-block" type="submit">
+                <i class="fa fa-linkedin fa-fw"></i> Sign in with LinkedIn
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
+</div>

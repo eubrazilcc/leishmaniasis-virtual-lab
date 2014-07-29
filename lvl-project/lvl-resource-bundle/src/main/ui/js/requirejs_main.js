@@ -8,14 +8,16 @@ requirejs.config({
     baseUrl : 'js',
     paths : {
         /* jQuery JavaScript library */
-        'jquery' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min', 'vendor/cached/jquery.min' ],
-        'jquery-ui' : [ '//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min', 'vendor/cached/jquery-ui.min' ],
+        'jquery' : [ '//code.jquery.com/jquery-2.1.1.min', 'vendor/cached/jquery.min' ],
+        'jquery-ui' : [ '//code.jquery.com/ui/1.11.0/jquery-ui.min', 'vendor/cached/jquery-ui.min' ],
         'jquery.toolbar' : 'vendor/provided/jquery.toolbar.min',
         /* Boostrap front-end framework */
         'jquery.ui.touch-punch' : [ '//cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min',
                 'vendor/cached/jquery.ui.touch-punch.min' ],
-        'bootstrap' : [ '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min', 'vendor/cached/bootstrap.min' ],
+        'bootstrap' : [ '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min', 'vendor/cached/bootstrap.min' ],
         'bootstrap-switch' : [ '//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.0.2/js/bootstrap-switch.min', 'vendor/cached/bootstrap-switch.min' ],
+        'bootstrapvalidator' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.0/js/bootstrapValidator.min',
+                'vendor/cached/bootstrapValidator.min' ],
         /* Flat-UI theme (http://designmodo.github.io/Flat-UI/) */
         'flatui-checkbox' : 'vendor/provided/flatui-checkbox',
         'flatui-radio' : 'vendor/provided/flatui-radio',
@@ -49,6 +51,10 @@ requirejs.config({
         'bootstrap' : [ 'jquery', 'jquery-ui', 'jquery.ui.touch-punch' ],
         'flatui-checkbox' : [ 'bootstrap', 'bootstrap-switch', 'jquery.tagsinput', 'jquery.placeholder' ],
         'flatui-radio' : [ 'bootstrap', 'bootstrap-switch', 'jquery.tagsinput', 'jquery.placeholder' ],
+        'bootstrapvalidator' : {
+            deps : [ 'bootstrap' ],
+            exports : 'BootstrapValidator'
+        },
         'underscore' : {
             exports : '_'
         },

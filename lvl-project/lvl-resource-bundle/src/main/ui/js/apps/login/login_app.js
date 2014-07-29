@@ -23,5 +23,11 @@ define([ 'app' ], function(Lvl) {
                 ShowController.showLogin();
             });
         });
+        
+        Lvl.commands.setHandler('show:registration', function() {
+            require([ 'apps/login/register/login_register_ctrl' ], function(RegisterController) {
+                RegisterController.register();
+            });
+        });
     });
 });

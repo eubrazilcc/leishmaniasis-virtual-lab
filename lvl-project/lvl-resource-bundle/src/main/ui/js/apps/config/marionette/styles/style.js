@@ -7,10 +7,10 @@ define([ 'marionette', 'jquery-ui' ], function(Marionette) {
         initialize : function(options) {
             this.baseStyles = [ {
                 id : 'bootstrap',
-                url : '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css'
+                url : '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'
             }, {
                 id : 'font-awesome',
-                url : '//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css'
+                url : '//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css'
             }, {
                 id : 'google_fonts',
                 url : '//fonts.googleapis.com/css?family=Lato:300,400,700,900,400italic,700italic'

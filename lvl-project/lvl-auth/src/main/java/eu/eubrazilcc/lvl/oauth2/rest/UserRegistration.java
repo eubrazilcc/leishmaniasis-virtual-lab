@@ -23,6 +23,9 @@
 package eu.eubrazilcc.lvl.oauth2.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.getValidationField;
+import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.getValidationType;
+import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.validationResponse;
 import static eu.eubrazilcc.lvl.oauth2.mail.EmailSender.EMAIL_SENDER;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
@@ -50,6 +53,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
@@ -157,6 +161,27 @@ public class UserRegistration {
 				.build());
 		// delete pending user from database
 		PENDING_USER_DAO.delete(pendingUser.getPendingUserId());
+	}
+
+	@POST
+	@Path("check_availability")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response checkUserAvailability(final MultivaluedMap<String, String> form) {
+		final String type = getValidationType(form);
+		final String field = getValidationField(type, form);
+		boolean isAvailable = false;		
+		if ("username".equals(type)) {
+			isAvailable = RESOURCE_OWNER_DAO.find(field) == null;
+		} else if ("email".equals(type)) {
+			isAvailable = RESOURCE_OWNER_DAO.findByEmail(field) == null;
+		} else {
+			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+		}
+		return Response.ok()
+				.entity(validationResponse(isAvailable))
+				.type(MediaType.APPLICATION_JSON)
+				.build();		
 	}
 
 	private static final void sendActivation(final URI baseUri, final PendingUser pendingUser) {		

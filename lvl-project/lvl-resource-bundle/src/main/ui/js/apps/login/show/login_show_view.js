@@ -6,8 +6,10 @@ define([ 'marionette', 'tpl!apps/login/show/templates/login', 'flatui-checkbox',
     return {
         Content : Marionette.ItemView.extend({
             template : LoginTpl,
-            onShow : function() {
+            onBeforeRender : function() {
                 $('body').addClass('lvl-login-body');
+            },
+            onShow : function() {
                 $(':checkbox').checkbox();
                 $('#login-email').focus();
             },

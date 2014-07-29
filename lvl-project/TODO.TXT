@@ -1,9 +1,0 @@
-Design guides:
---
-* Responsive Website.
-** Fluid layouts.
-** Media queries
-
-Helpers:
---
-ssh -X grycapui.i3m.upv.es "nohup firefox"

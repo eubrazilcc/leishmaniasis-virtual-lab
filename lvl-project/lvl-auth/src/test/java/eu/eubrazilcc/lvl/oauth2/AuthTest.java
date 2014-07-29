@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.oauth2;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.readValid;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
@@ -31,6 +32,7 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.http.client.fluent.Form.form;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -54,12 +56,14 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.client.fluent.Request;
 import org.apache.oltu.oauth2.client.OAuthClient;
 import org.apache.oltu.oauth2.client.URLConnectionClient;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
@@ -279,7 +283,7 @@ public class AuthTest {
 
 			Path path = OAuth2TokenRevocation.class.getAnnotation(Path.class);
 			System.out.println(" >> Token revocation: " + target.path(path.value()).getUri().toString());			
-			final Form form = new Form();
+			Form form = new Form();
 			form.param("token", accessToken2);
 			form.param("client_id", clientId);
 			form.param("client_secret", clientSecret);					
@@ -337,7 +341,7 @@ public class AuthTest {
 			System.out.println("     >> Get users HTTP headers: " + response3.getStringHeaders());
 
 			// test identity provider (IdP) get users (Java object)
-			final Users users = target.path(path.value()).request(MediaType.APPLICATION_JSON)  // TODO
+			final Users users = target.path(path.value()).request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(Users.class);
 			assertThat("Get users result is not null", users, notNullValue());
@@ -466,6 +470,44 @@ public class AuthTest {
 			assertThat("Get user by username after validation coincides with expected", user2.equalsIgnoreVolatile(user));
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by username after validation result: " + user2.toString());
+
+			// test check user availability with form field: username, expected response: user unavailable
+			path = UserRegistration.class.getAnnotation(Path.class);
+			final Path innerPath = UserRegistration.class.getMethod("checkUserAvailability", new Class<?>[]{ MultivaluedMap.class }).getAnnotation(Path.class);
+			System.out.println(" >> Check user availability: " + target.path(path.value()).path(innerPath.value()).getUri().toString());
+			form = new Form();
+			form.param("type", "username");
+			form.param("username", user.getUsername());
+			response3 = target.path(path.value()).path(innerPath.value()).request(MediaType.APPLICATION_JSON)
+					.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+			assertThat("Check user availability response is not null", response3, notNullValue());
+			assertThat("Check user availability response is OK", response3.getStatus() == Response.Status.OK.getStatusCode());
+			assertThat("Check user availability response is not empty", response3.getEntity(), notNullValue());
+			payload = response3.readEntity(String.class);
+			assertThat("Check user availability response entity is not null", payload, notNullValue());
+			assertThat("Check user availability response entity is not empty", !isBlank(payload));
+			assertThat("Check user availability coincides with expected", !readValid(payload));
+			/* uncomment for additional output */
+			System.out.println("     >> Check user availability response body (JSON): " + payload);
+			System.out.println("     >> Check user availability response JAX-RS object: " + response3);			
+
+			// test check user availability with form field: email, expected response: user available (using plain REST, no Jersey client)
+			uri = target.path(path.value()).path(innerPath.value()).getUri();
+			System.out.println(" >> Check user availability (plain): " + uri.toString());
+			final String response4 = Request.Post(uri)
+					.addHeader("Accept", "application/json")
+					.bodyForm(form().add("email", "not_existing_email@example.org").add("type", "email").build())
+					.execute()
+					.returnContent()
+					.asString();
+			assertThat("Check user availability (plain) is not null", response4, notNullValue());
+			assertThat("Check user availability (plain) is not empty", isNotBlank(response4));
+			/* uncomment for additional output */
+			System.out.println("Check user availability (plain): " + response4);
+			final boolean valid = readValid(response4);
+			assertThat("Check user availability (plain) concides with expected", valid, equalTo(true));	
+			/* uncomment for additional output */
+			System.out.println("Check user availability (plain) returns: " + valid);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("AuthTest.test() failed: " + e.getMessage());

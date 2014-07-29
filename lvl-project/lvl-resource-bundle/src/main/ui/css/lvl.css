@@ -4,6 +4,10 @@
   background-color: #1abc9c;
 }
 
+.lvl-login-form {
+  background-color: #ECF0F1;
+}
+
 .lvl-main-container {
   padding-top: 50px;
 }
@@ -85,6 +89,17 @@
 
 #tab-nav {
   position: fixed;
+}
+
+/* Override Boostrap styles */
+.has-feedback .form-control-feedback {
+  top: 12px;
+  right: -32px;
+}
+
+.has-feedback .input-group .form-control-feedback {
+  top: 12px;
+  right: -32px;
 }
 
 /* OpenLayers */
