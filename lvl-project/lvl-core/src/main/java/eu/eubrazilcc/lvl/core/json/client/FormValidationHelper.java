@@ -63,7 +63,7 @@ public final class FormValidationHelper {
 	}
 
 	public static String validationResponse(final boolean isValid) {
-		return "{ valid : '" + isValid + "' }";
+		return "{ \"valid\" : \"" + isValid + "\" }";
 	}
 
 	public static boolean readValid(final String content) {

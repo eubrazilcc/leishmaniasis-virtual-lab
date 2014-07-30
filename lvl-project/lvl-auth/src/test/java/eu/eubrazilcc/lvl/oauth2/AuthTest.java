@@ -291,7 +291,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken2))
 					.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 			assertThat("Revoke token response is not null", response3, notNullValue());
-			assertThat("Revoke token response is OK", response3.getStatus() == Response.Status.OK.getStatusCode());
+			assertThat("Revoke token response is OK", response3.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
 			assertThat("Revoke token response is not empty", response3.getEntity(), notNullValue());
 			String payload = response3.readEntity(String.class);
 			assertThat("Revoke token response entity is not null", payload, notNullValue());
@@ -315,7 +315,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.post(Entity.entity(user, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("Create new user response is not null", response3, notNullValue());
-			assertThat("Create new user response is CREATED", response3.getStatus() == Response.Status.CREATED.getStatusCode());
+			assertThat("Create new user response is CREATED", response3.getStatus(), equalTo(Response.Status.CREATED.getStatusCode()));
 			assertThat("Create new user response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Create new user response entity is not null", payload, notNullValue());
@@ -330,7 +330,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get();
 			assertThat("Get users response is not null", response3, notNullValue());
-			assertThat("Get users response is OK", response3.getStatus() == Response.Status.OK.getStatusCode());
+			assertThat("Get users response is OK", response3.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
 			assertThat("Get users response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Get users response entity is not null", payload, notNullValue());
@@ -376,7 +376,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.put(Entity.entity(user, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("Update user response is not null", response3, notNullValue());
-			assertThat("Update user response is OK", response3.getStatus() == Response.Status.NO_CONTENT.getStatusCode());
+			assertThat("Update user response is OK", response3.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
 			assertThat("Update user response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Update user response entity is not null", payload, notNullValue());
@@ -412,7 +412,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.delete();
 			assertThat("Delete user response is not null", response3, notNullValue());
-			assertThat("Delete user response is OK", response3.getStatus() == Response.Status.NO_CONTENT.getStatusCode());
+			assertThat("Delete user response is OK", response3.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
 			assertThat("Delete user response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Delete user response entity is not null", payload, notNullValue());
@@ -428,7 +428,7 @@ public class AuthTest {
 			response3 = target.path(path.value()).queryParam("skip_activation", true).request()
 					.post(Entity.entity(user, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("Create pending user response is not null", response3, notNullValue());
-			assertThat("Create pending user response is CREATED", response3.getStatus() == Response.Status.CREATED.getStatusCode());
+			assertThat("Create pending user response is CREATED", response3.getStatus(), equalTo(Response.Status.CREATED.getStatusCode()));
 			assertThat("Create pending user response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Create pending user response entity is not null", payload, notNullValue());
@@ -447,7 +447,7 @@ public class AuthTest {
 			response3 = target.path(path.value()).path(user.getEmail()).request()
 					.put(Entity.entity(pendingUser2, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("New user activation response is not null", response3, notNullValue());			
-			assertThat("New user activation response is OK", response3.getStatus() == Response.Status.NO_CONTENT.getStatusCode());
+			assertThat("New user activation response is OK", response3.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
 			assertThat("New user activation response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("New user activation response entity is not null", payload, notNullValue());
@@ -478,10 +478,10 @@ public class AuthTest {
 			form = new Form();
 			form.param("type", "username");
 			form.param("username", user.getUsername());
-			response3 = target.path(path.value()).path(innerPath.value()).request(MediaType.APPLICATION_JSON)
+			response3 = target.path(path.value()).path(innerPath.value()).request(MediaType.TEXT_HTML)
 					.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
 			assertThat("Check user availability response is not null", response3, notNullValue());
-			assertThat("Check user availability response is OK", response3.getStatus() == Response.Status.OK.getStatusCode());
+			assertThat("Check user availability response is OK", response3.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
 			assertThat("Check user availability response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Check user availability response entity is not null", payload, notNullValue());
@@ -495,7 +495,7 @@ public class AuthTest {
 			uri = target.path(path.value()).path(innerPath.value()).getUri();
 			System.out.println(" >> Check user availability (plain): " + uri.toString());
 			final String response4 = Request.Post(uri)
-					.addHeader("Accept", "application/json")
+					.addHeader("Accept", "text/html") // application/json
 					.bodyForm(form().add("email", "not_existing_email@example.org").add("type", "email").build())
 					.execute()
 					.returnContent()

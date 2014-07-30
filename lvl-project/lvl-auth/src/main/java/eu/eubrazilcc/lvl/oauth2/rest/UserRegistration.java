@@ -166,7 +166,7 @@ public class UserRegistration {
 	@POST
 	@Path("check_availability")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_HTML)
 	public Response checkUserAvailability(final MultivaluedMap<String, String> form) {
 		final String type = getValidationType(form);
 		final String field = getValidationField(type, form);

@@ -93,12 +93,12 @@
 
 /* Override Boostrap styles */
 .has-feedback .form-control-feedback {
-  top: 12px;
+  top: 14px;
   right: -32px;
 }
 
 .has-feedback .input-group .form-control-feedback {
-  top: 12px;
+  top: 14px;
   right: -32px;
 }
 
