@@ -45,7 +45,6 @@ define([ 'app', 'tpl!apps/login/register/templates/register', 'apps/config/mario
                                         remote : {
                                             message : 'The username is not available',
                                             url : 'http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/pending_users/check_availability',
-                                            // TODO url : '/test',
                                             data : {
                                                 type : 'username'
                                             }
