@@ -7,17 +7,23 @@ define([ 'app', 'routefilter' ], function(Lvl) {
         'use strict';
         var Router = Backbone.Router.extend({
             routes : {
-                'collection' : 'browseCollection',
-                'collection-browse' : 'browseCollection',
-                'collection-map' : 'mapCollection',
-                'collection-stats' : 'statsCollection',
-                'collection-submit' : 'submitCollection'
+                'collection' : 'defaultCollection',
+                'collection/browse' : 'browseCollection',
+                'collection/map' : 'mapCollection',
+                'collection/stats' : 'statsCollection',
+                'collection/submit' : 'submitCollection'
             },
             before : function() {
                 require([ 'apps/collection/collection_app' ], function() {
                     Lvl.execute('set:active:header', 'workspace', 'collection');
                     Lvl.execute('set:active:footer', 'workspace');
                     Lvl.startSubApp('CollectionApp');
+                });
+            },
+            defaultCollection : function() {
+                var self = this;
+                Lvl.navigate('collection/browse', {
+                    trigger : true
                 });
             },
             browseCollection : function() {

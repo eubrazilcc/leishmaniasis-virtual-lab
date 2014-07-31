@@ -1,13 +1,11 @@
 /**
- * RequireJS module that defines the entity: dynamic styles. Note that this
- * module uses the 'requirejs.s.contexts._.config' hack to read values of
- * configuration that could change or disappear in the next versions of
- * RequireJS without warning.
+ * RequireJS module that defines the entity: dynamic styles.
  */
 
-define([ 'app' ], function(Lvl) {
-    var bust = requirejs.s.contexts._.config.urlArgs ? '?' + requirejs.s.contexts._.config.urlArgs : '';
+define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configuration) {    
     Lvl.module('Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
+        var bust = new Configuration().get('bust', '');
+        
         Entities.Style = Backbone.Model.extend({
             defaults : {
                 id : 'none',

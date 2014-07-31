@@ -1,29 +1,27 @@
 /**
- * Define styles that are dynamically loaded in the application. Note that this
- * module uses the 'requirejs.s.contexts._.config' hack to read values of
- * configuration that could change or disappear in the next versions of
- * RequireJS without warning.
+ * RequireJS module that defines styles that are dynamically loaded in the
+ * application.
  */
 
-define([ 'marionette', 'jquery-ui' ], function(Marionette) {
-    var bust = requirejs.s.contexts._.config.urlArgs ? '?' + requirejs.s.contexts._.config.urlArgs : '';
+define([ 'marionette', 'apps/config/marionette/configuration', 'jquery-ui' ], function(Marionette, Configuration) {
     Marionette.Controller.Style = Marionette.Controller.extend({
         initialize : function(options) {
+            this.bust = new Configuration().get('bust', '');
             this.baseStyles = [ {
                 id : 'bootstrap',
-                url : '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css' + bust
+                url : '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css' + this.bust
             }, {
                 id : 'font-awesome',
-                url : '//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css' + bust
+                url : '//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css' + this.bust
             }, {
                 id : 'google_fonts',
-                url : '//fonts.googleapis.com/css?family=Lato:300,400,700,900,400italic,700italic' + bust
+                url : '//fonts.googleapis.com/css?family=Lato:300,400,700,900,400italic,700italic' + this.bust
             }, {
                 id : 'flat-ui',
-                url : '/css/flat-ui.css' + bust
+                url : '/css/flat-ui.css' + this.bust
             }, {
                 id : 'lvl',
-                url : '/css/lvl.css' + bust
+                url : '/css/lvl.css' + this.bust
             } ];
         },
         loadSingleCss : function(id, url) {

@@ -8,10 +8,10 @@ define([ 'marionette', 'tpl!apps/login/account-validation/templates/account-vali
         Content : Marionette.ItemView.extend({
             template : AccountValidationTpl,
             onBeforeRender : function() {
-                // TODO $('body').addClass('lvl-login-body');
+                $('body').addClass('lvl-login-body');
             },
             onClose : function() {
-                // TODO $('body').removeClass('lvl-login-body');
+                $('body').removeClass('lvl-login-body');
             }
         })
     };
