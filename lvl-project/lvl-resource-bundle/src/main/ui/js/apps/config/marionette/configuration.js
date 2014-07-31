@@ -6,7 +6,7 @@
  * warning.
  */
 
-define([ 'marionette', 'underscore' ], function(Marionette, _, $) {
+define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
     var bust = requirejs.s.contexts._.config.urlArgs ? '?' + requirejs.s.contexts._.config.urlArgs : '';
     Marionette.Controller.Configuration = Marionette.Controller.extend({
         initialize : function(options) {
@@ -36,6 +36,19 @@ define([ 'marionette', 'underscore' ], function(Marionette, _, $) {
                 return obj.id === id
             });
             return res ? res.value : _def;
+        },
+        getUserLocation : function(callback, error) {
+            if ('function' === typeof callback) {
+                $.ajax('http://freegeoip.net/json/').done(function(location) {
+                    callback(location);
+                }).fail(function(jqXHR, textStatus) {
+                    if ('function' === typeof error) {
+                        error(textStatus);
+                    } else {
+                        console.log('Failed to get user location', textStatus);
+                    }
+                });
+            }
         }
     });
     return Marionette.Controller.Configuration;
