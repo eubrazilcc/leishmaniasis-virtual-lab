@@ -478,7 +478,7 @@ public class AuthTest {
 			form = new Form();
 			form.param("type", "username");
 			form.param("username", user.getUsername());
-			response3 = target.path(path.value()).path(innerPath.value()).request(MediaType.TEXT_HTML)
+			response3 = target.path(path.value()).path(innerPath.value()).request(MediaType.APPLICATION_JSON)
 					.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
 			assertThat("Check user availability response is not null", response3, notNullValue());
 			assertThat("Check user availability response is OK", response3.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
@@ -495,7 +495,7 @@ public class AuthTest {
 			uri = target.path(path.value()).path(innerPath.value()).getUri();
 			System.out.println(" >> Check user availability (plain): " + uri.toString());
 			final String response4 = Request.Post(uri)
-					.addHeader("Accept", "text/html") // application/json
+					.addHeader("Accept", "text/javascript") // also supports: application/json
 					.bodyForm(form().add("email", "not_existing_email@example.org").add("type", "email").build())
 					.execute()
 					.returnContent()
