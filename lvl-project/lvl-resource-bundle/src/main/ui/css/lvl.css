@@ -8,6 +8,14 @@
   background-color: #ECF0F1;
 }
 
+a.lvl-login {
+  color: #2C3E50;
+}
+
+a.lvl-login:hover,a.lvl-login:focus {
+  color: #7F8C8D;
+}
+
 .lvl-main-container {
   padding-top: 50px;
 }

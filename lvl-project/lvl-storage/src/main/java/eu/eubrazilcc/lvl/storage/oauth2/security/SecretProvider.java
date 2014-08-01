@@ -79,7 +79,7 @@ public final class SecretProvider {
 	public static String generateFastUrlSafeSecret() {
 		return new Base32().encodeAsString(generateSalt(8));
 	}
-	
+
 	/**
 	 * Creates a random salt of the specified bytes, selected by a {@link SecureRandom} that can 
 	 * be passed as input parameter to a function that hashes a password to protect the generated 
@@ -120,6 +120,50 @@ public final class SecretProvider {
 			return md.digest(bytesOfMixName);			
 		} catch (Exception e) {			
 			throw new IOException("Digest computation has failed", e);
+		}
+	}
+
+	/**
+	 * Protects a password with a standard cryptographic function (SHA-256), prepending a long random 
+	 * salt (256 bits) to defend the password against dictionary attacks. This method can be used to 
+	 * store a password (e.g. in a database) and the method {@link #validatePassword(String, String, String)} 
+	 * can be used to validate a given password with the stored one.
+	 * @param password - password to be protected
+	 * @return An array with two elements: the first position of the array contains a Base64 
+	 *        representation of the salt, while the second position contains a Base64 representation
+	 *        of the protected key.
+	 */
+	public static String[] protectPassword(final String password) {
+		try {
+			// compute a long random salt to defend against dictionary attacks
+			final String salt = new String(encodeBase64(generateSalt(DEFAULT_STRENGTH), false, false));
+			// prepend the salt to the password and hash the mix with a standard cryptographic function
+			final byte[] digest = digest(new String[]{ salt.concat(password) }, null);
+			// encode the protected password with Base64 before returning it to the caller
+			return new String[]{ salt, new String(encodeBase64(digest, false, false)) };
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to protect the password", e);
+		}
+	}
+
+	/**
+	 * Validates a password using a hash computed from the original password and a salt that is applied
+	 * to the original password before computing the hash. The validation uses the same steps that the
+	 * method {@link #protectPassword(String)} used to protect a password.
+	 * @param password - password to be validated
+	 * @param salt - salt used to protect the hash
+	 * @param hash - hash computed from the original password
+	 * @return {@code true} if the password matches, otherwise {@code false}.
+	 */
+	public static boolean validatePassword(final String password, final String salt, final String hash) {
+		try {
+			// prepend the salt to the password and hash the mix with a standard cryptographic function
+			final byte[] digest = digest(new String[]{ salt.concat(password) }, null);
+			// compare the hash of the given password with the hash from the caller
+			final String computedHash = new String(encodeBase64(digest, false, false));
+			return computedHash.equals(hash);
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to validate the password", e);
 		}
 	}
 

@@ -49,6 +49,44 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
                     }
                 });
             }
+        },
+        session : {
+            get : function(key) {
+                var value = sessionStorage.getItem(key);
+                return value ? JSON.parse(value) : value;
+            },
+            set : function(key, value) {
+                if (key && value) {
+                    sessionStorage.setItem(key, JSON.stringify(value));
+                }
+            },
+            check : function(key) {
+                return key ? sessionStorage.getItem(key) == null : false;
+            },
+            clear : function(key) {
+                if (key && value) {
+                    sessionStorage.removeItem(key);
+                }
+            }
+        },
+        storage : {
+            get : function(key) {
+                var value = localStorage.getItem(key);
+                return value ? JSON.parse(value) : value;
+            },
+            set : function(key, value) {
+                if (key && value) {
+                    localStorage.setItem(key, JSON.stringify(value));
+                }
+            },
+            check : function(key) {
+                return key ? localStorage.getItem(key) == null : false;
+            },
+            clear : function(key) {
+                if (key && value) {
+                    localStorage.removeItem(key);
+                }
+            }
         }
     });
     return Marionette.Controller.Configuration;

@@ -2,7 +2,8 @@
   <div class="row text-center">
     <div class="col-md-offset-4 col-md-4 col-xs-12">
       <h4>
-        Sign up to <span style="color: #2C3E50;">L<span class="text-danger">ei</span>sh VirtLab</span>
+        Sign up to <a class="lvl-login" href="/#home">L<span class="text-danger">ei</span>sh VirtLab
+        </a>
       </h4>
     </div>
   </div>
@@ -13,27 +14,69 @@
           <form id="signupForm" autocomplete="off" novalidate="novalidate">
             <div class="login-form">
               <!-- hack to avoid Chrome to autocomplete this form -->
-              <input style="display:none">
-              <input type="password" style="display:none">
+              <input style="display: none"> <input type="password" style="display: none">
               <div class="form-group">
                 <input type="text" class="form-control login-field" value="" placeholder="Enter username" name="username" required autofocus autocomplete="off" />
                 <label class="login-field-icon fui-user" for="username"></label>
               </div>
               <div class="form-group">
-                <input type="text" class="form-control login-field" value="" placeholder="Enter email" name="email" required autocomplete="off" />
-                <label class="login-field-icon fui-mail" for="email"></label>
+                <input type="text" class="form-control login-field" value="" placeholder="Enter email" name="email" required autocomplete="off" /> <label
+                  class="login-field-icon fui-mail" for="email"></label>
               </div>
               <div class="form-group">
-                <input type="password" class="form-control login-field" value="" placeholder="Password" name="password" required autocomplete="off" />
-                <label class="login-field-icon fui-lock" for="password"></label>
+                <input type="password" class="form-control login-field" value="" placeholder="Password" name="password" required autocomplete="off" /> <label
+                  class="login-field-icon fui-lock" for="password"></label>
               </div>
               <button class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
             </div>
             <div>
-              <p><small>By signing up you are agreeing to our <a href="/#privacy-policy" target="_blank">Privacy Policy</a> and <a href="/#terms-of-use" target="_blank">Terms &amp;
-                Conditions</a>.</small></p> 
+              <p>
+                <small>By signing up you are agreeing to our <a href="#" data-toggle="modal" data-target="#privacyPolicy">Privacy Policy</a> and <a
+                  href="#" data-toggle="modal" data-target="#termsAndConditions">Terms &amp; Conditions</a>.
+                </small>
+              </p>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="privacyPolicy" tabindex="-1" role="dialog" aria-labelledby="privacyPolicyLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+        </button>
+        <h4 class="modal-title" id="privacyPolicyLabel">Privacy Policy</h4>
+        <p>Text here</p>
+        <div class="btn-toolbar" role="toolbar">
+          <div class="btn-group pull-right">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="termsAndConditions" tabindex="-1" role="dialog" aria-labelledby="termsAndConditionsLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+        </button>
+        <h4 class="modal-title" id="termsAndConditionsLabel">Terms &amp; Conditions</h4>
+        <p>Text here</p>
+        <div class="btn-toolbar" role="toolbar">
+          <div class="btn-group pull-right">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
         </div>
       </div>
     </div>

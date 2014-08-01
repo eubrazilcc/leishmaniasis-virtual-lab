@@ -36,17 +36,29 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                 });
                 // find user location, load the map and resize it to fit the
                 // screen area
-                config.getUserLocation(function(location) {
-                    if (location && location.longitude && location.latitude && (location.longitude != 0 || location.latitude != 0)) {
-                        center = {
-                            lon : location.longitude,
-                            lat : location.latitude
-                        };
-                        zoom = 7;
-                    }
+                var userLocation = config.session.get('user.location');
+                if (userLocation) {
+                    center = userLocation.center;
+                    zoom = userLocation.zoom;
                     self.loadMap();
                     self.resize();
-                });
+                } else {
+                    config.getUserLocation(function(location) {
+                        if (location && location.longitude && location.latitude && (location.longitude != 0 || location.latitude != 0)) {
+                            center = {
+                                lon : location.longitude,
+                                lat : location.latitude
+                            };
+                            zoom = 7;
+                            config.session.set('user.location', {
+                                'center' : center,
+                                'zoom' : zoom
+                            });
+                        }
+                        self.loadMap();
+                        self.resize();
+                    });
+                }
             },
             onClose : function() {
                 // unsubscribe from events

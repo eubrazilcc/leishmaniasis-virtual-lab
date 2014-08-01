@@ -57,6 +57,7 @@ public class User implements Serializable {
 	private String email;
 	private String fullname;
 	private Set<String> scopes;
+	private String salt;
 
 	public User() { }
 

@@ -25,10 +25,15 @@ package eu.eubrazilcc.lvl.storage;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.generateFastUrlSafeSecret;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.generateSalt;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.generateSecret;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.protectPassword;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.validatePassword;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
+
+import java.util.Arrays;
 
 import org.junit.Test;
 
@@ -50,21 +55,38 @@ public class SecretProviderTest {
 			assertThat("secret is not empty", isNotBlank(secret));
 			/* uncomment for additional output */
 			System.out.println(" >> Secret: " + secret);
-			
+
 			// generate fast URL-safe secret
 			secret = generateFastUrlSafeSecret();
 			assertThat("fast URL-safe secret is not null", secret, notNullValue());
 			assertThat("fast URL-safe secret is not empty", isNotBlank(secret));
 			/* uncomment for additional output */
 			System.out.println(" >> Fast URL-safe secret: " + secret);
-			
+
 			// generate salt
 			final byte[] salt = generateSalt(SecretProvider.DEFAULT_STRENGTH);
 			assertThat("salt is not null", salt, notNullValue());
 			assertThat("salt is not empty", isNotBlank(new String(salt)));
 			/* uncomment for additional output */
 			System.out.println(" >> Salt: " + salt);
-			
+
+			// protect password
+			final String password = "piece of cake";
+			final String[] secret2 = protectPassword(password);
+			assertThat("protected password is not null", secret2, notNullValue());
+			assertThat("protected password is correct", secret2.length, equalTo(2));
+			assertThat("protected password - salt is not empty", isNotBlank(secret2[0]));
+			assertThat("protected password - password is not empty", isNotBlank(secret2[1]));
+			/* uncomment for additional output */
+			System.out.println(" >> Protected password: " + Arrays.toString(secret2));
+
+			// validate password
+			assertThat("correct password is valid", validatePassword(password, secret2[0], secret2[1]), equalTo(true));
+			assertThat("incorrect hash is invalid   ", validatePassword(password, secret2[0], "bad hash"), equalTo(false));
+			assertThat("incorrect salt is invalid", validatePassword(password, "bad salt", secret2[1]), equalTo(false));			
+			assertThat("incorrect salt and password  is invalid", validatePassword(password, "bad salt", "bad hash"), equalTo(false));
+			assertThat("incorrect password is invalid", validatePassword("bad password", secret2[0], secret2[1]), equalTo(false));
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("SecretProviderTest.test() failed: " + e.getMessage());
