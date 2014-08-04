@@ -169,7 +169,20 @@ public class User implements Serializable {
 		}
 		return Objects.equal(link, other.link)
 				&& Objects.equal(pictureUrl, other.pictureUrl)
-				&& Objects.equal(username, other.username)
+				&& equalsToUnprotectedIgnoringVolatile(other);
+	}
+	
+	/**
+	 * Ignores password, salt and volatile fields when comparing two instances of this class.
+	 * @param other - the instance to be compared to.
+	 * @return {@code true} if all the attributes of both instances coincide in value with the sole exception of those considered part of the password
+	 *        and the volatile ones. Otherwise, {@code false}.
+	 */
+	public boolean equalsToUnprotectedIgnoringVolatile(final User other) {
+		if (other == null) {
+			return false;
+		}
+		return Objects.equal(username, other.username)
 				&& Objects.equal(email, other.email)				
 				&& Objects.equal(fullname, other.fullname)
 				&& Objects.equal(scopes, other.scopes);

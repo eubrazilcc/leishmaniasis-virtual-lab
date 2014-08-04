@@ -339,12 +339,6 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		checkArgument(isNotBlank(username), "Uninitialized or invalid username");
 		checkArgument(isNotBlank(password), "Uninitialized or invalid password");
 		final ResourceOwner resourceOwner = find(ownerId);
-		
-		// TODO
-		System.err.println("\n\n >> HERE : " + computeHash(password, resourceOwner.getUser().getSalt())
-				+ " <--> " + resourceOwner.getUser().getPassword() + "\n\n");
-		// TODO
-		
 		final boolean isValid = (resourceOwner != null && resourceOwner.getUser() != null 
 				&& username.equals(resourceOwner.getUser().getUsername())				
 				&& computeHash(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));

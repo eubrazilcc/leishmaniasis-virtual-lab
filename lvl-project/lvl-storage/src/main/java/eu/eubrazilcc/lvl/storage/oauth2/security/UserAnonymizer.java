@@ -53,9 +53,11 @@ public class UserAnonymizer implements Function<ResourceOwner, User> {
 			switch (level) {
 			case MEDIUM:
 				user.setPassword("***");
+				user.setSalt("***");
 				break;
 			case HARD:
 				user.setPassword("***");
+				user.setSalt("***");
 				user.setEmail("***");
 				break;
 			case NONE:
