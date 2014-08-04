@@ -24,6 +24,8 @@ package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.updatePassword;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,6 +37,7 @@ import java.util.List;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
+import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 
@@ -49,7 +52,8 @@ public class PendingUserCollectionTest {
 		System.out.println("PendingUserCollectionTest.test()");
 		try {
 			final Collection<String> scopes = newArrayList("scope1", "scope2");
-			// insert
+
+			// insert (no salt)
 			final PendingUser pendingUser = PendingUser.builder()
 					.id("username")
 					.expiresIn(1000l)
@@ -62,24 +66,36 @@ public class PendingUserCollectionTest {
 							.fullname("Fullname")
 							.scopes(scopes)
 							.build()).build();
-			PENDING_USER_DAO.insert(pendingUser);
-			
-			// find
+			WriteResult<PendingUser> result = PENDING_USER_DAO.insert(pendingUser);
+			assertThat("insert pending user result is not null", result, notNullValue());
+			assertThat("insert pending user result id is not null", result.getId(), notNullValue());
+			assertThat("insert pending user result id is not empty", isNotBlank(result.getId()), equalTo(true));
+			assertThat("insert pending user result element is not null", result.getElement(), notNullValue());
+			assertThat("insert pending user result user is not null", result.getElement().getUser(), notNullValue());
+			assertThat("insert pending user result hashed password", result.getElement().getUser().getPassword(), notNullValue());
+			assertThat("insert pending user result hashed password", isNotBlank(result.getElement().getUser().getPassword()), equalTo(true));			
+			assertThat("insert pending user result salt", result.getElement().getUser().getSalt(), notNullValue());
+			assertThat("insert pending user result salt", isNotBlank(result.getElement().getUser().getSalt()), equalTo(true));
+			assertThat("inserted pending user coincides with original (ignoring password & salt)", 
+					pendingUser.equalsToUnprotected(result.getElement()), equalTo(true));
+			final PendingUser hashed = result.getElement();
+
+			// find (no salt)
 			PendingUser pendingUser2 = PENDING_USER_DAO.find(pendingUser.getPendingUserId());
 			assertThat("pending user is not null", pendingUser2, notNullValue());
-			assertThat("pending user coincides with original", pendingUser2, equalTo(pendingUser));
+			assertThat("pending user coincides with original", pendingUser2, equalTo(hashed));
 			System.out.println(pendingUser2.toString());
-			
+
 			// update
-			pendingUser.getUser().setPassword("new_password");
-			PENDING_USER_DAO.update(pendingUser);
-			
+			updatePassword(hashed, "new_password");
+			PENDING_USER_DAO.update(hashed);
+
 			// find after update
 			pendingUser2 = PENDING_USER_DAO.find(pendingUser.getPendingUserId());
 			assertThat("pending user is not null", pendingUser2, notNullValue());
-			assertThat("pending user coincides with original", pendingUser2, equalTo(pendingUser));
+			assertThat("pending user coincides with original", pendingUser2, equalTo(hashed));
 			System.out.println(pendingUser2.toString());
-			
+
 			// check validity using pending user Id and username
 			boolean validity = PENDING_USER_DAO.isValid(pendingUser.getPendingUserId(), 
 					pendingUser.getUser().getUsername(), 
@@ -97,10 +113,22 @@ public class PendingUserCollectionTest {
 			// remove
 			PENDING_USER_DAO.delete(pendingUser.getPendingUserId());
 
+			// insert (with salt)
+			result = PENDING_USER_DAO.insert(hashed);
+			assertThat("insert pending user result (with salt) is not null", result, notNullValue());
+			assertThat("insert pending user result (with salt) id is not null", result.getId(), notNullValue());
+			assertThat("insert pending user result (with salt) id is not empty", isNotBlank(result.getId()), equalTo(true));
+
+			// find (with salt)
+			pendingUser2 = PENDING_USER_DAO.find(hashed.getPendingUserId());
+			assertThat("pending user (with salt) is not null", pendingUser2, notNullValue());
+			assertThat("pending user (with salt) coincides with original", pendingUser2, equalTo(hashed));
+			System.out.println(pendingUser2.toString());
+
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {
-				final PendingUser pendingUser3 = PendingUser.builder()
+				final PendingUser pendingUser4 = PendingUser.builder()
 						.id(Integer.toString(i))
 						.expiresIn(1000l)
 						.issuedAt(2000l)
@@ -112,8 +140,8 @@ public class PendingUserCollectionTest {
 								.fullname("Fullname")
 								.scopes(scopes)
 								.build()).build();								
-				ids.add(pendingUser3.getPendingUserId());
-				PENDING_USER_DAO.insert(pendingUser3);
+				ids.add(pendingUser4.getPendingUserId());
+				PENDING_USER_DAO.insert(pendingUser4);
 			}
 			final int size = 3;
 			int start = 0;

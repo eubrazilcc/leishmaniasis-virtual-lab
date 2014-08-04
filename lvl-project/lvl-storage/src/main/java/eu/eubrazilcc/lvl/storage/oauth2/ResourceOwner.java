@@ -65,6 +65,21 @@ public class ResourceOwner implements Serializable {
 				&& Objects.equal(user, other.user);
 	}
 
+	/**
+	 * Ignores password and salt fields when comparing two instances of this class. Use this method when comparing an instance of this class that contains
+	 * an unprotected password (password in plain text and no salt) with a protected one (hashed password with a valid salt).
+	 * @param other - the instance to be compared to.
+	 * @return {@code true} if all the attributes of both instances coincide in value with the sole exception of those considered part of the password. 
+	 *        Otherwise, {@code false}.
+	 */
+	public boolean equalsToUnprotected(final ResourceOwner other) {
+		if (other == null) {
+			return false;
+		}
+		return Objects.equal(ownerId, other.ownerId)
+				&& ((user == null && other.user == null) || (user.equalsToUnprotected(other.user)));
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hashCode(ownerId, user);
@@ -104,6 +119,22 @@ public class ResourceOwner implements Serializable {
 			return instance;
 		}
 
+	}
+
+	/**
+	 * Performs a deep copy of the input instance.
+	 * @param original - the original instance to be copied.
+	 * @return a deep copy of the input instance.
+	 */
+	public static final ResourceOwner copyOf(final ResourceOwner original) {
+		ResourceOwner copy = null;
+		if (original != null) {
+			return builder()
+					.id(original.ownerId)
+					.user(User.copyOf(original.user))
+					.build();
+		}
+		return copy;
 	}
 
 }

@@ -26,6 +26,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static eu.eubrazilcc.lvl.storage.oauth2.PendingUser.copyOf;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.computeHash;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.protectPassword;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -63,7 +66,9 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 
 /**
- * Pending user DAO.
+ * {@link PendingUser} DAO. This class detects any attempt to insert a new resource owner in the database with an unprotected password and 
+ * automatically creates a salt and hashes the password before inserting the element in the database. Any element an empty salt will be considered
+ * insecure and therefore the password will be protected. 
  * @author Erik Torres <ertorser@upv.es>
  */
 public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
@@ -90,13 +95,29 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
 	@Override
 	public WriteResult<PendingUser> insert(final PendingUser pendingUser) {
-		// remove transient fields from the element before saving it to the database
-		final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
-		final DBObject obj = map(store);
-		final String id = MONGODB_CONN.insert(obj, COLLECTION);
-		// restore transient fields
-		store.restore();
-		return new WriteResult.Builder<PendingUser>().id(id).build();
+		if (isNotBlank(pendingUser.getUser().getSalt())) {
+			// remove transient fields from the element before saving it to the database
+			final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
+			final DBObject obj = map(store);
+			final String id = MONGODB_CONN.insert(obj, COLLECTION);
+			// restore transient fields
+			store.restore();
+			return new WriteResult.Builder<PendingUser>().id(id).build();
+		} else {
+			// protect sensitive fields before storing the element in the database
+			final PendingUser copy = copyOf(pendingUser);
+			final String[] shadowed = protectPassword(copy.getUser().getPassword());			
+			copy.getUser().setSalt(shadowed[0]);
+			copy.getUser().setPassword(shadowed[1]);
+			// remove transient fields from the element before saving it to the database
+			final PendingUserTransientStore store = PendingUserTransientStore.start(copy);
+			final DBObject obj = map(store);
+			final String id = MONGODB_CONN.insert(obj, COLLECTION);
+			return new WriteResult.Builder<PendingUser>()
+					.id(id)
+					.element(copy)
+					.build();
+		}		
 	}
 
 	@Override
@@ -219,6 +240,11 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 			LOGGER.error("Failed to read pending user from DB object", e);
 		}
 		return entity;
+	}
+
+	public static void updatePassword(final PendingUser pendingUser, final String newPassword) {
+		final String shadowed = computeHash(newPassword, pendingUser.getUser().getSalt());
+		pendingUser.getUser().setPassword(shadowed);		
 	}
 
 	/**

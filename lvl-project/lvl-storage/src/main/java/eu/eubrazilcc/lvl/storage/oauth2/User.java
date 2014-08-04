@@ -51,7 +51,7 @@ public class User implements Serializable {
 
 	private Link link;
 	private String pictureUrl;
-	
+
 	private String username;
 	private String password;
 	private String email;
@@ -120,10 +120,17 @@ public class User implements Serializable {
 		final User other = User.class.cast(obj);
 		return Objects.equal(link, other.link)
 				&& Objects.equal(pictureUrl, other.pictureUrl)
-				&& equalsIgnoreVolatile(other);
+				&& equalsIgnoringVolatile(other);
 	}
 
-	public boolean equalsIgnoreVolatile(final User other) {
+	/**
+	 * Ignores volatile fields when comparing two instances of this class. A volatile field is a class attribute with its value assigned from local variables.
+	 * For example, a field that contains the URI of the service.
+	 * @param other - the instance to be compared to.
+	 * @return {@code true} if all the attributes of both instances coincide in value with the sole exception of those considered volatile. 
+	 *        Otherwise, {@code false}.
+	 */
+	public boolean equalsIgnoringVolatile(final User other) {
 		if (other == null) {
 			return false;
 		}
@@ -135,11 +142,35 @@ public class User implements Serializable {
 				&& Objects.equal(salt, other.salt);
 	}
 
+	/**
+	 * Compare two instances of this class using identity fields.
+	 * @param other - the instance to be compared to.
+	 * @return {@code true} if all the identity attributes of both instances coincide in value. Otherwise, {@code false}.
+	 */
 	public boolean equalsToAnonymous(final User other) {
 		if (other == null) {
 			return false;
 		}
 		return Objects.equal(username, other.username)			
+				&& Objects.equal(fullname, other.fullname)
+				&& Objects.equal(scopes, other.scopes);
+	}
+	
+	/**
+	 * Ignores password and salt fields when comparing two instances of this class. Use this method when comparing an instance of this class that contains
+	 * an unprotected password (password in plain text and no salt) with a protected one (hashed password with a valid salt).
+	 * @param other - the instance to be compared to.
+	 * @return {@code true} if all the attributes of both instances coincide in value with the sole exception of those considered part of the password. 
+	 *        Otherwise, {@code false}.
+	 */
+	public boolean equalsToUnprotected(final User other) {
+		if (other == null) {
+			return false;
+		}
+		return Objects.equal(link, other.link)
+				&& Objects.equal(pictureUrl, other.pictureUrl)
+				&& Objects.equal(username, other.username)
+				&& Objects.equal(email, other.email)				
 				&& Objects.equal(fullname, other.fullname)
 				&& Objects.equal(scopes, other.scopes);
 	}
@@ -181,7 +212,7 @@ public class User implements Serializable {
 			instance.setLink(link);
 			return this;
 		}
-		
+
 		public Builder pictureUrl(final String pictureUrl) {
 			instance.setPictureUrl(pictureUrl);
 			return this;
@@ -222,7 +253,7 @@ public class User implements Serializable {
 			instance.getScopes().addAll(scopes);
 			return this;
 		}
-		
+
 		public Builder salt(final String salt) {
 			checkArgument(isNotBlank(salt), "Uninitialized or invalid salt");
 			instance.setSalt(salt);
@@ -233,6 +264,34 @@ public class User implements Serializable {
 			return instance;
 		}
 
+	}
+
+	/**
+	 * Performs a deep copy of the input instance.
+	 * @param original - the original instance to be copied.
+	 * @return a deep copy of the input instance.
+	 */
+	public static final User copyOf(final User original) {
+		User copy = null;
+		if (original != null) {
+			final Builder builder = builder()
+					.pictureUrl(original.pictureUrl)
+					.username(original.username)
+					.password(original.password)
+					.email(original.email)
+					.fullname(original.fullname);
+			if (original.getLink() != null) {
+				builder.link(Link.fromLink(original.link).build());
+			}
+			if (original.getScopes() != null) {
+				builder.scopes(original.scopes);
+			}
+			if (isNotBlank(original.salt)) {
+				builder.salt(original.salt);
+			}
+			return builder.build();
+		}
+		return copy;
 	}
 
 }

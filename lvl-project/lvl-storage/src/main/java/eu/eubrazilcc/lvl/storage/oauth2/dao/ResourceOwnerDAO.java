@@ -71,7 +71,9 @@ import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 
 /**
- * Resource owner DAO.
+ * {@link ResourceOwner} DAO. This class detects any attempt to insert a new resource owner in the database with an unprotected password and 
+ * automatically creates a salt and hashes the password before inserting the element in the database. Any element an empty salt will be considered
+ * insecure and therefore the password will be protected. 
  * @author Erik Torres <ertorser@upv.es>
  */
 public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {

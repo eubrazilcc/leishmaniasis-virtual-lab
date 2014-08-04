@@ -134,16 +134,11 @@ public final class SecretProvider {
 	 *        of the protected key.
 	 */
 	public static String[] protectPassword(final String password) {
-		try {
-			// compute a long random salt to defend against dictionary attacks
-			final String salt = new String(encodeBase64(generateSalt(DEFAULT_STRENGTH), false, false));
-			// prepend the salt to the password and hash the mix with a standard cryptographic function
-			final byte[] digest = digest(new String[]{ salt.concat(password) }, null);
-			// encode the protected password with Base64 before returning it to the caller
-			return new String[]{ salt, new String(encodeBase64(digest, false, false)) };
-		} catch (IOException e) {
-			throw new IllegalStateException("Failed to protect the password", e);
-		}
+		// compute a long random salt to defend against dictionary attacks
+		final String salt = new String(encodeBase64(generateSalt(DEFAULT_STRENGTH), false, false));
+		// shadow the password and encode it with Base64 before returning it to the caller
+		final String shadow = computeHash(password, salt);			
+		return new String[]{ salt, shadow };
 	}
 
 	/**
@@ -156,14 +151,26 @@ public final class SecretProvider {
 	 * @return {@code true} if the password matches, otherwise {@code false}.
 	 */
 	public static boolean validatePassword(final String password, final String salt, final String hash) {
+		// compare the hash of the given password with the hash from the caller
+		final String shadow = computeHash(password, salt);
+		return shadow.equals(hash);
+	}
+
+	/**
+	 * Compute a hash from the specified password and the specified salt using a standard cryptographic function (SHA-256), and 
+	 * prepending the salt to the password to defend it against dictionary attacks.
+	 * @param password - password to be validated
+	 * @param salt - salt used to protect the hash
+	 * @return a hash computed from the specified password and the specified salt.
+	 */
+	public static String computeHash(final String password, final String salt) {
 		try {
 			// prepend the salt to the password and hash the mix with a standard cryptographic function
 			final byte[] digest = digest(new String[]{ salt.concat(password) }, null);
-			// compare the hash of the given password with the hash from the caller
-			final String computedHash = new String(encodeBase64(digest, false, false));
-			return computedHash.equals(hash);
+			// encode the hashed password with Base64 before returning it to the caller
+			return new String(encodeBase64(digest, false, false));
 		} catch (IOException e) {
-			throw new IllegalStateException("Failed to validate the password", e);
+			throw new IllegalStateException("Failed to compute the hash", e);
 		}
 	}
 

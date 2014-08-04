@@ -79,7 +79,7 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner picture URL is not null", resourceOwner2.getUser().getPictureUrl(), notNullValue());
 			assertThat("resource owner picture URL is not empty", isNotBlank(resourceOwner2.getUser().getPictureUrl()));
 			assertThat("resource owner with volatile values coincides with original", 
-					resourceOwner2.getUser().equalsIgnoreVolatile(resourceOwner.getUser()));
+					resourceOwner2.getUser().equalsIgnoringVolatile(resourceOwner.getUser()));
 			System.out.println(resourceOwner2.toString());
 
 			// update

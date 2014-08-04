@@ -89,6 +89,24 @@ public class PendingUser implements Serializable {
 				&& Objects.equal(user, other.user);
 	}
 
+	/**
+	 * Ignores password and salt fields when comparing two instances of this class. Use this method when comparing an instance of this class that contains
+	 * an unprotected password (password in plain text and no salt) with a protected one (hashed password with a valid salt).
+	 * @param other - the instance to be compared to.
+	 * @return {@code true} if all the attributes of both instances coincide in value with the sole exception of those considered part of the password. 
+	 *        Otherwise, {@code false}.
+	 */
+	public boolean equalsToUnprotected(final PendingUser other) {
+		if (other == null) {
+			return false;
+		}
+		return Objects.equal(pendingUserId, other.pendingUserId)
+				&& Objects.equal(expiresIn, other.expiresIn)
+				&& Objects.equal(issuedAt, other.issuedAt)
+				&& Objects.equal(activationCode, other.activationCode)
+				&& ((user == null && other.user == null) || (user.equalsToUnprotected(other.user)));
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hashCode(pendingUserId, expiresIn, issuedAt, activationCode, user);
@@ -146,8 +164,27 @@ public class PendingUser implements Serializable {
 
 		public PendingUser build() {
 			return instance;
-		}
+		}		
 
+	}
+
+	/**
+	 * Performs a deep copy of the input instance.
+	 * @param original - the original instance to be copied.
+	 * @return a deep copy of the input instance.
+	 */
+	public static final PendingUser copyOf(final PendingUser original) {
+		PendingUser copy = null;
+		if (original != null) {
+			return builder()
+					.id(original.pendingUserId)
+					.expiresIn(original.expiresIn)
+					.issuedAt(original.issuedAt)
+					.activationCode(original.activationCode)
+					.user(User.copyOf(original.user))
+					.build();
+		}
+		return copy;
 	}
 
 }
