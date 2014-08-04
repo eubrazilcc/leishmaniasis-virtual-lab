@@ -108,43 +108,43 @@ public class AccessToken implements Serializable {
 
 	public static class Builder {
 
-		private final AccessToken accessToken = new AccessToken();
+		private final AccessToken instance = new AccessToken();
 
 		public Builder() {
-			accessToken.setScopes(new HashSet<String>());
+			instance.setScopes(new HashSet<String>());
 		}
 
 		public Builder token(final String token) {
 			checkArgument(isNotBlank(token), "Uninitialized or invalid token");
-			accessToken.setToken(token);
+			instance.setToken(token);
 			return this;
 		}
 
 		public Builder expiresIn(final long expiresIn) {
-			accessToken.setExpiresIn(expiresIn);
+			instance.setExpiresIn(expiresIn);
 			return this;
 		}
 
 		public Builder issuedAt(final long issuedAt) {
 			checkArgument(issuedAt >= 0l, "Invalid issued at");
-			accessToken.setIssuedAt(issuedAt);
+			instance.setIssuedAt(issuedAt);
 			return this;
 		}
 		
 		public Builder scope(final String scope) {
 			checkArgument(isNotBlank(scope), "Uninitialized or invalid scope");
-			accessToken.getScopes().add(scope);
+			instance.getScopes().add(scope);
 			return this;
 		}
 		
 		public Builder scope(final Collection<String> scopes) {
 			checkArgument(scopes != null && !isEmpty(scopes), "Uninitialized scopes");
-			accessToken.getScopes().addAll(scopes);
+			instance.getScopes().addAll(scopes);
 			return this;
 		}
 
 		public AccessToken build() {
-			return accessToken;
+			return instance;
 		}
 
 	}

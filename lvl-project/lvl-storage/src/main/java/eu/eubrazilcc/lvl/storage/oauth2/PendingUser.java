@@ -113,39 +113,39 @@ public class PendingUser implements Serializable {
 
 	public static class Builder {
 
-		private final PendingUser pendingUser = new PendingUser();
+		private final PendingUser instance = new PendingUser();
 
 		public Builder id(final String pendingUserId) {
 			checkArgument(isNotBlank(pendingUserId), "Uninitialized or invalid pending user Id");
-			pendingUser.setPendingUserId(pendingUserId);
+			instance.setPendingUserId(pendingUserId);
 			return this;
 		}
 
 		public Builder expiresIn(final long expiresIn) {
-			pendingUser.setExpiresIn(expiresIn);
+			instance.setExpiresIn(expiresIn);
 			return this;
 		}
 
 		public Builder issuedAt(final long issuedAt) {
 			checkArgument(issuedAt >= 0l, "Invalid issued at");
-			pendingUser.setIssuedAt(issuedAt);
+			instance.setIssuedAt(issuedAt);
 			return this;
 		}
 
 		public Builder activationCode(final String activationCode) {
 			checkArgument(isNotBlank(activationCode), "Uninitialized or invalid activation code");
-			pendingUser.setActivationCode(activationCode);
+			instance.setActivationCode(activationCode);
 			return this;
 		}
 
 		public Builder user(final User user) {
 			checkArgument(user != null, "Uninitialized user");
-			pendingUser.setUser(user);
+			instance.setUser(user);
 			return this;
 		}
 
 		public PendingUser build() {
-			return pendingUser;
+			return instance;
 		}
 
 	}

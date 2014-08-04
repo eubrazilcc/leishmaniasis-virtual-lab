@@ -95,27 +95,27 @@ public class AuthCode implements Serializable {
 
 	public static class Builder {
 
-		private final AuthCode accessCode = new AuthCode();
+		private final AuthCode instance = new AuthCode();
 
 		public Builder code(final String code) {
 			checkArgument(isNotBlank(code), "Uninitialized or invalid code");
-			accessCode.setCode(code);
+			instance.setCode(code);
 			return this;
 		}
 
 		public Builder expiresIn(final long expiresIn) {
-			accessCode.setExpiresIn(expiresIn);
+			instance.setExpiresIn(expiresIn);
 			return this;
 		}
 
 		public Builder issuedAt(final long issuedAt) {
 			checkArgument(issuedAt >= 0l, "Invalid issued at");
-			accessCode.setIssuedAt(issuedAt);
+			instance.setIssuedAt(issuedAt);
 			return this;
 		}
 
 		public AuthCode build() {
-			return accessCode;
+			return instance;
 		}
 
 	}

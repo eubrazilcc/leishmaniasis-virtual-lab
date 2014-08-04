@@ -44,15 +44,17 @@ public interface BaseDAO<K, E> {
 	/**
 	 * Inserts a new element in the database.
 	 * @param e - element to be inserted in the database
-	 * @return the id assigned to the element in the database
+	 * @return the id assigned to the element in the database and when the original element is modified, 
+	 *        a copy of the element inserted in the database. When the element is stored in the database 
+	 *        unmodified, the method {@link WriteResult#getElement()} can return {@code null}.
 	 */
-	String insert(E e);
+	WriteResult<E> insert(E e);
 	
 	/**
 	 * Updates an existing element in the database.
 	 * @param e - element to be updated in the database
 	 */
-	void update(E e);
+	@Nullable E update(E e);
 	
 	/**
 	 * Removes an element from the database.

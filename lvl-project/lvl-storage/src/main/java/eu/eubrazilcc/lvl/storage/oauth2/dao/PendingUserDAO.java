@@ -57,6 +57,7 @@ import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
+import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
@@ -88,24 +89,25 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	}
 
 	@Override
-	public String insert(final PendingUser pendingUser) {
+	public WriteResult<PendingUser> insert(final PendingUser pendingUser) {
 		// remove transient fields from the element before saving it to the database
 		final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return id;
+		return new WriteResult.Builder<PendingUser>().id(id).build();
 	}
 
 	@Override
-	public void update(final PendingUser pendingUser) {
+	public PendingUser update(final PendingUser pendingUser) {
 		// remove transient fields from the element before saving it to the database
 		final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(pendingUser.getPendingUserId()), COLLECTION);
 		// restore transient fields
 		store.restore();
+		return null;
 	}
 
 	@Override

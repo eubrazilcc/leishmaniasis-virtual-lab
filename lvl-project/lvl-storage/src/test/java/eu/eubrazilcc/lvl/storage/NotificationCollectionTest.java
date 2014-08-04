@@ -56,7 +56,7 @@ public class NotificationCollectionTest {
 			final Notification notification = Notification.builder()
 					.message("This is an example")
 					.build();
-			final String id = NOTIFICATION_DAO.insert(notification);
+			final String id = NOTIFICATION_DAO.insert(notification).getId();
 			assertThat("notification id is not null", id, notNullValue());
 			assertThat("notification id is not empty", isNotBlank(id));
 			notification.setId(id);
@@ -86,7 +86,7 @@ public class NotificationCollectionTest {
 			for (int i = 0; i < 11; i++) {
 				final Notification notification3 = Notification.builder()
 						.message(Integer.toString(i)).build();
-				ids.add(NOTIFICATION_DAO.insert(notification3));
+				ids.add(NOTIFICATION_DAO.insert(notification3).getId());
 			}
 			final int size = 3;
 			int start = 0;

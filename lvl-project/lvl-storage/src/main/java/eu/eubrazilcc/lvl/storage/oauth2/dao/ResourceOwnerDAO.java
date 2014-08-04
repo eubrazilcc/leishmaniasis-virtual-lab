@@ -63,6 +63,7 @@ import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
+import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.gravatar.Gravatar;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
@@ -127,24 +128,25 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	@Override
-	public String insert(final ResourceOwner resourceOwner) {
+	public WriteResult<ResourceOwner> insert(final ResourceOwner resourceOwner) {
 		// remove transient fields from the element before saving it to the database
 		final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return id;
+		return new WriteResult.Builder<ResourceOwner>().id(id).build();
 	}
 
 	@Override
-	public void update(final ResourceOwner resourceOwner) {
+	public ResourceOwner update(final ResourceOwner resourceOwner) {
 		// remove transient fields from the element before saving it to the database
 		final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(resourceOwner.getOwnerId()), COLLECTION);
 		// restore transient fields
 		store.restore();
+		return null;
 	}
 
 	@Override

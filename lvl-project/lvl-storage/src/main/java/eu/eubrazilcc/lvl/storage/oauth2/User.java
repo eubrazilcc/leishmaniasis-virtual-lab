@@ -105,6 +105,12 @@ public class User implements Serializable {
 	public void setScopes(final Set<String> scopes) {
 		this.scopes = scopes;
 	}
+	public String getSalt() {
+		return salt;
+	}
+	public void setSalt(final String salt) {
+		this.salt = salt;
+	}
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -125,7 +131,8 @@ public class User implements Serializable {
 				&& Objects.equal(password, other.password)
 				&& Objects.equal(email, other.email)				
 				&& Objects.equal(fullname, other.fullname)
-				&& Objects.equal(scopes, other.scopes);
+				&& Objects.equal(scopes, other.scopes)
+				&& Objects.equal(salt, other.salt);
 	}
 
 	public boolean equalsToAnonymous(final User other) {
@@ -139,7 +146,7 @@ public class User implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(link, pictureUrl, username, password, email, fullname, scopes);
+		return Objects.hashCode(link, pictureUrl, username, password, email, fullname, scopes, salt);
 	}
 
 	@Override
@@ -152,6 +159,7 @@ public class User implements Serializable {
 				.add("email", email)				
 				.add("fullname", fullname)
 				.add("scopes", scopes)
+				.add("salt", salt)
 				.toString();
 	}
 
@@ -163,60 +171,66 @@ public class User implements Serializable {
 
 	public static class Builder {
 
-		private final User user = new User();
+		private final User instance = new User();
 
 		public Builder() {			
-			user.setScopes(new HashSet<String>());
+			instance.setScopes(new HashSet<String>());
 		}
 
 		public Builder link(final Link link) {
-			user.setLink(link);
+			instance.setLink(link);
 			return this;
 		}
 		
 		public Builder pictureUrl(final String pictureUrl) {
-			user.setPictureUrl(pictureUrl);
+			instance.setPictureUrl(pictureUrl);
 			return this;
 		}
 
 		public Builder username(final String username) {
 			checkArgument(isNotBlank(username), "Uninitialized or invalid username");
-			user.setUsername(username);
+			instance.setUsername(username);
 			return this;
 		}
 
 		public Builder password(final String password) {
 			checkArgument(isNotBlank(password), "Uninitialized or invalid password");
-			user.setPassword(password);
+			instance.setPassword(password);
 			return this;
 		}
 
 		public Builder email(final String email) {
 			checkArgument(isNotBlank(email), "Uninitialized or invalid email");
-			user.setEmail(email);
+			instance.setEmail(email);
 			return this;
 		}
 
 		public Builder fullname(final String fullname) {
 			checkArgument(isNotBlank(fullname), "Uninitialized or invalid fullname");
-			user.setFullname(fullname);
+			instance.setFullname(fullname);
 			return this;
 		}
 
 		public Builder scope(final String scope) {
 			checkArgument(isNotBlank(scope), "Uninitialized or invalid scope");
-			user.getScopes().add(scope);
+			instance.getScopes().add(scope);
 			return this;
 		}
 
 		public Builder scopes(final Collection<String> scopes) {
 			checkArgument(scopes != null && !isEmpty(scopes), "Uninitialized scopes");
-			user.getScopes().addAll(scopes);
+			instance.getScopes().addAll(scopes);
+			return this;
+		}
+		
+		public Builder salt(final String salt) {
+			checkArgument(isNotBlank(salt), "Uninitialized or invalid salt");
+			instance.setSalt(salt);
 			return this;
 		}
 
 		public User build() {
-			return user;
+			return instance;
 		}
 
 	}

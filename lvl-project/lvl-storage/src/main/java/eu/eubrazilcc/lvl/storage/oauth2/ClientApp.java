@@ -152,18 +152,18 @@ public class ClientApp implements Serializable {
 
 	public static class Builder {
 
-		private final ClientApp clientApp = new ClientApp();
+		private final ClientApp instance = new ClientApp();
 
 		public Builder name(final String name) {
 			checkArgument(isNotBlank(name), "Uninitialized or invalid name");
-			clientApp.setName(name);
+			instance.setName(name);
 			return this;
 		}
 
 		public Builder url(final String url) {
 			checkArgument(isNotBlank(url), "Uninitialized or invalid URL");
 			try {				
-				clientApp.setUrl(new URI(url));
+				instance.setUrl(new URI(url));
 			} catch (URISyntaxException e) {
 				throw new IllegalArgumentException("Invalid URL", e);
 			}
@@ -172,14 +172,14 @@ public class ClientApp implements Serializable {
 
 		public Builder description(final String description) {
 			checkArgument(isNotBlank(description), "Uninitialized or invalid description");
-			clientApp.setDescription(description);
+			instance.setDescription(description);
 			return this;
 		}
 
 		public Builder icon(final String icon) {
 			checkArgument(isNotBlank(icon), "Uninitialized or invalid icon");
 			try {
-				clientApp.setIcon(new URI(icon));
+				instance.setIcon(new URI(icon));
 			} catch (URISyntaxException e) {
 				throw new IllegalArgumentException("Invalid icon URL", e);
 			}
@@ -189,7 +189,7 @@ public class ClientApp implements Serializable {
 		public Builder redirectURL(final String redirectURL) {
 			checkArgument(isNotBlank(redirectURL), "Uninitialized or invalid redirect URL");
 			try {
-				clientApp.setRedirectURL(new URI(redirectURL));
+				instance.setRedirectURL(new URI(redirectURL));
 			} catch (URISyntaxException e) {
 				throw new IllegalArgumentException("Invalid icon redirect URL", e);
 			}
@@ -198,29 +198,29 @@ public class ClientApp implements Serializable {
 
 		public Builder clientId(final String clientId) {
 			checkArgument(isNotBlank(clientId), "Uninitialized or invalid client Id");
-			clientApp.setClientId(clientId);
+			instance.setClientId(clientId);
 			return this;
 		}
 
 		public Builder clientSecret(final String clientSecret) {
 			checkArgument(isNotBlank(clientSecret), "Uninitialized or invalid client secret");
-			clientApp.setClientSecret(clientSecret);
+			instance.setClientSecret(clientSecret);
 			return this;
 		}
 
 		public Builder expiresIn(final long expiresIn) {
-			clientApp.setExpiresIn(expiresIn);
+			instance.setExpiresIn(expiresIn);
 			return this;
 		}
 
 		public Builder issuedAt(final long issuedAt) {
 			checkArgument(issuedAt >= 0l, "Invalid issued at");
-			clientApp.setIssuedAt(issuedAt);
+			instance.setIssuedAt(issuedAt);
 			return this;
 		}
 
 		public ClientApp build() {
-			return clientApp;
+			return instance;
 		}
 
 	}

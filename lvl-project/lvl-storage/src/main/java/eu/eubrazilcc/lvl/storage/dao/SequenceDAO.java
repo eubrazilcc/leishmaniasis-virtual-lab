@@ -94,18 +94,18 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	}
 
 	@Override
-	public String insert(final Sequence sequence) {
+	public WriteResult<Sequence> insert(final Sequence sequence) {
 		// remove transient fields from the element before saving it to the database
 		final SequenceTransientStore store = SequenceTransientStore.start(sequence);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return id;
+		return new WriteResult.Builder<Sequence>().id(id).build();
 	}
 
 	@Override
-	public void update(final Sequence sequence) {
+	public Sequence update(final Sequence sequence) {
 		// remove transient fields from the element before saving it to the database
 		final SequenceTransientStore store = SequenceTransientStore.start(sequence);
 		final DBObject obj = map(store);
@@ -115,6 +115,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 				.build()), COLLECTION);
 		// restore transient fields
 		store.restore();
+		return null;
 	}
 
 	@Override

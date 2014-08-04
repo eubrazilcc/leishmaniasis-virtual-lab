@@ -54,30 +54,32 @@ public class Users extends Paginable {
 				.toString();
 	}
 
+	/* Fluent API */
+	
 	public static UsersBuilder start() {
 		return new UsersBuilder();
 	}
 
 	public static class UsersBuilder {
 
-		private final Users users;
+		private final Users instance;
 
 		public UsersBuilder() {
-			users = new Users();
+			instance = new Users();
 		}
 
 		public UsersBuilder paginable(final Paginable paginable) {
-			users.push(paginable);
+			instance.push(paginable);
 			return this;
 		}
 
 		public UsersBuilder users(final List<User> userList) {
-			users.setUsers(userList);
+			instance.setUsers(userList);
 			return this;			
 		}
 
 		public Users build() {
-			return users;
+			return instance;
 		}
 
 	}

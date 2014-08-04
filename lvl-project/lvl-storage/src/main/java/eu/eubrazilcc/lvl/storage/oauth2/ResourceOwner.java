@@ -86,22 +86,22 @@ public class ResourceOwner implements Serializable {
 
 	public static class Builder {
 
-		private final ResourceOwner resourceOwner = new ResourceOwner();
+		private final ResourceOwner instance = new ResourceOwner();
 
 		public Builder id(final String ownerId) {
 			checkArgument(isNotBlank(ownerId), "Uninitialized or invalid owner Id");
-			resourceOwner.setOwnerId(ownerId);
+			instance.setOwnerId(ownerId);
 			return this;
 		}
 
 		public Builder user(final User user) {
 			checkArgument(user != null, "Uninitialized user");
-			resourceOwner.setUser(user);
+			instance.setUser(user);
 			return this;
 		}
 
 		public ResourceOwner build() {
-			return resourceOwner;
+			return instance;
 		}
 
 	}

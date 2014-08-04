@@ -53,6 +53,7 @@ import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
+import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.ClientApp;
@@ -94,24 +95,25 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	}
 
 	@Override
-	public String insert(final ClientApp clientApp) {
+	public WriteResult<ClientApp> insert(final ClientApp clientApp) {
 		// remove transient fields from the element before saving it to the database
 		final ClientAppTransientStore store = ClientAppTransientStore.start(clientApp);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return id;
+		return new WriteResult.Builder<ClientApp>().id(id).build();
 	}
 
 	@Override
-	public void update(final ClientApp clientApp) {
+	public ClientApp update(final ClientApp clientApp) {
 		// remove transient fields from the element before saving it to the database
 		final ClientAppTransientStore store = ClientAppTransientStore.start(clientApp);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(clientApp.getClientId()), COLLECTION);
 		// restore transient fields
 		store.restore();
+		return null;
 	}
 
 	@Override

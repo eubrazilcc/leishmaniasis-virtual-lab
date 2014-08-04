@@ -52,6 +52,7 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
+import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
@@ -75,24 +76,25 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	}
 
 	@Override
-	public String insert(final AccessToken accessToken) {
+	public WriteResult<AccessToken> insert(final AccessToken accessToken) {
 		// remove transient fields from the element before saving it to the database
 		final AccessTokenTransientStore store = AccessTokenTransientStore.start(accessToken);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return id;
+		return new WriteResult.Builder<AccessToken>().id(id).build();
 	}
 
 	@Override
-	public void update(final AccessToken accessToken) {
+	public AccessToken update(final AccessToken accessToken) {
 		// remove transient fields from the element before saving it to the database
 		final AccessTokenTransientStore store = AccessTokenTransientStore.start(accessToken);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(accessToken.getToken()), COLLECTION);
 		// restore transient fields
 		store.restore();
+		return null;
 	}
 
 	@Override

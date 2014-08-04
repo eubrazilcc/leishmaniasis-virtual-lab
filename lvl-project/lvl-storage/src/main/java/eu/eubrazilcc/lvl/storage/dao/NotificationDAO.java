@@ -76,24 +76,25 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	}
 
 	@Override
-	public String insert(final Notification notification) {
+	public WriteResult<Notification> insert(final Notification notification) {
 		// remove transient fields from the element before saving it to the database
 		final NotificationTransientStore store = NotificationTransientStore.start(notification);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return id;
+		return new WriteResult.Builder<Notification>().id(id).build();
 	}
 
 	@Override
-	public void update(final Notification notification) {
+	public Notification update(final Notification notification) {
 		// remove transient fields from the element before saving it to the database
 		final NotificationTransientStore store = NotificationTransientStore.start(notification);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(store.getId()), COLLECTION);
 		// restore transient fields
 		store.restore();
+		return null;
 	}
 
 	@Override

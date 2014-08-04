@@ -201,60 +201,60 @@ public class Sequence {
 
 	public static class Builder {
 
-		private final Sequence sequence = new Sequence();
+		private final Sequence instance = new Sequence();
 
 		public Builder link(final Link link) {
-			sequence.setLink(link);
+			instance.setLink(link);
 			return this;
 		}
 
 		public Builder dataSource(final String dataSource) {
-			sequence.setDataSource(dataSource);
+			instance.setDataSource(dataSource);
 			return this;
 		}
 
 		public Builder definition(final String definition) {
-			sequence.setDefinition(definition);
+			instance.setDefinition(definition);
 			return this;
 		}
 
 		public Builder accession(final String accession) {
-			sequence.setAccession(accession);
+			instance.setAccession(accession);
 			return this;
 		}	
 
 		public Builder version(final String version) {
-			sequence.setVersion(version);
+			instance.setVersion(version);
 			return this;
 		}
 		
 		public Builder gi(final int gi) {
-			sequence.setGi(gi);
+			instance.setGi(gi);
 			return this;
 		}
 
 		public Builder organism(final String organism) {
-			sequence.setOrganism(organism);
+			instance.setOrganism(organism);
 			return this;
 		}
 
 		public Builder countryFeature(final String countryFeature) {
-			sequence.setCountryFeature(countryFeature);
+			instance.setCountryFeature(countryFeature);
 			return this;
 		}
 
 		public Builder location(final Point location) {
-			sequence.setLocation(location);
+			instance.setLocation(location);
 			return this;
 		}
 
 		public Builder locale(final Locale locale) {
-			sequence.setLocale(locale);
+			instance.setLocale(locale);
 			return this;
 		}
 
 		public Sequence build() {
-			return sequence;
+			return instance;
 		}
 
 	}
