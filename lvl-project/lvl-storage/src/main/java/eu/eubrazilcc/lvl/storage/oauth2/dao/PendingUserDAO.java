@@ -117,7 +117,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 					.id(id)
 					.element(copy)
 					.build();
-		}		
+		}
 	}
 
 	@Override

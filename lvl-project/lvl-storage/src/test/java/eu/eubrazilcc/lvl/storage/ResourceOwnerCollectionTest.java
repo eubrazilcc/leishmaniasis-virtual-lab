@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.updatePassword;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -37,6 +38,7 @@ import java.util.List;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
+import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
@@ -53,7 +55,7 @@ public class ResourceOwnerCollectionTest {
 		try {
 			final Collection<String> scopes = newArrayList("scope1", "scope2");
 
-			// insert
+			// insert (no salt)
 			final ResourceOwner resourceOwner = ResourceOwner.builder()
 					.id("username")
 					.user(User.builder()
@@ -63,15 +65,27 @@ public class ResourceOwnerCollectionTest {
 							.fullname("Fullname")
 							.scopes(scopes)
 							.build()).build();
-			RESOURCE_OWNER_DAO.insert(resourceOwner);
+			WriteResult<ResourceOwner> result = RESOURCE_OWNER_DAO.insert(resourceOwner);
+			assertThat("insert resource owner result is not null", result, notNullValue());
+			assertThat("insert resource owner result id is not null", result.getId(), notNullValue());
+			assertThat("insert resource owner result id is not empty", isNotBlank(result.getId()), equalTo(true));
+			assertThat("insert resource owner result element is not null", result.getElement(), notNullValue());
+			assertThat("insert resource owner result user is not null", result.getElement().getUser(), notNullValue());
+			assertThat("insert resource owner result hashed password", result.getElement().getUser().getPassword(), notNullValue());
+			assertThat("insert resource owner result hashed password", isNotBlank(result.getElement().getUser().getPassword()), equalTo(true));			
+			assertThat("insert resource owner result salt", result.getElement().getUser().getSalt(), notNullValue());
+			assertThat("insert resource owner result salt", isNotBlank(result.getElement().getUser().getSalt()), equalTo(true));
+			assertThat("inserted resource owner coincides with original (ignoring password & salt)", 
+					resourceOwner.equalsToUnprotected(result.getElement()), equalTo(true));
+			final ResourceOwner hashed = result.getElement();			
 
-			// find
+			// find (no salt)
 			ResourceOwner resourceOwner2 = RESOURCE_OWNER_DAO.find(resourceOwner.getOwnerId());
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
-			assertThat("resource owner coincides with original", resourceOwner2, equalTo(resourceOwner));
+			assertThat("resource owner coincides with original", resourceOwner2, equalTo(hashed));
 			System.out.println(resourceOwner2.toString());
 
-			// find with volatile values
+			// find (no salt) with volatile values
 			resourceOwner2 = RESOURCE_OWNER_DAO.baseUri(new URI("http://localhost/"))
 					.useGravatar(true).find(resourceOwner.getOwnerId());
 			assertThat("resource owner with volatile values is not null", resourceOwner2, notNullValue());
@@ -79,31 +93,32 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner picture URL is not null", resourceOwner2.getUser().getPictureUrl(), notNullValue());
 			assertThat("resource owner picture URL is not empty", isNotBlank(resourceOwner2.getUser().getPictureUrl()));
 			assertThat("resource owner with volatile values coincides with original", 
-					resourceOwner2.getUser().equalsIgnoringVolatile(resourceOwner.getUser()));
+					resourceOwner2.getUser().equalsIgnoringVolatile(hashed.getUser()));
 			System.out.println(resourceOwner2.toString());
 
 			// update
-			resourceOwner.getUser().setPassword("new_password");
-			RESOURCE_OWNER_DAO.update(resourceOwner);
+			final String plainPassword = "new_password";
+			updatePassword(hashed, plainPassword);
+			RESOURCE_OWNER_DAO.update(hashed);
 
 			// find after update
 			resourceOwner2 = RESOURCE_OWNER_DAO.reset().find(resourceOwner.getOwnerId());
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
-			assertThat("resource owner coincides with original", resourceOwner2, equalTo(resourceOwner));
+			assertThat("resource owner coincides with original", resourceOwner2, equalTo(hashed));
 			System.out.println(resourceOwner2.toString());
 
 			// check validity using owner Id and username
-			boolean validity = RESOURCE_OWNER_DAO.isValid(resourceOwner.getOwnerId(), 
-					resourceOwner.getUser().getUsername(), 
-					resourceOwner.getUser().getPassword(), 
+			boolean validity = RESOURCE_OWNER_DAO.isValid(hashed.getOwnerId(), 
+					hashed.getUser().getUsername(), 
+					plainPassword, 
 					false, 
 					null);
 			assertThat("resource owner is valid (using owner Id & username)", validity);
 
 			// check validity using email address
 			validity = RESOURCE_OWNER_DAO.isValid(null, 
-					resourceOwner.getUser().getEmail(), 
-					resourceOwner.getUser().getPassword(), 
+					hashed.getUser().getEmail(), 
+					plainPassword, 
 					true, 
 					null);
 			assertThat("resource owner is valid (using email)", validity);			
@@ -124,6 +139,18 @@ public class ResourceOwnerCollectionTest {
 
 			// remove
 			RESOURCE_OWNER_DAO.delete(resourceOwner.getOwnerId());
+
+			// insert (with salt)
+			result = RESOURCE_OWNER_DAO.insert(hashed);
+			assertThat("insert resource owner result (with salt) is not null", result, notNullValue());
+			assertThat("insert resource owner result (with salt) id is not null", result.getId(), notNullValue());
+			assertThat("insert resource owner result (with salt) id is not empty", isNotBlank(result.getId()), equalTo(true));
+
+			// find (with salt)
+			resourceOwner2 = RESOURCE_OWNER_DAO.find(hashed.getOwnerId());
+			assertThat("resource owner (with salt) is not null", resourceOwner2, notNullValue());
+			assertThat("resource owner (with salt) coincides with original", resourceOwner2, equalTo(hashed));
+			System.out.println(resourceOwner2.toString());
 
 			// pagination
 			final List<String> ids = newArrayList();

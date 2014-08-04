@@ -27,9 +27,12 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner.copyOf;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asOAuthString;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.computeHash;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.protectPassword;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -101,7 +104,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		// ensure that at least the administrator account exists in the database
 		final List<ResourceOwner> owners = list(0, 1, null);
 		if (owners == null || owners.isEmpty()) {
-			insert(ResourceOwner.builder()
+			final ResourceOwner admin = ResourceOwner.builder()
 					.id(ADMIN_USER)
 					.user(User.builder()
 							.username(ADMIN_USER)
@@ -109,7 +112,11 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 							.email(ADMIN_DEFAULT_EMAIL)
 							.fullname("LVL root user")
 							.scopes(asList(all()))
-							.build()).build());
+							.build()).build();
+			final String[] shadowed = protectPassword(admin.getUser().getPassword());			
+			admin.getUser().setSalt(shadowed[0]);
+			admin.getUser().setPassword(shadowed[1]);
+			insert(admin);
 		}
 	}
 
@@ -131,13 +138,29 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	@Override
 	public WriteResult<ResourceOwner> insert(final ResourceOwner resourceOwner) {
-		// remove transient fields from the element before saving it to the database
-		final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
-		final DBObject obj = map(store);
-		final String id = MONGODB_CONN.insert(obj, COLLECTION);
-		// restore transient fields
-		store.restore();
-		return new WriteResult.Builder<ResourceOwner>().id(id).build();
+		if (isNotBlank(resourceOwner.getUser().getSalt())) {
+			// remove transient fields from the element before saving it to the database
+			final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
+			final DBObject obj = map(store);
+			final String id = MONGODB_CONN.insert(obj, COLLECTION);
+			// restore transient fields
+			store.restore();
+			return new WriteResult.Builder<ResourceOwner>().id(id).build();				
+		} else {
+			// protect sensitive fields before storing the element in the database
+			final ResourceOwner copy = copyOf(resourceOwner);
+			final String[] shadowed = protectPassword(copy.getUser().getPassword());			
+			copy.getUser().setSalt(shadowed[0]);
+			copy.getUser().setPassword(shadowed[1]);
+			// remove transient fields from the element before saving it to the database			
+			final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(copy);
+			final DBObject obj = map(store);
+			final String id = MONGODB_CONN.insert(obj, COLLECTION);
+			return new WriteResult.Builder<ResourceOwner>()
+					.id(id)
+					.element(copy)
+					.build();
+		}		
 	}
 
 	@Override
@@ -276,6 +299,11 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		return entity;
 	}
 
+	public static void updatePassword(final ResourceOwner resourceOwner, final String newPassword) {
+		final String shadowed = computeHash(newPassword, resourceOwner.getUser().getSalt());
+		resourceOwner.getUser().setPassword(shadowed);
+	}
+
 	/**
 	 * Search for an resource owner in the database using the specified email address.
 	 * @param email - email address whose associate resource owner is to be returned
@@ -311,9 +339,15 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		checkArgument(isNotBlank(username), "Uninitialized or invalid username");
 		checkArgument(isNotBlank(password), "Uninitialized or invalid password");
 		final ResourceOwner resourceOwner = find(ownerId);
+		
+		// TODO
+		System.err.println("\n\n >> HERE : " + computeHash(password, resourceOwner.getUser().getSalt())
+				+ " <--> " + resourceOwner.getUser().getPassword() + "\n\n");
+		// TODO
+		
 		final boolean isValid = (resourceOwner != null && resourceOwner.getUser() != null 
-				&& username.equals(resourceOwner.getUser().getUsername())
-				&& password.equals(resourceOwner.getUser().getPassword()));
+				&& username.equals(resourceOwner.getUser().getUsername())				
+				&& computeHash(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));
 		if (isValid && scopeRef != null) {
 			scopeRef.set(oauthScope(resourceOwner, false));
 		}
@@ -326,7 +360,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		final ResourceOwner resourceOwner = findByEmail(email);
 		final boolean isValid = (resourceOwner != null && resourceOwner.getUser() != null 
 				&& email.equals(resourceOwner.getUser().getEmail())
-				&& password.equals(resourceOwner.getUser().getPassword()));
+				&& computeHash(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));
 		if (isValid && scopeRef != null) {
 			scopeRef.set(oauthScope(resourceOwner, false));
 		}
