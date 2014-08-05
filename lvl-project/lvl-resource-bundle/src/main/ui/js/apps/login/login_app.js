@@ -18,9 +18,9 @@ define([ 'app' ], function(Lvl) {
         };
 
         /* Commands and events */
-        Lvl.commands.setHandler('show:login', function() {
+        Lvl.commands.setHandler('show:login', function(target, reason) {
             require([ 'apps/login/show/login_show_ctrl' ], function(ShowController) {
-                ShowController.showLogin();
+                ShowController.showLogin(target, reason);
             });
         });
 

@@ -1,11 +1,19 @@
 <div class="container lvl-main-container">
+  <div id="alertBox" class="row text-center hidden">
+    <div class="col-xs-12">
+      <div class="alert alert-danger alert-dismissible" role="alert">
+        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <strong>Sorry!</strong> <%= alertMessage() %> Please, login and try again.
+      </div>
+    </div>
+  </div>
   <div class="row text-center">
     <div class="col-md-offset-4 col-md-4 col-xs-12">
       <h4>
         Sign in to <a class="lvl-login" href="/#home" >L<span class="text-danger">ei</span>sh VirtLab</a>
       </h4>
     </div>
-  </div>
+  </div>  
   <div class="row">
     <div class="col-md-offset-4 col-md-4 col-xs-12">
       <div class="panel lvl-login-form">

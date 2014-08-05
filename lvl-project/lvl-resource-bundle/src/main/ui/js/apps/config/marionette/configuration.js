@@ -87,6 +87,17 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
                     localStorage.removeItem(key);
                 }
             }
+        },
+        loadPreviousSession : function() {
+            var session = this.storage.get('user.session');
+            if (session) {
+                this.session.set('user.session');
+            }
+            return session;
+        },
+        isAuthenticated : function() {
+            var session = this.session.get('user.session') || this.loadPreviousSession();
+            return session !== undefined && session !== null;
         }
     });
     return Marionette.Controller.Configuration;
