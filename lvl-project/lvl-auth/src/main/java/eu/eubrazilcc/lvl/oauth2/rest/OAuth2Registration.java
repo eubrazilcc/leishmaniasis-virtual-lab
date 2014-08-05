@@ -42,7 +42,7 @@ import org.apache.oltu.oauth2.ext.dynamicreg.server.response.OAuthServerRegistra
 
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
 import eu.eubrazilcc.lvl.storage.oauth2.ClientApp;
-import eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider;
+import eu.eubrazilcc.lvl.storage.security.SecurityProvider;
 
 /**
  * Implements the OAuth 2.0 Registration Endpoint using Apache Oltu.
@@ -74,7 +74,7 @@ public class OAuth2Registration {
 					.icon(oauthRequest.getClientIcon())
 					.redirectURL(oauthRequest.getRedirectURI())
 					.clientId(NamingUtils.toAsciiSafeName(oauthRequest.getClientName()))
-					.clientSecret(SecretProvider.generateSecret())
+					.clientSecret(SecurityProvider.generateSecret())
 					.issuedAt(System.currentTimeMillis() / 1000l)
 					.expiresIn(REGISTRATION_EXPIRATION_SECONDS)
 					.build();

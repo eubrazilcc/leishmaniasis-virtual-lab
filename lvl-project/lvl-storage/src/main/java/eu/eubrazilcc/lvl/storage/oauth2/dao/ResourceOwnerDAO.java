@@ -31,8 +31,8 @@ import static eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner.copyOf;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asOAuthString;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.computeHash;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.protectPassword;
+import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.computeHash;
+import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.obfuscatePassword;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -113,7 +113,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 							.fullname("LVL root user")
 							.scopes(asList(all()))
 							.build()).build();
-			final String[] shadowed = protectPassword(admin.getUser().getPassword());			
+			final String[] shadowed = obfuscatePassword(admin.getUser().getPassword());			
 			admin.getUser().setSalt(shadowed[0]);
 			admin.getUser().setPassword(shadowed[1]);
 			insert(admin);
@@ -149,7 +149,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		} else {
 			// protect sensitive fields before storing the element in the database
 			final ResourceOwner copy = copyOf(resourceOwner);
-			final String[] shadowed = protectPassword(copy.getUser().getPassword());			
+			final String[] shadowed = obfuscatePassword(copy.getUser().getPassword());			
 			copy.getUser().setSalt(shadowed[0]);
 			copy.getUser().setPassword(shadowed[1]);
 			// remove transient fields from the element before saving it to the database			

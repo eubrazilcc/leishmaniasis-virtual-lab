@@ -95,7 +95,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.Users;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
-import eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider;
+import eu.eubrazilcc.lvl.storage.security.SecurityProvider;
 
 /**
  * Integration test.
@@ -143,7 +143,7 @@ public class AuthTest {
 		System.out.println("AuthTest.test()");
 		try {
 			final String redirectURI = "https://localhost:8443/redirect";
-			final String state = SecretProvider.generateFastUrlSafeSecret();
+			final String state = SecurityProvider.generateFastUrlSafeSecret();
 			final String scope = all();
 			final ResourceOwner resourceOwner = ResourceOwner.builder()
 					.id("test_username")

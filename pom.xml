@@ -190,7 +190,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>joda-time</groupId>
 				<artifactId>joda-time</artifactId>
 				<version>2.3</version>
-			</dependency>			
+			</dependency>
 			
 			<!-- MongoDB Java driver -->
 			

@@ -22,11 +22,11 @@
 
 package eu.eubrazilcc.lvl.storage;
 
-import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.generateFastUrlSafeSecret;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.generateSalt;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.generateSecret;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.protectPassword;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider.validatePassword;
+import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.generateFastUrlSafeSecret;
+import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.generateSalt;
+import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.generateSecret;
+import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.obfuscatePassword;
+import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.validatePassword;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -37,13 +37,13 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.storage.oauth2.security.SecretProvider;
+import eu.eubrazilcc.lvl.storage.security.SecurityProvider;
 
 /**
  * Tests secret provider.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SecretProviderTest {
+public class SecurityProviderTest {
 
 	@Test
 	public void test() {
@@ -64,15 +64,15 @@ public class SecretProviderTest {
 			System.out.println(" >> Fast URL-safe secret: " + secret);
 
 			// generate salt
-			final byte[] salt = generateSalt(SecretProvider.DEFAULT_STRENGTH);
+			final byte[] salt = generateSalt(SecurityProvider.DEFAULT_STRENGTH);
 			assertThat("salt is not null", salt, notNullValue());
 			assertThat("salt is not empty", isNotBlank(new String(salt)));
 			/* uncomment for additional output */
-			System.out.println(" >> Salt: " + salt);
+			System.out.println(" >> Salt length: " + salt.length);
 
 			// protect password
 			final String password = "piece of cake";
-			final String[] secret2 = protectPassword(password);
+			final String[] secret2 = obfuscatePassword(password);
 			assertThat("protected password is not null", secret2, notNullValue());
 			assertThat("protected password is correct", secret2.length, equalTo(2));
 			assertThat("protected password - salt is not empty", isNotBlank(secret2[0]));
