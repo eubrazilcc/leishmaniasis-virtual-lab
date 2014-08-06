@@ -64,7 +64,7 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
                 return key ? sessionStorage.getItem(key) == null : false;
             },
             clear : function(key) {
-                if (key && value) {
+                if (key) {
                     sessionStorage.removeItem(key);
                 }
             }
@@ -83,7 +83,7 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
                 return key ? localStorage.getItem(key) == null : false;
             },
             clear : function(key) {
-                if (key && value) {
+                if (key) {
                     localStorage.removeItem(key);
                 }
             }
@@ -94,6 +94,20 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
                 this.session.set('user.session');
             }
             return session;
+        },
+        saveSession : function(email, token, permanent) {
+            var session = {
+                'email' : email,
+                'token' : token
+            };
+            this.session.set('user.session', session);
+            if (permanent === true) {
+                this.storage.set('user.session', session);
+            }
+        },
+        deleteSession : function() {
+            this.storage.clear('user.session');
+            this.session.clear('user.session');
         },
         isAuthenticated : function() {
             var session = this.session.get('user.session') || this.loadPreviousSession();

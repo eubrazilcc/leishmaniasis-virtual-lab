@@ -1,22 +1,23 @@
 /**
- * RequireJS module that defines the routes of the sub-application: login.
+ * RequireJS module that defines the routes of the sub-application: access.
  */
 
 define([ 'app', 'routefilter' ], function(Lvl) {
-    Lvl.module('Routers.LoginApp', function(LoginAppRouter, Lvl, Backbone, Marionette, $, _) {
+    Lvl.module('Routers.AccessApp', function(LoginAppRouter, Lvl, Backbone, Marionette, $, _) {
         'use strict';
         var Router = Backbone.Router.extend({
             routes : {
                 'login(/:target)(/:reason)' : 'showLogin',
                 'authorization/:service' : 'showAuthorization',
                 'register' : 'showRegistration',
-                'account/validation' : 'validateAccount'
+                'account/validation' : 'validateAccount',
+                'logout' : 'logout'
             },
             before : function() {
-                require([ 'apps/login/login_app' ], function() {
+                require([ 'apps/access/access_app' ], function() {
                     Lvl.execute('set:active:header', 'no_header');
                     Lvl.execute('set:active:footer', 'no_footer');
-                    Lvl.startSubApp('LoginApp');
+                    Lvl.startSubApp('AccessApp');
                 });
             },
             showLogin : function(target, reason) {
@@ -32,6 +33,14 @@ define([ 'app', 'routefilter' ], function(Lvl) {
             },
             validateAccount : function() {
                 Lvl.execute('show:account:validation');
+            },
+            logout : function() {
+                require([ 'apps/config/marionette/configuration' ], function(Configuration) {
+                    new Configuration().deleteSession();
+                });
+                Lvl.navigate('home', {
+                    trigger : true
+                });
             }
         });
         Lvl.addInitializer(function() {

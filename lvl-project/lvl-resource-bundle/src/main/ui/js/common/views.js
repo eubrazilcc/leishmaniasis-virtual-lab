@@ -9,9 +9,9 @@ define([ 'app', 'tpl!common/templates/loading', 'jquery.spin', ], function(Lvl, 
             template : LoadingTpl,
             onShow : function() {
                 var docHeight = $(document).height();
-                $('body').append("<div style='display: none;' id='lvl-loading-overlay'></div>");
+                $('body').append("<div id='lvl-loading-overlay'></div>");
                 $('#lvl-loading-overlay').height(docHeight).css({
-                    'opacity' : 0,
+                    'opacity' : 0.4,
                     'position' : 'absolute',
                     'top' : 0,
                     'left' : 0,
@@ -39,13 +39,7 @@ define([ 'app', 'tpl!common/templates/loading', 'jquery.spin', ], function(Lvl, 
                     left : '50%'
                 };
                 $('#lvl-loading-spinner').spin(opts);
-                $('#lvl-loading-overlay').show(0, function() {
-                    $('#lvl-loading-spinner').fadeToggle('fast', function() {
-                        $('#lvl-loading-overlay').animate({
-                            opacity : 0.4
-                        });
-                    });
-                });
+                $('#lvl-loading-spinner').fadeToggle('fast');
             },
             onBeforeClose : function() {
                 $.when($('#lvl-loading-spinner').spin(false)).then(function() {

@@ -12,7 +12,7 @@
       </div>
       <div class="collapse navbar-collapse" id="navbar-collapse-1">
         <ul class="nav navbar-nav navbar-right">
-          <li class="active"><a href="/#login">Sign in</a></li>
+          <li class="active"><a href="/#<%= sessionLink() %>"><%= sessionText() %></a></li>
           <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Resources<span class="caret"></span></a>
             <ul class="dropdown-menu" role="menu">
               <% _.each(items, function(item){ %>

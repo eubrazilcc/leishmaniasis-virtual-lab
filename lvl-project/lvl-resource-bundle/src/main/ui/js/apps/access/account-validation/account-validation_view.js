@@ -1,8 +1,8 @@
 /**
- * RequireJS module that defines the view: login->account-validation.
+ * RequireJS module that defines the view: access->account-validation.
  */
 
-define([ 'marionette', 'tpl!apps/login/account-validation/templates/account-validation', 'flatui-checkbox', 'flatui-radio' ], function(Marionette,
+define([ 'marionette', 'tpl!apps/access/account-validation/templates/account-validation', 'flatui-checkbox', 'flatui-radio' ], function(Marionette,
         AccountValidationTpl) {
     return {
         Content : Marionette.ItemView.extend({

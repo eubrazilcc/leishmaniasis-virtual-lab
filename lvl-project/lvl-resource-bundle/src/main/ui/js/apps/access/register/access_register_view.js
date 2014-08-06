@@ -2,9 +2,9 @@
  * RequireJS module that defines the view: login->register.
  */
 
-define([ 'app', 'tpl!apps/login/register/templates/register', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
+define([ 'app', 'tpl!apps/access/register/templates/register', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
         'bootstrapvalidator', 'flatui-checkbox', 'flatui-radio' ], function(Lvl, RegisterTpl, Style, Configuration) {
-    Lvl.module('LoginApp.Register.View', function(View, Lvl, Backbone, Marionette, $, _) {
+    Lvl.module('AccessApp.Register.View', function(View, Lvl, Backbone, Marionette, $, _) {
         var lvlAuth = new Configuration().get('auth', '');
         View.Content = Marionette.ItemView.extend({
             template : RegisterTpl,
@@ -96,5 +96,5 @@ define([ 'app', 'tpl!apps/login/register/templates/register', 'apps/config/mario
             }
         });
     });
-    return Lvl.LoginApp.Register.View;
+    return Lvl.AccessApp.Register.View;
 });
