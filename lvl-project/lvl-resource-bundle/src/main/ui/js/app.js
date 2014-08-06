@@ -12,6 +12,7 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
         dialogRegion : Marionette.Region.Dialog.extend({
             el : '#dialog-region'
         }),
+        fullpageRegion : '#fullpage-region',
         footerRegion : '#footer-region'
     });
 

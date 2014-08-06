@@ -11,6 +11,8 @@ requirejs.config({
         'jquery' : [ '//code.jquery.com/jquery-2.1.1.min', 'vendor/cached/jquery.min' ],
         'jquery-ui' : [ '//code.jquery.com/ui/1.11.0/jquery-ui.min', 'vendor/cached/jquery-ui.min' ],
         'jquery.toolbar' : 'vendor/provided/jquery.toolbar.min',
+        'spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min', 'vendor/cached/spin.min' ],
+        'jquery.spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/jquery.spin.min', 'jquery.spin.min' ],        
         /* Boostrap front-end framework */
         'jquery.ui.touch-punch' : [ '//cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min',
                 'vendor/cached/jquery.ui.touch-punch.min' ],
@@ -48,6 +50,7 @@ requirejs.config({
         'jquery-ui' : [ 'jquery' ],
         'jquery.ui.touch-punch' : [ 'jquery', 'jquery-ui' ],
         'jquery.toolbar' : [ 'jquery' ],
+        'jquery.spin' : [ 'spin', 'jquery' ],
         'bootstrap' : [ 'jquery', 'jquery-ui', 'jquery.ui.touch-punch' ],
         'flatui-checkbox' : [ 'bootstrap', 'bootstrap-switch', 'jquery.tagsinput', 'jquery.placeholder' ],
         'flatui-radio' : [ 'bootstrap', 'bootstrap-switch', 'jquery.tagsinput', 'jquery.placeholder' ],

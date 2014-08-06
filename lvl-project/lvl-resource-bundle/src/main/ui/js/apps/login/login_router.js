@@ -8,6 +8,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
         var Router = Backbone.Router.extend({
             routes : {
                 'login(/:target)(/:reason)' : 'showLogin',
+                'authorization/:service' : 'showAuthorization',
                 'register' : 'showRegistration',
                 'account/validation' : 'validateAccount'
             },
@@ -20,6 +21,11 @@ define([ 'app', 'routefilter' ], function(Lvl) {
             },
             showLogin : function(target, reason) {
                 Lvl.execute('show:login', target, reason);
+            },
+            showAuthorization : function(service) {
+                // TODO
+                console.log('Unsupported feature requested -- external authorization with: ' + service);
+                // TODO
             },
             showRegistration : function() {
                 Lvl.execute('show:registration');

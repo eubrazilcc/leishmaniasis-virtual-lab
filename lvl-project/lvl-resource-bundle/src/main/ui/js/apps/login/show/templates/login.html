@@ -18,18 +18,18 @@
     <div class="col-md-offset-4 col-md-4 col-xs-12">
       <div class="panel lvl-login-form">
         <div class="panel-body">
-          <form id="formSignin" autocomplete="on" action="" role="form">
+          <form id="signinForm" id="formSignin" autocomplete="on" novalidate="novalidate">
             <div class="login-form">
               <div class="form-group">
-                <input type="email" class="form-control login-field" value="" placeholder="Enter email" id="login-email" required autofocus /> <label
+                <input type="email" class="form-control login-field" value="" placeholder="Enter email" name="login-email" required autofocus /> <label
                   class="login-field-icon fui-mail" for="login-email"></label>
               </div>
               <div class="form-group">
-                <input type="password" class="form-control login-field" value="" placeholder="Password" id="login-pass" required /> <label
+                <input type="password" class="form-control login-field" value="" placeholder="Password" name="login-pass" required /> <label
                   class="login-field-icon fui-lock" for="login-pass"></label>
               </div>
               <div class="form-group">
-                <label class="checkbox" for="login-remember"> <input type="checkbox" class="form-control login-field" value="" id="login-remember"
+                <label class="checkbox" for="login-remember"> <input type="checkbox" class="form-control login-field" value="" name="login-remember"
                   checked="checked" data-toggle="checkbox"> Remember me
                 </label>
               </div>
@@ -39,7 +39,7 @@
                   class="fa fa-sign-in"></i> Don't have an account yet? Sign up <strong>now</strong>.</a>
               </p>
               <p class="text-center">- OR -</p>
-              <a href="/#login/linkedin" class="btn btn-info btn-block" role="button">
+              <a href="/#authorization/linkedin" class="btn btn-info btn-block" role="button">
                 Sign in with Linked <i class="fa fa-linkedin-square"></i>
               </a>
             </div>
