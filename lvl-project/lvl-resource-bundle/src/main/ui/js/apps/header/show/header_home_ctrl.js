@@ -10,10 +10,6 @@ define([ 'app', 'apps/header/show/header_home_view' ], function(Lvl, View) {
                 require([ 'entities/navigation' ], function() {
                     var links = Lvl.request('navigation:external:entities');
                     var view = new View.Header({
-                        /* model : new Backbone.Model({
-                            sessionLink : 'dds',
-                            sessionText : 'sss'
-                        }), */
                         collection : links
                     });
                     Lvl.headerRegion.show(view);
@@ -22,5 +18,5 @@ define([ 'app', 'apps/header/show/header_home_view' ], function(Lvl, View) {
             }
         }
     });
-    return Lvl.HeaderApp.Home.Controller; // Sign in
+    return Lvl.HeaderApp.Home.Controller;
 });
