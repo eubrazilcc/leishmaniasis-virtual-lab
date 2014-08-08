@@ -2,7 +2,7 @@
 // Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
 // Licensed under the EUPL license
 // Author: Erik Torres <ertorser@upv.es>
-// See: https://github.com/fiznool/backbone.basicauth
+// For HTTP basic authentication with login and password see: https://github.com/fiznool/backbone.basicauth
 
 (function(root, factory) {
     if (typeof exports === 'object') {
