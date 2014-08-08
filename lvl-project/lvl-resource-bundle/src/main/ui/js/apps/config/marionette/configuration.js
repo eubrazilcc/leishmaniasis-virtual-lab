@@ -112,6 +112,16 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
         isAuthenticated : function() {
             var session = this.session.get('user.session') || this.loadPreviousSession();
             return session !== undefined && session !== null;
+        },
+        authorizationToken : function() {
+            var session = this.session.get('user.session');
+            return (session !== undefined && session !== null && session.token !== undefined ? session.token : null);
+        },
+        authorizationHeader : function() {
+            var token = this.authorizationToken();
+            return (token !== null ? {
+                'Authorization' : 'Bearer ' + token
+            } : null);
         }
     });
     return Marionette.Controller.Configuration;

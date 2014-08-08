@@ -12,7 +12,7 @@ requirejs.config({
         'jquery-ui' : [ '//code.jquery.com/ui/1.11.0/jquery-ui.min', 'vendor/cached/jquery-ui.min' ],
         'jquery.toolbar' : 'vendor/provided/jquery.toolbar.min',
         'spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min', 'vendor/cached/spin.min' ],
-        'jquery.spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/jquery.spin.min', 'jquery.spin.min' ],        
+        'jquery.spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/jquery.spin.min', 'jquery.spin.min' ],
         /* Boostrap front-end framework */
         'jquery.ui.touch-punch' : [ '//cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min',
                 'vendor/cached/jquery.ui.touch-punch.min' ],
@@ -33,6 +33,7 @@ requirejs.config({
         'routefilter' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.routefilter/0.2.0/backbone.routefilter.min', 'vendor/cached/backbone.routefilter.min' ],
         'backbone.picky' : 'vendor/provided/backbone.picky.min',
         'backbone.paginator' : 'vendor/provided/backbone.paginator.min',
+        'backbone.oauth2' : 'plugins/backbone.oauth2',
         /* Data grid based on Backbone */
         'backgrid' : [ '//cdnjs.cloudflare.com/ajax/libs/backgrid.js/0.3.5/backgrid.min', 'vendor/cached/backgrid.min' ],
         'backgrid-paginator' : 'vendor/provided/backgrid-paginator.min',
@@ -42,6 +43,8 @@ requirejs.config({
         'openlayers' : 'vendor/provided/ol',
         /* Moment.js */
         'moment' : [ '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.7.0/moment.min', 'vendor/cached/moment.min' ],
+        /* Pace */
+        'pace' : [ '//cdnjs.cloudflare.com/ajax/libs/pace/0.5.5/pace.min', 'vendor/cached/pace.min' ],
         /* Add support for underscore templates */
         'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
         'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
@@ -68,6 +71,7 @@ requirejs.config({
         'routefilter' : [ 'backbone' ],
         'backbone.picky' : [ 'backbone' ],
         'backbone.paginator' : [ 'backbone' ],
+        'backbone.oauth2' : [ 'backbone' ],
         'backgrid' : {
             deps : [ 'backbone' ],
             exports : 'Backgrid'
@@ -84,6 +88,7 @@ requirejs.config({
             exports : 'ol'
         },
         'moment' : [ 'jquery' ],
+        'pace' : [ 'jquery' ],
         'tpl' : [ 'text' ]
     }
 });

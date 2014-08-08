@@ -47,6 +47,8 @@ public class Paginable {
 	private Link first;
 	private Link last;
 
+	private int totalCount;
+
 	public Paginable() { }
 
 	public void push(final Paginable other) {
@@ -54,6 +56,7 @@ public class Paginable {
 		this.next = other.next;
 		this.first = other.first;
 		this.last = other.last;
+		this.totalCount = other.totalCount;
 	}
 
 	@XmlElement(name="previous")
@@ -96,6 +99,14 @@ public class Paginable {
 		this.last = last;
 	}	
 
+	public int getTotalCount() {
+		return totalCount;
+	}
+
+	public void setTotalCount(final int totalCount) {
+		this.totalCount = totalCount;
+	}
+
 	@Override
 	public String toString() {
 		return toStringHelper(Paginable.class.getSimpleName())
@@ -103,6 +114,7 @@ public class Paginable {
 				.add("next", next)
 				.add("first", first)
 				.add("last", last)
+				.add("totalCount", totalCount)				
 				.toString();
 	}
 
@@ -135,6 +147,11 @@ public class Paginable {
 
 		public Builder last(final Link last) {
 			paginable.setLast(last);
+			return this;
+		}
+
+		public Builder totalCount(final int totalCount) {
+			paginable.setTotalCount(totalCount);
 			return this;
 		}
 

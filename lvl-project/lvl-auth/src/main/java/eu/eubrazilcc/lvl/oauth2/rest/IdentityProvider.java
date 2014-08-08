@@ -91,9 +91,11 @@ public class IdentityProvider {
 		// get sequences from database
 		final MutableLong count = new MutableLong(0l);
 		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.baseUri(uriInfo.getAbsolutePath()).useGravatar(true).list(start, size, count);
-		final int total = ((Long)count.getValue()).intValue();
-		// previous link
+		// total count		
 		final Paginable paginable = new Paginable();
+		final int total = ((Long)count.getValue()).intValue();
+		paginable.setTotalCount(total);
+		// previous link		
 		if (start > 0) {
 			int previous = start - size;
 			if (previous < 0) previous = 0;

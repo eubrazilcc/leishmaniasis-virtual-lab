@@ -2,22 +2,42 @@
  * RequireJS module that defines the view: collection->browse.
  */
 
-define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/config/marionette/styles/style', 'flatui-checkbox', 'flatui-radio', 'backgrid',
-        'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, Style) {
+define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
+        'pace', 'flatui-checkbox', 'flatui-radio', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter', 'backbone.oauth2' ], function(
+        Lvl, BrowseTpl, Style, Configuration, pace) {
     Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
+        var config = new Configuration();
 
         // TODO : controller
         var Sequence = Backbone.Model.extend({});
         var Sequences = Backbone.PageableCollection.extend({
             model : Sequence,
-            url : 'sequences.json',
+            mode : 'server',
+            // TODO url : 'sequences.json?burst=' + Math.random(),
+            url : config.get('service', '') + '/sequences',
             state : {
-                pageSize : 25
+                pageSize : 100,
+                firstPage : 0
             },
-            mode : 'client'
+            queryParams : {
+                totalPages : null,
+                totalRecords : null,
+                currentPage : 'start',
+                pageSize : 'size',
+                sortKey : null
+            },
+            parseState : function(resp, queryParams, state, options) {
+                return {
+                    totalRecords : resp.totalCount
+                };
+            },
+            parseRecords : function(resp, options) {
+                return resp.sequences;
+            }
         });
 
         var sequences = new Sequences();
+        sequences.oauth2_token = config.authorizationToken();
         // TODO : controller
 
         var columns = [ {
@@ -35,11 +55,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
             label : 'Accession',
             editable : false,
             cell : 'string'
-        }, /*
-             * { name : 'version', label : 'Version', editable : false, cell :
-             * 'string' }, { name : 'gi', label : 'GI', editable : false, cell :
-             * 'string' },
-             */{
+        }, {
             name : 'organism',
             label : 'Organism',
             editable : false,
@@ -56,21 +72,38 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 cell : 'select-row',
                 headerCell : 'select-all'
             } ].concat(columns),
-            collection : sequences
+            collection : sequences,
+            emptyText : 'No sequences found'
         });
 
         View.Content = Marionette.ItemView.extend({
             id : 'browse',
             template : BrowseTpl,
+            initialize : function() {
+                this.listenTo(sequences, 'request', this.displaySpinner);
+                this.listenTo(sequences, 'sync error', this.removeSpinner);
+            },
+            displaySpinner : function() {
+                pace.restart();
+                $('#grid-container').fadeTo('fast', 0.4);
+            },
+            removeSpinner : function() {
+                pace.stop();
+                $('#grid-container').fadeTo('fast', 1);
+            },
             onBeforeRender : function() {
                 require([ 'entities/styles' ], function() {
-                    new Style().loadCss(Lvl.request('styles:backgrid:entities').toJSON());
+                    var stylesLoader = new Style();
+                    stylesLoader.loadCss(Lvl.request('styles:backgrid:entities').toJSON());
+                    stylesLoader.loadCss(Lvl.request('styles:pace:entities').toJSON());
                 });
             },
             onClose : function() {
                 /* don't remove the styles in order to enable them to be reused */
             },
             onRender : function() {
+                // pace.start();
+
                 var gridContainer = this.$('#grid-container');
                 gridContainer.append(grid.render().el);
 
@@ -83,7 +116,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 var filter = new Backgrid.Extension.ClientSideFilter({
                     collection : sequences,
                     fields : [ 'definition' ],
-                    placeholder: 'filter by definition'
+                    placeholder : 'filter by definition'
                 });
 
                 gridContainer.before(filter.render().el);

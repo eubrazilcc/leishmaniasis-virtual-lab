@@ -2,10 +2,10 @@
  * RequireJS module that defines the entity: dynamic styles.
  */
 
-define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configuration) {    
+define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configuration) {
     Lvl.module('Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
         var bust = new Configuration().get('bust', '');
-        
+
         Entities.Style = Backbone.Model.extend({
             defaults : {
                 id : 'none',
@@ -71,6 +71,14 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
             } ]);
         };
 
+        var iniPaceStyles = function() {
+            Entities.paceStyles = new Entities.StyleCollection([ {
+                id : 'pace',
+                // cdnjs.cloudflare.com/ajax/libs/pace/0.5.5/themes/pace-theme-flash.css
+                url : '/css/pace-theme-flash.css' + bust
+            } ]);
+        };
+
         var API = {
             getFormValidationStyles : function() {
                 if (Entities.formValidationStyles === undefined) {
@@ -95,6 +103,12 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
                     iniJQueryToolbarStyles();
                 }
                 return Entities.jQueryToolbarStyles;
+            },
+            getPaceStyles : function() {
+                if (Entities.paceStyles === undefined) {
+                    iniPaceStyles();
+                }
+                return Entities.paceStyles;
             }
         }
 
@@ -112,6 +126,10 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 
         Lvl.reqres.setHandler('styles:jquery.toolbar:entities', function() {
             return API.getJQueryToolbarStyles();
+        });
+
+        Lvl.reqres.setHandler('styles:pace:entities', function() {
+            return API.getPaceStyles();
         });
 
         return;

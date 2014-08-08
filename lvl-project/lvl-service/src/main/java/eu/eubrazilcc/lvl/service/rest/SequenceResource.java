@@ -99,9 +99,11 @@ public class SequenceResource {
 		// get sequences from database
 		final MutableLong count = new MutableLong(0l);
 		final List<Sequence> sequences = SEQUENCE_DAO.baseUri(uriInfo.getAbsolutePath()).list(start, size, count);
-		final int total = ((Long)count.getValue()).intValue();
-		// previous link
+		// total count
 		final Paginable paginable = new Paginable();
+		final int total = ((Long)count.getValue()).intValue();
+		paginable.setTotalCount(total);
+		// previous link		
 		if (start > 0) {
 			int previous = start - size;
 			if (previous < 0) previous = 0;
@@ -118,7 +120,7 @@ public class SequenceResource {
 			final int pages = roundUp(total, size);
 			final URI lastUri = uriBuilder.clone().build(pages * size, size);
 			paginable.setLast(Link.fromUri(lastUri).rel(LinkRelation.LAST).type(MediaType.APPLICATION_JSON).build());
-		}		
+		}
 		return Sequences.start().paginable(paginable).sequences(sequences).build();
 	}
 

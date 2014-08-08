@@ -110,6 +110,16 @@ a.lvl-login:hover,a.lvl-login:focus {
   right: -32px;
 }
 
+/* Override Backgrid.js styles */
+.backgrid-paginator ul>li>a,.backgrid-paginator ul>li>span {
+  float: left;
+  width: 45px !important;
+  height: 30px;
+  padding: 0;
+  line-height: 30px;
+  text-decoration: none;
+}
+
 /* OpenLayers */
 .lvl-map {
   height: 400px;
