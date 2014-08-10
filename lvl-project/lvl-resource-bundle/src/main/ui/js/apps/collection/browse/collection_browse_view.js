@@ -3,8 +3,8 @@
  */
 
 define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
-        'pace', 'flatui-checkbox', 'flatui-radio', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter', 'backbone.oauth2' ], function(
-        Lvl, BrowseTpl, Style, Configuration, pace) {
+        'pace', 'common/country_names', 'flatui-checkbox', 'flatui-radio', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter',
+        'backbone.oauth2' ], function(Lvl, BrowseTpl, Style, Configuration, pace, mapCn) {
     Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
         var config = new Configuration();
 
@@ -24,7 +24,10 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 totalRecords : null,
                 currentPage : 'start',
                 pageSize : 'size',
-                sortKey : null
+                sortKey : null,
+                offset : function() {
+                    return this.state.currentPage * this.state.pageSize;
+                }
             },
             parseState : function(resp, queryParams, state, options) {
                 return {
@@ -40,32 +43,54 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
         sequences.oauth2_token = config.authorizationToken();
         // TODO : controller
 
-        var columns = [ {
-            name : 'dataSource',
-            label : 'Source',
-            editable : false,
-            cell : 'string'
-        }, {
-            name : 'definition',
-            label : 'Definition',
-            editable : false,
-            cell : 'string'
-        }, {
-            name : 'accession',
-            label : 'Accession',
-            editable : false,
-            cell : 'string'
-        }, {
-            name : 'organism',
-            label : 'Organism',
-            editable : false,
-            cell : 'string'
-        }, {
-            name : 'countryFeature',
-            label : 'Country',
-            editable : false,
-            cell : 'string'
-        } ];
+        var columns = [
+                {
+                    name : 'dataSource',
+                    label : 'Source',
+                    editable : false,
+                    cell : 'string'
+                },
+                {
+                    name : 'definition',
+                    label : 'Definition',
+                    editable : false,
+                    cell : 'string'
+                },
+                {
+                    name : 'accession',
+                    label : 'Accession',
+                    editable : false,
+                    cell : 'string'
+                },
+                {
+                    name : 'organism',
+                    label : 'Organism',
+                    editable : false,
+                    cell : 'string'
+                },
+                {
+                    name : 'locale',
+                    label : 'Country',
+                    editable : false,
+                    cell : Backgrid.Cell.extend({
+                        render : function() {
+                            this.$el.empty();
+                            var rawValue = this.model.get(this.column.get('name'));
+                            var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+                            if (formattedValue && typeof formattedValue === 'string') {
+                                var twoLetterCode = formattedValue.split("_")[1];
+                                var code2 = twoLetterCode ? twoLetterCode.toUpperCase() : '';
+                                var countryName = mapCn[code2];
+                                if (countryName) {
+                                    this.$el.append('<img src="img/blank.gif" class="flag flag-' + code2.toLowerCase() + '" alt="' + countryName + '" /> '
+                                            + countryName);
+                                }
+                            }
+                            this.delegateEvents();
+                            return this;
+                        }
+                    })
+                } ];
         var grid = new Backgrid.Grid({
             columns : [ {
                 name : '',
@@ -90,19 +115,23 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
             removeSpinner : function() {
                 pace.stop();
                 $('#grid-container').fadeTo('fast', 1);
+                $('html,body').animate({
+                    scrollTop : 0
+                }, '500', 'swing');
             },
             onBeforeRender : function() {
                 require([ 'entities/styles' ], function() {
                     var stylesLoader = new Style();
                     stylesLoader.loadCss(Lvl.request('styles:backgrid:entities').toJSON());
                     stylesLoader.loadCss(Lvl.request('styles:pace:entities').toJSON());
+                    stylesLoader.loadCss(Lvl.request('styles:flags:entities').toJSON());
                 });
             },
             onClose : function() {
                 /* don't remove the styles in order to enable them to be reused */
             },
             onRender : function() {
-                // pace.start();
+                pace.start();
 
                 var gridContainer = this.$('#grid-container');
                 gridContainer.append(grid.render().el);

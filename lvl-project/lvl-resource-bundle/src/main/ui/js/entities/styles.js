@@ -34,6 +34,13 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
             comparator : 'id'
         });
 
+        var iniFlagsSpriteStyles = function() {
+            Entities.flagsSpriteStyles = new Entities.StyleCollection([ {
+                id : 'flags',
+                url : '/css/flags.css' + bust
+            } ]);
+        };
+
         var iniFormValidationStyles = function() {
             Entities.formValidationStyles = new Entities.StyleCollection([ {
                 id : 'bootstrapvalidator',
@@ -80,6 +87,12 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
         };
 
         var API = {
+            getFlagsSpriteStyles : function() {
+                if (Entities.flagsSpriteStyles === undefined) {
+                    iniFlagsSpriteStyles();
+                }
+                return Entities.flagsSpriteStyles;
+            },
             getFormValidationStyles : function() {
                 if (Entities.formValidationStyles === undefined) {
                     iniFormValidationStyles();
@@ -111,6 +124,10 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
                 return Entities.paceStyles;
             }
         }
+
+        Lvl.reqres.setHandler('styles:flags:entities', function() {
+            return API.getFlagsSpriteStyles();
+        });
 
         Lvl.reqres.setHandler('styles:form-validation:entities', function() {
             return API.getFormValidationStyles();

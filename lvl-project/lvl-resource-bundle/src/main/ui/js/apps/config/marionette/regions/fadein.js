@@ -9,6 +9,9 @@ define([ 'marionette', 'jquery-ui' ], function(Marionette) {
             this.$el.hide();
             this.$el.html(view.el);
             this.$el.fadeIn();
+        },
+        onBeforeShow : function(view) {
+            window.scrollTo(0, 0);
         }
     });
     return Marionette.Region.FadeInRegion;
