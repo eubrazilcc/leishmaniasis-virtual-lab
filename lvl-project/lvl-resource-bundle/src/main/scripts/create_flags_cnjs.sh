@@ -26,8 +26,8 @@
 #
 # 1) Parse list of country names obtained from OpenGeoCode.org, create a CSS 
 #    image sprite with the country flags obtained from GeoNames.org and a 
-#    RequireJS module with the conversion from the two-letter country codes
-#    (ISO 3166-1 alpha-2) to country names:
+#    RequireJS module that allows JS applications to convert from two-letter 
+#    country codes (ISO 3166-1 alpha-2) to country names:
 #
 #    create_flags_cnjs.sh OGC
 #

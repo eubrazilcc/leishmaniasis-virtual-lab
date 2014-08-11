@@ -58,6 +58,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
         <div class="col-xs-12">
           <div class="bs-component">
             <ul>
+              <li><a href="#about">About this guide</a></li>
               <li><a href="#installation">Installation</a>
                 <ul>
                   <li><a href="#installation_requirements">Requirements</a></li>
@@ -113,6 +114,30 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                     </ul></li>
                 </ul></li>
             </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="clearfix">
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="page-header">
+            <h1 id="type">
+              <a id="about"></a>About this guide
+            </h1>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+
+            <p>
+              This guide uses the Bootstrap theme <a href="http://bootswatch.com/readable/" target="_blank">Readable</a> from WrapBootstrap, which is optimized
+              for legibility.
+            </p>
+
           </div>
         </div>
       </div>
@@ -915,35 +940,48 @@ Serving HTTP on 0.0.0.0 port 8000 ...
             </h2>
 
             <p>
-              A responsive mobile-first design strategy was used to develop the UI. <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> framework
-              and <a href="http://angularjs.org/" target="_blank">AngularJS</a> were used in the development. <a href="http://jquerymobile.com/" target="_blank">jQuery
-                Mobile</a> was discarded in a first approach due to known incompatibility issues with those frameworks, in special with AngularJS.
+              A responsive mobile-first design strategy was used to develop the UI. The <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a>
+              front-end framework was used with a flat UI design <a href="http://designmodo.github.io/Flat-UI/" target="_blank">theme</a> to develop the
+              responsive web design. A single-page application was developed using the <a href="http://backbonejs.org/" target="_blank">Backbone</a> + <a
+                href="http://marionettejs.com/" target="_blank">Marionette</a> MVC framework. The <a href="http://ol3js.org/" target="_blank">OpenLayers</a>
+              JavaScript library was used to render and display georeferenced information in maps. All this application is modular, with <a
+                href="http://requirejs.org/" target="_blank">RequireJS</a> providing the necessary means for loading CSS styles, JavaScript modules and HTML
+              templates on-demand.
             </p>
+
+            <!-- <a href="http://jquerymobile.com/" target="_blank">jQuery Mobile</a> was discarded in a first approach due to known incompatibility issues with those frameworks, in special with AngularJS.  -->
 
             <h2>
               <a id="user_interface_resources"></a>UI resources
             </h2>
 
-            <p>Description of resources used in the user interface.</p>
+            <p>Description of resources used in the design and develop of the user interface.</p>
 
             <h3>
               <a id="user_interface_country_flags"></a>Country flags
             </h3>
-            
-            OpenGeocode - Free Public Domain Geolocation Databases
-            http://opengeocode.org/
 
-            <p>Download a good set of country flag icons. For example, this one from GeoNames has a flat design:</p>
+            <p>
+              A <a href="http://goo.gl/glz7wT" target="_blank">shell script</a> was created to facilitate the use of country names and flags. This script
+              downloads a list of country names from <a href="http://opengeocode.org/" target="_blank">OpenGeocode</a> (a collection of free public domain
+              geolocation databases), creates a CSS image sprite with the icon flags obtained from <a href="http://www.geonames.org/" target="_blank">GeoNames</a>
+              (an open geographical database) and a <a href="http://requirejs.org/" target="_blank">RequireJS</a> module that allows JS applications to convert
+              from the two-letter country codes (ISO 3166-1 alpha-2) to country names. The output of the script includes the following files: <em>flags.css</em>,
+              <em>flags.png</em> and <em>country_names.js</em>.
+            </p>
+
+            <p>
+              The flag icons are converted and assembled using <a href="http://www.imagemagick.org/" target="_blank">ImageMagick</a> and the result image is
+              optimized using <a href="http://pmt.sourceforge.net/pngcrush/" target="_blank">Pngcrush</a>.
+            </p>
+
+            <p>GeoNames.org provides one of the most complete sets of country flag icons (which has a flat design). Other datasets of flag icons ready for
+              use:</p>
 
             <ul>
-              <li>http://www.geonames.org/</li>
-            </ul>
-
-            <p>Other</p>
-
-            <ul>
-              <li>https://github.com/tellnes/country-flags</li>
-              <li>http://www.icondrawer.com/flag-icons.php</li>
+              <li><a href="https://github.com/tellnes/country-flags" target="_blank">Country Flags server in Node.JS</a></li>
+              <li><a href="http://www.icondrawer.com/flag-icons.php" target="_blank">IconDrawer flag icons</a></li>
+              <li><a href="https://github.com/usrz/bootstrap-languages" target="_blank">Language labels and icons for Bootstrap 3</a></li>
             </ul>
 
           </div>

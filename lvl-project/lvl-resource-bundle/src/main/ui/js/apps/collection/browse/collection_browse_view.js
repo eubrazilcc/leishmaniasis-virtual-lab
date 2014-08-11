@@ -82,8 +82,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                                 var code2 = twoLetterCode ? twoLetterCode.toUpperCase() : '';
                                 var countryName = mapCn[code2];
                                 if (countryName) {
-                                    this.$el.append('<img src="img/blank.gif" class="flag flag-' + code2.toLowerCase() + '" alt="' + countryName + '" /> '
-                                            + countryName);
+                                    this.$el.append('<a href="/#collection/map/country/' + code2.toLowerCase() + '"><img src="img/blank.gif" class="flag flag-'
+                                            + code2.toLowerCase() + '" alt="' + countryName + '" /> ' + countryName + '</a>');
                                 }
                             }
                             this.delegateEvents();
