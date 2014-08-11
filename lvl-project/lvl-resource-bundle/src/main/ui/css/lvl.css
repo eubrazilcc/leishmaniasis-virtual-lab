@@ -111,6 +111,18 @@ a.lvl-login:hover,a.lvl-login:focus {
 }
 
 /* Override Backgrid.js styles */
+.backgrid-container {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  /* height: 465px; */
+  height: auto !important;
+  padding: 0;
+  overflow: auto;
+  border: 0;
+}
+
 .backgrid-paginator ul>li>a,.backgrid-paginator ul>li>span {
   float: left;
   width: 45px !important;

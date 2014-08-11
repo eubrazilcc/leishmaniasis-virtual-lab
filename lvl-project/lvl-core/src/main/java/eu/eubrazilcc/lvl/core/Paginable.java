@@ -35,12 +35,14 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  * Any collection that can be returned to the client as a series of pages that
  * contains a part of the collection. Include JAXB annotations to serialize this 
  * class to XML and JSON. Most JSON processing libraries like Jackson support 
- * these JAXB annotations.
+ * these JAXB annotations. This class include links to previous and next pages, 
+ * which allows clients using infinite scroll pagination. Additionally, the total
+ * count of records in provided to support classic server-side pagination.
  * @author Erik Torres <ertorser@upv.es>
  */
 @XmlRootElement
 public class Paginable {
-
+	
 	private Link previous;
 	private Link next;
 

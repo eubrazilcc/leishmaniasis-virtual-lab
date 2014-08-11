@@ -22,12 +22,9 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
             queryParams : {
                 totalPages : null,
                 totalRecords : null,
-                currentPage : 'start',
-                pageSize : 'size',
-                sortKey : null,
-                offset : function() {
-                    return this.state.currentPage * this.state.pageSize;
-                }
+                currentPage : 'page',
+                pageSize : 'per_page',
+                sortKey : null
             },
             parseState : function(resp, queryParams, state, options) {
                 return {
@@ -131,6 +128,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 /* don't remove the styles in order to enable them to be reused */
             },
             onRender : function() {
+                var self = this;
                 pace.start();
 
                 var gridContainer = this.$('#grid-container');

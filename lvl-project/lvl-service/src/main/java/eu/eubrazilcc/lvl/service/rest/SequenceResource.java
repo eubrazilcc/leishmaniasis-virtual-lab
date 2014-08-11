@@ -24,7 +24,8 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
-import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
+import static eu.eubrazilcc.lvl.storage.PaginationUtils.firstEntryOf;
+import static eu.eubrazilcc.lvl.storage.PaginationUtils.totalPages;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -85,40 +86,40 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 public class SequenceResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);	
+	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Sequences getSequences(final @QueryParam("start") @DefaultValue("0") int start,
-			final @QueryParam("size") @DefaultValue("10") int size, final @Context UriInfo uriInfo,
+	public Sequences getSequences(final @QueryParam("page") @DefaultValue("0") int page,
+			final @QueryParam("per_page") @DefaultValue("10") int per_page, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
-				.queryParam("start", "{start}")
-				.queryParam("size", "{size}");
+				.queryParam("page", "{page}")
+				.queryParam("per_page", "{per_page}");
 		// get sequences from database
+		final int pageFirstEntry = firstEntryOf(page, per_page);
 		final MutableLong count = new MutableLong(0l);
-		final List<Sequence> sequences = SEQUENCE_DAO.baseUri(uriInfo.getAbsolutePath()).list(start, size, count);
+		final List<Sequence> sequences = SEQUENCE_DAO.baseUri(uriInfo.getAbsolutePath()).list(pageFirstEntry, per_page, count);
 		// total count
 		final Paginable paginable = new Paginable();
-		final int total = ((Long)count.getValue()).intValue();
-		paginable.setTotalCount(total);
-		// previous link		
-		if (start > 0) {
-			int previous = start - size;
-			if (previous < 0) previous = 0;
-			final URI previousUri = uriBuilder.clone().build(previous, size);
+		final int totalEntries = ((Long)count.getValue()).intValue();
+		paginable.setTotalCount(totalEntries);
+		// previous link
+		if (page > 0) {
+			int previous = page - 1;
+			final URI previousUri = uriBuilder.clone().build(previous, per_page);
 			paginable.setPrevious(Link.fromUri(previousUri).rel(LinkRelation.PREVIOUS).type(MediaType.APPLICATION_JSON).build());
-			final URI firstUri = uriBuilder.clone().build(0, size);
+			final URI firstUri = uriBuilder.clone().build(0, per_page);
 			paginable.setFirst(Link.fromUri(firstUri).rel(LinkRelation.FIRST).type(MediaType.APPLICATION_JSON).build());
 		}
 		// next link
-		if (start + size < total) {
-			int next = start + size;
-			final URI nextUri = uriBuilder.clone().build(next, size);
+		if (pageFirstEntry + per_page < totalEntries) {
+			int next = page + 1;
+			final URI nextUri = uriBuilder.clone().build(next, per_page);
 			paginable.setNext(Link.fromUri(nextUri).rel(LinkRelation.NEXT).type(MediaType.APPLICATION_JSON).build());
-			final int pages = roundUp(total, size);
-			final URI lastUri = uriBuilder.clone().build(pages * size, size);
+			final int totalPages = totalPages(totalEntries, per_page);
+			final URI lastUri = uriBuilder.clone().build(totalPages, per_page);
 			paginable.setLast(Link.fromUri(lastUri).rel(LinkRelation.LAST).type(MediaType.APPLICATION_JSON).build());
 		}
 		return Sequences.start().paginable(paginable).sequences(sequences).build();

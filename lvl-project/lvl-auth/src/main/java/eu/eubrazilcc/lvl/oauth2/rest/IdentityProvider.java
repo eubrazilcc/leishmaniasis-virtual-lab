@@ -24,7 +24,8 @@ package eu.eubrazilcc.lvl.oauth2.rest;
 
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
-import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
+import static eu.eubrazilcc.lvl.storage.PaginationUtils.firstEntryOf;
+import static eu.eubrazilcc.lvl.storage.PaginationUtils.totalPages;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.inherit;
@@ -80,37 +81,37 @@ public class IdentityProvider {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Users getUsers(final @QueryParam("start") @DefaultValue("0") int start,
-			final @QueryParam("size") @DefaultValue("10") int size, 
+	public Users getUsers(final @QueryParam("page") @DefaultValue("0") int page,
+			final @QueryParam("per_page") @DefaultValue("10") int per_page, 
 			final @QueryParam("plain") @DefaultValue("false") boolean plain, 
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
-				.queryParam("start", "{start}")
-				.queryParam("size", "{size}");
+				.queryParam("page", "{page}")
+				.queryParam("per_page", "{per_page}");
 		// get sequences from database
+		final int pageFirstEntry = firstEntryOf(page, per_page);
 		final MutableLong count = new MutableLong(0l);
-		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.baseUri(uriInfo.getAbsolutePath()).useGravatar(true).list(start, size, count);
+		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.baseUri(uriInfo.getAbsolutePath()).useGravatar(true).list(pageFirstEntry, per_page, count);
 		// total count		
 		final Paginable paginable = new Paginable();
-		final int total = ((Long)count.getValue()).intValue();
-		paginable.setTotalCount(total);
+		final int totalEntries = ((Long)count.getValue()).intValue();
+		paginable.setTotalCount(totalEntries);
 		// previous link		
-		if (start > 0) {
-			int previous = start - size;
-			if (previous < 0) previous = 0;
-			final URI previousUri = uriBuilder.clone().build(previous, size);
+		if (page > 0) {
+			int previous = page - 1;
+			final URI previousUri = uriBuilder.clone().build(previous, per_page);
 			paginable.setPrevious(Link.fromUri(previousUri).rel(LinkRelation.PREVIOUS).type(MediaType.APPLICATION_JSON).build());
-			final URI firstUri = uriBuilder.clone().build(0, size);
+			final URI firstUri = uriBuilder.clone().build(0, per_page);
 			paginable.setFirst(Link.fromUri(firstUri).rel(LinkRelation.FIRST).type(MediaType.APPLICATION_JSON).build());
 		}
 		// next link
-		if (start + size < total) {
-			int next = start + size;
-			final URI nextUri = uriBuilder.clone().build(next, size);
+		if (pageFirstEntry + per_page < totalEntries) {
+			int next = page + 1;
+			final URI nextUri = uriBuilder.clone().build(next, per_page);
 			paginable.setNext(Link.fromUri(nextUri).rel(LinkRelation.NEXT).type(MediaType.APPLICATION_JSON).build());
-			final int pages = roundUp(total, size);
-			final URI lastUri = uriBuilder.clone().build(pages * size, size);
+			final int totalPages = totalPages(totalEntries, per_page);
+			final URI lastUri = uriBuilder.clone().build(totalPages, per_page);
 			paginable.setLast(Link.fromUri(lastUri).rel(LinkRelation.LAST).type(MediaType.APPLICATION_JSON).build());
 		}
 		return Users.start().paginable(paginable)
