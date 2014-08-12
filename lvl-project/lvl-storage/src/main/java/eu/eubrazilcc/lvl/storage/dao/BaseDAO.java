@@ -30,6 +30,8 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang.mutable.MutableLong;
 
+import com.google.common.collect.ImmutableMap;
+
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 
@@ -40,7 +42,7 @@ import eu.eubrazilcc.lvl.core.geojson.Polygon;
  * @param <E> - the type of elements in this DAO
  */
 public interface BaseDAO<K, E> {	
-	
+
 	/**
 	 * Inserts a new element in the database.
 	 * @param e - element to be inserted in the database
@@ -49,25 +51,25 @@ public interface BaseDAO<K, E> {
 	 *        unmodified, the method {@link WriteResult#getElement()} can return {@code null}.
 	 */
 	WriteResult<E> insert(E e);
-	
+
 	/**
 	 * Updates an existing element in the database.
 	 * @param e - element to be updated in the database
 	 */
 	@Nullable E update(E e);
-	
+
 	/**
 	 * Removes an element from the database.
 	 * @param key - identifier of the element to be removed from the database
 	 */
 	void delete(K key);
-	
+
 	/**
 	 * Returns all the elements from the database.
 	 * @return all the elements that are in the database
 	 */
 	List<E> findAll();
-	
+
 	/**
 	 * Search for an element in the database using the specified id.
 	 * @param key - identifier whose associate value is to be returned
@@ -75,24 +77,25 @@ public interface BaseDAO<K, E> {
 	 *         or {@code null} if the database contains no entry for the key
 	 */
 	E find(K key);
-	
+
 	/**
-	 * Returns a view of the elements in the database that contains the specified
-	 * range. The elements are sorted by the key in ascending order. Optionally,
-	 * the number of elements found in the database is returned to the caller.
+	 * Returns a view of the elements in the database that contains the specified range. The elements are sorted by the key in ascending order.
+	 * An optional filter can be specified to filter the database response. However, if the filter is invalid, an empty list will be returned
+	 * to the caller. Optionally, the number of elements found in the database is returned to the caller.
 	 * @param start - starting index
 	 * @param size - maximum number of elements returned
+	 * @param filter - the expression to be used to filter the collection
 	 * @param count - (optional) is updated with the number of elements in the database
 	 * @return a view of the elements in the database that contains the specified range
 	 */
-	List<E> list(int start, int size, @Nullable MutableLong count);
-	
+	List<E> list(int start, int size, @Nullable ImmutableMap<String, String> filter, @Nullable MutableLong count);
+
 	/**
 	 * Returns the number of elements in the database.
 	 * @return the number of elements in the database
 	 */
 	long count();
-	
+
 	/**
 	 * Returns the elements in the database that are within the specified distance (in meters) 
 	 * from the center point specified (using WGS84).
@@ -102,18 +105,18 @@ public interface BaseDAO<K, E> {
 	 * @return the elements that are within the specified distance from the center point
 	 */
 	List<E> getNear(Point point, double maxDistance);
-	
+
 	/**
 	 * Returns the elements in the database that exist entirely within the defined polygon.
 	 * @param polygon - geometric shape with at least four edges
 	 * @return the elements that exist entirely within the defined polygon
 	 */
 	List<E> geoWithin(Polygon polygon);
-	
+
 	/**
 	 * Writes statistics about the elements to the specified output stream.
 	 * @param os - the output stream to write the statistics to
 	 */
 	void stats(OutputStream os) throws IOException;
-	
+
 }

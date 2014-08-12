@@ -22,23 +22,26 @@
 
 package eu.eubrazilcc.lvl.storage;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
@@ -88,7 +91,7 @@ public class SequenceCollectionTest {
 			assertThat("sequence is not null", sequence2, notNullValue());
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
-						
+
 			// find and append link to found records
 			final URI baseUri = new URI("https://localhost:8080/service/resource");
 			SEQUENCE_DAO.baseUri(baseUri);
@@ -136,33 +139,77 @@ public class SequenceCollectionTest {
 							LngLatAlt.builder().coordinates(-110.0d, 30.0d).build(),
 							LngLatAlt.builder().coordinates(-110.0d, 50.0d).build(),
 							LngLatAlt.builder().coordinates(-140.0d, 30.0d).build()).build());
-			assertThat("sequence is not null", sequences, notNullValue());
+			assertThat("sequences is not null", sequences, notNullValue());
 			assertThat("ids is not empty", !sequences.isEmpty());
 
 			// remove
 			SEQUENCE_DAO.delete(sequenceKey);
 
-			// pagination
-			final List<String> ids = Lists.newArrayList();
-			for (int i = 0; i < 11; i++) {
+			// create a large dataset to test complex operations
+			final List<String> ids = newArrayList();
+			final int numItems = 11;
+			for (int i = 0; i < numItems; i++) {
 				final Sequence sequence3 = Sequence.builder()
 						.dataSource(DataSource.GENBANK)
 						.accession(Integer.toString(i))
-						.gi(i).build();
+						.gi(i)
+						.locale(i%2 != 0 ? Locale.ENGLISH : Locale.FRANCE)
+						.build();
 				ids.add(sequence3.getAccession());
 				SEQUENCE_DAO.insert(sequence3);
 			}
+
+			// pagination
 			final int size = 3;
 			int start = 0;
 			sequences = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				sequences = SEQUENCE_DAO.list(start, size, count);
+				sequences = SEQUENCE_DAO.list(start, size, null, count);
 				if (sequences.size() != 0) {
-					System.out.println("Paging " + start + " - " + sequences.size() + " of " + count.getValue());
+					System.out.println("Paging: first item " + start + ", showing " + sequences.size() + " of " + count.getValue() + " items");
 				}
 				start += sequences.size();
 			} while (!sequences.isEmpty());
+
+			// filter: full-text search
+			final Random random = new Random();
+			ImmutableMap<String, String> filter = of("source", DataSource.GENBANK);
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			assertThat("filtered sequences is not null", sequences, notNullValue());
+			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));
+
+			// filter: full-text search
+			filter = of("accession", Integer.toString(random.nextInt(numItems)));
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			assertThat("filtered sequences is not null", sequences, notNullValue());
+			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(1));
+			
+			// filter: keyword matching search
+			filter = of("locale", Locale.ENGLISH.toString());
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			assertThat("filtered sequences is not null", sequences, notNullValue());
+			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems / 2));
+
+			// filter: combined full-text search
+			filter = of("source", DataSource.GENBANK, "accession", Integer.toString(random.nextInt(numItems)));
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			assertThat("filtered sequences is not null", sequences, notNullValue());
+			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));
+			
+			// filter: combined full-text search with keyword matching search
+			filter = of("source", DataSource.GENBANK, "locale", Locale.ENGLISH.toString(), "accession", Integer.toString(random.nextInt(numItems)));
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			assertThat("filtered sequences is not null", sequences, notNullValue());
+			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems / 2));
+
+			// invalid filter
+			filter = of("filter_name", "filter_content");
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			assertThat("filtered sequences is not null", sequences, notNullValue());
+			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(0));
+
+			// clean-up and display database statistics
 			for (final String id2 : ids) {			
 				SEQUENCE_DAO.delete(SequenceKey.builder()
 						.dataSource(DataSource.GENBANK)

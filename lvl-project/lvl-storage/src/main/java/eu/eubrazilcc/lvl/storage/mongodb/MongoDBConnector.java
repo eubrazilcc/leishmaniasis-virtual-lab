@@ -213,7 +213,7 @@ public enum MongoDBConnector implements Closeable2 {
 		} finally {
 			db.requestDone();
 		}
-	}	
+	}
 
 	/**
 	 * Creates a new geospatial index in a collection. Indexes are created in the background.
@@ -229,6 +229,37 @@ public enum MongoDBConnector implements Closeable2 {
 		try {
 			db.requestEnsureConnection();
 			dbcol.createIndex(new BasicDBObject(field, "2dsphere"), new BasicDBObject("background", true));
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	public void createTextIndex(final List<String> fields, final String collection) {
+		checkArgument(fields != null && !fields.isEmpty(), "Uninitialized or invalid fields");
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		final DBCollection dbcol = db.getCollection(collection);
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();
+			
+						
+			// TODO
+			System.err.println("\n\n" + new BasicDBObject(toMap(fields, new Function<String, String>() {
+				@Override
+				public String apply(final String field) {
+					return "text";
+				}				
+			})) + "\n\n");
+			// TODO
+			
+			
+			dbcol.createIndex(new BasicDBObject(toMap(fields, new Function<String, String>() {
+				@Override
+				public String apply(final String field) {
+					return "text";
+				}
+			})), new BasicDBObject("default_language", "english"));
 		} finally {
 			db.requestDone();
 		}
@@ -283,11 +314,13 @@ public enum MongoDBConnector implements Closeable2 {
 	 * @param collection - collection where the objects are searched
 	 * @param start - starting index
 	 * @param size - maximum number of objects returned
+	 * @param query - the expression to be used to query the collection
 	 * @param count - (optional) is updated with the number of objects in the database
 	 * @return a view of the objects in the collection that contains the specified range
 	 */
 	public List<BasicDBObject> list(final DBObject sortCriteria, final String collection, 
-			final int start, final int size, final @Nullable MutableLong count) {
+			final int start, final int size, final @Nullable DBObject query,
+			final @Nullable MutableLong count) {
 		checkArgument(sortCriteria != null, "Uninitialized sort criteria");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final List<BasicDBObject> list = newArrayList();
@@ -296,7 +329,12 @@ public enum MongoDBConnector implements Closeable2 {
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-			final DBCursor cursor = dbcol.find();			 
+
+			// TODO
+			System.err.println("\n\nFILTER:" + query + "\n\n");
+			// TODO
+
+			final DBCursor cursor = query != null ? dbcol.find(query) : dbcol.find(); // TODO
 			cursor.sort(sortCriteria);
 			cursor.skip(start).limit(size);
 			try {

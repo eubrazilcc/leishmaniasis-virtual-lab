@@ -172,9 +172,9 @@ public class ResourceOwnerCollectionTest {
 			List<ResourceOwner> resourceOwners = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				resourceOwners = RESOURCE_OWNER_DAO.list(start, size, count);
+				resourceOwners = RESOURCE_OWNER_DAO.list(start, size, null, count);
 				if (resourceOwners.size() != 0) {
-					System.out.println("Paging " + start + " - " + resourceOwners.size() + " of " + count.getValue());
+					System.out.println("Paging: first item " + start + ", showing " + resourceOwners.size() + " of " + count.getValue() + " items");
 				}
 				start += resourceOwners.size();
 			} while (!resourceOwners.isEmpty());

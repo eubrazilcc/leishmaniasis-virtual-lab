@@ -91,7 +91,7 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
         loadPreviousSession : function() {
             var session = this.storage.get('user.session');
             if (session) {
-                this.session.set('user.session');
+                this.session.set('user.session', session);
             }
             return session;
         },

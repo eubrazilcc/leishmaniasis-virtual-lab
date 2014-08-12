@@ -95,9 +95,9 @@ public class TokenCollectionTest {
 			List<AccessToken> accessTokens = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				accessTokens = TOKEN_DAO.list(start, size, count);
+				accessTokens = TOKEN_DAO.list(start, size, null, count);
 				if (accessTokens.size() != 0) {
-					System.out.println("Paging " + start + " - " + accessTokens.size() + " of " + count.getValue());
+					System.out.println("Paging: first item " + start + ", showing " + accessTokens.size() + " of " + count.getValue() + " items");
 				}
 				start += accessTokens.size();
 			} while (!accessTokens.isEmpty());

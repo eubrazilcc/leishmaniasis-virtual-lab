@@ -227,7 +227,7 @@ public class Sequence {
 			instance.setVersion(version);
 			return this;
 		}
-		
+
 		public Builder gi(final int gi) {
 			instance.setGi(gi);
 			return this;

@@ -84,9 +84,9 @@ public class AuthCodeCollectionTest {
 			List<AuthCode> authCodes = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				authCodes = AUTH_CODE_DAO.list(start, size, count);
+				authCodes = AUTH_CODE_DAO.list(start, size, null, count);
 				if (authCodes.size() != 0) {
-					System.out.println("Paging " + start + " - " + authCodes.size() + " of " + count.getValue());
+					System.out.println("Paging: first item " + start + ", showing " + authCodes.size() + " of " + count.getValue() + " items");
 				}
 				start += authCodes.size();
 			} while (!authCodes.isEmpty());

@@ -42,6 +42,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -104,7 +105,7 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 
 	@Override
 	public List<Notification> findAll() {
-		return list(0, Integer.MAX_VALUE, null);
+		return list(0, Integer.MAX_VALUE, null, null);
 	}
 
 	@Override
@@ -114,8 +115,9 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	}
 
 	@Override
-	public List<Notification> list(final int start, final int size, final @Nullable MutableLong count) {
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, Notification>() {
+	public List<Notification> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {		
+		// execute the query in the database (unsupported filter)
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, Notification>() {
 			@Override
 			public Notification apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
@@ -149,7 +151,7 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 
 	private BasicDBObject sortCriteria() {
 		return new BasicDBObject(MORPHIA_KEY, 1);
-	}	
+	}
 
 	private Notification parseBasicDBObject(final BasicDBObject obj) {
 		final NotificationEntity entity = map(obj);

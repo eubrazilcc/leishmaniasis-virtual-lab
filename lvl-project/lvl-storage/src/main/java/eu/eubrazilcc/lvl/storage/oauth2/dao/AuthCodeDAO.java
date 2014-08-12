@@ -44,6 +44,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -68,7 +69,8 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	private final static Logger LOGGER = getLogger(AuthCodeDAO.class);
 
 	public static final String COLLECTION = "authz_codes";
-	public static final String PRIMARY_KEY = "authCode.code";
+	public static final String DB_PREFIX = "authCode.";
+	public static final String PRIMARY_KEY = DB_PREFIX + "code";
 
 	private AuthCodeDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
@@ -103,7 +105,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 
 	@Override
 	public List<AuthCode> findAll() {
-		return list(0, Integer.MAX_VALUE, null);
+		return list(0, Integer.MAX_VALUE, null, null);
 	}
 
 	@Override
@@ -113,8 +115,9 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	}
 
 	@Override
-	public List<AuthCode> list(final int start, final int size, final @Nullable MutableLong count) {
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, AuthCode>() {
+	public List<AuthCode> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {		
+		// execute the query in the database (unsupported filter)
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, AuthCode>() {
 			@Override
 			public AuthCode apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);

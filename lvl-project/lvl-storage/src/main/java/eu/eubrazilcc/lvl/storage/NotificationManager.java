@@ -112,7 +112,7 @@ public enum NotificationManager {
 							List<ResourceOwner> resourceOwners = null;
 							final MutableLong count = new MutableLong(0l);
 							do {
-								resourceOwners = RESOURCE_OWNER_DAO.list(start, PAGE_SIZE, count);
+								resourceOwners = RESOURCE_OWNER_DAO.list(start, PAGE_SIZE, null, count);
 								for (final ResourceOwner resourceOwner : resourceOwners) {
 									if (isAccessible(notification.getScope(), resourceOwner.getUser().getScopes(), true)) {
 										notification.setAddressee(resourceOwner.getUser().getUsername());

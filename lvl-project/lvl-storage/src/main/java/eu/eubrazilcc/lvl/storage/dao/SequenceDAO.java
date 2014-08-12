@@ -27,12 +27,14 @@ import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
@@ -58,6 +60,7 @@ import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
+import eu.eubrazilcc.lvl.storage.InvalidFilterParseException;
 import eu.eubrazilcc.lvl.storage.SequenceGiKey;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.TransientStore;
@@ -75,10 +78,11 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	private final static Logger LOGGER = getLogger(SequenceDAO.class);
 
 	public static final String COLLECTION        = "sequences";
-	public static final String PRIMARY_KEY_PART1 = "sequence.dataSource";
-	public static final String PRIMARY_KEY_PART2 = "sequence.accession";
-	public static final String GI_KEY            = "sequence.gi";
-	public static final String GEOLOCATION_KEY   = "sequence.location";
+	public static final String DB_PREFIX         = "sequence.";
+	public static final String PRIMARY_KEY_PART1 = DB_PREFIX + "dataSource";
+	public static final String PRIMARY_KEY_PART2 = DB_PREFIX + "accession";
+	public static final String GI_KEY            = DB_PREFIX + "gi";
+	public static final String GEOLOCATION_KEY   = DB_PREFIX + "location";
 
 	private URI baseUri = null;
 
@@ -86,6 +90,13 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, GI_KEY), COLLECTION);
 		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
+		MONGODB_CONN.createTextIndex(ImmutableList.of(
+				DB_PREFIX + "dataSource", 
+				DB_PREFIX + "definition", 
+				DB_PREFIX + "accession", 
+				DB_PREFIX + "organism",
+				DB_PREFIX + "countryFeature"), // TODO 
+				COLLECTION);
 	}
 
 	public SequenceDAO baseUri(final URI baseUri) {
@@ -125,7 +136,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	@Override
 	public List<Sequence> findAll() {
-		return list(0, Integer.MAX_VALUE, null);
+		return list(0, Integer.MAX_VALUE, null, null);
 	}
 
 	@Override
@@ -135,13 +146,22 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	}
 
 	@Override
-	public List<Sequence> list(final int start, final int size, final @Nullable MutableLong count) {
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, Sequence>() {
+	public List<Sequence> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {
+		// parse the filter or return an empty list if the filter is invalid
+		BasicDBObject query = null;
+		try {
+			query = buildQuery(filter);
+		} catch (InvalidFilterParseException e) {
+			LOGGER.warn("Discarding operation after an invalid filter was found: " + e.getMessage());
+			return newArrayList();
+		}
+		// execute the query in the database
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, query, count), new Function<BasicDBObject, Sequence>() {
 			@Override
 			public Sequence apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);
 			}
-		});		
+		});
 	}
 
 	@Override
@@ -192,6 +212,56 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	private BasicDBObject sortCriteria() {
 		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, 1, PRIMARY_KEY_PART2, 1));
+	}
+
+	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter) throws InvalidFilterParseException {
+		BasicDBObject query = null;
+		if (filter != null) {
+			for (final Entry<String, String> entry : filter.entrySet()) {
+				query = parseFilter(entry.getKey(), entry.getValue(), query);
+			}
+		}
+		return query;
+	}
+
+	private BasicDBObject parseFilter(final String parameter, final String expression, final BasicDBObject query) throws InvalidFilterParseException {
+		BasicDBObject query2 = query;
+		if (isNotBlank(parameter) && isNotBlank(expression)) {
+			String field = null;
+			// full-text search
+			if ("source".equals(parameter)) {
+				field = DB_PREFIX + "dataSource";				
+			} else if ("definition".equals(parameter)) {
+				field = DB_PREFIX + "definition";
+			} else if ("accession".equals(parameter)) {
+				field = DB_PREFIX + "accession";
+			} else if ("organism".equals(parameter)) {
+				field = DB_PREFIX + "organism";
+			} else if ("country".equals(parameter)) {
+				field = DB_PREFIX + "countryFeature";
+			}
+			if (isNotBlank(field)) {
+				if (query2 != null) {
+					final BasicDBObject textSearch = (BasicDBObject)query2.get("$text");
+					final BasicDBObject search = new BasicDBObject("$search", textSearch != null ? textSearch.getString("$search") + " " + expression : expression);
+					query2 = query2.append("$text", search.append("$language", "english"));
+				} else {
+					final BasicDBObject search = new BasicDBObject("$search", expression);
+					query2 = new BasicDBObject().append("$text", search.append("$language", "english"));					
+				}
+			} else {
+				// keyword matching search
+				if ("locale".equals(parameter)) {
+					field = DB_PREFIX + "locale";
+				}
+				if (isNotBlank(field)) {
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
+				} else {			
+					throw new InvalidFilterParseException(parameter);
+				}	
+			}			
+		}
+		return query2;		
 	}
 
 	private Sequence parseBasicDBObject(final BasicDBObject obj) {
@@ -290,7 +360,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
 	public static class SequenceEntity {
-		
+
 		@JsonSerialize(using = ObjectIdSerializer.class)
 		@JsonDeserialize(using = ObjectIdDeserializer.class)
 		@JsonProperty("_id")

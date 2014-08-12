@@ -51,6 +51,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -138,7 +139,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
 	@Override
 	public List<PendingUser> findAll() {
-		return list(0, Integer.MAX_VALUE, null);
+		return list(0, Integer.MAX_VALUE, null, null);
 	}
 
 	@Override
@@ -148,8 +149,9 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	}
 
 	@Override
-	public List<PendingUser> list(final int start, final int size, final @Nullable MutableLong count) {
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, PendingUser>() {
+	public List<PendingUser> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {
+		// execute the query in the database (unsupported filter)
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, PendingUser>() {
 			@Override
 			public PendingUser apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
@@ -188,7 +190,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	private BasicDBObject sortCriteria() {
 		return new BasicDBObject(PRIMARY_KEY, 1);
 	}
-
+	
 	private PendingUser parseBasicDBObject(final BasicDBObject obj) {
 		final PendingUser pendingUser = map(obj).getPendingUser();
 		addLink(pendingUser);

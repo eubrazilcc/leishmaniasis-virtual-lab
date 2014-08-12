@@ -44,6 +44,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -78,7 +79,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	private ClientAppDAO() {		
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		// ensure that at least the administrator account exists in the database
-		final List<ClientApp> clientApps = list(0, 1, null);
+		final List<ClientApp> clientApps = list(0, 1, null, null);
 		if (clientApps == null || clientApps.isEmpty()) {
 			insert(ClientApp.builder()
 					.name(LVL_PORTAL_NAME)
@@ -123,7 +124,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 
 	@Override
 	public List<ClientApp> findAll() {
-		return list(0, Integer.MAX_VALUE, null);
+		return list(0, Integer.MAX_VALUE, null, null);
 	}
 
 	@Override
@@ -133,8 +134,9 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	}
 
 	@Override
-	public List<ClientApp> list(final int start, final int size, final @Nullable MutableLong count) {
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, count), new Function<BasicDBObject, ClientApp>() {
+	public List<ClientApp> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {
+		// execute the query in the database (unsupported filter)
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, ClientApp>() {
 			@Override
 			public ClientApp apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
@@ -267,7 +269,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 		@JsonDeserialize(using = ObjectIdDeserializer.class)
 		@JsonProperty("_id")
 		private ObjectId id;
-		
+
 		private ClientApp clientApp;
 
 		public ClientAppEntity() { }

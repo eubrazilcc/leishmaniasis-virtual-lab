@@ -3,8 +3,8 @@
  */
 
 define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
-        'pace', 'common/country_names', 'flatui-checkbox', 'flatui-radio', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter',
-        'backbone.oauth2' ], function(Lvl, BrowseTpl, Style, Configuration, pace, mapCn) {
+        'pace', 'common/country_names', 'backbone.oauth2', 'flatui-checkbox', 'flatui-radio', 'backgrid', 'backgrid-paginator', 'backgrid-select-all',
+        'backgrid-filter' ], function(Lvl, BrowseTpl, Style, Configuration, pace, mapCn) {
     Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
         var config = new Configuration();
 
@@ -125,7 +125,9 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 });
             },
             onClose : function() {
-                /* don't remove the styles in order to enable them to be reused */
+                /*
+                 * don't remove the styles in order to enable them to be reused
+                 */
             },
             onRender : function() {
                 var self = this;

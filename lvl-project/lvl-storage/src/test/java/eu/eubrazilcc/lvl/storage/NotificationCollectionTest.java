@@ -22,14 +22,14 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.storage.dao.NotificationDAO.NOTIFICATION_DAO;
 import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
+import static eu.eubrazilcc.lvl.storage.dao.NotificationDAO.NOTIFICATION_DAO;
+import static java.util.Collections.shuffle;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
-import static java.util.Collections.shuffle;
 
 import java.util.List;
 
@@ -60,7 +60,7 @@ public class NotificationCollectionTest {
 			assertThat("notification id is not null", id, notNullValue());
 			assertThat("notification id is not empty", isNotBlank(id));
 			notification.setId(id);
-			
+
 			// find
 			Notification notification2 = NOTIFICATION_DAO.find(notification.getId());
 			assertThat("notification is not null", notification2, notNullValue());
@@ -81,29 +81,34 @@ public class NotificationCollectionTest {
 			// remove
 			NOTIFICATION_DAO.delete(notification.getId());
 
-			// pagination
+			// create a large dataset to test complex operations
 			final List<String> ids = newArrayList();
-			for (int i = 0; i < 11; i++) {
+			final int numItems = 11;
+			for (int i = 0; i < numItems; i++) {
 				final Notification notification3 = Notification.builder()
 						.message(Integer.toString(i)).build();
 				ids.add(NOTIFICATION_DAO.insert(notification3).getId());
 			}
+
+			// pagination			
 			final int size = 3;
 			int start = 0;
 			List<Notification> notifications = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				notifications = NOTIFICATION_DAO.list(start, size, count);
+				notifications = NOTIFICATION_DAO.list(start, size, null, count);
 				if (notifications.size() != 0) {
-					System.out.println("Paging " + start + " - " + notifications.size() + " of " + count.getValue());
+					System.out.println("Paging: first item " + start + ", showing " + notifications.size() + " of " + count.getValue() + " items");
 				}
 				start += notifications.size();
 			} while (!notifications.isEmpty());
+
+			// clean-up and display database statistics
 			for (final String id2 : ids) {			
 				NOTIFICATION_DAO.delete(id2);
 			}
 			NOTIFICATION_DAO.stats(System.out);
-			
+
 			// test notification sending
 			final List<Notification> notifications2 = newArrayList();
 			for (int i = 0; i < 200; i++) {
@@ -131,10 +136,10 @@ public class NotificationCollectionTest {
 			while (NOTIFICATION_MANAGER.hasPendingNotifications() && tries++ < 30) {
 				Thread.sleep(1000l);
 			}
-			notifications = NOTIFICATION_DAO.list(0, 200, null);
+			notifications = NOTIFICATION_DAO.list(0, 200, null, null);
 			assertThat("notifications is not null", notifications, notNullValue());
 			assertThat("notifications size coincides with expected", notifications.size(), equalTo(200));
-			
+
 			// test notification broadcasting
 			final Notification notification3 = Notification.builder()
 					.scope(ScopeManager.SEQUENCES)
@@ -144,7 +149,7 @@ public class NotificationCollectionTest {
 			while (NOTIFICATION_MANAGER.hasPendingNotifications() && tries++ < 30) {
 				Thread.sleep(1000l);
 			}
-			notifications = NOTIFICATION_DAO.list(0, 201, null);
+			notifications = NOTIFICATION_DAO.list(0, 201, null, null);
 			assertThat("notifications (including broadcasted) is not null", notifications, notNullValue());
 			assertThat("notifications (including broadcasted) size coincides with expected", notifications.size(), equalTo(201));			
 		} catch (Exception e) {
