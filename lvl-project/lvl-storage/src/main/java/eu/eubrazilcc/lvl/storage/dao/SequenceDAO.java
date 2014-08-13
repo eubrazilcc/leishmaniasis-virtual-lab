@@ -95,7 +95,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 				DB_PREFIX + "definition", 
 				DB_PREFIX + "accession", 
 				DB_PREFIX + "organism",
-				DB_PREFIX + "countryFeature"), // TODO 
+				DB_PREFIX + "countryFeature"), 
 				COLLECTION);
 	}
 
@@ -228,38 +228,41 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		BasicDBObject query2 = query;
 		if (isNotBlank(parameter) && isNotBlank(expression)) {
 			String field = null;
-			// full-text search
-			if ("source".equals(parameter)) {
+			// keyword matching search
+			if ("source".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "dataSource";				
-			} else if ("definition".equals(parameter)) {
+			} else if ("definition".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "definition";
-			} else if ("accession".equals(parameter)) {
+			} else if ("accession".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "accession";
-			} else if ("organism".equals(parameter)) {
+			} else if ("organism".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "organism";
-			} else if ("country".equals(parameter)) {
+			} else if ("country".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "countryFeature";
+			} else if ("locale".equalsIgnoreCase(parameter)) {
+				field = DB_PREFIX + "locale";
 			}
 			if (isNotBlank(field)) {
-				if (query2 != null) {
-					final BasicDBObject textSearch = (BasicDBObject)query2.get("$text");
-					final BasicDBObject search = new BasicDBObject("$search", textSearch != null ? textSearch.getString("$search") + " " + expression : expression);
-					query2 = query2.append("$text", search.append("$language", "english"));
-				} else {
-					final BasicDBObject search = new BasicDBObject("$search", expression);
-					query2 = new BasicDBObject().append("$text", search.append("$language", "english"));					
-				}
+				query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
 			} else {
-				// keyword matching search
-				if ("locale".equals(parameter)) {
-					field = DB_PREFIX + "locale";
+				// full-text search
+				if ("text".equalsIgnoreCase(parameter)) {
+					field = "$text";
 				}
 				if (isNotBlank(field)) {
-					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
-				} else {			
-					throw new InvalidFilterParseException(parameter);
-				}	
-			}			
+					if (query2 != null) {
+						final BasicDBObject textSearch = (BasicDBObject)query2.get("$text");
+						final BasicDBObject search = new BasicDBObject("$search", textSearch != null 
+								? textSearch.getString("$search") + " " + expression : expression);
+						query2 = query2.append("$text", search.append("$language", "english"));
+					} else {
+						final BasicDBObject search = new BasicDBObject("$search", expression);
+						query2 = new BasicDBObject().append("$text", search.append("$language", "english"));					
+					}
+				} else {				
+					throw new InvalidFilterParseException(parameter);					
+				}
+			}
 		}
 		return query2;		
 	}

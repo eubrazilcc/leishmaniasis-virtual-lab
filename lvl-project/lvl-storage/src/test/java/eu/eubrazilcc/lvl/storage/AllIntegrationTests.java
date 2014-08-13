@@ -37,10 +37,9 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-/* TODO @SuiteClasses({ SequenceCollectionTest.class, TokenCollectionTest.class, AuthCodeCollectionTest.class, 
+@SuiteClasses({ SequenceCollectionTest.class, TokenCollectionTest.class, AuthCodeCollectionTest.class, 
 	ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class,
-	NotificationCollectionTest.class }) */
-@SuiteClasses({ SequenceCollectionTest.class })
+	NotificationCollectionTest.class })
 public class AllIntegrationTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

@@ -242,24 +242,12 @@ public enum MongoDBConnector implements Closeable2 {
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-			
-						
-			// TODO
-			System.err.println("\n\n" + new BasicDBObject(toMap(fields, new Function<String, String>() {
-				@Override
-				public String apply(final String field) {
-					return "text";
-				}				
-			})) + "\n\n");
-			// TODO
-			
-			
 			dbcol.createIndex(new BasicDBObject(toMap(fields, new Function<String, String>() {
 				@Override
 				public String apply(final String field) {
 					return "text";
 				}
-			})), new BasicDBObject("default_language", "english"));
+			})), new BasicDBObject("default_language", "english").append("name", collection + ".text_idx"));
 		} finally {
 			db.requestDone();
 		}
@@ -329,12 +317,7 @@ public enum MongoDBConnector implements Closeable2 {
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-
-			// TODO
-			System.err.println("\n\nFILTER:" + query + "\n\n");
-			// TODO
-
-			final DBCursor cursor = query != null ? dbcol.find(query) : dbcol.find(); // TODO
+			final DBCursor cursor = query != null ? dbcol.find(query) : dbcol.find();
 			cursor.sort(sortCriteria);
 			cursor.skip(start).limit(size);
 			try {

@@ -152,6 +152,7 @@ public class SequenceCollectionTest {
 				final Sequence sequence3 = Sequence.builder()
 						.dataSource(DataSource.GENBANK)
 						.accession(Integer.toString(i))
+						.definition("This is an example")
 						.gi(i)
 						.locale(i%2 != 0 ? Locale.ENGLISH : Locale.FRANCE)
 						.build();
@@ -172,14 +173,14 @@ public class SequenceCollectionTest {
 				start += sequences.size();
 			} while (!sequences.isEmpty());
 
-			// filter: full-text search
+			// filter: keyword matching search
 			final Random random = new Random();
 			ImmutableMap<String, String> filter = of("source", DataSource.GENBANK);
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));
 
-			// filter: full-text search
+			// filter: keyword matching search
 			filter = of("accession", Integer.toString(random.nextInt(numItems)));
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
@@ -191,18 +192,24 @@ public class SequenceCollectionTest {
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems / 2));
 
-			// filter: combined full-text search
+			// filter: combined keyword matching search
 			filter = of("source", DataSource.GENBANK, "accession", Integer.toString(random.nextInt(numItems)));
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			assertThat("filtered sequences is not null", sequences, notNullValue());
+			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(1));
+			
+			// filter: full-text search
+			filter = of("text", "an example");
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));
 			
 			// filter: combined full-text search with keyword matching search
-			filter = of("source", DataSource.GENBANK, "locale", Locale.ENGLISH.toString(), "accession", Integer.toString(random.nextInt(numItems)));
+			filter = of("source", DataSource.GENBANK, "locale", Locale.ENGLISH.toString(), "text", "example");
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems / 2));
-
+			
 			// invalid filter
 			filter = of("filter_name", "filter_content");
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
