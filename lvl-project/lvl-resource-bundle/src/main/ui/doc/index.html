@@ -84,6 +84,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                     <ul>
                       <li><a href="#restful_api_geojson_support">GeoJSON support</a></li>
                     </ul></li>
+                  <li><a href="#restful_api_search">Search</a>
+                    <ul>
+                      <li><a href="#restful_api_search_sequences">Search sequences</a>
+                    </ul></li>
                 </ul></li>
               <li><a href="#user_interface">User Interface</a>
                 <ul>
@@ -790,11 +794,16 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               server response:
             </p>
 
-            <code>
-              Access-Control-Allow-Origin: * <br /> Access-Control-Allow-Headers: origin, content-type, accept, authorization <br />
-              Access-Control-Allow-Credentials: true <br /> Access-Control-Allow-Methods: GET PUT DELETE POST HEAD OPTIONS <br /> Access-Control-Max-Age:
-              604800
-            </code>
+            <code>Access-Control-Allow-Origin: *</code>
+            <br>
+            <code>Access-Control-Allow-Headers: origin, content-type, accept, authorization</code>
+            <br>
+            <code>Access-Control-Allow-Credentials: true</code>
+            <br>
+            <code>Access-Control-Allow-Methods: GET PUT DELETE POST HEAD OPTIONS</code>
+            <br>
+            <code>Access-Control-Max-Age: 604800</code>
+
             <p></p>
 
             <p>
@@ -821,6 +830,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
             <p>
               <em>TODO LIST</em>
+            </p>
+
             <ol>
               <li>Get new publications from PubMed and new sequences from GenBank: the system must periodically inspect these resources for new records on
                 Leishmaniasis. Users with administrator role are notified when new records are found.</li>
@@ -828,7 +839,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               <li>The system must at least assist in identifying the following fields: PubMed identifier, sequence accession number, geographical
                 coordinates and/or country/region.</li>
             </ol>
-            </p>
 
             <h2>
               <a id="restful_api_endpoints"></a>Endpoints
@@ -874,6 +884,94 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               Currently, LVL supports the following GeoJSON geometries: point, line and polygon. For a complete description: <a href="http://geojson.org/"
                 target="_blank">GeoJSON -- JSON Geometry and Feature Description</a>.
             </p>
+
+            <h2>
+              <a id="restful_api_search"></a>Search
+            </h2>
+
+            <p>The Search API is designed to help users to find entries (e.g. sequences, papers, users) in the LVL database. It supports two different
+              search strategies: a) keyword matching search; and b) full-text search. Search qualifiers support keyword matching search, unless otherwise
+              specified. Regardless the searched collection, the following parameters are available to all searches and they can be passed as query parameters
+              as part of the URL:</p>
+
+            <ul class="list-group">
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">page</h4>
+                <p class="list-group-item-text">
+                  The current page. The search API uses a 0-based index (the first page is always 0). <strong>Default: </strong> 0.
+                </p>
+              </li>
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">per_page</h4>
+                <p class="list-group-item-text">The maximum number of entries returned per page. The default value depends on the collection.</p>
+              </li>
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">q (query)</h4>
+                <p class="list-group-item-text">
+                  The search terms. Every search term must include a search qualifier and a search expression, especified in the following way:
+                  <code>qualifier:expression</code>
+                  . To include multiple search terms separate them with a semicolon:
+                  <code>q1:exp1;q2:exp2</code>
+                  . Some expressions can include symbols: <code>length : >23</code>. See the search terms supported per collection below.
+                </p>
+              </li>
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">sort</h4>
+                <p class="list-group-item-text">The sort field. The possible values as well as the default value depends on the collection.</p>
+              </li>
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">order</h4>
+                <p class="list-group-item-text">
+                  The sort order if sort parameter is provided. One of asc or desc. <strong>Default:</strong> desc.
+                </p>
+              </li>
+            </ul>
+
+            <h3>
+              <a id="restful_api_search_sequences"></a>Search sequences
+            </h3>
+
+            <p>Find sequences via various criteria.</p>
+
+            <code>GET /lvl-service/rest/v1/sequences</code>
+
+            <p></p>
+
+            <p>
+              100 sequences are returned per page by default, unless other page size is especified using the parameter:
+              <code>per_page</code>
+            </p>
+
+            <p>
+              The
+              <code>q</code>
+              search term can contain any combination of the supported sequence search qualifiers:
+            </p>
+
+            <ul>
+              <li><code>source</code> With this qualifier users can restrict the search to just the sequences from a specific data source (e.g. GenBank).</li>
+              <li><code>definition</code> Filter sequences by the definition they have.</li>
+              <li><code>accession</code> Search for sequences that have accessions that match a certain identifier.</li>
+              <li><code>organism</code> Filter sequences based on the organism.</li>
+              <li><code>country</code> Filter sequences by the country indicated in the metadata.</li>
+              <li><code>locale</code> Filter sequences by the country indicated in the metadata, using two letter country codes.</li>
+              <li><code>text</code> Full-text search that finds the especified string anywhere within the fields data source, definition, accession,
+                organism and country of the sequences stored in the LVL database.</li>
+            </ul>
+
+            <h4>Example:</h4>
+
+            <p>
+              Search for sequences that contains the string "<em>phlebotomus papatasi</em>" and that are derived from the GenBank database:
+            </p>
+
+            <code>GET /lvl-service/rest/v1/sequences?q=text:phlebotomus papatasi;source:genbank&amp;per_page=20</code>
+
+            <p></p>
+
+            <p>URL encoded:</p>
+
+            <code>GET /lvl-service/rest/v1/sequences?q=text%3Aphlebotomus+papatasi%3Bsource%3Agenbank&amp;per_page=20</code>
 
           </div>
         </div>

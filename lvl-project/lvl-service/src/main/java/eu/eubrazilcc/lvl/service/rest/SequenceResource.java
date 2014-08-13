@@ -26,6 +26,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
 import static eu.eubrazilcc.lvl.storage.PaginationUtils.firstEntryOf;
 import static eu.eubrazilcc.lvl.storage.PaginationUtils.totalPages;
+import static eu.eubrazilcc.lvl.storage.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -54,6 +55,8 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.mutable.MutableLong;
+
+import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.Sequence;
@@ -91,16 +94,19 @@ public class SequenceResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Sequences getSequences(final @QueryParam("page") @DefaultValue("0") int page,
-			final @QueryParam("per_page") @DefaultValue("10") int per_page, final @Context UriInfo uriInfo,
+			final @QueryParam("per_page") @DefaultValue("100") int per_page,			
+			final @QueryParam("q") @DefaultValue("") String q, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
 				.queryParam("page", "{page}")
-				.queryParam("per_page", "{per_page}");
+				.queryParam("per_page", "{per_page}")
+				.queryParam("q", "{q}");
 		// get sequences from database
 		final int pageFirstEntry = firstEntryOf(page, per_page);
 		final MutableLong count = new MutableLong(0l);
-		final List<Sequence> sequences = SEQUENCE_DAO.baseUri(uriInfo.getAbsolutePath()).list(pageFirstEntry, per_page, count);
+		final ImmutableMap<String, String> filter = parseQuery(q);
+		final List<Sequence> sequences = SEQUENCE_DAO.baseUri(uriInfo.getAbsolutePath()).list(pageFirstEntry, per_page, filter, count);
 		// total count
 		final Paginable paginable = new Paginable();
 		final int totalEntries = ((Long)count.getValue()).intValue();

@@ -92,8 +92,8 @@ public class IdentityProvider {
 		// get sequences from database
 		final int pageFirstEntry = firstEntryOf(page, per_page);
 		final MutableLong count = new MutableLong(0l);
-		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.baseUri(uriInfo.getAbsolutePath()).useGravatar(true).list(pageFirstEntry, per_page, count);
-		// total count		
+		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.baseUri(uriInfo.getAbsolutePath()).useGravatar(true).list(pageFirstEntry, per_page, null, count);
+		// total count
 		final Paginable paginable = new Paginable();
 		final int totalEntries = ((Long)count.getValue()).intValue();
 		paginable.setTotalCount(totalEntries);

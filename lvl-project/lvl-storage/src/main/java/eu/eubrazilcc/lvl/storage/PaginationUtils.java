@@ -24,7 +24,7 @@ package eu.eubrazilcc.lvl.storage;
 import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
 
 /**
- * Utility class to help record pagination.
+ * Utility class to help with collection pagination.
  * @author Erik Torres <ertorser@upv.es>
  */
 public final class PaginationUtils {

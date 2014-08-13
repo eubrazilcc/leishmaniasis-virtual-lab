@@ -22,13 +22,16 @@
 
 package eu.eubrazilcc.lvl.core.util;
 
+import static com.google.common.base.Joiner.on;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner.MapJoiner;
 
 /**
  * Collection utilities.
@@ -44,5 +47,10 @@ public final class CollectionUtils {
 			}
 		}).filter(notNull()).toArray(String.class));		
 	}
-	
+
+	public static <K, V> String mapToString(final Map<K, V> map) {
+		final MapJoiner mapJoiner = on(',').withKeyValueSeparator("=");
+		return mapJoiner.join(map);
+	}	
+
 }
