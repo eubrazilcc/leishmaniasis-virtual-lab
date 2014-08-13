@@ -47,6 +47,8 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
  * Most JSON processing libraries like Jackson support these JAXB annotations.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://opengeocode.org/download.php">Americas Open Geocode (AOG) database</a>
+ * @see <a href="http://geojson.org/">GeoJSON open standard format for encoding geographic data structures</a>
+ * @see <a href="http://www.ncbi.nlm.nih.gov/genbank/">GenBank collection of publicly available DNA sequences</a>
  */
 @XmlRootElement
 public class Sequence {

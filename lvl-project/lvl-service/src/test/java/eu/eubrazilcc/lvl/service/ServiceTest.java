@@ -269,7 +269,7 @@ public class ServiceTest {
 			System.out.println("Get sequences HTTP headers: " + response.getStringHeaders());
 
 			// test get sequences (Java object)
-			final Sequences sequences = target.path(path.value()).request(MediaType.APPLICATION_JSON)
+			Sequences sequences = target.path(path.value()).request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequences.class);
 			assertThat("Get sequences result is not null", sequences, notNullValue());
@@ -277,6 +277,45 @@ public class ServiceTest {
 			assertThat("Get sequences list is not empty", !sequences.getSequences().isEmpty());
 			/* uncomment for additional output */			
 			System.out.println("Get sequences result: " + sequences.toString());
+
+			// test get sequences applying a full-text search filter
+			sequences = target.path(path.value())
+					.queryParam("q", "papatasi")
+					.request(MediaType.APPLICATION_JSON)
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.get(Sequences.class);
+			assertThat("Search sequences result is not null", sequences, notNullValue());
+			assertThat("Search sequences list is not null", sequences.getSequences(), notNullValue());
+			assertThat("Search sequences list is not empty", !sequences.getSequences().isEmpty());
+			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(3));
+			/* uncomment for additional output */			
+			System.out.println("Search sequences result: " + sequences.toString());
+
+			// test get sequences applying a keyword matching filter
+			sequences = target.path(path.value())
+					.queryParam("q", "accession:JP553239")
+					.request(MediaType.APPLICATION_JSON)
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.get(Sequences.class);
+			assertThat("Search sequences result is not null", sequences, notNullValue());
+			assertThat("Search sequences list is not null", sequences.getSequences(), notNullValue());
+			assertThat("Search sequences list is not empty", !sequences.getSequences().isEmpty());
+			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(1));
+			/* uncomment for additional output */			
+			System.out.println("Search sequences result: " + sequences.toString());
+
+			// test get sequences applying a full-text search combined with a keyword matching filter
+			sequences = target.path(path.value())
+					.queryParam("q", "source:GenBank Phlebotomus")
+					.request(MediaType.APPLICATION_JSON)
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.get(Sequences.class);
+			assertThat("Search sequences result is not null", sequences, notNullValue());
+			assertThat("Search sequences list is not null", sequences.getSequences(), notNullValue());
+			assertThat("Search sequences list is not empty", !sequences.getSequences().isEmpty());
+			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(4));
+			/* uncomment for additional output */			
+			System.out.println("Search sequences result: " + sequences.toString());
 
 			// test get sequence by data source + accession number
 			Sequence sequence2 = target.path(path.value()).path(sequenceKey.toId())
