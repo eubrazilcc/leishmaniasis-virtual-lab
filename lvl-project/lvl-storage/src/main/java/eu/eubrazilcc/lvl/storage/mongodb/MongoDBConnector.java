@@ -327,8 +327,8 @@ public enum MongoDBConnector implements Closeable2 {
 			} finally {
 				cursor.close();
 			}
-			if (count != null) {
-				count.setValue(dbcol.getCount());
+			if (count != null) {				
+				count.setValue(cursor.count());
 			}
 			return list;
 		} finally {

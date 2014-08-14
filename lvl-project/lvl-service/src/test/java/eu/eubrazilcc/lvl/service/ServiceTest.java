@@ -275,6 +275,7 @@ public class ServiceTest {
 			assertThat("Get sequences result is not null", sequences, notNullValue());
 			assertThat("Get sequences list is not null", sequences.getSequences(), notNullValue());
 			assertThat("Get sequences list is not empty", !sequences.getSequences().isEmpty());
+			assertThat("Get sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
 			/* uncomment for additional output */			
 			System.out.println("Get sequences result: " + sequences.toString());
 
@@ -287,6 +288,7 @@ public class ServiceTest {
 			assertThat("Search sequences result is not null", sequences, notNullValue());
 			assertThat("Search sequences list is not null", sequences.getSequences(), notNullValue());
 			assertThat("Search sequences list is not empty", !sequences.getSequences().isEmpty());
+			assertThat("Search sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
 			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(3));
 			/* uncomment for additional output */			
 			System.out.println("Search sequences result: " + sequences.toString());
@@ -300,6 +302,7 @@ public class ServiceTest {
 			assertThat("Search sequences result is not null", sequences, notNullValue());
 			assertThat("Search sequences list is not null", sequences.getSequences(), notNullValue());
 			assertThat("Search sequences list is not empty", !sequences.getSequences().isEmpty());
+			assertThat("Search sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
 			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(1));
 			/* uncomment for additional output */			
 			System.out.println("Search sequences result: " + sequences.toString());
@@ -313,6 +316,7 @@ public class ServiceTest {
 			assertThat("Search sequences result is not null", sequences, notNullValue());
 			assertThat("Search sequences list is not null", sequences.getSequences(), notNullValue());
 			assertThat("Search sequences list is not empty", !sequences.getSequences().isEmpty());
+			assertThat("Search sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
 			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(4));
 			/* uncomment for additional output */			
 			System.out.println("Search sequences result: " + sequences.toString());

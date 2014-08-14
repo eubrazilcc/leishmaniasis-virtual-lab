@@ -114,18 +114,18 @@ public class SequenceResource {
 		// previous link
 		if (page > 0) {
 			int previous = page - 1;
-			final URI previousUri = uriBuilder.clone().build(previous, per_page);
+			final URI previousUri = uriBuilder.clone().build(previous, per_page, q);
 			paginable.setPrevious(Link.fromUri(previousUri).rel(LinkRelation.PREVIOUS).type(MediaType.APPLICATION_JSON).build());
-			final URI firstUri = uriBuilder.clone().build(0, per_page);
+			final URI firstUri = uriBuilder.clone().build(0, per_page, q);
 			paginable.setFirst(Link.fromUri(firstUri).rel(LinkRelation.FIRST).type(MediaType.APPLICATION_JSON).build());
 		}
 		// next link
 		if (pageFirstEntry + per_page < totalEntries) {
 			int next = page + 1;
-			final URI nextUri = uriBuilder.clone().build(next, per_page);
+			final URI nextUri = uriBuilder.clone().build(next, per_page, q);
 			paginable.setNext(Link.fromUri(nextUri).rel(LinkRelation.NEXT).type(MediaType.APPLICATION_JSON).build());
 			final int totalPages = totalPages(totalEntries, per_page);
-			final URI lastUri = uriBuilder.clone().build(totalPages, per_page);
+			final URI lastUri = uriBuilder.clone().build(totalPages, per_page, q);
 			paginable.setLast(Link.fromUri(lastUri).rel(LinkRelation.LAST).type(MediaType.APPLICATION_JSON).build());
 		}
 		return Sequences.start().paginable(paginable).sequences(sequences).build();

@@ -125,9 +125,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 });
             },
             onClose : function() {
-                /*
-                 * don't remove the styles in order to enable them to be reused
-                 */
+                // don't remove the styles in order to enable them to be reused
             },
             onRender : function() {
                 var self = this;
@@ -142,10 +140,14 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 
                 gridContainer.after(paginator.render().el);
 
-                var filter = new Backgrid.Extension.ClientSideFilter({
+                $(paginator.el).css({
+                    'margin-top' : '20px'
+                });
+
+                var filter = new Backgrid.Extension.ServerSideFilter({
                     collection : sequences,
-                    fields : [ 'definition' ],
-                    placeholder : 'filter'
+                    name : 'q',
+                    placeholder : 'filter sequences'
                 });
 
                 gridContainer.before(filter.render().el);

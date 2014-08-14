@@ -347,6 +347,7 @@ public class AuthTest {
 			assertThat("Get users result is not null", users, notNullValue());
 			assertThat("Get users list is not null", users.getUsers(), notNullValue());
 			assertThat("Get users list is not empty", !users.getUsers().isEmpty());
+			assertThat("Get users items count coincide with list size", users.getUsers().size(), equalTo(users.getTotalCount()));
 			/* uncomment for additional output */
 			System.out.println("     >> Get users result: " + users.toString());
 
