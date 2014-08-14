@@ -35,6 +35,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
@@ -243,7 +244,18 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 				field = DB_PREFIX + "locale";
 			}
 			if (isNotBlank(field)) {
-				query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
+				if ("accession".equalsIgnoreCase(parameter)) {
+					// convert the expression to upper case and compare for exact matching
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toUpperCase());
+				} else if ("locale".equalsIgnoreCase(parameter)) {
+					// regular expression to match the language part of the locale
+					final Pattern regex = Pattern.compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");					
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);
+				} else {
+					// regular expression to match all entries that contains the keyword
+					final Pattern regex = Pattern.compile(".*" + expression + ".*", Pattern.CASE_INSENSITIVE);
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);
+				}
 			} else {
 				// full-text search
 				if ("text".equalsIgnoreCase(parameter)) {

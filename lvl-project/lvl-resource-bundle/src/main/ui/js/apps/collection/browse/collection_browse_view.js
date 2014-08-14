@@ -40,6 +40,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
         sequences.oauth2_token = config.authorizationToken();
         // TODO : controller
 
+        // TODO Showing {{sequences.length}} sequences
+        
         var columns = [
                 {
                     name : 'dataSource',
@@ -135,7 +137,10 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 gridContainer.append(grid.render().el);
 
                 var paginator = new Backgrid.Extension.Paginator({
-                    collection : sequences
+                    collection : sequences,
+                    windowSize : 14,
+                    slideScale : 0.5,
+                    goBackFirstOnSort : false
                 });
 
                 gridContainer.after(paginator.render().el);
@@ -151,12 +156,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 });
 
                 gridContainer.before(filter.render().el);
-
-                $(filter.el).css({
-                    float : 'right',
-                    margin : '10px 20px 20px 20px',
-                    padding : '0px'
-                });
+                
+                $(filter.el).addClass('pull-right lvl-filter-container');
 
                 // TODO : controller
                 sequences.fetch({

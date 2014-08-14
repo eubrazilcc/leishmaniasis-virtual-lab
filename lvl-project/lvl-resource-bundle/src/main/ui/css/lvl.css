@@ -99,6 +99,11 @@ a.lvl-login:hover,a.lvl-login:focus {
   position: fixed;
 }
 
+.lvl-filter-container {
+  margin: 10px 0px 20px 0px !important;
+  padding: 0px;
+}
+
 /* Override Boostrap styles */
 .has-feedback .form-control-feedback {
   top: 14px;

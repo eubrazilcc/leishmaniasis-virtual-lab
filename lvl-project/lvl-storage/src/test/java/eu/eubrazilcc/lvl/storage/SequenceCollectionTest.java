@@ -178,7 +178,7 @@ public class SequenceCollectionTest {
 			ImmutableMap<String, String> filter = of("source", DataSource.GENBANK);
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
-			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));
+			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));			
 
 			// filter: keyword matching search
 			filter = of("accession", Integer.toString(random.nextInt(numItems)));

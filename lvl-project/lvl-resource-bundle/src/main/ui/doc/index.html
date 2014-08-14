@@ -912,7 +912,9 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                   <code>qualifier:expression</code>
                   . To include multiple search terms separate them with a semicolon:
                   <code>q1:exp1;q2:exp2</code>
-                  . Some expressions can include symbols: <code>length : >23</code>. See the search terms supported per collection below.
+                  . Some expressions can include symbols:
+                  <code>length : >23</code>
+                  . See the search terms supported per collection below.
                 </p>
               </li>
               <li class="list-group-item">
@@ -926,6 +928,28 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                 </p>
               </li>
             </ul>
+
+            <div class="alert alert-warning">
+              <div class="media">
+                <div class="pull-left">
+                  <h1>
+                    <span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
+                  </h1>
+                </div>
+                <div class="media-body">
+                  <h4 class="media-heading">UI search operators</h4>
+                  <p>
+                    The LVL search interface is inspired in <a href="https://support.google.com/websearch/answer/136861" target="_blank" class="alert-link">Google</a>
+                    to facilitate its use. Think of it the way you think of performing a search on Google. Just like searching on Google, when you search using
+                    an operator, don't add any spaces between the operator and your query. A search for
+                    <code>accession:AC238558</code>
+                    will work, but
+                    <code>accession:&nbsp;AC238558</code>
+                    will not.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <h3>
               <a id="restful_api_search_sequences"></a>Search sequences
@@ -954,7 +978,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               <li><code>accession</code> Search for sequences that have accessions that match a certain identifier.</li>
               <li><code>organism</code> Filter sequences based on the organism.</li>
               <li><code>country</code> Filter sequences by the country indicated in the metadata.</li>
-              <li><code>locale</code> Filter sequences by the country indicated in the metadata, using two letter country codes.</li>
+              <li><code>locale</code> Filter sequences by the language indicated in the metadata, using two letter country codes to indicate the language
+                (e.g. en for English).</li>
               <li><code>text</code> Full-text search that finds the especified string anywhere within the fields data source, definition, accession,
                 organism and country of the sequences stored in the LVL database.</li>
             </ul>
