@@ -41,7 +41,8 @@ import org.junit.runners.Suite.SuiteClasses;
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
-@SuiteClasses({ SequenceKeyTest.class, ScopeManagerTest.class, SecurityProviderTest.class, GravatarTest.class, QueryUtilsTest.class })
+@SuiteClasses({ SequenceKeyTest.class, ScopeManagerTest.class, SecurityProviderTest.class, GravatarTest.class, QueryUtilsTest.class,
+	SortUtilsTest.class })
 public class AllJUnitTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

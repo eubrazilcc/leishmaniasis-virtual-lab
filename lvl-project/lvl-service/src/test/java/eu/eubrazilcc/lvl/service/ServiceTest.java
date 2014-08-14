@@ -320,7 +320,26 @@ public class ServiceTest {
 			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(4));
 			/* uncomment for additional output */			
 			System.out.println("Search sequences result: " + sequences.toString());
-
+			
+			// test get sequences sorted by accession number
+			sequences = target.path(path.value())
+					.queryParam("sort", "accession")
+					.queryParam("order", "asc")
+					.request(MediaType.APPLICATION_JSON)
+					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.get(Sequences.class);
+			assertThat("Sorted sequences result is not null", sequences, notNullValue());
+			assertThat("Sorted sequences list is not null", sequences.getSequences(), notNullValue());
+			assertThat("Sorted sequences list is not empty", !sequences.getSequences().isEmpty());
+			assertThat("Sorted sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
+			String last = "-1";
+			for (final Sequence seq : sequences.getSequences()) {
+				assertThat("Sequences are properly sorted", seq.getAccession().compareTo(last) > 0);
+				last = seq.getAccession();
+			}			
+			/* uncomment for additional output */			
+			System.out.println("Sorted sequences result: " + sequences.toString());
+			
 			// test get sequence by data source + accession number
 			Sequence sequence2 = target.path(path.value()).path(sequenceKey.toId())
 					.request(MediaType.APPLICATION_JSON)

@@ -27,6 +27,7 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
 import static eu.eubrazilcc.lvl.storage.PaginationUtils.firstEntryOf;
 import static eu.eubrazilcc.lvl.storage.PaginationUtils.totalPages;
 import static eu.eubrazilcc.lvl.storage.QueryUtils.parseQuery;
+import static eu.eubrazilcc.lvl.storage.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -69,6 +70,7 @@ import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
+import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 
 /**
@@ -94,19 +96,25 @@ public class SequenceResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Sequences getSequences(final @QueryParam("page") @DefaultValue("0") int page,
-			final @QueryParam("per_page") @DefaultValue("100") int per_page,			
-			final @QueryParam("q") @DefaultValue("") String q, final @Context UriInfo uriInfo,
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+			final @QueryParam("per_page") @DefaultValue("100") int per_page,
+			final @QueryParam("q") @DefaultValue("") String q,			
+			final @QueryParam("sort") @DefaultValue("") String sort,
+			final @QueryParam("order") @DefaultValue("asc") String order,
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
 				.queryParam("page", "{page}")
 				.queryParam("per_page", "{per_page}")
-				.queryParam("q", "{q}");
+				.queryParam("q", "{q}")
+				.queryParam("sort", "{sort}")
+				.queryParam("order", "{order}");
 		// get sequences from database
 		final int pageFirstEntry = firstEntryOf(page, per_page);
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
-		final List<Sequence> sequences = SEQUENCE_DAO.baseUri(uriInfo.getAbsolutePath()).list(pageFirstEntry, per_page, filter, count);
+		final Sorting sorting = parseSorting(sort, order);
+		final List<Sequence> sequences = SEQUENCE_DAO.baseUri(uriInfo.getAbsolutePath())
+				.list(pageFirstEntry, per_page, filter, sorting, count);
 		// total count
 		final Paginable paginable = new Paginable();
 		final int totalEntries = ((Long)count.getValue()).intValue();
@@ -114,18 +122,18 @@ public class SequenceResource {
 		// previous link
 		if (page > 0) {
 			int previous = page - 1;
-			final URI previousUri = uriBuilder.clone().build(previous, per_page, q);
+			final URI previousUri = uriBuilder.clone().build(previous, per_page, q, sort, order);
 			paginable.setPrevious(Link.fromUri(previousUri).rel(LinkRelation.PREVIOUS).type(MediaType.APPLICATION_JSON).build());
-			final URI firstUri = uriBuilder.clone().build(0, per_page, q);
+			final URI firstUri = uriBuilder.clone().build(0, per_page, q, sort, order);
 			paginable.setFirst(Link.fromUri(firstUri).rel(LinkRelation.FIRST).type(MediaType.APPLICATION_JSON).build());
 		}
 		// next link
 		if (pageFirstEntry + per_page < totalEntries) {
 			int next = page + 1;
-			final URI nextUri = uriBuilder.clone().build(next, per_page, q);
+			final URI nextUri = uriBuilder.clone().build(next, per_page, q, sort, order);
 			paginable.setNext(Link.fromUri(nextUri).rel(LinkRelation.NEXT).type(MediaType.APPLICATION_JSON).build());
 			final int totalPages = totalPages(totalEntries, per_page);
-			final URI lastUri = uriBuilder.clone().build(totalPages, per_page, q);
+			final URI lastUri = uriBuilder.clone().build(totalPages, per_page, q, sort, order);
 			paginable.setLast(Link.fromUri(lastUri).rel(LinkRelation.LAST).type(MediaType.APPLICATION_JSON).build());
 		}
 		return Sequences.start().paginable(paginable).sequences(sequences).build();

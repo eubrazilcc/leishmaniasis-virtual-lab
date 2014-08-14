@@ -40,8 +40,6 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
         sequences.oauth2_token = config.authorizationToken();
         // TODO : controller
 
-        // TODO Showing {{sequences.length}} sequences
-        
         var columns = [
                 {
                     name : 'dataSource',
@@ -156,7 +154,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 });
 
                 gridContainer.before(filter.render().el);
-                
+
                 $(filter.el).addClass('pull-right lvl-filter-container');
 
                 // TODO : controller

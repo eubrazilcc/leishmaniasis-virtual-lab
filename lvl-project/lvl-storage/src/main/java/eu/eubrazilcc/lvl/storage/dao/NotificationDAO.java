@@ -50,6 +50,7 @@ import com.mongodb.util.JSON;
 import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
+import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
@@ -105,7 +106,7 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 
 	@Override
 	public List<Notification> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null);
 	}
 
 	@Override
@@ -115,7 +116,8 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	}
 
 	@Override
-	public List<Notification> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {		
+	public List<Notification> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
+			final @Nullable Sorting sorting, final @Nullable MutableLong count) {		
 		// execute the query in the database (unsupported filter)
 		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, Notification>() {
 			@Override

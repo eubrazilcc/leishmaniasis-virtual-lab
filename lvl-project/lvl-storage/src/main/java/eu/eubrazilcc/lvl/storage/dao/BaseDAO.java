@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
+import eu.eubrazilcc.lvl.storage.Sorting;
 
 /**
  * Base DAO.
@@ -84,11 +85,12 @@ public interface BaseDAO<K, E> {
 	 * to the caller. Optionally, the number of elements found in the database is returned to the caller.
 	 * @param start - starting index
 	 * @param size - maximum number of elements returned
-	 * @param filter - the expression to be used to filter the collection
+	 * @param filter - (optional) the expression to be used to filter the collection
+	 * @param sorting - (optional) sorting order
 	 * @param count - (optional) is updated with the number of elements in the database
 	 * @return a view of the elements in the database that contains the specified range
 	 */
-	List<E> list(int start, int size, @Nullable ImmutableMap<String, String> filter, @Nullable MutableLong count);
+	List<E> list(int start, int size, @Nullable ImmutableMap<String, String> filter, @Nullable Sorting sorting, @Nullable MutableLong count);
 
 	/**
 	 * Returns the number of elements in the database.

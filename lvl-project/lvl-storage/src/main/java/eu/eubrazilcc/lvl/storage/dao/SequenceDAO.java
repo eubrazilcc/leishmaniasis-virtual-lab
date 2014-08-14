@@ -62,8 +62,10 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.InvalidFilterParseException;
+import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
 import eu.eubrazilcc.lvl.storage.SequenceGiKey;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
+import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
@@ -137,7 +139,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	@Override
 	public List<Sequence> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null);
 	}
 
 	@Override
@@ -147,7 +149,8 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	}
 
 	@Override
-	public List<Sequence> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {
+	public List<Sequence> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
+			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
 		try {
@@ -156,8 +159,16 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 			LOGGER.warn("Discarding operation after an invalid filter was found: " + e.getMessage());
 			return newArrayList();
 		}
+		// parse the sorting information or return an empty list if the sort is invalid
+		BasicDBObject sort = null;
+		try {
+			sort = sortCriteria(sorting);
+		} catch (InvalidSortParseException e) {
+			LOGGER.warn("Discarding operation after an invalid sort was found: " + e.getMessage());
+			return newArrayList();
+		}
 		// execute the query in the database
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, query, count), new Function<BasicDBObject, Sequence>() {
+		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, count), new Function<BasicDBObject, Sequence>() {
 			@Override
 			public Sequence apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);
@@ -211,7 +222,40 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 				GI_KEY, key.getGi()));
 	}
 
-	private BasicDBObject sortCriteria() {
+	private BasicDBObject sortCriteria(final @Nullable Sorting sorting) throws InvalidSortParseException {
+		if (sorting != null) {			
+			String field = null;
+			// sortable fields
+			if ("source".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "dataSource";				
+			} else if ("definition".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "definition";
+			} else if ("accession".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "accession";
+			} else if ("organism".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "organism";
+			} else if ("country".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "countryFeature";
+			}
+			if (isNotBlank(field)) {
+				int order = 1;
+				switch (sorting.getOrder()) {
+				case ASC:
+					order = 1;
+					break;
+				case DESC:
+					order = -1;
+					break;
+				default:
+					order = 1;
+					break;
+				}
+				return new BasicDBObject(field, order);
+			} else {				
+				throw new InvalidSortParseException(sorting.getField());					
+			}				
+		}
+		// insertion order
 		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, 1, PRIMARY_KEY_PART2, 1));
 	}
 

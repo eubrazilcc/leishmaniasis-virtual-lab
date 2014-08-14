@@ -148,7 +148,7 @@ public class PendingUserCollectionTest {
 			List<PendingUser> pendingUsers = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				pendingUsers = PENDING_USER_DAO.list(start, size, null, count);
+				pendingUsers = PENDING_USER_DAO.list(start, size, null, null, count);
 				if (pendingUsers.size() != 0) {
 					System.out.println("Paging: first item " + start + ", showing " + pendingUsers.size() + " of " + count.getValue() + " items");
 				}

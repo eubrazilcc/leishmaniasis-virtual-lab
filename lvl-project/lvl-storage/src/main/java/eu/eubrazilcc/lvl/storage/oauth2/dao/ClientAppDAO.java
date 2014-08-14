@@ -52,6 +52,7 @@ import com.mongodb.util.JSON;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
+import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
@@ -79,7 +80,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	private ClientAppDAO() {		
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		// ensure that at least the administrator account exists in the database
-		final List<ClientApp> clientApps = list(0, 1, null, null);
+		final List<ClientApp> clientApps = list(0, 1, null, null, null);
 		if (clientApps == null || clientApps.isEmpty()) {
 			insert(ClientApp.builder()
 					.name(LVL_PORTAL_NAME)
@@ -124,7 +125,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 
 	@Override
 	public List<ClientApp> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null);
 	}
 
 	@Override
@@ -134,7 +135,8 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	}
 
 	@Override
-	public List<ClientApp> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {
+	public List<ClientApp> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
+			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
 		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, ClientApp>() {
 			@Override

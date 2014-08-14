@@ -48,6 +48,7 @@ import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
+import eu.eubrazilcc.lvl.storage.Sorting.Order;
 
 /**
  * Tests sequence collection in the database.
@@ -146,6 +147,10 @@ public class SequenceCollectionTest {
 			SEQUENCE_DAO.delete(sequenceKey);
 
 			// create a large dataset to test complex operations
+			final Random random = new Random();
+			final String[] countries = { "Kenya", "Senegal", "Pakistan", "Italy", "Greece", "France", "Tunisia", "Ethiopia", "Egypt", 
+					"Spain", "Lebanon", "Oman", "Syrian Arab Republic", "Cyprus", "Portugal", "Morocco", "Turkey", "Malta", "Madagascar",
+					"New Caledonia", "Brazil" };
 			final List<String> ids = newArrayList();
 			final int numItems = 11;
 			for (int i = 0; i < numItems; i++) {
@@ -154,6 +159,7 @@ public class SequenceCollectionTest {
 						.accession(Integer.toString(i))
 						.definition("This is an example")
 						.gi(i)
+						.countryFeature(countries[random.nextInt(countries.length)])
 						.locale(i%2 != 0 ? Locale.ENGLISH : Locale.FRANCE)
 						.build();
 				ids.add(sequence3.getAccession());
@@ -166,55 +172,91 @@ public class SequenceCollectionTest {
 			sequences = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				sequences = SEQUENCE_DAO.list(start, size, null, count);
+				sequences = SEQUENCE_DAO.list(start, size, null, null, count);
 				if (sequences.size() != 0) {
 					System.out.println("Paging: first item " + start + ", showing " + sequences.size() + " of " + count.getValue() + " items");
 				}
 				start += sequences.size();
 			} while (!sequences.isEmpty());
 
-			// filter: keyword matching search
-			final Random random = new Random();
+			// filter: keyword matching search			
 			ImmutableMap<String, String> filter = of("source", DataSource.GENBANK);
-			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));			
 
 			// filter: keyword matching search
 			filter = of("accession", Integer.toString(random.nextInt(numItems)));
-			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(1));
-			
+
 			// filter: keyword matching search
 			filter = of("locale", Locale.ENGLISH.toString());
-			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems / 2));
 
 			// filter: combined keyword matching search
 			filter = of("source", DataSource.GENBANK, "accession", Integer.toString(random.nextInt(numItems)));
-			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(1));
-			
+
 			// filter: full-text search
 			filter = of("text", "an example");
-			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));
-			
+
 			// filter: combined full-text search with keyword matching search
 			filter = of("source", DataSource.GENBANK, "locale", Locale.ENGLISH.toString(), "text", "example");
-			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems / 2));
-			
+
 			// invalid filter
 			filter = of("filter_name", "filter_content");
-			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null);
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(0));
+
+			// sorting by accession in ascending order
+			Sorting sorting = Sorting.builder()
+					.field("accession")
+					.order(Order.ASC)
+					.build();
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);
+			assertThat("sorted sequences is not null", sequences, notNullValue());
+			assertThat("number of sorted sequences coincides with expected", sequences.size(), equalTo(numItems));
+			String last = "-1";
+			for (final Sequence seq : sequences) {
+				assertThat("sequences are properly sorted", seq.getAccession().compareTo(last) > 0);
+				last = seq.getAccession();
+			}
+
+			// sorting by country in descending order
+			sorting = Sorting.builder()
+					.field("country")
+					.order(Order.DESC)
+					.build();
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);
+			assertThat("sorted sequences is not null", sequences, notNullValue());
+			assertThat("number of sorted sequences coincides with expected", sequences.size(), equalTo(numItems));
+			last = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
+			for (final Sequence seq : sequences) {
+				assertThat("sequences are properly sorted", seq.getCountryFeature().compareTo(last) <= 0);
+				last = seq.getCountryFeature();
+			}
+
+			// invalid sort
+			sorting = Sorting.builder()
+					.field("sort_name")
+					.order(Order.DESC)
+					.build();
+			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);
+			assertThat("sorted sequences is not null", sequences, notNullValue());
+			assertThat("number of sorted sequences coincides with expected", sequences.size(), equalTo(0));
 
 			// clean-up and display database statistics
 			for (final String id2 : ids) {			

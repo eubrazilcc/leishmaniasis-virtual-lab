@@ -51,6 +51,7 @@ import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
+import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
@@ -105,7 +106,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 
 	@Override
 	public List<AccessToken> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null);
 	}
 
 	@Override
@@ -115,7 +116,8 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	}
 
 	@Override
-	public List<AccessToken> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {
+	public List<AccessToken> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter,
+			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
 		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, AccessToken>() {
 			@Override
@@ -262,7 +264,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		@JsonDeserialize(using = ObjectIdDeserializer.class)
 		@JsonProperty("_id")
 		private ObjectId id;
-		
+
 		private AccessToken accessToken;
 
 		public AccessTokenEntity() { }

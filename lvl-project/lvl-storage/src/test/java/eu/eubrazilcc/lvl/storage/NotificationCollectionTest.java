@@ -96,7 +96,7 @@ public class NotificationCollectionTest {
 			List<Notification> notifications = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				notifications = NOTIFICATION_DAO.list(start, size, null, count);
+				notifications = NOTIFICATION_DAO.list(start, size, null, null, count);
 				if (notifications.size() != 0) {
 					System.out.println("Paging: first item " + start + ", showing " + notifications.size() + " of " + count.getValue() + " items");
 				}
@@ -136,7 +136,7 @@ public class NotificationCollectionTest {
 			while (NOTIFICATION_MANAGER.hasPendingNotifications() && tries++ < 30) {
 				Thread.sleep(1000l);
 			}
-			notifications = NOTIFICATION_DAO.list(0, 200, null, null);
+			notifications = NOTIFICATION_DAO.list(0, 200, null, null, null);
 			assertThat("notifications is not null", notifications, notNullValue());
 			assertThat("notifications size coincides with expected", notifications.size(), equalTo(200));
 
@@ -149,7 +149,7 @@ public class NotificationCollectionTest {
 			while (NOTIFICATION_MANAGER.hasPendingNotifications() && tries++ < 30) {
 				Thread.sleep(1000l);
 			}
-			notifications = NOTIFICATION_DAO.list(0, 201, null, null);
+			notifications = NOTIFICATION_DAO.list(0, 201, null, null, null);
 			assertThat("notifications (including broadcasted) is not null", notifications, notNullValue());
 			assertThat("notifications (including broadcasted) size coincides with expected", notifications.size(), equalTo(201));			
 		} catch (Exception e) {

@@ -65,6 +65,7 @@ import com.mongodb.util.JSON;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
+import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
@@ -103,7 +104,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		// reset parameters to their default values
 		reset();
 		// ensure that at least the administrator account exists in the database
-		final List<ResourceOwner> owners = list(0, 1, null, null);
+		final List<ResourceOwner> owners = list(0, 1, null, null, null);
 		if (owners == null || owners.isEmpty()) {
 			final ResourceOwner admin = ResourceOwner.builder()
 					.id(ADMIN_USER)
@@ -182,7 +183,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	@Override
 	public List<ResourceOwner> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null);
 	}
 
 	@Override
@@ -192,7 +193,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	@Override
-	public List<ResourceOwner> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {
+	public List<ResourceOwner> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
+			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
 		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, ResourceOwner>() {
 			@Override

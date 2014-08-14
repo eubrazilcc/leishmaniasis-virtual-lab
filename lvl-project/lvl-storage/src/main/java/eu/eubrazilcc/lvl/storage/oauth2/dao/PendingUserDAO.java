@@ -59,6 +59,7 @@ import com.mongodb.util.JSON;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
+import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
@@ -139,7 +140,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
 	@Override
 	public List<PendingUser> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null);
 	}
 
 	@Override
@@ -149,7 +150,8 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	}
 
 	@Override
-	public List<PendingUser> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable MutableLong count) {
+	public List<PendingUser> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
+			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
 		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, PendingUser>() {
 			@Override
@@ -190,7 +192,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	private BasicDBObject sortCriteria() {
 		return new BasicDBObject(PRIMARY_KEY, 1);
 	}
-	
+
 	private PendingUser parseBasicDBObject(final BasicDBObject obj) {
 		final PendingUser pendingUser = map(obj).getPendingUser();
 		addLink(pendingUser);
