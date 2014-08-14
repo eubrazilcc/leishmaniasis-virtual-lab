@@ -226,7 +226,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		if (sorting != null) {			
 			String field = null;
 			// sortable fields
-			if ("source".equalsIgnoreCase(sorting.getField())) {
+			if ("dataSource".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "dataSource";				
 			} else if ("definition".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "definition";
@@ -234,7 +234,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 				field = DB_PREFIX + "accession";
 			} else if ("organism".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "organism";
-			} else if ("country".equalsIgnoreCase(sorting.getField())) {
+			} else if ("countryFeature".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "countryFeature";
 			}
 			if (isNotBlank(field)) {

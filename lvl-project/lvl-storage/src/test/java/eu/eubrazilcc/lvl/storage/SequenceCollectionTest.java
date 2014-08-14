@@ -237,7 +237,7 @@ public class SequenceCollectionTest {
 
 			// sorting by country in descending order
 			sorting = Sorting.builder()
-					.field("country")
+					.field("countryFeature")
 					.order(Order.DESC)
 					.build();
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);

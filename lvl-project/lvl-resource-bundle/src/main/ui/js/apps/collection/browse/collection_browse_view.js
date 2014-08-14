@@ -24,7 +24,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 totalRecords : null,
                 currentPage : 'page',
                 pageSize : 'per_page',
-                sortKey : null
+                sortKey : 'sort',
+                order : 'order'
             },
             parseState : function(resp, queryParams, state, options) {
                 return {
