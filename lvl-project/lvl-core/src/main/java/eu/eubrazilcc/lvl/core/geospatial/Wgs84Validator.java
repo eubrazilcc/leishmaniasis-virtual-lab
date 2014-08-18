@@ -31,10 +31,12 @@ import com.google.common.collect.Range;
  * Validates World Geodetic System 84 (WGS84) coordinates.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://spatialreference.org/ref/epsg/4326/">epsg projection 4326 - wgs 84</a>
+ * @see <a href="http://wiki.geojson.org/GeoJSON_draft_version_5">GeoJSON draft version 5</a>
  */
 public final class Wgs84Validator {
 
 	public static final String LEGACY_CRS = "EPSG:3857";
+	public static final String URN_CRS = "urn:ogc:def:crs:OGC:1.3:CRS84";
 	
 	private static final Range<Double> LONGITUDE_RANGE = closed(-180.0d, 180.0d);
 	private static final Range<Double> LATITUDE_RANGE = closed(-90.0d, 90.0d);

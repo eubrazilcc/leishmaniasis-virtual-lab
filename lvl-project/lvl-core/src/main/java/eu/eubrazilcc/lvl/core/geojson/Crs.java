@@ -86,7 +86,7 @@ public class Crs {
 		private final Crs instance = new Crs();
 		
 		public Builder wgs84() {
-			instance.getProperties().put("name", Wgs84Validator.LEGACY_CRS);
+			instance.getProperties().put("name", Wgs84Validator.URN_CRS);
 			return this;
 		}
 
