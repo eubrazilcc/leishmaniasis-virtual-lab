@@ -139,7 +139,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                     collection : sequences,
                     windowSize : 14,
                     slideScale : 0.5,
-                    goBackFirstOnSort : false
+                    goBackFirstOnSort : true
                 });
 
                 gridContainer.after(paginator.render().el);

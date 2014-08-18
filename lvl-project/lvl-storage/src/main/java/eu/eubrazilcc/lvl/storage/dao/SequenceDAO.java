@@ -236,6 +236,8 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 				field = DB_PREFIX + "organism";
 			} else if ("countryFeature".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "countryFeature";
+			} else if ("locale".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "locale";
 			}
 			if (isNotBlank(field)) {
 				int order = 1;

@@ -913,7 +913,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                   . To include multiple search terms separate them with a semicolon:
                   <code>q1:exp1;q2:exp2</code>
                   . Some expressions can include symbols:
-                  <code>length : >23</code>
+                  <code>length:&gt;23</code>
                   . See the search terms supported per collection below.
                 </p>
               </li>
@@ -1281,14 +1281,56 @@ Serving HTTP on 0.0.0.0 port 8000 ...
               the center point specified (using WGS84):
             </h3>
 
-            <p>It uses coordinates order longitude, latitude. Response is a GeoJSON Features Collection.</p>
+            <p>
+              It uses coordinates order longitude, latitude. Response is a GeoJSON Features Collection. There are several free services that you can use to find
+              a position on a map. For example the <a href="http://epsg.io/" target="_blank">EPSG.io: Coordinate Systems Worldwide</a> allows using different
+              coordinate systems to this end, including <a href="http://epsg.io/4326/map" target="_blank">WGS84</a>.
+            </p>
 
-            <code> $ curl -v http://127.0.0.1:8080/lvl/sequences/nearby/-1.0/1.0?maxDistance=2000.0 </code>
+            <p>For example, find sequences located in Yemen (longitude: 48.516388000000006, latitude: 15.552727) within a radius of 2 km:</p>
+
+            <code> $ curl -H 'Authorization: Bearer 4NYglPbKiSx3aNKSY8aIrSnpa3tOj2WytUP+MIaSDB0='
+              'http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/nearby/48.516388000000006/15.552727?maxDistance=2000.0'</code>
             <p></p>
 
             <pre>
-<em>TODO</em>
+{
+    "crs": {
+        "properties": {
+            "name": "EPSG:3857"
+        }, 
+        "type": "name"
+    }, 
+    "features": [
+        {
+            "geometry": {
+                "coordinates": [
+                    48.516388, 
+                    15.552727
+                ], 
+                "type": "Point"
+            }, 
+            "type": "Feature"
+        }, 
+        {
+            "geometry": {
+                "coordinates": [
+                    48.516388, 
+                    15.552727
+                ], 
+                "type": "Point"
+            }, 
+            "type": "Feature"
+        }
+    ], 
+    "type": "FeatureCollection"
+}
 </pre>
+
+            <p>To find all the sequences annotated with geospatial coordinates search from the center of the map up to 6,500 km:</p>
+
+            <code>$ curl -H 'Authorization: Bearer 4NYglPbKiSx3aNKSY8aIrSnpa3tOj2WytUP+MIaSDB0='
+              'http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences/nearby/0.0/0.0?maxDistance=6500000.0'</code>
 
             <h3>
               <a id="examples_restful_api_import_sequences"></a>Import new sequences into the database:

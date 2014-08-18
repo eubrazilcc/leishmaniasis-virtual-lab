@@ -32,7 +32,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
             defaultCollection : function() {
                 var self = this;
                 Lvl.navigate('collection/browse', {
-                    trigger : true
+                    trigger : true,
+                    replace : true
                 });
             },
             browseCollection : function() {

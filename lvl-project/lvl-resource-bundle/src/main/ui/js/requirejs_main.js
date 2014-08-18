@@ -83,10 +83,7 @@ requirejs.config({
             deps : [ 'backbone' ],
             exports : 'Marionette'
         },
-        'openlayers' : {
-            deps : [ 'jquery' ],
-            exports : 'ol'
-        },
+        'openlayers' : [ 'jquery' ],
         'moment' : [ 'jquery' ],
         'pace' : [ 'jquery' ],
         'tpl' : [ 'text' ]

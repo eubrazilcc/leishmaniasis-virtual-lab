@@ -3,7 +3,7 @@
  */
 
 define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
-        'flatui-checkbox', 'flatui-radio', 'jquery.toolbar' ], function(Lvl, MapTpl, Style, Configuration) {
+        'openlayers', 'flatui-checkbox', 'flatui-radio', 'jquery.toolbar' ], function(Lvl, MapTpl, Style, Configuration) {
     Lvl.module('CollectionApp.Map.View', function(View, Lvl, Backbone, Marionette, $, _) {
         var config = new Configuration();
         var center = {
@@ -71,6 +71,66 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
             },
             loadMap : function() {
                 require([ 'openlayers' ], function() {
+
+                    // TODO
+
+                    var createTextStyle = function(text) {
+                        return new ol.style.Text({
+                            font : '12px Calibri,sans-serif',
+                            text : text,
+                            fill : new ol.style.Fill({
+                                color : '#000'
+                            }),
+                            stroke : new ol.style.Stroke({
+                                color : '#fff',
+                                width : 3
+                            })
+                        });
+                    };
+                    var styleCache = {};
+                    
+                    var styles = {
+                            'Point': [new ol.style.Style({
+                                image: new ol.style.Circle({
+                                  fill: new ol.style.Fill({
+                                    color: 'rgba(255,255,0,0.5)'
+                                  }),
+                                  radius: 5,
+                                  stroke: new ol.style.Stroke({
+                                    color: '#ff0',
+                                    width: 1
+                                  })
+                                })
+                              })]
+                    };
+                    var styleFunction = function(feature, resolution) {
+                        return styles[feature.getGeometry().getType()];
+                    };
+
+                    var vectorLayer = new ol.layer.Vector({
+                        source : new ol.source.GeoJSON({
+                            projection : 'EPSG:3857',
+                            url : 'http://localhost:8000/all_sequences.geojson' + '?bust=' + Math.random()
+                        }),
+                        style : styleFunction /* function(feature, resolution) {
+                            var text = resolution < 5000 ? feature.get('name') : '';
+                            if (!styleCache[text]) {
+                                styleCache[text] = [ new ol.style.Style({
+                                    fill : new ol.style.Fill({
+                                        color : 'rgba(255, 255, 255, 0.6)'
+                                    }),
+                                    stroke : new ol.style.Stroke({
+                                        color : '#319FD3',
+                                        width : 1
+                                    }),
+                                    text : createTextStyle(text)
+                                }) ];
+                            }
+                            return styleCache[text];
+                        } */
+                    });
+                    // TODO
+
                     // setup map
                     this.map = new ol.Map({
                         controls : ol.control.defaults({
@@ -81,7 +141,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                         layers : [ new ol.layer.Tile({
                             preload : Infinity,
                             source : new ol.source.OSM()
-                        }) ],
+                        }), vectorLayer ],
                         /* fastest renderer */
                         renderer : 'canvas',
                         /* div HTML element with id='map-container' */

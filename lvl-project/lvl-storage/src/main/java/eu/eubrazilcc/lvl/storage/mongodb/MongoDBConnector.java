@@ -378,7 +378,7 @@ public enum MongoDBConnector implements Closeable2 {
 			.append("maxDistance", maxDistance)
 			.append("spherical", true)			
 			.append("uniqueDocs", true)
-			.append("num", 100);
+			.append("num", Integer.MAX_VALUE);
 			LOGGER.trace("geoNear query: " + JSON.serialize(query));
 			final CommandResult cmdResult = db.command(query);
 			checkState(cmdResult.ok(), "geoNear search failed");			
