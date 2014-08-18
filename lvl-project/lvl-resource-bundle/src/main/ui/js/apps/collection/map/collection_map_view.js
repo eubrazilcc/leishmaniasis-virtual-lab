@@ -214,6 +214,45 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                         position : 'right',
                         hideOnClick : true
                     });
+                    // add popup
+                    var popupElem = document.getElementById('map-popup');
+                    var popup = new ol.Overlay({
+                        element : popupElem,
+                        positioning : 'bottom-center',
+                        stopEvent : false
+                    });
+                    this.map.addOverlay(popup);
+                    var this_ = this;
+                    this.map.on('click', function(evt) {
+                        var feature = this_.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+                            return feature;
+                        });
+                        if (feature) {
+                            var geometry = feature.getGeometry();
+                            var coord = geometry.getCoordinates();
+                            popup.setPosition(coord);
+                            $(popupElem).popover({
+                                'placement' : 'top',
+                                'html' : true,
+                                'content' : '<a href="#">' + feature.get('name') + '</a>' // TODO
+                            });
+                            $(popupElem).popover('show');
+                        } else {
+                            $(popupElem).popover('destroy');
+                        }
+                    });
+                    $(this.map.getViewport()).on('mousemove', function(e) {                        
+                        var pixel = this_.map.getEventPixel(e.originalEvent);
+                        var hit = this_.map.forEachFeatureAtPixel(pixel, function(feature, layer) {
+                            return true;
+                        });
+                        var mapElem = document.getElementById(this_.map.getTarget());
+                        if (hit) {
+                            mapElem.style.cursor = 'pointer';
+                        } else {
+                            mapElem.style.cursor = '';
+                        }
+                    });
                 });
             },
             resize : function() {
