@@ -229,7 +229,10 @@ public class SequenceResource {
 				.build(), maxDistance);
 		final List<Feature> features = newArrayList();
 		for (final Sequence sequence : sequences) {
-			features.add(Feature.builder().geometry(sequence.getLocation()).build());
+			features.add(Feature.builder()
+					.property("name", sequence.getAccession())
+					.geometry(sequence.getLocation())
+					.build());
 		}
 		return FeatureCollection.builder().crs(Crs.builder().wgs84().build()).features(features).build();
 	}

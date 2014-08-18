@@ -42,7 +42,7 @@ public class Point extends GeoJsonObject {
 	public void setCoordinates(final LngLatAlt coordinates) {
 		this.coordinates = coordinates;
 	}
-	
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof Point)) {
@@ -87,5 +87,5 @@ public class Point extends GeoJsonObject {
 		}
 
 	}
-	
+
 }

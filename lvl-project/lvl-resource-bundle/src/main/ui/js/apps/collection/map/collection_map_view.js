@@ -76,10 +76,10 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 
                     var createTextStyle = function(text) {
                         return new ol.style.Text({
-                            font : '12px Calibri,sans-serif',
+                            font : '12px Lato, Helvetica, Arial, sans-serif',
                             text : text,
                             fill : new ol.style.Fill({
-                                color : '#000'
+                                color : '#C0392B'
                             }),
                             stroke : new ol.style.Stroke({
                                 color : '#fff',
@@ -87,47 +87,41 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                             })
                         });
                     };
+
+                    var createFeatureStyle = function(type, text, resolution) {
+                        var style;
+                        if (type === 'Point') {
+                            style = [ new ol.style.Style({
+                                image : new ol.style.Circle({
+                                    fill : new ol.style.Fill({
+                                        color : 'rgba(192,57,43,0.5)'
+                                    }),
+                                    radius : resolution < 5000 ? 7 : 5,
+                                    stroke : new ol.style.Stroke({
+                                        color : '#E74C3C',
+                                        width : 1
+                                    })
+                                }),
+                                text : createTextStyle(text)
+                            }) ];
+                        }
+                        return style;
+                    }
+
                     var styleCache = {};
-                    
-                    var styles = {
-                            'Point': [new ol.style.Style({
-                                image: new ol.style.Circle({
-                                  fill: new ol.style.Fill({
-                                    color: 'rgba(255,255,0,0.5)'
-                                  }),
-                                  radius: 5,
-                                  stroke: new ol.style.Stroke({
-                                    color: '#ff0',
-                                    width: 1
-                                  })
-                                })
-                              })]
-                    };
-                    var styleFunction = function(feature, resolution) {
-                        return styles[feature.getGeometry().getType()];
-                    };
 
                     var vectorLayer = new ol.layer.Vector({
                         source : new ol.source.GeoJSON({
                             projection : 'EPSG:3857',
                             url : 'http://localhost:8000/all_sequences.geojson' + '?bust=' + Math.random()
                         }),
-                        style : styleFunction /* function(feature, resolution) {
+                        style : function(feature, resolution) {
                             var text = resolution < 5000 ? feature.get('name') : '';
                             if (!styleCache[text]) {
-                                styleCache[text] = [ new ol.style.Style({
-                                    fill : new ol.style.Fill({
-                                        color : 'rgba(255, 255, 255, 0.6)'
-                                    }),
-                                    stroke : new ol.style.Stroke({
-                                        color : '#319FD3',
-                                        width : 1
-                                    }),
-                                    text : createTextStyle(text)
-                                }) ];
+                                styleCache[text] = createFeatureStyle(feature.getGeometry().getType(), text, resolution);
                             }
                             return styleCache[text];
-                        } */
+                        }
                     });
                     // TODO
 

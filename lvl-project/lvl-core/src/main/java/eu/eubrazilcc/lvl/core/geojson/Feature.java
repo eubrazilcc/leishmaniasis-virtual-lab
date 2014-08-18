@@ -94,6 +94,11 @@ public class Feature extends GeoJsonObject {
 			return this;
 		}
 
+		public Builder property(final String key, final Object value) {
+			instance.getProperties().put(key, value);
+			return this;
+		}
+
 		public Builder id(final String id) {
 			instance.setId(id);
 			return this;
