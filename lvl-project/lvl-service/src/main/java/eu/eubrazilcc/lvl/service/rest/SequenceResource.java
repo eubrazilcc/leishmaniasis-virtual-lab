@@ -220,6 +220,7 @@ public class SequenceResource {
 	public FeatureCollection findNearbySequences(final @PathParam("longitude") double longitude, 
 			final @PathParam("latitude") double latitude, 
 			final @QueryParam("maxDistance") @DefaultValue("1000.0d") double maxDistance, 
+			final @QueryParam("group") @DefaultValue("true") boolean group,
 			final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
@@ -228,16 +229,18 @@ public class SequenceResource {
 		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
 				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build())
 				.build(), maxDistance);
-		
-		final List<Feature> features = SequenceAnalyzer.of(sequences).groupByLocation();
-		
-		/* TODO final List<Feature> features = newArrayList();
-		for (final Sequence sequence : sequences) {
-			features.add(Feature.builder()
-					.property("name", sequence.getAccession())
-					.geometry(sequence.getLocation())
-					.build());
-		} */
+		List<Feature> features = null;
+		if (group) {
+			features = SequenceAnalyzer.of(sequences).groupByLocation();
+		} else {
+			features = newArrayList();
+			for (final Sequence sequence : sequences) {
+				features.add(Feature.builder()
+						.property("name", sequence.getAccession())
+						.geometry(sequence.getLocation())
+						.build());
+			}
+		}
 		return FeatureCollection.builder().crs(Crs.builder().wgs84().build()).features(features).build();
 	}
 
