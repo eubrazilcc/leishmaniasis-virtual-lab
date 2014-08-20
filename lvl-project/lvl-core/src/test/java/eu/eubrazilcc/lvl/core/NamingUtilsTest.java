@@ -33,6 +33,7 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.splitIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toAsciiSafeName;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.toId;
 import static org.apache.commons.lang.StringUtils.countMatches;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -77,9 +78,43 @@ public class NamingUtilsTest {
 			for (int i = 0; i < 5; i++) {
 				sequences.add(Sequence.builder()
 						.dataSource(GENBANK)
-						.accession("SEQ-" + i)
+						.accession("SEQ_" + i)
 						.build());
 			}
+
+			// test sequence identifier creation (using long notation)
+			String dataSource = sequences.get(0).getDataSource();
+			String accession = sequences.get(0).getAccession();
+			String seqId = toId(dataSource, accession, NOTATION_LONG);
+			assertThat("sequence Id is not null", seqId, notNullValue());
+			assertThat("sequence Id is not empty", isNotBlank(seqId), equalTo(true));
+			assertThat("sequence Id coincides with expected", seqId, 
+					equalTo(GENBANK + ID_FRAGMENT_SEPARATOR + accession));
+
+			// test sequence identifier creation (using short notation)
+			dataSource = sequences.get(1).getDataSource();
+			accession = sequences.get(1).getAccession();
+			seqId = toId(dataSource, accession, NOTATION_SHORT);
+			assertThat("sequence Id is not null", seqId, notNullValue());
+			assertThat("sequence Id is not empty", isNotBlank(seqId), equalTo(true));
+			assertThat("sequence Id coincides with expected", seqId, 
+					equalTo(GENBANK_SHORT + ID_FRAGMENT_SEPARATOR + accession));
+
+			// test sequence identifier creation (using long notation and sequence class)
+			Sequence sequence = sequences.get(2);
+			seqId = toId(sequence, NOTATION_LONG);
+			assertThat("sequence Id is not null", seqId, notNullValue());
+			assertThat("sequence Id is not empty", isNotBlank(seqId), equalTo(true));
+			assertThat("sequence Id coincides with expected", seqId, 
+					equalTo(GENBANK + ID_FRAGMENT_SEPARATOR + sequence.getAccession()));
+
+			// test sequence identifier creation (using short notation and sequence class)
+			sequence = sequences.get(3);
+			seqId = toId(sequence, NOTATION_SHORT);
+			assertThat("sequence Id is not null", seqId, notNullValue());
+			assertThat("sequence Id is not empty", isNotBlank(seqId), equalTo(true));
+			assertThat("sequence Id coincides with expected", seqId, 
+					equalTo(GENBANK_SHORT + ID_FRAGMENT_SEPARATOR + sequence.getAccession()));
 
 			// test sequence Ids merging using long notation
 			String mergedIds = mergeIds(sequences, NOTATION_LONG);
@@ -99,14 +134,14 @@ public class NamingUtilsTest {
 
 			// test sequence Ids splitting using long notation
 			List<String> idsList = splitIds(mergedIds);
-			assertThat("splitted Ids is not null", idsList, notNullValue());
-			assertThat("splitted Ids is not empty", idsList.isEmpty(), equalTo(false));
-			assertThat("number of splitted Ids coincides with expected", idsList.size(), equalTo(sequences.size()));
+			assertThat("split Ids is not null", idsList, notNullValue());
+			assertThat("split Ids is not empty", idsList.isEmpty(), equalTo(false));
+			assertThat("number of split Ids coincides with expected", idsList.size(), equalTo(sequences.size()));
 			for (final String id : idsList) {
 				validate(id, GENBANK);
 			}
 			/* uncomment for additional output */
-			System.out.println(" >> splitted Ids (using long notation): " + idsList);
+			System.out.println(" >> split Ids (using long notation): " + idsList);
 
 			// test sequence Ids merging using short notation			
 			mergedIds = mergeIds(sequences, NOTATION_SHORT);
@@ -126,14 +161,14 @@ public class NamingUtilsTest {
 
 			// test sequence Ids splitting using short notation
 			idsList = splitIds(mergedIds);
-			assertThat("splitted Ids is not null", idsList, notNullValue());
-			assertThat("splitted Ids is not empty", idsList.isEmpty(), equalTo(false));
-			assertThat("number of splitted Ids coincides with expected", idsList.size(), equalTo(sequences.size()));
+			assertThat("split Ids is not null", idsList, notNullValue());
+			assertThat("split Ids is not empty", idsList.isEmpty(), equalTo(false));
+			assertThat("number of split Ids coincides with expected", idsList.size(), equalTo(sequences.size()));
 			for (final String id : idsList) {
 				validate(id, GENBANK_SHORT);
 			}
 			/* uncomment for additional output */
-			System.out.println(" >> splitted Ids (using long notation): " + idsList);
+			System.out.println(" >> split Ids (using long notation): " + idsList);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -144,9 +179,9 @@ public class NamingUtilsTest {
 	}
 
 	private static void validate(final String id, final String dataSource) {
-		assertThat("splitted Id is not null", id, notNullValue());
-		assertThat("splitted Id is not empty", isNotBlank(id), equalTo(true));
-		assertThat("splitted Id coincides with expected", id.startsWith(dataSource + ID_FRAGMENT_SEPARATOR), 
+		assertThat("split Id is not null", id, notNullValue());
+		assertThat("split Id is not empty", isNotBlank(id), equalTo(true));
+		assertThat("split Id coincides with expected", id.startsWith(dataSource + ID_FRAGMENT_SEPARATOR), 
 				equalTo(true));
 	}
 

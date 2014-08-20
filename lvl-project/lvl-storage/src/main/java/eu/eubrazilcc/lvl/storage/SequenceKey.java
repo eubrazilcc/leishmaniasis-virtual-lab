@@ -24,13 +24,15 @@ package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static com.google.common.base.Splitter.on;
+import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.List;
 
 import com.google.common.base.Objects;
 
+import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
 
 /**
@@ -80,26 +82,17 @@ public class SequenceKey {
 				.add("accession", accession)
 				.toString();
 	}
-	
+
 	/**
 	 * Creates an identifier that uniquely identifies the sequence in the LVL. This identifier 
 	 * is computed from the data source and the accession fields. This method uses the default
-	 * character to separate these particles in the created identifier.
+	 * character {@link NamingUtils#ID_FRAGMENT_SEPARATOR} to separate these particles in the 
+	 * created identifier and the default notation {@link DataSource.Notation#NOTATION_LONG}.
 	 * @return an identifier that uniquely identifies the sequence in the LVL.
 	 */
-	public String toId() { // TODO
-		return dataSource + NamingUtils.URI_ID_SEPARATOR + accession;
-	}
-	
-	/**
-	 * Creates an identifier that uniquely identifies the sequence in the LVL. This identifier 
-	 * is computed from the data source and the accession fields.
-	 * @param separator Character that separates components of a sequence identifier.
-	 * @return an identifier that uniquely identifies the sequence in the LVL.
-	 */
-	public String toId(final char separator) {
-		return dataSource + separator + accession;
-	}
+	public String toId() {
+		return NamingUtils.toId(dataSource, accession, NOTATION_LONG);		
+	}	
 
 	/* Fluent API */
 

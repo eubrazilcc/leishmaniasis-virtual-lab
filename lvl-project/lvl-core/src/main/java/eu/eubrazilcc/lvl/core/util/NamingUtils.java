@@ -24,9 +24,11 @@ package eu.eubrazilcc.lvl.core.util;
 
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
+import static eu.eubrazilcc.lvl.core.DataSource.toShortNotation;
+import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
+import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
 import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static eu.eubrazilcc.lvl.core.DataSource.toShortNotation;
 
 import java.util.Collection;
 import java.util.List;
@@ -72,9 +74,9 @@ public final class NamingUtils {
 	 * @return an string with the merged sequence identifier.
 	 */
 	public static String mergeIds(final Collection<Sequence> sequences) {
-		return mergeIds(sequences, Notation.NOTATION_SHORT);
+		return mergeIds(sequences, NOTATION_SHORT);
 	}
-	
+
 	/**
 	 * Iterates over a collection of sequences and merges their sequence identifiers. A sequence identifier is composed
 	 * by the sequence data source and the sequence accession number. Those fragments are joint with the {@link NamingUtils#ID_FRAGMENT_SEPARATOR}.
@@ -87,12 +89,16 @@ public final class NamingUtils {
 		return Joiner.on(URI_ID_SEPARATOR).skipNulls().join(from(sequences).transform(new Function<Sequence, String>() {
 			@Override
 			public String apply(final Sequence sequence) {
-				final String dataSource = Notation.NOTATION_SHORT.equals(notation) ? toShortNotation(sequence.getDataSource(), Notation.NOTATION_LONG) : sequence.getDataSource();
-				return dataSource + ID_FRAGMENT_SEPARATOR + sequence.getAccession();
+				return toId(sequence, notation);
 			}
 		}).filter(notNull()).toList());
 	}
 
+	/**
+	 * Extracts the sequence identifiers contained in the specified string.
+	 * @param str - the string to split.
+	 * @return a list with the split sequence identifiers.
+	 */
 	public static List<String> splitIds(final String str) {
 		return from(Splitter.on(URI_ID_SEPARATOR).trimResults().omitEmptyStrings().split(str)).transform(new Function<String, String>() {
 			@Override
@@ -100,6 +106,34 @@ public final class NamingUtils {
 				return input;
 			}
 		}).filter(notNull()).toList();
+	}
+
+	/**
+	 * Creates an identifier that uniquely identifies the sequence in the LVL. This identifier 
+	 * is computed from the data source and the accession fields. This method uses the default
+	 * character {@link NamingUtils#ID_FRAGMENT_SEPARATOR} to separate these particles in the 
+	 * created identifier.
+	 * @param sequence - the sequence to create the identifier for.
+	 * @param notation - the notation to be used when creating the identifier.
+	 * @return an identifier that uniquely identifies the sequence in the LVL.
+	 */
+	public static String toId(final Sequence sequence, final @Nullable Notation notation) {
+		return toId(sequence.getDataSource(), sequence.getAccession(), notation);
+	}
+
+	/**
+	 * Creates an identifier that uniquely identifies the sequence in the LVL. This identifier 
+	 * is computed from the data source and the accession fields. This method uses the default
+	 * character {@link NamingUtils#ID_FRAGMENT_SEPARATOR} to separate these particles in the 
+	 * created identifier.
+	 * @param dataSource - the data source to use.
+	 * @param accession - the accession number to use.
+	 * @param notation - the notation to be used when creating the identifier.
+	 * @return an identifier that uniquely identifies the sequence in the LVL.
+	 */
+	public static String toId(final String dataSource, final String accession, final @Nullable Notation notation) {
+		final String dataSource2 = NOTATION_SHORT.equals(notation) ? toShortNotation(dataSource, NOTATION_LONG) : dataSource;
+		return dataSource2 + ID_FRAGMENT_SEPARATOR + accession;
 	}
 
 }

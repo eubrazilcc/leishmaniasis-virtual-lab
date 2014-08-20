@@ -23,12 +23,13 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.storage.PaginationUtils.firstEntryOf;
 import static eu.eubrazilcc.lvl.storage.PaginationUtils.totalPages;
 import static eu.eubrazilcc.lvl.storage.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.storage.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -62,6 +63,7 @@ import com.google.common.collect.ImmutableMap;
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sequences;
+import eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geojson.Crs;
 import eu.eubrazilcc.lvl.core.geojson.Feature;
@@ -71,7 +73,6 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.Sorting;
-import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper;
 
 /**
  * Sequences resource. Since a sequence is uniquely identified by the combination of the data source and 
@@ -101,7 +102,7 @@ public class SequenceResource {
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
 				.queryParam("page", "{page}")
 				.queryParam("per_page", "{per_page}")
@@ -140,18 +141,18 @@ public class SequenceResource {
 	}
 
 	@GET
-	@Path("{id: [a-zA-Z_0-9]+,[a-zA-Z_0-9]+}")
+	@Path("{id: [a-zA-Z_0-9]+:[a-zA-Z_0-9]+}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Sequence getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from database
 		final Sequence sequence = SEQUENCE_DAO
 				.baseUri(uriInfo.getBaseUri())
-				.find(SequenceKey.builder().parse(id, URI_ID_SEPARATOR));
+				.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR));
 		if (sequence == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
@@ -162,7 +163,7 @@ public class SequenceResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createSequence(final Sequence sequence, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
 		if (sequence == null || isBlank(sequence.getAccession())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
@@ -173,15 +174,15 @@ public class SequenceResource {
 	}
 
 	@PUT
-	@Path("{id: [a-zA-Z_0-9]+,[a-zA-Z_0-9]+}")
+	@Path("{id: [a-zA-Z_0-9]+:[a-zA-Z_0-9]+}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void updateSequence(final @PathParam("id") String id, final Sequence update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}		
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, URI_ID_SEPARATOR);
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR);
 		if (sequenceKey == null || !sequenceKey.getDataSource().equals(update.getDataSource()) 
 				|| !sequenceKey.getAccession().equals(update.getAccession())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
@@ -196,14 +197,14 @@ public class SequenceResource {
 	}
 
 	@DELETE
-	@Path("{id: [a-zA-Z_0-9]+,[a-zA-Z_0-9]+}")
+	@Path("{id: [a-zA-Z_0-9]+:[a-zA-Z_0-9]+}")
 	public void deleteSequence(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, URI_ID_SEPARATOR);
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR);
 		// get from database
 		final Sequence current = SEQUENCE_DAO.find(sequenceKey);
 		if (current == null) {
@@ -222,18 +223,21 @@ public class SequenceResource {
 			final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		OAuth2Gatekeeper.authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		// get from database
 		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
 				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build())
 				.build(), maxDistance);
-		final List<Feature> features = newArrayList();
+		
+		final List<Feature> features = SequenceAnalyzer.of(sequences).groupByLocation();
+		
+		/* TODO final List<Feature> features = newArrayList();
 		for (final Sequence sequence : sequences) {
 			features.add(Feature.builder()
 					.property("name", sequence.getAccession())
 					.geometry(sequence.getLocation())
 					.build());
-		}
+		} */
 		return FeatureCollection.builder().crs(Crs.builder().wgs84().build()).features(features).build();
 	}
 

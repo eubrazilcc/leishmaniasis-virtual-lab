@@ -77,7 +77,7 @@ public class SequenceAnalyzerTest {
 			for (int i = 0; i < points.length; i++) {
 				sequences.add(Sequence.builder()
 						.dataSource(GENBANK)
-						.accession("SEQ-" + i)
+						.accession("SEQ_" + i)
 						.location(points[i])
 						.build());
 			}
@@ -144,7 +144,7 @@ public class SequenceAnalyzerTest {
 		return from(splitIds(name)).transform(new Function<String, Integer>() {
 			@Override
 			public Integer apply(final String id) {
-				return valueOf(id.substring(id.indexOf(ID_FRAGMENT_SEPARATOR) + 1 + "SEQ-".length()));
+				return valueOf(id.substring(id.indexOf(ID_FRAGMENT_SEPARATOR) + 1 + "SEQ_".length()));
 			}
 		}).filter(notNull()).toList();
 	}

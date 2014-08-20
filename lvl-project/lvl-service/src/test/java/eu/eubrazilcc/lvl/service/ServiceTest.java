@@ -320,7 +320,7 @@ public class ServiceTest {
 			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(4));
 			/* uncomment for additional output */			
 			System.out.println("Search sequences result: " + sequences.toString());
-			
+
 			// test get sequences sorted by accession number
 			sequences = target.path(path.value())
 					.queryParam("sort", "accession")
@@ -336,10 +336,10 @@ public class ServiceTest {
 			for (final Sequence seq : sequences.getSequences()) {
 				assertThat("Sequences are properly sorted", seq.getAccession().compareTo(last) > 0);
 				last = seq.getAccession();
-			}			
+			}
 			/* uncomment for additional output */			
 			System.out.println("Sorted sequences result: " + sequences.toString());
-			
+
 			// test get sequence by data source + accession number
 			Sequence sequence2 = target.path(path.value()).path(sequenceKey.toId())
 					.request(MediaType.APPLICATION_JSON)
