@@ -22,14 +22,83 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 /**
  * This class stores data sources as {@link String}, which is an alternative to BioJava 
  * {@link org.biojava3.core.sequence.DataSource}. This is more convenient than BioJava to exchange 
  * information to a client application where BioJava is not available (for example, a Web application).
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DataSource {
+public final class DataSource {
+
+	/* Long or full notation */
 
 	public static final String GENBANK = "GenBank";
-	
+
+	/* Short notation */
+
+	public static final String GENBANK_SHORT = "gb";
+
+	/**
+	 * Converts from the specified notation to short notation.
+	 * @param dataSource - the data source to be converted.
+	 * @param fromNotation - the original notation of the data source.
+	 * @return the short version of the specified data source. If the data source cannot be converted, an {@link Exception} 
+	 *         will be thrown to the caller.
+	 */
+	public static String toShortNotation(final String dataSource, final Notation fromNotation) {
+		checkArgument(isNotBlank(dataSource), "Uninitialized or invalid data source");
+		checkArgument(fromNotation != null, "Uninitialized notation");
+		final String trimmedDataSource = dataSource.trim();
+		String shortenedDataSource = null;
+		switch (fromNotation) {
+		case NOTATION_LONG:
+			if (GENBANK.equalsIgnoreCase(trimmedDataSource)) {
+				shortenedDataSource = GENBANK_SHORT;
+			}
+			break;
+		default:
+			break;
+		}
+		checkState(isNotBlank(shortenedDataSource), "The specified data source cannot be found");
+		return shortenedDataSource;
+	}
+
+	/**
+	 * Converts from the specified notation to long notation.
+	 * @param dataSource - the data source to be converted.
+	 * @param fromNotation - the original notation of the data source.
+	 * @return the long version of the specified data source. If the data source cannot be converted, an {@link Exception} 
+	 *         will be thrown to the caller.
+	 */
+	public static String toLongNotation(final String dataSource, final Notation fromNotation) {
+		checkArgument(isNotBlank(dataSource), "Uninitialized or invalid data source");
+		checkArgument(fromNotation != null, "Uninitialized notation");
+		final String trimmedDataSource = dataSource.trim();
+		String expandedDataSource = null;
+		switch (fromNotation) {
+		case NOTATION_SHORT:
+			if (GENBANK_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+				expandedDataSource = GENBANK;
+			}
+			break;
+		default:
+			break;
+		}
+		checkState(isNotBlank(expandedDataSource), "The specified data source cannot be found");
+		return expandedDataSource;
+	}
+
+	/**
+	 * Data source notation.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public static enum Notation {
+		NOTATION_LONG,
+		NOTATION_SHORT
+	}
+
 }

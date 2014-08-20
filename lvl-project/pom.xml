@@ -68,7 +68,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
 		<!-- Convenience properties to set library versions -->
 		<jersey.version>2.10.2</jersey.version>
-		<junit.version>4.11</junit.version>
+		<junit.version>4.11</junit.version> <!-- if you change this, then check Hamcrest version -->
+		<hamcrest.version>1.3</hamcrest.version> <!-- coincides with JUnit dependency -->
 		<mockito.version>1.9.5</mockito.version>
 
 		<!-- Convenience properties to set Maven plugins versions -->
@@ -96,6 +97,14 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- Hamcrest library of matcher implementations that extends the core matcher
+		  transitively included with JUnit -->
+		<dependency>
+		  <groupId>org.hamcrest</groupId>
+		  <artifactId>hamcrest-library</artifactId>
+		  <version>${hamcrest.version}</version>
+        </dependency>
 
 		<!-- Mockito: a mock objects library for Java -->
 		<dependency>

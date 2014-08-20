@@ -22,7 +22,23 @@
 
 package eu.eubrazilcc.lvl.core.util;
 
-import org.apache.commons.lang.StringUtils;
+import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.FluentIterable.from;
+import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static eu.eubrazilcc.lvl.core.DataSource.toShortNotation;
+
+import java.util.Collection;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+
+import eu.eubrazilcc.lvl.core.DataSource.Notation;
+import eu.eubrazilcc.lvl.core.Sequence;
 
 /**
  * Utility class to work with user-supplied text (e.g. names) and convert them into
@@ -33,6 +49,7 @@ public final class NamingUtils {
 
 	public static final String NO_NAME = "noname";
 	public static final char URI_ID_SEPARATOR = ',';
+	public static final char ID_FRAGMENT_SEPARATOR = ':';
 
 	/**
 	 * Replaces non-printable Unicode characters from an specified name, producing a 
@@ -42,10 +59,47 @@ public final class NamingUtils {
 	 * @return an ASCII printable representation.
 	 */
 	public static String toAsciiSafeName(final String name) {
-		final String safeName = StringUtils.isNotBlank(name) ? name : "";
-		return StringUtils.defaultIfEmpty(safeName.trim().replaceAll("\\p{C}", "?")
+		final String safeName = isNotBlank(name) ? name : "";
+		return defaultIfEmpty(safeName.trim().replaceAll("\\p{C}", "?")
 				.replaceAll("\\W+", "_").replaceFirst("[_]+$", "").replaceFirst("^[_]+", "")
 				.toLowerCase(), NO_NAME);
-	}	
+	}
+
+	/**
+	 * Wrapper method around the {@link NamingUtils#mergeIds(Collection, Notation)} method that uses the default notation:
+	 * {@link Notation#NOTATION_SHORT}.
+	 * @param sequences - the sequences to be processed to extract and merge their sequence identifiers.
+	 * @return an string with the merged sequence identifier.
+	 */
+	public static String mergeIds(final Collection<Sequence> sequences) {
+		return mergeIds(sequences, Notation.NOTATION_SHORT);
+	}
+	
+	/**
+	 * Iterates over a collection of sequences and merges their sequence identifiers. A sequence identifier is composed
+	 * by the sequence data source and the sequence accession number. Those fragments are joint with the {@link NamingUtils#ID_FRAGMENT_SEPARATOR}.
+	 * Sequence identifiers are separated by the {@link NamingUtils#URI_ID_SEPARATOR}.
+	 * @param sequences - the sequences to be processed to extract and merge their sequence identifiers.
+	 * @param notation - (optional) the notation to be used with the sequence data source.
+	 * @return an string with the merged sequence identifier.
+	 */
+	public static String mergeIds(final Collection<Sequence> sequences, final @Nullable Notation notation) {
+		return Joiner.on(URI_ID_SEPARATOR).skipNulls().join(from(sequences).transform(new Function<Sequence, String>() {
+			@Override
+			public String apply(final Sequence sequence) {
+				final String dataSource = Notation.NOTATION_SHORT.equals(notation) ? toShortNotation(sequence.getDataSource(), Notation.NOTATION_LONG) : sequence.getDataSource();
+				return dataSource + ID_FRAGMENT_SEPARATOR + sequence.getAccession();
+			}
+		}).filter(notNull()).toList());
+	}
+
+	public static List<String> splitIds(final String str) {
+		return from(Splitter.on(URI_ID_SEPARATOR).trimResults().omitEmptyStrings().split(str)).transform(new Function<String, String>() {
+			@Override
+			public String apply(final String input) {			
+				return input;
+			}
+		}).filter(notNull()).toList();
+	}
 
 }

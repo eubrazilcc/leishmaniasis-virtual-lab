@@ -87,7 +87,7 @@ public class SequenceKey {
 	 * character to separate these particles in the created identifier.
 	 * @return an identifier that uniquely identifies the sequence in the LVL.
 	 */
-	public String toId() {
+	public String toId() { // TODO
 		return dataSource + NamingUtils.URI_ID_SEPARATOR + accession;
 	}
 	
