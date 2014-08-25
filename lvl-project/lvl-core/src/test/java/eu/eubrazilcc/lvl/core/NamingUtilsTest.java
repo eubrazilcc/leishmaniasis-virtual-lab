@@ -38,10 +38,13 @@ import static org.apache.commons.lang.StringUtils.countMatches;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
@@ -116,6 +119,25 @@ public class NamingUtilsTest {
 			assertThat("sequence Id coincides with expected", seqId, 
 					equalTo(GENBANK_SHORT + ID_FRAGMENT_SEPARATOR + sequence.getAccession()));
 
+			// test sequence Ids splitting
+			List<String> idsList = splitIds("gb:DQ887647,gb:DQ887648,gb:DQ887649,gb:DQ887650,gb:DQ887651,gb:DQ887652,"
+					+ "gb:HM992926,gb:HM992927,gb:HM992928,gb:HM992929,gb:HM992930,gb:JF766954,gb:JF766955,gb:JF766956,"
+					+ "gb:JF766957,gb:JF766958,gb:JF766959,gb:JF766960,gb:JF766961,gb:JF766962,gb:JF766963,gb:JF766964,"
+					+ "gb:JF766965,gb:JF766966,gb:JF766967,gb:JF766968,gb:JF766969,gb:JF766970,gb:JF766971,gb:JF766972,"
+					+ "gb:JF766973,gb:JF766974,gb:JF766975,gb:JF729345,gb:JF729346,gb:JF729347,gb:JF729348,gb:JF729349,"
+					+ "gb:JF729350,gb:JF729351,gb:KF680810,gb:KF680811,gb:KF680812,gb:KF680813,gb:KF680814,gb:KF680815,"
+					+ "gb:KF680816,gb:KF680817,gb:KF680818,gb:KF680842,gb:KF680843,gb:KF680844,gb:KF680845,gb:KF680846,"
+					+ "gb:KF680847,gb:KF680848,gb:KF680849,gb:KF680850,gb:AF091533");
+			assertThat("split Ids is not null", idsList, notNullValue());
+			assertThat("split Ids is not empty", idsList.isEmpty(), equalTo(false));
+			assertThat("number of split Ids coincides with expected", idsList.size(), equalTo(59));
+			for (int i = 0; i < idsList.size(); i++) {
+				String current = idsList.get(i);
+				final List<String> copy = new ArrayList<String>(idsList);
+				assertThat("current element is eliminated from the copy list of split Ids", copy.remove(current));
+				assertThat("the list of split Ids contains no duplicated elements", copy, not(hasItem(current)));
+			}
+
 			// test sequence Ids merging using long notation
 			String mergedIds = mergeIds(sequences, NOTATION_LONG);
 			assertThat("merged Ids is not null", mergedIds, notNullValue());
@@ -133,7 +155,7 @@ public class NamingUtilsTest {
 			System.out.println(" >> merged Ids (using long notation): " + mergedIds);
 
 			// test sequence Ids splitting using long notation
-			List<String> idsList = splitIds(mergedIds);
+			idsList = splitIds(mergedIds);
 			assertThat("split Ids is not null", idsList, notNullValue());
 			assertThat("split Ids is not empty", idsList.isEmpty(), equalTo(false));
 			assertThat("number of split Ids coincides with expected", idsList.size(), equalTo(sequences.size()));

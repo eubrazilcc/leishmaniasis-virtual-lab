@@ -25,9 +25,9 @@ package eu.eubrazilcc.lvl.core.analysis;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.geospatial.Wgs84Calculator.matrixPoints;
 import static eu.eubrazilcc.lvl.core.geospatial.Wgs84Calculator.distance;
 import static eu.eubrazilcc.lvl.core.geospatial.Wgs84Calculator.geographicCenter;
+import static eu.eubrazilcc.lvl.core.geospatial.Wgs84Calculator.matrixPoints;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.splitIds;
 
@@ -180,9 +180,9 @@ public class SequenceAnalyzer {
 				final Point[][] matrix = matrixPoints(names.size(), point);
 				int count2 = 0;
 				for (int i = 0; i < matrix.length && count2 < count; i++) {
-					for (int j = 0; j < matrix[i].length && count2 < count; j++) {
+					for (int j = 0; j < matrix[i].length && count2 < count; j++) {						
 						features2.add(Feature.builder()
-								.property("name", names.get(i))
+								.property("name", names.get(count2))
 								.property("count", 1)
 								.geometry(matrix[i][j])
 								.build());
