@@ -72,8 +72,6 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
             loadMap : function() {
                 require([ 'openlayers' ], function() {
 
-                    // TODO
-
                     var createTextStyle = function(text) {
                         return new ol.style.Text({
                             font : '12px Lato, Helvetica, Arial, sans-serif',
@@ -116,14 +114,40 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                             url : 'http://localhost:8000/all_sequences.geojson' + '?bust=' + Math.random()
                         }),
                         style : function(feature, resolution) {
-                            var text = resolution < 5000 ? feature.get('name') : '';
+                            var text = resolution < 5000 ? feature.get('count') : '';
                             if (!styleCache[text]) {
                                 styleCache[text] = createFeatureStyle(feature.getGeometry().getType(), text, resolution);
                             }
                             return styleCache[text];
                         }
                     });
-                    // TODO
+
+                    var heatmapLayer = new ol.layer.Heatmap({
+                        source : new ol.source.GeoJSON({
+                            extractStyles : false,
+                            projection : 'EPSG:3857',
+                            url : 'http://localhost:8000/all_sequences.geojson' + '?bust=' + Math.random()
+                        }),
+                        radius : 5
+                    });
+
+                    heatmapLayer.getSource().on('addfeature', function(event) {
+                        var count = event.feature.get('count');
+                        var magnitude = parseFloat(count);
+                        event.feature.set('weight', magnitude);
+                    });
+
+                    var osmRaster = new ol.layer.Tile({
+                        preload : Infinity,
+                        source : new ol.source.OSM()
+                    });
+
+                    var tonerRaster = new ol.layer.Tile({
+                        source : new ol.source.Stamen({
+                            preload : Infinity,
+                            layer : 'toner'
+                        })
+                    });
 
                     // setup map
                     this.map = new ol.Map({
@@ -132,10 +156,8 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                         }).extend([ new ol.control.FullScreen(), new ol.control.ScaleLine({
                             units : 'metric'
                         }) ]),
-                        layers : [ new ol.layer.Tile({
-                            preload : Infinity,
-                            source : new ol.source.OSM()
-                        }), vectorLayer ],
+                        layers : [ tonerRaster, heatmapLayer ],
+                        // layers : [ osmRaster, vectorLayer ],
                         /* fastest renderer */
                         renderer : 'canvas',
                         /* div HTML element with id='map-container' */
@@ -215,6 +237,14 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                         hideOnClick : true
                     });
                     // add popup
+                    var createSeqLinks = function(name) {
+                        var text = '';
+                        var seqs = name.split(',');
+                        for (i = 0; i < seqs.length; i++) {
+                            text += '<a href="/#sequence/' + seqs[i] + '">' + seqs[i] + '</a> ';
+                        }
+                        return text;
+                    }
                     var popupElem = document.getElementById('map-popup');
                     var popup = new ol.Overlay({
                         element : popupElem,
@@ -224,6 +254,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                     this.map.addOverlay(popup);
                     var this_ = this;
                     this.map.on('click', function(evt) {
+                        $(popupElem).popover('destroy');
                         var feature = this_.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
                             return feature;
                         });
@@ -233,15 +264,14 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                             popup.setPosition(coord);
                             $(popupElem).popover({
                                 'placement' : 'top',
+                                'animation' : false,
                                 'html' : true,
-                                'content' : '<a href="#">' + feature.get('name') + '</a>' // TODO
+                                'content' : createSeqLinks(feature.get('name'))
                             });
                             $(popupElem).popover('show');
-                        } else {
-                            $(popupElem).popover('destroy');
                         }
                     });
-                    $(this.map.getViewport()).on('mousemove', function(e) {                        
+                    $(this.map.getViewport()).on('mousemove', function(e) {
                         var pixel = this_.map.getEventPixel(e.originalEvent);
                         var hit = this_.map.forEachFeatureAtPixel(pixel, function(feature, layer) {
                             return true;

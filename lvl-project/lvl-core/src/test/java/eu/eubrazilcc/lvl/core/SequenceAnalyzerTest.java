@@ -27,6 +27,9 @@ import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.DEFAULT_ERROR;
+import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.aveWeights;
+import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.realoc4Heatmap;
+import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.relWeights;
 import static eu.eubrazilcc.lvl.core.geospatial.Wgs84Calculator.distance;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.splitIds;
@@ -99,7 +102,7 @@ public class SequenceAnalyzerTest {
 			List<Feature> features = clusterer.groupByLocation(errorMeters);
 			assertThat("features is not null", features, notNullValue());
 			assertThat("features is not empty", features.isEmpty(), equalTo(false));
-			assertThat("number of features coincide with expected", features.size(), equalTo(8));
+			assertThat("number of features coincides with expected", features.size(), equalTo(8));
 			for (final Feature feature : features) {				
 				validate(feature, distMeters, errorMeters);
 				/* uncomment for additional output */
@@ -112,12 +115,35 @@ public class SequenceAnalyzerTest {
 			features = clusterer.groupByLocation(errorMeters);
 			assertThat("features (exact match) is not null", features, notNullValue());
 			assertThat("features (exact match) is not empty", features.isEmpty(), equalTo(false));
-			assertThat("number of features coincide with expected", features.size(), equalTo(9));
+			assertThat("number of features coincides with expected", features.size(), equalTo(9));
 			for (final Feature feature : features) {
 				validate(feature, distMeters, errorMeters);
 				/* uncomment for additional output */
 				System.out.println(" >> feature name (exact match): " + feature.getProperty("name") + ", location: " + feature.getGeometry());
 			}
+
+			// test average weight calculation
+			aveWeights(features);
+			assertThat("features is not null after weight calculation", features, notNullValue());
+			assertThat("number of features after weight calculation coincides with expected", features.size(), equalTo(9));
+			/* uncomment for additional output */
+			for (final Feature feature : features) {								
+				System.out.println(" >> feature name: " + feature.getProperty("name") + ", average weigth: " + feature.getProperty("weight"));
+			}			
+
+			// test relative weight calculation
+			relWeights(features);
+			assertThat("features is not null after weight calculation", features, notNullValue());
+			assertThat("number of features after weight calculation coincides with expected", features.size(), equalTo(9));
+			/* uncomment for additional output */
+			for (final Feature feature : features) {								
+				System.out.println(" >> feature name: " + feature.getProperty("name") + ", relative weigth: " + feature.getProperty("weight"));
+			}
+
+			// test feature reallocation
+			final List<Feature> features2 = realoc4Heatmap(features);
+			assertThat("features is not null after reallocation", features2, notNullValue());
+			assertThat("number of features after reallocation coincides with expected", features2.size(), equalTo(11));			
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

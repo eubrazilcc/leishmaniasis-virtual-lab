@@ -24,9 +24,12 @@ package eu.eubrazilcc.lvl.core.analysis;
 
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
+import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.geospatial.Wgs84Calculator.matrixPoints;
 import static eu.eubrazilcc.lvl.core.geospatial.Wgs84Calculator.distance;
 import static eu.eubrazilcc.lvl.core.geospatial.Wgs84Calculator.geographicCenter;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeIds;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.splitIds;
 
 import java.util.Collection;
 import java.util.List;
@@ -75,7 +78,8 @@ public class SequenceAnalyzer {
 	 * The sequences that are found to have the same location are grouped in a single {@link Feature}. Each feature
 	 * is annotated with the property {@code name}, which will contain the identifiers of all the sequences grouped 
 	 * in the feature. Also, the property {@code count} will contain the number of sequences grouped in the feature.
-	 * @param error - the allowed error margin in distance calculations (the endpoint is also included in the interval)
+	 * @param error - the error margin (in meters) allowed in distance calculations (the endpoint is also included 
+	 *        in the interval)
 	 * @return a list of {@link Feature} that contains the features computed from the original dataset. Each feature
 	 *         is centered in the geospatial center of the locations that contains, the {@code name} property of the 
 	 *         feature contains the identifiers of all the {@link Sequence} that belong to the feature and the 
@@ -129,6 +133,67 @@ public class SequenceAnalyzer {
 				return sequence.getLocation();
 			}
 		}).filter(notNull()).toList();
+	}
+
+	/**
+	 * Calculates the average weight of the specified features and annotates each feature with the property {@code weight}.
+	 * @param features - the features to calculate the weights.
+	 */
+	public static void aveWeights(final List<Feature> features) {
+		double total = 0.0d;
+		for (final Feature feature : features) {
+			total += (int)feature.getProperty("count");
+		}
+		for (final Feature feature : features) {
+			feature.setProperty("weight", ((int)feature.getProperty("count")) / total);
+		}
+	}
+
+	/**
+	 * Calculates the relative weight of the specified features and annotates each feature with the property {@code weight}.
+	 * @param features - the features to calculate the weights.
+	 */
+	public static void relWeights(final List<Feature> features) {
+		double max = Double.MIN_VALUE;
+		for (final Feature feature : features) {
+			final int count = (int)feature.getProperty("count");
+			max = Math.max(max, (double)count);
+		}
+		for (final Feature feature : features) {
+			feature.setProperty("weight", ((int)feature.getProperty("count")) / max);
+		}
+	}
+
+	/**
+	 * Reallocates a set of features, distributing each group found in a arithmetic spiral. This can be used for example 
+	 * to represent a set of points in a heat-map.
+	 * @param features - the features to reallocate.
+	 * @return the reallocated features.
+	 */
+	public static List<Feature> realoc4Heatmap(final List<Feature> features) {
+		final List<Feature> features2 = newArrayList();
+		for (final Feature feature : features) {
+			final int count = (int)feature.getProperty("count");
+			if (count > 1) {				
+				final List<String> names = splitIds((String)feature.getProperty("name"));
+				final Point point = (Point) feature.getGeometry();
+				final Point[][] matrix = matrixPoints(names.size(), point);
+				int count2 = 0;
+				for (int i = 0; i < matrix.length && count2 < count; i++) {
+					for (int j = 0; j < matrix[i].length && count2 < count; j++) {
+						features2.add(Feature.builder()
+								.property("name", names.get(i))
+								.property("count", 1)
+								.geometry(matrix[i][j])
+								.build());
+						count2++;
+					}
+				}
+			} else {
+				features2.add(feature);
+			}
+		}
+		return features2;
 	}
 
 	/* Fluent API */

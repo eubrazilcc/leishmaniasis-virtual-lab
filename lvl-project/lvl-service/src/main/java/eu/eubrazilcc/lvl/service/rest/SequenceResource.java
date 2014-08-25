@@ -23,6 +23,8 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.DEFAULT_ERROR;
+import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.realoc4Heatmap;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.storage.PaginationUtils.firstEntryOf;
 import static eu.eubrazilcc.lvl.storage.PaginationUtils.totalPages;
@@ -221,6 +223,7 @@ public class SequenceResource {
 			final @PathParam("latitude") double latitude, 
 			final @QueryParam("maxDistance") @DefaultValue("1000.0d") double maxDistance, 
 			final @QueryParam("group") @DefaultValue("true") boolean group,
+			final @QueryParam("heatmap") @DefaultValue("false") boolean heatmap,
 			final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
@@ -231,7 +234,10 @@ public class SequenceResource {
 				.build(), maxDistance);
 		List<Feature> features = null;
 		if (group) {
-			features = SequenceAnalyzer.of(sequences).groupByLocation();
+			features = SequenceAnalyzer.of(sequences).groupByLocation(heatmap ? 1 : DEFAULT_ERROR);
+			if (heatmap) {
+				features = realoc4Heatmap(features);
+			}
 		} else {
 			features = newArrayList();
 			for (final Sequence sequence : sequences) {
