@@ -66,8 +66,8 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                 $(document).off('webkitfullscreenchange mozfullscreenchange fullscreenchange');
                 $('#map-return-home').off('click');
                 $('#map-my-location').off('click');
+                $('#map-switch').off('click');
                 $('#map-export').off('click');
-                $('#map-share').off('click');
             },
             loadMap : function() {
                 require([ 'openlayers' ], function() {
@@ -111,7 +111,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                     var vectorLayer = new ol.layer.Vector({
                         source : new ol.source.GeoJSON({
                             projection : 'EPSG:3857',
-                            url : 'http://localhost:8000/all_sequences.geojson' + '?bust=' + Math.random()
+                            url : 'http://localhost:8000/all_sequences-grouped.geojson' + '?bust=' + Math.random()
                         }),
                         style : function(feature, resolution) {
                             var text = resolution < 5000 ? feature.get('count') : '';
@@ -157,7 +157,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                             units : 'metric'
                         }) ]),
                         layers : [ tonerRaster, heatmapLayer ],
-                        // layers : [ osmRaster, vectorLayer ],
+                     // TODO layers : [ osmRaster, vectorLayer ],
                         /* fastest renderer */
                         renderer : 'canvas',
                         /* div HTML element with id='map-container' */
@@ -215,15 +215,25 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
                             $('#dummy').trigger('click');
                         });
 
-                        // add event to export map as a PNG file
-                        $('#map-export').on('click', function(e) {
+                        // add event to change the type of map displayed
+                        $('#map-switch').on('click', function(e) {
                             e.preventDefault();
+
+                            require([ 'common/views' ], function(CommonViews) {
+                                var loadingView = new CommonViews.Loading();
+                                Lvl.fullpageRegion.show(loadingView);
+                            });
+
+                            setTimeout(function() {
+                                Lvl.fullpageRegion.close();
+                            }, 3000);
+
                             // TODO
                             $('#dummy').trigger('click');
                         });
 
-                        // add event to share map (center, zoom)
-                        $('#map-share').on('click', function(e) {
+                        // add event to export map as a PNG file
+                        $('#map-export').on('click', function(e) {
                             e.preventDefault();
                             // TODO
                             $('#dummy').trigger('click');

@@ -33,8 +33,12 @@ import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.ESEARCH_XML;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getCount;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getIds;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.getGenInfoIdentifier;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GB_SEQXML;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getGenInfoIdentifier;
+import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XML;
+import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.getPubMedId;
+import static java.io.File.createTempFile;
+import static java.nio.charset.Charset.forName;
 import static java.nio.file.Files.newBufferedReader;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
@@ -81,6 +85,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.ESearchResult;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSet;
+import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
+import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticleSet;
 
 /**
  * Utilities to interact with the Entrez NCBI search system.
@@ -91,32 +97,28 @@ public final class EntrezHelper {
 
 	private static final Logger LOGGER = getLogger(EntrezHelper.class);
 
+	public static final String NUCLEOTIDE_DB = "nuccore";
+	public static final String PUBMED_DB = "pubmed";
+
 	public static final String ESEARCH_BASE_URI = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
 	public static final String EFETCH_BASE_URI = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
 
 	public static final int MAX_RECORDS_LISTED = 10000;  // esearch maximum 100,000
 	public static final int MAX_RECORDS_FETCHED = 10000; // efetch maximum 100,000
 
-	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+	public static final Charset DEFAULT_CHARSET = forName("UTF-8");
 
 	public static final String PHLEBOTOMUS_QUERY = "phlebotomus[Organism]";
-
-	/**
-	 * Searches all occurrences of phlebotomus in the nucleotide database and returns their accession
-	 * identifiers in a {@link Set}.
-	 * @return a {@link Set} with the accession identifiers of all the phlebotomus found in the
-	 *         nucleotide database.
-	 */
-	public static Set<String> listPhlebotomines() {
-		return listNucleotides(PHLEBOTOMUS_QUERY);
-	}
+	public static final String PHLEBOTOMUS_CYTOCHROME_OXIDASE_I = "(sandfly[Organism] OR sand fly[Organism] OR Phlebotomus[Organism] OR Sergentomyia[Organism] OR Lutzomyia[Organism]) AND (cytochrome oxidase I[Gene Name] OR cytochrome oxidase 1[Gene Name] OR coi[Gene Name] OR COI[Gene Name] OR co1[Gene Name] OR CO1[Gene Name] OR coxi[Gene Name] OR cox1[Gene Name] OR COXI[Gene Name])";
 
 	/**
 	 * Lists the identifiers of the sequences found in the nucleotide database. Searching the nucleotide 
 	 * database with general text queries will produce links to results in Nucleotide, Genome Survey 
-	 * Sequence (GSS), and Expressed Sequence Tag (EST) databases.
+	 * Sequence (GSS), and Expressed Sequence Tag (EST) databases. For example, use {@code listNucleotides(PHLEBOTOMUS_QUERY)}
+	 * to search all occurrences of phlebotomus in the nucleotide database.
 	 * @param query - Entrez query.
-	 * @return a collection of ids with no duplications.
+	 * @return a {@link Set} with the accession identifiers of all the DNA sequences found in the nucleotide 
+	 *         database for the specified query.
 	 */
 	public static Set<String> listNucleotides(final String query) {
 		final Set<String> ids = newHashSet();
@@ -125,7 +127,7 @@ public final class EntrezHelper {
 			int retstart = 0, count = 0;
 			final int retmax = MAX_RECORDS_LISTED;
 			do {
-				final ESearchResult result = esearch(query, retstart, retmax);
+				final ESearchResult result = esearch(NUCLEOTIDE_DB, query, retstart, retmax);
 				if (esearchResultCount < 0) {
 					esearchResultCount = getCount(result);
 				}
@@ -144,9 +146,26 @@ public final class EntrezHelper {
 	}
 
 	/**
+	 * Fetches the sequence identified by its accession id and saves it in the specified directory.
+	 * @param id - accession identifier.
+	 * @param directory - the directory where the file will be saved.
+	 * @param format - the format that will be used to store the file.
+	 */
+	public static void saveNucleotide(final String id, final File directory, final Format format) {
+		checkArgument(isNotBlank(id), "Uninitialized or invalid Id");
+		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
+				"Uninitialized or invalid directory");
+		try {
+			efetch(newArrayList(id), 0, 1, directory, format);
+		} catch (Exception e) {
+			LOGGER.error("Fetching nucleotide sequence failed", e);
+		}
+	}
+
+	/**
 	 * Fetches the sequences identified by their accession identifiers and saves them in the specified directory,
 	 * using the specified data format. The saved files are named 'id.ext', where 'id' is the original sequence 
-	 * accession identifier and 'ext' the .
+	 * accession identifier and 'ext' the file extension that matches the specified format.
 	 * @param ids - accession identifiers.
 	 * @param directory - the directory where the files will be saved.
 	 * @param format - the format that will be used to store the files.
@@ -167,35 +186,41 @@ public final class EntrezHelper {
 	}
 
 	/**
-	 * Fetches the sequence identified by its accession id and saves it in the specified directory.
-	 * @param id - accession identifier.
-	 * @param directory - the directory where the file will be saved.
-	 * @param format - the format that will be used to store the file.
+	 * Gets the publications identified by their PubMed identifiers (PMIDs) and saves them in the specified 
+	 * directory, using the specified data format. The saved files are named 'id.ext', where 'id' is the 
+	 * original PMID and 'ext' the file extension that matches the specified format.
+	 * @param ids
+	 * @param directory
+	 * @param format
 	 */
-	public static void fecthNucleotide(final String id, final File directory, final Format format) {
-		checkArgument(isNotBlank(id), "Uninitialized or invalid Id");
+	public static void savePublications(final Set<String> ids, final File directory, final Format format) {
+		checkState(ids != null && !ids.isEmpty(), "Uninitialized or invalid sequence ids");
 		checkArgument(directory != null && (directory.isDirectory() || directory.mkdirs()) && directory.canWrite(), 
 				"Uninitialized or invalid directory");
 		try {
-			efetch(newArrayList(id), 0, 1, directory, format);
+			final int retstart = 0, retmax = MAX_RECORDS_FETCHED;
+			final Iterable<List<String>> partitions = partition(ids, retmax);
+			for (final List<String> chunk : partitions) {
+				efetch(chunk, retstart, retmax, directory, format);
+			}
 		} catch (Exception e) {
-			LOGGER.error("Fetching nucleotide sequence failed", e);
-		}
+			LOGGER.error("Saving publication references failed", e);
+		}		
 	}
 
-	private static Form esearchForm(final String query, final int retstart, final int retmax) {
+	private static Form esearchForm(final String database, final String query, final int retstart, final int retmax) {
 		return Form.form()
-				.add("db", "nuccore")
+				.add("db", database)
 				.add("term", query)
 				.add("retstart", Integer.toString(retstart))
 				.add("retmax", Integer.toString(retmax));
 	}
 
-	public static ESearchResult esearch(final String query, final int retstart, final int retmax) throws Exception {
+	public static ESearchResult esearch(final String database, final String query, final int retstart, final int retmax) throws Exception {
 		return Request.Post(ESEARCH_BASE_URI)
 				.useExpectContinue() // execute a POST with the 'expect-continue' handshake
 				.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
-				.bodyForm(esearchForm(query, retstart, retmax).build()).execute().handleResponse(new ResponseHandler<ESearchResult>() {
+				.bodyForm(esearchForm(database, query, retstart, retmax).build()).execute().handleResponse(new ResponseHandler<ESearchResult>() {
 					@Override
 					public ESearchResult handleResponse(final HttpResponse response) throws IOException {
 						final StatusLine statusLine = response.getStatusLine();
@@ -223,10 +248,13 @@ public final class EntrezHelper {
 	public static void efetch(final List<String> ids, final int retstart, final int retmax, final File directory, final Format format) throws Exception {
 		switch (format) {
 		case FLAT_FILE:
-			efetchFlatFile(ids, retstart, retmax, directory);
+			efetchFlatFiles(ids, retstart, retmax, directory);
 			break;
 		case GB_SEQ_XML:
 			efetchGBSeqXMLFiles(ids, retstart, retmax, directory);			
+			break;
+		case PUBMED_XML:
+			efetchPubmedXMLFiles(ids, retstart, retmax, directory);
 			break;
 		default:
 			throw new IllegalArgumentException("Unsupported file format: " + format);
@@ -235,13 +263,13 @@ public final class EntrezHelper {
 
 	private static void efetchGBSeqXMLFiles(final List<String> ids, final int retstart, final int retmax, final File directory) throws Exception {
 		// save the bulk of files to a temporary file
-		final File tmpFile = File.createTempFile("gb-", ".tmp", directory);
+		final File tmpFile = createTempFile("gb-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
 		LOGGER.trace("Fetching " + ids.size() + " files from GenBank, retstart=" + retstart + ", retmax=" + retmax + ", file=" + tmpFile.getPath());
 		Request.Post(EFETCH_BASE_URI)
 		.useExpectContinue() // execute a POST with the 'expect-continue' handshake
 		.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
-		.bodyForm(efetchForm(idsParam, retstart, retmax, "xml").build()).execute().handleResponse(new ResponseHandler<Void>() {
+		.bodyForm(efetchForm(NUCLEOTIDE_DB, idsParam, retstart, retmax, "xml").build()).execute().handleResponse(new ResponseHandler<Void>() {
 			@Override
 			public Void handleResponse(final HttpResponse response) throws IOException {
 				final StatusLine statusLine = response.getStatusLine();
@@ -306,16 +334,16 @@ public final class EntrezHelper {
 		future.get();
 	}
 
-	private static void efetchFlatFile(final List<String> ids, final int retstart, final int retmax, final File directory) throws Exception {
+	private static void efetchFlatFiles(final List<String> ids, final int retstart, final int retmax, final File directory) throws Exception {
 		// save the bulk of files to a temporary file
-		final File tmpFile = File.createTempFile("gb-", ".tmp", directory);
+		final File tmpFile = createTempFile("gb-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
 		LOGGER.trace("Fetching " + ids.size() + " files from GenBank, retstart=" + retstart + ", retmax=" + retmax
 				+ ", file=" + tmpFile.getPath());
 		Request.Post(EFETCH_BASE_URI)
 		.useExpectContinue() // execute a POST with the 'expect-continue' handshake
 		.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
-		.bodyForm(efetchForm(idsParam, retstart, retmax, "text").build()).execute().handleResponse(new ResponseHandler<Void>() {
+		.bodyForm(efetchForm(NUCLEOTIDE_DB, idsParam, retstart, retmax, "text").build()).execute().handleResponse(new ResponseHandler<Void>() {
 			@Override
 			public Void handleResponse(final HttpResponse response) throws IOException {
 				final StatusLine statusLine = response.getStatusLine();
@@ -398,15 +426,94 @@ public final class EntrezHelper {
 		future.get();
 	}
 
-	private static Form efetchForm(final String ids, final int retstart, final int retmax, final String retmode) {
-		return Form.form()
-				.add("db", "nuccore")
+	private static void efetchPubmedXMLFiles(final List<String> ids, final int retstart, final int retmax, final File directory) throws Exception {
+		// save the bulk of files to a temporary file
+		final File tmpFile = createTempFile("pm-", ".tmp", directory);
+		final String idsParam = Joiner.on(",").skipNulls().join(ids);
+		LOGGER.trace("Fetching " + ids.size() + " files from PubMed, retstart=" + retstart + ", retmax=" + retmax + ", file=" + tmpFile.getPath());
+		Request.Post(EFETCH_BASE_URI)
+		.useExpectContinue() // execute a POST with the 'expect-continue' handshake
+		.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
+		.bodyForm(efetchForm(PUBMED_DB, idsParam, retstart, retmax, "xml").build()).execute().handleResponse(new ResponseHandler<Void>() {
+			@Override
+			public Void handleResponse(final HttpResponse response) throws IOException {
+				final StatusLine statusLine = response.getStatusLine();
+				final HttpEntity entity = response.getEntity();
+				if (statusLine.getStatusCode() >= 300) {
+					throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+				}
+				if (entity == null) {
+					throw new ClientProtocolException("Response contains no content");
+				}
+				final ContentType contentType = getOrDefault(entity);
+				final String mimeType = contentType.getMimeType();
+				if (!mimeType.equals(APPLICATION_OCTET_STREAM.getMimeType()) && !mimeType.equals(TEXT_XML.getMimeType())) {
+					throw new ClientProtocolException("Unexpected content type:" + contentType);
+				}
+				Charset charset = contentType.getCharset();
+				if (charset == null) {
+					charset = HTTP.DEF_CONTENT_CHARSET;
+				}
+				final ByteSink sink = asByteSink(tmpFile);
+				sink.writeFrom(entity.getContent());
+				return null;
+			}
+		});
+		final ListenableFuture<String[]> future = TASK_RUNNER.submit(new Callable<String[]>() {
+			@Override
+			public String[] call() throws Exception {
+				final Set<String> files = newHashSet();
+				final PubmedArticleSet articleSet = PUBMED_XML.typeFromFile(tmpFile);
+				checkState(articleSet != null, "Expected PubMed article XML, but no content read from temporary file downloaded with efetch");
+				if (articleSet.getPubmedArticle() != null) {
+					final List<PubmedArticle> articles = articleSet.getPubmedArticle();
+					for (final PubmedArticle article : articles) {
+						final String pmid = getPubMedId(article);						
+						if (pmid != null) {							
+							final File file = new File(directory, pmid + ".xml");
+							PUBMED_XML.typeToFile(article, file);
+							files.add(file.getCanonicalPath());
+						} else {
+							LOGGER.warn("Ingoring malformed article (pmid not found) in efetch response");
+						}
+					}
+				} else {
+					LOGGER.warn("Ingoring malformed article (PubmedArticle not found) in efetch response");
+				}				
+				return files.toArray(new String[files.size()]);
+			}
+		});
+		addCallback(future, new FutureCallback<String[]>() {
+			@Override
+			public void onSuccess(final String[] result) {
+				LOGGER.info("One bulk publication file was processed successfully: " + tmpFile.getName()
+						+ ", number of created files: " + result.length);
+				deleteQuietly(tmpFile);
+			}
+			@Override
+			public void onFailure(final Throwable error) {
+				LOGGER.error("Failed to process bulk publication file " + tmpFile.getName(), error);
+			}
+		});
+		// wait for files to be processed
+		future.get();
+	}
+
+	private static Form efetchForm(final String database, final String ids, final int retstart, final int retmax, final String retmode) {
+		final Form form = Form.form()
+				.add("db", database)
 				.add("id", ids)
 				.add("retstart", Integer.toString(retstart))
-				.add("retmax", Integer.toString(retmax))
-				// GenBank flat file
-				.add("rettype", "gb") // use gbwithparts to download the file with the full sequence (this could produce huge files)
+				.add("retmax", Integer.toString(retmax))				
 				.add("retmode", retmode);
+		if (NUCLEOTIDE_DB.equals(database)) {
+			form.add("rettype", "gb"); // use gbwithparts to download the file with the full sequence (this could produce huge files)
+		} else if (PUBMED_DB.equals(database)) {
+			// PubMed uses rettype = null for text ASN.1 and XML file format
+		} else {
+			throw new IllegalStateException("Invalid database " + database);
+		}
+		return form;
 	}
 
 	/**
@@ -473,9 +580,10 @@ public final class EntrezHelper {
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
 	public enum Format {
-		FLAT_FILE,   // GenBank Flat Files
-		GB_SEQ_XML,  // GBSeqXML
-		TINY_SEQ_XML // TinySeqXML
+		FLAT_FILE,    // GenBank Flat Files
+		GB_SEQ_XML,   // GBSeqXML
+		TINY_SEQ_XML, // TinySeqXML
+		PUBMED_XML    // PubMed XML
 	}
 
 }

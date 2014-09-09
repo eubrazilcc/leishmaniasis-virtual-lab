@@ -104,7 +104,7 @@ a.lvl-login:hover,a.lvl-login:focus {
   padding: 0px;
 }
 
-/* Override Boostrap styles */
+/* Override Boostrap styles: adjust form icons position */
 .has-feedback .form-control-feedback {
   top: 14px;
   right: -32px;

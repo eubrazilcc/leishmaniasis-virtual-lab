@@ -22,9 +22,20 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.listNucleotides;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.saveNucleotides;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.savePublications;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.FLAT_FILE;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GB_SEQXML;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedIds;
+import static java.lang.System.getProperty;
 import static org.apache.commons.io.FileUtils.listFiles;
+import static org.apache.commons.io.FilenameUtils.concat;
+import static org.apache.commons.lang.RandomStringUtils.random;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
@@ -35,30 +46,30 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
+import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 
 /**
- * Tests Entrez utilities.
+ * Tests Entrez utilities provided by the class {@link EntrezHelper}.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class EntrezTest {
 
-	private static final File TEST_OUTPUT_DIR = new File(FilenameUtils.concat(System.getProperty("java.io.tmpdir"),
-			EntrezTest.class.getSimpleName() + "_" + RandomStringUtils.random(8, true, true)));
+	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
+			EntrezTest.class.getSimpleName() + "_" + random(8, true, true)));
 
-	private static final String SMALL_QUERY = "(phlebotomus[Organism])+AND+(\"Phlebotomus+alexandri\"[porgn:__txid94477])";
+	private static final String SMALL_QUERY = "(phlebotomus[Organism])+AND+(\"Phlebotomus+alexandri\"[porgn:__txid94477])";	
 
 	@Before
-	public void setUp() {		
+	public void setUp() {
 		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);
+		TASK_RUNNER.preload();
 	}
-	
+
 	@After
 	public void cleanUp() throws IOException {
 		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);		
@@ -72,14 +83,39 @@ public class EntrezTest {
 			final Set<String> ids = listNucleotides(SMALL_QUERY);
 			assertThat("ids is not null", ids, notNullValue());
 			assertThat("ids is not empty", !ids.isEmpty());
-			final int count = ids.size();
+			int count = ids.size();
 
-			// test save sequences
-			saveNucleotides(ids, TEST_OUTPUT_DIR, Format.FLAT_FILE);
-			final Collection<File> files = listFiles(TEST_OUTPUT_DIR, new String[] { "gb" }, false);
-			assertThat("GenBank files is not null", files, notNullValue());
-			assertThat("GenBank files is not empty", !files.isEmpty());
-			assertThat("GenBank files count does not concide", count == files.size());
+			// test save sequences in flat file format
+			File outputDir = new File(TEST_OUTPUT_DIR, "gb-flat");
+			saveNucleotides(ids, outputDir, FLAT_FILE);
+			Collection<File> files = listFiles(outputDir, new String[] { "gb" }, false);
+			assertThat("GenBank flat files is not null", files, notNullValue());
+			assertThat("GenBank flat files is not empty", !files.isEmpty());
+			assertThat("GenBank flat files count does not concide", count, equalTo(files.size()));
+
+			// test save sequences in GenBank XML format
+			outputDir = new File(TEST_OUTPUT_DIR, "gb-xml");
+			saveNucleotides(ids, outputDir, GB_SEQ_XML);
+			files = listFiles(outputDir, new String[] { "xml" }, false);
+			assertThat("GenBank XML files is not null", files, notNullValue());
+			assertThat("GenBank XML files is not empty", !files.isEmpty());
+			assertThat("GenBank XML files count does not concide", count, equalTo(files.size()));
+
+			// test save publications in PubMed XML format
+			final GBSeq gbSeq = GB_SEQXML.typeFromFile(new File(TEST_OUTPUT_DIR, "gb-xml/9931364.xml"));
+			assertThat("GenBank XML sequence is not null", gbSeq, notNullValue());
+			final Set<String> pmids = getPubMedIds(gbSeq);
+			assertThat("GenBank XML PMIDs is not null", pmids, notNullValue());
+			assertThat("GenBank XML PMIDs is not empty", !pmids.isEmpty());
+			count = pmids.size();
+
+			outputDir = new File(TEST_OUTPUT_DIR, "pubmed-xml");
+			savePublications(pmids, outputDir, PUBMED_XML);
+			files = listFiles(outputDir, new String[] { "xml" }, false);
+			assertThat("PubMed XML files is not null", files, notNullValue());
+			assertThat("PubMed XML files is not empty", !files.isEmpty());
+			assertThat("PubMed XML files count does not concide", count, equalTo(files.size()));
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("EntrezTest.test() failed: " + e.getMessage());

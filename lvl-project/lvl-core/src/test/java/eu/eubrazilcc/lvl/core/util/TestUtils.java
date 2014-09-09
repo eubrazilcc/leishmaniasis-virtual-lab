@@ -40,6 +40,7 @@ public class TestUtils {
 	public static final String ANCHOR_FILENAME = "m2anchor";
 
 	public static final String GENBANK_FOLDER = "genbank";
+	public static final String PUBMED_FOLDER = "pubmed";
 	public static final String GEOJSON_FOLDER = "geojson";
 
 	public static final String RESOURCES_FOLDER;
@@ -61,6 +62,11 @@ public class TestUtils {
 	
 	public static Collection<File> getGBSeqXMLFiles() {
 		final File dir = new File(FilenameUtils.concat(AllTests.TEST_RESOURCES_PATH, GENBANK_FOLDER));
+		return FileUtils.listFiles(dir, new String[] { "xml" }, false);
+	}
+	
+	public static Collection<File> getPubMedXMLFiles() {
+		final File dir = new File(FilenameUtils.concat(AllTests.TEST_RESOURCES_PATH, PUBMED_FOLDER));
 		return FileUtils.listFiles(dir, new String[] { "xml" }, false);
 	}
 	

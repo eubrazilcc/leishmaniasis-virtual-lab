@@ -1,5 +1,5 @@
 /**
- * Define a region to display modal windows (dialogs) within the application.
+ * Defines a region to display modal windows (dialogs) within the application.
  */
 
 define([ 'marionette', 'jquery-ui' ], function(Marionette) {

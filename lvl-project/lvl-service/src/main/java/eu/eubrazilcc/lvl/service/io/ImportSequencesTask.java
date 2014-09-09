@@ -33,12 +33,16 @@ import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.ListenableFutureTask.create;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_FETCHED;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_LISTED;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.NUCLEOTIDE_DB;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.PHLEBOTOMUS_QUERY;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getCount;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getIds;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.GB_SEQXML;
-import static eu.eubrazilcc.lvl.core.xml.NCBIXmlBinder.parse;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GB_SEQXML;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.parseSequence;
 import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static java.nio.file.Files.copy;
@@ -65,7 +69,6 @@ import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
-import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.ESearchResult;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
@@ -86,7 +89,7 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 
 	private AtomicInteger pending = new AtomicInteger(0);
 	private AtomicInteger fetched = new AtomicInteger(0);
-	
+
 	public ImportSequencesTask() {
 		this.task = create(importSequencesTask());
 	}
@@ -160,11 +163,11 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 	private List<ListenableFuture<Integer>> importGenBankSequences(final File tmpDir) {		
 		final List<ListenableFuture<Integer>> futures = newArrayList();
 		int esearchCount = -1, retstart = 0, count = 0, retries = 0;
-		final int retmax = EntrezHelper.MAX_RECORDS_LISTED;		
+		final int retmax = MAX_RECORDS_LISTED;		
 		do {
 			setStatus("Searching GenBank for sequence identifiers");
 			try {
-				final ESearchResult result = esearch(EntrezHelper.PHLEBOTOMUS_QUERY, retstart, retmax);
+				final ESearchResult result = esearch(NUCLEOTIDE_DB, PHLEBOTOMUS_QUERY, retstart, retmax);
 				if (esearchCount < 0) {
 					esearchCount = getCount(result);
 				}
@@ -212,7 +215,7 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 					setProgress(100.0d * fetched.get() / pendingCount);
 					// fetch sequence files
 					final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_task_");
-					efetch(ids2, 0, EntrezHelper.MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
+					efetch(ids2, 0, MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
 					// copy sequence files to their final location and import them to the database
 					final Path seqPath = CONFIG_MANAGER.getGenBankDir(format).toPath();
 					for (final String id : ids2) {
@@ -224,7 +227,7 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 							copy(source, target, REPLACE_EXISTING);
 							LOGGER.info("New GBSeqXML file stored: " + target.toString());
 							// insert sequence in the database
-							final Sequence sequence = parse((GBSeq)GB_SEQXML.typeFromFile(target.toFile()));
+							final Sequence sequence = parseSequence((GBSeq)GB_SEQXML.typeFromFile(target.toFile()));
 							SEQUENCE_DAO.insert(sequence);
 							efetchCount++;
 							// update progress							
@@ -259,7 +262,7 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 				.addValue(super.toString())
 				.toString();
 	}
-	
+
 	/* Fluent API */
 
 	public static Builder builder() {

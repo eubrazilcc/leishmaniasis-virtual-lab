@@ -38,7 +38,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
       <div class="row">
         <div class="col-xs-12">
           <h1>Leishmaniasis Virtual Laboratory (LVL) Administration &amp; Development Guide</h1>
-          <p class="lead">Version 0.0.1 - August 2014</p>
+          <p class="lead">Version 0.0.1 - September 2014</p>
           <p>
             <strong>Abstract.</strong> This document is a guide to the administration and configuration of the Leishmaniasis Virtual Laboratory (LVL).
           </p>
@@ -74,7 +74,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               <li><a href="#database">Database</a>
                 <ul>
                   <li><a href="#database_configuration">Configuration</a></li>
-                  <li><a href="#database_compatibility_with_genBank">Compatibility with GenBank</a></li>
+                  <li><a href="#database_compatibility_with_genBank_and_pubmed">Compatibility with GenBank and PubMed</a></li>
                 </ul></li>
               <li><a href="#restful_api">RESTful API</a>
                 <ul>
@@ -86,7 +86,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                     </ul></li>
                   <li><a href="#restful_api_search">Search</a>
                     <ul>
-                      <li><a href="#restful_api_search_sequences">Search sequences</a>
+                      <li><a href="#restful_api_search_sequences">Search sequences</a></li>
+                      <li><a href="#restful_api_e-compendium">Leishmaniasis e-compendium</a></li>
                     </ul></li>
                 </ul></li>
               <li><a href="#user_interface">User Interface</a>
@@ -176,7 +177,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               <li class="list-group-item">
                 <h4 class="list-group-item-heading">LVL collection</h4>
                 <p class="list-group-item-text">
-                  A database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>. <em>Recommended version:</em> 2.6.3.
+                  A database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>. <em>Recommended version:</em> 2.6.4.
                 </p>
               </li>
               <li class="list-group-item">
@@ -715,7 +716,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
             </p>
 
             <h2>
-              <a id="database_compatibility_with_genBank"></a>Compatibility with GenBank
+              <a id="database_compatibility_with_genBank_and_pubmed"></a>Compatibility with GenBank and PubMed
             </h2>
 
             <p>The LVL database resembles other open-access nucleotide databases, in particular GenBank. Indeed, GenBank references are included in the LVL
@@ -753,7 +754,16 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               -mark-generated eSearch_020511.dtd
             </code>
             <p></p>
-
+            
+            <p>In a similar way, LVL publication references are compatible with PubMed:</p>            
+            
+            <code>
+              $ wget http://www.ncbi.nlm.nih.gov/corehtml/query/DTD/pubmed_100101.dtd <br />
+              $ wget http://www.ncbi.nlm.nih.gov/corehtml/query/DTD/nlmmedlinecitationset_100101.dtd <br />
+              $ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi.pubmed -mark-generated pubmed_100101.dtd
+            </code>
+            <p></p>
+            
           </div>
         </div>
       </div>
@@ -998,6 +1008,28 @@ that you distribute must include a readable copy of the "NOTICE" text file.
             <p>URL encoded:</p>
 
             <code>GET /lvl-service/rest/v1/sequences?q=text%3Aphlebotomus+papatasi%3Bsource%3Agenbank&amp;per_page=20</code>
+
+            <h3>
+              <a id="restful_api_e-compendium"></a>Leishmaniasis e-compendium
+            </h3>
+
+            <p>The leishmaniasis e-compendium is a compilation of all available peer-reviewed literature on leishmaniasis epidemiology. The first version of 
+            the e-compendium was compiled in 2010 by the WHO and the release note is available in the following link:
+            <a href="http://www.sciencedirect.com/science/article/pii/S147149221000139X" target="_blank">The leishmaniasis e-compendium: a geo-referenced bibliographic tool</a>
+            </p>
+            
+            <p>The LVL include the most actual version of the e-compendium, which was builded from the following search in Nucleotide database from GeBank:</p>
+            
+            <code>
+            (sandfly[Organism] OR sand fly[Organism] OR Phlebotomus[Organism] OR Sergentomyia[Organism] OR Lutzomyia[Organism]) AND (cytochrome oxidase I[Gene Name] OR cytochrome oxidase 1[Gene Name] OR coi[Gene Name] OR COI[Gene Name] OR co1[Gene Name] OR CO1[Gene Name] OR coxi[Gene Name] OR cox1[Gene Name] OR COXI[Gene Name])
+            </code>
+            
+            <p>In the moment of the compilation, there were 815 DNA sequences that match this query in the database and the terms <i>sandfly</i>,
+            <i>sand fly</i> and <i>cytochrome oxidase 1</i> did not produce any match.</p>
+
+            <p>
+              <em>TODO</em>
+            </p>
 
           </div>
         </div>
