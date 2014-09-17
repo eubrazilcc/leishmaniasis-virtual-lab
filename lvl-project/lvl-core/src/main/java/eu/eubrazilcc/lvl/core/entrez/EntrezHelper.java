@@ -30,12 +30,12 @@ import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.io.Files.asByteSink;
 import static com.google.common.util.concurrent.Futures.addCallback;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
-import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.ESEARCH_XML;
+import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.ESEARCH_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getCount;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getIds;
-import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GB_SEQXML;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getGenInfoIdentifier;
-import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XML;
+import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.getPubMedId;
 import static java.io.File.createTempFile;
 import static java.nio.charset.Charset.forName;
@@ -240,7 +240,7 @@ public final class EntrezHelper {
 						if (charset == null) {
 							charset = HTTP.DEF_CONTENT_CHARSET;
 						}
-						return ESEARCH_XML.typeFromInputStream(entity.getContent());
+						return ESEARCH_XMLB.typeFromInputStream(entity.getContent());
 					}
 				});
 	}
@@ -298,7 +298,7 @@ public final class EntrezHelper {
 			@Override
 			public String[] call() throws Exception {
 				final Set<String> files = newHashSet();
-				final GBSet gbSet = GB_SEQXML.typeFromFile(tmpFile);
+				final GBSet gbSet = GBSEQ_XMLB.typeFromFile(tmpFile);
 				checkState(gbSet != null, "Expected GBSeqXML, but no content read from temporary file downloaded with efetch");
 				if (gbSet.getGBSeq() != null) {
 					final List<GBSeq> gbSeqs = gbSet.getGBSeq();
@@ -306,7 +306,7 @@ public final class EntrezHelper {
 						final Integer gi = getGenInfoIdentifier(gbSeq);
 						if (gi != null) {							
 							final File file = new File(directory, gi.toString() + ".xml");							
-							GB_SEQXML.typeToFile(gbSeq, file);
+							GBSEQ_XMLB.typeToFile(gbSeq, file);
 							files.add(file.getCanonicalPath());
 						} else {
 							LOGGER.warn("Ingoring malformed sequence (gi not found) in efetch response");
@@ -463,7 +463,7 @@ public final class EntrezHelper {
 			@Override
 			public String[] call() throws Exception {
 				final Set<String> files = newHashSet();
-				final PubmedArticleSet articleSet = PUBMED_XML.typeFromFile(tmpFile);
+				final PubmedArticleSet articleSet = PUBMED_XMLB.typeFromFile(tmpFile);
 				checkState(articleSet != null, "Expected PubMed article XML, but no content read from temporary file downloaded with efetch");
 				if (articleSet.getPubmedArticle() != null) {
 					final List<PubmedArticle> articles = articleSet.getPubmedArticle();
@@ -471,7 +471,7 @@ public final class EntrezHelper {
 						final String pmid = getPubMedId(article);						
 						if (pmid != null) {							
 							final File file = new File(directory, pmid + ".xml");
-							PUBMED_XML.typeToFile(article, file);
+							PUBMED_XMLB.typeToFile(article, file);
 							files.add(file.getCanonicalPath());
 						} else {
 							LOGGER.warn("Ingoring malformed article (pmid not found) in efetch response");

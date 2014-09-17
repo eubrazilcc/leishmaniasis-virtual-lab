@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.core.geojson;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Objects;
@@ -60,7 +61,7 @@ public class Point extends GeoJsonObject {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("geojson_obj", super.toString())
 				.add("coordinates", coordinates)
 				.toString();

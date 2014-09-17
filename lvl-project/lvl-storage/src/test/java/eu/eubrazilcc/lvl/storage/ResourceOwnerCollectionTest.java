@@ -31,7 +31,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
-import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 
@@ -86,10 +85,9 @@ public class ResourceOwnerCollectionTest {
 			System.out.println(resourceOwner2.toString());
 
 			// find (no salt) with volatile values
-			resourceOwner2 = RESOURCE_OWNER_DAO.baseUri(new URI("http://localhost/"))
-					.useGravatar(true).find(resourceOwner.getOwnerId());
+			resourceOwner2 = RESOURCE_OWNER_DAO.useGravatar(true).find(resourceOwner.getOwnerId());
 			assertThat("resource owner with volatile values is not null", resourceOwner2, notNullValue());
-			assertThat("resource owner link is not null", resourceOwner2.getUser().getLink(), notNullValue());
+			assertThat("resource owner links are not null", resourceOwner2.getUser().getLinks(), notNullValue());
 			assertThat("resource owner picture URL is not null", resourceOwner2.getUser().getPictureUrl(), notNullValue());
 			assertThat("resource owner picture URL is not empty", isNotBlank(resourceOwner2.getUser().getPictureUrl()));
 			assertThat("resource owner with volatile values coincides with original", 
@@ -137,8 +135,10 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner OAuth scope coincided with expected", oauthScope, equalTo("scope1 scope3"));
 			System.out.println("OAuth scope: '" + oauthScope + "'");
 
-			// remove
+			// remove (default LVL administrator is not removed)
 			RESOURCE_OWNER_DAO.delete(resourceOwner.getOwnerId());
+			final long numRecords = RESOURCE_OWNER_DAO.count();
+			assertThat("number of resource owners stored in the database coincides with expected", numRecords, equalTo(1l));
 
 			// insert (with salt)
 			result = RESOURCE_OWNER_DAO.insert(hashed);

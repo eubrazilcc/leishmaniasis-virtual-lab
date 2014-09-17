@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.service;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import com.google.common.base.Objects;
 
 /**
@@ -81,7 +83,7 @@ public class Progress {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("done", done)
 				.add("progress", progress)
 				.add("status", status)

@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import java.util.Map;
 
 import com.google.common.base.Objects;
@@ -100,7 +102,7 @@ Comparable<ImmutablePair<L, R>> {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("left", left)
 				.add("right", right)				
 				.toString();

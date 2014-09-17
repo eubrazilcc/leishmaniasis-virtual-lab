@@ -24,6 +24,8 @@ package eu.eubrazilcc.lvl.service;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
 import static java.lang.System.getProperty;
@@ -67,7 +69,6 @@ import com.google.common.collect.ImmutableList;
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sequences;
-import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
@@ -99,9 +100,9 @@ public class ServiceTest {
 	public void setUp() throws Exception {
 		// load test configuration
 		final ImmutableList.Builder<URL> builder = new ImmutableList.Builder<URL>();
-		final ImmutableList<URL> defaultUrls = ConfigurationManager.getDefaultConfiguration();
+		final ImmutableList<URL> defaultUrls = getDefaultConfiguration();
 		for (final URL url : defaultUrls) {
-			if (!url.toString().endsWith(ConfigurationManager.REST_SERVICE_CONFIG)) {
+			if (!url.toString().endsWith(REST_SERVICE_CONFIG)) {
 				builder.add(url);
 			} else {
 				builder.add(this.getClass().getResource("/config/lvl-service.xml"));
@@ -173,14 +174,14 @@ public class ServiceTest {
 					// connection has been closed
 					break;
 				}
-				final String id = trimToEmpty(inboundEvent.getId()); // Last-Event-ID is optional				
+				final String id = trimToEmpty(inboundEvent.getId()); // Last-Event-ID is optional
 				final String name = inboundEvent.getName();
 				assertThat("Progress event name is not null", name, notNullValue());
 				assertThat("Progress event name is not empty", isNotBlank(name));
 				final String data = inboundEvent.readData(String.class);
 				assertThat("Progress event data is not null", data, notNullValue());
 				assertThat("Progress event data is not empty", isNotBlank(data));
-				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);
+				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);				
 				assertThat("Progress event decoded object is not null", progress, notNullValue());
 				assertThat("Import sequences task does not have errors", !progress.isHasErrors());
 				/* uncomment for additional output */				
@@ -346,7 +347,7 @@ public class ServiceTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequence.class);
 			assertThat("Get sequence by accession number result is not null", sequence2, notNullValue());
-			assertThat("Get sequence by accession number coincides with expected", sequence2.equalsIgnoreLink(sequence));
+			assertThat("Get sequence by accession number coincides with expected", sequence2.equalsIgnoringVolatile(sequence));
 			/* uncomment for additional output */
 			System.out.println("Get sequence by accession number result: " + sequence2.toString());
 
@@ -373,7 +374,7 @@ public class ServiceTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequence.class);
 			assertThat("Get sequence by accession number after update result is not null", sequence2, notNullValue());
-			assertThat("Get sequence by accession number after update coincides with expected", sequence2.equalsIgnoreLink(sequence));
+			assertThat("Get sequence by accession number after update coincides with expected", sequence2.equalsIgnoringVolatile(sequence));
 			/* uncomment for additional output */
 			System.out.println("Get sequence by accession number after update result: " + sequence2.toString());			
 

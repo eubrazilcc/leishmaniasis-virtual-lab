@@ -89,6 +89,11 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	}
 
 	@Override
+	public WriteResult<AccessToken> insert(final AccessToken accessToken, final boolean ignoreDuplicates) {
+		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
+	}
+
+	@Override
 	public AccessToken update(final AccessToken accessToken) {
 		// remove transient fields from the element before saving it to the database
 		final AccessTokenTransientStore store = AccessTokenTransientStore.start(accessToken);

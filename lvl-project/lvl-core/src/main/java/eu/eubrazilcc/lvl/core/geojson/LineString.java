@@ -22,13 +22,12 @@
 
 package eu.eubrazilcc.lvl.core.geojson;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.base.Objects;
 
 /**
  * Stores geospatial locations in GeoJSON format. For type "LineString", the "coordinates" member must be 
@@ -40,7 +39,7 @@ public class LineString extends Geometry<LngLatAlt> {
 	
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("geometry", super.toString())
 				.toString();
 	}

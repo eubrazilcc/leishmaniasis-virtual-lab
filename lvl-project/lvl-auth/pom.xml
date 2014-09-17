@@ -83,6 +83,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
 		</dependency>
+		<dependency> <!-- Add declarative hyperlinking support -->
+    		<groupId>org.glassfish.jersey.ext</groupId>
+    		<artifactId>jersey-declarative-linking</artifactId>
+		</dependency>
 		<dependency> <!-- Jersey Test Framework with external container -->
 			<groupId>org.glassfish.jersey.test-framework.providers</groupId>
 			<artifactId>jersey-test-framework-provider-external</artifactId>
@@ -123,7 +127,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<!-- JavaMail API -->
 		<dependency>
 			<groupId>javax.mail</groupId>
-			<artifactId>mail</artifactId>
+			<artifactId>javax.mail-api</artifactId>
 		</dependency>
 	
 		<!-- Logback and SLF4J logging framework -->

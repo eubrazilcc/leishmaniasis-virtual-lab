@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.storage;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -73,7 +74,7 @@ public class Sorting {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("field", field)
 				.add("order", order)				
 				.toString();

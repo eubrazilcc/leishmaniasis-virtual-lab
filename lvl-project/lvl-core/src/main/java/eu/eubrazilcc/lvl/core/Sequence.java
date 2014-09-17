@@ -22,17 +22,29 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.toId;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
+import java.util.List;
 import java.util.Locale;
 
 import javax.ws.rs.core.Link;
-import javax.ws.rs.core.Link.JaxbAdapter;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
 
 /**
  * Stores a nucleotide sequence as a subset of GenBank fields (since most sequences comes from GenBank) 
@@ -43,17 +55,28 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
  * a Java {@link Locale} that can be used later to export the country as a two-letter code that 
  * represents a country name with ISO 3166-1 alpha-2 standard. The original GenBank country feature is 
  * also included in the class. What is more important, a GeoJSON point is included that allows callers 
- * to georeference the sequence. Include JAXB annotations to serialize this class to XML and JSON.
- * Most JSON processing libraries like Jackson support these JAXB annotations.
+ * to georeference the sequence. Jackson annotations are included to serialize this class to JSON. These
+ * annotations are preferred to JAXB annotations (which are supported in most JSON processing libraries
+ * and besides JSON, they also support XML serialization) due to compatibility issues with the current
+ * version of JAX-RS that produces errors when unmarshaling {@link Link}. In addition, Jersey annotations
+ * are included to inject links from a RESTful resource.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://opengeocode.org/download.php">Americas Open Geocode (AOG) database</a>
  * @see <a href="http://geojson.org/">GeoJSON open standard format for encoding geographic data structures</a>
  * @see <a href="http://www.ncbi.nlm.nih.gov/genbank/">GenBank collection of publicly available DNA sequences</a>
  */
-@XmlRootElement
-public class Sequence {
+public class Sequence implements Linkable<Sequence> {
 
-	private Link link;             // RESTful link
+	@InjectLinks({
+		@InjectLink(value="sequences/{id}", rel="self", bindings={@Binding(name="id", value="${instance.id}")})
+	})
+	@JsonSerialize(using = LinkSerializer.class)
+	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonProperty("links")
+	private List<Link> links;      // HATEOAS links
+
+	private String id;             // Resource identifier
+
 	private String dataSource;     // Database where the original sequence is stored
 	private String definition;     // GenBank definition field
 	private String accession;      // GenBank accession number	
@@ -64,16 +87,28 @@ public class Sequence {
 	private Point location;        // Geospatial location
 	private Locale locale;         // Represents country with standards
 
-	public Sequence() { }
-
-	@XmlElement(name="link")
-	@XmlJavaTypeAdapter(JaxbAdapter.class)
-	public Link getLink() {
-		return link;
+	public Sequence() {
+		links = newArrayList();
 	}
 
-	public void setLink(final Link link) {
-		this.link = link;
+	public List<Link> getLinks() {
+		return links;
+	}
+
+	public void setLinks(final List<Link> links) {
+		if (links != null && !links.isEmpty()) {
+			this.links = newArrayList(links);
+		} else {
+			this.links = newArrayList();
+		}
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
 	}
 
 	public String getDataSource() {
@@ -82,6 +117,7 @@ public class Sequence {
 
 	public void setDataSource(final String dataSource) {
 		this.dataSource = dataSource;
+		updateId();
 	}
 
 	public String getDefinition() {
@@ -98,6 +134,7 @@ public class Sequence {
 
 	public void setAccession(final String accession) {
 		this.accession = accession;
+		updateId();
 	}
 
 	public String getVersion() {
@@ -146,7 +183,7 @@ public class Sequence {
 
 	public void setLocale(final Locale locale) {
 		this.locale = locale;
-	}
+	}	
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -154,15 +191,17 @@ public class Sequence {
 			return false;
 		}
 		final Sequence other = Sequence.class.cast(obj);
-		return Objects.equal(link, other.link)
-				&& equalsIgnoreLink(other);
+		return Objects.equal(links, other.links)
+				&& equalsIgnoringVolatile(other);
 	}
 
-	public boolean equalsIgnoreLink(final Sequence other) {
+	@Override
+	public boolean equalsIgnoringVolatile(final Sequence other) {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(dataSource, other.dataSource)
+		return Objects.equal(id, other.id)
+				&& Objects.equal(dataSource, other.dataSource)
 				&& Objects.equal(definition, other.definition)
 				&& Objects.equal(accession, other.accession)
 				&& Objects.equal(version, other.version)
@@ -175,14 +214,15 @@ public class Sequence {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(link, dataSource, definition, accession, version, gi, organism, 
+		return Objects.hashCode(id, links, dataSource, definition, accession, version, gi, organism, 
 				countryFeature, location, locale);
 	}
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
-				.add("link", link)
+		return toStringHelper(this)
+				.add("id", id)
+				.add("links", links)
 				.add("dataSource", dataSource)
 				.add("definition", definition)
 				.add("accession", accession)
@@ -195,18 +235,22 @@ public class Sequence {
 				.toString();
 	}
 
+	private void updateId() {
+		id = dataSource != null && isNotBlank(accession) ? toId(dataSource, accession, NOTATION_SHORT) : null;
+	}
+
 	/* Fluent API */
 
 	public static Builder builder() {
 		return new Builder();
-	}
+	}	
 
 	public static class Builder {
 
 		private final Sequence instance = new Sequence();
 
-		public Builder link(final Link link) {
-			instance.setLink(link);
+		public Builder links(final List<Link> links) {
+			instance.setLinks(links);
 			return this;
 		}
 

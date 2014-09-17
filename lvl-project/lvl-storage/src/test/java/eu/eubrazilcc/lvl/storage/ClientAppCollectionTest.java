@@ -82,8 +82,10 @@ public class ClientAppCollectionTest {
 			assertThat("client application coincides with original", clientApp2, equalTo(clientApp));
 			System.out.println(clientApp2.toString());
 			
-			// remove
+			// remove (default LVL application is not removed)
 			CLIENT_APP_DAO.delete(clientApp.getClientId());
+			final long numRecords = CLIENT_APP_DAO.count();
+			assertThat("number of client applications stored in the database coincides with expected", numRecords, equalTo(1l));
 			
 			// pagination
 			final List<String> ids = newArrayList();

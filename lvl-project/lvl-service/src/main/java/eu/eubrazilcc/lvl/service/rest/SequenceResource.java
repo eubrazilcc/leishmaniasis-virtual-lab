@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.DEFAULT_ERROR;
 import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.realoc4Heatmap;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
@@ -77,15 +78,15 @@ import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.Sorting;
 
 /**
- * Sequences resource. Since a sequence is uniquely identified by the combination of the data source and 
- * the accession (i.e. GenBank, U49845), this class uses the reserved character ',' allowed in an URI 
- * segment to delimit or dereference the sequence identifier. For example, the following URIs are valid
- * and identifies the previous sequence:
+ * Sequences resource. Since a sequence is uniquely identified by the combination of the data source and the accession (i.e. GenBank, U49845), 
+ * this class uses the reserved character ':' allowed in an URI segment to delimit or dereference the sequence identifier. Short and long notation
+ * of data source are accepted (GenBank or gb). This resource converts the data source to the long notation (used to store the sequence in the
+ * database) before calling a method of the database. For example, the following URIs are valid and identifies the same sequence mentioned before:
  * <ul>
- * <li>https://localhost/webapp/sequences/GenBank,U49845</li>
+ * <li>https://localhost/webapp/sequences/GenBank:U49845</li>
+ * <li>https://localhost/webapp/sequences/gb:U49845</li>
  * </ul>
- * Identifiers that don't follow this convention will be rejected by this server with an HTTP Error 400 
- * (Bad request).
+ * Identifiers that don't follow this convention will be rejected by this server with an HTTP Error 400 (Bad request).
  * @author Erik Torres <ertorser@upv.es>
  * @see {@link Sequence} class
  * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.3">RFC3986 - Uniform Resource Identifier (URI): Generic Syntax; Section 3.3 - Path</a>
@@ -116,8 +117,7 @@ public class SequenceResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Sequence> sequences = SEQUENCE_DAO.baseUri(uriInfo.getAbsolutePath())
-				.list(pageFirstEntry, per_page, filter, sorting, count);
+		final List<Sequence> sequences = SEQUENCE_DAO.list(pageFirstEntry, per_page, filter, sorting, count);
 		// total count
 		final Paginable paginable = new Paginable();
 		final int totalEntries = ((Long)count.getValue()).intValue();
@@ -152,9 +152,7 @@ public class SequenceResource {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final Sequence sequence = SEQUENCE_DAO
-				.baseUri(uriInfo.getBaseUri())
-				.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR));
+		final Sequence sequence = SEQUENCE_DAO.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
 		if (sequence == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
@@ -184,7 +182,7 @@ public class SequenceResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}		
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR);
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
 		if (sequenceKey == null || !sequenceKey.getDataSource().equals(update.getDataSource()) 
 				|| !sequenceKey.getAccession().equals(update.getAccession())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
@@ -206,7 +204,7 @@ public class SequenceResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR);
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
 		// get from database
 		final Sequence current = SEQUENCE_DAO.find(sequenceKey);
 		if (current == null) {

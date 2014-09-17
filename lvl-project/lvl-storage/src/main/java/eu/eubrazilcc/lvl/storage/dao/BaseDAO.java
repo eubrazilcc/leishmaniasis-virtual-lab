@@ -47,15 +47,28 @@ public interface BaseDAO<K, E> {
 	/**
 	 * Inserts a new element in the database.
 	 * @param e - element to be inserted in the database
-	 * @return the id assigned to the element in the database and when the original element is modified, 
-	 *        a copy of the element inserted in the database. When the element is stored in the database 
-	 *        unmodified, the method {@link WriteResult#getElement()} can return {@code null}.
+	 * @return an instance of {@link WriteResult} that includes the id assigned to the element in the database, and when the original element 
+	 *         is modified the {@link WriteResult} will also include a copy of the element inserted in the database. When the element is stored 
+	 *         in the database unmodified, the method {@link WriteResult#getElement()} can return {@code null}.
 	 */
 	WriteResult<E> insert(E e);
+	
+	/**
+	 * Inserts a new element in the database. If the input record is a duplicate and the parameter {@code ignoreDuplicates} is set tu {@code true}, 
+	 * then this method will discard the operation silently without generating an error.
+	 * @param e - element to be inserted in the database
+	 * @param ignoreDuplicates - set to {@code true} to ignore duplicated records
+	 * @return an instance of {@link WriteResult} that includes the id assigned to the element in the database, and when the original element 
+	 *         is modified the {@link WriteResult} will also include a copy of the element inserted in the database. When the element is stored 
+	 *         in the database unmodified, the method {@link WriteResult#getElement()} can return {@code null}.
+	 */
+	WriteResult<E> insert(E e, boolean ignoreDuplicates);
 
 	/**
 	 * Updates an existing element in the database.
 	 * @param e - element to be updated in the database
+	 * @return a copy of the element updated in the database. When the element is stored in the database unmodified, this method can 
+	 *         return {@code null}.
 	 */
 	@Nullable E update(E e);
 
@@ -74,8 +87,7 @@ public interface BaseDAO<K, E> {
 	/**
 	 * Search for an element in the database using the specified id.
 	 * @param key - identifier whose associate value is to be returned
-	 * @return the element to which the specified key is associated in the database, 
-	 *         or {@code null} if the database contains no entry for the key
+	 * @return the element to which the specified key is associated in the database, or {@code null} if the database contains no entry for the key.
 	 */
 	E find(K key);
 
@@ -102,8 +114,7 @@ public interface BaseDAO<K, E> {
 	 * Returns the elements in the database that are within the specified distance (in meters) 
 	 * from the center point specified (using WGS84).
 	 * @param point - longitude, latitude pair represented in WGS84 coordinate reference system (CRS)
-	 * @param maxDistance - limits the results to those elements that fall within the specified 
-	 *        distance (in meters) from the center point
+	 * @param maxDistance - limits the results to those elements that fall within the specified distance (in meters) from the center point
 	 * @return the elements that are within the specified distance from the center point
 	 */
 	List<E> getNear(Point point, double maxDistance);

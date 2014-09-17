@@ -53,7 +53,7 @@ public class ESearchXmlBinder extends XmlBinder {
 
 	public static final ObjectFactory ESEARCH_XML_FACTORY = new ObjectFactory();	
 
-	public static final ESearchXmlBinder ESEARCH_XML = new ESearchXmlBinder();
+	public static final ESearchXmlBinder ESEARCH_XMLB = new ESearchXmlBinder();
 
 	private ESearchXmlBinder() {
 		super(SUPPORTED_CLASSES);

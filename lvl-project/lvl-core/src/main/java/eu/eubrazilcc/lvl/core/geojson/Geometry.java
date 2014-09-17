@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.core.geojson;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public abstract class Geometry<T> extends GeoJsonObject {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("geojson_obj", super.toString())
 				.add("coordinates", coordinates != null ? collectionToString(coordinates) : null)
 				.toString();

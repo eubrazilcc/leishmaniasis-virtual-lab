@@ -29,7 +29,7 @@ import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.savePublications;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.FLAT_FILE;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
-import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GB_SEQXML;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedIds;
 import static java.lang.System.getProperty;
 import static org.apache.commons.io.FileUtils.listFiles;
@@ -102,7 +102,7 @@ public class EntrezTest {
 			assertThat("GenBank XML files count does not concide", count, equalTo(files.size()));
 
 			// test save publications in PubMed XML format
-			final GBSeq gbSeq = GB_SEQXML.typeFromFile(new File(TEST_OUTPUT_DIR, "gb-xml/9931364.xml"));
+			final GBSeq gbSeq = GBSEQ_XMLB.typeFromFile(new File(TEST_OUTPUT_DIR, "gb-xml/9931364.xml"));
 			assertThat("GenBank XML sequence is not null", gbSeq, notNullValue());
 			final Set<String> pmids = getPubMedIds(gbSeq);
 			assertThat("GenBank XML PMIDs is not null", pmids, notNullValue());
@@ -115,7 +115,7 @@ public class EntrezTest {
 			assertThat("PubMed XML files is not null", files, notNullValue());
 			assertThat("PubMed XML files is not empty", !files.isEmpty());
 			assertThat("PubMed XML files count does not concide", count, equalTo(files.size()));
-
+			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("EntrezTest.test() failed: " + e.getMessage());

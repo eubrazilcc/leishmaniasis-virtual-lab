@@ -112,6 +112,8 @@ public class PendingUserCollectionTest {
 
 			// remove
 			PENDING_USER_DAO.delete(pendingUser.getPendingUserId());
+			final long numRecords = PENDING_USER_DAO.count();
+			assertThat("number of pending users stored in the database coincides with expected", numRecords, equalTo(0l));
 
 			// insert (with salt)
 			result = PENDING_USER_DAO.insert(hashed);

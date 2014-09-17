@@ -36,6 +36,7 @@ import java.util.Set;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.slf4j.Logger;
 
@@ -67,6 +68,7 @@ public class LeishVirtLabApplication extends Application {
 		// add additional JAX-RS providers
 		classes.add(JacksonFeature.class);
 		classes.add(SseFeature.class);
+		classes.add(DeclarativeLinkingFeature.class);
 		LOGGER.info(SERVICE_NAME + " initialized successfully, registered resources: " + objectsClassNames(instances));
 	}
 

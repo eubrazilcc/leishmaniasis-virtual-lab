@@ -22,6 +22,10 @@
 
 package eu.eubrazilcc.lvl.storage;
 
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.ALL;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.PUBLICATIONS;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SEQUENCES;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.USERS;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.defaultScope;
@@ -32,8 +36,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
-
-import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
 /**
  * Tests scope manager.
@@ -52,51 +54,66 @@ public class ScopeManagerTest {
 
 			// test access from full access profile
 			assertThat("Users are accessible from full access profile (write included)", 
-					isAccessible(ScopeManager.USERS, asList(fullAccessProfile), true));
+					isAccessible(USERS, asList(fullAccessProfile), true));
 			assertThat("Users are accessible from full access profile (write not included)", 
-					isAccessible(ScopeManager.USERS, asList(fullAccessProfile), false));
-			
+					isAccessible(USERS, asList(fullAccessProfile), false));
+
 			assertThat("Users are accessible from full access profile (write included)", 
-					isAccessible(inherit(ScopeManager.USERS, ScopeManager.ALL), asList(fullAccessProfile), true));
+					isAccessible(inherit(USERS, ALL), asList(fullAccessProfile), true));
 			assertThat("Users are accessible from full access profile (write not included)", 
-					isAccessible(inherit(ScopeManager.USERS, ScopeManager.ALL), asList(fullAccessProfile), false));
-			
+					isAccessible(inherit(USERS, ALL), asList(fullAccessProfile), false));
+
 			assertThat("Specific users are accessible from full access profile (write included)", 
-					isAccessible(inherit(ScopeManager.USERS, username), asList(fullAccessProfile), true));
+					isAccessible(inherit(USERS, username), asList(fullAccessProfile), true));
 			assertThat("Specific users are accessible from full access profile (write not included)", 
-					isAccessible(inherit(ScopeManager.USERS, username), asList(fullAccessProfile), false));
+					isAccessible(inherit(USERS, username), asList(fullAccessProfile), false));
 
 			assertThat("Sequences are accessible from full access profile (write included)", 
-					isAccessible(ScopeManager.SEQUENCES, asList(fullAccessProfile), true));
+					isAccessible(SEQUENCES, asList(fullAccessProfile), true));
 			assertThat("Sequences are accessible from full access profile (write not included)", 
-					isAccessible(ScopeManager.SEQUENCES, asList(fullAccessProfile), false));
+					isAccessible(SEQUENCES, asList(fullAccessProfile), false));
+
+			assertThat("Publications are accessible from full access profile (write included)", 
+					isAccessible(PUBLICATIONS, asList(fullAccessProfile), true));
+			assertThat("Publications are accessible from full access profile (write not included)", 
+					isAccessible(PUBLICATIONS, asList(fullAccessProfile), false));
 
 			// test access from user profile
 			assertThat("Users are not accessible from user profile (write included)", 
-					!isAccessible(ScopeManager.USERS, asList(userProfile), true));
+					!isAccessible(USERS, asList(userProfile), true));
 			assertThat("Users are not accessible from user profile (write not included)", 
-					!isAccessible(ScopeManager.USERS, asList(userProfile), false));
+					!isAccessible(USERS, asList(userProfile), false));
 
 			assertThat("User own information is accessible from user profile (write included)", 
-					isAccessible(inherit(ScopeManager.USERS, username), asList(userProfile), true));
+					isAccessible(inherit(USERS, username), asList(userProfile), true));
 			assertThat("User own information is accessible from user profile (write not included)", 
-					isAccessible(inherit(ScopeManager.USERS, username), asList(userProfile), false));
+					isAccessible(inherit(USERS, username), asList(userProfile), false));
 
 			assertThat("Sequences are not accessible from user profile (write included)", 
-					!isAccessible(ScopeManager.SEQUENCES, asList(userProfile), true));
+					!isAccessible(SEQUENCES, asList(userProfile), true));
 			assertThat("Sequences are accessible from user profile (write not included)", 
-					isAccessible(ScopeManager.SEQUENCES, asList(userProfile), false));
-			
+					isAccessible(SEQUENCES, asList(userProfile), false));
+
+			assertThat("Publications are not accessible from user profile (write included)", 
+					!isAccessible(PUBLICATIONS, asList(userProfile), true));
+			assertThat("Publications are accessible from user profile (write not included)", 
+					isAccessible(PUBLICATIONS, asList(userProfile), false));
+
 			// test access from default profile
 			assertThat("Users are not accessible from default profile (write included)", 
-					!isAccessible(ScopeManager.USERS, asList(defaultProfile), true));
+					!isAccessible(USERS, asList(defaultProfile), true));
 			assertThat("Users are not accessible from default profile (write not included)", 
-					!isAccessible(ScopeManager.USERS, asList(defaultProfile), false));
+					!isAccessible(USERS, asList(defaultProfile), false));
 
 			assertThat("Sequences are not accessible from default profile (write included)", 
-					!isAccessible(ScopeManager.SEQUENCES, asList(defaultProfile), true));
+					!isAccessible(SEQUENCES, asList(defaultProfile), true));
 			assertThat("Sequences are accessible from default profile (write not included)", 
-					isAccessible(ScopeManager.SEQUENCES, asList(defaultProfile), false));
+					isAccessible(SEQUENCES, asList(defaultProfile), false));
+
+			assertThat("Publications are not accessible from default profile (write included)", 
+					!isAccessible(PUBLICATIONS, asList(defaultProfile), true));
+			assertThat("Publications are accessible from default profile (write not included)", 
+					isAccessible(PUBLICATIONS, asList(defaultProfile), false));
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("ScopeManagerTest.test() failed: " + e.getMessage());

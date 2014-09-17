@@ -38,8 +38,9 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<lvl.version>${project.version}</lvl.version>
 		<logback.version>1.1.2</logback.version>
 		<slf4j.version>1.7.7</slf4j.version>
-		<org.apache.httpcomponents.version>4.3.2</org.apache.httpcomponents.version> <!-- must coincide with the version BioJava uses (3.0.8 uses 4.3.1) -->
-		<mongodb.driver.version>2.12.2</mongodb.driver.version>		
+		<org.apache.httpcomponents.version>4.3.5</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
+		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
+		<mongodb.driver.version>2.12.3</mongodb.driver.version>
 	</properties>
 
 	<dependencyManagement>
@@ -96,31 +97,31 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency>
 				<groupId>org.apache.oltu.oauth2</groupId>
 				<artifactId>org.apache.oltu.oauth2.authzserver</artifactId>
-				<version>1.0.0</version>
+				<version>${org.apache.oltu.oauth2.version}</version>
 			</dependency>
 			
 			<dependency>
 				<groupId>org.apache.oltu.oauth2</groupId>
 				<artifactId>org.apache.oltu.oauth2.resourceserver</artifactId>
-				<version>1.0.0</version>
+				<version>${org.apache.oltu.oauth2.version}</version>
 			</dependency>
 			
 			<dependency>
 				<groupId>org.apache.oltu.oauth2</groupId>
 				<artifactId>org.apache.oltu.oauth2.client</artifactId>
-				<version>1.0.0</version>
+				<version>${org.apache.oltu.oauth2.version}</version>
 			</dependency>
 			
 			<dependency>
 				<groupId>org.apache.oltu.oauth2</groupId>
 				<artifactId>org.apache.oltu.oauth2.dynamicreg.server</artifactId>
-				<version>1.0.0</version>
+				<version>${org.apache.oltu.oauth2.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.apache.oltu.oauth2</groupId>
 				<artifactId>org.apache.oltu.oauth2.dynamicreg.client</artifactId>
-				<version>1.0.0</version>
+				<version>${org.apache.oltu.oauth2.version}</version>
 			</dependency>
 
 			<!-- Apache Tika: a toolkit for detecting and extracting metadata and 
@@ -129,7 +130,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency> <!-- core -->
 				<groupId>org.apache.tika</groupId>
 				<artifactId>tika-core</artifactId>
-				<version>1.5</version>
+				<version>1.6</version>
 			</dependency>
 
 			<!-- Guava: Google Core Libraries for Java -->
@@ -137,7 +138,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency>
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
-				<version>17.0</version>
+				<version>18.0</version>
 			</dependency>
 
 			<!-- JSR305 Annotations from Findbugs -->
@@ -145,7 +146,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency>
 				<groupId>com.google.code.findbugs</groupId>
 				<artifactId>jsr305</artifactId>
-				<version>2.0.3</version>
+				<version>3.0.0</version>
 			</dependency>
 
 			<!-- The javax.inject API: declare this dependency (provided) to be able 
@@ -173,15 +174,15 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency>
 				<groupId>javax.ws.rs</groupId>
 				<artifactId>javax.ws.rs-api</artifactId>
-				<version>2.0</version>
+				<version>2.0.1</version>
 			</dependency>
 			
 			<!-- JavaMail API: a framework to build mail and messaging applications -->
 			
 			<dependency>
 				<groupId>javax.mail</groupId>
-				<artifactId>mail</artifactId>
-				<version>1.4.7</version>
+				<artifactId>javax.mail-api</artifactId>
+				<version>1.5.2</version>
 			</dependency>
 
 			<!-- Joda Time: Date and time library to replace JDK date handling -->
@@ -189,7 +190,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency>
 				<groupId>joda-time</groupId>
 				<artifactId>joda-time</artifactId>
-				<version>2.3</version>
+				<version>2.4</version>
 			</dependency>
 			
 			<!-- MongoDB Java driver -->

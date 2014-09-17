@@ -879,8 +879,46 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               JAX-RS contains a very useful representation of the <a href="http://www.iana.org/assignments/link-relations/link-relations.xhtml" target="_blank">Link
                 Relation</a> that can be serialised with a <a href="https://jax-rs-spec.java.net/nonav/2.0/apidocs/javax/ws/rs/core/Link.JaxbAdapter.html"
                 target="_blank">JAXB adapter</a> into XML and JSON. LVL resources use this representation to provide the necessary links as well as reading and
-              writing JAX-RS Link objects. Many JSON processing libraries like <a href="http://wiki.fasterxml.com/JacksonFAQ#JAXB" target="_blank">Jackson
-                support JAXB annotations</a>.
+                writing JAX-RS Link objects. Many JSON processing libraries like <a href="http://wiki.fasterxml.com/JacksonFAQ#JAXB" target="_blank">Jackson
+                support JAXB annotations</a>. However, native Jackson annotations have been preferred due to problems to serialize links with the current version
+                of JAX-RS. The following fragment of <code>Java</code> code shows an example using JAXB annotations:
+            </p>
+            
+            <pre>
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.Link.JaxbAdapter;
+
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
+
+@XmlRootElement
+public class Sequence {
+    @InjectLinks({
+        @InjectLink(value="sequences/{id}", rel="self", bindings={@Binding(name="id", value="${instance.id}")}) <br>
+    })
+    @XmlElement(name = "link")
+    @XmlElementWrapper(name = "links")
+    @XmlJavaTypeAdapter(JaxbAdapter.class)
+    private List&lt;Link&gt; links; // HATEOAS links
+    ...
+}</pre>
+
+            <p>One issue to be taken into account when using these JAXB annotations with Jackson is that the element that contains the list of links 
+              will be named after the <code>@XmlElement</code> name and not the <code>@XmlElementWrapper</code> as expected. This is a
+              <a href="https://github.com/FasterXML/jackson-module-jaxb-annotations/issues/13" target="_blank">documented behavior</a>.</p>
+
+            <p>In addition, Jersey annotations have been used to inject the necessary links in a server response using the 
+              <a href="https://jersey.java.net/documentation/latest/user-guide.html#declarative-linking" target="_blank">declarative hyperlinking</a> API.
+              This module intercepts GET requests and includes the links before sending the response to the caller. Since the links are injected directly
+              in the Java class, these annotations are compatible with whatever serialization technology/annotations are used (JAXB, Jackson).
             </p>
 
             <p>MongoDB stores data in JSON documents. Instead on using a library for mapping Java objects to/from MongoDB, classes are annotated with

@@ -76,9 +76,9 @@ public final class GbSeqXmlBinder extends XmlBinder {
 		GBSeq.class
 	};
 
-	public static final ObjectFactory GB_SEQXML_FACTORY = new ObjectFactory();	
+	public static final ObjectFactory GBSEQ_XML_FACTORY = new ObjectFactory();	
 
-	public static final GbSeqXmlBinder GB_SEQXML = new GbSeqXmlBinder();
+	public static final GbSeqXmlBinder GBSEQ_XMLB = new GbSeqXmlBinder();
 
 	private GbSeqXmlBinder() {
 		super(SUPPORTED_CLASSES);
@@ -90,9 +90,9 @@ public final class GbSeqXmlBinder extends XmlBinder {
 		Object element = null;
 		Class<? extends Object> clazz = obj.getClass();
 		if (clazz.equals(GBSet.class)) {
-			element = GB_SEQXML_FACTORY.createGBSet();
+			element = GBSEQ_XML_FACTORY.createGBSet();
 		} else if (clazz.equals(GBSeq.class)) {
-			element = GB_SEQXML_FACTORY.createGBSeq();
+			element = GBSEQ_XML_FACTORY.createGBSeq();
 		} else {
 			throw new IllegalArgumentException("Unsupported type: " + clazz.getCanonicalName());
 		}
@@ -216,9 +216,9 @@ public final class GbSeqXmlBinder extends XmlBinder {
 								.pubmedId(gbRef.getGBReferencePubmed())
 								.build());						
 					} else if (SUBMITTER_BLOCK_TITLE.equals(gbRef.getGBReferenceTitle())) {						
-						LOGGER.trace("Ignoring submitter block in GenBank sequence: " + sequence.getGBSeqPrimaryAccession());						
+						LOGGER.trace("Ignoring submitter block in GenBank sequence: " + sequenceId(sequence));						
 					} else {
-						LOGGER.info("Ignoring non-PubMed publication in GenBank sequence: " + sequence.getGBSeqPrimaryAccession());						
+						LOGGER.info("Ignoring non-PubMed publication in GenBank sequence: " + sequenceId(sequence));						
 					}					
 				}
 			}
@@ -263,6 +263,10 @@ public final class GbSeqXmlBinder extends XmlBinder {
 				.location(isNotBlank(countryFeature) ? geocode(countryFeature) : null)
 				.locale(isNotBlank(countryFeature) ? countryFeatureToLocale(countryFeature) : null)
 				.build();
+	}
+	
+	public static String sequenceId(final GBSeq gbSeq) {
+		return "AC:" + gbSeq.getGBSeqPrimaryAccession() + ", GI:" + getGenInfoIdentifier(gbSeq);
 	}
 
 }

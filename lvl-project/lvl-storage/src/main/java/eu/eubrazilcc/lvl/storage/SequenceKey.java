@@ -22,10 +22,13 @@
 
 package eu.eubrazilcc.lvl.storage;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Splitter.on;
-import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
+import static eu.eubrazilcc.lvl.core.DataSource.toLongNotation;
+import static eu.eubrazilcc.lvl.core.DataSource.toShortNotation;
+import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.List;
@@ -33,6 +36,7 @@ import java.util.List;
 import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.DataSource;
+import eu.eubrazilcc.lvl.core.DataSource.Notation;
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
 
 /**
@@ -77,7 +81,7 @@ public class SequenceKey {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("dataSource", dataSource)
 				.add("accession", accession)
 				.toString();
@@ -87,11 +91,11 @@ public class SequenceKey {
 	 * Creates an identifier that uniquely identifies the sequence in the LVL. This identifier 
 	 * is computed from the data source and the accession fields. This method uses the default
 	 * character {@link NamingUtils#ID_FRAGMENT_SEPARATOR} to separate these particles in the 
-	 * created identifier and the default notation {@link DataSource.Notation#NOTATION_LONG}.
+	 * created identifier and the default notation {@link DataSource.Notation#NOTATION_SHORT}.
 	 * @return an identifier that uniquely identifies the sequence in the LVL.
 	 */
 	public String toId() {
-		return NamingUtils.toId(dataSource, accession, NOTATION_LONG);		
+		return NamingUtils.toId(dataSource, accession, NOTATION_SHORT);		
 	}	
 
 	/* Fluent API */
@@ -118,6 +122,36 @@ public class SequenceKey {
 			return instance;
 		}
 
+		/**
+		 * Parses the input identifier, extracting the parts of a {@link SequenceKey}. In addition, the data source of the generated sequence key is
+		 * converted to the specified notation.
+		 * @param id - the identifier to be parsed
+		 * @param separator - the separator the identifier uses to separate its different parts
+		 * @param notation - the notation the data source of the generated sequence key is converted to
+		 * @return a sequence key.
+		 */
+		public SequenceKey parse(final String id, final char separator, final Notation notation) {
+			checkArgument(notation != null, "Uninitialized notation");
+			final SequenceKey sequenceKey = parse(id, separator);
+			switch (notation) {
+			case NOTATION_SHORT:
+				sequenceKey.setDataSource(toShortNotation(sequenceKey.getDataSource()));
+				break;
+			case NOTATION_LONG:
+				sequenceKey.setDataSource(toLongNotation(sequenceKey.getDataSource()));
+				break;
+			default:
+				break;
+			}
+			return sequenceKey;
+		}
+
+		/**
+		 * Parses the input identifier, extracting the parts of a {@link SequenceKey}.
+		 * @param id - the identifier to be parsed
+		 * @param separator - the separator the identifier uses to separate its different parts
+		 * @return a sequence key.
+		 */
 		public SequenceKey parse(final String id, final char separator) {
 			checkArgument(isNotBlank(id) && id.matches("[a-zA-Z_0-9]+" + separator + "[a-zA-Z_0-9]+"), 
 					"Uninitialized or invalid id");

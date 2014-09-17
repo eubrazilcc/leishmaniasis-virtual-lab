@@ -22,7 +22,7 @@
 
 package eu.eubrazilcc.lvl.core;
 
-import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -46,18 +46,18 @@ import com.google.common.util.concurrent.ListenableScheduledFuture;
 public class ConcurrencyTest {
 
 	private boolean isCompleted;
-	
+
 	@Before
 	public void setUp() {
 		isCompleted = false;
 	}
-	
+
 	@After
 	public void cleanUp() throws IOException {
 		// don't close the task runner here since it will be used in other tests
 		TASK_SCHEDULER.close();
 	}
-	
+
 	@Test
 	public void test() {
 		System.out.println("ConcurrencyTest.test()");
@@ -118,7 +118,7 @@ public class ConcurrencyTest {
 				public void run() {
 					isCompleted = true;
 				}
-			}, sameThreadExecutor());
+			}, directExecutor());
 			Thread.sleep(2000);
 			assertThat("scheduled task result coincides with expected", isCompleted, equalTo(isCompleted));			
 		} catch (Exception e) {

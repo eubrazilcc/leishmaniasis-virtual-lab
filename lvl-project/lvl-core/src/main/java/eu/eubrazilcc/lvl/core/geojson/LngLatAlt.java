@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.core.geojson;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
@@ -83,7 +85,7 @@ public class LngLatAlt {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("longitude", longitude)
 				.add("latitude", latitude)
 				.add("altitude", altitude)

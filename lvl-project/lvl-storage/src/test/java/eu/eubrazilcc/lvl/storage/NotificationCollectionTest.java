@@ -80,6 +80,8 @@ public class NotificationCollectionTest {
 
 			// remove
 			NOTIFICATION_DAO.delete(notification.getId());
+			final long numRecords = NOTIFICATION_DAO.count();
+			assertThat("number of notifications stored in the database coincides with expected", numRecords, equalTo(0l));
 
 			// create a large dataset to test complex operations
 			final List<String> ids = newArrayList();

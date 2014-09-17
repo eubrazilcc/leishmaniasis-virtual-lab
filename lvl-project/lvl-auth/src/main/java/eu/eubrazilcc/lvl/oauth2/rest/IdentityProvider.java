@@ -92,8 +92,7 @@ public class IdentityProvider {
 		// get sequences from database
 		final int pageFirstEntry = firstEntryOf(page, per_page);
 		final MutableLong count = new MutableLong(0l);
-		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.baseUri(uriInfo.getAbsolutePath())
-				.useGravatar(true)
+		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.useGravatar(true)
 				.list(pageFirstEntry, per_page, null, null, count);
 		// total count
 		final Paginable paginable = new Paginable();
@@ -132,8 +131,8 @@ public class IdentityProvider {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get effective user (this is an exception since we always want to check authorization before)
-		final ResourceOwner owner = (!useEmail ? RESOURCE_OWNER_DAO.baseUri(uriInfo.getBaseUri()).useGravatar(true).find(id)
-				: RESOURCE_OWNER_DAO.baseUri(uriInfo.getBaseUri()).useGravatar(true).findByEmail(id));
+		final ResourceOwner owner = (!useEmail ? RESOURCE_OWNER_DAO.useGravatar(true).find(id)
+				: RESOURCE_OWNER_DAO.useGravatar(true).findByEmail(id));
 		if (owner == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}

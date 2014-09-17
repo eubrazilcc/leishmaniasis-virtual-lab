@@ -27,6 +27,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
+import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 
 import org.junit.Test;
 
@@ -40,9 +41,8 @@ public class SequenceKeyTest {
 	public void test() {
 		System.out.println("SequenceKeyTest.test()");
 		try {
-			// test sequence key parsing (using comma separator)
-			SequenceKey sequenceKey = SequenceKey.builder()
-					.parse("GenBank,U49845", ',');
+			// test sequence key parsing (using comma separator and long notation)
+			SequenceKey sequenceKey = SequenceKey.builder().parse("GenBank,U49845", ',');
 			assertThat("sequence key is not null", sequenceKey, notNullValue());
 			assertThat("sequence key data source is not empty", isNotBlank(sequenceKey.getDataSource()));
 			assertThat("sequence key accession is not empty", isNotBlank(sequenceKey.getAccession()));
@@ -50,6 +50,27 @@ public class SequenceKeyTest {
 			assertThat("sequence key accession coincides with expected", sequenceKey.getAccession(), equalTo("U49845"));
 			/* uncomment for additional output */
 			System.out.println(" >> Sequence key: " + sequenceKey);
+
+			// test sequence key parsing (using colon separator and short notation)
+			sequenceKey = SequenceKey.builder().parse("gb:1293613", ':');
+			assertThat("sequence key is not null", sequenceKey, notNullValue());
+			assertThat("sequence key data source is not empty", isNotBlank(sequenceKey.getDataSource()));
+			assertThat("sequence key accession is not empty", isNotBlank(sequenceKey.getAccession()));
+			assertThat("sequence key data source coincides with expected", sequenceKey.getDataSource(), equalTo("gb"));
+			assertThat("sequence key accession coincides with expected", sequenceKey.getAccession(), equalTo("1293613"));
+			/* uncomment for additional output */
+			System.out.println(" >> Sequence key: " + sequenceKey);
+
+			// test sequence key parsing with notation conversion
+			sequenceKey = SequenceKey.builder().parse("gb:1293613", ':', NOTATION_LONG);
+			assertThat("sequence key is not null", sequenceKey, notNullValue());
+			assertThat("sequence key data source is not empty", isNotBlank(sequenceKey.getDataSource()));
+			assertThat("sequence key accession is not empty", isNotBlank(sequenceKey.getAccession()));
+			assertThat("sequence key data source coincides with expected", sequenceKey.getDataSource(), equalTo("GenBank"));
+			assertThat("sequence key accession coincides with expected", sequenceKey.getAccession(), equalTo("1293613"));
+			/* uncomment for additional output */
+			System.out.println(" >> Sequence key: " + sequenceKey);
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("SequenceKeyTest.test() failed: " + e.getMessage());

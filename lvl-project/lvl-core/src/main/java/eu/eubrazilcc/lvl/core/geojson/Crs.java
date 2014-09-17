@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.core.geojson;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,7 +71,7 @@ public class Crs {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("type", type)
 				.add("properties", properties)
 				.toString();

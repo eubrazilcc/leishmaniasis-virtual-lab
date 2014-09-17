@@ -89,6 +89,11 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	}
 
 	@Override
+	public WriteResult<Notification> insert(final Notification notification, final boolean ignoreDuplicates) {
+		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
+	}
+
+	@Override
 	public Notification update(final Notification notification) {
 		// remove transient fields from the element before saving it to the database
 		final NotificationTransientStore store = NotificationTransientStore.start(notification);

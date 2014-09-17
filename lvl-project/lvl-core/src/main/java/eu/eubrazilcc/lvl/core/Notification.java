@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.System.currentTimeMillis;
 
@@ -121,7 +122,7 @@ public class Notification {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("id", id)
 				.add("priority", priority)
 				.add("addressee", addressee)
@@ -229,7 +230,7 @@ public class Notification {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this)
+			return toStringHelper(this)
 					.add("link", link)
 					.add("text", text)
 					.toString();

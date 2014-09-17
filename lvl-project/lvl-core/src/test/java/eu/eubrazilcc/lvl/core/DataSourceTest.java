@@ -22,8 +22,11 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK_SHORT;
+import static eu.eubrazilcc.lvl.core.DataSource.PUBMED;
+import static eu.eubrazilcc.lvl.core.DataSource.PUBMED_SHORT;
 import static eu.eubrazilcc.lvl.core.DataSource.toLongNotation;
 import static eu.eubrazilcc.lvl.core.DataSource.toShortNotation;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
@@ -34,7 +37,11 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.Map.Entry;
+
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Test {@link DataSource} manipulation utilities.
@@ -46,17 +53,44 @@ public class DataSourceTest {
 	public void test() {
 		System.out.println("DataSourceTest.test()");
 		try {
+			// create test datasets
+			final ImmutableMap<String, String> testDataset1 = of(GENBANK_SHORT, GENBANK, PUBMED_SHORT, PUBMED);
+			final ImmutableMap<String, String> testDataset2 = of(GENBANK, GENBANK_SHORT, PUBMED, PUBMED_SHORT, GENBANK_SHORT, GENBANK_SHORT, 
+					PUBMED_SHORT, PUBMED_SHORT);
+			final ImmutableMap<String, String> testDataset3 = of(GENBANK_SHORT, GENBANK, PUBMED_SHORT, PUBMED, GENBANK, GENBANK, PUBMED, PUBMED);
+			
+
 			// test conversion from long to short notation
-			String dataSource = toShortNotation(GENBANK, NOTATION_LONG);
-			assertThat("converted data source is not null", dataSource, notNullValue());
-			assertThat("converted data source is not empty", isNotBlank(dataSource), equalTo(true));
-			assertThat("converted data source coincides with expected", dataSource, equalTo(GENBANK_SHORT));
+			for (final Entry<String, String> entry : testDataset1.entrySet()) {
+				final String dataSource = toShortNotation(entry.getValue(), NOTATION_LONG);
+				assertThat("converted data source is not null", dataSource, notNullValue());
+				assertThat("converted data source is not empty", isNotBlank(dataSource), equalTo(true));
+				assertThat("converted data source coincides with expected", dataSource, equalTo(entry.getKey()));
+			}
 
 			// test conversion from short to long notation
-			dataSource = toLongNotation(GENBANK_SHORT, NOTATION_SHORT);
-			assertThat("converted data source is not null", dataSource, notNullValue());
-			assertThat("converted data source is not empty", isNotBlank(dataSource), equalTo(true));
-			assertThat("converted data source coincides with expected", dataSource, equalTo(GENBANK));
+			for (final Entry<String, String> entry : testDataset1.entrySet()) {
+				final String dataSource = toLongNotation(entry.getKey(), NOTATION_SHORT);
+				assertThat("converted data source is not null", dataSource, notNullValue());
+				assertThat("converted data source is not empty", isNotBlank(dataSource), equalTo(true));
+				assertThat("converted data source coincides with expected", dataSource, equalTo(entry.getValue()));
+			}
+
+			// test conversion to short notation discovering the original notation
+			for (final Entry<String, String> entry : testDataset2.entrySet()) {
+				final String dataSource = toShortNotation(entry.getKey());
+				assertThat("converted data source is not null", dataSource, notNullValue());
+				assertThat("converted data source is not empty", isNotBlank(dataSource), equalTo(true));
+				assertThat("converted data source coincides with expected", dataSource, equalTo(entry.getValue()));
+			}
+
+			// test conversion to long notation discovering the original notation
+			for (final Entry<String, String> entry : testDataset3.entrySet()) {
+				final String dataSource = toLongNotation(entry.getKey());
+				assertThat("converted data source is not null", dataSource, notNullValue());
+				assertThat("converted data source is not empty", isNotBlank(dataSource), equalTo(true));
+				assertThat("converted data source coincides with expected", dataSource, equalTo(entry.getValue()));
+			}
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.storage.oauth2;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -92,7 +93,7 @@ public class AccessToken implements Serializable {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("token", token)				
 				.add("expiresIn", expiresIn)
 				.add("issuedAt", issuedAt)

@@ -81,6 +81,8 @@ public class TokenCollectionTest {
 			
 			// remove
 			TOKEN_DAO.delete(accessToken.getToken());
+			final long numRecords = TOKEN_DAO.count();
+			assertThat("number of access tokens stored in the database coincides with expected", numRecords, equalTo(0l));
 			
 			// pagination
 			final List<String> ids = newArrayList();

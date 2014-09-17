@@ -25,14 +25,14 @@ package eu.eubrazilcc.lvl.core;
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLFiles;
-import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GB_SEQXML;
-import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GB_SEQXML_FACTORY;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getGenInfoIdentifier;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedIds;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedReferences;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.inferCountry;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.parseSequence;
-import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XML;
+import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.parseArticle;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -68,9 +68,9 @@ public class NCBIXmlBindingTest {
 			// test parsing GenInfo identifier
 			final String[] ids = { "gb|JQ790522.1|", "gi|384562886", "gi|", "gi|JQ790522", "gi" };
 			final Integer[] gis = { null, 384562886, null, null, null };
-			final GBSeq gbSeq = GB_SEQXML_FACTORY.createGBSeq();
-			gbSeq.setGBSeqOtherSeqids(GB_SEQXML_FACTORY.createGBSeqOtherSeqids());
-			gbSeq.getGBSeqOtherSeqids().getGBSeqid().add(GB_SEQXML_FACTORY.createGBSeqid());
+			final GBSeq gbSeq = GBSEQ_XML_FACTORY.createGBSeq();
+			gbSeq.setGBSeqOtherSeqids(GBSEQ_XML_FACTORY.createGBSeqOtherSeqids());
+			gbSeq.getGBSeqOtherSeqids().getGBSeqid().add(GBSEQ_XML_FACTORY.createGBSeqid());
 			for (int i = 0; i < ids.length; i++) {
 				gbSeq.getGBSeqOtherSeqids().getGBSeqid().get(0).setvalue(ids[i]);		
 				final Integer gi = getGenInfoIdentifier(gbSeq);
@@ -80,10 +80,10 @@ public class NCBIXmlBindingTest {
 			// test inferring location from the country feature stored in GenBank records
 			final String[] features = { "Italy", "Spain:Almeria", "Sudan: Sirougia, Khartoum State" };
 			final Locale[] countries = { getLocale("Italy"), getLocale("Spain"), getLocale("Sudan") };
-			gbSeq.setGBSeqFeatureTable(GB_SEQXML_FACTORY.createGBSeqFeatureTable());
-			gbSeq.getGBSeqFeatureTable().getGBFeature().add(GB_SEQXML_FACTORY.createGBFeature());
-			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).setGBFeatureQuals(GB_SEQXML_FACTORY.createGBFeatureQuals());
-			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().add(GB_SEQXML_FACTORY.createGBQualifier());
+			gbSeq.setGBSeqFeatureTable(GBSEQ_XML_FACTORY.createGBSeqFeatureTable());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().add(GBSEQ_XML_FACTORY.createGBFeature());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).setGBFeatureQuals(GBSEQ_XML_FACTORY.createGBFeatureQuals());
+			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().add(GBSEQ_XML_FACTORY.createGBQualifier());
 			gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().get(0).setGBQualifierName("country");
 			for (int i = 0; i < features.length; i++) {	
 				gbSeq.getGBSeqFeatureTable().getGBFeature().get(0).getGBFeatureQuals().getGBQualifier().get(0).setGBQualifierValue(features[i]);
@@ -103,7 +103,7 @@ public class NCBIXmlBindingTest {
 			Collection<File> files = getGBSeqXMLFiles();
 			for (final File file : files) {
 				System.out.println(" >> GenBank sequence XML file: " + file.getCanonicalPath());
-				final GBSet gbSet = GB_SEQXML.typeFromFile(file);
+				final GBSet gbSet = GBSEQ_XMLB.typeFromFile(file);
 				assertThat("GenBank XML set is not null", gbSet, notNullValue());
 				assertThat("GenBank XML sequences is not null", gbSet.getGBSeq(), notNullValue());
 				assertThat("GenBank XML sequences is not empty", !gbSet.getGBSeq().isEmpty());				
@@ -146,7 +146,7 @@ public class NCBIXmlBindingTest {
 			files = getPubMedXMLFiles();
 			for (final File file : files) {
 				System.out.println(" >> PubMed article XML file: " + file.getCanonicalPath());
-				final PubmedArticleSet articleSet = PUBMED_XML.typeFromFile(file);
+				final PubmedArticleSet articleSet = PUBMED_XMLB.typeFromFile(file);
 				assertThat("PubMed XML set is not null", articleSet, notNullValue());
 				assertThat("PubMed XML articles is not null", articleSet.getPubmedArticle(), notNullValue());
 				assertThat("PubMed XML articles is not empty", !articleSet.getPubmedArticle().isEmpty());				

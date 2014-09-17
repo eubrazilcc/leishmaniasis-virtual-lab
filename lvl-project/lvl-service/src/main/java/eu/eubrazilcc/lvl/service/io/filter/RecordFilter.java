@@ -20,41 +20,59 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service.io;
+package eu.eubrazilcc.lvl.service.io.filter;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.copyOf;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
+
 /**
- * Provides sequence filtering capabilities.
+ * Filters out the records that are passed by the caller, returning the identifiers that match the filtering 
+ * criteria implemented in the filter method.
  * @author Erik Torres <ertorser@upv.es>
  */
-public interface SequenceFilter {
+public abstract class RecordFilter {
+
+	private final ImmutableList<String> dataSources;
+
+	public RecordFilter(final ImmutableList<String> dataSources) {
+		this.dataSources = copyOf(dataSources);
+	}
 
 	/**
-	 * Returns the list of data sources to which the filter can be applied to filter the sequences stored
-	 * from this data source.
+	 * Returns the list of data sources to which the filter can be applied to filter the records stored
+	 * in this data source.
 	 * @return the list of data sources to which the filter can be applied.
 	 */
-	List<String> dataSources();
-	
+	public List<String> dataSources() {
+		return copyOf(dataSources);
+	}
+
 	/**
 	 * Checks whether or not the filter can be applied to the specified data source to filter the 
-	 * sequences stored from this data source.
+	 * records stored in this data source.
 	 * @param dataSource - the data source to be checked
-	 * @return {@code true} if the filter can be applied to filter the sequences of the specified data
+	 * @return {@code true} if the filter can be applied to filter the records of the specified data
 	 *         source, otherwise {@code false}.
 	 */
-	boolean canBeApplied(String dataSource);
-	
+	public boolean canBeApplied(final String dataSource) {
+		checkArgument(isNotBlank(dataSource), "Uninitialized or invalid data source");
+		return dataSources.contains(dataSource);
+	}	
+
 	/**
 	 * Returns the input identifier or {@code null}, depending on whether the filter applies to
 	 * the specified identifier or not.
-	 * @param id - sequence identifier to be filtered
+	 * @param id - record identifier to be filtered
 	 * @return the input identifier or {@code null}, depending on whether the filter applies to
 	 *         the specified identifier or not.
 	 */
-	@Nullable String filterById(String id);
-	
+	public abstract @Nullable String filterById(String id);
+
 }

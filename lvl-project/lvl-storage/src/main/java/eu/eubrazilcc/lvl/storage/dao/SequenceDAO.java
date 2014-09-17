@@ -32,15 +32,11 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -60,7 +56,6 @@ import com.mongodb.DBObject;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.InvalidFilterParseException;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
 import eu.eubrazilcc.lvl.storage.SequenceGiKey;
@@ -87,8 +82,6 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	public static final String GI_KEY            = DB_PREFIX + "gi";
 	public static final String GEOLOCATION_KEY   = DB_PREFIX + "location";
 
-	private URI baseUri = null;
-
 	private SequenceDAO() {
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, GI_KEY), COLLECTION);
@@ -102,11 +95,6 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 				COLLECTION);
 	}
 
-	public SequenceDAO baseUri(final URI baseUri) {
-		this.baseUri = baseUri;
-		return this;
-	}
-
 	@Override
 	public WriteResult<Sequence> insert(final Sequence sequence) {
 		// remove transient fields from the element before saving it to the database
@@ -116,6 +104,11 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		// restore transient fields
 		store.restore();
 		return new WriteResult.Builder<Sequence>().id(id).build();
+	}
+
+	@Override
+	public WriteResult<Sequence> insert(final Sequence sequence, final boolean ignoreDuplicates) {
+		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
@@ -326,9 +319,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	}
 
 	private Sequence parseBasicDBObject(final BasicDBObject obj) {
-		final Sequence sequence = map(obj).getSequence();
-		addLink(sequence);
-		return sequence;
+		return map(obj).getSequence();
 	}
 
 	private Sequence parseBasicDBObjectOrNull(final BasicDBObject obj) {
@@ -337,7 +328,6 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 			final SequenceEntity entity = map(obj);
 			if (entity != null) {
 				sequence = entity.getSequence();
-				addLink(sequence);
 			}
 		}
 		return sequence;
@@ -345,20 +335,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	private Sequence parseObject(final Object obj) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
-		final Sequence sequence = map((BasicDBObject) obj2.get("obj")).getSequence();
-		addLink(sequence);
-		return sequence;
-	}
-
-	private void addLink(final Sequence sequence) {
-		if (baseUri != null) {
-			final SequenceKey sequenceKey = SequenceKey.builder()
-					.dataSource(sequence.getDataSource())
-					.accession(sequence.getAccession())
-					.build();
-			sequence.setLink(Link.fromUri(UriBuilder.fromUri(baseUri).path(sequenceKey.toId()).build())
-					.rel(LinkRelation.SELF).type(MediaType.APPLICATION_JSON).build());
-		}
+		return map((BasicDBObject) obj2.get("obj")).getSequence();
 	}
 
 	private DBObject map(final SequenceTransientStore store) {
@@ -389,24 +366,15 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	 */
 	public static class SequenceTransientStore extends TransientStore<Sequence> {
 
-		private Link link;
-
 		public SequenceTransientStore(final Sequence sequence) {
 			super(sequence);
 		}
 
-		public Link getLink() {
-			return link;
-		}
-
 		public Sequence purge() {
-			link = element.getLink();
-			element.setLink(null);
 			return element;
 		}
 
 		public Sequence restore() {
-			element.setLink(link);
 			return element;
 		}
 

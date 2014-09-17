@@ -25,18 +25,14 @@ package eu.eubrazilcc.lvl.storage;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
-
-import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
@@ -93,22 +89,6 @@ public class SequenceCollectionTest {
 			assertThat("sequence coincides with original", sequence2, equalTo(sequence));
 			System.out.println(sequence2.toString());
 
-			// find and append link to found records
-			final URI baseUri = new URI("https://localhost:8080/service/resource");
-			SEQUENCE_DAO.baseUri(baseUri);
-			sequence2 = SEQUENCE_DAO.find(sequenceKey);
-			assertThat("sequence with link is not null", sequence2, notNullValue());
-			assertThat("sequence with link coincides with original", sequence2.equalsIgnoreLink(sequence));
-			final Link link = sequence2.getLink();
-			assertThat("sequence link is not null", link, notNullValue());
-			assertThat("sequence link URI is not null", link.getUri(), notNullValue());
-			assertThat("sequence link relation type is not null", link.getRel(), notNullValue());
-			assertThat("sequence link relation type is not empty", isNotBlank(link.getRel()));
-			assertThat("sequence link type is not null", link.getType(), notNullValue());
-			assertThat("sequence link type is not empty", isNotBlank(link.getType()));
-			System.out.println(sequence2.toString());
-			SEQUENCE_DAO.baseUri(null);			
-
 			// duplicates are not allowed
 			try {
 				SEQUENCE_DAO.insert(sequence2);
@@ -145,6 +125,8 @@ public class SequenceCollectionTest {
 
 			// remove
 			SEQUENCE_DAO.delete(sequenceKey);
+			final long numRecords = SEQUENCE_DAO.count();
+			assertThat("number of sequences stored in the database coincides with expected", numRecords, equalTo(0l));
 
 			// create a large dataset to test complex operations
 			final Random random = new Random();

@@ -46,7 +46,7 @@ public class PubMedXmlBinder extends XmlBinder {
 
 	public static final ObjectFactory PUBMED_XML_FACTORY = new ObjectFactory();	
 
-	public static final PubMedXmlBinder PUBMED_XML = new PubMedXmlBinder();
+	public static final PubMedXmlBinder PUBMED_XMLB = new PubMedXmlBinder();
 
 	private PubMedXmlBinder() {
 		super(SUPPORTED_CLASSES);

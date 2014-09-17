@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.service;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -56,7 +58,7 @@ public class Task {
 	public void setIds(final List<String> ids) {
 		this.ids = ids;
 	}
-	
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof Task)) {
@@ -75,7 +77,7 @@ public class Task {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("uuid", uuid)
 				.add("type", type)
 				.add("ids", ids)

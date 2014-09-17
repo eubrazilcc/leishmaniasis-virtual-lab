@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.storage.oauth2;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -87,7 +88,7 @@ public class ResourceOwner implements Serializable {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("ownerId", ownerId)
 				.add("user", user)
 				.toString();

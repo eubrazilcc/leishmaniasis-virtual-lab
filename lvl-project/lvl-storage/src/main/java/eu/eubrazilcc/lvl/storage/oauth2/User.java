@@ -22,34 +22,50 @@
 
 package eu.eubrazilcc.lvl.storage.oauth2;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.isEmpty;
+import static com.google.common.collect.Lists.newArrayList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.core.Link;
-import javax.ws.rs.core.Link.JaxbAdapter;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
+
+import eu.eubrazilcc.lvl.core.Linkable;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
 
 /**
  * User identity provider. Include JAXB annotations to serialize this class to XML and JSON.
  * Most JSON processing libraries like Jackson support these JAXB annotations.
  * @author Erik Torres <ertorser@upv.es>
  */
-@XmlRootElement
-public class User implements Serializable {
+public class User implements Serializable, Linkable<User> {
 
 	private static final long serialVersionUID = -8320525767063830149L;
 
-	private Link link;
+	@InjectLinks({
+		@InjectLink(value="users/{id}", rel="self", bindings={@Binding(name="id", value="${instance.username}")})
+	})
+	@JsonSerialize(using = LinkSerializer.class)
+	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonProperty("links")
+	private List<Link> links; // HATEOAS links
+
 	private String pictureUrl;
 
 	private String username;
@@ -59,15 +75,19 @@ public class User implements Serializable {
 	private Set<String> scopes;
 	private String salt;
 
-	public User() { }
-
-	@XmlElement(name="link")
-	@XmlJavaTypeAdapter(JaxbAdapter.class)
-	public Link getLink() {
-		return link;
+	public User() {
+		links = newArrayList();
 	}
-	public void setLink(final Link link) {
-		this.link = link;
+
+	public List<Link> getLinks() {
+		return links;
+	}
+	public void setLinks(final List<Link> links) {
+		if (links != null && !links.isEmpty()) {
+			this.links = newArrayList(links);
+		} else {
+			this.links = newArrayList();
+		}
 	}
 	public String getPictureUrl() {
 		return pictureUrl;
@@ -118,18 +138,12 @@ public class User implements Serializable {
 			return false;
 		}
 		final User other = User.class.cast(obj);
-		return Objects.equal(link, other.link)
+		return Objects.equal(links, other.links)
 				&& Objects.equal(pictureUrl, other.pictureUrl)
 				&& equalsIgnoringVolatile(other);
 	}
 
-	/**
-	 * Ignores volatile fields when comparing two instances of this class. A volatile field is a class attribute with its value assigned from local variables.
-	 * For example, a field that contains the URI of the service.
-	 * @param other - the instance to be compared to.
-	 * @return {@code true} if all the attributes of both instances coincide in value with the sole exception of those considered volatile. 
-	 *        Otherwise, {@code false}.
-	 */
+	@Override
 	public boolean equalsIgnoringVolatile(final User other) {
 		if (other == null) {
 			return false;
@@ -155,7 +169,7 @@ public class User implements Serializable {
 				&& Objects.equal(fullname, other.fullname)
 				&& Objects.equal(scopes, other.scopes);
 	}
-	
+
 	/**
 	 * Ignores password and salt fields when comparing two instances of this class. Use this method when comparing an instance of this class that contains
 	 * an unprotected password (password in plain text and no salt) with a protected one (hashed password with a valid salt).
@@ -167,11 +181,11 @@ public class User implements Serializable {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(link, other.link)
+		return Objects.equal(links, other.links)
 				&& Objects.equal(pictureUrl, other.pictureUrl)
 				&& equalsToUnprotectedIgnoringVolatile(other);
 	}
-	
+
 	/**
 	 * Ignores password, salt and volatile fields when comparing two instances of this class.
 	 * @param other - the instance to be compared to.
@@ -190,13 +204,13 @@ public class User implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(link, pictureUrl, username, password, email, fullname, scopes, salt);
+		return Objects.hashCode(links, pictureUrl, username, password, email, fullname, scopes, salt);
 	}
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
-				.add("link", link)
+		return toStringHelper(this)
+				.add("link", links)
 				.add("pictureUrl", pictureUrl)
 				.add("username", username)
 				.add("password", password)
@@ -221,8 +235,8 @@ public class User implements Serializable {
 			instance.setScopes(new HashSet<String>());
 		}
 
-		public Builder link(final Link link) {
-			instance.setLink(link);
+		public Builder links(final List<Link> links) {
+			instance.setLinks(links);
 			return this;
 		}
 
@@ -293,8 +307,12 @@ public class User implements Serializable {
 					.password(original.password)
 					.email(original.email)
 					.fullname(original.fullname);
-			if (original.getLink() != null) {
-				builder.link(Link.fromLink(original.link).build());
+			if (original.getLinks() != null) {
+				final List<Link> linksCopy = newArrayList();
+				for (final Link link : original.getLinks()) {
+					linksCopy.add(Link.fromLink(link).build());					
+				}				
+				builder.links(linksCopy);
 			}
 			if (original.getScopes() != null) {
 				builder.scopes(original.scopes);

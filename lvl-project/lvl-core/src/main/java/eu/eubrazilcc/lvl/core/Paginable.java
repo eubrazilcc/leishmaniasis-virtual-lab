@@ -22,14 +22,17 @@
 
 package eu.eubrazilcc.lvl.core;
 
-import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
-import javax.ws.rs.core.Link.JaxbAdapter;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import eu.eubrazilcc.lvl.core.json.jackson.LinkDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
 
 /**
  * Any collection that can be returned to the client as a series of pages that
@@ -40,13 +43,26 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  * count of records in provided to support classic server-side pagination.
  * @author Erik Torres <ertorser@upv.es>
  */
-@XmlRootElement
 public class Paginable {
-	
+
+	@JsonSerialize(using = LinkSerializer.class)
+	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonProperty("previous")
 	private Link previous;
+
+	@JsonSerialize(using = LinkSerializer.class)
+	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonProperty("next")
 	private Link next;
 
+	@JsonSerialize(using = LinkSerializer.class)
+	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonProperty("first")
 	private Link first;
+
+	@JsonSerialize(using = LinkSerializer.class)
+	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonProperty("last")
 	private Link last;
 
 	private int totalCount;
@@ -61,8 +77,6 @@ public class Paginable {
 		this.totalCount = other.totalCount;
 	}
 
-	@XmlElement(name="previous")
-	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public @Nullable Link getPrevious() {
 		return previous;
 	}
@@ -71,8 +85,6 @@ public class Paginable {
 		this.previous = previous;
 	}
 
-	@XmlElement(name="next")
-	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public @Nullable Link getNext() {
 		return next;
 	}
@@ -81,8 +93,6 @@ public class Paginable {
 		this.next = next;
 	}
 
-	@XmlElement(name="first")
-	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public @Nullable Link getFirst() {
 		return first;
 	}
@@ -91,8 +101,6 @@ public class Paginable {
 		this.first = first;
 	}
 
-	@XmlElement(name="last")
-	@XmlJavaTypeAdapter(JaxbAdapter.class)
 	public @Nullable Link getLast() {
 		return last;
 	}

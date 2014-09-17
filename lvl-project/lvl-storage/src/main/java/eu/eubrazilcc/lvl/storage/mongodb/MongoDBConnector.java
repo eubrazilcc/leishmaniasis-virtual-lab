@@ -64,6 +64,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
@@ -267,7 +268,11 @@ public enum MongoDBConnector implements Closeable2 {
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-			dbcol.insert(obj);
+			try {
+				dbcol.insert(obj);
+			} catch (DuplicateKeyException dke) {
+				throw new MongoDBDuplicateKeyException(dke.getMessage());
+			}
 			return ObjectId.class.cast(obj.get("_id")).toString();
 		} finally {
 			db.requestDone();

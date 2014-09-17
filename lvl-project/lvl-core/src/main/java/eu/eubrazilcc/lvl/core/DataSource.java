@@ -30,6 +30,8 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
  * This class stores data sources as {@link String}, which is an alternative to BioJava 
  * {@link org.biojava3.core.sequence.DataSource}. This is more convenient than BioJava to exchange 
  * information to a client application where BioJava is not available (for example, a Web application).
+ * In addition, this class provides information about other sources of data than sequence databases.
+ * In particular, publication database like PubMed.
  * @author Erik Torres <ertorser@upv.es>
  */
 public final class DataSource {
@@ -37,10 +39,12 @@ public final class DataSource {
 	/* Long or full notation */
 
 	public static final String GENBANK = "GenBank";
+	public static final String PUBMED = "PubMed";
 
 	/* Short notation */
 
 	public static final String GENBANK_SHORT = "gb";
+	public static final String PUBMED_SHORT = "pm";
 
 	/**
 	 * Converts from the specified notation to short notation.
@@ -58,10 +62,32 @@ public final class DataSource {
 		case NOTATION_LONG:
 			if (GENBANK.equalsIgnoreCase(trimmedDataSource)) {
 				shortenedDataSource = GENBANK_SHORT;
+			} else if (PUBMED.equalsIgnoreCase(trimmedDataSource)) {
+				shortenedDataSource = PUBMED_SHORT;
 			}
 			break;
 		default:
 			break;
+		}
+		checkState(isNotBlank(shortenedDataSource), "The specified data source cannot be found");
+		return shortenedDataSource;
+	}
+
+	/**
+	 * Converts to short notation discovering the original notation from the input data source. If the original notation 
+	 * is known beforehand, the method {@link DataSource#toShortNotation(String, Notation)} provides a better performance.
+	 * @param dataSource - the data source to be converted.
+	 * @return the short version of the specified data source. If the data source cannot be converted, an {@link Exception} 
+	 *         will be thrown to the caller.
+	 */
+	public static String toShortNotation(final String dataSource) {
+		checkArgument(isNotBlank(dataSource), "Uninitialized or invalid data source");
+		final String trimmedDataSource = dataSource.trim();
+		String shortenedDataSource = null;
+		if (GENBANK.equalsIgnoreCase(trimmedDataSource) || GENBANK_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+			shortenedDataSource = GENBANK_SHORT;
+		} else if (PUBMED.equalsIgnoreCase(trimmedDataSource) || PUBMED_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+			shortenedDataSource = PUBMED_SHORT;
 		}
 		checkState(isNotBlank(shortenedDataSource), "The specified data source cannot be found");
 		return shortenedDataSource;
@@ -83,10 +109,32 @@ public final class DataSource {
 		case NOTATION_SHORT:
 			if (GENBANK_SHORT.equalsIgnoreCase(trimmedDataSource)) {
 				expandedDataSource = GENBANK;
+			} else if (PUBMED_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+				expandedDataSource = PUBMED;
 			}
 			break;
 		default:
 			break;
+		}
+		checkState(isNotBlank(expandedDataSource), "The specified data source cannot be found");
+		return expandedDataSource;
+	}	
+
+	/**
+	 * Converts to long notation discovering the original notation from the input data source. If the original notation 
+	 * is known beforehand, the method {@link DataSource#toLongNotation(String, Notation)} provides a better performance.
+	 * @param dataSource - the data source to be converted.
+	 * @return the long version of the specified data source. If the data source cannot be converted, an {@link Exception} 
+	 *         will be thrown to the caller.
+	 */
+	public static String toLongNotation(final String dataSource) {
+		checkArgument(isNotBlank(dataSource), "Uninitialized or invalid data source");
+		final String trimmedDataSource = dataSource.trim();
+		String expandedDataSource = null;
+		if (GENBANK_SHORT.equalsIgnoreCase(trimmedDataSource) || GENBANK.equalsIgnoreCase(trimmedDataSource)) {
+			expandedDataSource = GENBANK;
+		} else if (PUBMED_SHORT.equalsIgnoreCase(trimmedDataSource) || PUBMED.equalsIgnoreCase(trimmedDataSource)) {
+			expandedDataSource = PUBMED;
 		}
 		checkState(isNotBlank(expandedDataSource), "The specified data source cannot be found");
 		return expandedDataSource;

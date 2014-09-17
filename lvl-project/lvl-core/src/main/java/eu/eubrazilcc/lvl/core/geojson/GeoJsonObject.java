@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.core.geojson;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +99,7 @@ public abstract class GeoJsonObject {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("crs", crs)
 				.add("bbox", bbox != null ? Arrays.toString(bbox) : null)
 				.add("properties", properties)

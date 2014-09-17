@@ -22,22 +22,61 @@
 
 package eu.eubrazilcc.lvl.core;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.collect.Lists.newArrayList;
 
+import java.util.List;
+
+import javax.ws.rs.core.Link;
+
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
 
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
+
 /**
- * Stores a publication reference as a subset of PubMed fields (since publications comes from PubMed) 
- * annotated with additional fields.
+ * Stores a publication reference as a subset of PubMed fields (since publications comes from PubMed) annotated 
+ * with additional fields. In particular, a GeoJSON point is included that allows callers to georeference the sequence.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="http://geojson.org/">GeoJSON open standard format for encoding geographic data structures</a>
  */
-@XmlRootElement
-public class Reference {
+public class Reference implements Linkable<Reference> {
 
-	private String title;     // Title of the published work
-	private String pubmedId;  // PubMed Identifier (PMID)
+	@InjectLinks({
+		@InjectLink(value="references/{id}", rel="self", bindings={@Binding(name="id", value="${instance.pubmedId}")})
+	})
+	@JsonSerialize(using = LinkSerializer.class)
+	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonProperty("links")
+	private List<Link> links;      // HATEOAS links
 
-	public Reference() { }
+	private String title;          // Title of the published work
+	private String pubmedId;       // PubMed Identifier (PMID)
+	private Point location;        // Geospatial location
+
+	public Reference() {
+		links = newArrayList();
+	}
+
+	public List<Link> getLinks() {
+		return links;
+	}
+
+	public void setLinks(final List<Link> links) {
+		if (links != null && !links.isEmpty()) {
+			this.links = newArrayList(links);
+		} else {
+			this.links = newArrayList();
+		}
+	}
 
 	public String getTitle() {
 		return title;
@@ -55,26 +94,46 @@ public class Reference {
 		this.pubmedId = pubmedId;
 	}
 
+	public Point getLocation() {
+		return location;
+	}
+
+	public void setLocation(final Point location) {
+		this.location = location;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof Reference)) {
 			return false;
 		}
 		final Reference other = Reference.class.cast(obj);
+		return Objects.equal(links, other.links)
+				&& equalsIgnoringVolatile(other);		
+	}
+
+	@Override
+	public boolean equalsIgnoringVolatile(final Reference other) {
+		if (other == null) {
+			return false;
+		}
 		return Objects.equal(title, other.title)
-				&& Objects.equal(pubmedId, other.pubmedId);
+				&& Objects.equal(pubmedId, other.pubmedId)
+				&& Objects.equal(location, other.location);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(title, pubmedId);
+		return Objects.hashCode(links, title, pubmedId, location);
 	}
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
+				.add("links", links)
 				.add("title", title)
 				.add("pubmedId", pubmedId)
+				.add("location", location)
 				.toString();
 	}
 
@@ -88,6 +147,11 @@ public class Reference {
 
 		private final Reference instance = new Reference();
 
+		public Builder links(final List<Link> links) {
+			instance.setLinks(links);
+			return this;
+		}
+
 		public Builder title(final String title) {
 			instance.setTitle(title);
 			return this;
@@ -95,6 +159,11 @@ public class Reference {
 
 		public Builder pubmedId(final String pubmedId) {
 			instance.setPubmedId(pubmedId);
+			return this;
+		}
+
+		public Builder location(final Point location) {
+			instance.setLocation(location);
 			return this;
 		}
 

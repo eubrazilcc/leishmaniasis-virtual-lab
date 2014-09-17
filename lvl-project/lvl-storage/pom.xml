@@ -98,6 +98,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<scope>test</scope>
 		</dependency>
 		
+		<!-- Jersey declarative hyperlinking -->
+		<dependency>
+    		<groupId>org.glassfish.jersey.ext</groupId>
+    		<artifactId>jersey-declarative-linking</artifactId>
+    		<scope>provided</scope>
+		</dependency>
+		
 		<!-- Logback and SLF4J logging framework -->
 		<dependency>
 			<groupId>ch.qos.logback</groupId>

@@ -34,13 +34,9 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -58,7 +54,6 @@ import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
@@ -83,16 +78,9 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	public static final String PRIMARY_KEY = "pendingUser.pendingUserId";
 	public static final String EMAIL_KEY   = "pendingUser.user.email";
 
-	private URI baseUri = null;
-
 	private PendingUserDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		MONGODB_CONN.createIndex(EMAIL_KEY, COLLECTION);
-	}
-
-	public PendingUserDAO baseUri(final URI baseUri) {
-		this.baseUri = baseUri;
-		return this;
 	}
 
 	@Override
@@ -120,6 +108,11 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 					.element(copy)
 					.build();
 		}
+	}
+
+	@Override
+	public WriteResult<PendingUser> insert(final PendingUser pendingUser, final boolean ignoreDuplicates) {
+		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
@@ -195,7 +188,6 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
 	private PendingUser parseBasicDBObject(final BasicDBObject obj) {
 		final PendingUser pendingUser = map(obj).getPendingUser();
-		addLink(pendingUser);
 		return pendingUser;
 	}
 
@@ -205,7 +197,6 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 			final PendingUserEntity entity = map(obj);
 			if (entity != null) {
 				pendingUser = entity.getPendingUser();
-				addLink(pendingUser);
 			}
 		}
 		return pendingUser;
@@ -214,16 +205,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	@SuppressWarnings("unused")
 	private PendingUser parseObject(final Object obj) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
-		final PendingUser pendingUser = map((BasicDBObject) obj2.get("obj")).getPendingUser();
-		addLink(pendingUser);
-		return pendingUser;
-	}
-
-	private void addLink(final PendingUser pendingUser) {
-		if (baseUri != null) {
-			pendingUser.getUser().setLink(Link.fromUri(UriBuilder.fromUri(baseUri).path(pendingUser.getPendingUserId()).build())
-					.rel(LinkRelation.SELF).type(MediaType.APPLICATION_JSON).build());
-		}
+		return map((BasicDBObject) obj2.get("obj")).getPendingUser();
 	}
 
 	private DBObject map(final PendingUserTransientStore store) {
@@ -308,24 +290,15 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	 */
 	public static class PendingUserTransientStore extends TransientStore<PendingUser> {
 
-		private Link link;
-
 		public PendingUserTransientStore(final PendingUser pendingUser) {
 			super(pendingUser);
 		}
 
-		public Link getLink() {
-			return link;
-		}
-
 		public PendingUser purge() {
-			link = element.getUser().getLink();
-			element.getUser().setLink(null);
 			return element;
 		}
 
 		public PendingUser restore() {
-			element.getUser().setLink(link);
 			return element;
 		}
 

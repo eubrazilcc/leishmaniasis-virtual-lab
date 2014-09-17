@@ -22,7 +22,7 @@
 
 package eu.eubrazilcc.lvl.storage.oauth2;
 
-import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 

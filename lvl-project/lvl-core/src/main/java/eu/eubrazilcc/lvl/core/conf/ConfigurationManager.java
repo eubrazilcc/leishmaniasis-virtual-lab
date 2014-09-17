@@ -22,11 +22,15 @@
 
 package eu.eubrazilcc.lvl.core.conf;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.and;
 import static com.google.common.base.Predicates.contains;
 import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.ImmutableList.of;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.parseURL;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -57,7 +61,6 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -88,7 +91,7 @@ public enum ConfigurationManager implements Closeable2 {
 	public static final String LVL_NAME = "Leishmaniasis Virtual Laboratory (LVL)";
 
 	private ConfigurationManager.Configuration dont_use = null;
-	private Collection<URL> urls = ConfigurationManager.getDefaultConfiguration();	
+	private Collection<URL> urls = getDefaultConfiguration();	
 
 	// public methods
 
@@ -151,7 +154,7 @@ public enum ConfigurationManager implements Closeable2 {
 	public String getPortalEndpoint() {
 		return configuration().getPortalEndpoint().or("");
 	}
-	
+
 	public File getGenBankDir(final Format format) {
 		switch (format) {
 		case GB_SEQ_XML:
@@ -160,6 +163,15 @@ public enum ConfigurationManager implements Closeable2 {
 			return new File(getRootDir(), "sequences/genbank/text");			
 		default:
 			throw new IllegalArgumentException("Unsupported GenBank format: " + format);
+		}
+	}
+
+	public File getPubMedDir(final Format format) {
+		switch (format) {
+		case PUBMED_XML:
+			return new File(getRootDir(), "papers/pubmed/xml");				
+		default:
+			throw new IllegalArgumentException("Unsupported PubMed format: " + format);
 		}
 	}
 
@@ -172,7 +184,7 @@ public enum ConfigurationManager implements Closeable2 {
 	@Override
 	public void preload() {
 		// an initial access is needed due to lazy load, we create the application environment
-		for (final File file : ImmutableList.of(getGenBankDir(Format.GB_SEQ_XML))) {
+		for (final File file : of(getGenBankDir(GB_SEQ_XML), getPubMedDir(PUBMED_XML))) {
 			try {
 				file.mkdirs();
 			} catch (Exception e) { }
@@ -422,7 +434,7 @@ public enum ConfigurationManager implements Closeable2 {
 		}
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this)
+			return toStringHelper(this)
 					.add("rootDir", rootDir)
 					.add("localCacheDir", localCacheDir)
 					.add("htdocsDir", htdocsDir)					

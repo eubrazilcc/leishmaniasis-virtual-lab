@@ -70,9 +70,9 @@ import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.service.Progress;
 import eu.eubrazilcc.lvl.service.Task;
-import eu.eubrazilcc.lvl.service.io.DbNotFoundSequenceFilter;
 import eu.eubrazilcc.lvl.service.io.ImportSequencesTask;
-import eu.eubrazilcc.lvl.service.io.MatchSequenceFilter;
+import eu.eubrazilcc.lvl.service.io.filter.SequenceIdFilter;
+import eu.eubrazilcc.lvl.service.io.filter.NewSequenceFilter;
 
 /**
  * Tasks resource.
@@ -104,7 +104,7 @@ public class TaskResource {
 		case IMPORT_SEQUENCES:
 			final List<String> ids = task.getIds();
 			final ImportSequencesTask importSequencesTask = ImportSequencesTask.builder()
-					.filter(ids == null || ids.isEmpty() ? new DbNotFoundSequenceFilter() : new MatchSequenceFilter(ids))
+					.filter(ids == null || ids.isEmpty() ? NewSequenceFilter.builder().build() : SequenceIdFilter.builder().ids(ids).build())
 					.build();
 			TASK_RUNNER.execute(importSequencesTask);
 			TASK_STORAGE.add(importSequencesTask);

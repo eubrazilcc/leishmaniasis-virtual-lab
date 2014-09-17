@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.storage.dao;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import javax.annotation.Nullable;
 
 import com.google.common.base.Objects;
@@ -81,7 +83,7 @@ public class WriteResult<E> {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("id", id)				
 				.add("element", element)
 				.toString();

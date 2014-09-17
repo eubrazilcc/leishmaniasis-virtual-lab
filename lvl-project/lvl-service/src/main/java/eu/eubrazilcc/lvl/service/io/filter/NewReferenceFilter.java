@@ -20,49 +20,50 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service.io;
+package eu.eubrazilcc.lvl.service.io.filter;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.ImmutableList.of;
-import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
+import static eu.eubrazilcc.lvl.core.DataSource.PUBMED;
+import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-
-import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
-import eu.eubrazilcc.lvl.core.DataSource;
-import eu.eubrazilcc.lvl.storage.SequenceGiKey;
-
 /**
- * Implements a {@link SequenceFilter} that filters out the sequences that are already stored 
+ * Implements a {@link RecordFilter} that filters out the references that are already stored 
  * in the application's database, returning to the caller the identifiers that are missing 
- * from the application's database.
+ * in the application's database.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DbNotFoundSequenceFilter implements SequenceFilter {
+public class NewReferenceFilter extends RecordFilter {
 
-	private static final ImmutableList<String> DATA_SOURCES = of(DataSource.GENBANK);
+	private static final ImmutableList<String> DATA_SOURCES = of(PUBMED);
 
-	@Override
-	public List<String> dataSources() {
-		return copyOf(DATA_SOURCES);
-	}
-
-	@Override
-	public boolean canBeApplied(final String dataSource) {
-		checkArgument(isNotBlank(dataSource), "Uninitialized or invalid data source");
-		return DATA_SOURCES.contains(dataSource);
+	public NewReferenceFilter() {
+		super(DATA_SOURCES);
 	}
 
 	@Override
 	public String filterById(final String id) {
 		checkArgument(isNotBlank(id), "Uninitialized or invalid identifier");
-		return SEQUENCE_DAO.find(SequenceGiKey.builder()
-				.dataSource(DataSource.GENBANK)
-				.gi(Integer.valueOf(id))
-				.build()) == null ? id : null;
-	}	
+		return REFERENCE_DAO.find(id) == null ? id : null;
+	}
+
+	/* Fluent API */
+
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public static class Builder {
+
+		private final NewReferenceFilter instance = new NewReferenceFilter();
+
+		public NewReferenceFilter build() {
+			return instance;
+		}
+
+	}
 
 }

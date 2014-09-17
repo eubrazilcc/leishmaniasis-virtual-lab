@@ -79,7 +79,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 
 	private ClientAppDAO() {		
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
-		// ensure that at least the administrator account exists in the database
+		// ensure that at least the LVL application exists in the database
 		final List<ClientApp> clientApps = list(0, 1, null, null, null);
 		if (clientApps == null || clientApps.isEmpty()) {
 			insert(ClientApp.builder()
@@ -105,6 +105,11 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 		// restore transient fields
 		store.restore();
 		return new WriteResult.Builder<ClientApp>().id(id).build();
+	}
+
+	@Override
+	public WriteResult<ClientApp> insert(final ClientApp clientApp, final boolean ignoreDuplicates) {
+		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override

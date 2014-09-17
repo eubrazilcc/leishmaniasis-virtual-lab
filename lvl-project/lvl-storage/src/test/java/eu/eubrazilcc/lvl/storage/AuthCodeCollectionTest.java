@@ -53,24 +53,32 @@ public class AuthCodeCollectionTest {
 					.expiresIn(23l)
 					.build();			
 			AUTH_CODE_DAO.insert(authCode);
+			
 			// find
 			AuthCode authCode2 = AUTH_CODE_DAO.find(authCode.getCode());
 			assertThat("authorization code is not null", authCode2, notNullValue());
 			assertThat("authorization code coincides with original", authCode2, equalTo(authCode));
 			System.out.println(authCode2.toString());
+			
 			// update
 			authCode.setExpiresIn(3600l);
 			AUTH_CODE_DAO.update(authCode);
+			
 			// find after update
 			authCode2 = AUTH_CODE_DAO.find(authCode.getCode());
 			assertThat("authorization code is not null", authCode2, notNullValue());
 			assertThat("authorization code coincides with original", authCode2, equalTo(authCode));
 			System.out.println(authCode2.toString());
+			
 			// check validity
 			final boolean validity = AUTH_CODE_DAO.isValid(authCode.getCode());
 			assertThat("authorization code is valid", validity);
+			
 			// remove
 			AUTH_CODE_DAO.delete(authCode.getCode());
+			final long numRecords = AUTH_CODE_DAO.count();
+			assertThat("number of authorization codes stored in the database coincides with expected", numRecords, equalTo(0l));
+			
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {

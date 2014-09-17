@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.core.geojson;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 
@@ -40,7 +41,7 @@ import com.google.common.base.Objects;
  */
 public class FeatureCollection extends GeoJsonObject implements Iterable<Feature> {
 
-	private List<Feature> features = new ArrayList<Feature>();
+	private List<Feature> features = newArrayList();
 
 	public List<Feature> getFeatures() {
 		return features;
@@ -80,7 +81,7 @@ public class FeatureCollection extends GeoJsonObject implements Iterable<Feature
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("geojson_obj", super.toString())
 				.add("features", features != null ? collectionToString(features) : null)
 				.toString();

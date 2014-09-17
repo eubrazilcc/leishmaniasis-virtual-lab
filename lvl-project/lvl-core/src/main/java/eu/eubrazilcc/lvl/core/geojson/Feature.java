@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.core.geojson;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import java.util.Map;
 
 import com.google.common.base.Objects;
@@ -67,7 +69,7 @@ public class Feature extends GeoJsonObject {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this)
+		return toStringHelper(this)
 				.add("geojson_obj", super.toString())
 				.add("geometry", geometry)
 				.add("id", id)

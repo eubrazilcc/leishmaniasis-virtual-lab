@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.core.analysis;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
@@ -177,7 +178,7 @@ public class DisjointSet<T> {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this)
+			return toStringHelper(this)
 					.add("id", id)
 					.add("element", element)					
 					.toString();

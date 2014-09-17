@@ -89,6 +89,11 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	}
 
 	@Override
+	public WriteResult<AuthCode> insert(final AuthCode authCode, final boolean ignoreDuplicates) {
+		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
+	}
+
+	@Override
 	public AuthCode update(final AuthCode authCode) {
 		// remove transient fields from the element before saving it to the database
 		final AuthCodeTransientStore store = AuthCodeTransientStore.start(authCode);

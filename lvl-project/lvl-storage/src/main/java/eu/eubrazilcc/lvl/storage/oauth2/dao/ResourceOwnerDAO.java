@@ -38,15 +38,11 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -64,7 +60,6 @@ import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
@@ -95,7 +90,6 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public static final String ADMIN_DEFAULT_PASSWD = "changeit";
 	public static final String ADMIN_DEFAULT_EMAIL  = "root@example.com";
 
-	private URI baseUri;
 	private boolean useGravatar;
 
 	private ResourceOwnerDAO() {
@@ -122,18 +116,12 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		}
 	}
 
-	public ResourceOwnerDAO baseUri(final URI baseUri) {
-		this.baseUri = baseUri;
-		return this;
-	}
-
 	public ResourceOwnerDAO useGravatar(final boolean useGravatar) {
 		this.useGravatar = useGravatar;
 		return this;
 	}
 
 	public ResourceOwnerDAO reset() {
-		this.baseUri = null;
 		this.useGravatar = false;
 		return this;
 	}
@@ -163,6 +151,11 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 					.element(copy)
 					.build();
 		}		
+	}
+
+	@Override
+	public WriteResult<ResourceOwner> insert(final ResourceOwner resourceOwner, final boolean ignoreDuplicates) {
+		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
@@ -238,7 +231,6 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	private ResourceOwner parseBasicDBObject(final BasicDBObject obj) {
 		final ResourceOwner owner = map(obj).getResourceOwner();
-		addLink(owner);
 		addGravatar(owner);
 		return owner;
 	}
@@ -249,7 +241,6 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 			final ResourceOwnerEntity entity = map(obj);
 			if (entity != null) {
 				owner = entity.getResourceOwner();
-				addLink(owner);
 				addGravatar(owner);
 			}
 		}
@@ -260,16 +251,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	private ResourceOwner parseObject(final Object obj) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
 		final ResourceOwner owner = map((BasicDBObject) obj2.get("obj")).getResourceOwner();
-		addLink(owner);
 		addGravatar(owner);
 		return owner;
-	}
-
-	private void addLink(final ResourceOwner owner) {
-		if (baseUri != null) {
-			owner.getUser().setLink(Link.fromUri(UriBuilder.fromUri(baseUri).path(owner.getOwnerId()).build())
-					.rel(LinkRelation.SELF).type(MediaType.APPLICATION_JSON).build());
-		}
 	}
 
 	private void addGravatar(final ResourceOwner owner) {
@@ -445,15 +428,10 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 */
 	public static class ResourceOwnerTransientStore extends TransientStore<ResourceOwner> {
 
-		private Link link;
 		private String prictureUrl;
 
 		public ResourceOwnerTransientStore(final ResourceOwner resourceOwner) {
 			super(resourceOwner);
-		}
-
-		public Link getLink() {
-			return link;
 		}
 
 		public String getPrictureUrl() {
@@ -462,16 +440,13 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 		public ResourceOwner purge() {
 			// store
-			link = element.getUser().getLink();
 			prictureUrl = element.getUser().getPictureUrl();
 			// remove
-			element.getUser().setLink(null);
 			element.getUser().setPictureUrl(null);			
 			return element;
 		}
 
 		public ResourceOwner restore() {
-			element.getUser().setLink(link);
 			element.getUser().setPictureUrl(prictureUrl);
 			return element;
 		}
