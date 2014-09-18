@@ -23,33 +23,17 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.firstEntryOf;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.totalPages;
 import static java.lang.Math.max;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.util.List;
 
 import javax.ws.rs.core.Link;
 
-import org.glassfish.jersey.linking.Binding;
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.InjectLinks;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
  * Use this class to store any collection that can be returned to the client as a series of pages that contain a part of the collection. Includes 
@@ -58,53 +42,12 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
  * @param <T> the type of objects that this class stores
  * @author Erik Torres <ertorser@upv.es>
  */
-@JsonIgnoreProperties({ "resource", "page", "perPage", "query", "sort", "order", "pageFirstEntry", "totalPages" })
-public class Paginable<T> {
+@JsonIgnoreProperties({ "page", "perPage", "query", "sort", "order", "pageFirstEntry", "totalPages" })
+public abstract class Paginable<T> {
 
 	public final static int PER_PAGE_MIN = 1;
-	public final static String URI_TEMPLATE = "{resource}?page={page}&per_page={per_page}&sort={sort}&order={order}&q={query}";
-
-	@InjectLinks({
-		@InjectLink(value=URI_TEMPLATE, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}", bindings={
-				@Binding(name="resource", value="${instance.resource}"),
-				@Binding(name="page", value="${instance.page - 1}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="query", value="${instance.query}")
-		}),
-		@InjectLink(value=URI_TEMPLATE, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}", bindings={
-				@Binding(name="resource", value="${instance.resource}"),
-				@Binding(name="page", value="${0}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="query", value="${instance.query}")
-		}),
-		@InjectLink(value=URI_TEMPLATE, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}", bindings={
-				@Binding(name="resource", value="${instance.resource}"),
-				@Binding(name="page", value="${instance.page + 1}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="query", value="${instance.query}")
-		}),
-		@InjectLink(value=URI_TEMPLATE, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}", bindings={
-				@Binding(name="resource", value="${instance.resource}"),
-				@Binding(name="page", value="${instance.totalPages}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="query", value="${instance.query}")
-		})		
-	})
-	@JsonSerialize(using = LinkListSerializer.class)
-	@JsonDeserialize(using = LinkListDeserializer.class)
-	@JsonProperty("links")
-	private List<Link> links; // HATEOAS links
-
-	private String resource; // query parameters
-	private int page;
+	
+	private int page; // query parameters
 	private int perPage = PER_PAGE_MIN;	
 	private String sort;
 	private String order;
@@ -118,29 +61,9 @@ public class Paginable<T> {
 
 	public Paginable() { }
 
-	public List<Link> getLinks() {
-		return links;
-	}
+	public abstract List<Link> getLinks();
 
-	public void setLinks(final List<Link> links) {
-		if (links != null) {
-			this.links = newArrayList(links);
-		} else {
-			this.links = null;
-		}
-	}	
-
-	public String getResource() {
-		return resource;
-	}
-
-	public void setResource(final String resource) {
-		this.resource = checkNotNull(resource, "Uninitialized resource").trim();
-		// remove path separators from the beginning of the route
-		while (this.resource.charAt(0) == '/') {
-			this.resource = this.resource.length() > 1 ? this.resource.substring(1) : "";
-		}
-	}
+	public abstract void setLinks(final List<Link> links);
 
 	public int getPage() {
 		return page;
@@ -224,8 +147,8 @@ public class Paginable<T> {
 
 	@Override
 	public String toString() {
+		final List<Link> links = getLinks();
 		return toStringHelper(Paginable.class.getSimpleName())
-				.add("resource", resource)
 				.add("page", page)
 				.add("perPage", perPage)
 				.add("sort", sort)

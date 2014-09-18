@@ -60,7 +60,6 @@ import org.apache.commons.lang.mutable.MutableLong;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.Sequences;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
@@ -69,6 +68,7 @@ import eu.eubrazilcc.lvl.core.geojson.Feature;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.service.Sequences;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 
 /**
@@ -101,7 +101,6 @@ public class SequenceResource {
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		final Sequences paginable = Sequences.start()
-				.resource(SequenceResource.class.getAnnotation(Path.class).value())
 				.page(page)
 				.perPage(per_page)
 				.sort(sort)

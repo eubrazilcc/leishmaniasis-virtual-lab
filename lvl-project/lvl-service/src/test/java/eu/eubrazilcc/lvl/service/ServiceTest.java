@@ -80,7 +80,6 @@ import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.Sequences;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
@@ -327,6 +326,7 @@ public class ServiceTest {
 			assertThat("Paginate sequences first page link to last page is not null", lastLink, notNullValue());
 
 			response = target.path(getPath(lastLink).substring(SERVICE.length()))
+					.queryParam("page", parseInt(getQueryParams(lastLink).get("page")))
 					.queryParam("per_page", parseInt(getQueryParams(lastLink).get("per_page")))
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(token))
@@ -341,8 +341,6 @@ public class ServiceTest {
 			assertThat("Paginate sequences last page result is not null", sequences, notNullValue());
 			assertThat("Paginate sequences last page list is not null", sequences.getElements(), notNullValue());
 			assertThat("Paginate sequences last page list is not empty", !sequences.getElements().isEmpty());
-			assertThat("Paginate sequences last page items count coincide with page size", sequences.getElements().size(), 
-					equalTo(min(perPage, sequences.getTotalCount())));
 			/* uncomment for additional output */			
 			System.out.println(" >> Paginate sequences last page response body (JSON): " + payload);
 
@@ -377,6 +375,7 @@ public class ServiceTest {
 			assertThat("Paginate sequences first page link to last page is not null", lastLink, notNullValue());
 
 			sequences = target.path(getPath(lastLink).substring(SERVICE.length()))
+					.queryParam("page", parseInt(getQueryParams(lastLink).get("page")))
 					.queryParam("per_page", parseInt(getQueryParams(lastLink).get("per_page")))
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(token))
@@ -384,8 +383,6 @@ public class ServiceTest {
 			assertThat("Paginate sequences last page result is not null", sequences, notNullValue());
 			assertThat("Paginate sequences last page list is not null", sequences.getElements(), notNullValue());
 			assertThat("Paginate sequences last page list is not empty", !sequences.getElements().isEmpty());
-			assertThat("Paginate sequences last page items count coincide with list size", sequences.getElements().size(), 
-					equalTo(min(perPage, sequences.getTotalCount())));
 			/* uncomment for additional output */			
 			System.out.println(" >> Paginate sequences last page result: " + sequences.toString());
 

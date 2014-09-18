@@ -54,9 +54,9 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang.mutable.MutableLong;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
+import eu.eubrazilcc.lvl.oauth2.Users;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
-import eu.eubrazilcc.lvl.storage.oauth2.Users;
 import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer;
 import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.AnonymizationLevel;
 
@@ -81,9 +81,9 @@ public class IdentityProvider {
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
 		final Users paginable = Users.start()
-				.resource(IdentityProvider.class.getAnnotation(Path.class).value())
 				.page(page)
 				.perPage(per_page)
+				.plain(plain)
 				.build();
 		// get users from database
 		final MutableLong count = new MutableLong(0l);

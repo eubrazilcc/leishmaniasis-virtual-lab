@@ -93,7 +93,6 @@ import eu.eubrazilcc.lvl.oauth2.rest.UserRegistration;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
-import eu.eubrazilcc.lvl.storage.oauth2.Users;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
 import eu.eubrazilcc.lvl.storage.security.SecurityProvider;
 
