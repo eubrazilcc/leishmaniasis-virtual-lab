@@ -23,16 +23,21 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.updatePassword;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.Collection;
 import java.util.List;
+
+import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
@@ -87,13 +92,35 @@ public class ResourceOwnerCollectionTest {
 			// find (no salt) with volatile values
 			resourceOwner2 = RESOURCE_OWNER_DAO.useGravatar(true).find(resourceOwner.getOwnerId());
 			assertThat("resource owner with volatile values is not null", resourceOwner2, notNullValue());
-			assertThat("resource owner links are not null", resourceOwner2.getUser().getLinks(), notNullValue());
+			assertThat("resource owner links are null", resourceOwner2.getUser().getLinks(), nullValue());
 			assertThat("resource owner picture URL is not null", resourceOwner2.getUser().getPictureUrl(), notNullValue());
 			assertThat("resource owner picture URL is not empty", isNotBlank(resourceOwner2.getUser().getPictureUrl()));
 			assertThat("resource owner with volatile values coincides with original", 
 					resourceOwner2.getUser().equalsIgnoringVolatile(hashed.getUser()));
 			System.out.println(resourceOwner2.toString());
 
+			// insert element with hard link
+			final ResourceOwner resourceOwner1 = ResourceOwner.builder()
+					.id("username1")
+					.user(User.builder()
+							.links(newArrayList(Link.fromUri("http://example.com/users/username1").rel(SELF).type(APPLICATION_JSON).build()))
+							.username("username1")
+							.password("password1")
+							.email("username1@example.com")
+							.fullname("Fullname 1")
+							.scopes(scopes)
+							.build()).build();
+
+			result = RESOURCE_OWNER_DAO.insert(resourceOwner1);
+			resourceOwner1.getUser().setLinks(null);
+			assertThat("resource owner result inserted with hard link is not null", result, notNullValue());
+			assertThat("resource owner inserted with hard link is not null", result.getElement(), notNullValue());
+			assertThat("resource owner inserted with hard link coincides with original (ignoring password & salt)", 
+					resourceOwner1.equalsToUnprotected(result.getElement()), equalTo(true));
+			System.out.println(resourceOwner2.toString());
+
+			RESOURCE_OWNER_DAO.delete(resourceOwner1.getOwnerId());
+			
 			// update
 			final String plainPassword = "new_password";
 			updatePassword(hashed, plainPassword);

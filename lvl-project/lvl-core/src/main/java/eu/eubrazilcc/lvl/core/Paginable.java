@@ -23,91 +23,183 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
+import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
+import static eu.eubrazilcc.lvl.core.util.PaginationUtils.firstEntryOf;
+import static eu.eubrazilcc.lvl.core.util.PaginationUtils.totalPages;
+import static java.lang.Math.max;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import javax.annotation.Nullable;
+import java.util.List;
+
 import javax.ws.rs.core.Link;
 
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import eu.eubrazilcc.lvl.core.json.jackson.LinkDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Any collection that can be returned to the client as a series of pages that
- * contains a part of the collection. Include JAXB annotations to serialize this 
- * class to XML and JSON. Most JSON processing libraries like Jackson support 
- * these JAXB annotations. This class include links to previous and next pages, 
- * which allows clients using infinite scroll pagination. Additionally, the total
- * count of records in provided to support classic server-side pagination.
+ * Use this class to store any collection that can be returned to the client as a series of pages that contain a part of the collection. Includes 
+ * Jackson annotations to serialize this class to JSON. In addition, this class include HATEOAS links to previous, next, first and last pages, which 
+ * allow clients using infinite scroll pagination. Additionally, the total count of records in provided to support classic server-side pagination.
+ * @param <T> the type of objects that this class stores
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Paginable {
+@JsonIgnoreProperties({ "resource", "page", "perPage", "query", "sort", "order", "pageFirstEntry", "totalPages" })
+public class Paginable<T> {
 
-	@JsonSerialize(using = LinkSerializer.class)
-	@JsonDeserialize(using = LinkDeserializer.class)
-	@JsonProperty("previous")
-	private Link previous;
+	public final static int PER_PAGE_MIN = 1;
+	public final static String URI_TEMPLATE = "{resource}?page={page}&per_page={per_page}&sort={sort}&order={order}&q={query}";
 
-	@JsonSerialize(using = LinkSerializer.class)
-	@JsonDeserialize(using = LinkDeserializer.class)
-	@JsonProperty("next")
-	private Link next;
+	@InjectLinks({
+		@InjectLink(value=URI_TEMPLATE, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}", bindings={
+				@Binding(name="resource", value="${instance.resource}"),
+				@Binding(name="page", value="${instance.page - 1}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="query", value="${instance.query}")
+		}),
+		@InjectLink(value=URI_TEMPLATE, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}", bindings={
+				@Binding(name="resource", value="${instance.resource}"),
+				@Binding(name="page", value="${0}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="query", value="${instance.query}")
+		}),
+		@InjectLink(value=URI_TEMPLATE, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}", bindings={
+				@Binding(name="resource", value="${instance.resource}"),
+				@Binding(name="page", value="${instance.page + 1}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="query", value="${instance.query}")
+		}),
+		@InjectLink(value=URI_TEMPLATE, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}", bindings={
+				@Binding(name="resource", value="${instance.resource}"),
+				@Binding(name="page", value="${instance.totalPages}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="query", value="${instance.query}")
+		})		
+	})
+	@JsonSerialize(using = LinkListSerializer.class)
+	@JsonDeserialize(using = LinkListDeserializer.class)
+	@JsonProperty("links")
+	private List<Link> links; // HATEOAS links
 
-	@JsonSerialize(using = LinkSerializer.class)
-	@JsonDeserialize(using = LinkDeserializer.class)
-	@JsonProperty("first")
-	private Link first;
+	private String resource; // query parameters
+	private int page;
+	private int perPage = PER_PAGE_MIN;	
+	private String sort;
+	private String order;
+	private String query;
 
-	@JsonSerialize(using = LinkSerializer.class)
-	@JsonDeserialize(using = LinkDeserializer.class)
-	@JsonProperty("last")
-	private Link last;
+	private int pageFirstEntry; // first entry of the current page
+	private int totalPages; // total number of pages
+	private int totalCount; // total number of elements
 
-	private int totalCount;
+	private List<T> elements = newArrayList(); // elements of the current page
 
 	public Paginable() { }
 
-	public void push(final Paginable other) {
-		this.previous = other.previous;
-		this.next = other.next;
-		this.first = other.first;
-		this.last = other.last;
-		this.totalCount = other.totalCount;
+	public List<Link> getLinks() {
+		return links;
 	}
 
-	public @Nullable Link getPrevious() {
-		return previous;
-	}
-
-	public void setPrevious(final Link previous) {
-		this.previous = previous;
-	}
-
-	public @Nullable Link getNext() {
-		return next;
-	}
-
-	public void setNext(final Link next) {
-		this.next = next;
-	}
-
-	public @Nullable Link getFirst() {
-		return first;
-	}
-
-	public void setFirst(final Link first) {
-		this.first = first;
-	}
-
-	public @Nullable Link getLast() {
-		return last;
-	}
-
-	public void setLast(final Link last) {
-		this.last = last;
+	public void setLinks(final List<Link> links) {
+		if (links != null) {
+			this.links = newArrayList(links);
+		} else {
+			this.links = null;
+		}
 	}	
+
+	public String getResource() {
+		return resource;
+	}
+
+	public void setResource(final String resource) {
+		this.resource = checkNotNull(resource, "Uninitialized resource").trim();
+		// remove path separators from the beginning of the route
+		while (this.resource.charAt(0) == '/') {
+			this.resource = this.resource.length() > 1 ? this.resource.substring(1) : "";
+		}
+	}
+
+	public int getPage() {
+		return page;
+	}
+
+	public void setPage(final int page) {
+		this.page = page;
+		setPageFirstEntry(firstEntryOf(this.page, this.perPage));
+	}
+
+	public int getPerPage() {
+		return perPage;
+	}
+
+	public void setPerPage(final int perPage) {
+		this.perPage = max(PER_PAGE_MIN, perPage);
+		setPageFirstEntry(firstEntryOf(this.page, this.perPage));
+		setTotalPages(totalPages(this.totalCount, this.perPage));
+	}
+
+	public String getSort() {
+		return sort;
+	}
+
+	public void setSort(final String sort) {
+		this.sort = sort;
+	}
+
+	public String getOrder() {
+		return order;
+	}
+
+	public void setOrder(final String order) {
+		this.order = order;
+	}
+
+	public String getQuery() {
+		return query;
+	}
+
+	public void setQuery(final String query) {
+		this.query = query;
+	}
+
+	public int getPageFirstEntry() {
+		return pageFirstEntry;
+	}
+
+	public void setPageFirstEntry(final int pageFirstEntry) {
+		this.pageFirstEntry = pageFirstEntry;
+	}
+
+	public int getTotalPages() {
+		return totalPages;
+	}
+
+	public void setTotalPages(final int totalPages) {
+		this.totalPages = totalPages;
+	}
 
 	public int getTotalCount() {
 		return totalCount;
@@ -115,60 +207,36 @@ public class Paginable {
 
 	public void setTotalCount(final int totalCount) {
 		this.totalCount = totalCount;
+		setTotalPages(totalPages(this.totalCount, this.perPage));
+	}
+
+	public List<T> getElements() {
+		return elements;
+	}
+
+	public void setElements(final List<T> elements) {
+		if (elements != null) {
+			this.elements = newArrayList(elements);
+		} else {
+			this.elements = null;
+		}
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(Paginable.class.getSimpleName())
-				.add("previous", previous)
-				.add("next", next)
-				.add("first", first)
-				.add("last", last)
-				.add("totalCount", totalCount)				
+				.add("resource", resource)
+				.add("page", page)
+				.add("perPage", perPage)
+				.add("sort", sort)
+				.add("order", order)
+				.add("query", query)
+				.add("pageFirstEntry", pageFirstEntry)
+				.add("totalPages", totalPages)
+				.add("totalCount", totalCount)
+				.add("elements", collectionToString(elements))
+				.add("links", links != null ? collectionToString(links) : null)
 				.toString();
-	}
-
-	public static Builder builder() {
-		return new Builder();
-	}
-
-	public static class Builder {
-
-		private final Paginable paginable;
-
-		public Builder() {
-			paginable = new Paginable();
-		}
-
-		public Builder previous(final Link previous) {
-			paginable.setPrevious(previous);
-			return this;
-		}
-
-		public Builder next(final Link next) {
-			paginable.setNext(next);
-			return this;
-		}
-
-		public Builder first(final Link first) {
-			paginable.setFirst(first);
-			return this;
-		}
-
-		public Builder last(final Link last) {
-			paginable.setLast(last);
-			return this;
-		}
-
-		public Builder totalCount(final int totalCount) {
-			paginable.setTotalCount(totalCount);
-			return this;
-		}
-
-		public Paginable build() {
-			return paginable;
-		}
-
 	}
 
 }

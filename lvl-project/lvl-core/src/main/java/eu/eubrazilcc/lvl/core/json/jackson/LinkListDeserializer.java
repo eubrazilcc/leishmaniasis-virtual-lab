@@ -40,14 +40,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 /**
- * Deserialize JAX-RS links from JSON to {@link Link} Java class.
+ * Deserialize lists of JAX-RS links from JSON to {@link Link} Java class.
  * @author Erik Torres <ertorser@upv.es>
  */
-public final class LinkDeserializer extends StdDeserializer<List<Link>> {
+public class LinkListDeserializer extends StdDeserializer<List<Link>> {
 
 	private static final long serialVersionUID = -8033657526192304797L;
 
-	protected LinkDeserializer() {
+	protected LinkListDeserializer() {
 		super(defaultInstance().constructCollectionType(List.class, Link.class));
 	}
 

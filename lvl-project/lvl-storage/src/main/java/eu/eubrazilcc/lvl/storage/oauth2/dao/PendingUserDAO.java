@@ -37,6 +37,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -52,9 +53,9 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
+import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
@@ -290,15 +291,24 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	 */
 	public static class PendingUserTransientStore extends TransientStore<PendingUser> {
 
+		private List<Link> links;
+		
 		public PendingUserTransientStore(final PendingUser pendingUser) {
 			super(pendingUser);
 		}
+		
+		public List<Link> getLinks() {
+			return links;
+		}
 
 		public PendingUser purge() {
+			links = element.getUser().getLinks();
+			element.getUser().setLinks(null);
 			return element;
 		}
 
 		public PendingUser restore() {
+			element.getUser().setLinks(links);
 			return element;
 		}
 

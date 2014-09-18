@@ -36,12 +36,12 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 /**
- * Serialize JAX-RS {@link Link} Java class to JSON.
+ * Serialize lists of JAX-RS {@link Link} Java class to JSON.
  * @author Erik Torres <ertorser@upv.es>
  */
-public final class LinkSerializer extends StdSerializer<List<Link>> {
+public class LinkListSerializer extends StdSerializer<List<Link>> {
 
-	protected LinkSerializer() {
+	protected LinkListSerializer() {
 		super(defaultInstance().constructCollectionType(List.class, Link.class));
 	}
 

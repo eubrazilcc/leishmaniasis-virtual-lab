@@ -25,7 +25,9 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toId;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.List;
@@ -43,8 +45,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
  * Stores a nucleotide sequence as a subset of GenBank fields (since most sequences comes from GenBank) 
@@ -68,10 +70,10 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
 public class Sequence implements Linkable<Sequence> {
 
 	@InjectLinks({
-		@InjectLink(value="sequences/{id}", rel="self", bindings={@Binding(name="id", value="${instance.id}")})
+		@InjectLink(value="sequences/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.id}")})
 	})
-	@JsonSerialize(using = LinkSerializer.class)
-	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonSerialize(using = LinkListSerializer.class)
+	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links;      // HATEOAS links
 
@@ -87,19 +89,17 @@ public class Sequence implements Linkable<Sequence> {
 	private Point location;        // Geospatial location
 	private Locale locale;         // Represents country with standards
 
-	public Sequence() {
-		links = newArrayList();
-	}
+	public Sequence() { }
 
 	public List<Link> getLinks() {
 		return links;
 	}
 
 	public void setLinks(final List<Link> links) {
-		if (links != null && !links.isEmpty()) {
+		if (links != null) {
 			this.links = newArrayList(links);
 		} else {
-			this.links = newArrayList();
+			this.links = null;
 		}
 	}
 

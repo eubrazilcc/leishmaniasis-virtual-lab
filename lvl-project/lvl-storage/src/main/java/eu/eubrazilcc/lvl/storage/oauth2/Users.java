@@ -23,8 +23,6 @@
 package eu.eubrazilcc.lvl.storage.oauth2;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 
 import java.util.List;
 
@@ -34,47 +32,62 @@ import eu.eubrazilcc.lvl.core.Paginable;
  * Wraps a collection of {@link User}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Users extends Paginable {
-
-	private List<User> users = newArrayList();	
-
-	public List<User> getUsers() {
-		return users;
-	}
-
-	public void setUsers(final List<User> users) {
-		this.users = newArrayList(users);
-	}
+public class Users extends Paginable<User> {
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("paginable", super.toString())
-				.add("users", collectionToString(users))
 				.toString();
 	}
 
 	/* Fluent API */
-	
+
 	public static UsersBuilder start() {
 		return new UsersBuilder();
 	}
 
 	public static class UsersBuilder {
 
-		private final Users instance;
+		private final Users instance = new Users();
 
-		public UsersBuilder() {
-			instance = new Users();
-		}
-
-		public UsersBuilder paginable(final Paginable paginable) {
-			instance.push(paginable);
+		public UsersBuilder resource(final String resource) {
+			instance.setResource(resource);
 			return this;
 		}
 
-		public UsersBuilder users(final List<User> userList) {
-			instance.setUsers(userList);
+		public UsersBuilder page(final int page) {
+			instance.setPage(page);
+			return this;
+		}
+
+		public UsersBuilder perPage(final int perPage) {
+			instance.setPerPage(perPage);
+			return this;
+		}
+
+		public UsersBuilder sort(final String sort) {
+			instance.setSort(sort);
+			return this;
+		}
+
+		public UsersBuilder order(final String order) {
+			instance.setOrder(order);
+			return this;
+		}
+
+		public UsersBuilder query(final String query) {
+			instance.setQuery(query);
+			return this;
+		}
+
+		public UsersBuilder totalCount(final int totalCount) {
+			instance.setTotalCount(totalCount);
+			return this;
+		}
+
+		public UsersBuilder users(final List<User> users) {
+			instance.setElements(users);
 			return this;			
 		}
 

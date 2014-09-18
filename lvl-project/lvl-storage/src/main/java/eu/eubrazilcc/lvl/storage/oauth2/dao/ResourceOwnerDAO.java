@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -58,9 +59,9 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
+import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
@@ -428,10 +429,15 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 */
 	public static class ResourceOwnerTransientStore extends TransientStore<ResourceOwner> {
 
+		private List<Link> links;
 		private String prictureUrl;
 
 		public ResourceOwnerTransientStore(final ResourceOwner resourceOwner) {
 			super(resourceOwner);
+		}
+		
+		public List<Link> getLinks() {
+			return links;
 		}
 
 		public String getPrictureUrl() {
@@ -440,13 +446,16 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 		public ResourceOwner purge() {
 			// store
+			links = element.getUser().getLinks();
 			prictureUrl = element.getUser().getPictureUrl();
 			// remove
+			element.getUser().setLinks(null);
 			element.getUser().setPictureUrl(null);			
 			return element;
 		}
 
 		public ResourceOwner restore() {
+			element.getUser().setLinks(links);
 			element.getUser().setPictureUrl(prictureUrl);
 			return element;
 		}

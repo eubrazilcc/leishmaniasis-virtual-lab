@@ -24,15 +24,12 @@ package eu.eubrazilcc.lvl.oauth2.rest;
 
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
-import static eu.eubrazilcc.lvl.storage.PaginationUtils.firstEntryOf;
-import static eu.eubrazilcc.lvl.storage.PaginationUtils.totalPages;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.inherit;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
-import java.net.URI;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -49,7 +46,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -57,9 +53,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.mutable.MutableLong;
 
-import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.Users;
@@ -86,38 +80,21 @@ public class IdentityProvider {
 			final @QueryParam("plain") @DefaultValue("false") boolean plain, 
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
-				.queryParam("page", "{page}")
-				.queryParam("per_page", "{per_page}");
-		// get sequences from database
-		final int pageFirstEntry = firstEntryOf(page, per_page);
+		final Users paginable = Users.start()
+				.resource(IdentityProvider.class.getAnnotation(Path.class).value())
+				.page(page)
+				.perPage(per_page)
+				.build();
+		// get users from database
 		final MutableLong count = new MutableLong(0l);
 		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.useGravatar(true)
-				.list(pageFirstEntry, per_page, null, null, count);
-		// total count
-		final Paginable paginable = new Paginable();
+				.list(paginable.getPageFirstEntry(), per_page, null, null, count);
+		paginable.setElements(from(owners).transform(UserAnonymizer.start(plain ? AnonymizationLevel.NONE : AnonymizationLevel.HARD))
+						.filter(notNull()).toList());
+		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
 		paginable.setTotalCount(totalEntries);
-		// previous link		
-		if (page > 0) {
-			int previous = page - 1;
-			final URI previousUri = uriBuilder.clone().build(previous, per_page);
-			paginable.setPrevious(Link.fromUri(previousUri).rel(LinkRelation.PREVIOUS).type(MediaType.APPLICATION_JSON).build());
-			final URI firstUri = uriBuilder.clone().build(0, per_page);
-			paginable.setFirst(Link.fromUri(firstUri).rel(LinkRelation.FIRST).type(MediaType.APPLICATION_JSON).build());
-		}
-		// next link
-		if (pageFirstEntry + per_page < totalEntries) {
-			int next = page + 1;
-			final URI nextUri = uriBuilder.clone().build(next, per_page);
-			paginable.setNext(Link.fromUri(nextUri).rel(LinkRelation.NEXT).type(MediaType.APPLICATION_JSON).build());
-			final int totalPages = totalPages(totalEntries, per_page);
-			final URI lastUri = uriBuilder.clone().build(totalPages, per_page);
-			paginable.setLast(Link.fromUri(lastUri).rel(LinkRelation.LAST).type(MediaType.APPLICATION_JSON).build());
-		}
-		return Users.start().paginable(paginable)
-				.users(from(owners).transform(UserAnonymizer.start(plain ? AnonymizationLevel.NONE : AnonymizationLevel.HARD))
-						.filter(notNull()).toList()).build();
+		return paginable;		
 	}
 
 	@GET

@@ -20,9 +20,9 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage;
+package eu.eubrazilcc.lvl.core;
 
-import static eu.eubrazilcc.lvl.storage.SortUtils.parseSorting;
+import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,7 +30,8 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.storage.Sorting.Order;
+import eu.eubrazilcc.lvl.core.Sorting.Order;
+import eu.eubrazilcc.lvl.core.util.SortUtils;
 
 /**
  * Tests {@link SortUtils} utility class.

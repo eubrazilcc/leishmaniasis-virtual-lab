@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.core;
 
+
 /**
  * Classes that include volatile fields, such as links that depends on the location where the application runs, implement this interface to provide 
  * a method that can be used to compare two instances of the class ignoring the volatile fields.
@@ -29,7 +30,7 @@ package eu.eubrazilcc.lvl.core;
  * @param <T>  the type of objects that this object may be compared to
  */
 public interface Linkable<T> {
-
+	
 	/**
 	 * Ignores volatile fields when comparing two instances of this class. A volatile field is a class attribute with its value assigned from local variables.
 	 * For example, a field that contains the URI of the service.

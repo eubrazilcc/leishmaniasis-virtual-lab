@@ -19,34 +19,38 @@
  * The "NOTICE" text file is part of the distribution. Any derivative works
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
+package eu.eubrazilcc.lvl.core.util;
 
-package eu.eubrazilcc.lvl.storage;
-
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-
-import javax.annotation.Nullable;
-
-import eu.eubrazilcc.lvl.storage.Sorting.Order;
+import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
 
 /**
- * Utility class to help with sorting parameters parsing.
+ * Utility class to help with collection pagination.
  * @author Erik Torres <ertorser@upv.es>
  */
-public final class SortUtils {
+public final class PaginationUtils {
 
-	public static @Nullable Sorting parseSorting(final @Nullable String sort, final @Nullable String order) {
-		Sorting sorting = null;
-		if (isNotBlank(sort)) {
-			sorting = Sorting.builder()
-					.field(sort)
-					.order(parseOrder(order))
-					.build();
-		}		
-		return sorting;
+	/**
+	 * Computes the position of the first entry of a page.
+	 * @param page - current page
+	 * @param perPage - number of entries per page
+	 * @return The position of the first entry of the specified page.
+	 */
+	public static int firstEntryOf(final int page, final int perPage) {
+		if (page > 0 && perPage > 0) {
+			return page * perPage;
+		}
+		return 0;
 	}
-
-	private static Order parseOrder(final @Nullable String order) {
-		return "desc".equalsIgnoreCase(order) ? Order.DESC : Order.ASC;
+	
+	/**
+	 * Computes the total number of pages needed to display a collection of items
+	 * with a fixed number of elements per page.
+	 * @param totalEntries - total number of items in the collection to be displayed
+	 * @param perPage - maximum number of items per page
+	 * @return The total number of pages needed to display the collection.
+	 */
+	public static int totalPages(final int totalEntries, final int perPage) {		
+		return roundUp(totalEntries, perPage);
 	}
-
+	
 }

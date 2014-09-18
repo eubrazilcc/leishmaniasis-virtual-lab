@@ -23,8 +23,10 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.updatePassword;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -33,6 +35,8 @@ import static org.junit.Assert.fail;
 
 import java.util.Collection;
 import java.util.List;
+
+import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
@@ -86,6 +90,33 @@ public class PendingUserCollectionTest {
 			assertThat("pending user coincides with original", pendingUser2, equalTo(hashed));
 			System.out.println(pendingUser2.toString());
 
+			// insert element with hard link
+			final PendingUser pendingUser1 = PendingUser.builder()
+					.id("username1")
+					.expiresIn(1000l)
+					.issuedAt(2000l)
+					.activationCode("1234567890abcDEF")
+					.user(User.builder()
+							.links(newArrayList(Link.fromUri("http://example.com/users/username").rel(SELF).type(APPLICATION_JSON).build()))
+							.username("username1")
+							.password("password1")
+							.email("username1@example.com")
+							.fullname("Fullname 1")
+							.scopes(scopes)
+							.build()).build();			
+
+			PENDING_USER_DAO.insert(pendingUser1);
+			pendingUser1.getUser().setLinks(null);
+
+			// find element after insertion (hard link should be removed)
+			pendingUser2 = PENDING_USER_DAO.find(pendingUser1.getPendingUserId());
+			assertThat("pending user inserted with hard link is not null", pendingUser2, notNullValue());
+			assertThat("pending user inserted with hard link coincides with expected (ignoring password & salt)", 
+					pendingUser1.equalsToUnprotected(pendingUser2), equalTo(true));
+			System.out.println(pendingUser2.toString());
+
+			PENDING_USER_DAO.delete(pendingUser1.getPendingUserId());
+			
 			// update
 			updatePassword(hashed, "new_password");
 			PENDING_USER_DAO.update(hashed);

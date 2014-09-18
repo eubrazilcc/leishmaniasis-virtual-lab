@@ -23,8 +23,6 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 
 import java.util.List;
 
@@ -32,23 +30,12 @@ import java.util.List;
  * Wraps a collection of PubMed publications.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class References extends Paginable {
-
-	private List<Reference> references = newArrayList();
-
-	public List<Reference> getReferences() {
-		return references;
-	}
-
-	public void setReferences(final List<Reference> references) {
-		this.references = newArrayList(references);
-	}
+public class References extends Paginable<Reference> {
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("paginable", super.toString())
-				.add("references", collectionToString(references))
 				.toString();
 	}
 
@@ -58,24 +45,50 @@ public class References extends Paginable {
 
 	public static class ReferencesBuilder {
 
-		private final References references;
+		private final References instance = new References();
 
-		public ReferencesBuilder() {
-			references = new References();
-		}
-
-		public ReferencesBuilder paginable(final Paginable paginable) {
-			references.push(paginable);
+		public ReferencesBuilder resource(final String resource) {
+			instance.setResource(resource);
 			return this;
 		}
 
-		public ReferencesBuilder references(final List<Reference> refList) {
-			references.setReferences(refList);
+		public ReferencesBuilder page(final int page) {
+			instance.setPage(page);
+			return this;
+		}
+
+		public ReferencesBuilder perPage(final int perPage) {
+			instance.setPerPage(perPage);
+			return this;
+		}
+
+		public ReferencesBuilder sort(final String sort) {
+			instance.setSort(sort);
+			return this;
+		}
+
+		public ReferencesBuilder order(final String order) {
+			instance.setOrder(order);
+			return this;
+		}
+
+		public ReferencesBuilder query(final String query) {
+			instance.setQuery(query);
+			return this;
+		}
+
+		public ReferencesBuilder totalCount(final int totalCount) {
+			instance.setTotalCount(totalCount);
+			return this;
+		}
+
+		public ReferencesBuilder references(final List<Reference> references) {
+			instance.setElements(references);
 			return this;			
 		}
 
 		public References build() {
-			return references;
+			return instance;
 		}
 
 	}

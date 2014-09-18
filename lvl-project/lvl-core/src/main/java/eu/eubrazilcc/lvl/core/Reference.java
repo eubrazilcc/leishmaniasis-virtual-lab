@@ -24,6 +24,8 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.util.List;
 
@@ -39,8 +41,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
  * Stores a publication reference as a subset of PubMed fields (since publications comes from PubMed) annotated 
@@ -51,10 +53,10 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
 public class Reference implements Linkable<Reference> {
 
 	@InjectLinks({
-		@InjectLink(value="references/{id}", rel="self", bindings={@Binding(name="id", value="${instance.pubmedId}")})
+		@InjectLink(value="references/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.pubmedId}")})
 	})
-	@JsonSerialize(using = LinkSerializer.class)
-	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonSerialize(using = LinkListSerializer.class)
+	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links;      // HATEOAS links
 
@@ -62,19 +64,17 @@ public class Reference implements Linkable<Reference> {
 	private String pubmedId;       // PubMed Identifier (PMID)
 	private Point location;        // Geospatial location
 
-	public Reference() {
-		links = newArrayList();
-	}
+	public Reference() { }
 
 	public List<Link> getLinks() {
 		return links;
 	}
 
 	public void setLinks(final List<Link> links) {
-		if (links != null && !links.isEmpty()) {
+		if (links != null) {
 			this.links = newArrayList(links);
 		} else {
-			this.links = newArrayList();
+			this.links = null;
 		}
 	}
 

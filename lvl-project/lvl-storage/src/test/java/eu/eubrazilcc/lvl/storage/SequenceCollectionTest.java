@@ -24,7 +24,9 @@ package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,6 +36,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+import javax.ws.rs.core.Link;
+
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
@@ -41,10 +45,11 @@ import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.Sorting;
+import eu.eubrazilcc.lvl.core.Sorting.Order;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.Sorting.Order;
 
 /**
  * Tests sequence collection in the database.
@@ -96,6 +101,35 @@ public class SequenceCollectionTest {
 			} catch (Exception e) {
 				System.out.println("Exception caught while trying to insert a duplicate sequence");
 			}
+
+			// insert element with hard link
+			final Sequence sequence1 = Sequence.builder()
+					.links(newArrayList(Link.fromUri("http://example.com/sequences/gb:EFHJ90864").rel(SELF).type(APPLICATION_JSON).build()))
+					.dataSource(DataSource.GENBANK)
+					.accession("EFHJ90864")
+					.version("3.0")
+					.gi(Integer.MAX_VALUE - 1)
+					.definition("definition")
+					.organism("organism")
+					.countryFeature("Spain: Murcia")
+					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build())
+					.locale(new Locale("es", "ES"))
+					.build();
+			final SequenceKey sequenceKey1 = SequenceKey.builder()
+					.dataSource(sequence1.getDataSource())
+					.accession(sequence1.getAccession())
+					.build();
+
+			SEQUENCE_DAO.insert(sequence1);
+			sequence1.setLinks(null);
+
+			// find element after insertion (hard link should be removed)
+			sequence2 = SEQUENCE_DAO.find(sequenceKey1);
+			assertThat("sequence inserted with hard link is not null", sequence2, notNullValue());
+			assertThat("sequence inserted with hard link coincides with expected", sequence2, equalTo(sequence1));
+			System.out.println(sequence2.toString());
+			
+			SEQUENCE_DAO.delete(sequenceKey1);
 
 			// update
 			sequence.setVersion("4.0");

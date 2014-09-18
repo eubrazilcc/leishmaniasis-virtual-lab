@@ -23,8 +23,6 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 
 import java.util.List;
 
@@ -32,23 +30,12 @@ import java.util.List;
  * Wraps a collection of GenBank sequences.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Sequences extends Paginable {
-
-	private List<Sequence> sequences = newArrayList();	
-
-	public List<Sequence> getSequences() {
-		return sequences;
-	}
-
-	public void setSequences(final List<Sequence> sequences) {
-		this.sequences = newArrayList(sequences);
-	}
+public class Sequences extends Paginable<Sequence> {
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("paginable", super.toString())
-				.add("sequences", collectionToString(sequences))
 				.toString();
 	}
 
@@ -57,25 +44,51 @@ public class Sequences extends Paginable {
 	}
 
 	public static class SequencesBuilder {
+		
+		private final Sequences instance = new Sequences();
 
-		private final Sequences sequences;
-
-		public SequencesBuilder() {
-			sequences = new Sequences();
-		}
-
-		public SequencesBuilder paginable(final Paginable paginable) {
-			sequences.push(paginable);
+		public SequencesBuilder resource(final String resource) {
+			instance.setResource(resource);
 			return this;
 		}
 
-		public SequencesBuilder sequences(final List<Sequence> seqList) {
-			sequences.setSequences(seqList);
+		public SequencesBuilder page(final int page) {
+			instance.setPage(page);
+			return this;
+		}
+
+		public SequencesBuilder perPage(final int perPage) {
+			instance.setPerPage(perPage);
+			return this;
+		}
+
+		public SequencesBuilder sort(final String sort) {
+			instance.setSort(sort);
+			return this;
+		}
+
+		public SequencesBuilder order(final String order) {
+			instance.setOrder(order);
+			return this;
+		}
+
+		public SequencesBuilder query(final String query) {
+			instance.setQuery(query);
+			return this;
+		}
+
+		public SequencesBuilder totalCount(final int totalCount) {
+			instance.setTotalCount(totalCount);
+			return this;
+		}
+
+		public SequencesBuilder sequences(final List<Sequence> sequences) {
+			instance.setElements(sequences);
 			return this;			
 		}
 
 		public Sequences build() {
-			return sequences;
+			return instance;
 		}
 
 	}

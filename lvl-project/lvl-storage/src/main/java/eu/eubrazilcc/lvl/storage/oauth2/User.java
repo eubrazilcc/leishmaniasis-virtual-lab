@@ -26,6 +26,8 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.isEmpty;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
@@ -46,8 +48,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.Linkable;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkSerializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
  * User identity provider. Include JAXB annotations to serialize this class to XML and JSON.
@@ -59,10 +61,10 @@ public class User implements Serializable, Linkable<User> {
 	private static final long serialVersionUID = -8320525767063830149L;
 
 	@InjectLinks({
-		@InjectLink(value="users/{id}", rel="self", bindings={@Binding(name="id", value="${instance.username}")})
+		@InjectLink(value="users/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.username}")})
 	})
-	@JsonSerialize(using = LinkSerializer.class)
-	@JsonDeserialize(using = LinkDeserializer.class)
+	@JsonSerialize(using = LinkListSerializer.class)
+	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
 
@@ -75,20 +77,20 @@ public class User implements Serializable, Linkable<User> {
 	private Set<String> scopes;
 	private String salt;
 
-	public User() {
-		links = newArrayList();
-	}
+	public User() { }
 
 	public List<Link> getLinks() {
 		return links;
 	}
+
 	public void setLinks(final List<Link> links) {
-		if (links != null && !links.isEmpty()) {
+		if (links != null) {
 			this.links = newArrayList(links);
 		} else {
-			this.links = newArrayList();
+			this.links = null;
 		}
 	}
+
 	public String getPictureUrl() {
 		return pictureUrl;
 	}

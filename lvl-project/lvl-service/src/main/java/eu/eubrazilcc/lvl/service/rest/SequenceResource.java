@@ -27,16 +27,14 @@ import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.DEFAULT_ERROR;
 import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.realoc4Heatmap;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
-import static eu.eubrazilcc.lvl.storage.PaginationUtils.firstEntryOf;
-import static eu.eubrazilcc.lvl.storage.PaginationUtils.totalPages;
-import static eu.eubrazilcc.lvl.storage.QueryUtils.parseQuery;
-import static eu.eubrazilcc.lvl.storage.SortUtils.parseSorting;
+import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
+import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
-import java.net.URI;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,8 +51,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
@@ -63,9 +59,9 @@ import org.apache.commons.lang.mutable.MutableLong;
 
 import com.google.common.collect.ImmutableMap;
 
-import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sequences;
+import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geojson.Crs;
@@ -73,9 +69,7 @@ import eu.eubrazilcc.lvl.core.geojson.Feature;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
-import eu.eubrazilcc.lvl.core.http.LinkRelation;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
-import eu.eubrazilcc.lvl.storage.Sorting;
 
 /**
  * Sequences resource. Since a sequence is uniquely identified by the combination of the data source and the accession (i.e. GenBank, U49845), 
@@ -98,7 +92,7 @@ public class SequenceResource {
 	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);
 
 	@GET
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(APPLICATION_JSON)
 	public Sequences getSequences(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @QueryParam("q") @DefaultValue("") String q,			
@@ -106,45 +100,29 @@ public class SequenceResource {
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
-				.queryParam("page", "{page}")
-				.queryParam("per_page", "{per_page}")
-				.queryParam("q", "{q}")
-				.queryParam("sort", "{sort}")
-				.queryParam("order", "{order}");
+		final Sequences paginable = Sequences.start()
+				.resource(SequenceResource.class.getAnnotation(Path.class).value())
+				.page(page)
+				.perPage(per_page)
+				.sort(sort)
+				.order(order)
+				.query(q)
+				.build();
 		// get sequences from database
-		final int pageFirstEntry = firstEntryOf(page, per_page);
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Sequence> sequences = SEQUENCE_DAO.list(pageFirstEntry, per_page, filter, sorting, count);
-		// total count
-		final Paginable paginable = new Paginable();
+		final List<Sequence> sequences = SEQUENCE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, count);
+		paginable.setElements(sequences);
+		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
-		paginable.setTotalCount(totalEntries);
-		// previous link
-		if (page > 0) {
-			int previous = page - 1;
-			final URI previousUri = uriBuilder.clone().build(previous, per_page, q, sort, order);
-			paginable.setPrevious(Link.fromUri(previousUri).rel(LinkRelation.PREVIOUS).type(MediaType.APPLICATION_JSON).build());
-			final URI firstUri = uriBuilder.clone().build(0, per_page, q, sort, order);
-			paginable.setFirst(Link.fromUri(firstUri).rel(LinkRelation.FIRST).type(MediaType.APPLICATION_JSON).build());
-		}
-		// next link
-		if (pageFirstEntry + per_page < totalEntries) {
-			int next = page + 1;
-			final URI nextUri = uriBuilder.clone().build(next, per_page, q, sort, order);
-			paginable.setNext(Link.fromUri(nextUri).rel(LinkRelation.NEXT).type(MediaType.APPLICATION_JSON).build());
-			final int totalPages = totalPages(totalEntries, per_page);
-			final URI lastUri = uriBuilder.clone().build(totalPages, per_page, q, sort, order);
-			paginable.setLast(Link.fromUri(lastUri).rel(LinkRelation.LAST).type(MediaType.APPLICATION_JSON).build());
-		}
-		return Sequences.start().paginable(paginable).sequences(sequences).build();
+		paginable.setTotalCount(totalEntries);		
+		return paginable;
 	}
 
 	@GET
 	@Path("{id: [a-zA-Z_0-9]+:[a-zA-Z_0-9]+}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(APPLICATION_JSON)
 	public Sequence getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
@@ -160,7 +138,7 @@ public class SequenceResource {
 	}
 
 	@POST
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(APPLICATION_JSON)
 	public Response createSequence(final Sequence sequence, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
@@ -175,7 +153,7 @@ public class SequenceResource {
 
 	@PUT
 	@Path("{id: [a-zA-Z_0-9]+:[a-zA-Z_0-9]+}")
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(APPLICATION_JSON)
 	public void updateSequence(final @PathParam("id") String id, final Sequence update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
@@ -216,7 +194,7 @@ public class SequenceResource {
 
 	@GET
 	@Path("nearby/{longitude}/{latitude}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(APPLICATION_JSON)
 	public FeatureCollection findNearbySequences(final @PathParam("longitude") double longitude, 
 			final @PathParam("latitude") double latitude, 
 			final @QueryParam("maxDistance") @DefaultValue("1000.0d") double maxDistance, 

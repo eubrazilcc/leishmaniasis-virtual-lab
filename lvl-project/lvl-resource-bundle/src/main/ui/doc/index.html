@@ -117,6 +117,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                       <li><a href="#examples_oauth2_get_access_token_password">Get access token for user/password</a></li>
                       <li><a href="#examples_oauth2_access_to_protected_resource">Access to protected resource</a></li>
                     </ul></li>
+                  <li><a href="#examples_tasks">Task examples</a>
+                    <ul>
+                      <li><a href="#examples_tasks_import_sequences">Import sequences from external databases (PubMed)</a></li>
+                    </ul></li>
                 </ul></li>
             </ul>
           </div>
@@ -1308,42 +1312,103 @@ Serving HTTP on 0.0.0.0 port 8000 ...
 </pre>
 
             <h3>
-              <a id="examples_restful_api_list_sequences"></a>List all the sequences in the database. This method uses pagination, by default only the first 10
+              <a id="examples_restful_api_list_sequences"></a>List all the sequences in the database. This method uses pagination, by default only the first 100
               items are retrieved and the navigation links are included in the response:
             </h3>
 
-            <code> $ curl -v http://127.0.0.1:8080/lvl/sequences </code>
+            <code> $ curl -v -H 'Authorization: Bearer ubauFeNkTWiVGQWTcfJPUW55nWTIY3c+yu25p/Sm7KU=' 'http://lvl.i3m.upv.es/lvl-service/rest/v1/sequences' </code>
             <p></p>
 
             <pre>
-* About to connect() to 127.0.0.1 port 8080 (#0)
-*   Trying 127.0.0.1... connected
-&gt; GET /lvl/sequences HTTP/1.1
-&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
-&gt; Host: 127.0.0.1:8080
+* Hostname was NOT found in DNS cache
+*   Trying 158.42.105.62...
+* Connected to lvl.i3m.upv.es (158.42.105.62) port 80 (#0)
+&gt; GET /lvl-service/rest/v1/sequences HTTP/1.1
+&gt; User-Agent: curl/7.35.0
+&gt; Host: lvl.i3m.upv.es
 &gt; Accept: */*
 &gt; 
 &lt; HTTP/1.1 200 OK
+* Server nginx/1.4.6 (Ubuntu) is not blacklisted
+&lt; Server: nginx/1.4.6 (Ubuntu)
+&lt; Date: Wed, 17 Sep 2014 10:41:21 GMT
 &lt; Content-Type: application/json
-&lt; Date: Thu, 06 Mar 2014 10:13:41 GMT
-&lt; Content-Length: 1125
+&lt; Content-Length: 1586
+&lt; Connection: keep-alive
 &lt; 
-* Connection #0 to host 127.0.0.1 left intact
-* Closing connection #
-{"type":"sequences",
- "last":"&lt;http://127.0.0.1:8080/lvl/sequences?start=2&amp;size=10&gt;; rel=\"last\"; type=\"application/json\"",
- "next":"&lt;http://127.0.0.1:8080/lvl/sequences?start=10&amp;size=10&gt;; rel=\"next\"; type=\"application/json\"",
- "sequences":[
- {"accession":"1","definition":"example sequence","organism":"unknown","version":"1.0"},
- {"accession":"10","definition":"example sequence","organism":"unknown","version":"1.0"},
- {"accession":"11","definition":"example sequence","organism":"unknown","version":"1.0"},
- {"accession":"2","definition":"example sequence","organism":"unknown","version":"1.0"},
- {"accession":"3","definition":"example sequence","organism":"unknown","version":"1.0"},
- {"accession":"4","definition":"example sequence","organism":"unknown","version":"1.0"},
- {"accession":"5","definition":"example sequence","organism":"unknown","version":"1.0"},
- {"accession":"6","definition":"example sequence","organism":"unknown","version":"1.0"},
- {"accession":"7","definition":"example sequence","organism":"unknown","version":"1.0"},
- {"accession":"8","definition":"example sequence","organism":"unknown","version":"1.0"}]}
+{
+    "totalCount": 25820,
+    "next": {
+        "href": "/lvl-service/rest/v1/sequences?page=1&amp;per_page=100&amp;q=&amp;sort=&amp;order=asc",
+        "params": {
+            "rel": "next",
+            "type": "application/json"
+        }
+    },
+    "last": {
+        "href": "/lvl-service/rest/v1/sequences?page=259&amp;per_page=100&amp;q=&amp;sort=&amp;order=asc",
+        "params": {
+            "rel": "last",
+            "type": "application/json"
+        }
+    },
+    "sequences": [
+        {
+            "accession": "AC238558",
+            "countryFeature": null,
+            "dataSource": "GenBank",
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-7H12 from chromosome unknown, complete sequence",
+            "gi": 260764140,
+            "link": {
+                "href": "/lvl-service/rest/v1/sequences/GenBank:AC238558",
+                "params": {
+                    "rel": "self",
+                    "type": "application/json"
+                }
+            },
+            "locale": null,
+            "location": null,
+            "organism": "Phlebotomus papatasi",
+            "version": "AC238558.1"
+        },
+        {
+            "accession": "AC238775",
+            "countryFeature": null,
+            "dataSource": "GenBank",
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-10H12 from chromosome unknown, complete sequence",
+            "gi": 262073197,
+            "link": {
+                "href": "/lvl-service/rest/v1/sequences/GenBank:AC238775",
+                "params": {
+                    "rel": "self",
+                    "type": "application/json"
+                }
+            },
+            "locale": null,
+            "location": null,
+            "organism": "Phlebotomus papatasi",
+            "version": "AC238775.1"
+        },
+        {
+            "accession": "AC238776",
+            "countryFeature": null,
+            "dataSource": "GenBank",
+            "definition": "Phlebotomus papatasi BAC clone PLPAAEX-12H12 from chromosome unknown, complete sequence",
+            "gi": 262073198,
+            "link": {
+                "href": "/lvl-service/rest/v1/sequences/GenBank:AC238776",
+                "params": {
+                    "rel": "self",
+                    "type": "application/json"
+                }
+            },
+            "locale": null,
+            "location": null,
+            "organism": "Phlebotomus papatasi",
+            "version": "AC238776.1"
+        }
+    ]
+}
 </pre>
 
             <h3>
@@ -1511,6 +1576,23 @@ Serving HTTP on 0.0.0.0 port 8000 ...
 * Closing connection #0
 {"email":"***","fullname":"LVL root user","link":"&lt;http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/root&gt;; rel=\"self\"; type=\"application/json\"","password":"***","scopes":["users/*,a","sequences,a","pipelines,a","my_sequences/*,a","pending_sequences,a"],"username":"root"}
 </pre>
+
+            <h2>
+              <a id="examples_tasks"></a>Task examples
+            </h2>
+
+            <p>
+              This section provides simple examples to illustrate the use of the REST API to execute tasks in the LVL. The examples use 
+              <a href="http://curl.haxx.se/" target="_blank">cURL</a> to access the endpoint.
+            </p>
+
+            <h3>
+              <a id="examples_tasks_import_sequences"></a>Import sequences from external databases (PubMed):
+            </h3>
+
+            <code> $ curl -H 'Authorization: Bearer ubauFeNkTWiVGQWTcfJPUW55nWTIY3c+yu25p/Sm7KU=' -X POST -H "Content-Type: application/json" 
+              -d '{"uuid":null,"type":"IMPORT_SEQUENCES"}' http://lvl.i3m.upv.es/lvl-service/rest/v1/tasks </code>
+            <p></p>
 
           </div>
         </div>

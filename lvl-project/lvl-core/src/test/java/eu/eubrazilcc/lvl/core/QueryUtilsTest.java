@@ -20,10 +20,10 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage;
+package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.mapToString;
-import static eu.eubrazilcc.lvl.storage.QueryUtils.parseQuery;
+import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,6 +32,8 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+
+import eu.eubrazilcc.lvl.core.util.QueryUtils;
 
 /**
  * Tests {@link QueryUtils} utility class.

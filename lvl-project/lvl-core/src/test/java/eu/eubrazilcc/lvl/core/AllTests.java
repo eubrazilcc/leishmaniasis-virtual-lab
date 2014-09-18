@@ -47,7 +47,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({ LogManagerTest.class, ConcurrencyTest.class, JsonMappingTest.class, GeoJsonBindingTest.class, 
 	GeocodingTest.class, Wgs84CalculatorTest.class, NCBIXmlBindingTest.class, UrlUtilsTest.class, NetworkingUtilsTest.class,
 	DataSourceTest.class, NamingUtilsTest.class, EntrezTest.class, GenBankFlatFileTest.class, FormValidationTest.class, 
-	DisjointSetTest.class, SequenceAnalyzerTest.class })
+	DisjointSetTest.class, SequenceAnalyzerTest.class, QueryUtilsTest.class, SortUtilsTest.class })
 public class AllTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

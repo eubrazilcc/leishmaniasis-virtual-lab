@@ -23,17 +23,33 @@
 package eu.eubrazilcc.lvl.core.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.nio.charset.Charset.defaultCharset;
+import static org.apache.commons.io.FilenameUtils.concat;
+import static org.apache.commons.io.FilenameUtils.normalize;
+import static org.apache.commons.io.FilenameUtils.separatorsToUnix;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
+import javax.annotation.Nullable;
+import javax.ws.rs.core.Link;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 
 /**
  * URL manipulation utilities.
@@ -47,23 +63,23 @@ public final class UrlUtils {
 
 	/**
 	 * Extracts the protocol from an URL.
-	 * @param url the source URL.
+	 * @param url - the source URL
 	 * @return the protocol of the URL. In case that no protocol is found, {@link #FILE}
 	 *         is assumed.
 	 */
 	public static String extractProtocol(final URL url) {
 		checkArgument(url != null, "Uninitialized URL");
 		String protocol = url.getProtocol();
-		if (StringUtils.isBlank(protocol)) {
+		if (isBlank(protocol)) {
 			protocol = FILE;
 		}
 		return protocol;
 	}
-	
+
 	/**
 	 * Checks whether the specified URL points to an object accessible through one of the 
 	 * remote protocols supported by this application.
-	 * @param url input URL.
+	 * @param url - input URL
 	 * @return {@code true} if the specified URL points to an object accessible through one 
 	 *         of the remote protocols supported by this application, otherwise {@code false}.
 	 */
@@ -75,7 +91,7 @@ public final class UrlUtils {
 
 	/**
 	 * Checks whether the specified URL points to a file in the local file-system.
-	 * @param url input URL.
+	 * @param url - input URL
 	 * @return {@code true} if the specified URL points to a file, otherwise {@code false}.
 	 */
 	public static boolean isFileProtocol(final URL url) {
@@ -87,31 +103,31 @@ public final class UrlUtils {
 	/**
 	 * Parses a URL from a String. This method supports file-system paths 
 	 * (e.g. /foo/bar).
-	 * @param str String representation of an URL.
+	 * @param str - String representation of an URL
 	 * @return an URL.
 	 * @throws IOException If an input/output error occurs.
 	 */
-	public static URL parseURL(final String str) throws MalformedURLException {
+	public static @Nullable URL parseURL(final String str) throws MalformedURLException {
 		URL url = null;
-		if (StringUtils.isNotBlank(str)) {
+		if (isNotBlank(str)) {
 			try {
 				url = new URL(str);
 			} catch (MalformedURLException e) {
 				url = null;
 				if (!str.matches("^[a-zA-Z]+[/]*:[^\\\\]")) {
 					// convert path to UNIX path
-					String path = FilenameUtils.separatorsToUnix(str.trim());
+					String path = separatorsToUnix(str.trim());
 					final Pattern pattern = Pattern.compile("^([a-zA-Z]:/)");
 					final Matcher matcher = pattern.matcher(path);
 					path = matcher.replaceFirst("/");
 					// convert relative paths to absolute paths
 					if (!path.startsWith("/")) {
 						path = path.startsWith("~") ? path.replaceFirst("~", System.getProperty("user.home"))
-								: FilenameUtils.concat(System.getProperty("user.dir"), path);
+								: concat(System.getProperty("user.dir"), path);
 					}
 					// normalize path
-					path = FilenameUtils.normalize(path, true);
-					if (StringUtils.isNotBlank(path)) {
+					path = normalize(path, true);
+					if (isNotBlank(path)) {
 						url = new File(path).toURI().toURL();
 					} else {
 						throw new MalformedURLException("Invalid path: " + path);
@@ -123,17 +139,17 @@ public final class UrlUtils {
 		}
 		return url;
 	}
-	
+
 	/**
 	 * Checks whether or not a URL is valid.
-	 * @param str input URL.
+	 * @param str - input URL
 	 * @param strict when is set to {@code true}, an additional check is performed 
 	 *        to verify that the URL is formatted strictly according to RFC2396.
 	 * @return {@code true} if the specified URL is valid. Otherwise, {@code false}.
 	 */
 	public static boolean isValid(final String str, final boolean strict) {
 		URL url = null;
-		if (StringUtils.isNotBlank(str)) {
+		if (isNotBlank(str)) {
 			try {
 				url = new URL(str);
 				if (strict) {
@@ -144,6 +160,69 @@ public final class UrlUtils {
 			}			
 		}
 		return url != null;
+	}
+
+	/**
+	 * Gets the path part of a link.
+	 * @param link - input link
+	 * @return the path part of the specified link or an empty string if one does not exist.
+	 * @throws IllegalArgumentException If a malformed link occurs.
+	 */
+	public static String getPath(final Link link) {
+		checkArgument(link != null, "Uninitialized link");
+		return getPath(link.getUri());
+	}
+
+	/**
+	 * Gets the path part of an URI.
+	 * @param uri - input URI
+	 * @return the path part of the specified URI or an empty string if one does not exist.
+	 * @throws IllegalArgumentException If a malformed URI occurs.
+	 */
+	public static String getPath(final URI uri) {
+		checkArgument(uri != null, "Uninitialized URI");
+		try {
+			final URI nUri = uri.normalize();
+			final URL url = nUri.isAbsolute() ? nUri.toURL() : new URL(new URL("http://example.org/"), nUri.getPath());
+			return url.getPath();
+		} catch (MalformedURLException e) {
+			throw new IllegalArgumentException("Malformed URI", e);
+		}
+	}
+
+	/**
+	 * Returns a list of name-value pairs as built from the link's query portion.
+	 * @param link - input link
+	 * @return a list of name-value pairs as built from the link's query portion.
+	 */
+	public static Map<String, String> getQueryParams(final Link link) {
+		checkArgument(link != null, "Uninitialized link");
+		return getQueryParams(link.getUri());
+	}
+
+	/**
+	 * Returns a list of name-value pairs as built from the URI's query portion.
+	 * @param uri - input URI
+	 * @return a list of name-value pairs as built from the URI's query portion.
+	 * @throws IllegalArgumentException If a malformed URI occurs.
+	 */
+	public static Map<String, String> getQueryParams(final URI uri) {
+		checkArgument(uri != null, "Uninitialized URI");
+		try {
+			final URI nUri = uri.normalize();
+			final URL url = nUri.isAbsolute() ? nUri.toURL() : new URL(new URL("http://example.org/"), nUri.toString());
+			final String query = new URL(URLDecoder.decode(url.toString(), defaultCharset().name())).getQuery();
+			final Map<String, String> map = newHashMap();
+			final List<NameValuePair> pairs = URLEncodedUtils.parse(query, defaultCharset());
+			final Iterator<NameValuePair> iterator = pairs.iterator();
+			while (iterator.hasNext()) {
+				final NameValuePair pair = iterator.next();
+				map.put(pair.getName(), pair.getValue());
+			}
+			return map;
+		} catch (MalformedURLException | UnsupportedEncodingException e) {
+			throw new IllegalArgumentException("Malformed URI", e);			
+		}
 	}
 
 }

@@ -32,9 +32,9 @@ import org.apache.commons.lang.mutable.MutableLong;
 
 import com.google.common.collect.ImmutableMap;
 
+import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.Sorting;
 
 /**
  * Base DAO.

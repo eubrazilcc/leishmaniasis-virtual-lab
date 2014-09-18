@@ -26,9 +26,21 @@ import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
+import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
+import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
+import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SEQUENCES;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
+import static java.lang.Integer.parseInt;
+import static java.lang.Math.min;
 import static java.lang.System.getProperty;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.NO_CONTENT;
+import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -51,7 +63,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.client.fluent.Request;
@@ -72,12 +84,10 @@ import eu.eubrazilcc.lvl.core.Sequences;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
-import eu.eubrazilcc.lvl.service.Task.TaskType;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
-import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
 import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
 /**
@@ -89,7 +99,9 @@ public class ServiceTest {
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
 			"lvl-service-test-Hf330xKUcsn7vnlKQXFndptow52MvZNKWxxpbnVqAA"));
 
-	private static final String BASE_URI = "https://localhost:8443/lvl-service/rest/v1";
+	private static final String HOST = "https://localhost:8443";
+	private static final String SERVICE = "/lvl-service/rest/v1";
+	private static final String BASE_URI = HOST + SERVICE;
 
 	private WebTarget target;
 	private static final String token = "1234567890abcdEFGhiJKlMnOpqrstUVWxyZ";
@@ -139,25 +151,25 @@ public class ServiceTest {
 		System.out.println("ServiceTest.test()");
 		try {
 			// test import sequences task
-			Path path = TaskResource.class.getAnnotation(Path.class);			
+			Path path = TaskResource.class.getAnnotation(Path.class);
 			Task task = Task.builder()
-					.type(TaskType.IMPORT_SEQUENCES)
+					.type(IMPORT_SEQUENCES)
 					.ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
 			Response response = target.path(path.value()).request()
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-					.post(Entity.entity(task, MediaType.APPLICATION_JSON_TYPE));
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.post(Entity.entity(task, APPLICATION_JSON_TYPE));
 
 			assertThat("Create import sequences task response is not null", response, notNullValue());
-			assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(Response.Status.CREATED.getStatusCode()));
+			assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create import sequences task response is not empty", response.getEntity(), notNullValue());
 			String payload = response.readEntity(String.class);
 			assertThat("Create import sequences task response entity is not null", payload, notNullValue());
 			assertThat("Create import sequences task response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			System.out.println("Create import sequences task response body (JSON), empty is OK: " + payload);
-			System.out.println("Create import sequences task response JAX-RS object: " + response);
-			System.out.println("Create import sequences task HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create import sequences task response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create import sequences task response JAX-RS object: " + response);
+			System.out.println(" >> Create import sequences task HTTP headers: " + response.getStringHeaders());
 			URI location = new URI((String)response.getHeaders().get("Location").get(0));
 
 			// test import sequences task progress
@@ -166,7 +178,7 @@ public class ServiceTest {
 					.path(getName(location.getPath()))
 					.queryParam("refresh", 1)
 					.request()
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(EventInput.class);
 			while (!eventInput.isClosed()) {
 				final InboundEvent inboundEvent = eventInput.read();
@@ -191,17 +203,17 @@ public class ServiceTest {
 
 			// repeat the import new sequences task to test how the subscription is made from a client using the JavaScript EventSource interface
 			task = Task.builder()
-					.type(TaskType.IMPORT_SEQUENCES)
+					.type(IMPORT_SEQUENCES)
 					.ids(newArrayList("430902590"))
 					.build();
 			response = target.path(path.value()).request()
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-					.post(Entity.entity(task, MediaType.APPLICATION_JSON_TYPE));
-			assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(Response.Status.CREATED.getStatusCode()));
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.post(Entity.entity(task, APPLICATION_JSON_TYPE));
+			assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			/* uncomment for additional output */
-			System.out.println("Create import sequences task response body (JSON), empty is OK: " + payload);
-			System.out.println("Create import sequences task response JAX-RS object: " + response);
-			System.out.println("Create import sequences task HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create import sequences task response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create import sequences task response JAX-RS object: " + response);
+			System.out.println(" >> Create import sequences task HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));
 
 			eventInput = target.path(path.value())
@@ -241,190 +253,291 @@ public class ServiceTest {
 					.accession(sequence.getAccession())
 					.build();			
 			response = target.path(path.value()).request()
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-					.post(Entity.entity(sequence, MediaType.APPLICATION_JSON_TYPE));			
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.post(Entity.entity(sequence, APPLICATION_JSON_TYPE));			
 			assertThat("Create new sequence response is not null", response, notNullValue());
-			assertThat("Create new sequence response is CREATED", response.getStatus(), equalTo(Response.Status.CREATED.getStatusCode()));
+			assertThat("Create new sequence response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create new sequence response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
 			assertThat("Create new sequence response entity is not null", payload, notNullValue());
 			assertThat("Create new sequence response entity is empty", isBlank(payload));
 			/* uncomment for additional output */			
-			System.out.println("Create new sequence response body (JSON), empty is OK: " + payload);
-			System.out.println("Create new sequence response JAX-RS object: " + response);
-			System.out.println("Create new sequence HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create new sequence response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create new sequence response JAX-RS object: " + response);
+			System.out.println(" >> Create new sequence HTTP headers: " + response.getStringHeaders());
 
 			// test get sequences (JSON encoded)
-			response = target.path(path.value()).request(MediaType.APPLICATION_JSON)
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+			response = target.path(path.value()).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get();
 			assertThat("Get sequences response is not null", response, notNullValue());
-			assertThat("Get sequences response is OK", response.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
+			assertThat("Get sequences response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
 			assertThat("Get sequences response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
 			assertThat("Get sequences response entity is not null", payload, notNullValue());
 			assertThat("Get sequences response entity is not empty", isNotBlank(payload));
 			/* uncomment for additional output */			
-			System.out.println("Get sequences response body (JSON): " + payload);
-			System.out.println("Get sequences response JAX-RS object: " + response);
-			System.out.println("Get sequences HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Get sequences response body (JSON): " + payload);
+			System.out.println(" >> Get sequences response JAX-RS object: " + response);
+			System.out.println(" >> Get sequences HTTP headers: " + response.getStringHeaders());
 
 			// test get sequences (Java object)
-			Sequences sequences = target.path(path.value()).request(MediaType.APPLICATION_JSON)
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+			Sequences sequences = target.path(path.value()).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequences.class);
 			assertThat("Get sequences result is not null", sequences, notNullValue());
-			assertThat("Get sequences list is not null", sequences.getSequences(), notNullValue());
-			assertThat("Get sequences list is not empty", !sequences.getSequences().isEmpty());
-			assertThat("Get sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
+			assertThat("Get sequences list is not null", sequences.getElements(), notNullValue());
+			assertThat("Get sequences list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Get sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
 			/* uncomment for additional output */			
-			System.out.println("Get sequences result: " + sequences.toString());
+			System.out.println(" >> Get sequences result: " + sequences.toString());
+
+			// test sequence pagination (JSON encoded)
+			final int perPage = 2;
+			response = target.path(path.value())
+					.queryParam("per_page", perPage)
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.get();
+			assertThat("Paginate sequences first page response is not null", response, notNullValue());
+			assertThat("Paginate sequences first page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+			assertThat("Paginate sequences first page response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Paginate sequences first page response entity is not null", payload, notNullValue());
+			assertThat("Paginate sequences first page response entity is not empty", isNotBlank(payload));			
+			sequences = JSON_MAPPER.readValue(payload, Sequences.class);			
+			assertThat("Paginate sequences first page result is not null", sequences, notNullValue());
+			assertThat("Paginate sequences first page list is not null", sequences.getElements(), notNullValue());
+			assertThat("Paginate sequences first page list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Paginate sequences first page items count coincide with page size", sequences.getElements().size(), 
+					equalTo(min(perPage, sequences.getTotalCount())));
+			/* uncomment for additional output */			
+			System.out.println(" >> Paginate sequences first page response body (JSON): " + payload);
+
+			assertThat("Paginate sequences first page links is not null", sequences.getLinks(), notNullValue());
+			assertThat("Paginate sequences first page links is not empty", !sequences.getLinks().isEmpty());
+			assertThat("Paginate sequences first page links count coincide with expected", sequences.getLinks().size(), equalTo(2));
+			Link lastLink = null;
+			for (int i = 0; i < sequences.getLinks().size() && lastLink == null; i++) {
+				final Link link = sequences.getLinks().get(i);
+				if (LAST.equalsIgnoreCase(link.getRel())) {
+					lastLink = link;
+				}
+			}
+			assertThat("Paginate sequences first page link to last page is not null", lastLink, notNullValue());
+
+			response = target.path(getPath(lastLink).substring(SERVICE.length()))
+					.queryParam("per_page", parseInt(getQueryParams(lastLink).get("per_page")))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.get();
+			assertThat("Paginate sequences last page response is not null", response, notNullValue());
+			assertThat("Paginate sequences last page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+			assertThat("Paginate sequences last page response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Paginate sequences last page response entity is not null", payload, notNullValue());
+			assertThat("Paginate sequences last page response entity is not empty", isNotBlank(payload));			
+			sequences = JSON_MAPPER.readValue(payload, Sequences.class);			
+			assertThat("Paginate sequences last page result is not null", sequences, notNullValue());
+			assertThat("Paginate sequences last page list is not null", sequences.getElements(), notNullValue());
+			assertThat("Paginate sequences last page list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Paginate sequences last page items count coincide with page size", sequences.getElements().size(), 
+					equalTo(min(perPage, sequences.getTotalCount())));
+			/* uncomment for additional output */			
+			System.out.println(" >> Paginate sequences last page response body (JSON): " + payload);
+
+			assertThat("Paginate sequences last page links is not null", sequences.getLinks(), notNullValue());
+			assertThat("Paginate sequences last page links is not empty", !sequences.getLinks().isEmpty());
+			assertThat("Paginate sequences last page links count coincide with expected", sequences.getLinks().size(), equalTo(2));
+
+			// test get sequences pagination (Java object)
+			sequences = target.path(path.value())
+					.queryParam("per_page", perPage)
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.get(Sequences.class);
+			assertThat("Paginate sequences first page result is not null", sequences, notNullValue());
+			assertThat("Paginate sequences first page list is not null", sequences.getElements(), notNullValue());
+			assertThat("Paginate sequences first page list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Paginate sequences first page items count coincide with list size", sequences.getElements().size(), 
+					equalTo(min(perPage, sequences.getTotalCount())));
+			/* uncomment for additional output */			
+			System.out.println(" >> Paginate sequences first page result: " + sequences.toString());
+
+			assertThat("Paginate sequences first page links is not null", sequences.getLinks(), notNullValue());
+			assertThat("Paginate sequences first page links is not empty", !sequences.getLinks().isEmpty());
+			assertThat("Paginate sequences first page links count coincide with expected", sequences.getLinks().size(), equalTo(2));
+			lastLink = null;
+			for (int i = 0; i < sequences.getLinks().size() && lastLink == null; i++) {
+				final Link link = sequences.getLinks().get(i);
+				if (LAST.equalsIgnoreCase(link.getRel())) {
+					lastLink = link;
+				}
+			}
+			assertThat("Paginate sequences first page link to last page is not null", lastLink, notNullValue());
+
+			sequences = target.path(getPath(lastLink).substring(SERVICE.length()))
+					.queryParam("per_page", parseInt(getQueryParams(lastLink).get("per_page")))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.get(Sequences.class);
+			assertThat("Paginate sequences last page result is not null", sequences, notNullValue());
+			assertThat("Paginate sequences last page list is not null", sequences.getElements(), notNullValue());
+			assertThat("Paginate sequences last page list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Paginate sequences last page items count coincide with list size", sequences.getElements().size(), 
+					equalTo(min(perPage, sequences.getTotalCount())));
+			/* uncomment for additional output */			
+			System.out.println(" >> Paginate sequences last page result: " + sequences.toString());
+
+			assertThat("Paginate sequences last page links is not null", sequences.getLinks(), notNullValue());
+			assertThat("Paginate sequences last page links is not empty", !sequences.getLinks().isEmpty());
+			assertThat("Paginate sequences last page links count coincide with expected", sequences.getLinks().size(), equalTo(2));
 
 			// test get sequences applying a full-text search filter
 			sequences = target.path(path.value())
 					.queryParam("q", "papatasi")
-					.request(MediaType.APPLICATION_JSON)
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequences.class);
 			assertThat("Search sequences result is not null", sequences, notNullValue());
-			assertThat("Search sequences list is not null", sequences.getSequences(), notNullValue());
-			assertThat("Search sequences list is not empty", !sequences.getSequences().isEmpty());
-			assertThat("Search sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
-			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(3));
+			assertThat("Search sequences list is not null", sequences.getElements(), notNullValue());
+			assertThat("Search sequences list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Search sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
+			assertThat("Search sequences coincides result with expected", sequences.getElements().size(), equalTo(3));
 			/* uncomment for additional output */			
-			System.out.println("Search sequences result: " + sequences.toString());
+			System.out.println(" >> Search sequences result: " + sequences.toString());
 
 			// test get sequences applying a keyword matching filter
 			sequences = target.path(path.value())
 					.queryParam("q", "accession:JP553239")
-					.request(MediaType.APPLICATION_JSON)
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequences.class);
 			assertThat("Search sequences result is not null", sequences, notNullValue());
-			assertThat("Search sequences list is not null", sequences.getSequences(), notNullValue());
-			assertThat("Search sequences list is not empty", !sequences.getSequences().isEmpty());
-			assertThat("Search sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
-			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(1));
+			assertThat("Search sequences list is not null", sequences.getElements(), notNullValue());
+			assertThat("Search sequences list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Search sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
+			assertThat("Search sequences coincides result with expected", sequences.getElements().size(), equalTo(1));
 			/* uncomment for additional output */			
-			System.out.println("Search sequences result: " + sequences.toString());
+			System.out.println(" >> Search sequences result: " + sequences.toString());
 
 			// test get sequences applying a full-text search combined with a keyword matching filter
 			sequences = target.path(path.value())
 					.queryParam("q", "source:GenBank Phlebotomus")
-					.request(MediaType.APPLICATION_JSON)
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequences.class);
 			assertThat("Search sequences result is not null", sequences, notNullValue());
-			assertThat("Search sequences list is not null", sequences.getSequences(), notNullValue());
-			assertThat("Search sequences list is not empty", !sequences.getSequences().isEmpty());
-			assertThat("Search sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
-			assertThat("Search sequences coincides result with expected", sequences.getSequences().size(), equalTo(4));
+			assertThat("Search sequences list is not null", sequences.getElements(), notNullValue());
+			assertThat("Search sequences list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Search sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
+			assertThat("Search sequences coincides result with expected", sequences.getElements().size(), equalTo(4));
 			/* uncomment for additional output */			
-			System.out.println("Search sequences result: " + sequences.toString());
+			System.out.println(" >> Search sequences result: " + sequences.toString());
 
 			// test get sequences sorted by accession number
 			sequences = target.path(path.value())
 					.queryParam("sort", "accession")
 					.queryParam("order", "asc")
-					.request(MediaType.APPLICATION_JSON)
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequences.class);
 			assertThat("Sorted sequences result is not null", sequences, notNullValue());
-			assertThat("Sorted sequences list is not null", sequences.getSequences(), notNullValue());
-			assertThat("Sorted sequences list is not empty", !sequences.getSequences().isEmpty());
-			assertThat("Sorted sequences items count coincide with list size", sequences.getSequences().size(), equalTo(sequences.getTotalCount()));
+			assertThat("Sorted sequences list is not null", sequences.getElements(), notNullValue());
+			assertThat("Sorted sequences list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Sorted sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
 			String last = "-1";
-			for (final Sequence seq : sequences.getSequences()) {
+			for (final Sequence seq : sequences.getElements()) {
 				assertThat("Sequences are properly sorted", seq.getAccession().compareTo(last) > 0);
 				last = seq.getAccession();
 			}
 			/* uncomment for additional output */			
-			System.out.println("Sorted sequences result: " + sequences.toString());
+			System.out.println(" >> Sorted sequences result: " + sequences.toString());
 
 			// test get sequence by data source + accession number
 			Sequence sequence2 = target.path(path.value()).path(sequenceKey.toId())
-					.request(MediaType.APPLICATION_JSON)
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequence.class);
 			assertThat("Get sequence by accession number result is not null", sequence2, notNullValue());
 			assertThat("Get sequence by accession number coincides with expected", sequence2.equalsIgnoringVolatile(sequence));
 			/* uncomment for additional output */
-			System.out.println("Get sequence by accession number result: " + sequence2.toString());
+			System.out.println(" >> Get sequence by accession number result: " + sequence2.toString());
 
 			// test update sequence
 			sequence.setDefinition("Modified example sequence");
 			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
-					.put(Entity.entity(sequence, MediaType.APPLICATION_JSON_TYPE));
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.put(Entity.entity(sequence, APPLICATION_JSON_TYPE));
 			assertThat("Update sequence response is not null", response, notNullValue());
-			assertThat("Update sequence response is NO_CONTENT", response.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
+			assertThat("Update sequence response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Update sequence response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
 			assertThat("Update sequence response entity is not null", payload, notNullValue());
 			assertThat("Update sequence response entity is empty", isBlank(payload));
 			/* uncomment for additional output */			
-			System.out.println("Update sequence response body (JSON), empty is OK: " + payload);
-			System.out.println("Update sequence response JAX-RS object: " + response);
-			System.out.println("Update sequence HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Update sequence response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Update sequence response JAX-RS object: " + response);
+			System.out.println(" >> Update sequence HTTP headers: " + response.getStringHeaders());
 
 			// test get sequence by accession number after update
 			sequence2 = target.path(path.value()).path(sequenceKey.toId())
-					.request(MediaType.APPLICATION_JSON)
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(Sequence.class);
 			assertThat("Get sequence by accession number after update result is not null", sequence2, notNullValue());
 			assertThat("Get sequence by accession number after update coincides with expected", sequence2.equalsIgnoringVolatile(sequence));
 			/* uncomment for additional output */
-			System.out.println("Get sequence by accession number after update result: " + sequence2.toString());			
+			System.out.println(" >> Get sequence by accession number after update result: " + sequence2.toString());			
 
 			// test find sequences near to a location
 			FeatureCollection featCol = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d)
-					.request(MediaType.APPLICATION_JSON)
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.get(FeatureCollection.class);
 			assertThat("Get nearby sequences result is not null", featCol, notNullValue());
 			assertThat("Get nearby sequences list is not null", featCol.getFeatures(), notNullValue());
 			assertThat("Get nearby sequences list is not empty", featCol.getFeatures().size() > 0);
 			/* uncomment for additional output */			
-			System.out.println("Get nearby sequences result: " + featCol.toString());
+			System.out.println(" >> Get nearby sequences result: " + featCol.toString());
 
 			// test find sequences near to a location (using plain REST, no Jersey client)
 			final URI uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d).getUri();
 			final String response2 = Request.Get(uri)
 					.addHeader("Accept", "application/json")
-					.addHeader(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.addHeader(HEADER_AUTHORIZATION, bearerHeader(token))
 					.execute()
 					.returnContent()
 					.asString();
 			assertThat("Get nearby sequences result (plain) is not null", response2, notNullValue());
 			assertThat("Get nearby sequences result (plain) is not empty", isNotBlank(response2));
 			/* uncomment for additional output */
-			System.out.println("Get nearby sequences result (plain): " + response2);
+			System.out.println(" >> Get nearby sequences result (plain): " + response2);
 			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
 			assertThat("Get nearby sequences result (plain) is not null", featCol, notNullValue());
 			assertThat("Get nearby sequences (plain) list is not null", featCol.getFeatures(), notNullValue());
 			assertThat("Get nearby sequences (plain) list is not empty", featCol.getFeatures().size() > 0);
 			/* uncomment for additional output */
-			System.out.println("Get nearby sequences result (plain): " + featCol.toString());
+			System.out.println(" >> Get nearby sequences result (plain): " + featCol.toString());
 
 			// test delete sequence
 			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
-					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
 					.delete();
 			assertThat("Delete sequence response is not null", response, notNullValue());
-			assertThat("Delete sequence response is NO_CONTENT", response.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
+			assertThat("Delete sequence response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Delete sequence response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
 			assertThat("Delete sequence response entity is not null", payload, notNullValue());
 			assertThat("Delete sequence response entity is empty", isBlank(payload));
 			/* uncomment for additional output */			
-			System.out.println("Delete sequence response body (JSON), empty is OK: " + payload);
-			System.out.println("Delete sequence response JAX-RS object: " + response);
-			System.out.println("Delete sequence HTTP headers: " + response.getStringHeaders());			
+			System.out.println(" >> Delete sequence response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Delete sequence response JAX-RS object: " + response);
+			System.out.println(" >> Delete sequence HTTP headers: " + response.getStringHeaders());			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("ServiceTest.test() failed: " + e.getMessage());

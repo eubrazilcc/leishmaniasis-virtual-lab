@@ -37,6 +37,7 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -54,13 +55,13 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.storage.InvalidFilterParseException;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
 import eu.eubrazilcc.lvl.storage.SequenceGiKey;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
-import eu.eubrazilcc.lvl.storage.Sorting;
 import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
@@ -365,16 +366,25 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
 	public static class SequenceTransientStore extends TransientStore<Sequence> {
+		
+		private List<Link> links;
 
 		public SequenceTransientStore(final Sequence sequence) {
 			super(sequence);
 		}
+		
+		public List<Link> getLinks() {
+			return links;
+		}
 
 		public Sequence purge() {
+			links = element.getLinks();
+			element.setLinks(null);
 			return element;
 		}
 
 		public Sequence restore() {
+			element.setLinks(links);
 			return element;
 		}
 
