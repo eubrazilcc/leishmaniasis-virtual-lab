@@ -59,6 +59,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<artifactId>commons-codec</artifactId>
 				<version>1.9</version>
 			</dependency>
+			
+			<dependency> <!-- Provides file compression and archive routines, such as: bzip2, gzip, tar, zip -->
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>1.8.1</version>
+			</dependency>
 
 			<dependency> <!-- Configuration handling -->
 				<groupId>commons-configuration</groupId>

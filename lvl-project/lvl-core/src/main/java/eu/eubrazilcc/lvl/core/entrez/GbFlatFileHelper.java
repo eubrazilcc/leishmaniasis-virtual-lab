@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableMultimap;
  * Utility class to deal with sequences stored in GenBank flat file format.
  * @author Erik Torres <ertorser@upv.es>
  */
-public final class GenBankFlatFileHelper {
+public final class GbFlatFileHelper {
 
 	/**
 	 * Infers the possible countries of the species from which the DNA sequence was obtained and 

@@ -22,14 +22,14 @@
 
 package eu.eubrazilcc.lvl.core.util;
 
+import static eu.eubrazilcc.lvl.core.AllTests.TEST_RESOURCES_PATH;
+import static java.io.File.separator;
+import static org.apache.commons.io.FileUtils.listFiles;
+import static org.apache.commons.io.FilenameUtils.concat;
+
 import java.io.File;
 import java.net.URL;
 import java.util.Collection;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-
-import eu.eubrazilcc.lvl.core.AllTests;
 
 /**
  * Test utilities.
@@ -40,6 +40,9 @@ public class TestUtils {
 	public static final String ANCHOR_FILENAME = "m2anchor";
 
 	public static final String GENBANK_FOLDER = "genbank";
+	public static final String GB_SETS_FOLDER = GENBANK_FOLDER + separator + "sets";
+	public static final String GB_SEQUENCES_FOLDER = GENBANK_FOLDER + separator + "sequences";
+
 	public static final String PUBMED_FOLDER = "pubmed";
 	public static final String GEOJSON_FOLDER = "geojson";
 
@@ -56,23 +59,28 @@ public class TestUtils {
 	}
 
 	public static Collection<File> getGenBankFlatFiles() {
-		final File dir = new File(FilenameUtils.concat(AllTests.TEST_RESOURCES_PATH, GENBANK_FOLDER));
-		return FileUtils.listFiles(dir, new String[] { "gb" }, false);
+		final File dir = new File(concat(TEST_RESOURCES_PATH, GB_SEQUENCES_FOLDER));		
+		return listFiles(dir, new String[] { "gb" }, false);
 	}
-	
+
 	public static Collection<File> getGBSeqXMLFiles() {
-		final File dir = new File(FilenameUtils.concat(AllTests.TEST_RESOURCES_PATH, GENBANK_FOLDER));
-		return FileUtils.listFiles(dir, new String[] { "xml" }, false);
+		final File dir = new File(concat(TEST_RESOURCES_PATH, GB_SEQUENCES_FOLDER));
+		return listFiles(dir, new String[] { "xml" }, false);
 	}
-	
+
+	public static Collection<File> getGBSeqXMLSetFiles() {
+		final File dir = new File(concat(TEST_RESOURCES_PATH, GB_SETS_FOLDER));
+		return listFiles(dir, new String[] { "xml" }, false);
+	}
+
 	public static Collection<File> getPubMedXMLFiles() {
-		final File dir = new File(FilenameUtils.concat(AllTests.TEST_RESOURCES_PATH, PUBMED_FOLDER));
-		return FileUtils.listFiles(dir, new String[] { "xml" }, false);
+		final File dir = new File(concat(TEST_RESOURCES_PATH, PUBMED_FOLDER));
+		return listFiles(dir, new String[] { "xml" }, false);
 	}
-	
+
 	public static Collection<File> getGeoJsonFiles() {
-		final File dir = new File(FilenameUtils.concat(AllTests.TEST_RESOURCES_PATH, GEOJSON_FOLDER));
-		return FileUtils.listFiles(dir, new String[] { "json" }, false);
+		final File dir = new File(concat(TEST_RESOURCES_PATH, GEOJSON_FOLDER));
+		return listFiles(dir, new String[] { "json" }, false);
 	}
-	
+
 }

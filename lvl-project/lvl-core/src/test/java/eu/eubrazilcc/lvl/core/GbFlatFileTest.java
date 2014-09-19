@@ -22,7 +22,7 @@
 
 package eu.eubrazilcc.lvl.core;
 
-import static eu.eubrazilcc.lvl.core.entrez.GenBankFlatFileHelper.inferCountry;
+import static eu.eubrazilcc.lvl.core.entrez.GbFlatFileHelper.inferCountry;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGenBankFlatFiles;
 import static java.lang.System.getProperty;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
@@ -42,16 +42,16 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMultimap;
 
-import eu.eubrazilcc.lvl.core.entrez.GenBankFlatFileHelper.GenBankField;
+import eu.eubrazilcc.lvl.core.entrez.GbFlatFileHelper.GenBankField;
 
 /**
- * Tests biological sequences analysis.
+ * Tests GenBank flat file helper class {@link GbFlatFileHelper}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class GenBankFlatFileTest {
+public class GbFlatFileTest {
 
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
-			GenBankFlatFileTest.class.getSimpleName() + "_" + random(8, true, true)));
+			GbFlatFileTest.class.getSimpleName() + "_" + random(8, true, true)));
 
 	@Before
 	public void setUp() {
@@ -60,7 +60,7 @@ public class GenBankFlatFileTest {
 
 	@Test
 	public void test() {
-		System.out.println("GenBankFlatFileTest.test()");
+		System.out.println("GbFlatFileTest.test()");
 		try {			
 			final Collection<File> files = getGenBankFlatFiles();
 			for (final File file : files) {
@@ -78,9 +78,9 @@ public class GenBankFlatFileTest {
 			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			fail("GenBankFlatFileTest.test() failed: " + e.getMessage());
+			fail("GbFlatFileTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("GenBankFlatFileTest.test() has finished");
+			System.out.println("GbFlatFileTest.test() has finished");
 		}
 	}
 

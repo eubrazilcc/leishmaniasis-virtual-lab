@@ -33,7 +33,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
                 };
             },
             parseRecords : function(resp, options) {
-                return resp.sequences;
+                return resp.elements;
             }
         });
 

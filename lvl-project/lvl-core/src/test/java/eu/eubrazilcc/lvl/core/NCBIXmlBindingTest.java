@@ -23,7 +23,7 @@
 package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
-import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLSetFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLFiles;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
@@ -100,7 +100,7 @@ public class NCBIXmlBindingTest {
 			}
 
 			// test parsing GenBank XML records
-			Collection<File> files = getGBSeqXMLFiles();
+			Collection<File> files = getGBSeqXMLSetFiles();
 			for (final File file : files) {
 				System.out.println(" >> GenBank sequence XML file: " + file.getCanonicalPath());
 				final GBSet gbSet = GBSEQ_XMLB.typeFromFile(file);
