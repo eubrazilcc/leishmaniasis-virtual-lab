@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.core.util;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.AllTests.TEST_RESOURCES_PATH;
 import static java.io.File.separator;
 import static org.apache.commons.io.FileUtils.listFiles;
@@ -30,6 +31,7 @@ import static org.apache.commons.io.FilenameUtils.concat;
 import java.io.File;
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Test utilities.
@@ -44,7 +46,7 @@ public class TestUtils {
 	public static final String GB_SEQUENCES_FOLDER = GENBANK_FOLDER + separator + "sequences";
 
 	public static final String PUBMED_FOLDER = "pubmed";
-	public static final String GEOJSON_FOLDER = "geojson";
+	public static final String GEOJSON_FOLDER = "geojson";	
 
 	public static final String RESOURCES_FOLDER;
 	static {
@@ -81,6 +83,16 @@ public class TestUtils {
 	public static Collection<File> getGeoJsonFiles() {
 		final File dir = new File(concat(TEST_RESOURCES_PATH, GEOJSON_FOLDER));
 		return listFiles(dir, new String[] { "json" }, false);
+	}
+
+	public static Collection<File> getTextFiles() {
+		final List<File> files = newArrayList();
+		files.addAll(getGenBankFlatFiles());
+		files.addAll(getGBSeqXMLFiles());
+		files.addAll(getGBSeqXMLSetFiles());
+		files.addAll(getPubMedXMLFiles());
+		files.addAll(getGeoJsonFiles());
+		return files;
 	}
 
 }

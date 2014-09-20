@@ -43,6 +43,10 @@ import org.junit.Test;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableScheduledFuture;
 
+/**
+ * Tests utilities to concurrently execute tasks.
+ * @author Erik Torres <ertorser@upv.es>
+ */
 public class ConcurrencyTest {
 
 	private boolean isCompleted;

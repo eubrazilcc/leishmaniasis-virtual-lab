@@ -44,7 +44,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Test {@link DataSource} manipulation utilities.
+ * Tests {@link DataSource} manipulation utilities.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class DataSourceTest {
