@@ -43,6 +43,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
 	<!-- Storage configuration -->
 	<storage>
+	
 		<!-- The performance of certain applications may be improved by using a 
 		    local cache (ensure that this directory is writable by the user that 
 		    LVL runs as). Temporary directory is preferable when your application 
@@ -51,6 +52,9 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		
 		<!-- The base directory where the static HTTP resources are located -->
 		<htdocs>${lvl-root}/htdocs</htdocs>
+		
+		<!-- The base directory where the LVL data is stored -->
+		<data>${lvl-root}/data</data>
 
 	</storage>
 

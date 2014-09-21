@@ -90,6 +90,7 @@ public class SequenceResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence Resource";
 	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);
+	public static final String SEQ_ID_PATTERN = "[a-zA-Z_0-9]+:[a-zA-Z_0-9]+";
 
 	@GET
 	@Produces(APPLICATION_JSON)
@@ -120,7 +121,7 @@ public class SequenceResource {
 	}
 
 	@GET
-	@Path("{id: [a-zA-Z_0-9]+:[a-zA-Z_0-9]+}")
+	@Path("{id: " + SEQ_ID_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public Sequence getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -151,7 +152,7 @@ public class SequenceResource {
 	}
 
 	@PUT
-	@Path("{id: [a-zA-Z_0-9]+:[a-zA-Z_0-9]+}")
+	@Path("{id: " + SEQ_ID_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
 	public void updateSequence(final @PathParam("id") String id, final Sequence update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -174,7 +175,7 @@ public class SequenceResource {
 	}
 
 	@DELETE
-	@Path("{id: [a-zA-Z_0-9]+:[a-zA-Z_0-9]+}")
+	@Path("{id: " + SEQ_ID_PATTERN + "}")
 	public void deleteSequence(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);

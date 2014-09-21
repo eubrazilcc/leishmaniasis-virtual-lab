@@ -24,7 +24,7 @@ package eu.eubrazilcc.lvl.storage.security;
 
 import static java.lang.System.arraycopy;
 import static java.security.MessageDigest.getInstance;
-import static org.apache.commons.codec.binary.Base64.encodeBase64;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -86,7 +86,7 @@ public final class SecurityProvider {
 			}			
 			// compute secret and encode it with Base64 before returning it to the caller
 			final byte[] digest = digest(tokenArr, new Date[]{ new Date() });
-			return new String(encodeBase64(digest, false, false));
+			return encodeBase64String(digest);
 		} catch (IOException e) {
 			throw new IllegalStateException("Failed to generate secret", e);
 		}
@@ -160,7 +160,7 @@ public final class SecurityProvider {
 	 */
 	public static String[] obfuscatePassword(final String password) {
 		// compute a long random salt to defend against dictionary attacks
-		final String salt = new String(encodeBase64(generateSalt(DEFAULT_STRENGTH), false, false));
+		final String salt = encodeBase64String(generateSalt(DEFAULT_STRENGTH));
 		// shadow the password and encode it with Base64 before returning it to the caller
 		final String shadow = computeHash(password, salt);
 		return new String[]{ salt, shadow };
@@ -196,7 +196,7 @@ public final class SecurityProvider {
 			final MessageDigest md = getInstance("SHA-256");
 			final byte[] digest = md.digest(bytesOfMixName);				
 			// encode the hashed password with Base64 before returning it to the caller
-			return new String(encodeBase64(digest, false, false));
+			return encodeBase64String(digest);
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to compute the hash", e);
 		}

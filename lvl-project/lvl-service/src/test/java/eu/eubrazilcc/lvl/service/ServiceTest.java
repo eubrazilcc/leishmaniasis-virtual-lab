@@ -41,6 +41,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -80,10 +81,12 @@ import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.SharedObject;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
+import eu.eubrazilcc.lvl.service.rest.SharedObjectResource;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
@@ -534,7 +537,38 @@ public class ServiceTest {
 			/* uncomment for additional output */			
 			System.out.println(" >> Delete sequence response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Delete sequence response JAX-RS object: " + response);
-			System.out.println(" >> Delete sequence HTTP headers: " + response.getStringHeaders());			
+			System.out.println(" >> Delete sequence HTTP headers: " + response.getStringHeaders());
+
+			// test create shared object
+			path = SharedObjectResource.class.getAnnotation(Path.class);
+			final SharedObject sharedObject = SharedObject.builder()
+					.path("path/filename.txt")
+					.mime("text/plain")
+					.owner("owner")
+					.description("Optional description")
+					.build();
+
+			// TODO
+
+			// test get shared objects
+			// TODO
+
+			// test get shared object
+			SharedObject sharedObject2 = target.path(path.value()).path(sharedObject.getPath())
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.get(SharedObject.class);
+			//assertThat("Get shared object result is not null", sharedObject2, notNullValue());
+			//assertThat("Get shared object coincides with expected", sharedObject2.equalsIgnoringVolatile(sharedObject));
+			/* uncomment for additional output */
+			//System.out.println(" >> Get shared object result: " + sharedObject2.toString());
+
+
+
+			// TODO
+
+
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("ServiceTest.test() failed: " + e.getMessage());

@@ -23,29 +23,36 @@
 package eu.eubrazilcc.lvl.core.conf;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.and;
 import static com.google.common.base.Predicates.contains;
 import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.ImmutableList.of;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newTreeMap;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.parseURL;
+import static org.apache.commons.io.FileUtils.getTempDirectoryPath;
+import static org.apache.commons.io.FileUtils.getUserDirectoryPath;
+import static org.apache.commons.io.FilenameUtils.getName;
+import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -54,18 +61,13 @@ import org.apache.commons.configuration.CombinedConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.OverrideCombiner;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
@@ -85,12 +87,11 @@ public enum ConfigurationManager implements Closeable2 {
 	public static final String REST_SERVICE_CONFIG = "lvl-service.xml";
 	public static final String AUTHZ_SERVER_CONFIG = "lvl-auth.xml";
 
-	public static final ImmutableList<String> IGNORE_LIST = new ImmutableList.Builder<String>()
-			.add("logback.xml").build();
+	public static final ImmutableList<String> IGNORE_LIST = of("logback.xml");
 
 	public static final String LVL_NAME = "Leishmaniasis Virtual Laboratory (LVL)";
 
-	private ConfigurationManager.Configuration dont_use = null;
+	private Configuration dont_use = null;
 	private Collection<URL> urls = getDefaultConfiguration();	
 
 	// public methods
@@ -112,6 +113,10 @@ public enum ConfigurationManager implements Closeable2 {
 
 	public File getHtdocsDir() {
 		return configuration().getHtdocsDir();
+	}
+
+	public File getDataDir() {
+		return configuration().getDataDir();
 	}
 
 	public String getDbName() {
@@ -158,9 +163,9 @@ public enum ConfigurationManager implements Closeable2 {
 	public File getGenBankDir(final Format format) {
 		switch (format) {
 		case GB_SEQ_XML:
-			return new File(getRootDir(), "sequences/genbank/xml");			
+			return new File(getDataDir(), "sequences/genbank/xml");
 		case FLAT_FILE:
-			return new File(getRootDir(), "sequences/genbank/text");			
+			return new File(getDataDir(), "sequences/genbank/text");
 		default:
 			throw new IllegalArgumentException("Unsupported GenBank format: " + format);
 		}
@@ -169,10 +174,14 @@ public enum ConfigurationManager implements Closeable2 {
 	public File getPubMedDir(final Format format) {
 		switch (format) {
 		case PUBMED_XML:
-			return new File(getRootDir(), "papers/pubmed/xml");				
+			return new File(getDataDir(), "papers/pubmed/xml");				
 		default:
 			throw new IllegalArgumentException("Unsupported PubMed format: " + format);
 		}
+	}
+
+	public File getSharedDir() {
+		return new File(getDataDir(), "shared");
 	}
 
 	@Override
@@ -184,7 +193,7 @@ public enum ConfigurationManager implements Closeable2 {
 	@Override
 	public void preload() {
 		// an initial access is needed due to lazy load, we create the application environment
-		for (final File file : of(getGenBankDir(GB_SEQ_XML), getPubMedDir(PUBMED_XML))) {
+		for (final File file : of(getGenBankDir(GB_SEQ_XML), getPubMedDir(PUBMED_XML), getSharedDir())) {
 			try {
 				file.mkdirs();
 			} catch (Exception e) { }
@@ -196,21 +205,21 @@ public enum ConfigurationManager implements Closeable2 {
 
 	// auxiliary methods
 
-	private ConfigurationManager.Configuration configuration() {
+	private Configuration configuration() {
 		if (dont_use == null) {
-			synchronized (ConfigurationManager.Configuration.class) {
+			synchronized (Configuration.class) {
 				if (dont_use == null && urls != null) {
 					try {						
 						XMLConfiguration main = null;
 						// sorting secondary configurations ensures that combination always result the same
-						final SortedMap<String, XMLConfiguration> secondary = new TreeMap<String, XMLConfiguration>();
+						final SortedMap<String, XMLConfiguration> secondary = newTreeMap();
 						// extract main configuration
 						for (final URL url : urls) {
-							final String filename = FilenameUtils.getName(url.getPath());							
+							final String filename = getName(url.getPath());							
 							if (MAIN_CONFIG.equalsIgnoreCase(filename)) {
 								main = new XMLConfiguration(url);
 								LOGGER.info("Loading main configuration from: " + url.toString());
-							} else if (!IGNORE_LIST.contains(FilenameUtils.getName(url.getPath()))) {
+							} else if (!IGNORE_LIST.contains(getName(url.getPath()))) {
 								secondary.put(filename, new XMLConfiguration(url));
 								LOGGER.info("Loading secondary configuration from: " + url.toString());
 							} else {
@@ -230,17 +239,18 @@ public enum ConfigurationManager implements Closeable2 {
 								}
 								LOGGER.trace("Loading configuration from: " + names);
 							}
-							final List<String> foundNameList = new ArrayList<String>();
+							final List<String> foundNameList = newArrayList();
 							// get main property will fail if the requested property is missing
 							configuration.setThrowExceptionOnMissing(true);
 							final File rootDir = getFile("lvl-root", configuration, foundNameList, true, null);
 							final File localCacheDir = getFile("storage.local-cache", configuration, foundNameList, true, null);
 							final File htdocsDir = getFile("storage.htdocs", configuration, foundNameList, false, null);
+							final File dataDir = getFile("storage.data", configuration, foundNameList, true, null);
 							final String dbName = getString("database.name", configuration, foundNameList, "lvldb");
 							final String dbUsername = getString("database.credentials.username", configuration, foundNameList, null);
 							final String dbPassword = getString("database.credentials.password", configuration, foundNameList, null);
 							final ImmutableList<String> dbHosts = getStringList("database.hosts.host", Pattern.compile("^[\\w]+:[\\d]+$"), 
-									configuration, foundNameList, Lists.newArrayList("localhost:27017"));
+									configuration, foundNameList, newArrayList("localhost:27017"));
 							final String smtpHost = getString("smtp.host", configuration, foundNameList, "localhost");
 							final int smtpPort = getInteger("smtp.port", configuration, foundNameList, 25);
 							final String smtpSupportEmail = getString("smtp.support-email", configuration, foundNameList, "support@example.com");
@@ -261,7 +271,7 @@ public enum ConfigurationManager implements Closeable2 {
 									}								
 								}
 							}
-							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dbName, dbUsername, dbPassword, dbHosts, 
+							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dataDir, dbName, dbUsername, dbPassword, dbHosts, 
 									smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
@@ -281,11 +291,9 @@ public enum ConfigurationManager implements Closeable2 {
 	}
 
 	public static ImmutableList<URL> getDefaultConfiguration() {
-		return new ImmutableList.Builder<URL>()
-				.add(ConfigurationManager.class.getClassLoader().getResource(MAIN_CONFIG))
-				.add(ConfigurationManager.class.getClassLoader().getResource(REST_SERVICE_CONFIG))
-				.add(ConfigurationManager.class.getClassLoader().getResource(AUTHZ_SERVER_CONFIG))
-				.build();
+		return of(ConfigurationManager.class.getClassLoader().getResource(MAIN_CONFIG),
+				ConfigurationManager.class.getClassLoader().getResource(REST_SERVICE_CONFIG),
+				ConfigurationManager.class.getClassLoader().getResource(AUTHZ_SERVER_CONFIG));				
 	}
 
 	private static @Nullable File getFile(final String name, final CombinedConfiguration configuration, 
@@ -325,7 +333,7 @@ public enum ConfigurationManager implements Closeable2 {
 			final CombinedConfiguration configuration, final List<String> foundNameList, 
 			final @Nullable List<String> defaultValue) {
 		foundNameList.add(name);		
-		return FluentIterable.from(configuration.getList(name, defaultValue)).transform(new Function<Object, String>() {
+		return from(configuration.getList(name, defaultValue)).transform(new Function<Object, String>() {
 			@Override
 			public String apply(final Object obj) {
 				return obj instanceof String ? ((String) obj).trim() : null;
@@ -338,12 +346,12 @@ public enum ConfigurationManager implements Closeable2 {
 		if (path != null && path.trim().length() > 0) {
 			substituted = path.trim();
 			if (substituted.startsWith("$HOME")) {
-				final String userDir = FileUtils.getUserDirectoryPath();
+				final String userDir = getUserDirectoryPath();
 				substituted = (ensureWriting && !new File(userDir).canWrite()
-						? substituted.replaceFirst("\\$HOME", FileUtils.getTempDirectoryPath())
+						? substituted.replaceFirst("\\$HOME", getTempDirectoryPath())
 								: substituted.replaceFirst("\\$HOME", userDir));
 			} else if (substituted.startsWith("$TMP")) {
-				substituted = substituted.replaceFirst("\\$TMP", FileUtils.getTempDirectoryPath());				
+				substituted = substituted.replaceFirst("\\$TMP", getTempDirectoryPath());				
 			}
 		}
 		return substituted;
@@ -355,7 +363,8 @@ public enum ConfigurationManager implements Closeable2 {
 		// common configuration
 		private final File rootDir;
 		private final File localCacheDir;
-		private final File htdocsDir;		
+		private final File htdocsDir;
+		private final File dataDir;
 		private final String dbName;
 		private final Optional<String> dbUsername;
 		private final Optional<String> dbPassword;
@@ -367,25 +376,26 @@ public enum ConfigurationManager implements Closeable2 {
 		private final Optional<String> portalEndpoint;
 		// other configurations
 		private final ImmutableMap<String, String> othersMap;
-		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, 
+		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, final File dataDir, 
 				final String dbName, final @Nullable String dbUsername, final @Nullable String dbPassword, final ImmutableList<String> dbHosts,
 				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
 				final @Nullable String portalEndpoint,
 				final @Nullable Map<String, String> othersMap) {
 			this.rootDir = checkNotNull(rootDir, "Uninitialized root directory");
 			this.localCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
-			this.htdocsDir = checkNotNull(htdocsDir, "Uninitialized hyper-text documents directory");			
+			this.htdocsDir = checkNotNull(htdocsDir, "Uninitialized hyper-text documents directory");
+			this.dataDir = checkNotNull(dataDir, "Uninitialized data directory");
 			this.dbName = dbName;
-			this.dbUsername = Optional.fromNullable(StringUtils.trimToNull(dbUsername));
-			this.dbPassword = Optional.fromNullable(StringUtils.trimToNull(dbPassword));
+			this.dbUsername = fromNullable(trimToNull(dbUsername));
+			this.dbPassword = fromNullable(trimToNull(dbPassword));
 			this.dbHosts = dbHosts;
 			this.smtpHost = smtpHost;
 			this.smtpPort = smtpPort;
 			this.smtpSupportEmail = smtpSupportEmail;
 			this.smtpNoreplyEmail = smtpNoreplyEmail;
-			this.portalEndpoint = Optional.fromNullable(StringUtils.trimToNull(portalEndpoint));
+			this.portalEndpoint = fromNullable(trimToNull(portalEndpoint));
 			this.othersMap = new ImmutableMap.Builder<String, String>().putAll(othersMap).build();			
-		}		
+		}
 		public File getRootDir() {
 			return rootDir;
 		}
@@ -395,6 +405,9 @@ public enum ConfigurationManager implements Closeable2 {
 		public File getHtdocsDir() {
 			return htdocsDir;
 		}		
+		public File getDataDir() {
+			return dataDir;
+		}
 		public String getDbName() {
 			return dbName;
 		}
@@ -437,7 +450,8 @@ public enum ConfigurationManager implements Closeable2 {
 			return toStringHelper(this)
 					.add("rootDir", rootDir)
 					.add("localCacheDir", localCacheDir)
-					.add("htdocsDir", htdocsDir)					
+					.add("htdocsDir", htdocsDir)
+					.add("dataDir", dataDir)
 					.add("dbName", dbName)
 					.add("dbUsername", dbUsername.orNull())
 					.add("dbPassword", dbPassword.orNull())
@@ -464,7 +478,7 @@ public enum ConfigurationManager implements Closeable2 {
 			if (file != null) {
 				if (file.canRead()) {
 					try {
-						str = StringUtils.trimToEmpty(Files.toString(file, Charsets.UTF_8));
+						str = trimToEmpty(Files.toString(file, Charsets.UTF_8));
 					} catch (Exception e) {
 						LOGGER.error("Failed to read file: " + file.getPath(), e);
 					}	

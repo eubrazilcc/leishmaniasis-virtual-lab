@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.isAccessible;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -58,7 +59,6 @@ import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
-import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
 /**
  * Access token DAO.
@@ -228,10 +228,8 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
 		checkArgument(isNotBlank(targetScope), "Uninitialized or invalid target scope");
 		final AccessToken accessToken = find(token);
-		return (accessToken != null && accessToken.getToken() != null && token.equals(accessToken.getToken())
-				&& (accessToken.getIssuedAt() + accessToken.getExpiresIn()) > (System.currentTimeMillis() / 1000l)
-				&& ScopeManager.isAccessible(targetScope, accessToken.getScopes(), requestFullAccess));
-	}	
+		return isValid(token) && isAccessible(targetScope, accessToken.getScopes(), requestFullAccess);
+	}
 
 	/**
 	 * Extracts from an entity the fields that depends on the service (e.g. links)

@@ -91,10 +91,24 @@ public final class OAuth2Gatekeeper {
 		}
 	}
 
+	public static final void checkAuthenticateAccess(final HttpServletRequest request, 
+			final @Nullable MultivaluedMap<String, String> form,
+			final @Nullable HttpHeaders headers,
+			final String resourceName) {
+		try {
+			authorizeInternal(request, form, headers, null, false, resourceName);
+		} catch (OAuthSystemException e) {
+			LOGGER.error("Authorization failed", e);
+			throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.header(OAuth.HeaderType.WWW_AUTHENTICATE, "Bearer realm='" + resourceName + "', error='invalid-token'")
+					.build());
+		}
+	}
+
 	private static final void authorizeInternal(final HttpServletRequest request, 
 			final @Nullable MultivaluedMap<String, String> form,
 			final @Nullable HttpHeaders headers, 
-			final String resourceScope,
+			final @Nullable String resourceScope,
 			final boolean requestFullAccess,
 			final String resourceName) throws OAuthSystemException {
 		try {
@@ -106,18 +120,18 @@ public final class OAuth2Gatekeeper {
 			final String accessToken = oauthRequest.getAccessToken();
 
 			// validate the access token
-			if (!TOKEN_DAO.isValid(accessToken, resourceScope, requestFullAccess)) {
-				// setup the OAuth error message
-				final OAuthResponse oauthResponse = OAuthRSResponse
-						.errorResponse(HttpServletResponse.SC_UNAUTHORIZED)
-						.setRealm(resourceName)
-						.setError(OAuthError.ResourceResponse.INVALID_TOKEN)
-						.buildHeaderMessage();
-				LOGGER.warn("Access from " + getClientAddress(request) + " is denied due to: invalid credentials");
-				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-						.header(OAuth.HeaderType.WWW_AUTHENTICATE, oauthResponse.getHeader(OAuth.HeaderType.WWW_AUTHENTICATE))
-						.build());
+			if (resourceScope != null) {
+				// resource that requires special permissions
+				if (!TOKEN_DAO.isValid(accessToken, resourceScope, requestFullAccess)) {
+					invalidCredentialError(request, resourceName);
+				}
+			} else {
+				// resource that only requires authenticated access
+				if (!TOKEN_DAO.isValid(accessToken)) {
+					invalidCredentialError(request, resourceName);
+				}
 			}
+
 		} catch (OAuthProblemException e) {
 			// check if the error code has been set
 			final String errorCode = e.getError();
@@ -146,6 +160,19 @@ public final class OAuth2Gatekeeper {
 					.header(OAuth.HeaderType.WWW_AUTHENTICATE, oauthResponse.getHeader(OAuth.HeaderType.WWW_AUTHENTICATE))
 					.build());
 		}
+	}
+
+	private static final void invalidCredentialError(final HttpServletRequest request, final String resourceName) throws OAuthSystemException {
+		// setup the OAuth error message
+		final OAuthResponse oauthResponse = OAuthRSResponse
+				.errorResponse(HttpServletResponse.SC_UNAUTHORIZED)
+				.setRealm(resourceName)
+				.setError(OAuthError.ResourceResponse.INVALID_TOKEN)
+				.buildHeaderMessage();
+		LOGGER.warn("Access from " + getClientAddress(request) + " is denied due to: invalid credentials");
+		throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+				.header(OAuth.HeaderType.WWW_AUTHENTICATE, oauthResponse.getHeader(OAuth.HeaderType.WWW_AUTHENTICATE))
+				.build());
 	}
 
 }

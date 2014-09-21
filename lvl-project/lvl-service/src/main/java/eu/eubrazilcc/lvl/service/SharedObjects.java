@@ -43,45 +43,33 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.Paginable;
-import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.SharedObject;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
-import eu.eubrazilcc.lvl.service.rest.SequenceResource;
+import eu.eubrazilcc.lvl.service.rest.SharedObjectResource;
 
 /**
- * Wraps a collection of {@link Sequence}.
+ * Wraps a collection of {@link SharedObject}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Sequences extends Paginable<Sequence> {
+public class SharedObjects extends Paginable<SharedObject> {
 
 	@InjectLinks({
-		@InjectLink(resource=SequenceResource.class, method="getSequences", bindings={
+		@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
 			@Binding(name="page", value="${instance.page - 1}"),
-			@Binding(name="per_page", value="${instance.perPage}"),
-			@Binding(name="sort", value="${instance.sort}"),
-			@Binding(name="order", value="${instance.order}"),
-			@Binding(name="q", value="${instance.query}")
+			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=SequenceResource.class, method="getSequences", bindings={
+		@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
 			@Binding(name="page", value="${0}"),
-			@Binding(name="per_page", value="${instance.perPage}"),
-			@Binding(name="sort", value="${instance.sort}"),
-			@Binding(name="order", value="${instance.order}"),
-			@Binding(name="q", value="${instance.query}")
+			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=SequenceResource.class, method="getSequences", bindings={
+		@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
 			@Binding(name="page", value="${instance.page + 1}"),
-			@Binding(name="per_page", value="${instance.perPage}"),
-			@Binding(name="sort", value="${instance.sort}"),
-			@Binding(name="order", value="${instance.order}"),
-			@Binding(name="q", value="${instance.query}")
+			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-		@InjectLink(resource=SequenceResource.class, method="getSequences", bindings={
+		@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
 			@Binding(name="page", value="${instance.totalPages - 1}"),
-			@Binding(name="per_page", value="${instance.perPage}"),
-			@Binding(name="sort", value="${instance.sort}"),
-			@Binding(name="order", value="${instance.order}"),
-			@Binding(name="q", value="${instance.query}")
+			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}")
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
@@ -110,50 +98,30 @@ public class Sequences extends Paginable<Sequence> {
 				.toString();
 	}
 
-	public static SequencesBuilder start() {
-		return new SequencesBuilder();
+	public static SharedObjectsBuilder start() {
+		return new SharedObjectsBuilder();
 	}
 
-	public static class SequencesBuilder {
+	public static class SharedObjectsBuilder {
 
-		private final Sequences instance = new Sequences();
+		private final SharedObjects instance = new SharedObjects();
 
-		public SequencesBuilder page(final int page) {
+		public SharedObjectsBuilder page(final int page) {
 			instance.setPage(page);
 			return this;
 		}
 
-		public SequencesBuilder perPage(final int perPage) {
+		public SharedObjectsBuilder perPage(final int perPage) {
 			instance.setPerPage(perPage);
 			return this;
 		}
 
-		public SequencesBuilder sort(final String sort) {
-			instance.setSort(sort);
-			return this;
-		}
-
-		public SequencesBuilder order(final String order) {
-			instance.setOrder(order);
-			return this;
-		}
-
-		public SequencesBuilder query(final String query) {
-			instance.setQuery(query);
-			return this;
-		}
-
-		public SequencesBuilder totalCount(final int totalCount) {
-			instance.setTotalCount(totalCount);
-			return this;
-		}
-
-		public SequencesBuilder sequences(final List<Sequence> sequences) {
-			instance.setElements(sequences);
+		public SharedObjectsBuilder sharedObjects(final List<SharedObject> sharedObjects) {
+			instance.setElements(sharedObjects);
 			return this;			
 		}
 
-		public Sequences build() {
+		public SharedObjects build() {
 			return instance;
 		}
 

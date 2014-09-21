@@ -65,6 +65,7 @@ public class LeishVirtLabApplication extends Application {
 		// create LVL resources
 		instances.add(new SequenceResource());
 		instances.add(new TaskResource());
+		instances.add(new SharedObjectResource());
 		// add additional JAX-RS providers
 		classes.add(JacksonFeature.class);
 		classes.add(SseFeature.class);
