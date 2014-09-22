@@ -647,6 +647,7 @@ public class ServiceTest {
 			/* uncomment for additional output */
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (NCBI.GZIP sequence) HTTP headers: " + response.getStringHeaders());
 
 			// test create public link (uncompressed FASTA sequence)
 			publicLink = PublicLink.builder()
@@ -657,15 +658,16 @@ public class ServiceTest {
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (FASTA.GZIP sequence) response is not null", response, notNullValue());
-			assertThat("Create public link (FASTA.GZIP sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (FASTA.GZIP sequence) response is not empty", response.getEntity(), notNullValue());
+			assertThat("Create public link (FASTA sequence) response is not null", response, notNullValue());
+			assertThat("Create public link (FASTA sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (FASTA sequence) response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Create public link (FASTA.GZIP sequence) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (FASTA.GZIP sequence) response entity is empty", isBlank(payload));
+			assertThat("Create public link (FASTA sequence) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (FASTA sequence) response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			System.out.println(" >> Create public link (FASTA.GZIP sequence) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (FASTA.GZIP sequence) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (FASTA sequence) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (FASTA sequence) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (FASTA sequence) HTTP headers: " + response.getStringHeaders());
 
 			// test create public link (uncompressed NCBI sequence)
 			publicLink = PublicLink.builder()
@@ -676,15 +678,16 @@ public class ServiceTest {
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (FASTA.GZIP sequence) response is not null", response, notNullValue());
-			assertThat("Create public link (FASTA.GZIP sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (FASTA.GZIP sequence) response is not empty", response.getEntity(), notNullValue());
+			assertThat("Create public link (NCBI sequence) response is not null", response, notNullValue());
+			assertThat("Create public link (NCBI sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (NCBI sequence) response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Create public link (FASTA.GZIP sequence) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (FASTA.GZIP sequence) response entity is empty", isBlank(payload));
+			assertThat("Create public link (NCBI sequence) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (NCBI sequence) response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			System.out.println(" >> Create public link (FASTA.GZIP sequence) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (FASTA.GZIP sequence) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (NCBI sequence) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (NCBI sequence) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (NCBI sequence) HTTP headers: " + response.getStringHeaders());
 
 			// test create public link (GZIP compressed NCBI bulk of sequences)
 			publicLink = PublicLink.builder()
@@ -704,6 +707,7 @@ public class ServiceTest {
 			/* uncomment for additional output */
 			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (NCBI.GZIP sequence) HTTP headers: " + response.getStringHeaders());
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

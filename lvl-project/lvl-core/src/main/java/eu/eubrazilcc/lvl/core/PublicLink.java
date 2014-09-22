@@ -63,6 +63,8 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 	private List<Link> links; // HATEOAS links
 
 	private Target target;
+	
+	// TODO : ? download link?
 
 	public PublicLink() {
 		super();
