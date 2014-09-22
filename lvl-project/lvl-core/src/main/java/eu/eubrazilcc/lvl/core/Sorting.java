@@ -26,7 +26,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Sorting information.
@@ -63,13 +63,13 @@ public class Sorting {
 			return false;
 		}
 		final Sorting other = Sorting.class.cast(obj);
-		return Objects.equal(field, other.field)
-				&& Objects.equal(order, other.order);
+		return Objects.equals(field, other.field)
+				&& Objects.equals(order, other.order);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(field, order);
+		return Objects.hash(field, order);
 	}
 
 	@Override

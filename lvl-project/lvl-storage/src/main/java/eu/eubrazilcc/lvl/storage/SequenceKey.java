@@ -32,8 +32,7 @@ import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.List;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.DataSource.Notation;
@@ -70,13 +69,13 @@ public class SequenceKey {
 			return false;
 		}
 		final SequenceKey other = SequenceKey.class.cast(obj);
-		return Objects.equal(dataSource, other.dataSource)
-				&& Objects.equal(accession, other.accession);
+		return Objects.equals(dataSource, other.dataSource)
+				&& Objects.equals(accession, other.accession);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(dataSource, accession);
+		return Objects.hash(dataSource, accession);
 	}
 
 	@Override

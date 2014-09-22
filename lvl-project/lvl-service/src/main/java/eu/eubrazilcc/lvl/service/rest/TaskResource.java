@@ -96,7 +96,7 @@ public class TaskResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createTask(final Task task, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (task == null) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
@@ -123,7 +123,7 @@ public class TaskResource {
 	public EventOutput getServerSentEvents(final @PathParam("id") String id, final @QueryParam("refresh") @DefaultValue("30") int refresh,
 			final @QueryParam("token") @DefaultValue("") String token, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, isBlank(token) ? headers : ssehHttpHeaders(token), RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, isBlank(token) ? headers : ssehHttpHeaders(token), RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id) || !REFRESH_RANGE.contains(refresh)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}

@@ -32,6 +32,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import javax.ws.rs.core.Link;
 
@@ -42,7 +43,6 @@ import org.glassfish.jersey.linking.InjectLinks;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
@@ -191,7 +191,7 @@ public class Sequence implements Linkable<Sequence> {
 			return false;
 		}
 		final Sequence other = Sequence.class.cast(obj);
-		return Objects.equal(links, other.links)
+		return Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -200,21 +200,21 @@ public class Sequence implements Linkable<Sequence> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(id, other.id)
-				&& Objects.equal(dataSource, other.dataSource)
-				&& Objects.equal(definition, other.definition)
-				&& Objects.equal(accession, other.accession)
-				&& Objects.equal(version, other.version)
-				&& Objects.equal(gi, other.gi)
-				&& Objects.equal(organism, other.organism)
-				&& Objects.equal(countryFeature, other.countryFeature)
-				&& Objects.equal(location, other.location)
-				&& Objects.equal(locale, other.locale);
+		return Objects.equals(id, other.id)
+				&& Objects.equals(dataSource, other.dataSource)
+				&& Objects.equals(definition, other.definition)
+				&& Objects.equals(accession, other.accession)
+				&& Objects.equals(version, other.version)
+				&& Objects.equals(gi, other.gi)
+				&& Objects.equals(organism, other.organism)
+				&& Objects.equals(countryFeature, other.countryFeature)
+				&& Objects.equals(location, other.location)
+				&& Objects.equals(locale, other.locale);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(id, links, dataSource, definition, accession, version, gi, organism, 
+		return Objects.hash(id, links, dataSource, definition, accession, version, gi, organism, 
 				countryFeature, location, locale);
 	}
 

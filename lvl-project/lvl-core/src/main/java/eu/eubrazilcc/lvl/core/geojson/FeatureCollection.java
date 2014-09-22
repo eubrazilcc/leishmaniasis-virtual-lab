@@ -30,8 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Stores geospatial locations in GeoJSON format. A GeoJSON object with the type "FeatureCollection" 
@@ -71,12 +70,12 @@ public class FeatureCollection extends GeoJsonObject implements Iterable<Feature
 		}
 		final FeatureCollection other = FeatureCollection.class.cast(obj);
 		return super.equals(obj)
-				&& Objects.equal(features, other.features);
+				&& Objects.equals(features, other.features);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(super.hashCode(), features);
+		return super.hashCode() + Objects.hash(features);
 	}
 
 	@Override

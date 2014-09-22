@@ -33,18 +33,23 @@ import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SEQUENCES;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.min;
+import static java.lang.System.currentTimeMillis;
 import static java.lang.System.getProperty;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
-import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.io.FilenameUtils.getName;
+import static org.apache.commons.io.FilenameUtils.getPathNoEndSeparator;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
@@ -62,7 +67,6 @@ import java.util.Date;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
@@ -80,17 +84,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
+import eu.eubrazilcc.lvl.core.PublicLink;
+import eu.eubrazilcc.lvl.core.PublicLink.Target;
 import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.SharedObject;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
-import eu.eubrazilcc.lvl.service.rest.SharedObjectResource;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
-import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
 /**
  * Tests REST Web service.
@@ -106,7 +110,8 @@ public class ServiceTest {
 	private static final String BASE_URI = HOST + SERVICE;
 
 	private WebTarget target;
-	private static final String token = "1234567890abcdEFGhiJKlMnOpqrstUVWxyZ";
+	private static final String TOKEN_ROOT = "1234567890abcdEFGhiJKlMnOpqrstUVWxyZ";
+	private static final String TOKEN_USER = "0987654321zYXwvuTSRQPoNmLkjIHgfeDCBA";
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
@@ -133,12 +138,19 @@ public class ServiceTest {
 				.build();
 		// configure Web target
 		target = client.target(BASE_URI);
-		// insert valid token in the database
+		// insert valid tokens in the database
 		TOKEN_DAO.insert(AccessToken.builder()
-				.token(token)
-				.issuedAt(System.currentTimeMillis() / 1000l)
+				.token(TOKEN_ROOT)
+				.issuedAt(currentTimeMillis() / 1000l)
 				.expiresIn(604800l)
-				.scope(ScopeManager.asList(ScopeManager.all()))
+				.scope(asList(all()))
+				.build());
+		TOKEN_DAO.insert(AccessToken.builder()
+				.token(TOKEN_USER)
+				.issuedAt(currentTimeMillis() / 1000l)
+				.expiresIn(604800l)
+				.ownerId("user1")
+				.scope(asList(user("user1")))
 				.build());
 	}
 
@@ -158,10 +170,10 @@ public class ServiceTest {
 					.type(IMPORT_SEQUENCES)
 					.ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
-			Response response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
-					.post(Entity.entity(task, APPLICATION_JSON_TYPE));
 
+			Response response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.post(entity(task, APPLICATION_JSON_TYPE));
 			assertThat("Create import sequences task response is not null", response, notNullValue());
 			assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create import sequences task response is not empty", response.getEntity(), notNullValue());
@@ -180,7 +192,7 @@ public class ServiceTest {
 					.path(getName(location.getPath()))
 					.queryParam("refresh", 1)
 					.request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(EventInput.class);
 			while (!eventInput.isClosed()) {
 				final InboundEvent inboundEvent = eventInput.read();
@@ -209,8 +221,8 @@ public class ServiceTest {
 					.ids(newArrayList("430902590"))
 					.build();
 			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
-					.post(Entity.entity(task, APPLICATION_JSON_TYPE));
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.post(entity(task, APPLICATION_JSON_TYPE));
 			assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			/* uncomment for additional output */
 			System.out.println(" >> Create import sequences task response body (JSON), empty is OK: " + payload);
@@ -222,7 +234,7 @@ public class ServiceTest {
 					.path("progress")
 					.path(getName(location.getPath()))
 					.queryParam("refresh", 1)
-					.queryParam("token", token) // token attribute replaces HTTP header to overcome this EventSource limitation
+					.queryParam("token", TOKEN_ROOT) // token attribute replaces HTTP header to overcome this EventSource limitation
 					.request()
 					.get(EventInput.class);
 			while (!eventInput.isClosed()) {
@@ -255,8 +267,8 @@ public class ServiceTest {
 					.accession(sequence.getAccession())
 					.build();			
 			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
-					.post(Entity.entity(sequence, APPLICATION_JSON_TYPE));			
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.post(entity(sequence, APPLICATION_JSON_TYPE));			
 			assertThat("Create new sequence response is not null", response, notNullValue());
 			assertThat("Create new sequence response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create new sequence response is not empty", response.getEntity(), notNullValue());
@@ -270,7 +282,7 @@ public class ServiceTest {
 
 			// test get sequences (JSON encoded)
 			response = target.path(path.value()).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get();
 			assertThat("Get sequences response is not null", response, notNullValue());
 			assertThat("Get sequences response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
@@ -285,7 +297,7 @@ public class ServiceTest {
 
 			// test get sequences (Java object)
 			Sequences sequences = target.path(path.value()).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
 			assertThat("Get sequences result is not null", sequences, notNullValue());
 			assertThat("Get sequences list is not null", sequences.getElements(), notNullValue());
@@ -299,7 +311,7 @@ public class ServiceTest {
 			response = target.path(path.value())
 					.queryParam("per_page", perPage)
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get();
 			assertThat("Paginate sequences first page response is not null", response, notNullValue());
 			assertThat("Paginate sequences first page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
@@ -332,7 +344,7 @@ public class ServiceTest {
 					.queryParam("page", parseInt(getQueryParams(lastLink).get("page")))
 					.queryParam("per_page", parseInt(getQueryParams(lastLink).get("per_page")))
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get();
 			assertThat("Paginate sequences last page response is not null", response, notNullValue());
 			assertThat("Paginate sequences last page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
@@ -355,7 +367,7 @@ public class ServiceTest {
 			sequences = target.path(path.value())
 					.queryParam("per_page", perPage)
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
 			assertThat("Paginate sequences first page result is not null", sequences, notNullValue());
 			assertThat("Paginate sequences first page list is not null", sequences.getElements(), notNullValue());
@@ -381,7 +393,7 @@ public class ServiceTest {
 					.queryParam("page", parseInt(getQueryParams(lastLink).get("page")))
 					.queryParam("per_page", parseInt(getQueryParams(lastLink).get("per_page")))
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
 			assertThat("Paginate sequences last page result is not null", sequences, notNullValue());
 			assertThat("Paginate sequences last page list is not null", sequences.getElements(), notNullValue());
@@ -397,7 +409,7 @@ public class ServiceTest {
 			sequences = target.path(path.value())
 					.queryParam("q", "papatasi")
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
 			assertThat("Search sequences result is not null", sequences, notNullValue());
 			assertThat("Search sequences list is not null", sequences.getElements(), notNullValue());
@@ -411,7 +423,7 @@ public class ServiceTest {
 			sequences = target.path(path.value())
 					.queryParam("q", "accession:JP553239")
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
 			assertThat("Search sequences result is not null", sequences, notNullValue());
 			assertThat("Search sequences list is not null", sequences.getElements(), notNullValue());
@@ -425,7 +437,7 @@ public class ServiceTest {
 			sequences = target.path(path.value())
 					.queryParam("q", "source:GenBank Phlebotomus")
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
 			assertThat("Search sequences result is not null", sequences, notNullValue());
 			assertThat("Search sequences list is not null", sequences.getElements(), notNullValue());
@@ -440,7 +452,7 @@ public class ServiceTest {
 					.queryParam("sort", "accession")
 					.queryParam("order", "asc")
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
 			assertThat("Sorted sequences result is not null", sequences, notNullValue());
 			assertThat("Sorted sequences list is not null", sequences.getElements(), notNullValue());
@@ -457,7 +469,7 @@ public class ServiceTest {
 			// test get sequence by data source + accession number
 			Sequence sequence2 = target.path(path.value()).path(sequenceKey.toId())
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequence.class);
 			assertThat("Get sequence by accession number result is not null", sequence2, notNullValue());
 			assertThat("Get sequence by accession number coincides with expected", sequence2.equalsIgnoringVolatile(sequence));
@@ -468,8 +480,8 @@ public class ServiceTest {
 			sequence.setDefinition("Modified example sequence");
 			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
-					.put(Entity.entity(sequence, APPLICATION_JSON_TYPE));
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.put(entity(sequence, APPLICATION_JSON_TYPE));
 			assertThat("Update sequence response is not null", response, notNullValue());
 			assertThat("Update sequence response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Update sequence response is not empty", response.getEntity(), notNullValue());
@@ -484,7 +496,7 @@ public class ServiceTest {
 			// test get sequence by accession number after update
 			sequence2 = target.path(path.value()).path(sequenceKey.toId())
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequence.class);
 			assertThat("Get sequence by accession number after update result is not null", sequence2, notNullValue());
 			assertThat("Get sequence by accession number after update coincides with expected", sequence2.equalsIgnoringVolatile(sequence));
@@ -495,7 +507,7 @@ public class ServiceTest {
 			FeatureCollection featCol = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d)
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(FeatureCollection.class);
 			assertThat("Get nearby sequences result is not null", featCol, notNullValue());
 			assertThat("Get nearby sequences list is not null", featCol.getFeatures(), notNullValue());
@@ -508,7 +520,7 @@ public class ServiceTest {
 					.queryParam("maxDistance", 4000.0d).getUri();
 			final String response2 = Request.Get(uri)
 					.addHeader("Accept", "application/json")
-					.addHeader(HEADER_AUTHORIZATION, bearerHeader(token))
+					.addHeader(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.execute()
 					.returnContent()
 					.asString();
@@ -526,7 +538,7 @@ public class ServiceTest {
 			// test delete sequence
 			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.delete();
 			assertThat("Delete sequence response is not null", response, notNullValue());
 			assertThat("Delete sequence response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
@@ -539,35 +551,159 @@ public class ServiceTest {
 			System.out.println(" >> Delete sequence response JAX-RS object: " + response);
 			System.out.println(" >> Delete sequence HTTP headers: " + response.getStringHeaders());
 
-			// test create shared object
-			path = SharedObjectResource.class.getAnnotation(Path.class);
-			final SharedObject sharedObject = SharedObject.builder()
-					.path("path/filename.txt")
-					.mime("text/plain")
-					.owner("owner")
+			// test create public link (GZIP compressed FASTA sequence)
+			path = PublicLinkResource.class.getAnnotation(Path.class);
+			PublicLink publicLink = PublicLink.builder()
+					.target(Target.builder().type("sequence").id("gb:JP540074").filter("export_fasta").compression("gzip").build())
 					.description("Optional description")
 					.build();
 
-			// TODO
-
-			// test get shared objects
-			// TODO
-
-			// test get shared object
-			SharedObject sharedObject2 = target.path(path.value()).path(sharedObject.getPath())
-					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(token))
-					.get(SharedObject.class);
-			//assertThat("Get shared object result is not null", sharedObject2, notNullValue());
-			//assertThat("Get shared object coincides with expected", sharedObject2.equalsIgnoringVolatile(sharedObject));
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(publicLink, APPLICATION_JSON_TYPE));
+			assertThat("Create public link (FASTA.GZIP sequence) response is not null", response, notNullValue());
+			assertThat("Create public link (FASTA.GZIP sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (FASTA.GZIP sequence) is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create public link (FASTA.GZIP sequence) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (FASTA.GZIP sequence) response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			//System.out.println(" >> Get shared object result: " + sharedObject2.toString());
+			System.out.println(" >> Create public link (FASTA.GZIP sequence) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (FASTA.GZIP sequence) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (FASTA.GZIP sequence) HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));
+			publicLink.setPath(getName(getPathNoEndSeparator(location.getPath())) + "/" + getName(location.getPath()));
+			publicLink.setMime("application/gzip");
 
+			// test get public links
+			final PublicLinks publicLinks = target.path(path.value()).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.get(PublicLinks.class);
+			assertThat("Get public links result is not null", publicLinks, notNullValue());
+			assertThat("Get public links list is not null", publicLinks.getElements(), notNullValue());
+			assertThat("Get public links list is not empty", !publicLinks.getElements().isEmpty());
+			assertThat("Get public links items count coincide with list size", publicLinks.getElements().size(), equalTo(publicLinks.getTotalCount()));
+			/* uncomment for additional output */			
+			System.out.println(" >> Get public links result: " + publicLinks.toString());
 
+			// test get public link
+			final PublicLink publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getPath())
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.get(PublicLink.class);
+			assertThat("Get public link result is not null", publicLink2, notNullValue());
+			assertThat("Get public link coincides with expected", publicLink2.equalsIgnoringVolatile(publicLink), equalTo(true));
+			/* uncomment for additional output */
+			System.out.println(" >> Get public link result: " + publicLink2.toString());
 
-			// TODO
+			// test update public link
+			publicLink.setDescription("Different description");
+			response = target.path(path.value()).path(publicLinks.getElements().get(0).getPath())
+					.request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.put(entity(publicLink, APPLICATION_JSON_TYPE));
+			assertThat("Update public link response is not null", response, notNullValue());
+			assertThat("Update public link response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Update public link response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Update public link response entity is not null", payload, notNullValue());
+			assertThat("Update public link response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println(" >> Update public link response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Update public link response JAX-RS object: " + response);
+			System.out.println(" >> Update public link HTTP headers: " + response.getStringHeaders());
 
+			// test delete public link
+			response = target.path(path.value()).path(publicLinks.getElements().get(0).getPath())
+					.request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.delete();
+			assertThat("Delete public link response is not null", response, notNullValue());
+			assertThat("Delete public link response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Delete public link response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Delete public link response entity is not null", payload, notNullValue());
+			assertThat("Delete public link response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println(" >> Delete public link response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Delete public link response JAX-RS object: " + response);
+			System.out.println(" >> Delete public link HTTP headers: " + response.getStringHeaders());
 
+			// test create public link (GZIP compressed NCBI sequence)
+			publicLink = PublicLink.builder()
+					.target(Target.builder().type("sequence").id("gb:JP540074").filter("export").compression("gzip").build())
+					.description("Optional description")
+					.build();
+
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(publicLink, APPLICATION_JSON_TYPE));
+			assertThat("Create public link (NCBI.GZIP sequence) response is not null", response, notNullValue());
+			assertThat("Create public link (NCBI.GZIP sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (NCBI.GZIP sequence) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create public link (NCBI.GZIP sequence) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (NCBI.GZIP sequence) response entity is empty", isBlank(payload));
+			/* uncomment for additional output */
+			System.out.println(" >> Create public link (NCBI.GZIP sequence) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (NCBI.GZIP sequence) response JAX-RS object: " + response);
+
+			// test create public link (uncompressed FASTA sequence)
+			publicLink = PublicLink.builder()
+					.target(Target.builder().type("sequence").id("gb:JP540074").filter("export_fasta").build())
+					.description("Optional description")
+					.build();
+
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(publicLink, APPLICATION_JSON_TYPE));
+			assertThat("Create public link (FASTA.GZIP sequence) response is not null", response, notNullValue());
+			assertThat("Create public link (FASTA.GZIP sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (FASTA.GZIP sequence) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create public link (FASTA.GZIP sequence) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (FASTA.GZIP sequence) response entity is empty", isBlank(payload));
+			/* uncomment for additional output */
+			System.out.println(" >> Create public link (FASTA.GZIP sequence) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (FASTA.GZIP sequence) response JAX-RS object: " + response);
+
+			// test create public link (uncompressed NCBI sequence)
+			publicLink = PublicLink.builder()
+					.target(Target.builder().type("sequence").id("gb:JP540074").filter("export").compression("none").build())
+					.description("Optional description")
+					.build();
+
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(publicLink, APPLICATION_JSON_TYPE));
+			assertThat("Create public link (FASTA.GZIP sequence) response is not null", response, notNullValue());
+			assertThat("Create public link (FASTA.GZIP sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (FASTA.GZIP sequence) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create public link (FASTA.GZIP sequence) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (FASTA.GZIP sequence) response entity is empty", isBlank(payload));
+			/* uncomment for additional output */
+			System.out.println(" >> Create public link (FASTA.GZIP sequence) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (FASTA.GZIP sequence) response JAX-RS object: " + response);
+
+			// test create public link (GZIP compressed NCBI bulk of sequences)
+			publicLink = PublicLink.builder()
+					.target(Target.builder().type("sequence").ids(newArrayList("gb:JP540074", "gb:JP553239")).filter("export").compression("gzip").build())
+					.description("Optional description")
+					.build();
+
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(publicLink, APPLICATION_JSON_TYPE));
+			assertThat("Create public link (NCBI.GZIP sequences bulk) response is not null", response, notNullValue());
+			assertThat("Create public link (NCBI.GZIP sequences bulk) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (NCBI.GZIP sequences bulk) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create public link (NCBI.GZIP sequences bulk) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (NCBI.GZIP sequences bulk) response entity is empty", isBlank(payload));
+			/* uncomment for additional output */
+			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response JAX-RS object: " + response);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

@@ -24,7 +24,7 @@ package eu.eubrazilcc.lvl.service;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Encapsulates a task progress for communicating with a client.
@@ -70,15 +70,15 @@ public class Progress {
 			return false;
 		}
 		final Progress other = Progress.class.cast(obj);
-		return Objects.equal(done, other.done)
-				&& Objects.equal(progress, other.progress)
-				&& Objects.equal(status, other.status)
-				&& Objects.equal(hasErrors, other.hasErrors);
+		return Objects.equals(done, other.done)
+				&& Objects.equals(progress, other.progress)
+				&& Objects.equals(status, other.status)
+				&& Objects.equals(hasErrors, other.hasErrors);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(done, progress, status, hasErrors);
+		return Objects.hash(done, progress, status, hasErrors);
 	}
 
 	@Override

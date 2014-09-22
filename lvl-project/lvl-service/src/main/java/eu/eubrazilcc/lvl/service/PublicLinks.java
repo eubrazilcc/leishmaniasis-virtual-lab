@@ -43,31 +43,31 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.Paginable;
-import eu.eubrazilcc.lvl.core.SharedObject;
+import eu.eubrazilcc.lvl.core.PublicLink;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
-import eu.eubrazilcc.lvl.service.rest.SharedObjectResource;
+import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
 
 /**
- * Wraps a collection of {@link SharedObject}.
+ * Wraps a collection of {@link PublicLink}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SharedObjects extends Paginable<SharedObject> {
+public class PublicLinks extends Paginable<PublicLink> {
 
 	@InjectLinks({
-		@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
+		@InjectLink(resource=PublicLinkResource.class, method="getPublicLinks", bindings={
 			@Binding(name="page", value="${instance.page - 1}"),
 			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
+		@InjectLink(resource=PublicLinkResource.class, method="getPublicLinks", bindings={
 			@Binding(name="page", value="${0}"),
 			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
+		@InjectLink(resource=PublicLinkResource.class, method="getPublicLinks", bindings={
 			@Binding(name="page", value="${instance.page + 1}"),
 			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-		@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
+		@InjectLink(resource=PublicLinkResource.class, method="getPublicLinks", bindings={
 			@Binding(name="page", value="${instance.totalPages - 1}"),
 			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}")
@@ -98,30 +98,30 @@ public class SharedObjects extends Paginable<SharedObject> {
 				.toString();
 	}
 
-	public static SharedObjectsBuilder start() {
-		return new SharedObjectsBuilder();
+	public static PublicLinksBuilder start() {
+		return new PublicLinksBuilder();
 	}
 
-	public static class SharedObjectsBuilder {
+	public static class PublicLinksBuilder {
 
-		private final SharedObjects instance = new SharedObjects();
+		private final PublicLinks instance = new PublicLinks();
 
-		public SharedObjectsBuilder page(final int page) {
+		public PublicLinksBuilder page(final int page) {
 			instance.setPage(page);
 			return this;
 		}
 
-		public SharedObjectsBuilder perPage(final int perPage) {
+		public PublicLinksBuilder perPage(final int perPage) {
 			instance.setPerPage(perPage);
 			return this;
 		}
 
-		public SharedObjectsBuilder sharedObjects(final List<SharedObject> sharedObjects) {
+		public PublicLinksBuilder sharedObjects(final List<PublicLink> sharedObjects) {
 			instance.setElements(sharedObjects);
 			return this;			
 		}
 
-		public SharedObjects build() {
+		public PublicLinks build() {
 			return instance;
 		}
 

@@ -24,9 +24,9 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-import javax.annotation.Nullable;
+import java.util.Objects;
 
-import com.google.common.base.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Methods that insert or modify an element in a database may use this method to return a copy of the
@@ -72,13 +72,13 @@ public class WriteResult<E> {
 			return false;
 		}
 		final WriteResult<?> other = WriteResult.class.cast(obj);
-		return Objects.equal(id, other.id)
-				&& Objects.equal(element, other.element);
+		return Objects.equals(id, other.id)
+				&& Objects.equals(element, other.element);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(id, element);
+		return Objects.hash(id, element);
 	}
 
 	@Override

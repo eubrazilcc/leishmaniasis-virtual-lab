@@ -27,8 +27,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Simple implementation of the OAuth 2.0 resource owner using user+password.
@@ -62,8 +61,8 @@ public class ResourceOwner implements Serializable {
 			return false;
 		}
 		final ResourceOwner other = ResourceOwner.class.cast(obj);
-		return Objects.equal(ownerId, other.ownerId)
-				&& Objects.equal(user, other.user);
+		return Objects.equals(ownerId, other.ownerId)
+				&& Objects.equals(user, other.user);
 	}
 
 	/**
@@ -77,13 +76,13 @@ public class ResourceOwner implements Serializable {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(ownerId, other.ownerId)
+		return Objects.equals(ownerId, other.ownerId)
 				&& ((user == null && other.user == null) || (user.equalsToUnprotected(other.user)));
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(ownerId, user);
+		return Objects.hash(ownerId, user);
 	}
 
 	@Override

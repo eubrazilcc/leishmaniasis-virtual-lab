@@ -79,7 +79,7 @@ public class IdentityProvider {
 			final @QueryParam("per_page") @DefaultValue("10") int per_page, 
 			final @QueryParam("plain") @DefaultValue("false") boolean plain, 
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		final Users paginable = Users.start()
 				.page(page)
 				.perPage(per_page)
@@ -114,7 +114,7 @@ public class IdentityProvider {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 		// check authorization
-		authorize(request, null, headers, inherit(RESOURCE_SCOPE, owner.getOwnerId()), false, RESOURCE_NAME);
+		authorize(request, null, headers, inherit(RESOURCE_SCOPE, owner.getOwnerId()), false, false, RESOURCE_NAME);
 		// get from database		
 		return UserAnonymizer.start(plain ? AnonymizationLevel.NONE : AnonymizationLevel.HARD).apply(owner);
 	}
@@ -126,7 +126,7 @@ public class IdentityProvider {
 		if (user == null || isBlank(user.getUsername())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		authorize(request, null, headers, inherit(RESOURCE_SCOPE, user.getUsername()), true, RESOURCE_NAME);
+		authorize(request, null, headers, inherit(RESOURCE_SCOPE, user.getUsername()), true, false, RESOURCE_NAME);
 		// create user in the database
 		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder().id(user.getUsername()).user(user).build());
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(user.getUsername());		
@@ -141,7 +141,7 @@ public class IdentityProvider {
 		if (isBlank(id) || update == null || !id.equals(update.getUsername())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, RESOURCE_NAME);
+		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, false, RESOURCE_NAME);
 		// get from database
 		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {
@@ -158,7 +158,7 @@ public class IdentityProvider {
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
-		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, RESOURCE_NAME);
+		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, false, RESOURCE_NAME);
 		// get from database
 		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {

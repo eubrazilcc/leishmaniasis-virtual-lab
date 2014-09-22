@@ -27,8 +27,7 @@ import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Stores geospatial locations in GeoJSON format.
@@ -53,12 +52,12 @@ public abstract class Geometry<T> extends GeoJsonObject {
 		}
 		final Geometry<?> other = Geometry.class.cast(obj);
 		return super.equals(obj)
-				&& Objects.equal(coordinates, other.coordinates);
+				&& Objects.equals(coordinates, other.coordinates);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(super.hashCode(), coordinates);
+		return super.hashCode() + Objects.hash(coordinates);
 	}
 
 	@Override

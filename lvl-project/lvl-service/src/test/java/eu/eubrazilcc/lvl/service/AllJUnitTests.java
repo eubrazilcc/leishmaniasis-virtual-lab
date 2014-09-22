@@ -24,12 +24,12 @@ package eu.eubrazilcc.lvl.service;
 
 import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
 import static eu.eubrazilcc.lvl.service.mock.CloserServiceMock.CLOSER_SERVICE_MOCK;
+import static org.apache.commons.io.FilenameUtils.concat;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
-import org.apache.commons.io.FilenameUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -52,7 +52,7 @@ public class AllJUnitTests {
 		} catch (Exception e) {
 			anchorFile = new File(System.getProperty("user.dir"));
 		}
-		TEST_RESOURCES_PATH = FilenameUtils.concat(anchorFile.getParent(), "files");
+		TEST_RESOURCES_PATH = concat(anchorFile.getParent(), "files");
 		final File resDir = new File(TEST_RESOURCES_PATH);
 		if (resDir != null && resDir.isDirectory() && resDir.canRead()) {
 			try {
@@ -74,7 +74,7 @@ public class AllJUnitTests {
 	public static void release() {
 		CLOSER_SERVICE_MOCK.close();
 	}
-	
+
 	public static String TEST_RESOURCES_PATH;
 
 }

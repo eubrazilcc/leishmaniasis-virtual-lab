@@ -24,12 +24,12 @@ package eu.eubrazilcc.lvl.storage;
 
 import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.mock.CloserServiceMock.CLOSER_SERVICE_MOCK;
+import static org.apache.commons.io.FilenameUtils.concat;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
-import org.apache.commons.io.FilenameUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -38,7 +38,8 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({ SequenceCollectionTest.class, ReferenceCollectionTest.class, TokenCollectionTest.class, AuthCodeCollectionTest.class, 
-	ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class, NotificationCollectionTest.class })
+	ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class, NotificationCollectionTest.class,
+	PublicLinkCollectionTest.class })
 public class AllIntegrationTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";
@@ -53,7 +54,7 @@ public class AllIntegrationTests {
 		} catch (Exception e) {
 			anchorFile = new File(System.getProperty("user.dir"));
 		}
-		TEST_RESOURCES_PATH = FilenameUtils.concat(anchorFile.getParent(), "files");
+		TEST_RESOURCES_PATH = concat(anchorFile.getParent(), "files");
 		final File resDir = new File(TEST_RESOURCES_PATH);
 		if (resDir != null && resDir.isDirectory() && resDir.canRead()) {
 			try {

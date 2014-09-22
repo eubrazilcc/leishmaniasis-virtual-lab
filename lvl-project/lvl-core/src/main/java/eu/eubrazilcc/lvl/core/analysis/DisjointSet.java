@@ -33,12 +33,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.SortedMap;
 
 import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
 
 /**
  * Provides a disjoint-set data structure with helper methods to operate the data.
@@ -167,13 +167,13 @@ public class DisjointSet<T> {
 				return false;
 			}
 			final Element<?> other = Element.class.cast(obj);
-			return Objects.equal(id, other.id)
-					&& Objects.equal(element, other.element);
+			return Objects.equals(id, other.id)
+					&& Objects.equals(element, other.element);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hashCode(id, element);
+			return Objects.hash(id, element);
 		}
 
 		@Override

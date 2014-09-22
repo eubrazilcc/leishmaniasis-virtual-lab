@@ -32,6 +32,7 @@ import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedIds;
 import static java.lang.System.getProperty;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.lang.RandomStringUtils.random;
@@ -45,7 +46,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,13 +66,13 @@ public class EntrezTest {
 
 	@Before
 	public void setUp() {
-		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);
+		deleteQuietly(TEST_OUTPUT_DIR);
 		TASK_RUNNER.preload();
 	}
 
 	@After
 	public void cleanUp() throws IOException {
-		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);		
+		deleteQuietly(TEST_OUTPUT_DIR);		
 	}
 
 	@Test
@@ -115,7 +115,7 @@ public class EntrezTest {
 			assertThat("PubMed XML files is not null", files, notNullValue());
 			assertThat("PubMed XML files is not empty", !files.isEmpty());
 			assertThat("PubMed XML files count does not concide", count, equalTo(files.size()));
-			
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("EntrezTest.test() failed: " + e.getMessage());

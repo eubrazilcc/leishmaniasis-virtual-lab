@@ -63,7 +63,6 @@ public final class FileCompressor {
 	 */
 	public static void tarGzipDir(final String srcDir, final String targetName) throws IOException {
 
-
 		FileOutputStream fileOutputStream = null;
 		BufferedOutputStream bufferedOutputStream = null;
 		GzipCompressorOutputStream gzipOutputStream = null;

@@ -24,9 +24,10 @@ package eu.eubrazilcc.lvl.core.geojson;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.geojson.jackson.LngLatAltDeserializer;
 import eu.eubrazilcc.lvl.core.geojson.jackson.LngLatAltSerializer;
@@ -73,14 +74,14 @@ public class LngLatAlt {
 			return false;
 		}
 		final LngLatAlt other = LngLatAlt.class.cast(obj);
-		return Objects.equal(longitude, other.longitude)
-				&& Objects.equal(latitude, other.latitude)
-				&& Objects.equal(altitude, other.altitude);
+		return Objects.equals(longitude, other.longitude)
+				&& Objects.equals(latitude, other.latitude)
+				&& Objects.equals(altitude, other.altitude);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(longitude, latitude, altitude);
+		return Objects.hash(longitude, latitude, altitude);
 	}
 
 	@Override

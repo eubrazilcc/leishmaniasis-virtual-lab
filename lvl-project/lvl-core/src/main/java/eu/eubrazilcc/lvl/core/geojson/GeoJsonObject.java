@@ -27,6 +27,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -34,7 +35,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import com.google.common.base.Objects;
 
 /**
  * Stores geospatial locations in GeoJSON format. Only a subset of the GeoJSON is supported in this
@@ -80,21 +80,21 @@ public abstract class GeoJsonObject {
 	public <T> T getProperty(final String key) {
 		return (T) properties.get(key);
 	}
-	
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof GeoJsonObject)) {
 			return false;
 		}
 		final GeoJsonObject other = GeoJsonObject.class.cast(obj);
-		return Objects.equal(crs, other.crs)
-				&& Objects.equal(bbox, other.bbox)
-				&& Objects.equal(properties, other.properties);		
+		return Objects.equals(crs, other.crs)
+				&& Objects.equals(bbox, other.bbox)
+				&& Objects.equals(properties, other.properties);		
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(crs, bbox, properties);
+		return Objects.hash(crs, bbox, properties);
 	}
 
 	@Override
@@ -105,5 +105,5 @@ public abstract class GeoJsonObject {
 				.add("properties", properties)
 				.toString();
 	}
-	
+
 }

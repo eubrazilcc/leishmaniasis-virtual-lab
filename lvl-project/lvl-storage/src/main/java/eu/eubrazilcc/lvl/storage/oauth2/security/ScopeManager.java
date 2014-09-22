@@ -69,6 +69,7 @@ public final class ScopeManager {
 	public static final String MY_SEQUENCES      = "my_sequences";
 	public static final String PIPELINES         = "pipelines";
 	public static final String PUBLICATIONS      = "publications";
+	public static final String SHARED_OBJECTS    = "public_link";
 	public static final String TASKS             = "tasks";
 
 	public static final String ALL               = "*";
@@ -90,6 +91,7 @@ public final class ScopeManager {
 				grantFullAccess(inherit(MY_SEQUENCES, ALL)),				
 				grantFullAccess(PIPELINES),
 				grantFullAccess(PUBLICATIONS),
+				grantFullAccess(SHARED_OBJECTS),
 				grantFullAccess(TASKS));
 	}
 
@@ -98,9 +100,10 @@ public final class ScopeManager {
 		return on(SCOPE_SEPARATOR).skipNulls().join(
 				grantFullAccess(inherit(USERS, username)),
 				SEQUENCES,
+				grantFullAccess(inherit(MY_SEQUENCES, username)),
 				PIPELINES,
 				PUBLICATIONS,
-				grantFullAccess(inherit(MY_SEQUENCES, username)));
+				grantFullAccess(inherit(SHARED_OBJECTS, username)));
 	}
 
 	public static final String dataCurator() {
@@ -128,6 +131,16 @@ public final class ScopeManager {
 		checkArgument(isNotBlank(pT), "Uninitialized or invalid parent scope");
 		checkArgument(isNotBlank(sT), "Uninitialized or invalid scope");		
 		return pT + PATH_SEPARATOR + sT;
+	}
+
+	/**
+	 * Creates an EL expression created from the provided scope and the username.
+	 * @param parent - parent scope
+	 * @return an EL expression created from the provided scope and the username.
+	 * @see <a href="https://java.net/projects/el-spec/">Expression Language Specification</a>
+	 */
+	public static final String inheritElUsername(final String parent) {		
+		return inherit(parent, "${user.username}");
 	}
 
 	private static final String cleanScope(final String str, final boolean isParent) {

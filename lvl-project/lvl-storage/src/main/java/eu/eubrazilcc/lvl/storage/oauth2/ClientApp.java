@@ -29,8 +29,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Client application. Provides a validating, fluent API for object initialization.
@@ -113,20 +112,20 @@ public class ClientApp implements Serializable {
 			return false;
 		}
 		final ClientApp other = ClientApp.class.cast(obj);
-		return Objects.equal(name, other.name)
-				&& Objects.equal(url, other.url)
-				&& Objects.equal(description, other.description)
-				&& Objects.equal(icon, other.icon)
-				&& Objects.equal(redirectURL, other.redirectURL)
-				&& Objects.equal(clientId, other.clientId)				
-				&& Objects.equal(clientSecret, other.clientSecret)
-				&& Objects.equal(expiresIn, other.expiresIn)
-				&& Objects.equal(issuedAt, other.issuedAt);
+		return Objects.equals(name, other.name)
+				&& Objects.equals(url, other.url)
+				&& Objects.equals(description, other.description)
+				&& Objects.equals(icon, other.icon)
+				&& Objects.equals(redirectURL, other.redirectURL)
+				&& Objects.equals(clientId, other.clientId)				
+				&& Objects.equals(clientSecret, other.clientSecret)
+				&& Objects.equals(expiresIn, other.expiresIn)
+				&& Objects.equals(issuedAt, other.issuedAt);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(name, url, description, icon, redirectURL, clientId,
+		return Objects.hash(name, url, description, icon, redirectURL, clientId,
 				clientSecret, expiresIn, issuedAt);
 	}
 

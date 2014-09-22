@@ -28,6 +28,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.ws.rs.core.Link;
 
@@ -38,7 +39,6 @@ import org.glassfish.jersey.linking.InjectLinks;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
@@ -108,7 +108,7 @@ public class Reference implements Linkable<Reference> {
 			return false;
 		}
 		final Reference other = Reference.class.cast(obj);
-		return Objects.equal(links, other.links)
+		return Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);		
 	}
 
@@ -117,14 +117,14 @@ public class Reference implements Linkable<Reference> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(title, other.title)
-				&& Objects.equal(pubmedId, other.pubmedId)
-				&& Objects.equal(location, other.location);
+		return Objects.equals(title, other.title)
+				&& Objects.equals(pubmedId, other.pubmedId)
+				&& Objects.equals(location, other.location);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(links, title, pubmedId, location);
+		return Objects.hash(links, title, pubmedId, location);
 	}
 
 	@Override

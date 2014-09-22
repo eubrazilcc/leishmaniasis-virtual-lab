@@ -26,9 +26,9 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.System.currentTimeMillis;
 
-import javax.annotation.Nullable;
+import java.util.Objects;
 
-import com.google.common.base.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Represents a notification that can be stored, for example, in the application database or sent to the 
@@ -99,7 +99,7 @@ public class Notification {
 			return false;
 		}
 		final Notification other = Notification.class.cast(obj);
-		return Objects.equal(id, other.id)
+		return Objects.equals(id, other.id)
 				&& equalsIgnoreId(other);
 	}
 
@@ -107,17 +107,17 @@ public class Notification {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(priority, other.priority)
-				&& Objects.equal(addressee, other.addressee)
-				&& Objects.equal(scope, other.scope)
-				&& Objects.equal(issuedAt, other.issuedAt)
-				&& Objects.equal(message, other.message)
-				&& Objects.equal(action, other.action);
+		return Objects.equals(priority, other.priority)
+				&& Objects.equals(addressee, other.addressee)
+				&& Objects.equals(scope, other.scope)
+				&& Objects.equals(issuedAt, other.issuedAt)
+				&& Objects.equals(message, other.message)
+				&& Objects.equals(action, other.action);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(id, priority, addressee, scope, issuedAt, message, action);
+		return Objects.hash(id, priority, addressee, scope, issuedAt, message, action);
 	}
 
 	@Override
@@ -162,7 +162,7 @@ public class Notification {
 			instance.setScope(scope);
 			return this;
 		}
-		
+
 		public Builder issuedAt(final long issuedAt) {
 			checkArgument(issuedAt >= 0l, "Invalid issued at");
 			instance.setIssuedAt(issuedAt);
@@ -219,13 +219,13 @@ public class Notification {
 				return false;
 			}
 			final Action other = Action.class.cast(obj);
-			return Objects.equal(link, other.link)
-					&& Objects.equal(text, other.text);
+			return Objects.equals(link, other.link)
+					&& Objects.equals(text, other.text);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hashCode(link, text);
+			return Objects.hash(link, text);
 		}
 
 		@Override

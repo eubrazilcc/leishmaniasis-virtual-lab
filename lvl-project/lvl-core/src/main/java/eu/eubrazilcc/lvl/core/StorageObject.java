@@ -24,9 +24,9 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-import javax.annotation.Nullable;
+import java.util.Objects;
 
-import com.google.common.base.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Base class from which to extend to create objects stored in the filesystem and referred in 
@@ -80,15 +80,15 @@ public class StorageObject {
 			return false;
 		}
 		final StorageObject other = StorageObject.class.cast(obj);
-		return Objects.equal(path, other.path)
-				&& Objects.equal(mime, other.mime)				
-				&& Objects.equal(description, other.description)
-				&& Objects.equal(owner, other.owner);
+		return Objects.equals(path, other.path)
+				&& Objects.equals(mime, other.mime)				
+				&& Objects.equals(description, other.description)
+				&& Objects.equals(owner, other.owner);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(path, mime, description, owner);
+		return Objects.hash(path, mime, description, owner);
 	}
 
 	@Override

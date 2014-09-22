@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.storage;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.ALL;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.PUBLICATIONS;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SEQUENCES;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SHARED_OBJECTS;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.USERS;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
@@ -78,6 +79,11 @@ public class ScopeManagerTest {
 			assertThat("Publications are accessible from full access profile (write not included)", 
 					isAccessible(PUBLICATIONS, asList(fullAccessProfile), false));
 
+			assertThat("Shared objects are accessible from full access profile (write included)", 
+					isAccessible(SHARED_OBJECTS, asList(fullAccessProfile), true));
+			assertThat("Shared objects are accessible from full access profile (write not included)", 
+					isAccessible(SHARED_OBJECTS, asList(fullAccessProfile), false));
+
 			// test access from user profile
 			assertThat("Users are not accessible from user profile (write included)", 
 					!isAccessible(USERS, asList(userProfile), true));
@@ -99,6 +105,16 @@ public class ScopeManagerTest {
 			assertThat("Publications are accessible from user profile (write not included)", 
 					isAccessible(PUBLICATIONS, asList(userProfile), false));
 
+			assertThat("Shared objects are not accessible from user profile (write included)", 
+					!isAccessible(SHARED_OBJECTS, asList(userProfile), true));
+			assertThat("Shared objects are not accessible from user profile (write not included)", 
+					!isAccessible(SHARED_OBJECTS, asList(userProfile), false));
+
+			assertThat("User own shared objects is accessible from user profile (write included)", 
+					isAccessible(inherit(SHARED_OBJECTS, username), asList(userProfile), true));
+			assertThat("User own shared objects is accessible from user profile (write not included)", 
+					isAccessible(inherit(SHARED_OBJECTS, username), asList(userProfile), false));
+
 			// test access from default profile
 			assertThat("Users are not accessible from default profile (write included)", 
 					!isAccessible(USERS, asList(defaultProfile), true));
@@ -114,6 +130,12 @@ public class ScopeManagerTest {
 					!isAccessible(PUBLICATIONS, asList(defaultProfile), true));
 			assertThat("Publications are accessible from default profile (write not included)", 
 					isAccessible(PUBLICATIONS, asList(defaultProfile), false));
+
+			assertThat("Shared objects are not accessible from default profile (write included)", 
+					!isAccessible(SHARED_OBJECTS, asList(defaultProfile), true));
+			assertThat("Shared objects are not accessible from default profile (write not included)", 
+					!isAccessible(SHARED_OBJECTS, asList(defaultProfile), true));
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("ScopeManagerTest.test() failed: " + e.getMessage());

@@ -24,7 +24,7 @@ package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Stores sequence key that is based on the GenBank GenInfo Identifier instead of the GenBank 
@@ -58,13 +58,13 @@ public class SequenceGiKey {
 			return false;
 		}
 		final SequenceGiKey other = SequenceGiKey.class.cast(obj);
-		return Objects.equal(dataSource, other.dataSource)
-				&& Objects.equal(gi, other.gi);
+		return Objects.equals(dataSource, other.dataSource)
+				&& Objects.equals(gi, other.gi);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(dataSource, gi);
+		return Objects.hash(dataSource, gi);
 	}
 
 	@Override

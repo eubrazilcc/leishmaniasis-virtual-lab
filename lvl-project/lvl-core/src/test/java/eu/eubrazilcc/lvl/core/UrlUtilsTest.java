@@ -28,6 +28,11 @@ import static eu.eubrazilcc.lvl.core.util.UrlUtils.isFileProtocol;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.isValid;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.parseURL;
 import static javax.ws.rs.core.UriBuilder.fromPath;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.io.FileUtils.toFile;
+import static org.apache.commons.io.FilenameUtils.concat;
+import static org.apache.commons.io.FilenameUtils.normalizeNoEndSeparator;
+import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -42,9 +47,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,12 +57,12 @@ import org.junit.Test;
  */
 public class UrlUtilsTest {
 
-	private static final String TEST_OUTPUT_DIR = FilenameUtils.concat(System.getProperty("java.io.tmpdir"),
-			UrlUtilsTest.class.getSimpleName() + "_" + RandomStringUtils.random(8, true, true));
+	private static final String TEST_OUTPUT_DIR = concat(System.getProperty("java.io.tmpdir"),
+			UrlUtilsTest.class.getSimpleName() + "_" + random(8, true, true));
 
 	@Before
 	public void setUp() {
-		FileUtils.deleteQuietly(new File(TEST_OUTPUT_DIR));
+		deleteQuietly(new File(TEST_OUTPUT_DIR));
 	}
 
 	@Test
@@ -77,16 +79,16 @@ public class UrlUtilsTest {
 					{ "/foo/../bar/../baz", "/baz" },
 					{ "//foo//./bar", "/foo/bar" },
 					{ "/../", null },
-					{ "../foo", FilenameUtils.concat(System.getProperty("user.dir"), "../foo") },
-					{ "foo/bar/..", FilenameUtils.concat(System.getProperty("user.dir"), "foo/bar/..") },
-					{ "foo/../../bar", FilenameUtils.concat(System.getProperty("user.dir"), "foo/../../bar") },
-					{ "foo/../bar", FilenameUtils.concat(System.getProperty("user.dir"), "foo/../bar") },
+					{ "../foo", concat(System.getProperty("user.dir"), "../foo") },
+					{ "foo/bar/..", concat(System.getProperty("user.dir"), "foo/bar/..") },
+					{ "foo/../../bar", concat(System.getProperty("user.dir"), "foo/../../bar") },
+					{ "foo/../bar", concat(System.getProperty("user.dir"), "foo/../bar") },
 					{ "//server/foo/../bar", "/server/bar" },
 					{ "//server/../bar", null }, 
 					{ "C:\\foo\\..\\bar", "/bar" }, 
 					{ "C:\\..\\bar", null }, 
-					{ "~/foo/../bar/", FilenameUtils.concat(System.getProperty("user.home"), "foo/../bar/") }, 
-					{ "~/../bar", FilenameUtils.concat(System.getProperty("user.home"), "../bar") },
+					{ "~/foo/../bar/", concat(System.getProperty("user.home"), "foo/../bar/") }, 
+					{ "~/../bar", concat(System.getProperty("user.home"), "../bar") },
 					{ "http://localhost", null }
 			};
 			for (int i = 0; i < paths.length; i++) {
@@ -98,10 +100,10 @@ public class UrlUtilsTest {
 							+ "', EXPECTED='" + paths[i][1] + "'");
 					assertThat("URL is not null", url, notNullValue());
 					if (isFileProtocol(url)) {
-						final File file = FileUtils.toFile(url);
+						final File file = toFile(url);
 						assertThat("file is not null", file, notNullValue());
-						assertThat("file name coincides", FilenameUtils.normalizeNoEndSeparator(file.getCanonicalPath(), true)
-								.equals(FilenameUtils.normalizeNoEndSeparator(paths[i][1], true)));
+						assertThat("file name coincides", normalizeNoEndSeparator(file.getCanonicalPath(), true)
+								.equals(normalizeNoEndSeparator(paths[i][1], true)));
 					}
 				} catch (IOException ioe) {
 					if (paths[i][1] != null) {
@@ -184,7 +186,7 @@ public class UrlUtilsTest {
 
 	@After
 	public void cleanUp() {
-		FileUtils.deleteQuietly(new File(TEST_OUTPUT_DIR));
+		deleteQuietly(new File(TEST_OUTPUT_DIR));
 	}
 
 }

@@ -98,18 +98,18 @@ public class GbSeqXmlHelper {
 		checkState(outdir != null && (outdir.isDirectory() || outdir.mkdirs()) && outdir.canWrite(), 
 				"Cannot write on parent directory: " + outdir.getAbsolutePath());
 		checkState(outfile.canWrite() || outfile.createNewFile(), "Cannot write on output file: " + outfile.getAbsolutePath());
-		try (final FileOutputStream fos = new FileOutputStream(outfile); final BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-			// write FASTA sequences to file
+		// write FASTA sequences to file
+		try (final FileOutputStream fos = new FileOutputStream(outfile); final BufferedOutputStream bos = new BufferedOutputStream(fos)) {			
 			for (final File file : files) {
 				final GBSeq sequence = getSequence(file);
 				writeFasta(bos, sequence);
 			}			
-			// file compression
-			if (compressed) {
-				final String gzFilename = gzip(filename);
-				move(get(gzFilename), get(filename), REPLACE_EXISTING);
-			}
-		}	
+		}
+		// file compression
+		if (compressed) {
+			final String gzFilename = gzip(filename);
+			move(get(gzFilename), get(filename), REPLACE_EXISTING);
+		}
 	}
 
 	/**

@@ -26,6 +26,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getClientAddress;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_HEADER_OAUTH2;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -65,13 +67,13 @@ public final class OAuth2Gatekeeper {
 
 	public static final String bearerHeader(final String token) {
 		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
-		return OAuth2Common.AUTHORIZATION_HEADER_OAUTH2 + token;
+		return AUTHORIZATION_HEADER_OAUTH2 + token;
 	}
 
 	public static MultivaluedMap<String, String> authzHeader(final String token) {
 		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
 		final MultivaluedMap<String, String> map = new MultivaluedHashMap<String, String>();
-		map.put(OAuth2Common.HEADER_AUTHORIZATION, newArrayList(bearerHeader(token)));
+		map.put(HEADER_AUTHORIZATION, newArrayList(bearerHeader(token)));
 		return map;
 	}
 
@@ -80,9 +82,10 @@ public final class OAuth2Gatekeeper {
 			final @Nullable HttpHeaders headers, 
 			final String resourceScope,
 			final boolean requestFullAccess,
+			final boolean addResourceOwner,
 			final String resourceName) {
 		try {
-			authorizeInternal(request, form, headers, resourceScope, requestFullAccess, resourceName);
+			authorizeInternal(request, form, headers, resourceScope, requestFullAccess, addResourceOwner, resourceName);
 		} catch (OAuthSystemException e) {
 			LOGGER.error("Authorization failed", e);
 			throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -96,7 +99,7 @@ public final class OAuth2Gatekeeper {
 			final @Nullable HttpHeaders headers,
 			final String resourceName) {
 		try {
-			authorizeInternal(request, form, headers, null, false, resourceName);
+			authorizeInternal(request, form, headers, null, false, false, resourceName);
 		} catch (OAuthSystemException e) {
 			LOGGER.error("Authorization failed", e);
 			throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -110,6 +113,7 @@ public final class OAuth2Gatekeeper {
 			final @Nullable HttpHeaders headers, 
 			final @Nullable String resourceScope,
 			final boolean requestFullAccess,
+			final boolean addResourceOwner,
 			final String resourceName) throws OAuthSystemException {
 		try {
 			// make the OAuth request out of this request
@@ -122,7 +126,7 @@ public final class OAuth2Gatekeeper {
 			// validate the access token
 			if (resourceScope != null) {
 				// resource that requires special permissions
-				if (!TOKEN_DAO.isValid(accessToken, resourceScope, requestFullAccess)) {
+				if (!TOKEN_DAO.isValid(accessToken, resourceScope, requestFullAccess, addResourceOwner)) {
 					invalidCredentialError(request, resourceName);
 				}
 			} else {

@@ -26,8 +26,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import eu.eubrazilcc.lvl.core.geospatial.Wgs84Validator;
 
@@ -60,13 +59,13 @@ public class Crs {
 			return false;
 		}
 		final Crs other = Crs.class.cast(obj);
-		return Objects.equal(type, other.type)
-				&& Objects.equal(properties, other.properties);
+		return Objects.equals(type, other.type)
+				&& Objects.equals(properties, other.properties);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(type, properties);
+		return Objects.hash(type, properties);
 	}
 
 	@Override
@@ -86,7 +85,7 @@ public class Crs {
 	public static class Builder {
 
 		private final Crs instance = new Crs();
-		
+
 		public Builder wgs84() {
 			instance.getProperties().put("name", Wgs84Validator.URN_CRS);
 			return this;

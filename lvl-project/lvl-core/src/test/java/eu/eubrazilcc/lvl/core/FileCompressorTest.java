@@ -31,6 +31,7 @@ import static eu.eubrazilcc.lvl.core.io.FileCompressor.unGzipUnTar;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.GB_SEQUENCES_FOLDER;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static java.lang.System.getProperty;
+import static java.util.Collections.shuffle;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.io.FileUtils.readFileToString;
@@ -45,7 +46,6 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.After;
@@ -98,7 +98,7 @@ public class FileCompressorTest {
 
 			// test compress file with GZIP
 			final List<File> files = newArrayList(getGBSeqXMLFiles());
-			Collections.shuffle(files);
+			shuffle(files);
 			final File srcFile = files.get(0);
 			final String srcFilename = srcFile.getCanonicalPath();
 			System.out.println(" >> Will compress file " + srcFilename + " with GZIP");

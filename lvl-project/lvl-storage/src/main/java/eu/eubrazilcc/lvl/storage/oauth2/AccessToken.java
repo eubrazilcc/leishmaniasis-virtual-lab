@@ -30,9 +30,8 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
-
-import com.google.common.base.Objects;
 
 /**
  * OAuth2 access token.
@@ -45,6 +44,7 @@ public class AccessToken implements Serializable {
 	private String token;
 	private long expiresIn;
 	private long issuedAt;
+	private String ownerId;
 	private Set<String> scopes;
 
 	public AccessToken() { }
@@ -67,6 +67,12 @@ public class AccessToken implements Serializable {
 	public void setIssuedAt(final long issuedAt) {
 		this.issuedAt = issuedAt;
 	}
+	public String getOwnerId() {
+		return ownerId;
+	}
+	public void setOwnerId(final String ownerId) {
+		this.ownerId = ownerId;
+	}
 	public Set<String> getScopes() {
 		return scopes;
 	}
@@ -80,15 +86,16 @@ public class AccessToken implements Serializable {
 			return false;
 		}
 		final AccessToken other = AccessToken.class.cast(obj);
-		return Objects.equal(token, other.token)				
-				&& Objects.equal(expiresIn, other.expiresIn)
-				&& Objects.equal(issuedAt, other.issuedAt)
-				&& Objects.equal(scopes, other.scopes);
+		return Objects.equals(token, other.token)				
+				&& Objects.equals(expiresIn, other.expiresIn)
+				&& Objects.equals(issuedAt, other.issuedAt)
+				&& Objects.equals(ownerId, other.ownerId)
+				&& Objects.equals(scopes, other.scopes);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(token, expiresIn, issuedAt, scopes);
+		return Objects.hash(token, expiresIn, issuedAt, ownerId, scopes);
 	}
 
 	@Override
@@ -97,6 +104,7 @@ public class AccessToken implements Serializable {
 				.add("token", token)				
 				.add("expiresIn", expiresIn)
 				.add("issuedAt", issuedAt)
+				.add("ownerId", ownerId)
 				.add("scopes", scopes)
 				.toString();
 	}
@@ -131,13 +139,19 @@ public class AccessToken implements Serializable {
 			instance.setIssuedAt(issuedAt);
 			return this;
 		}
-		
+
+		public Builder ownerId(final String ownerId) {
+			checkArgument(isNotBlank(ownerId), "Uninitialized or invalid owner Id");
+			instance.setOwnerId(ownerId);
+			return this;
+		}
+
 		public Builder scope(final String scope) {
 			checkArgument(isNotBlank(scope), "Uninitialized or invalid scope");
 			instance.getScopes().add(scope);
 			return this;
 		}
-		
+
 		public Builder scope(final Collection<String> scopes) {
 			checkArgument(scopes != null && !isEmpty(scopes), "Uninitialized scopes");
 			instance.getScopes().addAll(scopes);

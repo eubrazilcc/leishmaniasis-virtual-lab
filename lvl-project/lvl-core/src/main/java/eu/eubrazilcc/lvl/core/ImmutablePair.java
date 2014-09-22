@@ -25,8 +25,8 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.util.Map;
+import java.util.Objects;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
 
 /**
@@ -91,13 +91,13 @@ Comparable<ImmutablePair<L, R>> {
 			return false;
 		}
 		final ImmutablePair<?, ?> other = ImmutablePair.class.cast(obj);
-		return Objects.equal(left, other.left)
-				&& Objects.equal(right, other.right);
+		return Objects.equals(left, other.left)
+				&& Objects.equals(right, other.right);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(left, right);
+		return Objects.hash(left, right);
 	}
 
 	@Override

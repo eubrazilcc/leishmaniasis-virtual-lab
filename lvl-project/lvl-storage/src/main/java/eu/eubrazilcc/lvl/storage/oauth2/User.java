@@ -34,6 +34,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.ws.rs.core.Link;
@@ -45,7 +46,6 @@ import org.glassfish.jersey.linking.InjectLinks;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.Linkable;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
@@ -140,8 +140,8 @@ public class User implements Serializable, Linkable<User> {
 			return false;
 		}
 		final User other = User.class.cast(obj);
-		return Objects.equal(links, other.links)
-				&& Objects.equal(pictureUrl, other.pictureUrl)
+		return Objects.equals(links, other.links)
+				&& Objects.equals(pictureUrl, other.pictureUrl)
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -150,12 +150,12 @@ public class User implements Serializable, Linkable<User> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(username, other.username)
-				&& Objects.equal(password, other.password)
-				&& Objects.equal(email, other.email)				
-				&& Objects.equal(fullname, other.fullname)
-				&& Objects.equal(scopes, other.scopes)
-				&& Objects.equal(salt, other.salt);
+		return Objects.equals(username, other.username)
+				&& Objects.equals(password, other.password)
+				&& Objects.equals(email, other.email)				
+				&& Objects.equals(fullname, other.fullname)
+				&& Objects.equals(scopes, other.scopes)
+				&& Objects.equals(salt, other.salt);
 	}
 
 	/**
@@ -167,9 +167,9 @@ public class User implements Serializable, Linkable<User> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(username, other.username)			
-				&& Objects.equal(fullname, other.fullname)
-				&& Objects.equal(scopes, other.scopes);
+		return Objects.equals(username, other.username)			
+				&& Objects.equals(fullname, other.fullname)
+				&& Objects.equals(scopes, other.scopes);
 	}
 
 	/**
@@ -183,8 +183,8 @@ public class User implements Serializable, Linkable<User> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(links, other.links)
-				&& Objects.equal(pictureUrl, other.pictureUrl)
+		return Objects.equals(links, other.links)
+				&& Objects.equals(pictureUrl, other.pictureUrl)
 				&& equalsToUnprotectedIgnoringVolatile(other);
 	}
 
@@ -198,15 +198,15 @@ public class User implements Serializable, Linkable<User> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(username, other.username)
-				&& Objects.equal(email, other.email)				
-				&& Objects.equal(fullname, other.fullname)
-				&& Objects.equal(scopes, other.scopes);
+		return Objects.equals(username, other.username)
+				&& Objects.equals(email, other.email)				
+				&& Objects.equals(fullname, other.fullname)
+				&& Objects.equals(scopes, other.scopes);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(links, pictureUrl, username, password, email, fullname, scopes, salt);
+		return Objects.hash(links, pictureUrl, username, password, email, fullname, scopes, salt);
 	}
 
 	@Override

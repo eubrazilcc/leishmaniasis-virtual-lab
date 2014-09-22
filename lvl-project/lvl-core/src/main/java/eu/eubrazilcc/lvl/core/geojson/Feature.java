@@ -25,8 +25,7 @@ package eu.eubrazilcc.lvl.core.geojson;
 import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.util.Map;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Stores geospatial locations in GeoJSON format.
@@ -58,13 +57,13 @@ public class Feature extends GeoJsonObject {
 		}
 		final Feature other = Feature.class.cast(obj);
 		return super.equals(obj)
-				&& Objects.equal(geometry, other.geometry)
-				&& Objects.equal(id, other.id);
+				&& Objects.equals(geometry, other.geometry)
+				&& Objects.equals(id, other.id);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(super.hashCode(), geometry, id);
+		return super.hashCode() + Objects.hash(geometry, id);
 	}
 
 	@Override

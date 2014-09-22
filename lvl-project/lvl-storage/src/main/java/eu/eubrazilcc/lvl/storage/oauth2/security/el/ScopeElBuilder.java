@@ -20,38 +20,29 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core.util;
+package eu.eubrazilcc.lvl.storage.oauth2.security.el;
 
-import static eu.eubrazilcc.lvl.core.util.NumberUtils.roundUp;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.inheritElUsername;
+
+import javax.el.ExpressionFactory;
+import javax.el.ValueExpression;
+
+import eu.eubrazilcc.lvl.storage.oauth2.User;
 
 /**
- * Utility class to help with collection pagination.
+ * Builds and parses scope expression from EL (expression language) templates.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="https://java.net/projects/el-spec/">Expression Language Specification</a>
  */
-public final class PaginationUtils {
+public final class ScopeElBuilder {
 
-	/**
-	 * Computes the position of the first entry of a page.
-	 * @param page - current page
-	 * @param perPage - number of entries per page
-	 * @return The position of the first entry of the specified page.
-	 */
-	public static int firstEntryOf(final int page, final int perPage) {
-		if (page > 0 && perPage > 0) {
-			return page * perPage;
-		}
-		return 0;
+	private static final ExpressionFactory EXPR_FACTORY = ExpressionFactory.newInstance();
+
+	public static String buildScope(final String scope, final User user) {
+		final ScopeElContext ctxt = ScopeElContext.builder().user(user).build();
+		final String template = inheritElUsername(scope);
+		final ValueExpression expr = EXPR_FACTORY.createValueExpression(ctxt, template, String.class);
+		return expr.getValue(ctxt).toString();
 	}
-	
-	/**
-	 * Computes the total number of pages needed to display a collection of items
-	 * with a fixed number of elements per page.
-	 * @param totalEntries - total number of items in the collection to be displayed
-	 * @param perPage - maximum number of items per page
-	 * @return The total number of pages needed to display the collection.
-	 */
-	public static int totalPages(final int totalEntries, final int perPage) {		
-		return roundUp(totalEntries, perPage);
-	}
-	
+
 }

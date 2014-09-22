@@ -25,9 +25,8 @@ package eu.eubrazilcc.lvl.service;
 import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-
-import com.google.common.base.Objects;
 
 /**
  * Encapsulates a task for communicating with a client. Requested tasks are internally converted to classes
@@ -65,14 +64,14 @@ public class Task {
 			return false;
 		}
 		final Task other = Task.class.cast(obj);
-		return Objects.equal(uuid, other.uuid)
-				&& Objects.equal(type, other.type)
-				&& Objects.equal(ids, other.ids);
+		return Objects.equals(uuid, other.uuid)
+				&& Objects.equals(type, other.type)
+				&& Objects.equals(ids, other.ids);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(uuid, type, ids);
+		return Objects.hash(uuid, type, ids);
 	}
 
 	@Override

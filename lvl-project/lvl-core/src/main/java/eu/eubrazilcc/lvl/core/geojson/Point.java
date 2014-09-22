@@ -25,7 +25,7 @@ package eu.eubrazilcc.lvl.core.geojson;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Stores geospatial locations in GeoJSON format. For type "Point", the "coordinates" member must be 
@@ -51,12 +51,12 @@ public class Point extends GeoJsonObject {
 		}
 		final Point other = Point.class.cast(obj);
 		return super.equals(obj)
-				&& Objects.equal(coordinates, other.coordinates);
+				&& Objects.equals(coordinates, other.coordinates);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(super.hashCode(), coordinates);
+		return super.hashCode() + Objects.hash(coordinates);
 	}
 
 	@Override

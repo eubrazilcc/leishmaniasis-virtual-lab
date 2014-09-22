@@ -90,6 +90,7 @@ public class SequenceResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence Resource";
 	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);
+	
 	public static final String SEQ_ID_PATTERN = "[a-zA-Z_0-9]+:[a-zA-Z_0-9]+";
 
 	@GET
@@ -100,7 +101,7 @@ public class SequenceResource {
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		final Sequences paginable = Sequences.start()
 				.page(page)
 				.perPage(per_page)
@@ -125,7 +126,7 @@ public class SequenceResource {
 	@Produces(APPLICATION_JSON)
 	public Sequence getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
@@ -141,7 +142,7 @@ public class SequenceResource {
 	@Consumes(APPLICATION_JSON)
 	public Response createSequence(final Sequence sequence, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (sequence == null || isBlank(sequence.getAccession())) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
@@ -156,7 +157,7 @@ public class SequenceResource {
 	@Consumes(APPLICATION_JSON)
 	public void updateSequence(final @PathParam("id") String id, final Sequence update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}		
@@ -178,7 +179,7 @@ public class SequenceResource {
 	@Path("{id: " + SEQ_ID_PATTERN + "}")
 	public void deleteSequence(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
@@ -203,7 +204,7 @@ public class SequenceResource {
 			final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, RESOURCE_NAME);
+		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		// get from database
 		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
 				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build())

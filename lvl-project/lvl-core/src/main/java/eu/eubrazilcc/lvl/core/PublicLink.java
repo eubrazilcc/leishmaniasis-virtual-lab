@@ -31,6 +31,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.ws.rs.core.Link;
 
@@ -41,19 +42,19 @@ import org.glassfish.jersey.linking.InjectLinks;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Objects;
 
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * A link that a user create to share a private object with other users.
+ * A link that a user create to share a private object with other users without requiring authentication (any user that knows the link 
+ * can access the content of the object).
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SharedObject extends StorageObject implements Linkable<SharedObject> {
+public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 	@InjectLinks({
-		@InjectLink(value="shared_objects/{path}", rel=SELF, type=APPLICATION_JSON, 
+		@InjectLink(value="public_link/{path}", rel=SELF, type=APPLICATION_JSON, 
 				bindings={@Binding(name="path", value="${instance.path}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
@@ -61,10 +62,9 @@ public class SharedObject extends StorageObject implements Linkable<SharedObject
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
 
-	private List<String> roGuests;
-	private List<String> rwGuests;
+	private Target target;
 
-	public SharedObject() {
+	public PublicLink() {
 		super();
 	}
 
@@ -80,56 +80,43 @@ public class SharedObject extends StorageObject implements Linkable<SharedObject
 		}
 	}
 
-	public List<String> getRoGuests() {
-		return roGuests;
+	public Target getTarget() {
+		return target;
 	}
 
-	public void setRoGuests(final List<String> roGuests) {
-		if (roGuests != null) {
-			this.roGuests = newArrayList(roGuests);
-		} else {
-			this.roGuests = null;
-		}
-	}
-
-	public List<String> getRwGuests() {
-		return rwGuests;
-	}
-
-	public void setRwGuests(final List<String> rwGuests) {
-		if (rwGuests != null) {
-			this.rwGuests = newArrayList(rwGuests);
-		} else {
-			this.rwGuests = null;
-		}
+	public void setTarget(final Target target) {
+		this.target = target;
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof SharedObject)) {
+		if (obj == null || !(obj instanceof PublicLink)) {
 			return false;
 		}
-		final SharedObject other = SharedObject.class.cast(obj);
-		return Objects.equal(links, other.links)				
+		final PublicLink other = PublicLink.class.cast(obj);
+		return Objects.equals(links, other.links)				
 				&& equalsIgnoringVolatile(other);
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final SharedObject other) {
+	public boolean equalsIgnoringVolatile(final PublicLink other) {
 		if (other == null) {
 			return false;
 		}
 		return super.equals((StorageObject)other)
-				&& Objects.equal(roGuests, other.roGuests)
-				&& Objects.equal(rwGuests, other.rwGuests);
+				&& Objects.equals(target, other.target);
+	}
+
+	@Override
+	public int hashCode() {
+		return super.hashCode() + Objects.hash(links, target);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("StorageObject", super.toString())
-				.add("roGuests", roGuests)
-				.add("rwGuests", rwGuests)
+				.add("target", target)
 				.toString();
 	}
 
@@ -141,7 +128,7 @@ public class SharedObject extends StorageObject implements Linkable<SharedObject
 
 	public static class Builder {
 
-		private final SharedObject instance = new SharedObject();
+		private final PublicLink instance = new PublicLink();
 
 		public Builder links(final List<Link> links) {
 			instance.setLinks(links);
@@ -170,18 +157,127 @@ public class SharedObject extends StorageObject implements Linkable<SharedObject
 			return this;
 		}
 
-		public Builder roGuests(final List<String> roGuests) {
-			instance.setRoGuests(roGuests);
+		public Builder target(final Target target) {
+			instance.setTarget(target);
 			return this;
 		}
 
-		public Builder rwGuests(final List<String> rwGuests) {
-			instance.setRwGuests(rwGuests);
-			return this;
-		}
-
-		public SharedObject build() {
+		public PublicLink build() {
 			return instance;
+		}
+
+	}
+
+	public static class Target {
+
+		private String type;
+		private List<String> ids;
+		private String filter;
+		private String compression;
+
+		public Target() { }
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(final String type) {
+			this.type = type;
+		}
+
+		public List<String> getIds() {
+			return ids;
+		}
+
+		public void setIds(final List<String> ids) {
+			if (ids != null) {
+				this.ids = newArrayList(ids);
+			} else {
+				this.ids = null;
+			}
+		}
+
+		public String getFilter() {
+			return filter;
+		}
+
+		public void setFilter(final String filter) {
+			this.filter = filter;
+		}
+
+		public String getCompression() {
+			return compression;
+		}
+
+		public void setCompression(final String compression) {
+			this.compression = compression;
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (obj == null || !(obj instanceof Target)) {
+				return false;
+			}
+			final Target other = Target.class.cast(obj);
+			return Objects.equals(type, other.type)				
+					&& Objects.equals(ids, other.ids)
+					&& Objects.equals(filter, other.filter)
+					&& Objects.equals(compression, other.compression);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(type, ids, filter, compression);
+		}
+
+		@Override
+		public String toString() {
+			return toStringHelper(this)
+					.add("type", type)
+					.add("ids", ids)
+					.add("filter", filter)
+					.add("compression", compression)
+					.toString();
+		}
+
+		/* Fluent API */
+
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		public static class Builder {
+
+			private final Target instance = new Target();
+
+			public Builder type(final String type) {
+				instance.setType(type);
+				return this;
+			}
+
+			public Builder id(final String id) {
+				return ids(newArrayList(id));
+			}
+
+			public Builder ids(final List<String> ids) {
+				instance.setIds(ids);
+				return this;
+			}
+
+			public Builder filter(final String filter) {
+				instance.setFilter(filter);
+				return this;
+			}
+
+			public Builder compression(final String compression) {
+				instance.setCompression(compression);
+				return this;
+			}
+
+			public Target build() {
+				return instance;
+			}
+
 		}
 
 	}

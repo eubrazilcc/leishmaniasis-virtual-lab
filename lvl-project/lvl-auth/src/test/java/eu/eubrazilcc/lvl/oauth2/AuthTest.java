@@ -30,6 +30,8 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerH
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.http.client.fluent.Form.form;
@@ -60,8 +62,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.apache.oltu.oauth2.client.OAuthClient;
@@ -102,7 +102,7 @@ import eu.eubrazilcc.lvl.storage.security.SecurityProvider;
  */
 public class AuthTest {
 
-	private static final File TEST_OUTPUT_DIR = new File(FilenameUtils.concat(System.getProperty("java.io.tmpdir"),
+	private static final File TEST_OUTPUT_DIR = new File(concat(System.getProperty("java.io.tmpdir"),
 			"lvl-authserver-test-Hf330xKUcsn7vnlKQXFndptow52MvZNKWxxpbnVqAA"));
 
 	private static final String BASE_URI = "https://localhost:8443/lvl-auth/oauth2/v1";
@@ -124,7 +124,7 @@ public class AuthTest {
 		CONFIG_MANAGER.setup(builder.build());
 		CONFIG_MANAGER.preload();
 		// setup test file-system environment
-		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);
+		deleteQuietly(TEST_OUTPUT_DIR);
 		// prepare client
 		final Client client = ClientBuilder.newBuilder().register(JacksonFeature.class).build();
 		// configure Web target
@@ -134,7 +134,7 @@ public class AuthTest {
 	@After
 	public void cleanUp() {
 		// cleanup test file-system environment
-		FileUtils.deleteQuietly(TEST_OUTPUT_DIR);
+		deleteQuietly(TEST_OUTPUT_DIR);
 	}
 
 	@Test

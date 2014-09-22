@@ -27,17 +27,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * OAuth2 access code.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class AuthCode implements Serializable {
-	
+
 	private static final long serialVersionUID = -5271391065299414494L;
-	
+
 	private String code;
 	private long expiresIn;
 	private long issuedAt;
@@ -62,21 +61,21 @@ public class AuthCode implements Serializable {
 	public void setIssuedAt(final long issuedAt) {
 		this.issuedAt = issuedAt;
 	}
-	
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof AuthCode)) {
 			return false;
 		}
 		final AuthCode other = AuthCode.class.cast(obj);
-		return Objects.equal(code, other.code)				
-				&& Objects.equal(expiresIn, other.expiresIn)
-				&& Objects.equal(issuedAt, other.issuedAt);
+		return Objects.equals(code, other.code)				
+				&& Objects.equals(expiresIn, other.expiresIn)
+				&& Objects.equals(issuedAt, other.issuedAt);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(code, expiresIn, issuedAt);
+		return Objects.hash(code, expiresIn, issuedAt);
 	}
 
 	@Override
@@ -120,5 +119,5 @@ public class AuthCode implements Serializable {
 		}
 
 	}
-	
+
 }

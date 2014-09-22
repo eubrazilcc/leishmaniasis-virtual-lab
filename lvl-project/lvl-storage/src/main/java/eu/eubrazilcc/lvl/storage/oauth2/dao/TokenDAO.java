@@ -27,6 +27,8 @@ import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.isAccessible;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.el.ScopeElBuilder.buildScope;
+import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -59,6 +61,7 @@ import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
+import eu.eubrazilcc.lvl.storage.oauth2.User;
 
 /**
  * Access token DAO.
@@ -71,10 +74,13 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	private final static Logger LOGGER = getLogger(TokenDAO.class);
 
 	public static final String COLLECTION = "access_tokens";
-	public static final String PRIMARY_KEY = "accessToken.token";
+	public static final String DB_PREFIX   = "accessToken.";
+	public static final String PRIMARY_KEY = DB_PREFIX + "token";
+	public static final String OWNER_KEY   = DB_PREFIX + "ownerId";
 
 	private TokenDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
+		MONGODB_CONN.createNonUniqueIndex(OWNER_KEY, COLLECTION, false);
 	}
 
 	@Override
@@ -156,9 +162,13 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		return new BasicDBObject(PRIMARY_KEY, key);		
 	}
 
+	private BasicDBObject ownerKey(final String key) {
+		return new BasicDBObject(OWNER_KEY, key);		
+	}
+
 	private BasicDBObject sortCriteria() {
 		return new BasicDBObject(PRIMARY_KEY, 1);
-	}	
+	}
 
 	private AccessToken parseBasicDBObject(final BasicDBObject obj) {
 		return map(obj).getAccessToken();
@@ -195,9 +205,17 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		return entity;
 	}
 
+	public List<AccessToken> listByOwnerId(final String ownerId) {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, 0, Integer.MAX_VALUE, ownerKey(ownerId), null), new Function<BasicDBObject, AccessToken>() {
+			@Override
+			public AccessToken apply(final BasicDBObject obj) {
+				return parseBasicDBObject(obj);
+			}
+		});
+	}
+
 	/**
-	 * Checks whether or not the specified secret (token) was previously stored
-	 * and is currently valid (not expired).
+	 * Checks whether or not the specified secret (token) was previously stored and is currently valid (not expired).
 	 * @param token - the secret associated to the token
 	 * @return {@code true} only if the provided secret (token) is found in the
 	 *         storage and is currently valid (not expired). Otherwise, returns 
@@ -207,34 +225,31 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
 		final AccessToken accessToken = find(token);		
 		return (accessToken != null && accessToken.getToken() != null && token.equals(accessToken.getToken())
-				&& (accessToken.getIssuedAt() + accessToken.getExpiresIn()) > (System.currentTimeMillis() / 1000l));
+				&& (accessToken.getIssuedAt() + accessToken.getExpiresIn()) > (currentTimeMillis() / 1000l));
 	}
 
 	/**
-	 * Checks whether or not the specified secret (token) was previously stored, 
-	 * is currently valid (not expired) and grant access to the specified scope.
-	 * When needed, the method can also check if the provided token grants full
-	 * access to the target scope.
+	 * Checks whether or not the specified secret (token) was previously stored, is currently valid (not expired) and grant access to the specified scope.
+	 * When needed, the method can also check if the provided token grants full access to the target scope.
 	 * @param token - the secret associated to the token
 	 * @param targetScope - the scope where the caller operations will be performed
-	 * @param requestFullAccess - {@code true} if the caller is requesting other
-	 *        kind of access than read only access
-	 * @return {@code true} only if the provided secret (token) is found in the
-	 *         storage, is currently valid (not expired) and grant access to the 
-	 *         specified scope with the specified permissions. Otherwise, returns 
-	 *         {@code false}.
+	 * @param requestFullAccess - {@code true} if the caller is requesting other kind of access than read only access
+	 * @param addResourceOwner - set this to {@code true} when the identity of the resource owner is unknown and the target scope is under the
+	 *        scope of the resource owner. For example: {@code target_scope/username}.
+	 * @return {@code true} only if the provided secret (token) is found in the storage, is currently valid (not expired) and grant access to the 
+	 *         specified scope with the specified permissions. Otherwise, returns {@code false}.
 	 */
-	public boolean isValid(final String token, final String targetScope, final boolean requestFullAccess) {
+	public boolean isValid(final String token, final String targetScope, final boolean requestFullAccess, final boolean addResourceOwner) {
 		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
 		checkArgument(isNotBlank(targetScope), "Uninitialized or invalid target scope");
-		final AccessToken accessToken = find(token);
-		return isValid(token) && isAccessible(targetScope, accessToken.getScopes(), requestFullAccess);
+		final AccessToken accessToken = find(token);		
+		return isValid(token) && isAccessible(addResourceOwner ? buildScope(targetScope, User.builder().username(accessToken.getOwnerId()).build()) 
+				: targetScope, accessToken.getScopes(), requestFullAccess);
 	}
 
 	/**
-	 * Extracts from an entity the fields that depends on the service (e.g. links)
-	 * before storing the entity in the database. These fields are stored in this
-	 * class and can be reinserted later in the entity.
+	 * Extracts from an entity the fields that depends on the service (e.g. links) before storing the entity in the database. These fields are stored in 
+	 * this class and can be reinserted later in the entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
 	public static class AccessTokenTransientStore extends TransientStore<AccessToken> {

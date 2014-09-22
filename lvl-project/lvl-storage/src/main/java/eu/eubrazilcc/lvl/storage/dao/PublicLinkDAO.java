@@ -32,6 +32,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -47,7 +48,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.Notification;
+import eu.eubrazilcc.lvl.core.PublicLink;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
@@ -56,81 +57,78 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 
 /**
- * {@link Notification} DAO.
+ * {@link PublicLink} DAO.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum NotificationDAO implements BaseDAO<String, Notification> {
+public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 
-	NOTIFICATION_DAO;
+	PUBLIC_LINK_DAO;
 
-	private final static Logger LOGGER = getLogger(NotificationDAO.class);
+	private final static Logger LOGGER = getLogger(PublicLinkDAO.class);
 
-	public static final String COLLECTION    = "notifications";
-	public static final String MORPHIA_KEY   = "_id";
-	public static final String DB_PREFIX     = "notification.";
-	public static final String PRIORITY_KEY  = DB_PREFIX + "priority";
-	public static final String ADDRESSE_KEY  = DB_PREFIX + "addressee";
-	public static final String ISSUED_AT_KEY = DB_PREFIX + "issuedAt";
+	public static final String COLLECTION  = "public_links";
+	public static final String DB_PREFIX   = "publicLink.";
+	public static final String PRIMARY_KEY = DB_PREFIX + "path";
+	public static final String OWNER_KEY   = DB_PREFIX + "owner";
 
-	private NotificationDAO() {
-		MONGODB_CONN.createNonUniqueIndex(PRIORITY_KEY, COLLECTION, false);
-		MONGODB_CONN.createNonUniqueIndex(ADDRESSE_KEY, COLLECTION, false);
-		MONGODB_CONN.createNonUniqueIndex(ISSUED_AT_KEY, COLLECTION, false);		
+	private PublicLinkDAO() {
+		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
+		MONGODB_CONN.createNonUniqueIndex(OWNER_KEY, COLLECTION, false);
 	}
 
 	@Override
-	public WriteResult<Notification> insert(final Notification notification) {
+	public WriteResult<PublicLink> insert(final PublicLink publicLink) {
 		// remove transient fields from the element before saving it to the database
-		final NotificationTransientStore store = NotificationTransientStore.start(notification);
+		final PublicLinkTransientStore store = PublicLinkTransientStore.start(publicLink);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return new WriteResult.Builder<Notification>().id(id).build();
+		return new WriteResult.Builder<PublicLink>().id(id).build();
 	}
 
 	@Override
-	public WriteResult<Notification> insert(final Notification notification, final boolean ignoreDuplicates) {
+	public WriteResult<PublicLink> insert(final PublicLink publicLink, final boolean ignoreDuplicates) {
 		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
-	public Notification update(final Notification notification) {
+	public PublicLink update(final PublicLink publicLink) {
 		// remove transient fields from the element before saving it to the database
-		final NotificationTransientStore store = NotificationTransientStore.start(notification);
+		final PublicLinkTransientStore store = PublicLinkTransientStore.start(publicLink);
 		final DBObject obj = map(store);
-		MONGODB_CONN.update(obj, key(store.getId()), COLLECTION);
+		MONGODB_CONN.update(obj, key(publicLink.getPath()), COLLECTION);
 		// restore transient fields
 		store.restore();
 		return null;
 	}
 
 	@Override
-	public void delete(final String id) {
-		MONGODB_CONN.remove(key(id), COLLECTION);
+	public void delete(final String path) {
+		MONGODB_CONN.remove(key(path), COLLECTION);
 	}
 
 	@Override
-	public List<Notification> findAll() {
+	public List<PublicLink> findAll() {
 		return list(0, Integer.MAX_VALUE, null, null, null);
 	}
 
 	@Override
-	public Notification find(final String id) {
-		final BasicDBObject obj = MONGODB_CONN.get(key(id), COLLECTION);		
+	public PublicLink find(final String path) {
+		final BasicDBObject obj = MONGODB_CONN.get(key(path), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
-	public List<Notification> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {		
+	public List<PublicLink> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
+			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, Notification>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, PublicLink>() {
 			@Override
-			public Notification apply(final BasicDBObject obj) {
+			public PublicLink apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
 			}
-		});		
+		});
 	}
 
 	@Override
@@ -139,12 +137,12 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	}
 
 	@Override
-	public List<Notification> getNear(final Point point, final double maxDistance) {
+	public List<PublicLink> getNear(final Point point, final double maxDistance) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<Notification> geoWithin(final Polygon polygon) {
+	public List<PublicLink> geoWithin(final Polygon polygon) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
@@ -153,51 +151,60 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 		MONGODB_CONN.stats(os, COLLECTION);
 	}
 
-	private BasicDBObject key(final String id) {
-		return new BasicDBObject(MORPHIA_KEY, new ObjectId(id));		
+	private BasicDBObject key(final String key) {
+		return new BasicDBObject(PRIMARY_KEY, key);		
+	}
+
+	private BasicDBObject ownerKey(final String key) {
+		return new BasicDBObject(OWNER_KEY, key);		
 	}
 
 	private BasicDBObject sortCriteria() {
-		return new BasicDBObject(MORPHIA_KEY, 1);
+		return new BasicDBObject(PRIMARY_KEY, 1);
 	}
 
-	private Notification parseBasicDBObject(final BasicDBObject obj) {
-		final NotificationEntity entity = map(obj);
-		final Notification notification = entity.getNotification();
-		notification.setId(entity.getId().toHexString());
-		return notification;
+	private PublicLink parseBasicDBObject(final BasicDBObject obj) {
+		return map(obj).getPublicLink();
 	}
 
-	private Notification parseBasicDBObjectOrNull(final BasicDBObject obj) {
-		Notification notification = null;		
+	private PublicLink parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		PublicLink publicLink = null;
 		if (obj != null) {
-			final NotificationEntity entity = map(obj);
+			final PublicLinkEntity entity = map(obj);
 			if (entity != null) {
-				notification = entity.getNotification();
-				notification.setId(entity.getId().toHexString());
+				publicLink = entity.getPublicLink();
 			}
 		}
-		return notification;
+		return publicLink;
 	}
 
-	private DBObject map(final NotificationTransientStore store) {
+	private DBObject map(final PublicLinkTransientStore store) {
 		DBObject obj = null;
 		try {
-			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new NotificationEntity(store.purge())));
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new PublicLinkEntity(store.purge())));
 		} catch (JsonProcessingException e) {
-			LOGGER.error("Failed to write notification to DB object", e);
+			LOGGER.error("Failed to write authN code to DB object", e);
 		}
 		return obj;
 	}
 
-	private NotificationEntity map(final BasicDBObject obj) {
-		NotificationEntity entity = null;
+	private PublicLinkEntity map(final BasicDBObject obj) {
+		PublicLinkEntity entity = null;
 		try {
-			entity = JSON_MAPPER.readValue(obj.toString(), NotificationEntity.class);		
+			entity = JSON_MAPPER.readValue(obj.toString(), PublicLinkEntity.class);		
 		} catch (IOException e) {
-			LOGGER.error("Failed to read notification from DB object", e);
+			LOGGER.error("Failed to read public link from DB object", e);
 		}
 		return entity;
+	}
+
+	public List<PublicLink> listByOwner(final String owner) {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, 0, Integer.MAX_VALUE, ownerKey(owner), null), new Function<BasicDBObject, PublicLink>() {
+			@Override
+			public PublicLink apply(final BasicDBObject obj) {
+				return parseBasicDBObject(obj);
+			}
+		});
 	}
 
 	/**
@@ -206,52 +213,52 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 	 * class and can be reinserted later in the entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	public static class NotificationTransientStore extends TransientStore<Notification> {
+	public static class PublicLinkTransientStore extends TransientStore<PublicLink> {
 
-		private String id;
+		private List<Link> links;
 
-		public NotificationTransientStore(final Notification notification) {
-			super(notification);
+		public PublicLinkTransientStore(final PublicLink publicLink) {
+			super(publicLink);
 		}
 
-		public String getId() {
-			return id;
+		public List<Link> getLinks() {
+			return links;
 		}
 
-		public Notification purge() {
-			id = element.getId();
-			element.setId(null);
+		public PublicLink purge() {
+			links = element.getLinks();
+			element.setLinks(null);
 			return element;
 		}
 
-		public Notification restore() {
-			element.setId(id);
+		public PublicLink restore() {
+			element.setLinks(links);
 			return element;
 		}
 
-		public static NotificationTransientStore start(final Notification notification) {
-			return new NotificationTransientStore(notification);
+		public static PublicLinkTransientStore start(final PublicLink publicLink) {
+			return new PublicLinkTransientStore(publicLink);
 		}
 
 	}
 
 	/**
-	 * Notification entity.
+	 * {@link PublicLink} entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	public static class NotificationEntity {
+	public static class PublicLinkEntity {
 
 		@JsonSerialize(using = ObjectIdSerializer.class)
 		@JsonDeserialize(using = ObjectIdDeserializer.class)
 		@JsonProperty("_id")
 		private ObjectId id;
 
-		private Notification notification;
+		private PublicLink publicLink;
 
-		public NotificationEntity() { }
+		public PublicLinkEntity() { }
 
-		public NotificationEntity(final Notification notification) {
-			setNotification(notification);
+		public PublicLinkEntity(final PublicLink publicLink) {
+			setPublicLink(publicLink);
 		}
 
 		public ObjectId getId() {
@@ -262,12 +269,12 @@ public enum NotificationDAO implements BaseDAO<String, Notification> {
 			this.id = id;
 		}
 
-		public Notification getNotification() {
-			return notification;
+		public PublicLink getPublicLink() {
+			return publicLink;
 		}
 
-		public void setNotification(final Notification notification) {
-			this.notification = notification;
+		public void setPublicLink(final PublicLink publicLink) {
+			this.publicLink = publicLink;
 		}
 
 	}

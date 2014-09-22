@@ -27,8 +27,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Pending users are supposed to send a confirmation code.
@@ -83,11 +82,11 @@ public class PendingUser implements Serializable {
 			return false;
 		}
 		final PendingUser other = PendingUser.class.cast(obj);
-		return Objects.equal(pendingUserId, other.pendingUserId)
-				&& Objects.equal(expiresIn, other.expiresIn)
-				&& Objects.equal(issuedAt, other.issuedAt)
-				&& Objects.equal(activationCode, other.activationCode)
-				&& Objects.equal(user, other.user);
+		return Objects.equals(pendingUserId, other.pendingUserId)
+				&& Objects.equals(expiresIn, other.expiresIn)
+				&& Objects.equals(issuedAt, other.issuedAt)
+				&& Objects.equals(activationCode, other.activationCode)
+				&& Objects.equals(user, other.user);
 	}
 
 	/**
@@ -101,16 +100,16 @@ public class PendingUser implements Serializable {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equal(pendingUserId, other.pendingUserId)
-				&& Objects.equal(expiresIn, other.expiresIn)
-				&& Objects.equal(issuedAt, other.issuedAt)
-				&& Objects.equal(activationCode, other.activationCode)
+		return Objects.equals(pendingUserId, other.pendingUserId)
+				&& Objects.equals(expiresIn, other.expiresIn)
+				&& Objects.equals(issuedAt, other.issuedAt)
+				&& Objects.equals(activationCode, other.activationCode)
 				&& ((user == null && other.user == null) || (user.equalsToUnprotected(other.user)));
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(pendingUserId, expiresIn, issuedAt, activationCode, user);
+		return Objects.hash(pendingUserId, expiresIn, issuedAt, activationCode, user);
 	}
 
 	@Override
