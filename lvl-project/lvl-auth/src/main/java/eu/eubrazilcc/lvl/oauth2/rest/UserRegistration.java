@@ -22,22 +22,21 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.getValidationField;
 import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.getValidationType;
 import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.validationResponse;
+import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getPortalEndpoint;
 import static eu.eubrazilcc.lvl.oauth2.mail.EmailSender.EMAIL_SENDER;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asSet;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
+import static java.lang.System.currentTimeMillis;
+import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -58,9 +57,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.slf4j.Logger;
-
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
@@ -72,8 +68,6 @@ import eu.eubrazilcc.lvl.storage.oauth2.User;
  */
 @Path("/pending_users")
 public class UserRegistration {
-
-	private final static Logger LOGGER = getLogger(UserRegistration.class);
 
 	/**
 	 * The lifetime in seconds of the confirmation code.
@@ -120,8 +114,8 @@ public class UserRegistration {
 		user.setScopes(asSet(user(user.getUsername())));
 		// create pending user in the database		
 		final PendingUser pendingUser = PendingUser.builder()
-				.activationCode(RandomStringUtils.random(8, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray()))
-				.issuedAt(System.currentTimeMillis() / 1000l)
+				.activationCode(randomAlphanumeric(8))
+				.issuedAt(currentTimeMillis() / 1000l)
 				.expiresIn(CONFIRMATION_CODE_EXPIRATION_SECONDS)
 				.id(user.getUsername())
 				.user(user)
@@ -184,17 +178,10 @@ public class UserRegistration {
 				.build();
 	}
 
-	private static final void sendActivation(final URI baseUri, final PendingUser pendingUser) {		
-		URI portalUri = null;
-		try {
-			final String portalEndpoint = CONFIG_MANAGER.getPortalEndpoint();
-			portalUri = isNotBlank(portalEndpoint) ? new URI(portalEndpoint.replaceAll("/$", "")) 
-			: new URI(baseUri.getScheme(), baseUri.getAuthority(), null, null, null);
-		} catch (URISyntaxException e) {
-			LOGGER.error("Failed to create LVL portal endpoint", e);
-		}
+	private static final void sendActivation(final URI baseUri, final PendingUser pendingUser) {
 		EMAIL_SENDER.sendTextEmail(pendingUser.getUser().getEmail(), emailActivationSubject(), 
-				emailActivationMessage(pendingUser.getUser().getUsername(), pendingUser.getUser().getEmail(), pendingUser.getActivationCode(), portalUri));
+				emailActivationMessage(pendingUser.getUser().getUsername(), pendingUser.getUser().getEmail(), pendingUser.getActivationCode(), 
+						getPortalEndpoint(baseUri)));
 	}
 
 	private static final String emailActivationSubject() {

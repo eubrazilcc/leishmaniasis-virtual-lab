@@ -30,6 +30,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SEQUENCES;
+import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
@@ -63,6 +64,7 @@ import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
@@ -115,6 +117,8 @@ public class ServiceTest {
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
+	private static final List<String> PUBLIC_LINKS = newArrayList();
+
 	@Before
 	public void setUp() throws Exception {
 		// load test configuration
@@ -158,6 +162,11 @@ public class ServiceTest {
 	public void cleanUp() {
 		// cleanup test file-system environment
 		deleteQuietly(TEST_OUTPUT_DIR);
+		for (final String link : PUBLIC_LINKS) {
+			try {
+				unsetPublicLink(new File(link));
+			} catch (Exception ignore) { }
+		}
 	}
 
 	@Test
@@ -574,6 +583,7 @@ public class ServiceTest {
 			location = new URI((String)response.getHeaders().get("Location").get(0));
 			publicLink.setPath(getName(getPathNoEndSeparator(location.getPath())) + "/" + getName(location.getPath()));
 			publicLink.setMime("application/gzip");
+			// TODO : add link to PUBLIC_LINKS
 
 			// test get public links
 			final PublicLinks publicLinks = target.path(path.value()).request(APPLICATION_JSON)
@@ -648,6 +658,7 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) HTTP headers: " + response.getStringHeaders());
+			// TODO : add link to PUBLIC_LINKS
 
 			// test create public link (uncompressed FASTA sequence)
 			publicLink = PublicLink.builder()
@@ -668,6 +679,7 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (FASTA sequence) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (FASTA sequence) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (FASTA sequence) HTTP headers: " + response.getStringHeaders());
+			// TODO : add link to PUBLIC_LINKS
 
 			// test create public link (uncompressed NCBI sequence)
 			publicLink = PublicLink.builder()
@@ -688,6 +700,7 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (NCBI sequence) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI sequence) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (NCBI sequence) HTTP headers: " + response.getStringHeaders());
+			// TODO : add link to PUBLIC_LINKS
 
 			// test create public link (GZIP compressed NCBI bulk of sequences)
 			publicLink = PublicLink.builder()
@@ -708,6 +721,7 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) HTTP headers: " + response.getStringHeaders());
+			// TODO : add link to PUBLIC_LINKS
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

@@ -25,11 +25,12 @@ package eu.eubrazilcc.lvl.storage.dao;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
-import static eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore.startStore;
+import static javax.ws.rs.core.UriBuilder.fromUri;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -71,15 +72,29 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 	public static final String PRIMARY_KEY = DB_PREFIX + "path";
 	public static final String OWNER_KEY   = DB_PREFIX + "owner";
 
+	private URI downloadBaseUri = null;
+
 	private PublicLinkDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		MONGODB_CONN.createNonUniqueIndex(OWNER_KEY, COLLECTION, false);
+		// reset parameters to their default values
+		reset();
+	}
+
+	public PublicLinkDAO downloadBaseUri(final URI baseUri) {
+		this.downloadBaseUri = baseUri;
+		return this;
+	}
+
+	public PublicLinkDAO reset() {
+		this.downloadBaseUri = null;
+		return this;
 	}
 
 	@Override
 	public WriteResult<PublicLink> insert(final PublicLink publicLink) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<PublicLink> store = startStore(publicLink);
+		final PublicLinkTransientStore store = new PublicLinkTransientStore(publicLink);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
@@ -95,7 +110,7 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 	@Override
 	public PublicLink update(final PublicLink publicLink) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<PublicLink> store = startStore(publicLink);
+		final PublicLinkTransientStore store = new PublicLinkTransientStore(publicLink);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(publicLink.getPath()), COLLECTION);
 		// restore transient fields
@@ -164,7 +179,9 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 	}
 
 	private PublicLink parseBasicDBObject(final BasicDBObject obj) {
-		return map(obj).getPublicLink();
+		final PublicLink publicLink = map(obj).getPublicLink();
+		addDownloadLink(publicLink);
+		return publicLink;
 	}
 
 	private PublicLink parseBasicDBObjectOrNull(final BasicDBObject obj) {
@@ -173,12 +190,19 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 			final PublicLinkEntity entity = map(obj);
 			if (entity != null) {
 				publicLink = entity.getPublicLink();
+				addDownloadLink(publicLink);
 			}
 		}
 		return publicLink;
 	}
+	
+	private void addDownloadLink(final PublicLink publicLink) {
+		if (downloadBaseUri != null) {
+			publicLink.setDownloadUri(fromUri(downloadBaseUri).path(publicLink.getPath()).build().toString());
+		}
+	}
 
-	private DBObject map(final LinkableTransientStore<PublicLink> store) {
+	private DBObject map(final PublicLinkTransientStore store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new PublicLinkEntity(store.purge())));
@@ -205,6 +229,44 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 				return parseBasicDBObject(obj);
 			}
 		});
+	}
+
+	/**
+	 * Extracts from an entity the fields that depends on the service (e.g. links) before storing the entity in the database. 
+	 * These fields are stored in this class and can be reinserted later in the entity.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public class PublicLinkTransientStore extends LinkableTransientStore<PublicLink> {
+
+		private String downloadUri;
+
+		public PublicLinkTransientStore(final PublicLink element) {
+			super(element);
+		}
+
+		public String getDownloadUri() {
+			return downloadUri;
+		}
+
+		public void setDownloadUri(final String downloadUri) {
+			this.downloadUri = downloadUri;
+		}
+
+		@Override
+		public PublicLink purge() {
+			super.purge();
+			downloadUri = element.getDownloadUri();
+			element.setDownloadUri(null);
+			return element;
+		}
+
+		@Override
+		public PublicLink restore() {
+			super.restore();
+			element.setDownloadUri(downloadUri);
+			return element;
+		}		
+
 	}	
 
 	/**

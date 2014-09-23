@@ -2,6 +2,7 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
+import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.writePublicLink;
 import static eu.eubrazilcc.lvl.storage.dao.PublicLinkDAO.PUBLIC_LINK_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
@@ -12,6 +13,7 @@ import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.io.File;
+import java.net.URI;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,12 +32,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+
+import static javax.ws.rs.core.UriBuilder.fromUri;
+
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.mutable.MutableLong;
 
 import eu.eubrazilcc.lvl.core.PublicLink;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
+import eu.eubrazilcc.lvl.core.servlet.ServletUtils;
 import eu.eubrazilcc.lvl.service.PublicLinks;
 
 /**
@@ -55,7 +61,7 @@ public class PublicLinkResource {
 	@Produces(APPLICATION_JSON)
 	public PublicLinks getPublicLinks(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
 		final PublicLinks paginable = PublicLinks.start()
 				.page(page)
@@ -63,7 +69,8 @@ public class PublicLinkResource {
 				.build();
 		// get public links from database
 		final MutableLong count = new MutableLong(0l);
-		final List<PublicLink> publicLinks = PUBLIC_LINK_DAO.list(paginable.getPageFirstEntry(), per_page, null, null, count);
+		final List<PublicLink> publicLinks = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo))
+				.list(paginable.getPageFirstEntry(), per_page, null, null, count);
 		paginable.setElements(publicLinks);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
@@ -75,13 +82,13 @@ public class PublicLinkResource {
 	@Path("{path :" + PATH_PATTERN + "}/{name: " + NAME_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public PublicLink getPublicLink(final @PathParam("path") String path, final @PathParam("name") String name,
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
 		if (isBlank(path) || isBlank(name)) {
 			throw new WebApplicationException(Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final PublicLink publicLink = PUBLIC_LINK_DAO.find(path + "/" + name);
+		final PublicLink publicLink = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo)).find(path + "/" + name);
 		if (publicLink == null) {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
@@ -142,6 +149,13 @@ public class PublicLinkResource {
 		}
 		// delete
 		PUBLIC_LINK_DAO.delete(fullpath);
+		unsetPublicLink(publicLink, CONFIG_MANAGER.getSharedDir());
+	}
+	
+	public static URI getDownloadBaseUri(final UriInfo uriInfo) {
+		final URI thisResourceEndpoint = uriInfo.getBaseUriBuilder().clone().build();
+		final URI portalEndpoint = ServletUtils.getPortalEndpoint(thisResourceEndpoint);		
+		return fromUri(portalEndpoint).path(CONFIG_MANAGER.getPublicLocation()).build();
 	}
 
 }

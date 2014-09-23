@@ -23,15 +23,25 @@
 package eu.eubrazilcc.lvl.core.servlet;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
 
 /**
  * Utility class to handle Servlet common tasks.
  * @author Erik Torres <ertorser@upv.es>
  */
 public final class ServletUtils {
+
+	private final static Logger LOGGER = getLogger(ServletUtils.class);
 
 	/**
 	 * Gets the client's IP address that's accessing the application, inspecting the request for 
@@ -47,6 +57,24 @@ public final class ServletUtils {
 			address = request.getRemoteAddr();  
 		}
 		return address;
+	}
+
+	/**
+	 * Gets the portal endpoint by inspecting the application configuration. In case that the endpoint
+	 * cannot be discovered from the configuration, 
+	 * @param baseUri - 
+	 * @return
+	 */
+	public static final URI getPortalEndpoint(final URI baseUri) {
+		URI portalUri = null;
+		try {
+			final String portalEndpoint = CONFIG_MANAGER.getPortalEndpoint();
+			portalUri = isNotBlank(portalEndpoint) ? new URI(portalEndpoint.replaceAll("/$", "")) 
+			: new URI(baseUri.getScheme(), baseUri.getAuthority(), null, null, null);
+		} catch (URISyntaxException e) {
+			LOGGER.error("Failed to create LVL portal endpoint", e);
+		}
+		return portalUri;
 	}
 
 }

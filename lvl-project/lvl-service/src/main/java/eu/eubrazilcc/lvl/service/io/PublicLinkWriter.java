@@ -35,6 +35,11 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
+import static java.nio.file.Files.delete;
+import static java.nio.file.Files.isDirectory;
+import static java.nio.file.Files.isRegularFile;
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.getBaseName;
 import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.io.IOUtils.copy;
@@ -45,6 +50,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.DirectoryNotEmptyException;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -179,6 +185,27 @@ public final class PublicLinkWriter {
 			}
 		}
 		return compression2;
+	}
+
+	public static void unsetPublicLink(final PublicLink publicLink, final File baseDir) {
+		unsetPublicLink(new File(baseDir, publicLink.getPath()));		
+	}
+
+	public static void unsetPublicLink(final File file) {
+		if (isRegularFile(file.toPath(), NOFOLLOW_LINKS)) {
+			deleteQuietly(file);
+		}
+		final File parent = file.getParentFile();
+		if (isDirectory(parent.toPath(), NOFOLLOW_LINKS)) {
+			try {
+				delete(parent.toPath());
+			} catch (DirectoryNotEmptyException e) {
+				LOGGER.warn("The directory is not empty, so was not removed: " + parent.getAbsolutePath());
+			} catch (IOException e) {
+				LOGGER.error("Failed to remove directory: " + parent.getAbsolutePath(), e);
+			}
+		}
+		LOGGER.trace("Public link was removed: " + file.getAbsolutePath());
 	}
 
 }

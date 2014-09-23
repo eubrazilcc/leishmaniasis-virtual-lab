@@ -64,6 +64,8 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 	private Target target;	
 
+	private String downloadUri;
+	
 	public PublicLink() {
 		super();
 	}
@@ -88,6 +90,14 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 	public void setTarget(final Target target) {
 		this.target = target;
+	}	
+
+	public String getDownloadUri() {
+		return downloadUri;
+	}
+
+	public void setDownloadUri(final String downloadUri) {
+		this.downloadUri = downloadUri;
 	}
 
 	@Override
@@ -96,7 +106,8 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 			return false;
 		}
 		final PublicLink other = PublicLink.class.cast(obj);
-		return Objects.equals(links, other.links)				
+		return Objects.equals(links, other.links)
+				&& Objects.equals(downloadUri, other.downloadUri)
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -111,7 +122,7 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, target);
+		return super.hashCode() + Objects.hash(links, target, downloadUri);
 	}
 
 	@Override
@@ -119,6 +130,7 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 		return toStringHelper(this)
 				.add("StorageObject", super.toString())
 				.add("target", target)
+				.add("downloadUri", downloadUri)
 				.toString();
 	}
 
@@ -161,6 +173,11 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 		public Builder target(final Target target) {
 			instance.setTarget(target);
+			return this;
+		}
+		
+		public Builder downloadUri(final String downloadUri) {
+			instance.setDownloadUri(trimToEmpty(downloadUri));
 			return this;
 		}
 
