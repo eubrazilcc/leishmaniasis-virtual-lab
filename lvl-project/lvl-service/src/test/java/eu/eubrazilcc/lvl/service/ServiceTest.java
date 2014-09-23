@@ -581,9 +581,10 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (FASTA.GZIP sequence) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (FASTA.GZIP sequence) HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));
-			publicLink.setPath(getName(getPathNoEndSeparator(location.getPath())) + "/" + getName(location.getPath()));
+			final String publicLinkPath = getPathFromLocation(location);
+			publicLink.setPath(publicLinkPath);
 			publicLink.setMime("application/gzip");
-			// TODO : add link to PUBLIC_LINKS
+			addPublicLinkForClean(publicLinkPath);
 
 			// test get public links
 			final PublicLinks publicLinks = target.path(path.value()).request(APPLICATION_JSON)
@@ -658,7 +659,8 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) HTTP headers: " + response.getStringHeaders());
-			// TODO : add link to PUBLIC_LINKS
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			addPublicLinkForClean(getPathFromLocation(location));
 
 			// test create public link (uncompressed FASTA sequence)
 			publicLink = PublicLink.builder()
@@ -679,7 +681,8 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (FASTA sequence) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (FASTA sequence) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (FASTA sequence) HTTP headers: " + response.getStringHeaders());
-			// TODO : add link to PUBLIC_LINKS
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			addPublicLinkForClean(getPathFromLocation(location));
 
 			// test create public link (uncompressed NCBI sequence)
 			publicLink = PublicLink.builder()
@@ -700,7 +703,8 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (NCBI sequence) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI sequence) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (NCBI sequence) HTTP headers: " + response.getStringHeaders());
-			// TODO : add link to PUBLIC_LINKS
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			addPublicLinkForClean(getPathFromLocation(location));
 
 			// test create public link (GZIP compressed NCBI bulk of sequences)
 			publicLink = PublicLink.builder()
@@ -721,7 +725,8 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) HTTP headers: " + response.getStringHeaders());
-			// TODO : add link to PUBLIC_LINKS
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			addPublicLinkForClean(getPathFromLocation(location));
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -729,6 +734,14 @@ public class ServiceTest {
 		} finally {			
 			System.out.println("ServiceTest.test() has finished");
 		}
+	}
+
+	private static String getPathFromLocation(final URI location) {
+		return getName(getPathNoEndSeparator(location.getPath())) + "/" + getName(location.getPath());
+	}
+
+	private static void addPublicLinkForClean(final String path) {
+		PUBLIC_LINKS.add(new File(CONFIG_MANAGER.getSharedDir(), path).getAbsolutePath());
 	}
 
 }

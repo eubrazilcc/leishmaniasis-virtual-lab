@@ -111,6 +111,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                       <li><a href="#examples_restful_api_list_sequences">List sequences</a></li>
                       <li><a href="#examples_restful_api_find_nearby_sequences">Find nearby sequences</a></li>
                       <li><a href="#examples_restful_api_import_sequences">Import new sequences into the database</a></li>
+                      <li><a href="#examples_restful_api_export_public_link_to_sequence">Export a public link to a sequence</a></li>
                     </ul></li>
                   <li><a href="#examples_oauth2">OAuth2 examples</a>
                     <ul>
@@ -204,9 +205,32 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                   A pure-JavaScript application that needs an HTTP server. <em>Recommended setup:</em> <a href="http://nginx.org/" target="_blank">nginx</a>
                   1.4.6. Optionally, you can include <a href="https://github.com/nbs-system/naxsi/wiki" target="_blank">Naxsi</a> with nginx to protect your
                   server against XSS &amp; SQL injection.
-                </p>
+                </p>                
               </li>
             </ul>
+            
+            <div class="alert alert-warning">
+              <div class="media">
+                <div class="pull-left">
+                  <h1>
+                    <span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
+                  </h1>
+                </div>
+                <div class="media-body">
+                  <h4 class="media-heading">Public links</h4>
+                  <p>
+                    Besides supporting the execution of the user interface, the HTTP server can also serve to provide access to the data that is anonymously 
+                    shared through public links. It's highly recommended that this data can be accessed outside the RESTful API to avoid overloading the
+                    Java application server. When the option <code>portal.public</code> is available in the LVL 
+                    <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-resource-bundle/src/main/etc/lvl.xml" target="_blank" class="alert-link">main configuration</a>
+                    a link will be automatically injected in the public link under the tag <code>downloadLink</code>. See the 
+                    <a href="#examples_restful_api_export_public_link_to_sequence" class="alert-link">examples</a> bellow for further details.
+                  </p>
+                </div>
+              </div>
+            </div>            
+            
+            <strong>Note:</strong> 
 
             <p>For example, the following command will install all these required dependencies in Ubuntu:</p>
 
@@ -1508,6 +1532,23 @@ Serving HTTP on 0.0.0.0 port 8000 ...
 * Connection #0 to host lvl.i3m.upv.es left intact
 * Closing connection #0
 </pre>
+
+            <h3>
+              <a id="examples_restful_api_export_public_link_to_sequence"></a>Export a public link to a sequence:
+            </h3>
+            
+            <!-- Access to the LVL is provided through a RESTful API requiring authentication to retrieve and to create/modify the data. This behaviour is required to support the requirements identified for the user interface. However, accessing from an application where users are not available will need an additional mechanism to get anonymous access to the data (read only). This mechanisn should work in a similar manner as Dropbox links works. Users will be able of creating and exporting public links to their data. Any user or application will have access to the data provided with a public link.
+
+In addition to these public links, the RESTful API will be extended with additional filters that allow users to export the sequences stored in the LVL database to the most common data formats used in bioinformatics. At least, FASTA and NCBI will be supported. Gzip compression will be optionally available. -->
+            
+            
+            
+            
+            
+            
+            
+            
+            
 
             <h2>
               <a id="examples_oauth2"></a>OAuth2 examples
