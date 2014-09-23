@@ -48,7 +48,7 @@ import eu.eubrazilcc.lvl.service.PublicLinks;
  * Public link resources.
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/public_link")
+@Path("/public_links")
 public class PublicLinkResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Shared Object Resource";
@@ -57,6 +57,8 @@ public class PublicLinkResource {
 	public static final String PATH_PATTERN = "[a-zA-Z_0-9\\.-]+";
 	public static final String NAME_PATTERN = "[a-zA-Z_0-9\\.-]+";
 
+	// TODO : add owner to all operations
+	
 	@GET
 	@Produces(APPLICATION_JSON)
 	public PublicLinks getPublicLinks(final @QueryParam("page") @DefaultValue("0") int page,
@@ -105,6 +107,7 @@ public class PublicLinkResource {
 		final String fullpath = writePublicLink(publicLink, outputDir);
 		publicLink.setPath(key + "/" + getName(fullpath));
 		publicLink.setMime(mimeType(new File(fullpath)));
+		// TODO : insert owner here!
 		// create entry in the database
 		PUBLIC_LINK_DAO.insert(publicLink);		
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(publicLink.getPath());		

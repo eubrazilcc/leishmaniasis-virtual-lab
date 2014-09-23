@@ -26,6 +26,8 @@ import static eu.eubrazilcc.lvl.storage.oauth2.dao.AuthCodeDAO.AUTH_CODE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO.CLIENT_APP_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.defaultScope;
 import static java.lang.System.currentTimeMillis;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -54,7 +56,6 @@ import org.apache.oltu.oauth2.common.message.types.GrantType;
 import eu.eubrazilcc.lvl.core.servlet.OAuth2RequestWrapper;
 import eu.eubrazilcc.lvl.oauth2.security.OAuth2TokenGenerator;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
-import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
 /**
  * Implements the OAuth 2.0 Token Endpoint using Apache Oltu.
@@ -81,7 +82,7 @@ public class OAuth2Token {
 		try {
 			final OAuthTokenRequest oauthRequest = new OAuthTokenRequest(new OAuth2RequestWrapper(request, form, null));
 			final OAuthIssuer oauthIssuerImpl = new OAuthIssuerImpl(new OAuth2TokenGenerator());			
-			String scope = null;
+			String scope = null, ownerId = null;
 
 			// check if client id is valid
 			if (!CLIENT_APP_DAO.isValid(oauthRequest.getClientId())) {
@@ -114,9 +115,9 @@ public class OAuth2Token {
 					return Response.status(response.getResponseStatus()).entity(response.getBody()).build();
 				}
 			} else if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.PASSWORD.toString())) {
-				final AtomicReference<String> scopeRef = new AtomicReference<String>();
+				final AtomicReference<String> scopeRef = new AtomicReference<String>(), ownerIdRef = new AtomicReference<String>();
 				if (!RESOURCE_OWNER_DAO.isValid(oauthRequest.getUsername(), oauthRequest.getUsername(), oauthRequest.getPassword(), 
-						"true".equalsIgnoreCase(oauthRequest.getParam(USE_EMAIL)), scopeRef)) {
+						"true".equalsIgnoreCase(oauthRequest.getParam(USE_EMAIL)), scopeRef, ownerIdRef)) {
 					final OAuthResponse response = OAuthASResponse
 							.errorResponse(HttpServletResponse.SC_BAD_REQUEST)
 							.setError(OAuthError.TokenResponse.INVALID_GRANT)
@@ -125,6 +126,7 @@ public class OAuth2Token {
 					return Response.status(response.getResponseStatus()).entity(response.getBody()).build();
 				}
 				scope = scopeRef.get();
+				ownerId = ownerIdRef.get();
 			} else if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.REFRESH_TOKEN.toString())) {
 				// refresh token is not supported in this implementation
 				final OAuthResponse response = OAuthASResponse
@@ -143,13 +145,14 @@ public class OAuth2Token {
 			}
 
 			// set scope, depending on user or default scope if grant type is code
-			scope = (scope != null ? scope : ScopeManager.defaultScope());
+			scope = (scope != null ? scope : defaultScope());
 
 			final AccessToken accessToken = AccessToken.builder()
 					.token(oauthIssuerImpl.accessToken())
 					.issuedAt(currentTimeMillis() / 1000l)
 					.expiresIn(TOKEN_EXPIRATION_SECONDS)
-					.scope(ScopeManager.asList(scope))
+					.scope(asList(scope))
+					.ownerId(ownerId)
 					.build();
 			TOKEN_DAO.insert(accessToken);
 

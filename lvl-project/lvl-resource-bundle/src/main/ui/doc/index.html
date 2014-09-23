@@ -229,8 +229,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                 </div>
               </div>
             </div>            
-            
-            <strong>Note:</strong> 
 
             <p>For example, the following command will install all these required dependencies in Ubuntu:</p>
 
@@ -333,7 +331,16 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
             <h3>Install &amp; configure Web portal</h3>
 
-            <em>TODO</em>
+            <p><em>TODO</em></p>            
+            
+            <p>Create an alias to your folder where the public files are stored. For example, in nginx, add a location alias in the <code>server</code>
+              section of the configuration to serve the public files from the filesystem in a static manner:</p>
+            
+<pre>
+location /lvl-pub/ {
+    alias /opt/lvl/data/shared/;
+}
+</pre>      
 
             <h3>Performance optimization</h3>
 
@@ -655,6 +662,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                   <li>pending-sequences,a</li>
                   <li>pipelines,a</li>
                   <li>my-sequences/*,a</li>
+                  <li>public_links,a</li>
                 </ul></li>
               <li><em>user</em>: grant read-only access to public LVL resources, full-access to user workspace
                 <ul>
@@ -662,6 +670,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                   <li>sequences</li>
                   <li>pipelines</li>
                   <li>my-sequences/&lt;username&gt;,a</li>
+                  <li>public_links/&lt;username&gt;,a</li>
                 </ul></li>
               <li><em>data-curator</em>: grant full-access to sequences
                 <ul>

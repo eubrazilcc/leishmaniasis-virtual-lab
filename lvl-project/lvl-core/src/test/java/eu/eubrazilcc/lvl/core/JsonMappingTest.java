@@ -42,6 +42,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eu.eubrazilcc.lvl.core.PublicLink.Target;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 
@@ -61,6 +62,8 @@ public class JsonMappingTest {
 			final Link seqLink = Link.fromUri(UriBuilder.fromUri("http://localhost/sequence").path("gb:ABC12345678").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
 			final Link refLink = Link.fromUri(UriBuilder.fromUri("http://localhost/paper").path("ADGJ87950").build())
+					.rel(SELF).type(APPLICATION_JSON).build();
+			final Link publicLinkLink = Link.fromUri(UriBuilder.fromUri("http://localhost/public_link").path("fjihknqswre1dvqp/353470160.fasta.gz").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
 
 			final Point point = Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build();
@@ -85,6 +88,12 @@ public class JsonMappingTest {
 					.build();
 			assertThat("reference is not null", reference, notNullValue());
 
+			final PublicLink publicLink = PublicLink.builder()
+					.target(Target.builder().type("sequence").ids(newArrayList("gb:JP540074", "gb:JP553239")).filter("export_fasta").compression("gzip").build())
+					.description("Optional description")
+					.build();
+			assertThat("public link is not null", publicLink, notNullValue());			
+
 			// test sequence with no links
 			testSequence(sequence);
 
@@ -98,6 +107,13 @@ public class JsonMappingTest {
 			// test references with links
 			reference.setLinks(newArrayList(refLink));
 			testReference(reference);
+
+			// test public links with no links
+			testPublicLink(publicLink);
+
+			// test public links with links
+			publicLink.setLinks(newArrayList(publicLinkLink));			
+			testPublicLink(publicLink);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -133,6 +149,20 @@ public class JsonMappingTest {
 		final Reference reference2 = JSON_MAPPER.readValue(payload, Reference.class);
 		assertThat("deserialized reference is not null", reference2, notNullValue());
 		assertThat("deserialized reference coincides with expected", reference2, equalTo(reference));
+	}
+
+	private void testPublicLink(final PublicLink publicLink) throws IOException {
+		// test public link JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(publicLink);
+		assertThat("serialized public link is not null", payload, notNullValue());
+		assertThat("serialized public link is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized public link (JSON): " + payload);
+
+		// test public link JSON deserialization
+		final PublicLink publicLink2 = JSON_MAPPER.readValue(payload, PublicLink.class);
+		assertThat("deserialized public link is not null", publicLink2, notNullValue());
+		assertThat("deserialized public link coincides with expected", publicLink2, equalTo(publicLink));		
 	}
 
 }

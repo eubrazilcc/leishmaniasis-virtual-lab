@@ -69,7 +69,7 @@ public final class ScopeManager {
 	public static final String MY_SEQUENCES      = "my_sequences";
 	public static final String PIPELINES         = "pipelines";
 	public static final String PUBLICATIONS      = "publications";
-	public static final String SHARED_OBJECTS    = "public_link";
+	public static final String PUBLIC_LINKS      = "public_links";
 	public static final String TASKS             = "tasks";
 
 	public static final String ALL               = "*";
@@ -91,7 +91,7 @@ public final class ScopeManager {
 				grantFullAccess(inherit(MY_SEQUENCES, ALL)),				
 				grantFullAccess(PIPELINES),
 				grantFullAccess(PUBLICATIONS),
-				grantFullAccess(SHARED_OBJECTS),
+				grantFullAccess(PUBLIC_LINKS),
 				grantFullAccess(TASKS));
 	}
 
@@ -103,7 +103,7 @@ public final class ScopeManager {
 				grantFullAccess(inherit(MY_SEQUENCES, username)),
 				PIPELINES,
 				PUBLICATIONS,
-				grantFullAccess(inherit(SHARED_OBJECTS, username)));
+				grantFullAccess(inherit(PUBLIC_LINKS, username)));
 	}
 
 	public static final String dataCurator() {

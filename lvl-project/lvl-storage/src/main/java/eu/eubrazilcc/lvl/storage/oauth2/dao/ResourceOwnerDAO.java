@@ -312,39 +312,53 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 * @param password - password to be validated
 	 * @param useEmail - use email address to search the database, instead of owner Id
 	 * @param scopeRef - if set and the resource owner is valid, then the scopes associated with the resource 
-	 *        owner are concatenated and returned to the caller to be used with OAuth 
+	 *        owner are concatenated and returned to the caller to be used with OAuth
+	 * @param ownerIdRef - if set and the resource owner is valid, then the Id of the resource owner is returned 
+	 *        to the caller
 	 * @return {@code true} only if the provided user name and password coincides
 	 *        with those stored for the resource owner. Otherwise, returns {@code false}.
 	 */
 	public boolean isValid(final String ownerId, final String username, final String password, final boolean useEmail,
-			final @Nullable AtomicReference<String> scopeRef) {
-		return !useEmail ? isValidUsingOwnerId(ownerId, username, password, scopeRef) : isValidUsingEmail(username, password,scopeRef);
-	}	
+			final @Nullable AtomicReference<String> scopeRef, final @Nullable AtomicReference<String> ownerIdRef) {
+		return !useEmail ? isValidUsingOwnerId(ownerId, username, password, scopeRef, ownerIdRef) 
+				: isValidUsingEmail(username, password, scopeRef, ownerIdRef);
+	}
 
 	private boolean isValidUsingOwnerId(final String ownerId, final String username, final String password,
-			final @Nullable AtomicReference<String> scopeRef) {
+			final @Nullable AtomicReference<String> scopeRef, final @Nullable AtomicReference<String> ownerIdRef) {
 		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
 		checkArgument(isNotBlank(username), "Uninitialized or invalid username");
 		checkArgument(isNotBlank(password), "Uninitialized or invalid password");
 		final ResourceOwner resourceOwner = find(ownerId);
 		final boolean isValid = (resourceOwner != null && resourceOwner.getUser() != null 
 				&& username.equals(resourceOwner.getUser().getUsername())				
-				&& computeHash(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));
-		if (isValid && scopeRef != null) {
-			scopeRef.set(oauthScope(resourceOwner, false));
+				&& computeHash(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));		
+		if (isValid) {
+			if (scopeRef != null) {
+				scopeRef.set(oauthScope(resourceOwner, false));
+			}
+			if (ownerIdRef != null) {
+				ownerIdRef.set(resourceOwner.getOwnerId());
+			}
 		}
 		return isValid;
 	}
 
-	private boolean isValidUsingEmail(final String email, final String password, final @Nullable AtomicReference<String> scopeRef) {
+	private boolean isValidUsingEmail(final String email, final String password, final @Nullable AtomicReference<String> scopeRef, 
+			final @Nullable AtomicReference<String> ownerIdRef) {
 		checkArgument(isNotBlank(email), "Uninitialized or invalid email address");
 		checkArgument(isNotBlank(password), "Uninitialized or invalid password");
 		final ResourceOwner resourceOwner = findByEmail(email);
 		final boolean isValid = (resourceOwner != null && resourceOwner.getUser() != null 
 				&& email.equals(resourceOwner.getUser().getEmail())
 				&& computeHash(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));
-		if (isValid && scopeRef != null) {
-			scopeRef.set(oauthScope(resourceOwner, false));
+		if (isValid) {
+			if (scopeRef != null) {
+				scopeRef.set(oauthScope(resourceOwner, false));
+			}
+			if (ownerIdRef != null) {
+				ownerIdRef.set(resourceOwner.getOwnerId());
+			}
 		}
 		return isValid;
 	}

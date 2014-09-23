@@ -36,6 +36,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.core.Link;
 
@@ -133,20 +134,26 @@ public class ResourceOwnerCollectionTest {
 			System.out.println(resourceOwner2.toString());
 
 			// check validity using owner Id and username
+			AtomicReference<String> ownerIdRef = new AtomicReference<String>();
 			boolean validity = RESOURCE_OWNER_DAO.isValid(hashed.getOwnerId(), 
 					hashed.getUser().getUsername(), 
 					plainPassword, 
 					false, 
-					null);
-			assertThat("resource owner is valid (using owner Id & username)", validity);
+					null,
+					ownerIdRef);
+			assertThat("resource owner is valid (using owner Id & username)", validity, equalTo(true));
+			assertThat("resource owner Id passed as reference coincides with expected", ownerIdRef.get(), equalTo(hashed.getOwnerId()));
 
 			// check validity using email address
+			ownerIdRef = new AtomicReference<String>();
 			validity = RESOURCE_OWNER_DAO.isValid(null, 
 					hashed.getUser().getEmail(), 
 					plainPassword, 
 					true, 
-					null);
-			assertThat("resource owner is valid (using email)", validity);			
+					null,
+					ownerIdRef);
+			assertThat("resource owner is valid (using email)", validity, equalTo(true));
+			assertThat("resource owner Id passed as reference coincides with expected", ownerIdRef.get(), equalTo(hashed.getOwnerId()));
 
 			// add scopes
 			RESOURCE_OWNER_DAO.addScopes(resourceOwner.getOwnerId(), "scope3");
