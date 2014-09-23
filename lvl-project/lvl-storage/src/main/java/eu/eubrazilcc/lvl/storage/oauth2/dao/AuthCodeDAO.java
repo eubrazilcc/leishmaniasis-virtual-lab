@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static eu.eubrazilcc.lvl.storage.transform.SameTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -52,12 +53,12 @@ import com.mongodb.util.JSON;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.AuthCode;
+import eu.eubrazilcc.lvl.storage.transform.SameTransientStore;
 
 /**
  * Authentication DAO.
@@ -80,7 +81,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	@Override
 	public WriteResult<AuthCode> insert(final AuthCode authCode) {
 		// remove transient fields from the element before saving it to the database
-		final AuthCodeTransientStore store = AuthCodeTransientStore.start(authCode);
+		final SameTransientStore<AuthCode> store = startStore(authCode);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
@@ -96,7 +97,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	@Override
 	public AuthCode update(final AuthCode authCode) {
 		// remove transient fields from the element before saving it to the database
-		final AuthCodeTransientStore store = AuthCodeTransientStore.start(authCode);
+		final SameTransientStore<AuthCode> store = startStore(authCode);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(authCode.getCode()), COLLECTION);
 		// restore transient fields
@@ -175,7 +176,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 		return authCode;
 	}
 
-	private DBObject map(final AuthCodeTransientStore store) {
+	private DBObject map(final SameTransientStore<AuthCode> store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new AuthCodeEntity(store.purge())));
@@ -209,32 +210,6 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 		return (authCode != null && authCode.getCode() != null && code.equals(authCode.getCode())
 				&& (authCode.getIssuedAt() + authCode.getExpiresIn()) > (System.currentTimeMillis() / 1000l));
 	}	
-
-	/**
-	 * Extracts from an entity the fields that depends on the service (e.g. links)
-	 * before storing the entity in the database. These fields are stored in this
-	 * class and can be reinserted later in the entity.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static class AuthCodeTransientStore extends TransientStore<AuthCode> {
-
-		public AuthCodeTransientStore(final AuthCode authCode) {
-			super(authCode);
-		}
-
-		public AuthCode purge() {
-			return element;
-		}
-
-		public AuthCode restore() {
-			return element;
-		}
-
-		public static AuthCodeTransientStore start(final AuthCode authCode) {
-			return new AuthCodeTransientStore(authCode);
-		}
-
-	}
 
 	/**
 	 * AuthCode entity.

@@ -66,10 +66,12 @@ public class Reference implements Linkable<Reference> {
 
 	public Reference() { }
 
+	@Override
 	public List<Link> getLinks() {
 		return links;
 	}
 
+	@Override
 	public void setLinks(final List<Link> links) {
 		if (links != null) {
 			this.links = newArrayList(links);

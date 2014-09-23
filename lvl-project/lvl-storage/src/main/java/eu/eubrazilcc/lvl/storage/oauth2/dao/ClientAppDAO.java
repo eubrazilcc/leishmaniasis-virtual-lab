@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static eu.eubrazilcc.lvl.storage.transform.SameTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -53,12 +54,12 @@ import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.util.NamingUtils;
-import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.ClientApp;
+import eu.eubrazilcc.lvl.storage.transform.SameTransientStore;
 
 /**
  * Client application (registration) DAO.
@@ -99,7 +100,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	@Override
 	public WriteResult<ClientApp> insert(final ClientApp clientApp) {
 		// remove transient fields from the element before saving it to the database
-		final ClientAppTransientStore store = ClientAppTransientStore.start(clientApp);
+		final SameTransientStore<ClientApp> store = startStore(clientApp);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
@@ -115,7 +116,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	@Override
 	public ClientApp update(final ClientApp clientApp) {
 		// remove transient fields from the element before saving it to the database
-		final ClientAppTransientStore store = ClientAppTransientStore.start(clientApp);
+		final SameTransientStore<ClientApp> store = startStore(clientApp);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(clientApp.getClientId()), COLLECTION);
 		// restore transient fields
@@ -194,7 +195,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 		return clientApp;
 	}
 
-	private DBObject map(final ClientAppTransientStore store) {
+	private DBObject map(final SameTransientStore<ClientApp> store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new ClientAppEntity(store.purge())));
@@ -238,32 +239,6 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 		checkArgument(isNotBlank(clientSecret), "Uninitialized or invalid client secret");
 		final ClientApp clientApp = find(clientId);		
 		return (clientApp != null && clientSecret.equals(clientApp.getClientSecret()));
-	}
-
-	/**
-	 * Extracts from an entity the fields that depends on the service (e.g. links)
-	 * before storing the entity in the database. These fields are stored in this
-	 * class and can be reinserted later in the entity.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static class ClientAppTransientStore extends TransientStore<ClientApp> {
-
-		public ClientAppTransientStore(final ClientApp clientApp) {
-			super(clientApp);
-		}
-
-		public ClientApp purge() {			
-			return element;
-		}
-
-		public ClientApp restore() {
-			return element;
-		}
-
-		public static ClientAppTransientStore start(final ClientApp clientApp) {
-			return new ClientAppTransientStore(clientApp);
-		}
-
 	}
 
 	/**

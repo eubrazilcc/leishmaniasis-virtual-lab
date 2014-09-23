@@ -79,10 +79,12 @@ public class User implements Serializable, Linkable<User> {
 
 	public User() { }
 
+	@Override
 	public List<Link> getLinks() {
 		return links;
 	}
 
+	@Override
 	public void setLinks(final List<Link> links) {
 		if (links != null) {
 			this.links = newArrayList(links);

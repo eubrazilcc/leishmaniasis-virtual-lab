@@ -62,18 +62,18 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
 
-	private Target target;
-	
-	// TODO : ? download link?
+	private Target target;	
 
 	public PublicLink() {
 		super();
 	}
 
+	@Override
 	public List<Link> getLinks() {
 		return links;
 	}
 
+	@Override
 	public void setLinks(final List<Link> links) {
 		if (links != null) {
 			this.links = newArrayList(links);

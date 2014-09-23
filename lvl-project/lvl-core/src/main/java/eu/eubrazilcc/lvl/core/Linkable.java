@@ -22,6 +22,10 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import java.util.List;
+
+import javax.ws.rs.core.Link;
+
 
 /**
  * Classes that include volatile fields, such as links that depends on the location where the application runs, implement this interface to provide 
@@ -30,7 +34,19 @@ package eu.eubrazilcc.lvl.core;
  * @param <T>  the type of objects that this object may be compared to
  */
 public interface Linkable<T> {
-	
+
+	/**
+	 * Gets the links associated to this class.
+	 * @return the links associated to this class.
+	 */
+	List<Link> getLinks();
+
+	/**
+	 * Sets the links associated to this class.
+	 * @param links - links to be associated to this class
+	 */
+	void setLinks(List<Link> links);
+
 	/**
 	 * Ignores volatile fields when comparing two instances of this class. A volatile field is a class attribute with its value assigned from local variables.
 	 * For example, a field that contains the URI of the service.
@@ -39,5 +55,5 @@ public interface Linkable<T> {
 	 *        Otherwise, {@code false}.
 	 */
 	boolean equalsIgnoringVolatile(T other);
-	
+
 }

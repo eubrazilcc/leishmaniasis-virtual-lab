@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_M
 import static eu.eubrazilcc.lvl.storage.oauth2.PendingUser.copyOf;
 import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.computeHash;
 import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.obfuscatePassword;
+import static eu.eubrazilcc.lvl.storage.transform.UserTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -37,7 +38,6 @@ import java.io.OutputStream;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -56,12 +56,12 @@ import com.mongodb.util.JSON;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
+import eu.eubrazilcc.lvl.storage.transform.UserTransientStore;
 
 /**
  * {@link PendingUser} DAO. This class detects any attempt to insert a new resource owner in the database with an unprotected password and 
@@ -88,7 +88,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	public WriteResult<PendingUser> insert(final PendingUser pendingUser) {
 		if (isNotBlank(pendingUser.getUser().getSalt())) {
 			// remove transient fields from the element before saving it to the database
-			final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
+			final UserTransientStore<PendingUser> store = startStore(pendingUser);
 			final DBObject obj = map(store);
 			final String id = MONGODB_CONN.insert(obj, COLLECTION);
 			// restore transient fields
@@ -101,7 +101,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 			copy.getUser().setSalt(shadowed[0]);
 			copy.getUser().setPassword(shadowed[1]);
 			// remove transient fields from the element before saving it to the database
-			final PendingUserTransientStore store = PendingUserTransientStore.start(copy);
+			final UserTransientStore<PendingUser> store = startStore(copy);
 			final DBObject obj = map(store);
 			final String id = MONGODB_CONN.insert(obj, COLLECTION);
 			return new WriteResult.Builder<PendingUser>()
@@ -119,7 +119,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	@Override
 	public PendingUser update(final PendingUser pendingUser) {
 		// remove transient fields from the element before saving it to the database
-		final PendingUserTransientStore store = PendingUserTransientStore.start(pendingUser);
+		final UserTransientStore<PendingUser> store = startStore(pendingUser);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(pendingUser.getPendingUserId()), COLLECTION);
 		// restore transient fields
@@ -209,7 +209,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 		return map((BasicDBObject) obj2.get("obj")).getPendingUser();
 	}
 
-	private DBObject map(final PendingUserTransientStore store) {
+	private DBObject map(final UserTransientStore<PendingUser> store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new PendingUserEntity(store.purge())));
@@ -282,41 +282,6 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 				&& activationCode.equals(pendingUser.getActivationCode()));
 		return isValid;
 	}	
-
-	/**
-	 * Extracts from an entity the fields that depends on the service (e.g. links)
-	 * before storing the entity in the database. These fields are stored in this
-	 * class and can be reinserted later in the entity.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static class PendingUserTransientStore extends TransientStore<PendingUser> {
-
-		private List<Link> links;
-		
-		public PendingUserTransientStore(final PendingUser pendingUser) {
-			super(pendingUser);
-		}
-		
-		public List<Link> getLinks() {
-			return links;
-		}
-
-		public PendingUser purge() {
-			links = element.getUser().getLinks();
-			element.getUser().setLinks(null);
-			return element;
-		}
-
-		public PendingUser restore() {
-			element.getUser().setLinks(links);
-			return element;
-		}
-
-		public static PendingUserTransientStore start(final PendingUser pendingUser) {
-			return new PendingUserTransientStore(pendingUser);
-		}
-
-	}
 
 	/**
 	 * Pending user entity.

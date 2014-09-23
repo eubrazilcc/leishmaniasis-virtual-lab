@@ -91,10 +91,12 @@ public class Sequence implements Linkable<Sequence> {
 
 	public Sequence() { }
 
+	@Override
 	public List<Link> getLinks() {
 		return links;
 	}
 
+	@Override
 	public void setLinks(final List<Link> links) {
 		if (links != null) {
 			this.links = newArrayList(links);

@@ -20,25 +20,29 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage;
+package eu.eubrazilcc.lvl.storage.transform;
 
 /**
- * Extracts from an entity the fields that depends on the service (e.g. links)
- * before storing the entity in the database. These fields are stored in this
- * class and can be reinserted later in the entity.
+ * A {@link TransientStore} that does not extract any field from an entity.
  * @author Erik Torres <ertorser@upv.es>
  * @param <T> - the type of elements in this store
  */
-public abstract class TransientStore<T> {
+public class SameTransientStore<T> extends TransientStore<T> {
 
-	protected final T element;
-
-	public TransientStore(final T element) {
-		this.element = element;
+	public SameTransientStore(final T element) {
+		super(element);
 	}
 
-	public abstract T purge();
+	public T purge() {
+		return element;
+	}
 
-	public abstract T restore();
+	public T restore() {
+		return element;
+	}
+
+	public static <T> SameTransientStore<T> startStore(final T element) {
+		return new SameTransientStore<T>(element);
+	}
 
 }

@@ -28,6 +28,7 @@ import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.isAccessible;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.el.ScopeElBuilder.buildScope;
+import static eu.eubrazilcc.lvl.storage.transform.SameTransientStore.startStore;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -55,13 +56,13 @@ import com.mongodb.util.JSON;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
+import eu.eubrazilcc.lvl.storage.transform.SameTransientStore;
 
 /**
  * Access token DAO.
@@ -86,7 +87,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	@Override
 	public WriteResult<AccessToken> insert(final AccessToken accessToken) {
 		// remove transient fields from the element before saving it to the database
-		final AccessTokenTransientStore store = AccessTokenTransientStore.start(accessToken);
+		final SameTransientStore<AccessToken> store = startStore(accessToken);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
@@ -102,7 +103,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	@Override
 	public AccessToken update(final AccessToken accessToken) {
 		// remove transient fields from the element before saving it to the database
-		final AccessTokenTransientStore store = AccessTokenTransientStore.start(accessToken);
+		final SameTransientStore<AccessToken> store = startStore(accessToken);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(accessToken.getToken()), COLLECTION);
 		// restore transient fields
@@ -185,7 +186,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		return token;
 	}
 
-	private DBObject map(final AccessTokenTransientStore store) {
+	private DBObject map(final SameTransientStore<AccessToken> store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new AccessTokenEntity(store.purge())));
@@ -245,31 +246,6 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		final AccessToken accessToken = find(token);		
 		return isValid(token) && isAccessible(addResourceOwner ? buildScope(targetScope, User.builder().username(accessToken.getOwnerId()).build()) 
 				: targetScope, accessToken.getScopes(), requestFullAccess);
-	}
-
-	/**
-	 * Extracts from an entity the fields that depends on the service (e.g. links) before storing the entity in the database. These fields are stored in 
-	 * this class and can be reinserted later in the entity.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static class AccessTokenTransientStore extends TransientStore<AccessToken> {
-
-		public AccessTokenTransientStore(final AccessToken accessToken) {
-			super(accessToken);
-		}
-
-		public AccessToken purge() {
-			return element;
-		}
-
-		public AccessToken restore() {
-			return element;
-		}
-
-		public static AccessTokenTransientStore start(final AccessToken accessToken) {
-			return new AccessTokenTransientStore(accessToken);
-		}
-
 	}
 
 	/**

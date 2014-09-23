@@ -26,6 +26,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static eu.eubrazilcc.lvl.storage.transform.SameTransientStore.startStore;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -54,10 +55,10 @@ import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBDuplicateKeyException;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
+import eu.eubrazilcc.lvl.storage.transform.SameTransientStore;
 
 /**
  * {@link Reference} DAO.
@@ -90,7 +91,7 @@ public enum ReferenceDAO implements BaseDAO<String, Reference> {
 	@Override
 	public WriteResult<Reference> insert(final Reference reference, final boolean ignoreDuplicates) {
 		// remove transient fields from the element before saving it to the database
-		final ReferenceTransientStore store = ReferenceTransientStore.start(reference);
+		final SameTransientStore<Reference> store = startStore(reference);
 		final DBObject obj = map(store);
 		String id = null; 		
 		try {
@@ -112,7 +113,7 @@ public enum ReferenceDAO implements BaseDAO<String, Reference> {
 	@Override
 	public Reference update(final Reference reference) {
 		// remove transient fields from the element before saving it to the database
-		final ReferenceTransientStore store = ReferenceTransientStore.start(reference);
+		final SameTransientStore<Reference> store = startStore(reference);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(reference.getPubmedId()), COLLECTION);
 		// restore transient fields
@@ -211,7 +212,7 @@ public enum ReferenceDAO implements BaseDAO<String, Reference> {
 		return map((BasicDBObject) obj2.get("obj")).getReference();
 	}
 
-	private DBObject map(final ReferenceTransientStore store) {
+	private DBObject map(final SameTransientStore<Reference> store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new ReferenceEntity(store.purge())));
@@ -229,33 +230,7 @@ public enum ReferenceDAO implements BaseDAO<String, Reference> {
 			LOGGER.error("Failed to read reference from DB object", e);
 		}
 		return entity;
-	}
-
-	/**
-	 * Extracts from an entity the fields that depends on the service (e.g. links)
-	 * before storing the entity in the database. These fields are stored in this
-	 * class and can be reinserted later in the entity.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static class ReferenceTransientStore extends TransientStore<Reference> {
-
-		public ReferenceTransientStore(final Reference reference) {
-			super(reference);
-		}
-
-		public Reference purge() {
-			return element;
-		}
-
-		public Reference restore() {
-			return element;
-		}
-
-		public static ReferenceTransientStore start(final Reference reference) {
-			return new ReferenceTransientStore(reference);
-		}
-
-	}
+	}	
 
 	/**
 	 * Reference entity.

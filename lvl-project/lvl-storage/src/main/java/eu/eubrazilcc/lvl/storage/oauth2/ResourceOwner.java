@@ -33,7 +33,7 @@ import java.util.Objects;
  * Simple implementation of the OAuth 2.0 resource owner using user+password.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ResourceOwner implements Serializable {
+public class ResourceOwner implements UserRole, Serializable {
 
 	private static final long serialVersionUID = -6701870173207375701L;
 
@@ -48,9 +48,11 @@ public class ResourceOwner implements Serializable {
 	public void setOwnerId(final String ownerId) {
 		this.ownerId = ownerId;
 	}
+	@Override
 	public User getUser() {
 		return user;
 	}
+	@Override
 	public void setUser(final User user) {
 		this.user = user;
 	}

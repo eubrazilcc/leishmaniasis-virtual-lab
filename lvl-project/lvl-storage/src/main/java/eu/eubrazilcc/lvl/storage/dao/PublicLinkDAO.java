@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore.startStore;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -32,7 +33,6 @@ import java.io.OutputStream;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -52,9 +52,9 @@ import eu.eubrazilcc.lvl.core.PublicLink;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
+import eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore;
 
 /**
  * {@link PublicLink} DAO.
@@ -79,7 +79,7 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 	@Override
 	public WriteResult<PublicLink> insert(final PublicLink publicLink) {
 		// remove transient fields from the element before saving it to the database
-		final PublicLinkTransientStore store = PublicLinkTransientStore.start(publicLink);
+		final LinkableTransientStore<PublicLink> store = startStore(publicLink);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
@@ -95,7 +95,7 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 	@Override
 	public PublicLink update(final PublicLink publicLink) {
 		// remove transient fields from the element before saving it to the database
-		final PublicLinkTransientStore store = PublicLinkTransientStore.start(publicLink);
+		final LinkableTransientStore<PublicLink> store = startStore(publicLink);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(publicLink.getPath()), COLLECTION);
 		// restore transient fields
@@ -178,7 +178,7 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 		return publicLink;
 	}
 
-	private DBObject map(final PublicLinkTransientStore store) {
+	private DBObject map(final LinkableTransientStore<PublicLink> store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new PublicLinkEntity(store.purge())));
@@ -205,42 +205,7 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 				return parseBasicDBObject(obj);
 			}
 		});
-	}
-
-	/**
-	 * Extracts from an entity the fields that depends on the service (e.g. links)
-	 * before storing the entity in the database. These fields are stored in this
-	 * class and can be reinserted later in the entity.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static class PublicLinkTransientStore extends TransientStore<PublicLink> {
-
-		private List<Link> links;
-
-		public PublicLinkTransientStore(final PublicLink publicLink) {
-			super(publicLink);
-		}
-
-		public List<Link> getLinks() {
-			return links;
-		}
-
-		public PublicLink purge() {
-			links = element.getLinks();
-			element.setLinks(null);
-			return element;
-		}
-
-		public PublicLink restore() {
-			element.setLinks(links);
-			return element;
-		}
-
-		public static PublicLinkTransientStore start(final PublicLink publicLink) {
-			return new PublicLinkTransientStore(publicLink);
-		}
-
-	}
+	}	
 
 	/**
 	 * {@link PublicLink} entity.

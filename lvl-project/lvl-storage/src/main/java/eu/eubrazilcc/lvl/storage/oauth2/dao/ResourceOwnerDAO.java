@@ -33,6 +33,7 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asOAuthString;
 import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.computeHash;
 import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.obfuscatePassword;
+import static eu.eubrazilcc.lvl.storage.transform.UserTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -62,7 +62,6 @@ import com.mongodb.util.JSON;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
-import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.dao.BaseDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.gravatar.Gravatar;
@@ -70,6 +69,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
+import eu.eubrazilcc.lvl.storage.transform.UserTransientStore;
 
 /**
  * {@link ResourceOwner} DAO. This class detects any attempt to insert a new resource owner in the database with an unprotected password and 
@@ -131,7 +131,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public WriteResult<ResourceOwner> insert(final ResourceOwner resourceOwner) {
 		if (isNotBlank(resourceOwner.getUser().getSalt())) {
 			// remove transient fields from the element before saving it to the database
-			final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
+			final UserTransientStore<ResourceOwner> store = startStore(resourceOwner);
 			final DBObject obj = map(store);
 			final String id = MONGODB_CONN.insert(obj, COLLECTION);
 			// restore transient fields
@@ -143,8 +143,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 			final String[] shadowed = obfuscatePassword(copy.getUser().getPassword());			
 			copy.getUser().setSalt(shadowed[0]);
 			copy.getUser().setPassword(shadowed[1]);
-			// remove transient fields from the element before saving it to the database			
-			final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(copy);
+			// remove transient fields from the element before saving it to the database
+			final UserTransientStore<ResourceOwner> store = startStore(copy);
 			final DBObject obj = map(store);
 			final String id = MONGODB_CONN.insert(obj, COLLECTION);
 			return new WriteResult.Builder<ResourceOwner>()
@@ -162,7 +162,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	@Override
 	public ResourceOwner update(final ResourceOwner resourceOwner) {
 		// remove transient fields from the element before saving it to the database
-		final ResourceOwnerTransientStore store = ResourceOwnerTransientStore.start(resourceOwner);
+		final UserTransientStore<ResourceOwner> store = startStore(resourceOwner);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(resourceOwner.getOwnerId()), COLLECTION);
 		// restore transient fields
@@ -267,7 +267,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		}
 	}
 
-	private DBObject map(final ResourceOwnerTransientStore store) {
+	private DBObject map(final UserTransientStore<ResourceOwner> store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new ResourceOwnerEntity(store.purge())));
@@ -420,51 +420,6 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		return (resourceOwner.getUser() != null && resourceOwner.getUser().getScopes() != null 
 				? asOAuthString(resourceOwner.getUser().getScopes(), sort) : null);
 	}	
-
-	/**
-	 * Extracts from an entity the fields that depends on the service (e.g. links)
-	 * before storing the entity in the database. These fields are stored in this
-	 * class and can be reinserted later in the entity.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static class ResourceOwnerTransientStore extends TransientStore<ResourceOwner> {
-
-		private List<Link> links;
-		private String prictureUrl;
-
-		public ResourceOwnerTransientStore(final ResourceOwner resourceOwner) {
-			super(resourceOwner);
-		}
-		
-		public List<Link> getLinks() {
-			return links;
-		}
-
-		public String getPrictureUrl() {
-			return prictureUrl;
-		}
-
-		public ResourceOwner purge() {
-			// store
-			links = element.getUser().getLinks();
-			prictureUrl = element.getUser().getPictureUrl();
-			// remove
-			element.getUser().setLinks(null);
-			element.getUser().setPictureUrl(null);			
-			return element;
-		}
-
-		public ResourceOwner restore() {
-			element.getUser().setLinks(links);
-			element.getUser().setPictureUrl(prictureUrl);
-			return element;
-		}
-
-		public static ResourceOwnerTransientStore start(final ResourceOwner resourceOwner) {
-			return new ResourceOwnerTransientStore(resourceOwner);
-		}
-
-	}
 
 	/**
 	 * Resource owner entity.

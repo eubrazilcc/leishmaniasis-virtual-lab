@@ -27,6 +27,7 @@ import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -37,7 +38,6 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Link;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.bson.types.ObjectId;
@@ -62,9 +62,9 @@ import eu.eubrazilcc.lvl.storage.InvalidFilterParseException;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
 import eu.eubrazilcc.lvl.storage.SequenceGiKey;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
-import eu.eubrazilcc.lvl.storage.TransientStore;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
+import eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore;
 
 /**
  * {@link Sequence} DAO.
@@ -99,7 +99,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	@Override
 	public WriteResult<Sequence> insert(final Sequence sequence) {
 		// remove transient fields from the element before saving it to the database
-		final SequenceTransientStore store = SequenceTransientStore.start(sequence);
+		final LinkableTransientStore<Sequence> store = startStore(sequence);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
@@ -115,7 +115,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 	@Override
 	public Sequence update(final Sequence sequence) {
 		// remove transient fields from the element before saving it to the database
-		final SequenceTransientStore store = SequenceTransientStore.start(sequence);
+		final LinkableTransientStore<Sequence> store = startStore(sequence);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(SequenceKey.builder()
 				.dataSource(sequence.getDataSource())
@@ -339,7 +339,7 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		return map((BasicDBObject) obj2.get("obj")).getSequence();
 	}
 
-	private DBObject map(final SequenceTransientStore store) {
+	private DBObject map(final LinkableTransientStore<Sequence> store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) parse(JSON_MAPPER.writeValueAsString(new SequenceEntity(store.purge())));
@@ -357,41 +357,6 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 			LOGGER.error("Failed to read sequence from DB object", e);
 		}
 		return entity;
-	}
-
-	/**
-	 * Extracts from an entity the fields that depends on the service (e.g. links)
-	 * before storing the entity in the database. These fields are stored in this
-	 * class and can be reinserted later in the entity.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static class SequenceTransientStore extends TransientStore<Sequence> {
-		
-		private List<Link> links;
-
-		public SequenceTransientStore(final Sequence sequence) {
-			super(sequence);
-		}
-		
-		public List<Link> getLinks() {
-			return links;
-		}
-
-		public Sequence purge() {
-			links = element.getLinks();
-			element.setLinks(null);
-			return element;
-		}
-
-		public Sequence restore() {
-			element.setLinks(links);
-			return element;
-		}
-
-		public static SequenceTransientStore start(final Sequence sequence) {
-			return new SequenceTransientStore(sequence);
-		}
-
 	}
 
 	/**

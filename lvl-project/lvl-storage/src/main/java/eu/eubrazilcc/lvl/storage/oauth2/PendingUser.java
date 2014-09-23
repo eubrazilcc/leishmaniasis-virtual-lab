@@ -33,7 +33,7 @@ import java.util.Objects;
  * Pending users are supposed to send a confirmation code.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PendingUser implements Serializable {
+public class PendingUser implements UserRole, Serializable {
 
 	private static final long serialVersionUID = 4734782376847178866L;
 
@@ -69,9 +69,11 @@ public class PendingUser implements Serializable {
 	public void setActivationCode(final String activationCode) {
 		this.activationCode = activationCode;
 	}
+	@Override
 	public User getUser() {
 		return user;
 	}
+	@Override
 	public void setUser(final User user) {
 		this.user = user;
 	}
