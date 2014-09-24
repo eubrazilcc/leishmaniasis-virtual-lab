@@ -36,6 +36,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -237,15 +238,23 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	 * @param requestFullAccess - {@code true} if the caller is requesting other kind of access than read only access
 	 * @param addResourceOwner - set this to {@code true} when the identity of the resource owner is unknown and the target scope is under the
 	 *        scope of the resource owner. For example: {@code target_scope/username}.
+	 * @param ownerIdRef - if set and the resource owner is valid, then the Id of the resource owner is returned 
+	 *        to the caller
 	 * @return {@code true} only if the provided secret (token) is found in the storage, is currently valid (not expired) and grant access to the 
 	 *         specified scope with the specified permissions. Otherwise, returns {@code false}.
 	 */
-	public boolean isValid(final String token, final String targetScope, final boolean requestFullAccess, final boolean addResourceOwner) {
+	public boolean isValid(final String token, final String targetScope, final boolean requestFullAccess, final boolean addResourceOwner,
+			final @Nullable AtomicReference<String> ownerIdRef) {
 		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
 		checkArgument(isNotBlank(targetScope), "Uninitialized or invalid target scope");
 		final AccessToken accessToken = find(token);		
-		return isValid(token) && isAccessible(addResourceOwner ? buildScope(targetScope, User.builder().username(accessToken.getOwnerId()).build()) 
-				: targetScope, accessToken.getScopes(), requestFullAccess);
+		final boolean isValid = isValid(token) && isAccessible(addResourceOwner 
+				? buildScope(targetScope, User.builder().username(accessToken.getOwnerId()).build()) 
+						: targetScope, accessToken.getScopes(), requestFullAccess);
+		if (isValid && ownerIdRef != null) {
+			ownerIdRef.set(accessToken.getOwnerId());
+		}
+		return isValid;
 	}
 
 	/**

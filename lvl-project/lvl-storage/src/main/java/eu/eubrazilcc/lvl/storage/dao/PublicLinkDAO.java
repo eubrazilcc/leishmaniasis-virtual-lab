@@ -22,10 +22,12 @@
 
 package eu.eubrazilcc.lvl.storage.dao;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static javax.ws.rs.core.UriBuilder.fromUri;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -61,7 +63,7 @@ import eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore;
  * {@link PublicLink} DAO.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
+public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 
 	PUBLIC_LINK_DAO;
 
@@ -108,7 +110,7 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 	}
 
 	@Override
-	public PublicLink update(final PublicLink publicLink) {
+	public PublicLink update(final PublicLink publicLink) {		
 		// remove transient fields from the element before saving it to the database
 		final PublicLinkTransientStore store = new PublicLinkTransientStore(publicLink);
 		final DBObject obj = map(store);
@@ -125,25 +127,42 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 
 	@Override
 	public List<PublicLink> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null, null);
+		return findAll(null);
 	}
 
 	@Override
-	public PublicLink find(final String path) {
-		final BasicDBObject obj = MONGODB_CONN.get(key(path), COLLECTION);		
+	public List<PublicLink> findAll(final String user) {
+		return list(0, Integer.MAX_VALUE, null, null, null, user);
+	}
+
+	@Override
+	public PublicLink find(final String path) {	
+		return find(path, null);
+	}
+
+	@Override
+	public PublicLink find(final String path, final String user) {
+		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(path, user) : key(path), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
 	public List<PublicLink> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
 			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
-		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, PublicLink>() {
+		return list(start, size, filter, sorting, count, null);
+	}	
+
+	@Override
+	public List<PublicLink> list(final int start, final int size, final ImmutableMap<String, String> filter, 
+			final Sorting sorting, final MutableLong count, final String user) {
+		// execute the query in the database using the user to filter the results in case that a valid one is provided
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, isNotBlank(user) ? ownerKey(user) : null, count), 
+				new Function<BasicDBObject, PublicLink>() {
 			@Override
 			public PublicLink apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
 			}
-		});
+		});		
 	}
 
 	@Override
@@ -157,7 +176,17 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 	}
 
 	@Override
+	public List<PublicLink> getNear(final Point point, final double maxDistance, final String user) {
+		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
+	}
+
+	@Override
 	public List<PublicLink> geoWithin(final Polygon polygon) {
+		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
+	}
+
+	@Override
+	public List<PublicLink> geoWithin(final Polygon polygon, final String user) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
@@ -172,6 +201,10 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 
 	private BasicDBObject ownerKey(final String key) {
 		return new BasicDBObject(OWNER_KEY, key);		
+	}
+
+	private BasicDBObject compositeKey(final String path, final String ownerId) {
+		return new BasicDBObject(of(PRIMARY_KEY, path, OWNER_KEY, ownerId));
 	}
 
 	private BasicDBObject sortCriteria() {
@@ -195,7 +228,7 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 		}
 		return publicLink;
 	}
-	
+
 	private void addDownloadLink(final PublicLink publicLink) {
 		if (downloadBaseUri != null) {
 			publicLink.setDownloadUri(fromUri(downloadBaseUri).path(publicLink.getPath()).build().toString());
@@ -220,15 +253,6 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 			LOGGER.error("Failed to read public link from DB object", e);
 		}
 		return entity;
-	}
-
-	public List<PublicLink> listByOwner(final String owner) {
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, 0, Integer.MAX_VALUE, ownerKey(owner), null), new Function<BasicDBObject, PublicLink>() {
-			@Override
-			public PublicLink apply(final BasicDBObject obj) {
-				return parseBasicDBObject(obj);
-			}
-		});
 	}
 
 	/**
@@ -304,6 +328,6 @@ public enum PublicLinkDAO implements BaseDAO<String, PublicLink> {
 			this.publicLink = publicLink;
 		}
 
-	}
+	}	
 
 }

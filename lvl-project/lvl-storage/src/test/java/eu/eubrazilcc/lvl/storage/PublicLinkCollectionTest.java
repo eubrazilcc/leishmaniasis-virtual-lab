@@ -73,8 +73,8 @@ public class PublicLinkCollectionTest {
 			assertThat("public link coincides with original", publicLink2, equalTo(publicLink));
 			System.out.println(publicLink2.toString());
 
-			// list by owner Id
-			List<PublicLink> publicLinks = PUBLIC_LINK_DAO.listByOwner(publicLink.getOwner());
+			// list all by owner Id
+			List<PublicLink> publicLinks = PUBLIC_LINK_DAO.findAll(publicLink.getOwner());
 			assertThat("public links are not null", publicLinks, notNullValue());
 			assertThat("public links are not empty", !publicLinks.isEmpty(), equalTo(true));
 			assertThat("number of public links coincides with expected", publicLinks.size(), equalTo(1));

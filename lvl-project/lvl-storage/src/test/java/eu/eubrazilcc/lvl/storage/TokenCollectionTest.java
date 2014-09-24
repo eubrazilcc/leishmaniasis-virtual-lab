@@ -32,6 +32,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
@@ -48,7 +49,7 @@ public class TokenCollectionTest {
 	public void test() {
 		System.out.println("TokenCollectionTest.test()");
 		try {
-			final Collection<String> scopes = newArrayList("scope1", "scope2", "scope2/username1");
+			final Collection<String> scopes = newArrayList("scope1", "scope2", "scope2/username1", "scope3,a");
 			// insert
 			final AccessToken accessToken = AccessToken.builder()
 					.token("1234567890abcdEFGhiJKlMnOpqrstUVWxyZ")
@@ -82,13 +83,21 @@ public class TokenCollectionTest {
 			assertThat("number of access tokens coincides with expected", accessTokens.size(), equalTo(1));
 			assertThat("access tokens coincide with original", accessTokens.get(0), equalTo(accessToken));			
 
-			// check validity
+			// check validity			
 			boolean validity = TOKEN_DAO.isValid(accessToken.getToken());
 			assertThat("access token is valid", validity, equalTo(true));
-			validity = TOKEN_DAO.isValid(accessToken.getToken(), "scope2", false, false);
+			
+			AtomicReference<String> ownerIdRef = new AtomicReference<String>();
+			validity = TOKEN_DAO.isValid(accessToken.getToken(), "scope2", false, false, ownerIdRef);
 			assertThat("access token is valid using target scope", validity, equalTo(true));
-			validity = TOKEN_DAO.isValid(accessToken.getToken(), "scope2", false, true);
+			assertThat("owner id coincides is not null", ownerIdRef.get(), notNullValue());
+			assertThat("owner id coincides with expected", ownerIdRef.get(), equalTo(accessToken.getOwnerId()));
+			
+			ownerIdRef = new AtomicReference<String>();
+			validity = TOKEN_DAO.isValid(accessToken.getToken(), "scope2", false, true, ownerIdRef);
 			assertThat("access token is valid using target scope and resource owner Id", validity, equalTo(true));
+			assertThat("owner id coincides is not null", ownerIdRef.get(), notNullValue());
+			assertThat("owner id coincides with expected", ownerIdRef.get(), equalTo(accessToken.getOwnerId()));
 			
 			// remove
 			TOKEN_DAO.delete(accessToken.getToken());

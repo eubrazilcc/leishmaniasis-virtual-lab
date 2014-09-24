@@ -112,8 +112,9 @@ public class ServiceTest {
 	private static final String BASE_URI = HOST + SERVICE;
 
 	private WebTarget target;
-	private static final String TOKEN_ROOT = "1234567890abcdEFGhiJKlMnOpqrstUVWxyZ";
-	private static final String TOKEN_USER = "0987654321zYXwvuTSRQPoNmLkjIHgfeDCBA";
+	private static final String TOKEN_ROOT  = "1234567890abcdEFGhiJKlMnOpqrstUVWxyZ";
+	private static final String TOKEN_USER  = "0987654321zYXwvuTSRQPoNmLkjIHgfeDCBA";
+	private static final String TOKEN_USER2 = "zYXwvuTSRQPoNmLkjIHgfeDCBA1234567890";
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
@@ -147,6 +148,7 @@ public class ServiceTest {
 				.token(TOKEN_ROOT)
 				.issuedAt(currentTimeMillis() / 1000l)
 				.expiresIn(604800l)
+				.ownerId("root")
 				.scope(asList(all()))
 				.build());
 		TOKEN_DAO.insert(AccessToken.builder()
@@ -155,6 +157,13 @@ public class ServiceTest {
 				.expiresIn(604800l)
 				.ownerId("user1")
 				.scope(asList(user("user1")))
+				.build());
+		TOKEN_DAO.insert(AccessToken.builder()
+				.token(TOKEN_USER2)
+				.issuedAt(currentTimeMillis() / 1000l)
+				.expiresIn(604800l)
+				.ownerId("user2")
+				.scope(asList(user("user2")))
 				.build());
 	}
 
@@ -586,18 +595,44 @@ public class ServiceTest {
 			publicLink.setMime("application/gzip");
 			addPublicLinkForClean(publicLinkPath);
 
-			// test get public links
-			final PublicLinks publicLinks = target.path(path.value()).request(APPLICATION_JSON)
+			// test list public links (from super-user account)
+			PublicLinks publicLinks = target.path(path.value()).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.get(PublicLinks.class);
+			assertThat("Get public links (root account) result is not null", publicLinks, notNullValue());
+			assertThat("Get public links (root account) list is not null", publicLinks.getElements(), notNullValue());
+			assertThat("Get public links (root account) list is not empty", publicLinks.getElements().isEmpty(), equalTo(false));
+			assertThat("Get public links (root account) items count coincide with list size", publicLinks.getElements().size(), 
+					equalTo(publicLinks.getTotalCount()));
+			/* uncomment for additional output */			
+			System.out.println(" >> Get public links (root account) result: " + publicLinks.toString());
+
+			// test list public links (from user unauthorized user account)
+			publicLinks = target.path(path.value()).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER2))
+					.get(PublicLinks.class);
+			assertThat("Get public links (unauthorized user account) result is not null", publicLinks, notNullValue());
+			assertThat("Get public links (unauthorized user account) list is not null", publicLinks.getElements(), notNullValue());
+			assertThat("Get public links (unauthorized user account) list is empty", publicLinks.getElements().isEmpty(), equalTo(true));
+			assertThat("Get public links (unauthorized user account) items count coincide with list size", publicLinks.getElements().size(), 
+					equalTo(publicLinks.getTotalCount()));
+			/* uncomment for additional output */			
+			System.out.println(" >> Get public links (unauthorized user account) result: " + publicLinks.toString());
+
+			// test list public links (from user account)
+			publicLinks = target.path(path.value()).request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.get(PublicLinks.class);
-			assertThat("Get public links result is not null", publicLinks, notNullValue());
-			assertThat("Get public links list is not null", publicLinks.getElements(), notNullValue());
-			assertThat("Get public links list is not empty", !publicLinks.getElements().isEmpty());
-			assertThat("Get public links items count coincide with list size", publicLinks.getElements().size(), equalTo(publicLinks.getTotalCount()));
+			assertThat("Get public links (user account) result is not null", publicLinks, notNullValue());
+			assertThat("Get public links (user account) list is not null", publicLinks.getElements(), notNullValue());
+			assertThat("Get public links (user account) list is not empty", publicLinks.getElements().isEmpty(), equalTo(false));
+			assertThat("Get public links (user account) items count coincide with list size", publicLinks.getElements().size(), 
+					equalTo(publicLinks.getTotalCount()));
 			/* uncomment for additional output */			
-			System.out.println(" >> Get public links result: " + publicLinks.toString());
+			System.out.println(" >> Get public links (user account) result: " + publicLinks.toString());
 
 			// test get public link
+			publicLink.setOwner("user1");
 			final PublicLink publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getPath())
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))

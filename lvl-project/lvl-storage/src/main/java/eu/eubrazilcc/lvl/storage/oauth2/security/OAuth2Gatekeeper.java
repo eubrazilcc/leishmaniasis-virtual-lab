@@ -23,13 +23,17 @@
 package eu.eubrazilcc.lvl.storage.oauth2.security;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getClientAddress;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_HEADER_OAUTH2;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -51,6 +55,8 @@ import org.apache.oltu.oauth2.rs.request.OAuthAccessResourceRequest;
 import org.apache.oltu.oauth2.rs.response.OAuthRSResponse;
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableMap;
+
 import eu.eubrazilcc.lvl.core.servlet.OAuth2RequestWrapper;
 
 /**
@@ -65,6 +71,11 @@ public final class OAuth2Gatekeeper {
 
 	private static final Logger LOGGER = getLogger(OAuth2Gatekeeper.class);
 
+	public static final String OWNER_ID = "owner_id";
+	public static final String ACCESS_TYPE = "access_type";
+	public static final String RESOURCE_WIDE_ACCESS = "resource_access";
+	public static final String USER_ACCESS = "user_access";
+
 	public static final String bearerHeader(final String token) {
 		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
 		return AUTHORIZATION_HEADER_OAUTH2 + token;
@@ -77,7 +88,7 @@ public final class OAuth2Gatekeeper {
 		return map;
 	}
 
-	public static final void authorize(final HttpServletRequest request, 
+	public static final ImmutableMap<String, String> authorize(final HttpServletRequest request, 
 			final @Nullable MultivaluedMap<String, String> form,
 			final @Nullable HttpHeaders headers, 
 			final String resourceScope,
@@ -85,7 +96,7 @@ public final class OAuth2Gatekeeper {
 			final boolean addResourceOwner,
 			final String resourceName) {
 		try {
-			authorizeInternal(request, form, headers, resourceScope, requestFullAccess, addResourceOwner, resourceName);
+			return authorizeInternal(request, form, headers, resourceScope, requestFullAccess, addResourceOwner, resourceName);
 		} catch (OAuthSystemException e) {
 			LOGGER.error("Authorization failed", e);
 			throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -94,12 +105,12 @@ public final class OAuth2Gatekeeper {
 		}
 	}
 
-	public static final void checkAuthenticateAccess(final HttpServletRequest request, 
+	public static final ImmutableMap<String, String> checkAuthenticateAccess(final HttpServletRequest request, 
 			final @Nullable MultivaluedMap<String, String> form,
 			final @Nullable HttpHeaders headers,
 			final String resourceName) {
 		try {
-			authorizeInternal(request, form, headers, null, false, false, resourceName);
+			return authorizeInternal(request, form, headers, null, false, false, resourceName);
 		} catch (OAuthSystemException e) {
 			LOGGER.error("Authorization failed", e);
 			throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -108,7 +119,7 @@ public final class OAuth2Gatekeeper {
 		}
 	}
 
-	private static final void authorizeInternal(final HttpServletRequest request, 
+	private static final ImmutableMap<String, String> authorizeInternal(final HttpServletRequest request, 
 			final @Nullable MultivaluedMap<String, String> form,
 			final @Nullable HttpHeaders headers, 
 			final @Nullable String resourceScope,
@@ -116,6 +127,8 @@ public final class OAuth2Gatekeeper {
 			final boolean addResourceOwner,
 			final String resourceName) throws OAuthSystemException {
 		try {
+			ImmutableMap<String, String> access = null;
+
 			// make the OAuth request out of this request
 			final OAuthAccessResourceRequest oauthRequest = new OAuthAccessResourceRequest(
 					new OAuth2RequestWrapper(request, form, headers), ParameterStyle.HEADER);		
@@ -125,8 +138,17 @@ public final class OAuth2Gatekeeper {
 
 			// validate the access token
 			if (resourceScope != null) {
-				// resource that requires special permissions
-				if (!TOKEN_DAO.isValid(accessToken, resourceScope, requestFullAccess, addResourceOwner)) {
+				// resource that requires special permissions, start by checking if the holder of the token has access to the root of 
+				// the resource (regardless of the identity of the resource owner) and then check user-based access
+				final AtomicReference<String> ownerIdRef = new AtomicReference<String>();
+				if (TOKEN_DAO.isValid(accessToken, resourceScope, requestFullAccess, false, ownerIdRef)) {					
+					access = of(OWNER_ID, ownerIdRef.get(), ACCESS_TYPE, RESOURCE_WIDE_ACCESS);
+				} else if (addResourceOwner) {
+					if (TOKEN_DAO.isValid(accessToken, resourceScope, requestFullAccess, addResourceOwner, ownerIdRef)) {						
+						access = of(OWNER_ID, ownerIdRef.get(), ACCESS_TYPE, USER_ACCESS);
+					}
+				}
+				if (access == null || isBlank(access.get(OWNER_ID)) || isBlank(access.get(ACCESS_TYPE))) {
 					invalidCredentialError(request, resourceName);
 				}
 			} else {
@@ -135,6 +157,7 @@ public final class OAuth2Gatekeeper {
 					invalidCredentialError(request, resourceName);
 				}
 			}
+			return access;
 
 		} catch (OAuthProblemException e) {
 			// check if the error code has been set
