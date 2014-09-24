@@ -1546,18 +1546,394 @@ Serving HTTP on 0.0.0.0 port 8000 ...
               <a id="examples_restful_api_export_public_link_to_sequence"></a>Export a public link to a sequence:
             </h3>
             
-            <!-- Access to the LVL is provided through a RESTful API requiring authentication to retrieve and to create/modify the data. This behaviour is required to support the requirements identified for the user interface. However, accessing from an application where users are not available will need an additional mechanism to get anonymous access to the data (read only). This mechanisn should work in a similar manner as Dropbox links works. Users will be able of creating and exporting public links to their data. Any user or application will have access to the data provided with a public link.
+            <p>Access to the LVL is provided through a RESTful API requiring authentication to retrieve and to create/modify the data. This behaviour is 
+              required to support the requirements identified for the LVL in the project EUBrazilCC. However, accessing from a programmatic environment where 
+              users are not available needs an additional mechanism to provide services and applications with anonymous access to the data (read only). The 
+              mechanisn implemented in the LVL works in a similar manner as Dropbox links do. Users are able of creating and exporting public links to 
+              their data, and any user or application have access to the data provided with a public link.</p>
+              
+            <p>In addition to these public links, the RESTful API provides additional filters that allow users to export the sequences stored in the LVL 
+              database to the most common data formats used in bioinformatics (<a href="http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml" target="_blank">FASTA</a> 
+              and <a href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html" target="_blank">NCBI</a> are currently supported). Gzip compression 
+              is optionally available. The following example shows how a new link to an existing sequence can be created using the RESTful API:</p>
+              
+<pre>
+{
+    "description": "Public link to FASTA.GZIP sequences",
+    "downloadUri": null,
+    "links": null,
+    "mime": null,
+    "owner": null,
+    "path": null,
+    "target": {
+        "compression": "gzip",
+        "filter": "export_fasta",
+        "ids": [
+            "gb:JP540074",
+            "gb:JP553239"
+        ],
+        "type": "sequence"
+    }
+}
+</pre>              
 
-In addition to these public links, the RESTful API will be extended with additional filters that allow users to export the sequences stored in the LVL database to the most common data formats used in bioinformatics. At least, FASTA and NCBI will be supported. Gzip compression will be optionally available. -->
+            <p>The only field required in the request is <code>target</code>. In this case, the origin of the public link is of <code>type</code> sequence
+              and two sequence identifiers are passed. A <code>filter</code> is applied to export the sequence to FASTA and GZIP <code>compression</code>
+              is requested. Other possible values are: <code>filter:export</code> to export the sequences in the default format (NCBI XML sequence format),
+              and <code>compression:null</code> or <code>compression:none</code> to export the sequences with no compression.</p>
             
+            <div class="alert alert-info">
+              <div class="media">
+                <div class="pull-left">
+                  <h1>
+                    <span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
+                  </h1>
+                </div>
+                <div class="media-body">
+                  <h4 class="media-heading">Sequence identifiers</h4>
+                  <p>
+                    Sequence identifiers include the original database where the sequence was submitted (e.g. GenBank) and the accession number in 
+                    the original database (e.g. JP540074). Valid sequence identifiers can be built using both forms the database name: a) long version: 
+                    <code>GenBank:JP540074</code>; or b) short version <code>gb:JP540074</code>. Sequence identifiers are case insensitive.
+                  </p>
+                </div>
+              </div>
+            </div>
             
+            <p>After submitting the request to the LVL, the server response header will include the standar <code>location</code> field.</p>
             
+            <code>$ curl -i -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' -X POST -H "Content-Type: application/json" -d '{"path":null,"mime":null,"description":"Public link to FASTA.GZIP sequences","owner":null,"target":{"type":"sequence","ids":["gb:JP540074","gb:JP553239"],"filter":"export_fasta","compression":"gzip"},"downloadUri":null,"links":null}' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links</code>
+            <p></p>
             
+<pre>
+HTTP/1.1 201 Created
+Server: nginx/1.4.6 (Ubuntu)
+Date: Wed, 24 Sep 2014 11:08:17 GMT
+Content-Length: 0
+Connection: keep-alive
+Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5/sequences.fasta.gz
+</pre>
+
+            <p>Once the public link is created, the expected operations for consulting, updating and removing it are provided in the RESTful API.</p>
+
+            <p>The public link can be retrieved from the LVL using the location. Note that the server response is always in JSON format, regardless the
+              file extension:</p>
+
+            <code>$ curl -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5/sequences.fasta.gz</code>
+            <p></p>
+
+<pre>
+{
+    "description": "Public link to FASTA.GZIP sequences",
+    "downloadUri": "http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz",
+    "links": [
+        {
+            "href": "/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5/sequences.fasta.gz",
+            "params": {
+                "rel": "self",
+                "type": "application/json"
+            }
+        }
+    ],
+    "mime": "application/gzip",
+    "owner": "user1",
+    "path": "bui6vm4cinxg9so5/sequences.fasta.gz",
+    "target": {
+        "compression": "gzip",
+        "filter": "export_fasta",
+        "ids": [
+            "gb:JP540074",
+            "gb:JP553239"
+        ],
+        "type": "sequence"
+    }
+}
+</pre>
             
+            <p>Additional fields are available in the server response. The <code>downloadUri</code> is especially usefull to download the data from 
+              a storage that is optimized for this purpose:</p>
             
+            <code>$ wget http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz</code>
+            <p></p>
+
+<pre>
+--2014-09-24 13:17:21--  http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz
+Resolving lvl.i3m.upv.es (lvl.i3m.upv.es)... 158.42.105.62
+Connecting to lvl.i3m.upv.es (lvl.i3m.upv.es)|158.42.105.62|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 455 [application/octet-stream]
+Saving to: ‘sequences.fasta.gz’
+
+100%[======================================>] 455         --.-K/s   in 0s      
+
+2014-09-24 13:17:21 (35.7 MB/s) - ‘sequences.fasta.gz’ saved [455/455]
+</pre>
+
+            <p>In this example, the content of the downloaded file is the following:</p>
+
+            <code>$ zmore sequences.fasta.gz</code>
+            <p></p>
+
+<pre>
+>gb|JP540074.1|JP540074
+AAACACTATTCCAGGAAGCCAGACGCATCAACATAGCTATTATTCAACATATTACATACAATGAATTCCT
+GCCTATACTCCTGGGCAAGGAAGTGATGGAGAAATTTGGACTGGTTCTACAGAAGGAAGGTTATTGGGAT
+GGATATGATGGACACATCAATCCAGCCATCATCGATGCCTTCGCTGCAGCTGCCTTCCGTTTCGGTCATT
+CCCTCCTACCAACAGCCGTTGAACGGTGGTCTAAGGCTCACAAATTTATAGCATCGAAGAGGCTGTCCGA
+TCTTATCAGACGTCCTTATGATTTGTACAGAGCTGGAGTGTTTGATGAGTATTTCATGGGACTGATGAAT
+CAAGTGGCTCAAGCCATGGATGATTCCATCACACAAGAGGTAACAAACCATCTCTTCAAGAAGGAGGGTA
+ATCGCTTTGGCATGGACTTGGTGTCCTTCAATATGCAACGAGGAAGAGAATTCGGTTTGCCCGGATATAT
+GGAGTTCAAGAAGTTCTGCGGATTGCCAACATCACACACGTGGGAGGAAATGTTCGGTTCGATGCCCAAT
+GACACAATTCGACGATACGAGAGTATTTTCCAGCATCCTGCTGACATTGATTTATGGTCTGGTGGAGTTT
+ACAAAAGATCACTGCCTGGCTCGATGCTGGGTCCCACTTTCGCTTGC
+>gb|JP553239.1|JP553239
+AAAATCGCAGGCCGAAATGGGTTTAAAGTACGAACTCTGTGTGGGTCTCAACAGGGGACACAAAACCAGT
+AAAATCAGGAATTTGCGGTATACTGGAGACAAGAAGGTGAAAGGACTCCGCCCTGATCGGCTAAAATGTG
+TTCAGACGAAACACACAAAATTCGTGAGGGATATTGTGCGTGAGGTGGTTGGACATGCTCCCTATGAGAA
+GCGCTGCATGGAATTGCTGAAGGTGTCTAAGGATAAGCGTGCCCTGAAATTCCTGAAACGTCGTCTGGGC
+ACTCACATCCGTGGCAAGAGGAAGCGTGAGGAACTGTCCAACATTCTGACACAAATGCGCAAGGCTCAGG
+CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
+</pre>
+
+            <p>Using NCBI format, the output is as follows:</p>
             
-            
-            
+<pre>
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+&lt;GBSet&gt;
+  &lt;GBSeq&gt;
+    &lt;GBSeq_locus&gt;JP540074&lt;/GBSeq_locus&gt;
+    &lt;GBSeq_length&gt;677&lt;/GBSeq_length&gt;
+    &lt;GBSeq_strandedness&gt;single&lt;/GBSeq_strandedness&gt;
+    &lt;GBSeq_moltype&gt;mRNA&lt;/GBSeq_moltype&gt;
+    &lt;GBSeq_topology&gt;linear&lt;/GBSeq_topology&gt;
+    &lt;GBSeq_division&gt;TSA&lt;/GBSeq_division&gt;
+    &lt;GBSeq_update-date&gt;25-MAR-2013&lt;/GBSeq_update-date&gt;
+    &lt;GBSeq_create-date&gt;14-OCT-2012&lt;/GBSeq_create-date&gt;
+    &lt;GBSeq_definition&gt;TSA: Phlebotomus papatasi PRAG-aaa24b11.b1 mRNA sequence&lt;/GBSeq_definition&gt;
+    &lt;GBSeq_primary-accession&gt;JP540074&lt;/GBSeq_primary-accession&gt;
+    &lt;GBSeq_accession-version&gt;JP540074.1&lt;/GBSeq_accession-version&gt;
+    &lt;GBSeq_other-seqids&gt;
+      &lt;GBSeqid&gt;gnl|gpid:68651|PRAG-aaa24b11.b1&lt;/GBSeqid&gt;
+      &lt;GBSeqid&gt;gb|JP540074.1|&lt;/GBSeqid&gt;
+      &lt;GBSeqid&gt;gi|353470160&lt;/GBSeqid&gt;
+    &lt;/GBSeq_other-seqids&gt;
+    &lt;GBSeq_project&gt;PRJNA68651&lt;/GBSeq_project&gt;
+    &lt;GBSeq_keywords&gt;
+      &lt;GBKeyword&gt;TSA&lt;/GBKeyword&gt;
+      &lt;GBKeyword&gt;Transcriptome Shotgun Assembly&lt;/GBKeyword&gt;
+    &lt;/GBSeq_keywords&gt;
+    &lt;GBSeq_source&gt;Phlebotomus papatasi&lt;/GBSeq_source&gt;
+    &lt;GBSeq_organism&gt;Phlebotomus papatasi&lt;/GBSeq_organism&gt;
+    &lt;GBSeq_taxonomy&gt;Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota; Neoptera; Endopterygota; Diptera; Nematocera; Psychodoidea; Psychodidae; Phlebotomus; Phlebotomus&lt;/GBSeq_taxonomy&gt;
+    &lt;GBSeq_references&gt;
+      &lt;GBReference&gt;
+        &lt;GBReference_reference&gt;1&lt;/GBReference_reference&gt;
+        &lt;GBReference_position&gt;1..677&lt;/GBReference_position&gt;
+        &lt;GBReference_authors&gt;
+          &lt;GBAuthor&gt;Abrudan,J.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Ramalho-Ortigao,M.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;O'Neil,S.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Stayback,G.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Wadsworth,M.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Bernard,M.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Shoue,D.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Emrich,S.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Lawyer,P.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Kamhawi,S.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Rowton,E.D.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Lehane,M.J.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Bates,P.A.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Valenzeula,J.G.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Tomlinson,C.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Appelbaum,E.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Moeller,D.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Thiesing,B.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Dillon,R.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Clifton,S.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Lobo,N.F.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Wilson,R.K.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Collins,F.H.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;McDowell,M.A.&lt;/GBAuthor&gt;
+        &lt;/GBReference_authors&gt;
+        &lt;GBReference_title&gt;The characterization of the Phlebotomus papatasi transcriptome&lt;/GBReference_title&gt;
+        &lt;GBReference_journal&gt;Insect Mol. Biol. 22 (2), 211-232 (2013)&lt;/GBReference_journal&gt;
+        &lt;GBReference_xref&gt;
+          &lt;GBXref&gt;
+            &lt;GBXref_dbname&gt;doi&lt;/GBXref_dbname&gt;
+            &lt;GBXref_id&gt;10.1111/imb.12015&lt;/GBXref_id&gt;
+          &lt;/GBXref&gt;
+        &lt;/GBReference_xref&gt;
+        &lt;GBReference_pubmed&gt;23398403&lt;/GBReference_pubmed&gt;
+      &lt;/GBReference&gt;
+      &lt;GBReference&gt;
+        &lt;GBReference_reference&gt;2&lt;/GBReference_reference&gt;
+        &lt;GBReference_position&gt;1..677&lt;/GBReference_position&gt;
+        &lt;GBReference_authors&gt;
+          &lt;GBAuthor&gt;Abrudan,J.L.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;McDowell,M.A.&lt;/GBAuthor&gt;
+        &lt;/GBReference_authors&gt;
+        &lt;GBReference_title&gt;Direct Submission&lt;/GBReference_title&gt;
+        &lt;GBReference_journal&gt;Submitted (11-OCT-2011) Biology, University of Notre Dame, 215 Galvin, Notre Dame, IN 46556, USA&lt;/GBReference_journal&gt;
+      &lt;/GBReference&gt;
+    &lt;/GBSeq_references&gt;
+    &lt;GBSeq_comment&gt;##Assembly-Data-START## Assembly Method Cap3 Sequencing Technology Sanger ##Assembly-Data-END##&lt;/GBSeq_comment&gt;
+    &lt;GBSeq_feature-table&gt;
+      &lt;GBFeature&gt;
+        &lt;GBFeature_key&gt;source&lt;/GBFeature_key&gt;
+        &lt;GBFeature_location&gt;1..677&lt;/GBFeature_location&gt;
+        &lt;GBFeature_intervals&gt;
+          &lt;GBInterval&gt;
+            &lt;GBInterval_from&gt;1&lt;/GBInterval_from&gt;
+            &lt;GBInterval_to&gt;677&lt;/GBInterval_to&gt;
+            &lt;GBInterval_accession&gt;JP540074.1&lt;/GBInterval_accession&gt;
+          &lt;/GBInterval&gt;
+        &lt;/GBFeature_intervals&gt;
+        &lt;GBFeature_quals&gt;
+          &lt;GBQualifier&gt;
+            &lt;GBQualifier_name&gt;organism&lt;/GBQualifier_name&gt;
+            &lt;GBQualifier_value&gt;Phlebotomus papatasi&lt;/GBQualifier_value&gt;
+          &lt;/GBQualifier&gt;
+          &lt;GBQualifier&gt;
+            &lt;GBQualifier_name&gt;mol_type&lt;/GBQualifier_name&gt;
+            &lt;GBQualifier_value&gt;mRNA&lt;/GBQualifier_value&gt;
+          &lt;/GBQualifier&gt;
+          &lt;GBQualifier&gt;
+            &lt;GBQualifier_name&gt;strain&lt;/GBQualifier_name&gt;
+            &lt;GBQualifier_value&gt;Israeli&lt;/GBQualifier_value&gt;
+          &lt;/GBQualifier&gt;
+          &lt;GBQualifier&gt;
+            &lt;GBQualifier_name&gt;db_xref&lt;/GBQualifier_name&gt;
+            &lt;GBQualifier_value&gt;taxon:29031&lt;/GBQualifier_value&gt;
+          &lt;/GBQualifier&gt;
+        &lt;/GBFeature_quals&gt;
+      &lt;/GBFeature&gt;
+    &lt;/GBSeq_feature-table&gt;
+    &lt;GBSeq_sequence&gt;aaacactattccaggaagccagacgcatcaacatagctattattcaacatattacatacaatgaattcctgcctatactcctgggcaaggaagtgatggagaaatttggactggttctacagaaggaaggttattgggatggatatgatggacacatcaatccagccatcatcgatgccttcgctgcagctgccttccgtttcggtcattccctcctaccaacagccgttgaacggtggtctaaggctcacaaatttatagcatcgaagaggctgtccgatcttatcagacgtccttatgatttgtacagagctggagtgtttgatgagtatttcatgggactgatgaatcaagtggctcaagccatggatgattccatcacacaagaggtaacaaaccatctcttcaagaaggagggtaatcgctttggcatggacttggtgtccttcaatatgcaacgaggaagagaattcggtttgcccggatatatggagttcaagaagttctgcggattgccaacatcacacacgtgggaggaaatgttcggttcgatgcccaatgacacaattcgacgatacgagagtattttccagcatcctgctgacattgatttatggtctggtggagtttacaaaagatcactgcctggctcgatgctgggtcccactttcgcttgc&lt;/GBSeq_sequence&gt;
+    &lt;GBSeq_xrefs&gt;
+      &lt;GBXref&gt;
+        &lt;GBXref_dbname&gt;BioProject&lt;/GBXref_dbname&gt;
+        &lt;GBXref_id&gt;PRJNA68651&lt;/GBXref_id&gt;
+      &lt;/GBXref&gt;
+    &lt;/GBSeq_xrefs&gt;
+  &lt;/GBSeq&gt;
+  &lt;GBSeq&gt;
+    &lt;GBSeq_locus&gt;JP553239&lt;/GBSeq_locus&gt;
+    &lt;GBSeq_length&gt;392&lt;/GBSeq_length&gt;
+    &lt;GBSeq_strandedness&gt;single&lt;/GBSeq_strandedness&gt;
+    &lt;GBSeq_moltype&gt;mRNA&lt;/GBSeq_moltype&gt;
+    &lt;GBSeq_topology&gt;linear&lt;/GBSeq_topology&gt;
+    &lt;GBSeq_division&gt;TSA&lt;/GBSeq_division&gt;
+    &lt;GBSeq_update-date&gt;25-MAR-2013&lt;/GBSeq_update-date&gt;
+    &lt;GBSeq_create-date&gt;14-OCT-2012&lt;/GBSeq_create-date&gt;
+    &lt;GBSeq_definition&gt;TSA: Phlebotomus papatasi PpContig1430.f1 mRNA sequence&lt;/GBSeq_definition&gt;
+    &lt;GBSeq_primary-accession&gt;JP553239&lt;/GBSeq_primary-accession&gt;
+    &lt;GBSeq_accession-version&gt;JP553239.1&lt;/GBSeq_accession-version&gt;
+    &lt;GBSeq_other-seqids&gt;
+      &lt;GBSeqid&gt;gnl|gpid:68651|PpContig1430.f1&lt;/GBSeqid&gt;
+      &lt;GBSeqid&gt;gb|JP553239.1|&lt;/GBSeqid&gt;
+      &lt;GBSeqid&gt;gi|353483325&lt;/GBSeqid&gt;
+    &lt;/GBSeq_other-seqids&gt;
+    &lt;GBSeq_project&gt;PRJNA68651&lt;/GBSeq_project&gt;
+    &lt;GBSeq_keywords&gt;
+      &lt;GBKeyword&gt;TSA&lt;/GBKeyword&gt;
+      &lt;GBKeyword&gt;Transcriptome Shotgun Assembly&lt;/GBKeyword&gt;
+    &lt;/GBSeq_keywords&gt;
+    &lt;GBSeq_source&gt;Phlebotomus papatasi&lt;/GBSeq_source&gt;
+    &lt;GBSeq_organism&gt;Phlebotomus papatasi&lt;/GBSeq_organism&gt;
+    &lt;GBSeq_taxonomy&gt;Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota; Neoptera; Endopterygota; Diptera; Nematocera; Psychodoidea; Psychodidae; Phlebotomus; Phlebotomus&lt;/GBSeq_taxonomy&gt;
+    &lt;GBSeq_references&gt;
+      &lt;GBReference&gt;
+        &lt;GBReference_reference&gt;1&lt;/GBReference_reference&gt;
+        &lt;GBReference_position&gt;1..392&lt;/GBReference_position&gt;
+        &lt;GBReference_authors&gt;
+          &lt;GBAuthor&gt;Abrudan,J.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Ramalho-Ortigao,M.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;O'Neil,S.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Stayback,G.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Wadsworth,M.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Bernard,M.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Shoue,D.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Emrich,S.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Lawyer,P.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Kamhawi,S.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Rowton,E.D.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Lehane,M.J.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Bates,P.A.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Valenzeula,J.G.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Tomlinson,C.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Appelbaum,E.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Moeller,D.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Thiesing,B.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Dillon,R.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Clifton,S.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Lobo,N.F.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Wilson,R.K.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;Collins,F.H.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;McDowell,M.A.&lt;/GBAuthor&gt;
+        &lt;/GBReference_authors&gt;
+        &lt;GBReference_title&gt;The characterization of the Phlebotomus papatasi transcriptome&lt;/GBReference_title&gt;
+        &lt;GBReference_journal&gt;Insect Mol. Biol. 22 (2), 211-232 (2013)&lt;/GBReference_journal&gt;
+        &lt;GBReference_xref&gt;
+          &lt;GBXref&gt;
+            &lt;GBXref_dbname&gt;doi&lt;/GBXref_dbname&gt;
+            &lt;GBXref_id&gt;10.1111/imb.12015&lt;/GBXref_id&gt;
+          &lt;/GBXref&gt;
+        &lt;/GBReference_xref&gt;
+        &lt;GBReference_pubmed&gt;23398403&lt;/GBReference_pubmed&gt;
+      &lt;/GBReference&gt;
+      &lt;GBReference&gt;
+        &lt;GBReference_reference&gt;2&lt;/GBReference_reference&gt;
+        &lt;GBReference_position&gt;1..392&lt;/GBReference_position&gt;
+        &lt;GBReference_authors&gt;
+          &lt;GBAuthor&gt;Abrudan,J.L.&lt;/GBAuthor&gt;
+          &lt;GBAuthor&gt;McDowell,M.A.&lt;/GBAuthor&gt;
+        &lt;/GBReference_authors&gt;
+        &lt;GBReference_title&gt;Direct Submission&lt;/GBReference_title&gt;
+        &lt;GBReference_journal&gt;Submitted (11-OCT-2011) Biology, University of Notre Dame, 215 Galvin, Notre Dame, IN 46556, USA&lt;/GBReference_journal&gt;
+      &lt;/GBReference&gt;
+    &lt;/GBSeq_references&gt;
+    &lt;GBSeq_comment&gt;##Assembly-Data-START## Assembly Method Cap3 Sequencing Technology Sanger ##Assembly-Data-END##&lt;/GBSeq_comment&gt;
+    &lt;GBSeq_feature-table&gt;
+      &lt;GBFeature&gt;
+        &lt;GBFeature_key&gt;source&lt;/GBFeature_key&gt;
+        &lt;GBFeature_location&gt;1..392&lt;/GBFeature_location&gt;
+        &lt;GBFeature_intervals&gt;
+          &lt;GBInterval&gt;
+            &lt;GBInterval_from&gt;1&lt;/GBInterval_from&gt;
+            &lt;GBInterval_to&gt;392&lt;/GBInterval_to&gt;
+            &lt;GBInterval_accession&gt;JP553239.1&lt;/GBInterval_accession&gt;
+          &lt;/GBInterval&gt;
+        &lt;/GBFeature_intervals&gt;
+        &lt;GBFeature_quals&gt;
+          &lt;GBQualifier&gt;
+            &lt;GBQualifier_name&gt;organism&lt;/GBQualifier_name&gt;
+            &lt;GBQualifier_value&gt;Phlebotomus papatasi&lt;/GBQualifier_value&gt;
+          &lt;/GBQualifier&gt;
+          &lt;GBQualifier&gt;
+            &lt;GBQualifier_name&gt;mol_type&lt;/GBQualifier_name&gt;
+            &lt;GBQualifier_value&gt;mRNA&lt;/GBQualifier_value&gt;
+          &lt;/GBQualifier&gt;
+          &lt;GBQualifier&gt;
+            &lt;GBQualifier_name&gt;strain&lt;/GBQualifier_name&gt;
+            &lt;GBQualifier_value&gt;Israeli&lt;/GBQualifier_value&gt;
+          &lt;/GBQualifier&gt;
+          &lt;GBQualifier&gt;
+            &lt;GBQualifier_name&gt;db_xref&lt;/GBQualifier_name&gt;
+            &lt;GBQualifier_value&gt;taxon:29031&lt;/GBQualifier_value&gt;
+          &lt;/GBQualifier&gt;
+        &lt;/GBFeature_quals&gt;
+      &lt;/GBFeature&gt;
+    &lt;/GBSeq_feature-table&gt;
+    &lt;GBSeq_sequence&gt;aaaatcgcaggccgaaatgggtttaaagtacgaactctgtgtgggtctcaacaggggacacaaaaccagtaaaatcaggaatttgcggtatactggagacaagaaggtgaaaggactccgccctgatcggctaaaatgtgttcagacgaaacacacaaaattcgtgagggatattgtgcgtgaggtggttggacatgctccctatgagaagcgctgcatggaattgctgaaggtgtctaaggataagcgtgccctgaaattcctgaaacgtcgtctgggcactcacatccgtggcaagaggaagcgtgaggaactgtccaacattctgacacaaatgcgcaaggctcaggcccatgccaagtaaaatttttccaggaggaataaagatgatt&lt;/GBSeq_sequence&gt;
+    &lt;GBSeq_xrefs&gt;
+      &lt;GBXref&gt;
+        &lt;GBXref_dbname&gt;BioProject&lt;/GBXref_dbname&gt;
+        &lt;GBXref_id&gt;PRJNA68651&lt;/GBXref_id&gt;
+      &lt;/GBXref&gt;
+    &lt;/GBSeq_xrefs&gt;
+  &lt;/GBSeq&gt;
+&lt;/GBSet&gt;
+</pre>
 
             <h2>
               <a id="examples_oauth2"></a>OAuth2 examples

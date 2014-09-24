@@ -54,7 +54,7 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 	@InjectLinks({
-		@InjectLink(value="public_link/{path}", rel=SELF, type=APPLICATION_JSON, 
+		@InjectLink(value="public_links/{path}", rel=SELF, type=APPLICATION_JSON, 
 				bindings={@Binding(name="path", value="${instance.path}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)

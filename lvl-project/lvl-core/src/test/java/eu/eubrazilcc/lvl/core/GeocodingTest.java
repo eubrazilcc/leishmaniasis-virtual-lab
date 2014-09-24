@@ -45,8 +45,15 @@ public class GeocodingTest {
 		System.out.println("GeocodingTest.test()");
 		try {
 			// test converting address into geographic coordinates
-			final String address = "Spain:Valencia";
+			String address = "Spain:Valencia";
 			Point point = geocode(address);
+			assertThat("location is not null", point, notNullValue());
+			/* uncomment to display additional output */
+			System.out.println(" >> Address: " + address + ", Location: " + point.toString());
+
+			// test converting address with valid country, invalid region into geographic coordinates
+			address = "Thailand: Ratchabun province, Muang district, Huay-Phai sub-district";
+			point = geocode(address);
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
 			System.out.println(" >> Address: " + address + ", Location: " + point.toString());
@@ -57,6 +64,7 @@ public class GeocodingTest {
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
 			System.out.println(" >> Locale: " + locale.getDisplayCountry() + ", Location: " + point.toString());
+			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("GeocodingTest.test() failed: " + e.getMessage());

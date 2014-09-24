@@ -24,14 +24,19 @@ package eu.eubrazilcc.lvl.core.geocoding;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Splitter.on;
+import static com.google.common.cache.CacheBuilder.newBuilder;
+import static com.google.common.collect.Iterables.getFirst;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static java.lang.Thread.sleep;
+import static java.util.Locale.ENGLISH;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -41,8 +46,6 @@ import com.google.code.geocoder.Geocoder;
 import com.google.code.geocoder.GeocoderRequestBuilder;
 import com.google.code.geocoder.model.GeocodeResponse;
 import com.google.code.geocoder.model.GeocoderResult;
-import com.google.code.geocoder.model.GeocoderStatus;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -60,20 +63,22 @@ public final class GeocodingHelper {
 
 	public static final int MAX_CACHED_ELEMENTS = 1000;
 	public static final int CACHE_EXPIRATION_SECONDS = 86400; // one day
+	public static final char COUNTRY_SEPARATOR = ':';	
+	public static final long OVER_QUERY_LIMIT_DELAY = 400l;
 
-	private static final LoadingCache<String, Point> CACHE = CacheBuilder.newBuilder()
+	private static final LoadingCache<String, Point> CACHE = newBuilder()
 			.maximumSize(MAX_CACHED_ELEMENTS)
-			.refreshAfterWrite(CACHE_EXPIRATION_SECONDS, TimeUnit.SECONDS)
+			.refreshAfterWrite(CACHE_EXPIRATION_SECONDS, SECONDS)
 			.build(new CacheLoader<String, Point>() {
 				@Override
 				public Point load(final String key) throws ExecutionException {
-					return geocodeFromGoogle(key);
+					return geocodeFromGoogle(key, true, true);
 				}
 				@Override
 				public ListenableFuture<Point> reload(final String key, final Point oldValue) throws Exception {
 					return TASK_RUNNER.submit(new Callable<Point>() {
 						public Point call() {
-							return geocodeFromGoogle(key);
+							return geocodeFromGoogle(key, true, true);
 						}
 					});					
 				}
@@ -87,7 +92,7 @@ public final class GeocodingHelper {
 	 */
 	public static final @Nullable Point geocode(final Locale locale) {
 		checkArgument(locale != null, "Uninitialized or invalid locale");
-		return geocode(locale.getDisplayCountry(Locale.ENGLISH));
+		return geocode(locale.getDisplayCountry(ENGLISH));
 	}
 
 	/**
@@ -108,12 +113,16 @@ public final class GeocodingHelper {
 	}
 
 	/**
-	 * Converts an address to geographic coordinates.
+	 * Converts an address to geographic coordinates. The expected address format is: <code>'country:region'</code>. 
 	 * @param address - the address to be converted
+	 * @param recoverZeroResults - when the query fails due to an error in the region, the method will try a second 
+	 *        search using only the country part of the address
+	 * @param recoverOverQueryLimit - when the maximum number of queries is reached, the method will suspend for a
+	 *        predefined time and will retry the same search one more ocassion
 	 * @return a {@link Point} that represents a geospatial location in GeoJSON format using WGS84 
 	 *         coordinate reference system (CRS), or {@code null} if the address cannot be found.
 	 */
-	private static final Point geocodeFromGoogle(final String address) {
+	private static final Point geocodeFromGoogle(final String address, final boolean recoverZeroResults, final boolean recoverOverQueryLimit) {
 		checkArgument(isNotBlank(address), "Uninitialized or invalid address");
 		Point point = null;
 		try {
@@ -122,10 +131,30 @@ public final class GeocodingHelper {
 					.setLanguage("en")
 					.getGeocoderRequest());
 			checkState(response != null, "No response received from Google Geocoding service");
-			checkState(response.getStatus() != null && response.getStatus().equals(GeocoderStatus.OK), 
-					"Searching for '" + address + "' produces invalid Google Geocoding server response: " 
-							+ response.getStatus());
-			if (response.getResults() != null) {
+			checkState(response.getStatus() != null, "No status code included in the response received from Google Geocoding service");
+			switch (response.getStatus()) {
+			case OK:
+				break;
+			case ZERO_RESULTS:
+				if (recoverZeroResults) {
+					final String country = countryName(address);
+					checkState(isNotBlank(country), "Invalid address format, expected 'country:region' but found: " + address);					
+					point = geocodeFromGoogle(country, false, recoverOverQueryLimit);
+				}
+				break;
+			case OVER_QUERY_LIMIT:
+				if (recoverOverQueryLimit) {
+					try {
+						sleep(OVER_QUERY_LIMIT_DELAY);
+						point = geocodeFromGoogle(address, recoverZeroResults, false);
+					} catch (InterruptedException ie) { }					
+				}
+				break;
+			default:
+				throw new IllegalStateException("Searching for '" + address + "' produces invalid Google Geocoding server response: " 
+						+ response.getStatus());
+			}
+			if (point == null && response.getResults() != null) {
 				for (int i = 0; i < response.getResults().size() && point == null; i++) {
 					final GeocoderResult result = response.getResults().get(i);
 					if (result != null && result.getGeometry() != null 
@@ -145,6 +174,13 @@ public final class GeocodingHelper {
 			LOGGER.error("Failed to convert address to geographic coordinates", e);
 		}
 		return point;
+	}
+
+	private static final String countryName(final String address) {
+		return getFirst(on(COUNTRY_SEPARATOR)
+				.trimResults()
+				.omitEmptyStrings()
+				.split(address), "");
 	}
 
 }
