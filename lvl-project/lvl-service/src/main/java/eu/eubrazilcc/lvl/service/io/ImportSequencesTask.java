@@ -129,7 +129,7 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 						futures.addAll(importSequences(dataSource, tmpDir));
 					}
 					final ListenableFuture<List<Integer>> futuresList = allAsList(futures);
-					final List<Integer> results = futuresList.get();
+					final List<Integer> results = futuresList.get(); // TODO
 					if(results != null) {
 						for (final Integer item : results) {
 							if (item != null) {
@@ -252,15 +252,15 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 						} finally {
 							deleteQuietly(source.toFile());
 						}
-					}					
+					}
 					// import references
 					final ImportPublicationsTask importPublicationsTask = ImportPublicationsTask.builder()
 							.filter(NewReferenceFilter.builder().build())
 							.parent(getUuid())
 							.ids(pmids)
 							.build();
-					TASK_RUNNER.execute(importPublicationsTask);
-					TASK_STORAGE.add(importPublicationsTask);					
+					// TODO TASK_RUNNER.execute(importPublicationsTask);
+					// TODO TASK_STORAGE.add(importPublicationsTask);					
 				}
 				checkState(ids2.size() == efetchCount, "No all sequences were imported");
 				return efetchCount;

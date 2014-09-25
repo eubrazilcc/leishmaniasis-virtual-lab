@@ -57,6 +57,12 @@ public class GeocodingTest {
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
 			System.out.println(" >> Address: " + address + ", Location: " + point.toString());
+			
+			// test get from cache
+			address = "Algeria: Fdoules";
+			point = geocode(address);
+			
+			// TODO
 
 			// test converting locale into geographic coordinates
 			final Locale locale = getLocale("Spain");
