@@ -260,7 +260,7 @@ public final class GbSeqXmlBinder extends XmlBinder {
 				.gi(getGenInfoIdentifier(gbSeq))
 				.organism(gbSeq.getGBSeqOrganism())
 				.countryFeature(countryFeature)
-				.location(isNotBlank(countryFeature) ? geocode(countryFeature) : null)
+				.location(isNotBlank(countryFeature) ? geocode(countryFeature).orNull() : null)
 				.locale(isNotBlank(countryFeature) ? countryFeatureToLocale(countryFeature) : null)
 				.build();
 	}

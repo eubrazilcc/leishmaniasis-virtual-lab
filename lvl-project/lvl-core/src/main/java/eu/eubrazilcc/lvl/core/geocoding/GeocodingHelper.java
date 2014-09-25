@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.core.geocoding;
 
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.of;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Splitter.on;
@@ -38,14 +40,13 @@ import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 
 import com.google.code.geocoder.Geocoder;
 import com.google.code.geocoder.GeocoderRequestBuilder;
 import com.google.code.geocoder.model.GeocodeResponse;
 import com.google.code.geocoder.model.GeocoderResult;
+import com.google.common.base.Optional;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -66,18 +67,18 @@ public final class GeocodingHelper {
 	public static final char COUNTRY_SEPARATOR = ':';	
 	public static final long OVER_QUERY_LIMIT_DELAY = 400l;
 
-	private static final LoadingCache<String, Point> CACHE = newBuilder()
+	private static final LoadingCache<String, Optional<Point>> CACHE = newBuilder()
 			.maximumSize(MAX_CACHED_ELEMENTS)
 			.refreshAfterWrite(CACHE_EXPIRATION_SECONDS, SECONDS)
-			.build(new CacheLoader<String, Point>() {
+			.build(new CacheLoader<String, Optional<Point>>() {
 				@Override
-				public Point load(final String key) throws ExecutionException {
+				public Optional<Point> load(final String key) throws ExecutionException {
 					return geocodeFromGoogle(key, true, true);
 				}
 				@Override
-				public ListenableFuture<Point> reload(final String key, final Point oldValue) throws Exception {
-					return TASK_RUNNER.submit(new Callable<Point>() {
-						public Point call() {
+				public ListenableFuture<Optional<Point>> reload(final String key, final Optional<Point> oldValue) throws Exception {
+					return TASK_RUNNER.submit(new Callable<Optional<Point>>() {
+						public Optional<Point> call() {
 							return geocodeFromGoogle(key, true, true);
 						}
 					});					
@@ -88,9 +89,9 @@ public final class GeocodingHelper {
 	 * Converts a Java {@link Locale} to geographic coordinates.
 	 * @param locale - the locale to be converted
 	 * @return a {@link Point} that represents a geospatial location in GeoJSON format using WGS84 
-	 *         coordinate reference system (CRS), or {@code null} if the locale cannot be found.
+	 *         coordinate reference system (CRS).
 	 */
-	public static final @Nullable Point geocode(final Locale locale) {
+	public static final Optional<Point> geocode(final Locale locale) {
 		checkArgument(locale != null, "Uninitialized or invalid locale");
 		return geocode(locale.getDisplayCountry(ENGLISH));
 	}
@@ -99,17 +100,28 @@ public final class GeocodingHelper {
 	 * Converts an address to geographic coordinates.
 	 * @param address - the address to be converted
 	 * @return a {@link Point} that represents a geospatial location in GeoJSON format using WGS84 
-	 *         coordinate reference system (CRS), or {@code null} if the address cannot be found.
+	 *         coordinate reference system (CRS).
 	 */
-	public static final @Nullable Point geocode(final String address) {
+	public static final Optional<Point> geocode(final String address) {
 		checkArgument(isNotBlank(address), "Uninitialized or invalid address");
-		Point point = null;
+		Optional<Point> point = absent();
 		try {
 			point = CACHE.get(address.trim());
 		} catch (Exception e) {
 			LOGGER.error("Failed to get geospatial location from cache", e);
 		}
 		return point;
+	}
+
+	/**
+	 * Returns the geographic coordinates associated with the specified address in this cache, or {@code null} 
+	 * if there is no cached value for address.
+	 * @param address - the address to be searched for
+	 * @return the geographic coordinates associated with the specified address in this cache, or {@code null} 
+	 *         if there is no cached value for address.
+	 */
+	public static final Optional<Point> getIfPresent(final String address) {
+		return CACHE.getIfPresent(address);
 	}
 
 	/**
@@ -122,9 +134,9 @@ public final class GeocodingHelper {
 	 * @return a {@link Point} that represents a geospatial location in GeoJSON format using WGS84 
 	 *         coordinate reference system (CRS), or {@code null} if the address cannot be found.
 	 */
-	private static final Point geocodeFromGoogle(final String address, final boolean recoverZeroResults, final boolean recoverOverQueryLimit) {
+	private static final Optional<Point> geocodeFromGoogle(final String address, final boolean recoverZeroResults, final boolean recoverOverQueryLimit) {
 		checkArgument(isNotBlank(address), "Uninitialized or invalid address");
-		Point point = null;
+		Optional<Point> point = absent();
 		try {
 			final Geocoder geocoder = new Geocoder();
 			final GeocodeResponse response = geocoder.geocode(new GeocoderRequestBuilder().setAddress(address)
@@ -148,25 +160,28 @@ public final class GeocodingHelper {
 						sleep(OVER_QUERY_LIMIT_DELAY);
 						point = geocodeFromGoogle(address, recoverZeroResults, false);
 					} catch (InterruptedException ie) { }					
+				} else {
+					// throwing an exception will prevent this value to be cached					
+					throw new IllegalStateException("Search failed, maximum number of Google Geocoding queries exceeded");
 				}
 				break;
 			default:
 				throw new IllegalStateException("Searching for '" + address + "' produces invalid Google Geocoding server response: " 
 						+ response.getStatus());
 			}
-			if (point == null && response.getResults() != null) {
-				for (int i = 0; i < response.getResults().size() && point == null; i++) {
+			if (!point.isPresent() && response.getResults() != null) {
+				for (int i = 0; i < response.getResults().size() && !point.isPresent(); i++) {
 					final GeocoderResult result = response.getResults().get(i);
 					if (result != null && result.getGeometry() != null 
 							&& result.getGeometry().getLocation() != null
 							&& result.getGeometry().getLocation().getLng() != null
 							&& result.getGeometry().getLocation().getLat() != null) {
-						point = Point.builder()
+						point = of(Point.builder()
 								.coordinates(LngLatAlt.builder()
 										.longitude(result.getGeometry().getLocation().getLng().doubleValue())
 										.latitude(result.getGeometry().getLocation().getLat().doubleValue())
 										.build())
-										.build();
+										.build());
 					}
 				}
 			}

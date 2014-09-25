@@ -23,14 +23,18 @@
 package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.geocoding.GeocodingHelper.geocode;
+import static eu.eubrazilcc.lvl.core.geocoding.GeocodingHelper.getIfPresent;
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.Locale;
 
 import org.junit.Test;
+
+import com.google.common.base.Optional;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
 
@@ -45,28 +49,37 @@ public class GeocodingTest {
 		System.out.println("GeocodingTest.test()");
 		try {
 			// test converting address into geographic coordinates
-			String address = "Spain:Valencia";
-			Point point = geocode(address);
+			final String address1 = "Spain:Valencia";
+			Point point = geocode(address1).orNull();
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
-			System.out.println(" >> Address: " + address + ", Location: " + point.toString());
+			System.out.println(" >> Address: " + address1 + ", Location: " + point.toString());
 
 			// test converting address with valid country, invalid region into geographic coordinates
-			address = "Thailand: Ratchabun province, Muang district, Huay-Phai sub-district";
-			point = geocode(address);
+			final String address2 = "Thailand: Ratchabun province, Muang district, Huay-Phai sub-district";
+			point = geocode(address2).orNull();
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
-			System.out.println(" >> Address: " + address + ", Location: " + point.toString());
+			System.out.println(" >> Address: " + address2 + ", Location: " + point.toString());
 			
-			// test get from cache
-			address = "Algeria: Fdoules";
-			point = geocode(address);
+			// test converting invalid address
+			final String address3 = "1234abcd:1234abcd";
+			point = geocode(address3).orNull();
+			assertThat("location is null", point, nullValue());
+			System.out.println(" >> Address: " + address3 + ", Location: NULL");
 			
-			// TODO
+			// test get location from cache
+			Optional<Point> cached = getIfPresent(address1);
+			assertThat("cached location is not null", cached, notNullValue());
+			assertThat("cached location content is not null", cached.orNull(), notNullValue());
+			cached = getIfPresent(address2);
+			assertThat("cached location content is not null", cached.orNull(), notNullValue());
+			cached = getIfPresent(address3);
+			assertThat("cached location content is null", cached.orNull(), nullValue());
 
 			// test converting locale into geographic coordinates
 			final Locale locale = getLocale("Spain");
-			point = geocode(locale);
+			point = geocode(locale).orNull();
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
 			System.out.println(" >> Locale: " + locale.getDisplayCountry() + ", Location: " + point.toString());
