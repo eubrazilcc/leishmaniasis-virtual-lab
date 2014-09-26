@@ -37,7 +37,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.http.HttpServletRequest;
@@ -98,7 +98,7 @@ public class TaskResource {
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (task == null) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		switch (task.getType()) {
 		case IMPORT_SEQUENCES:
@@ -111,7 +111,7 @@ public class TaskResource {
 			task.setUuid(importSequencesTask.getUuid());
 			break;
 		default:
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
 		}
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(task.getUuid().toString());		
 		return Response.created(uriBuilder.build()).build();		
@@ -125,12 +125,12 @@ public class TaskResource {
 			final @Context HttpHeaders headers) {
 		authorize(request, null, isBlank(token) ? headers : ssehHttpHeaders(token), RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id) || !REFRESH_RANGE.contains(refresh)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// get from task storage
 		final CancellableTask<?> task = TASK_STORAGE.get(fromString(id));
 		if (task == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		final String client = getClientAddress(request);
 		LOGGER.info("Subscribed to progress events: " + client);
@@ -142,7 +142,7 @@ public class TaskResource {
 				try {
 					do {
 						final ListenableScheduledFuture<?> future = TASK_SCHEDULER.schedule(checkTaskProgress(eventOutput, eventId, task), 
-								eventId.getAndIncrement() == 0 ? 0 : refresh, TimeUnit.SECONDS);
+								eventId.getAndIncrement() == 0 ? 0 : refresh, SECONDS);
 						future.get();
 					} while (!task.isDone());
 				} catch (Exception e) {

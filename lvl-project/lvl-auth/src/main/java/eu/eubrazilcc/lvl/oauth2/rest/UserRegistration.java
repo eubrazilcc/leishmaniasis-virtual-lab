@@ -84,12 +84,12 @@ public class UserRegistration {
 			final @QueryParam("send_activation") @DefaultValue("false") boolean sendActivation,
 			final @Context UriInfo uriInfo) {
 		if (isBlank(email)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// get from database
 		final PendingUser pendingUser = PENDING_USER_DAO.findByEmail(email);		
 		if (pendingUser == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// re-send confirmation code by email
 		if (sendActivation) {
@@ -104,11 +104,11 @@ public class UserRegistration {
 	public Response createPendingUser(final User user, final @Context UriInfo uriInfo,
 			final @QueryParam("skip_activation") @DefaultValue("false") boolean skipActivation) {
 		if (user == null || isBlank(user.getUsername()) || isBlank(user.getEmail()) || isBlank(user.getPassword())) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// verify that no other user exists in the database with the same username or email address
 		if (RESOURCE_OWNER_DAO.find(user.getUsername()) != null || RESOURCE_OWNER_DAO.findByEmail(user.getEmail()) != null) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// set the correct scopes that the new user must have
 		user.setScopes(asSet(user(user.getUsername())));
@@ -137,16 +137,16 @@ public class UserRegistration {
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(email) || update == null || update.getUser() == null 
 				|| !email.equals(update.getUser().getEmail()) || isBlank(update.getActivationCode())) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// get from database
 		final PendingUser pendingUser = PENDING_USER_DAO.findByEmail(email);		
 		if (pendingUser == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		if (!PENDING_USER_DAO.isValid(pendingUser.getPendingUserId(), pendingUser.getUser().getUsername(), 
 				update.getActivationCode(), false)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
 		}
 		// create regular user in the database		
 		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder()
@@ -170,7 +170,7 @@ public class UserRegistration {
 		} else if ("email".equals(type)) {
 			isAvailable = RESOURCE_OWNER_DAO.findByEmail(field) == null;
 		} else {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		return Response.ok()
 				.entity(validationResponse(isAvailable))

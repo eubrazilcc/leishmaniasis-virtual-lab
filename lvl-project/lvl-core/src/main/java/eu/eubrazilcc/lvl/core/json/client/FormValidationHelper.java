@@ -50,14 +50,14 @@ public final class FormValidationHelper {
 
 	public static String getValidationType(final MultivaluedMap<String, String> form) {
 		if (form == null || form.get("type") == null || form.get("type").size() != 1 || isBlank(form.getFirst("type"))) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		return form.getFirst("type");
 	}
 
 	public static String getValidationField(final String type, final MultivaluedMap<String, String> form) {
 		if (form == null || form.get(type) == null || form.get(type).size() != 1 || isBlank(form.getFirst(type))) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		return form.getFirst(type);
 	}

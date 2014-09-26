@@ -24,19 +24,22 @@ package eu.eubrazilcc.lvl.service.io;
 
 import static com.google.common.base.Joiner.on;
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.ImmutableList.of;
+import static com.google.common.collect.Iterables.partition;
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.util.concurrent.Futures.allAsList;
+import static com.google.common.collect.Sets.newHashSet;
+import static com.google.common.util.concurrent.Futures.successfulAsList;
 import static com.google.common.util.concurrent.ListenableFutureTask.create;
 import static eu.eubrazilcc.lvl.core.DataSource.PUBMED;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_FETCHED;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_LISTED;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
@@ -47,14 +50,14 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.PUBLICATION
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -72,28 +75,28 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.service.io.filter.RecordFilter;
 
 /**
- * Imports publications from public databases, such as PubMed. This class receives a list of identifiers from other task, which
- * also passes its identifier to link this task with the parent task that creates this one. As a consequence, this class uses a
+ * Imports publications from public databases, such as PubMed. This class receives a list of identifiers from other task and uses a
  * specialized form of the {@code insert} method that avoids failing when a duplicate record is found in the database, supporting
  * concurrent use from different threads without expensive synchronization.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class ImportPublicationsTask extends CancellableTask<Integer> {
 
-	private final static Logger LOGGER = getLogger(ImportPublicationsTask.class);
+	private static final Logger LOGGER = getLogger(ImportPublicationsTask.class);
 
-	public final static ImmutableList<String> DEFAULT_DATA_SOURCES = of(PUBMED);
+	public static final ImmutableList<String> DATABASES = of(PUBMED);
+
+	public static final long TIMEOUT_MINUTES = 60l;
 
 	private ImmutableList<RecordFilter> filters = of();
 
-	private final ImmutableList<String> ids;
-
+	private final ImmutableList<String> pmids;
+	
 	private AtomicInteger pending = new AtomicInteger(0);
 	private AtomicInteger fetched = new AtomicInteger(0);
 
-	public ImportPublicationsTask(final UUID parent, final ImmutableList<String> ids) {
-		super(parent);
-		this.ids = copyOf(ids);
+	public ImportPublicationsTask(final List<String> pmids) {
+		this.pmids = pmids != null ? copyOf(pmids) : new ImmutableList.Builder<String>().build();
 		this.task = create(importPublicationsTask());
 	}
 
@@ -106,71 +109,74 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 		this.filters = (filters != null ? builder.addAll(filters).build() : builder.build());
 	}
 
+	/**
+	 * Imports publications from external databases into the application's database.
+	 */
 	private Callable<Integer> importPublicationsTask() {
 		return new Callable<Integer>() {
 			@Override
 			public Integer call() throws Exception {
-				LOGGER.info("Importing new publications from: " + DEFAULT_DATA_SOURCES);
-				int importedPublicationsCount = 0;
+				LOGGER.info("Importing new publications from: " + DATABASES);
+				int count = 0;
 				final File tmpDir = createTmpDir();
 				try {
-					final List<ListenableFuture<Integer>> futures = newArrayList();
-					for (final String dataSource : DEFAULT_DATA_SOURCES) {						
-						futures.addAll(importPublications(dataSource, tmpDir));
-					}
-					final ListenableFuture<List<Integer>> futuresList = allAsList(futures);
-					final List<Integer> results = futuresList.get();
-					if(results != null) {
-						for (final Integer item : results) {
-							if (item != null) {
-								importedPublicationsCount += (item != null ? item : 0);
-							}
+					final List<ListenableFuture<Integer>> subTasks = newArrayList();
+					for (final String db : DATABASES) {
+						if (PUBMED.equals(db)) {
+							subTasks.addAll(importPubMedSubTasks(tmpDir));
+						} else {
+							throw new IllegalArgumentException("Unsupported database: " + db);
 						}
 					}
-					setStatus(importedPublicationsCount + " new publications were imported from: " + on(", ").join(DEFAULT_DATA_SOURCES));					
+					final ListenableFuture<List<Integer>> globalTask = successfulAsList(subTasks);					
+					final List<Integer> results = globalTask.get(TIMEOUT_MINUTES, MINUTES);
+					for (final Integer result : results) {
+						if (result != null) {
+							count += result;
+						} else {
+							setHasErrors(true);
+							setStatus("Error while importing publications: not all publications were imported");
+						}
+					}
 				} catch (Exception e) {
 					setHasErrors(true);
-					setStatus("Error while importing publications: some publications might have been skipped to avoid data integrity problems.");
-					NOTIFICATION_MANAGER.broadcast(Notification.builder()
-							.scope(PUBLICATIONS)
-							.message("Error while importing publications: " + e.getMessage()).build());
-					LOGGER.error("Error while importing publications", e);
-				} finally {					
+					setStatus("Uncaught error while importing publications: not all publications were imported");
+					LOGGER.error("Uncaught error while importing publications", e);
+				} finally {
 					deleteQuietly(tmpDir);
+				}
+				final String msg = count + " new publications were imported from: " + on(", ").join(DATABASES);				
+				if (!hasErrors()) {
+					setStatus(msg);
+					LOGGER.info(msg);
+				} else {
+					LOGGER.warn(msg + " - errors reported");
 				}
 				NOTIFICATION_MANAGER.broadcast(Notification.builder()
 						.scope(PUBLICATIONS)
-						.message(importedPublicationsCount + " new publications were imported from: " + on(", ").join(DEFAULT_DATA_SOURCES)).build());
-				LOGGER.info(importedPublicationsCount + " new publications were imported from: " + on(", ").join(DEFAULT_DATA_SOURCES));				
-				return new Integer(importedPublicationsCount);
+						.message(msg).build());
+				// unregister this task before returning the result to the execution service
+				TASK_STORAGE.remove(getUuid());
+				return new Integer(count);
 			}
 		};
 	}
 
-	/**
-	 * Imports publications from external databases into the application's database.
-	 * @param dataSource - source database, for example, PubMed
-	 */
-	private List<ListenableFuture<Integer>> importPublications(final String dataSource, final File tmpDir) {
-		checkArgument(isNotBlank(dataSource), "Uninitialized data source");
-		if (PUBMED.equals(dataSource)) {
-			return importPubMedPublications(tmpDir);
-		} else {
-			throw new IllegalArgumentException("Unsupported data source: " + dataSource);
+	private List<ListenableFuture<Integer>> importPubMedSubTasks(final File tmpDir) {
+		final List<ListenableFuture<Integer>> subTasks = newArrayList();
+		final Set<String> deduplicated = newHashSet(pmids);		
+		final Iterable<List<String>> subsets = partition(deduplicated, MAX_RECORDS_LISTED);
+		for (final List<String> subset : subsets) {
+			subTasks.add(TASK_RUNNER.submit(importPubMedSubTask(subset, tmpDir, PUBMED_XML, "xml")));
+			LOGGER.trace("Partition produced " + subset.size() + " new records");
 		}
+		return subTasks;
 	}
 
-	private List<ListenableFuture<Integer>> importPubMedPublications(final File tmpDir) {
-		final List<ListenableFuture<Integer>> futures = newArrayList();		
-		futures.add(TASK_RUNNER.submit(fetchPubMedPublications(ids, tmpDir, PUBMED_XML, "xml")));		
-		return futures;
-	}
-
-	private Callable<Integer> fetchPubMedPublications(final List<String> ids, final File tmpDir,
-			final Format format, final String extension) {
+	private Callable<Integer> importPubMedSubTask(final List<String> ids, final File tmpDir, final Format format, final String extension) {
 		return new Callable<Integer>() {
 			private int efetchCount = 0;
-			@Override
+			@Override			
 			public Integer call() throws Exception {
 				setStatus("Finding missing publications between PubMed and the local collection");
 				// filter out the publications that are already stored in the database, creating a new set
@@ -183,7 +189,7 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 						for (int i = 0; i < filters.size() && result != null; i++) {
 							final RecordFilter filter = filters.get(i);
 							if (filter.canBeApplied(PUBMED)) {
-								result = filters.get(i).filterById(id);								
+								result = filters.get(i).filterById(id);
 							}
 						}
 						return result;
@@ -194,10 +200,10 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 					// update progress
 					int pendingCount = pending.addAndGet(ids2.size());
 					setProgress(100.0d * fetched.get() / pendingCount);
-					// fetch article files
-					final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_task_");
+					// fetch sequence files
+					final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_pub_task_");
 					efetch(ids2, 0, MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
-					// copy sequence files to their final location and import them to the database
+					// copy publication files to their final location and import them to the database
 					final Path seqPath = CONFIG_MANAGER.getPubMedDir(format).toPath();
 					for (final String id : ids2) {
 						setStatus("Importing PubMed publications into local collection");
@@ -206,19 +212,17 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 							// copy publication to storage						
 							final Path target = seqPath.resolve(source.getFileName());
 							copy(source, target, REPLACE_EXISTING);
-							LOGGER.info("New PubMed XML file stored: " + target.toString());
+							LOGGER.info("New PubMed file stored: " + target.toString());
 							// insert publication in the database
 							final PubmedArticle pmArticle = PUBMED_XMLB.typeFromFile(target.toFile());
 							final Reference reference = parseArticle(pmArticle);
 							REFERENCE_DAO.insert(reference, true);							
 							efetchCount++;							
-							// update progress							
+							// update progress
 							int fetchedCount = fetched.incrementAndGet();
 							setProgress(100.0d * fetchedCount / pending.get());							
 						} catch (Exception e) {
 							LOGGER.warn("Failed to import publication from file: " + source.getFileName(), e);
-						} finally {
-							deleteQuietly(source.toFile());
 						}
 					}
 				}
@@ -231,7 +235,7 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 	private static File createTmpDir() {
 		File tmpDir = null;
 		try {
-			tmpDir = createTempDirectory("tmp_publications_").toFile();
+			tmpDir = createTempDirectory("tmp_pub_").toFile();
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to create temporary directory", e);
 		}
@@ -254,8 +258,7 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 	public static class Builder {
 
 		private ImmutableList<RecordFilter> filters = of();
-		private UUID parent = null;
-		private ImmutableList<String> ids = of();		
+		private ImmutableList<String> pmids = of();		
 
 		public Builder filter(final RecordFilter filter) {
 			this.filters = of(filter);
@@ -267,18 +270,13 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 			return this;
 		}
 
-		public Builder parent(final UUID parent) {
-			this.parent = parent;
-			return this;
-		}
-
-		public Builder ids(final Iterable<String> ids) {
-			this.ids = copyOf(ids);
+		public Builder pmids(final Iterable<String> pmids) {
+			this.pmids = copyOf(pmids);
 			return this;
 		}
 
 		public ImportPublicationsTask build() {
-			final ImportPublicationsTask task = new ImportPublicationsTask(parent, ids);
+			final ImportPublicationsTask task = new ImportPublicationsTask(pmids);
 			task.setFilters(filters);
 			return task;
 		}

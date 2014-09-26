@@ -26,7 +26,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
 import com.google.common.eventbus.DeadEvent;
 import com.google.common.eventbus.Subscribe;
 
@@ -46,16 +45,14 @@ public enum DeadEventListener {
 				+ getEventType(deadEvent) + "', source='" + getSource(deadEvent) + "']");
 	}
 
-	private String getEventType(final DeadEvent deadEvent) {
-		return (Optional.fromNullable(deadEvent).isPresent() 
-				&& Optional.fromNullable(deadEvent.getEvent()).isPresent() 
-				? deadEvent.getEvent().getClass().getCanonicalName() : "(not available)");
+	private static String getEventType(final DeadEvent deadEvent) {
+		return (deadEvent != null && deadEvent.getEvent() != null ? deadEvent.getEvent().getClass().getCanonicalName() 
+				: "(not available)");
 	}
 
-	private String getSource(final DeadEvent deadEvent) {
-		return (Optional.fromNullable(deadEvent).isPresent() 
-				&& Optional.fromNullable(deadEvent.getSource()).isPresent() 
-				? deadEvent.getSource().getClass().getCanonicalName() : "(not available)");
+	private static String getSource(final DeadEvent deadEvent) {
+		return (deadEvent != null && deadEvent.getSource() != null ? deadEvent.getSource().getClass().getCanonicalName() 
+				: "(not available)");
 	}
 
 }

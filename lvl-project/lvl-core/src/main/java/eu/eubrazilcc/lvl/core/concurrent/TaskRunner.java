@@ -27,6 +27,8 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.shutdownAndAwaitTermination;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskUncaughtExceptionHandler.TASK_UNCAUGHT_EXCEPTION_HANDLER;
+import static java.lang.Thread.currentThread;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -35,7 +37,6 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public enum TaskRunner implements Closeable2 {
 	 * Reuse the code of {@link java.util.concurrent.Executors#newCachedThreadPool(java.util.concurrent.ThreadFactory)}
 	 * to create the thread pool, limiting the maximum number of threads in the pool to 128.
 	 */
-	private final ListeningExecutorService runner = listeningDecorator(new ThreadPoolExecutor(0, 128, 60l, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), 
+	private final ListeningExecutorService runner = listeningDecorator(new ThreadPoolExecutor(0, 128, 60l, SECONDS, new SynchronousQueue<Runnable>(), 
 			new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PATTERN)
 			.setDaemon(false)
 			.setUncaughtExceptionHandler(TASK_UNCAUGHT_EXCEPTION_HANDLER)
@@ -120,14 +121,14 @@ public enum TaskRunner implements Closeable2 {
 	public void close() throws IOException {
 		shouldRun.set(false);
 		try {
-			if (!shutdownAndAwaitTermination(runner, TIMEOUT_SECS, TimeUnit.SECONDS)) {
+			if (!shutdownAndAwaitTermination(runner, TIMEOUT_SECS, SECONDS)) {
 				runner.shutdownNow();
 			}
 		} catch (Exception e) {
 			// force shutdown if current thread also interrupted, preserving interrupt status
 			runner.shutdownNow();
 			if (e instanceof InterruptedException) {
-				Thread.currentThread().interrupt();
+				currentThread().interrupt();
 			}
 		} finally {
 			LOGGER.info("Task runner shutdown successfully");	

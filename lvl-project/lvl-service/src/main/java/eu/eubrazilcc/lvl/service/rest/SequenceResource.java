@@ -128,12 +128,12 @@ public class SequenceResource {
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// get from database
 		final Sequence sequence = SEQUENCE_DAO.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
 		if (sequence == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		return sequence;
 	}
@@ -144,7 +144,7 @@ public class SequenceResource {
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (sequence == null || isBlank(sequence.getAccession())) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// create sequence in the database
 		SEQUENCE_DAO.insert(sequence);
@@ -159,17 +159,17 @@ public class SequenceResource {
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}		
 		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
 		if (sequenceKey == null || !sequenceKey.getDataSource().equals(update.getDataSource()) 
 				|| !sequenceKey.getAccession().equals(update.getAccession())) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
 		}
 		// get from database
 		final Sequence current = SEQUENCE_DAO.find(sequenceKey);
 		if (current == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// update
 		SEQUENCE_DAO.update(update);			
@@ -181,13 +181,13 @@ public class SequenceResource {
 			final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
 		// get from database
 		final Sequence current = SEQUENCE_DAO.find(sequenceKey);
 		if (current == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// delete
 		SEQUENCE_DAO.delete(sequenceKey);

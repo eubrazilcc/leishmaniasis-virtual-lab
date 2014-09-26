@@ -19,6 +19,7 @@
  * The "NOTICE" text file is part of the distribution. Any derivative works
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
+
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;

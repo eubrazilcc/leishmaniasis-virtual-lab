@@ -118,6 +118,10 @@ public class CancellableTask<V> {
 	public String toString() {
 		return toStringHelper(this)
 				.add("uuid", uuid)
+				.add("puuid", puuid)
+				.add("progress", progress)
+				.add("status", status)
+				.add("hasErrors", hasErrors)
 				.toString();
 	}
 

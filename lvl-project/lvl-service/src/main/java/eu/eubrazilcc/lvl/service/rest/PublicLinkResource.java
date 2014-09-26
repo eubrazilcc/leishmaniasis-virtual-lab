@@ -94,7 +94,7 @@ public class PublicLinkResource {
 		final PublicLink publicLink = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo))
 				.find(path + "/" + name, getOwnerId(access));
 		if (publicLink == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		return publicLink;
 	}

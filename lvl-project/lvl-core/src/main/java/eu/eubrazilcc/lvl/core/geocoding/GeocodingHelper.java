@@ -37,6 +37,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Locale;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -65,7 +66,9 @@ public final class GeocodingHelper {
 	public static final int MAX_CACHED_ELEMENTS = 1000;
 	public static final int CACHE_EXPIRATION_SECONDS = 86400; // one day
 	public static final char COUNTRY_SEPARATOR = ':';	
-	public static final long OVER_QUERY_LIMIT_DELAY = 400l;
+
+	public static final int OVER_QUERY_LIMIT_MIN_DELAY = 400;
+	public static final int OVER_QUERY_LIMIT_MAX_DELAY = 2000;
 
 	private static final LoadingCache<String, Optional<Point>> CACHE = newBuilder()
 			.maximumSize(MAX_CACHED_ELEMENTS)
@@ -157,7 +160,7 @@ public final class GeocodingHelper {
 			case OVER_QUERY_LIMIT:
 				if (recoverOverQueryLimit) {
 					try {
-						sleep(OVER_QUERY_LIMIT_DELAY);
+						sleep(new Random().nextInt(OVER_QUERY_LIMIT_MAX_DELAY - OVER_QUERY_LIMIT_MIN_DELAY + 1) + OVER_QUERY_LIMIT_MIN_DELAY);
 						point = geocodeFromGoogle(address, recoverZeroResults, false);
 					} catch (InterruptedException ie) { }					
 				} else {

@@ -58,7 +58,8 @@ import eu.eubrazilcc.lvl.oauth2.Users;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer;
-import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.AnonymizationLevel;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.AnonymizationLevel.HARD;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.AnonymizationLevel.NONE;
 
 /**
  * Implements an identity provider as an OAuth 2.0 Resource Server using Apache Oltu. It receives the 
@@ -89,7 +90,7 @@ public class IdentityProvider {
 		final MutableLong count = new MutableLong(0l);
 		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.useGravatar(true)
 				.list(paginable.getPageFirstEntry(), per_page, null, null, count);
-		paginable.setElements(from(owners).transform(UserAnonymizer.start(plain ? AnonymizationLevel.NONE : AnonymizationLevel.HARD))
+		paginable.setElements(from(owners).transform(UserAnonymizer.start(plain ? NONE : HARD))
 						.filter(notNull()).toList());
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
@@ -105,18 +106,18 @@ public class IdentityProvider {
 			final @QueryParam("use_email") @DefaultValue("false") boolean useEmail,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {		
 		if (isBlank(id)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// get effective user (this is an exception since we always want to check authorization before)
 		final ResourceOwner owner = (!useEmail ? RESOURCE_OWNER_DAO.useGravatar(true).find(id)
 				: RESOURCE_OWNER_DAO.useGravatar(true).findByEmail(id));
 		if (owner == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// check authorization
 		authorize(request, null, headers, inherit(RESOURCE_SCOPE, owner.getOwnerId()), false, false, RESOURCE_NAME);
 		// get from database		
-		return UserAnonymizer.start(plain ? AnonymizationLevel.NONE : AnonymizationLevel.HARD).apply(owner);
+		return UserAnonymizer.start(plain ? NONE : HARD).apply(owner);
 	}
 
 	@POST
@@ -124,7 +125,7 @@ public class IdentityProvider {
 	public Response createUser(final User user, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {		
 		if (user == null || isBlank(user.getUsername())) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		authorize(request, null, headers, inherit(RESOURCE_SCOPE, user.getUsername()), true, false, RESOURCE_NAME);
 		// create user in the database
@@ -139,13 +140,13 @@ public class IdentityProvider {
 	public void updateUser(final @PathParam("id") String id, final User update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(id) || update == null || !id.equals(update.getUsername())) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, false, RESOURCE_NAME);
 		// get from database
 		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// update
 		RESOURCE_OWNER_DAO.update(ResourceOwner.builder().id(update.getUsername()).user(update).build());			
@@ -156,13 +157,13 @@ public class IdentityProvider {
 	public void deleteUser(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		if (isBlank(id)) {
-			throw new WebApplicationException(Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, false, RESOURCE_NAME);
 		// get from database
 		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// delete
 		RESOURCE_OWNER_DAO.delete(id);
