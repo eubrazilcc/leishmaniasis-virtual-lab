@@ -22,7 +22,6 @@
 
 package eu.eubrazilcc.lvl.storage.dao;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
@@ -46,7 +45,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -156,23 +154,12 @@ public enum ReferenceDAO implements BaseDAO<String, Reference> {
 
 	@Override
 	public List<Reference> getNear(final Point point, final double maxDistance) {
-		final List<Reference> references = newArrayList();
-		final BasicDBList list = MONGODB_CONN.geoNear(COLLECTION, point.getCoordinates().getLongitude(), 
-				point.getCoordinates().getLatitude(), maxDistance);
-		for (int i = 0; i < list.size(); i++) {
-			references.add(parseObject(list.get(i)));
-		}
-		return references;
+		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
 	public List<Reference> geoWithin(final Polygon polygon) {
-		return transform(MONGODB_CONN.geoWithin(GEOLOCATION_KEY, COLLECTION, polygon), new Function<BasicDBObject, Reference>() {
-			@Override
-			public Reference apply(final BasicDBObject obj) {
-				return parseBasicDBObject(obj);
-			}
-		});
+		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
@@ -207,6 +194,7 @@ public enum ReferenceDAO implements BaseDAO<String, Reference> {
 		return map(obj).getId().toString();
 	}
 
+	@SuppressWarnings("unused")
 	private Reference parseObject(final Object obj) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
 		return map((BasicDBObject) obj2.get("obj")).getReference();

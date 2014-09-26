@@ -29,7 +29,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 /**
- * Integration tests.
+ * Integration tests. only run <code>FullDatabaseLoadTest.class</code> when you're completely sure that you need it.
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)

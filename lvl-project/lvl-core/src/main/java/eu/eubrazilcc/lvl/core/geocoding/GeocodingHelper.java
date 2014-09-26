@@ -67,7 +67,7 @@ public final class GeocodingHelper {
 	public static final int CACHE_EXPIRATION_SECONDS = 86400; // one day
 	public static final char COUNTRY_SEPARATOR = ':';	
 
-	public static final int OVER_QUERY_LIMIT_MIN_DELAY = 400;
+	public static final int OVER_QUERY_LIMIT_MIN_DELAY = 800;
 	public static final int OVER_QUERY_LIMIT_MAX_DELAY = 2000;
 
 	private static final LoadingCache<String, Optional<Point>> CACHE = newBuilder()

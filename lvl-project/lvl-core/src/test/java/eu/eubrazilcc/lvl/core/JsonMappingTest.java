@@ -87,7 +87,6 @@ public class JsonMappingTest {
 					.pubmedId("ADGJ87950")
 					.title("The best paper in the world!")
 					.publicationYear(1984)
-					.location(point)
 					.seqids(newHashSet("gb:ABC12345678"))
 					.build();
 			assertThat("reference is not null", reference, notNullValue());

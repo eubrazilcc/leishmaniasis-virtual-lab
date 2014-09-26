@@ -41,7 +41,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
@@ -64,7 +63,6 @@ public class Reference implements Linkable<Reference> {
 	private String title;          // Title of the published work
 	private String pubmedId;       // PubMed Identifier (PMID)
 	private int publicationYear;   // Journal publication year
-	private Point location;        // Geospatial location
 	private Set<String> seqids;    // Sequences mentioned in this publication (must include database and accession number)
 
 	public Reference() { }
@@ -107,14 +105,6 @@ public class Reference implements Linkable<Reference> {
 		this.publicationYear = publicationYear;
 	}
 
-	public Point getLocation() {
-		return location;
-	}
-
-	public void setLocation(final Point location) {
-		this.location = location;
-	}	
-
 	public Set<String> getSeqids() {
 		return seqids;
 	}
@@ -140,14 +130,13 @@ public class Reference implements Linkable<Reference> {
 		}
 		return Objects.equals(title, other.title)
 				&& Objects.equals(pubmedId, other.pubmedId)
-				&& Objects.equals(publicationYear, other.publicationYear)				
-				&& Objects.equals(location, other.location)
+				&& Objects.equals(publicationYear, other.publicationYear)
 				&& Objects.equals(seqids, other.seqids);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, title, pubmedId, location);
+		return Objects.hash(links, title, pubmedId);
 	}
 
 	@Override
@@ -157,7 +146,6 @@ public class Reference implements Linkable<Reference> {
 				.add("title", title)
 				.add("pubmedId", pubmedId)
 				.add("publicationYear", publicationYear)
-				.add("location", location)
 				.add("seqids", seqids)
 				.toString();
 	}
@@ -189,11 +177,6 @@ public class Reference implements Linkable<Reference> {
 
 		public Builder publicationYear(final int publicationYear) {
 			instance.setPublicationYear(publicationYear);
-			return this;
-		}
-
-		public Builder location(final Point location) {
-			instance.setLocation(location);
 			return this;
 		}
 
