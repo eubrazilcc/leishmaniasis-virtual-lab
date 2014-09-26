@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -58,7 +59,7 @@ public class JsonMappingTest {
 	public void test() {
 		System.out.println("JsonMappingTest.test()");
 		try {
-			// create the test dataset
+			// create test dataset
 			final Link seqLink = Link.fromUri(UriBuilder.fromUri("http://localhost/sequence").path("gb:ABC12345678").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
 			final Link refLink = Link.fromUri(UriBuilder.fromUri("http://localhost/paper").path("ADGJ87950").build())
@@ -78,13 +79,16 @@ public class JsonMappingTest {
 					.countryFeature("Spain: Murcia")
 					.location(point)
 					.locale(new Locale("es", "ES"))
+					.pmids(newHashSet("1234R", "AV99O0"))
 					.build();
 			assertThat("sequence is not null", sequence, notNullValue());
 
 			final Reference reference = Reference.builder()
 					.pubmedId("ADGJ87950")
 					.title("The best paper in the world!")
+					.publicationYear(1984)
 					.location(point)
+					.seqids(newHashSet("gb:ABC12345678"))
 					.build();
 			assertThat("reference is not null", reference, notNullValue());
 

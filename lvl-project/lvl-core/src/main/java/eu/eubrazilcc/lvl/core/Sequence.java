@@ -33,6 +33,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.ws.rs.core.Link;
 
@@ -81,13 +82,14 @@ public class Sequence implements Linkable<Sequence> {
 
 	private String dataSource;     // Database where the original sequence is stored
 	private String definition;     // GenBank definition field
-	private String accession;      // GenBank accession number	
+	private String accession;      // GenBank accession number
 	private String version;        // GenBank version
 	private int gi;                // GenBank GenInfo Identifier (Entrez default search field)
 	private String organism;       // GenBank organism
 	private String countryFeature; // GenBank country feature
 	private Point location;        // Geospatial location
 	private Locale locale;         // Represents country with standards
+	private Set<String> pmids;     // References mentioning this sequence in PubMed
 
 	public Sequence() { }
 
@@ -185,7 +187,15 @@ public class Sequence implements Linkable<Sequence> {
 
 	public void setLocale(final Locale locale) {
 		this.locale = locale;
-	}	
+	}
+
+	public Set<String> getPmids() {
+		return pmids;
+	}
+
+	public void setPmids(final Set<String> pmids) {
+		this.pmids = pmids;
+	}
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -211,13 +221,14 @@ public class Sequence implements Linkable<Sequence> {
 				&& Objects.equals(organism, other.organism)
 				&& Objects.equals(countryFeature, other.countryFeature)
 				&& Objects.equals(location, other.location)
-				&& Objects.equals(locale, other.locale);
+				&& Objects.equals(locale, other.locale)
+				&& Objects.equals(pmids, other.pmids);
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hash(id, links, dataSource, definition, accession, version, gi, organism, 
-				countryFeature, location, locale);
+				countryFeature, location, locale, pmids);
 	}
 
 	@Override
@@ -234,6 +245,7 @@ public class Sequence implements Linkable<Sequence> {
 				.add("countryFeature", countryFeature)
 				.add("location", location)
 				.add("locale", locale)
+				.add("pmids", pmids)
 				.toString();
 	}
 
@@ -298,6 +310,11 @@ public class Sequence implements Linkable<Sequence> {
 
 		public Builder locale(final Locale locale) {
 			instance.setLocale(locale);
+			return this;
+		}
+
+		public Builder pmids(final Set<String> pmids) {
+			instance.setPmids(pmids);
 			return this;
 		}
 

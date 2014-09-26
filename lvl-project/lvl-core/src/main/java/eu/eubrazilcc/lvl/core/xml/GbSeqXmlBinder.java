@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.geocoding.GeocodingHelper.geocode;
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static java.lang.Integer.parseInt;
@@ -49,7 +50,6 @@ import org.slf4j.Logger;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMultimap;
 
-import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBFeature;
@@ -253,7 +253,7 @@ public final class GbSeqXmlBinder extends XmlBinder {
 		checkArgument(gbSeq != null, "Uninitialized or invalid sequence");
 		final String countryFeature = countryFeature(gbSeq);		
 		return Sequence.builder()
-				.dataSource(DataSource.GENBANK)
+				.dataSource(GENBANK)
 				.definition(gbSeq.getGBSeqDefinition())
 				.accession(gbSeq.getGBSeqPrimaryAccession())
 				.version(gbSeq.getGBSeqAccessionVersion())
@@ -262,6 +262,7 @@ public final class GbSeqXmlBinder extends XmlBinder {
 				.countryFeature(countryFeature)
 				.location(isNotBlank(countryFeature) ? geocode(countryFeature).orNull() : null)
 				.locale(isNotBlank(countryFeature) ? countryFeatureToLocale(countryFeature) : null)
+				.pmids(getPubMedIds(gbSeq))
 				.build();
 	}
 	

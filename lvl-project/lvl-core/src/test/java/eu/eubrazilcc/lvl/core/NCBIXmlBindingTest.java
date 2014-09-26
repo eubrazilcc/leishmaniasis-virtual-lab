@@ -155,7 +155,16 @@ public class NCBIXmlBindingTest {
 					assertThat("PubMed XML article is not null", article.getMedlineCitation().getArticle(), notNullValue());
 					assertThat("PubMed XML article title is not empty", isNotBlank(article.getMedlineCitation().getArticle().getArticleTitle()));					
 					assertThat("PubMed XML article PMID is not null", article.getMedlineCitation().getPMID(), notNullValue());
-					assertThat("PubMed XML article PMID is not empty", isNotBlank(article.getMedlineCitation().getPMID().getvalue()));
+					assertThat("PubMed XML article PMID is not empty", isNotBlank(article.getMedlineCitation().getPMID().getvalue()));					
+					assertThat("PubMed XML article journal is not null", article.getMedlineCitation().getArticle().getJournal(), notNullValue());
+					assertThat("PubMed XML article journal issue is not null", article.getMedlineCitation().getArticle().getJournal()
+							.getJournalIssue(), notNullValue());
+					assertThat("PubMed XML article journal publication date is not null", article.getMedlineCitation().getArticle().getJournal()
+							.getJournalIssue().getPubDate(), notNullValue());
+					assertThat("PubMed XML article journal publication year is not null", article.getMedlineCitation().getArticle().getJournal()
+							.getJournalIssue().getPubDate().getYearOrMonthOrDayOrSeasonOrMedlineDate(), notNullValue());					
+					assertThat("PubMed XML article journal publication year is not empty", article.getMedlineCitation().getArticle().getJournal()
+							.getJournalIssue().getPubDate().getYearOrMonthOrDayOrSeasonOrMedlineDate().isEmpty(), equalTo(false));
 					/* Uncomment for additional output */
 					System.out.println(" >> Title : " + article.getMedlineCitation().getArticle().getArticleTitle());
 					System.out.println(" >> PMID  : " + article.getMedlineCitation().getPMID().getvalue());
@@ -164,6 +173,7 @@ public class NCBIXmlBindingTest {
 					assertThat("Reference is not null", reference, notNullValue());
 					assertThat("Reference title is not empty", isNotBlank(reference.getTitle()));
 					assertThat("Reference PMID is not empty", isNotBlank(reference.getPubmedId()));
+					assertThat("Reference publication year coincides with expected", reference.getPublicationYear() > 1900, equalTo(true));
 					/* Uncomment for additional output */
 					System.out.println(" >> Reference  : " + reference.toString());
 				}

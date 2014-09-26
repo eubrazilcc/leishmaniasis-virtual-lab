@@ -62,8 +62,11 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 
@@ -101,6 +104,8 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 	private final AtomicInteger fetched = new AtomicInteger(0);
 
 	private final List<String> pmids = synchronizedList(new ArrayList<String>());
+	
+	private UUID importPublicationsTaskId = null;
 
 	public ImportSequencesTask() {
 		this.task = create(importSequencesTask());
@@ -113,6 +118,10 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 	public void setFilters(final Iterable<RecordFilter> filters) {
 		final ImmutableList.Builder<RecordFilter> builder = new ImmutableList.Builder<RecordFilter>();
 		this.filters = (filters != null ? builder.addAll(filters).build() : builder.build());
+	}	
+
+	public @Nullable UUID getImportPublicationsTaskId() {
+		return importPublicationsTaskId;
 	}
 
 	/**
@@ -144,6 +153,10 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 							setStatus("Error while importing sequences: not all sequences were imported");
 						}
 					}
+				} catch (InterruptedException ie) {					
+					// ignore and propagate
+					LOGGER.warn("Sequence import was interrupted, exiting");
+					throw ie;
 				} catch (Exception e) {
 					setHasErrors(true);
 					setStatus("Uncaught error while importing sequences: not all sequences were imported");
@@ -166,8 +179,9 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 						.filter(NewReferenceFilter.builder().build())
 						.pmids(pmids)
 						.build();
+				importPublicationsTaskId = importPublicationsTask.getUuid();
 				TASK_RUNNER.execute(importPublicationsTask);
-				TASK_STORAGE.add(importPublicationsTask);
+				TASK_STORAGE.add(importPublicationsTask);				
 				// unregister this task before returning the result to the execution service
 				TASK_STORAGE.remove(getUuid());
 				return new Integer(count);

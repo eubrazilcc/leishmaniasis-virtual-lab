@@ -29,6 +29,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.ws.rs.core.Link;
 
@@ -62,7 +63,9 @@ public class Reference implements Linkable<Reference> {
 
 	private String title;          // Title of the published work
 	private String pubmedId;       // PubMed Identifier (PMID)
+	private int publicationYear;   // Journal publication year
 	private Point location;        // Geospatial location
+	private Set<String> seqids;    // Sequences mentioned in this publication (must include database and accession number)
 
 	public Reference() { }
 
@@ -96,12 +99,28 @@ public class Reference implements Linkable<Reference> {
 		this.pubmedId = pubmedId;
 	}
 
+	public int getPublicationYear() {
+		return publicationYear;
+	}
+
+	public void setPublicationYear(final int publicationYear) {
+		this.publicationYear = publicationYear;
+	}
+
 	public Point getLocation() {
 		return location;
 	}
 
 	public void setLocation(final Point location) {
 		this.location = location;
+	}	
+
+	public Set<String> getSeqids() {
+		return seqids;
+	}
+
+	public void setSeqids(final Set<String> seqids) {
+		this.seqids = seqids;
 	}
 
 	@Override
@@ -121,7 +140,9 @@ public class Reference implements Linkable<Reference> {
 		}
 		return Objects.equals(title, other.title)
 				&& Objects.equals(pubmedId, other.pubmedId)
-				&& Objects.equals(location, other.location);
+				&& Objects.equals(publicationYear, other.publicationYear)				
+				&& Objects.equals(location, other.location)
+				&& Objects.equals(seqids, other.seqids);
 	}
 
 	@Override
@@ -135,7 +156,9 @@ public class Reference implements Linkable<Reference> {
 				.add("links", links)
 				.add("title", title)
 				.add("pubmedId", pubmedId)
+				.add("publicationYear", publicationYear)
 				.add("location", location)
+				.add("seqids", seqids)
 				.toString();
 	}
 
@@ -164,8 +187,18 @@ public class Reference implements Linkable<Reference> {
 			return this;
 		}
 
+		public Builder publicationYear(final int publicationYear) {
+			instance.setPublicationYear(publicationYear);
+			return this;
+		}
+
 		public Builder location(final Point location) {
 			instance.setLocation(location);
+			return this;
+		}
+
+		public Builder seqids(final Set<String> seqids) {
+			instance.setSeqids(seqids);
 			return this;
 		}
 

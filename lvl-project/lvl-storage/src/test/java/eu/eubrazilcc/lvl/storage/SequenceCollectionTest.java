@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -114,6 +115,7 @@ public class SequenceCollectionTest {
 					.countryFeature("Spain: Murcia")
 					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build())
 					.locale(new Locale("es", "ES"))
+					.pmids(newHashSet("1234R", "AV99O0"))
 					.build();
 			final SequenceKey sequenceKey1 = SequenceKey.builder()
 					.dataSource(sequence1.getDataSource())

@@ -23,11 +23,12 @@
 package eu.eubrazilcc.lvl.core.xml;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static javax.xml.transform.OutputKeys.ENCODING;
+import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.StringWriter;
 
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -43,7 +44,7 @@ import org.w3c.dom.Document;
 public final class XmlHelper {
 
 	private static final Logger LOGGER = getLogger(XmlHelper.class);
-	
+
 	/**
 	 * Obtains a String representation of a XML document, omitting the XML declaration.
 	 * @param document the document to be transformed into String.
@@ -55,8 +56,8 @@ public final class XmlHelper {
 		try {
 			final TransformerFactory tf = TransformerFactory.newInstance();
 			final Transformer transformer = tf.newTransformer();
-			transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			transformer.setOutputProperty(ENCODING, "UTF-8");
+			transformer.setOutputProperty(OMIT_XML_DECLARATION, "yes");
 			final StringWriter writer = new StringWriter();
 			transformer.transform(new DOMSource(document), new StreamResult(writer));
 			docStr = writer.toString();
@@ -66,5 +67,5 @@ public final class XmlHelper {
 		}
 		return docStr;
 	}
-	
+
 }

@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -52,6 +53,8 @@ public class ReferenceCollectionTest {
 			final Reference reference = Reference.builder()
 					.title("The best paper in the world")
 					.pubmedId("ABCD1234")
+					.publicationYear(1984)
+					.seqids(newHashSet("gb:ABC12345678"))
 					.build();			
 			WriteResult<Reference> writeResult = REFERENCE_DAO.insert(reference);
 			assertThat("insert write result is not null", writeResult, notNullValue());
