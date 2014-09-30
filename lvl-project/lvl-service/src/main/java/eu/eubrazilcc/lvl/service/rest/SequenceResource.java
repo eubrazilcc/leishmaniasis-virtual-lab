@@ -22,10 +22,7 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
-import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.DEFAULT_ERROR;
-import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.realoc4Heatmap;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
@@ -64,7 +61,6 @@ import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geojson.Crs;
-import eu.eubrazilcc.lvl.core.geojson.Feature;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
@@ -90,7 +86,7 @@ public class SequenceResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence Resource";
 	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);
-	
+
 	public static final String SEQ_ID_PATTERN = "[a-zA-Z_0-9]+:[a-zA-Z_0-9]+";
 
 	@GET
@@ -209,22 +205,8 @@ public class SequenceResource {
 		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
 				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build())
 				.build(), maxDistance);
-		List<Feature> features = null;
-		if (group) {
-			features = SequenceAnalyzer.of(sequences).groupByLocation(heatmap ? 1 : DEFAULT_ERROR);
-			if (heatmap) {
-				features = realoc4Heatmap(features);
-			}
-		} else {
-			features = newArrayList();
-			for (final Sequence sequence : sequences) {
-				features.add(Feature.builder()
-						.property("name", sequence.getAccession())
-						.geometry(sequence.getLocation())
-						.build());
-			}
-		}
-		return FeatureCollection.builder().crs(Crs.builder().wgs84().build()).features(features).build();
+		// transform to improve visualization
+		return SequenceAnalyzer.toFeatureCollection(sequences, Crs.builder().wgs84().build(), group, heatmap);		
 	}
 
 }

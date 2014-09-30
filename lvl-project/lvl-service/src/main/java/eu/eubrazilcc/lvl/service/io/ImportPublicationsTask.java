@@ -56,7 +56,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -170,11 +169,6 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 	private List<ListenableFuture<Integer>> importPubMedSubTasks(final File tmpDir) {
 		final List<ListenableFuture<Integer>> subTasks = newArrayList();
 		final Set<String> deduplicated = newHashSet(pmids);
-		
-		// TODO
-		System.err.println("\n\n >> PUBLICATIONS : " + Arrays.toString(deduplicated.toArray()) + "\n");
-		// TODO
-		
 		final Iterable<List<String>> subsets = partition(deduplicated, MAX_RECORDS_LISTED);
 		for (final List<String> subset : subsets) {
 			subTasks.add(TASK_RUNNER.submit(importPubMedSubTask(subset, tmpDir, PUBMED_XML, "xml")));

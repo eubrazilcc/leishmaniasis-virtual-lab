@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.storage;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
+import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -44,7 +45,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
-import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.Sorting.Order;
@@ -64,7 +64,7 @@ public class SequenceCollectionTest {
 		try {
 			// insert
 			final Sequence sequence = Sequence.builder()
-					.dataSource(DataSource.GENBANK)
+					.dataSource(GENBANK)
 					.accession("ABC12345678")
 					.version("3.0")
 					.gi(Integer.MAX_VALUE)
@@ -106,7 +106,7 @@ public class SequenceCollectionTest {
 			// insert element with hard link
 			final Sequence sequence1 = Sequence.builder()
 					.links(newArrayList(Link.fromUri("http://example.com/sequences/gb:EFHJ90864").rel(SELF).type(APPLICATION_JSON).build()))
-					.dataSource(DataSource.GENBANK)
+					.dataSource(GENBANK)
 					.accession("EFHJ90864")
 					.version("3.0")
 					.gi(Integer.MAX_VALUE - 1)
@@ -130,7 +130,7 @@ public class SequenceCollectionTest {
 			assertThat("sequence inserted with hard link is not null", sequence2, notNullValue());
 			assertThat("sequence inserted with hard link coincides with expected", sequence2, equalTo(sequence1));
 			System.out.println(sequence2.toString());
-			
+
 			SEQUENCE_DAO.delete(sequenceKey1);
 
 			// update
@@ -173,7 +173,7 @@ public class SequenceCollectionTest {
 			final int numItems = 11;
 			for (int i = 0; i < numItems; i++) {
 				final Sequence sequence3 = Sequence.builder()
-						.dataSource(DataSource.GENBANK)
+						.dataSource(GENBANK)
 						.accession(Integer.toString(i))
 						.definition("This is an example")
 						.gi(i)
@@ -198,7 +198,7 @@ public class SequenceCollectionTest {
 			} while (!sequences.isEmpty());
 
 			// filter: keyword matching search			
-			ImmutableMap<String, String> filter = of("source", DataSource.GENBANK);
+			ImmutableMap<String, String> filter = of("source", GENBANK);
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));			
@@ -216,7 +216,7 @@ public class SequenceCollectionTest {
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems / 2));
 
 			// filter: combined keyword matching search
-			filter = of("source", DataSource.GENBANK, "accession", Integer.toString(random.nextInt(numItems)));
+			filter = of("source", GENBANK, "accession", Integer.toString(random.nextInt(numItems)));
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(1));
@@ -228,7 +228,7 @@ public class SequenceCollectionTest {
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems));
 
 			// filter: combined full-text search with keyword matching search
-			filter = of("source", DataSource.GENBANK, "locale", Locale.ENGLISH.toString(), "text", "example");
+			filter = of("source", GENBANK, "locale", Locale.ENGLISH.toString(), "text", "example");
 			sequences = SEQUENCE_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sequences is not null", sequences, notNullValue());
 			assertThat("number of filtered sequences coincides with expected", sequences.size(), equalTo(numItems / 2));
@@ -279,7 +279,7 @@ public class SequenceCollectionTest {
 			// clean-up and display database statistics
 			for (final String id2 : ids) {			
 				SEQUENCE_DAO.delete(SequenceKey.builder()
-						.dataSource(DataSource.GENBANK)
+						.dataSource(GENBANK)
 						.accession(id2)
 						.build());
 			}

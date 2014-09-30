@@ -41,6 +41,7 @@ import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -68,7 +69,7 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
  * @see <a href="http://geojson.org/">GeoJSON open standard format for encoding geographic data structures</a>
  * @see <a href="http://www.ncbi.nlm.nih.gov/genbank/">GenBank collection of publicly available DNA sequences</a>
  */
-public class Sequence implements Linkable<Sequence> {
+public class Sequence implements Linkable<Sequence>, Localizable<Point> {
 
 	@InjectLinks({
 		@InjectLink(value="sequences/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.id}")})
@@ -173,10 +174,12 @@ public class Sequence implements Linkable<Sequence> {
 		this.countryFeature = countryFeature;
 	}
 
+	@Override
 	public Point getLocation() {
 		return location;
 	}
 
+	@Override
 	public void setLocation(final Point location) {
 		this.location = location;
 	}
@@ -195,6 +198,12 @@ public class Sequence implements Linkable<Sequence> {
 
 	public void setPmids(final Set<String> pmids) {
 		this.pmids = pmids;
+	}
+
+	@JsonIgnore
+	@Override
+	public String getTag() {
+		return toId(this, NOTATION_SHORT);
 	}
 
 	@Override

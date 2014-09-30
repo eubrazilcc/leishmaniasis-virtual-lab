@@ -26,10 +26,10 @@ import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
-import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.DEFAULT_ERROR;
-import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.aveWeights;
-import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.realoc4Heatmap;
-import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.relWeights;
+import static eu.eubrazilcc.lvl.core.analysis.LocalizableAnalyzer.DEFAULT_ERROR;
+import static eu.eubrazilcc.lvl.core.analysis.LocalizableAnalyzer.aveWeights;
+import static eu.eubrazilcc.lvl.core.analysis.LocalizableAnalyzer.realoc4Heatmap;
+import static eu.eubrazilcc.lvl.core.analysis.LocalizableAnalyzer.relWeights;
 import static eu.eubrazilcc.lvl.core.geospatial.Wgs84Calculator.distance;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.splitIds;
@@ -46,7 +46,7 @@ import org.junit.Test;
 
 import com.google.common.base.Function;
 
-import eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer;
+import eu.eubrazilcc.lvl.core.analysis.LocalizableAnalyzer;
 import eu.eubrazilcc.lvl.core.geojson.Feature;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
@@ -55,7 +55,7 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
  * Tests {@link SequenceAnalyzer} class.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SequenceAnalyzerTest {
+public class LocalizableAnalyzerTest {
 
 	@Test
 	public void test() {
@@ -97,7 +97,7 @@ public class SequenceAnalyzerTest {
 			}
 
 			// test group sequences by location with margin error
-			SequenceAnalyzer clusterer = SequenceAnalyzer.of(sequences);
+			LocalizableAnalyzer<Sequence> clusterer = LocalizableAnalyzer.of(sequences);
 			double errorMeters = DEFAULT_ERROR;
 			List<Feature> features = clusterer.groupByLocation(errorMeters);
 			assertThat("features is not null", features, notNullValue());
@@ -110,7 +110,7 @@ public class SequenceAnalyzerTest {
 			}
 
 			// test group sequences by location with exact location matching
-			clusterer = SequenceAnalyzer.of(sequences);
+			clusterer = LocalizableAnalyzer.of(sequences);
 			errorMeters = 0.0d;
 			features = clusterer.groupByLocation(errorMeters);
 			assertThat("features (exact match) is not null", features, notNullValue());

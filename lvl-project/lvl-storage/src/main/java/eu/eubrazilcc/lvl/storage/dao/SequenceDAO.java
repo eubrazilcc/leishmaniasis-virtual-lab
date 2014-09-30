@@ -22,12 +22,18 @@
 
 package eu.eubrazilcc.lvl.storage.dao;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
+import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore.startStore;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.compile;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -54,6 +60,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+import eu.eubrazilcc.lvl.core.Localizable;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
@@ -206,6 +213,73 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		return parseBasicDBObjectOrNull(obj);
 	}
 
+	/**
+	 * Gets the list of publication references included within sequences in the collection, assigning to each reference the location of the sequence 
+	 * where the reference ins included.
+	 * @return the list of publication references included within sequences in the collection, annotated with geospatial locations obtained from the
+	 *         the sequences where the reference is included.
+	 */
+	public List<Localizable<Point>> getReferenceLocations() {
+		final List<Localizable<Point>> localizables = newArrayList();
+		final String mapFn = "function() {"
+				+ "    for (var i in this." + DB_PREFIX + "pmids) {"
+				+ "      key = { pmid: this." + DB_PREFIX + "pmids[i] };"
+				+ "      value = { locations: [ this." + DB_PREFIX + "location ] };"
+				+ "      emit(key, value);"
+				+ "    }"
+				+ "  }";
+		final String reduceFn = "function(key, values) {"
+				+ "    var result = { locations: [] };"
+				+ "    values.forEach(function(value) {"
+				+ "      result.locations = value.locations.concat(result.locations);"
+				+ "    });"
+				+ "    return result;"
+				+ "  }";
+		// filter sequences where PubMed Ids is not null
+		final DBObject query = new BasicDBObject(DB_PREFIX + "pmids", new BasicDBObject("$ne", null));
+		final List<BasicDBObject> results = MONGODB_CONN.mapReduce(COLLECTION, mapFn, reduceFn, query);
+		final List<InnerReference> innerRefs = from(results).transform(new Function<BasicDBObject, InnerReference>() {
+			@Override
+			public InnerReference apply(final BasicDBObject obj) {
+				InnerReference reference = null;
+				try {
+					reference = JSON_MAPPER.readValue(obj.toString(), InnerReference.class);
+				} catch (IOException e) {
+					LOGGER.error("Failed to read inner reference from DB object", e);
+				}				
+				return reference;
+			}			
+		}).filter(notNull()).toList();
+		for (final InnerReference ref : innerRefs) {
+			for (final Point point : ref.getValue().getLocations()) {
+				localizables.add(new Localizable<Point>() {
+					private final String tag = ref.get_id().getPmid();
+					private final Point location = point;
+					@Override
+					public Point getLocation() {
+						return location;
+					}
+					@Override
+					public void setLocation(final Point location) {
+						throw new UnsupportedOperationException("Modifiable location is not supported in this class");
+					}
+					@Override
+					public String getTag() {
+						return tag;
+					}
+					@Override
+					public String toString() {
+						return toStringHelper(this)
+								.add("tag", tag)
+								.add("location", location)
+								.toString();
+					}
+				});
+			}
+		}
+		return localizables;
+	}
+
 	private BasicDBObject key(final SequenceKey key) {
 		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, key.getDataSource(), 
 				PRIMARY_KEY_PART2, key.getAccession()));		
@@ -289,11 +363,11 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toUpperCase());
 				} else if ("locale".equalsIgnoreCase(parameter)) {
 					// regular expression to match the language part of the locale
-					final Pattern regex = Pattern.compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");					
+					final Pattern regex = compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");					
 					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);
 				} else {
 					// regular expression to match all entries that contains the keyword
-					final Pattern regex = Pattern.compile(".*" + expression + ".*", Pattern.CASE_INSENSITIVE);
+					final Pattern regex = compile(".*" + expression + ".*", CASE_INSENSITIVE);
 					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);
 				}
 			} else {
@@ -393,6 +467,79 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 		public void setSequence(final Sequence sequence) {
 			this.sequence = sequence;
 		}
+
+	}
+
+	public static class InnerReference {
+
+		private Id _id;
+		private Value value;
+
+		public Id get_id() {
+			return _id;
+		}
+
+		public void set_id(final Id _id) {
+			this._id = _id;
+		}
+
+		public Value getValue() {
+			return value;
+		}
+
+		public void setValue(final Value value) {
+			this.value = value;
+		}
+
+		@Override
+		public String toString() {
+			return toStringHelper(this)
+					.add("_id", _id)
+					.add("value", value)
+					.toString();
+		}
+
+		public static class Id {
+
+			private String pmid;
+
+			public String getPmid() {
+				return pmid;
+			}
+
+			public void setPmid(final String pmid) {
+				this.pmid = pmid;
+			}
+
+			@Override
+			public String toString() {
+				return toStringHelper(this)
+						.add("pmid", pmid)
+						.toString();
+			}
+
+		}
+
+		public static class Value {
+
+			private List<Point> locations;
+
+			public List<Point> getLocations() {
+				return locations;
+			}
+
+			public void setLocations(final List<Point> locations) {
+				this.locations = locations;
+			}			
+
+			@Override
+			public String toString() {
+				return toStringHelper(this)
+						.add("locations", collectionToString(locations))
+						.toString();
+			}
+
+		}		
 
 	}
 

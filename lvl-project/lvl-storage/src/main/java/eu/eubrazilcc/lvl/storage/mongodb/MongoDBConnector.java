@@ -29,11 +29,13 @@ import static com.google.common.base.Splitter.on;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.toMap;
+import static com.mongodb.MapReduceCommand.OutputType.REDUCE;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
 import static com.mongodb.util.JSON.parse;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static java.lang.Integer.parseInt;
+import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -65,6 +67,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.MapReduceCommand;
+import com.mongodb.MapReduceOutput;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
@@ -85,7 +89,9 @@ public enum MongoDBConnector implements Closeable2 {
 
 	MONGODB_CONN;
 
-	private final static Logger LOGGER = getLogger(MongoDBConnector.class);
+	private static final Logger LOGGER = getLogger(MongoDBConnector.class);
+
+	public static final String TMP_COLLECTION_PREFIX = "tmp_";
 
 	private Lock mutex = new ReentrantLock();
 	private MongoClient __client = null;
@@ -423,6 +429,46 @@ public enum MongoDBConnector implements Closeable2 {
 	}
 
 	/**
+	 * Runs a map-reduce aggregation over a collection and saves the result to a temporary collection, which is deleted at the end
+	 * of the execution. The results of the operation are returned to the caller in a list of {@code BasicDBObject}.
+	 * @param collection - collection whose objects are searched
+	 * @param mapFn - map function
+	 * @param reduceFn - reduce function
+	 * @param query - specifies the selection criteria using query operators for determining the documents input to the map function
+	 * @return a list of {@code BasicDBObject} which contains the results of this map reduce operation.
+	 * @see <a href="http://cookbook.mongodb.org/patterns/pivot/">The MongoDB Cookbook - Pivot Data with Map reduce</a>
+	 */
+	public List<BasicDBObject> mapReduce(final String collection, final String mapFn, final String reduceFn, final DBObject query) {
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
+		checkArgument(isNotBlank(mapFn), "Uninitialized or map function");
+		checkArgument(isNotBlank(reduceFn), "Uninitialized or reduce function");
+		final List<BasicDBObject> list = newArrayList();
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		final DBCollection dbcol = db.getCollection(collection);
+		final DBCollection tmpCol = tmpCollection();		
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();
+			final MapReduceCommand command = new MapReduceCommand(dbcol, mapFn, reduceFn, tmpCol.getName(), REDUCE, query);
+			final MapReduceOutput output = dbcol.mapReduce(command);
+			final Iterable<DBObject> results = output.results();
+			for (final DBObject result: results) {
+				list.add((BasicDBObject) result);
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException("Failed to execute map-reduce operation", e);			
+		} finally {
+			db.requestDone();
+			try {
+				tmpCol.drop();
+			} catch (Exception mdbe) {
+				LOGGER.warn("Failed to drop temporary collection", mdbe);
+			}
+		}
+		return list;
+	}
+
+	/**
 	 * Updates a object previously stored in a collection.
 	 * @param obj - value used to update the object
 	 * @param query - statement that is used to find the object in the collection
@@ -522,6 +568,11 @@ public enum MongoDBConnector implements Closeable2 {
 	public static BasicDBObject objectId(final String id) {
 		checkArgument(isNotBlank(id), "Uninitialized or invalid id");
 		return new BasicDBObject("_id", new ObjectId(id));
-	}	
+	}
+
+	private DBCollection tmpCollection() {
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		return db.getCollection(TMP_COLLECTION_PREFIX + randomAlphanumeric(12));
+	}
 
 }

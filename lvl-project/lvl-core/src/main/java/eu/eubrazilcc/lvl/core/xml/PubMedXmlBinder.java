@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.core.xml;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Lists.newArrayList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.List;
@@ -32,6 +33,8 @@ import javax.annotation.Nullable;
 import javax.xml.bind.JAXBElement;
 
 import eu.eubrazilcc.lvl.core.Reference;
+import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.AccessionNumber;
+import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.DataBank;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.ObjectFactory;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticleSet;
@@ -101,6 +104,27 @@ public class PubMedXmlBinder extends XmlBinder {
 		}
 		checkState(year > 1900, "No valid year found");
 		return year;
+	}
+
+	public static List<String> getSequences(final PubmedArticle article) {
+		final List<String> sequences = newArrayList();
+		checkArgument(article != null && article.getMedlineCitation() != null 
+				&& article.getMedlineCitation().getArticle() != null, "Uninitialized or invalid article");
+		if (article.getMedlineCitation().getArticle().getDataBankList() != null
+				&& article.getMedlineCitation().getArticle().getDataBankList().getDataBank() != null) {
+			final List<DataBank> databanks = article.getMedlineCitation().getArticle().getDataBankList().getDataBank();
+			for (final DataBank db : databanks) {
+				if (db != null && "GENBANK".equalsIgnoreCase(db.getDataBankName()) && db.getAccessionNumberList() != null 
+						&& db.getAccessionNumberList().getAccessionNumber() != null) {
+					for (final AccessionNumber an : db.getAccessionNumberList().getAccessionNumber()) {
+						if (isNotBlank(an.getvalue())) {
+							sequences.add(an.getvalue().trim());
+						}
+					}
+				}				
+			}
+		}
+		return sequences;
 	}
 
 	/**

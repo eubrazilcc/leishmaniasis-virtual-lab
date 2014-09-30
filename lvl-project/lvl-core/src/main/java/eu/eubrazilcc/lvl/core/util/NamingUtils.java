@@ -40,7 +40,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
 import eu.eubrazilcc.lvl.core.DataSource.Notation;
+import eu.eubrazilcc.lvl.core.Localizable;
 import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.geojson.GeoJsonObject;
 
 /**
  * Utility class to work with user-supplied text (e.g. names) and convert them into
@@ -67,14 +69,13 @@ public final class NamingUtils {
 				.toLowerCase(), NO_NAME);
 	}
 
-	/**
-	 * Wrapper method around the {@link NamingUtils#mergeIds(Collection, Notation)} method that uses the default notation:
-	 * {@link Notation#NOTATION_SHORT}.
-	 * @param sequences - the sequences to be processed to extract and merge their sequence identifiers.
-	 * @return an string with the merged sequence identifier.
-	 */
-	public static String mergeIds(final Collection<Sequence> sequences) {
-		return mergeIds(sequences, NOTATION_SHORT);
+	public static <T extends GeoJsonObject> String mergeIds(final Collection<Localizable<T>> items) {
+		return Joiner.on(URI_ID_SEPARATOR).skipNulls().join(from(items).transform(new Function<Localizable<T>, String>() {
+			@Override
+			public String apply(final Localizable<T> item) {
+				return item.getTag().trim();
+			}
+		}).filter(notNull()).toList());
 	}
 
 	/**

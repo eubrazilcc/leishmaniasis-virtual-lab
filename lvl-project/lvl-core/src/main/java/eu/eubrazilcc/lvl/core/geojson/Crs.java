@@ -31,7 +31,7 @@ import java.util.Objects;
 import eu.eubrazilcc.lvl.core.geospatial.Wgs84Validator;
 
 /**
- * Stores geospatial locations in GeoJSON format.
+ * Stores the coordinate reference system (CRS) of a GeoJSON object.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://geojson.org/">GeoJSON -- JSON Geometry and Feature Description</a>
  */

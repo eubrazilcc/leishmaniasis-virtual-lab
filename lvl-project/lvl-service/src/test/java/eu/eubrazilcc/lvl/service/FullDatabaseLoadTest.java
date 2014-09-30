@@ -55,7 +55,7 @@ import eu.eubrazilcc.lvl.service.io.filter.SequenceIdFilter;
  * <br>
  * $ watch "ls -l sequences/genbank/xml/ | wc -l ; ls -l papers/pubmed/xml/ | wc -l"<br>
  * <br>
- * September 2014: 25,829 sequences imported from GenBank and 66 publication references imported from PubMed.
+ * September 2014: 25,828 sequences imported from GenBank and 65 publication references imported from PubMed.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class FullDatabaseLoadTest {

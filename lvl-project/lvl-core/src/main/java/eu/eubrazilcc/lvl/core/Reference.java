@@ -146,7 +146,7 @@ public class Reference implements Linkable<Reference> {
 				.add("title", title)
 				.add("pubmedId", pubmedId)
 				.add("publicationYear", publicationYear)
-				.add("seqids", seqids)
+				.add("seqids", seqids)				
 				.toString();
 	}
 

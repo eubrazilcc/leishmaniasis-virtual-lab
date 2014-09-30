@@ -31,7 +31,7 @@ import javax.ws.rs.core.Link;
  * Classes that include volatile fields, such as links that depends on the location where the application runs, implement this interface to provide 
  * a method that can be used to compare two instances of the class ignoring the volatile fields.
  * @author Erik Torres <ertorser@upv.es>
- * @param <T>  the type of objects that this object may be compared to
+ * @param <T> the type of objects that this object may be compared to
  */
 public interface Linkable<T> {
 
