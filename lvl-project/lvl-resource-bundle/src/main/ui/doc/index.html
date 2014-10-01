@@ -1476,32 +1476,26 @@ Serving HTTP on 0.0.0.0 port 8000 ...
 {
     "crs": {
         "properties": {
-            "name": "EPSG:3857"
-        }, 
+            "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+        },
         "type": "name"
-    }, 
+    },
     "features": [
         {
             "geometry": {
                 "coordinates": [
-                    48.516388, 
+                    48.516388,
                     15.552727
-                ], 
+                ],
                 "type": "Point"
-            }, 
-            "type": "Feature"
-        }, 
-        {
-            "geometry": {
-                "coordinates": [
-                    48.516388, 
-                    15.552727
-                ], 
-                "type": "Point"
-            }, 
+            },
+            "properties": {
+                "count": 2,
+                "name": "gb:EF408772,gb:EF408798"
+            },
             "type": "Feature"
         }
-    ], 
+    ],
     "type": "FeatureCollection"
 }
 </pre>
@@ -1611,7 +1605,7 @@ Server: nginx/1.4.6 (Ubuntu)
 Date: Wed, 24 Sep 2014 11:08:17 GMT
 Content-Length: 0
 Connection: keep-alive
-Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5/sequences.fasta.gz
+Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5:sequences.fasta.gz
 </pre>
 
             <p>Once the public link is created, the expected operations for consulting, updating and removing it are provided in the RESTful API.</p>
@@ -1619,7 +1613,7 @@ Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so
             <p>The public link can be retrieved from the LVL using the location. Note that the server response is always in JSON format, regardless the
               file extension:</p>
 
-            <code>$ curl -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5/sequences.fasta.gz</code>
+            <code>$ curl -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5:sequences.fasta.gz</code>
             <p></p>
 
 <pre>
@@ -1628,7 +1622,7 @@ Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so
     "downloadUri": "http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz",
     "links": [
         {
-            "href": "/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5/sequences.fasta.gz",
+            "href": "/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5:sequences.fasta.gz",
             "params": {
                 "rel": "self",
                 "type": "application/json"
