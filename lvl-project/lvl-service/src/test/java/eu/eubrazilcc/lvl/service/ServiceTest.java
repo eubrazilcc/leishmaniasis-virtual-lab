@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.decodePublicLinkPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SEQUENCES;
@@ -53,7 +54,6 @@ import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.io.FilenameUtils.getName;
-import static org.apache.commons.io.FilenameUtils.getPathNoEndSeparator;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
@@ -638,18 +638,18 @@ public class ServiceTest {
 
 			// test get public link
 			publicLink.setOwner("user1");
-			final PublicLink publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getPath())
+			final PublicLink publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.get(PublicLink.class);
-			assertThat("Get public link result is not null", publicLink2, notNullValue());
+			assertThat("Get public link result is not null", publicLink2, notNullValue());			
 			assertThat("Get public link coincides with expected", publicLink2.equalsIgnoringVolatile(publicLink), equalTo(true));
 			/* uncomment for additional output */
 			System.out.println(" >> Get public link result: " + publicLink2.toString());
 
 			// test update public link
 			publicLink.setDescription("Different description");
-			response = target.path(path.value()).path(publicLinks.getElements().get(0).getPath())
+			response = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.put(entity(publicLink, APPLICATION_JSON_TYPE));
@@ -665,7 +665,7 @@ public class ServiceTest {
 			System.out.println(" >> Update public link HTTP headers: " + response.getStringHeaders());
 
 			// test delete public link
-			response = target.path(path.value()).path(publicLinks.getElements().get(0).getPath())
+			response = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.delete();
@@ -767,8 +767,6 @@ public class ServiceTest {
 			System.out.println(" >> Create public link (NCBI.GZIP sequence) HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));			
 			addPublicLinkForClean(getPathFromLocation(location));
-
-			// TODO
 
 			// test create new reference
 			final String pmid = "00000000";
@@ -922,7 +920,7 @@ public class ServiceTest {
 	}
 
 	private static String getPathFromLocation(final URI location) {
-		return getName(getPathNoEndSeparator(location.getPath())) + "/" + getName(location.getPath());
+		return decodePublicLinkPath(getName(location.getPath()));		
 	}
 
 	private static void addPublicLinkForClean(final String path) {

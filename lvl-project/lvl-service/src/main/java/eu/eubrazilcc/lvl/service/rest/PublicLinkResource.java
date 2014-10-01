@@ -3,6 +3,7 @@ package eu.eubrazilcc.lvl.service.rest;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.writePublicLink;
 import static eu.eubrazilcc.lvl.storage.dao.PublicLinkDAO.PUBLIC_LINK_DAO;
@@ -82,7 +83,7 @@ public class PublicLinkResource {
 	}
 
 	@GET
-	@Path("{path :" + PATH_PATTERN + "}/{name: " + NAME_PATTERN + "}")
+	@Path("{path :" + PATH_PATTERN + "}" + ID_FRAGMENT_SEPARATOR + "{name: " + NAME_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public PublicLink getPublicLink(final @PathParam("path") String path, final @PathParam("name") String name,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -112,12 +113,12 @@ public class PublicLinkResource {
 		publicLink.setOwner(access.get(OWNER_ID));
 		// create entry in the database
 		PUBLIC_LINK_DAO.insert(publicLink);		
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(publicLink.getPath());		
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(publicLink.getUrlSafePath());		
 		return Response.created(uriBuilder.build()).build();
 	}
 
 	@PUT
-	@Path("{path :" + PATH_PATTERN + "}/{name: " + NAME_PATTERN + "}")
+	@Path("{path :" + PATH_PATTERN + "}" + ID_FRAGMENT_SEPARATOR + "{name: " + NAME_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
 	public void updatePublicLink(final @PathParam("path") String path, final @PathParam("name") String name, 
 			final PublicLink update, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -143,7 +144,7 @@ public class PublicLinkResource {
 	}
 
 	@DELETE
-	@Path("{path :" + PATH_PATTERN + "}/{name: " + NAME_PATTERN + "}")
+	@Path("{path :" + PATH_PATTERN + "}" + ID_FRAGMENT_SEPARATOR + "{name: " + NAME_PATTERN + "}")
 	public void deletePublicLink(final @PathParam("path") String path, final @PathParam("name") String name,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);

@@ -27,6 +27,7 @@ import static com.google.common.collect.FluentIterable.from;
 import static eu.eubrazilcc.lvl.core.DataSource.toShortNotation;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
+import static java.lang.String.valueOf;
 import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -54,6 +55,7 @@ public final class NamingUtils {
 	public static final String NO_NAME = "noname";
 	public static final char URI_ID_SEPARATOR = ',';
 	public static final char ID_FRAGMENT_SEPARATOR = ':';
+	public static final String ID_FRAGMENT_SEPARATOR_STRING = valueOf(ID_FRAGMENT_SEPARATOR);
 
 	/**
 	 * Replaces non-printable Unicode characters from an specified name, producing a 
@@ -135,6 +137,14 @@ public final class NamingUtils {
 	public static String toId(final String dataSource, final String accession, final @Nullable Notation notation) {
 		final String dataSource2 = NOTATION_SHORT.equals(notation) ? toShortNotation(dataSource, NOTATION_LONG) : dataSource;
 		return dataSource2 + ID_FRAGMENT_SEPARATOR + accession;
+	}
+
+	public static String encodePublicLinkPath(final String path) {
+		return path != null ? path.replaceAll("/", ID_FRAGMENT_SEPARATOR_STRING) : path;
+	}
+
+	public static String decodePublicLinkPath(final String path) {
+		return path != null ? path.replaceAll(ID_FRAGMENT_SEPARATOR_STRING, "/") : path;
 	}
 
 }

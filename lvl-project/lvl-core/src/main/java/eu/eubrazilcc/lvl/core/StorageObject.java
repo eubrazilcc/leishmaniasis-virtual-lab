@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
  */
 public class StorageObject {
 
-	private String path; // relative path + filename
+	private String path; // path relative to the storage directory + filename with (optional) extension
 	private String mime;
 	private String description;	// (optional)
 	private String owner;

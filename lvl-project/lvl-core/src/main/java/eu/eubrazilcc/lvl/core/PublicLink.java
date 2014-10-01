@@ -26,6 +26,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.encodePublicLinkPath;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
@@ -39,6 +40,7 @@ import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -54,18 +56,21 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 	@InjectLinks({
-		@InjectLink(value="public_links/{path}", rel=SELF, type=APPLICATION_JSON, 
-				bindings={@Binding(name="path", value="${instance.path}")})
+		@InjectLink(value="public_links/{urlSafePath}", rel=SELF, type=APPLICATION_JSON, 
+				bindings={@Binding(name="urlSafePath", value="${instance.urlSafePath}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
 
-	private Target target;	
+	private Target target;
 
 	private String downloadUri;
-	
+
+	@JsonIgnore
+	private String urlSafePath;
+
 	public PublicLink() {
 		super();
 	}
@@ -82,6 +87,12 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 		} else {
 			this.links = null;
 		}
+	}
+	
+	@Override
+	public void setPath(final String path) {		
+		super.setPath(path);
+		setUrlSafePath(encodePublicLinkPath(path));
 	}
 
 	public Target getTarget() {
@@ -100,6 +111,16 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 		this.downloadUri = downloadUri;
 	}
 
+	@JsonIgnore
+	public String getUrlSafePath() {
+		return urlSafePath;
+	}
+
+	@JsonIgnore
+	public void setUrlSafePath(final String urlSafePath) {
+		this.urlSafePath = urlSafePath;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof PublicLink)) {
@@ -108,6 +129,7 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 		final PublicLink other = PublicLink.class.cast(obj);
 		return Objects.equals(links, other.links)
 				&& Objects.equals(downloadUri, other.downloadUri)
+				&& Objects.equals(urlSafePath, other.urlSafePath)
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -122,7 +144,7 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, target, downloadUri);
+		return super.hashCode() + Objects.hash(links, target, downloadUri, urlSafePath);
 	}
 
 	@Override
@@ -131,6 +153,7 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 				.add("StorageObject", super.toString())
 				.add("target", target)
 				.add("downloadUri", downloadUri)
+				.add("urlSafePath", urlSafePath)
 				.toString();
 	}
 
@@ -175,9 +198,14 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 			instance.setTarget(target);
 			return this;
 		}
-		
+
 		public Builder downloadUri(final String downloadUri) {
 			instance.setDownloadUri(trimToEmpty(downloadUri));
+			return this;
+		}
+
+		public Builder urlSafePath(final String urlSafePath) {
+			instance.setUrlSafePath(trimToEmpty(urlSafePath));
 			return this;
 		}
 
