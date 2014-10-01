@@ -215,29 +215,57 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 
 	/**
 	 * Gets the list of publication references included within sequences in the collection, assigning to each reference the location of the sequence 
-	 * where the reference ins included.
+	 * where the reference is included.
 	 * @return the list of publication references included within sequences in the collection, annotated with geospatial locations obtained from the
 	 *         the sequences where the reference is included.
 	 */
 	public List<Localizable<Point>> getReferenceLocations() {
-		final List<Localizable<Point>> localizables = newArrayList();
-		final String mapFn = "function() {"
+		final List<Localizable<Point>> localizables = newArrayList();		
+		// filter sequences where PubMed Ids is not null
+		final DBObject query = new BasicDBObject(DB_PREFIX + "pmids", new BasicDBObject("$ne", null));
+		final List<BasicDBObject> results = MONGODB_CONN.mapReduce(COLLECTION, emitReferencesFn(), reduceReferencesFn(), query);
+		transformReferenceLocations(localizables, results);
+		return localizables;
+	}
+
+	/**
+	 * Specialization of the method {@link SequenceDAO#getReferenceLocations()} that filters the sequences that are within the specified distance 
+	 * from the center point prior retrieving the references from the collection.
+	 * @param point - longitude, latitude pair represented in WGS84 coordinate reference system (CRS)
+	 * @param maxDistance - limits the results to those elements that fall within the specified distance (in meters) from the center point
+	 * @return the list of publication references included within sequences in the collection, annotated with geospatial locations obtained from the
+	 *         the sequences where the reference is included.
+	 */
+	public List<Localizable<Point>> getReferenceLocations(final Point point, final double maxDistance) {
+		final List<Localizable<Point>> localizables = newArrayList();		
+		// filter sequences by proximity to a center point
+		final List<BasicDBObject> results = MONGODB_CONN.mapReduce(COLLECTION, GEOLOCATION_KEY, emitReferencesFn(), reduceReferencesFn(), 
+				point.getCoordinates().getLongitude(), point.getCoordinates().getLatitude(), maxDistance);
+		transformReferenceLocations(localizables, results);
+		return localizables;		
+	}
+
+	private static String emitReferencesFn() {
+		return "function() {"
 				+ "    for (var i in this." + DB_PREFIX + "pmids) {"
 				+ "      key = { pmid: this." + DB_PREFIX + "pmids[i] };"
 				+ "      value = { locations: [ this." + DB_PREFIX + "location ] };"
 				+ "      emit(key, value);"
 				+ "    }"
 				+ "  }";
-		final String reduceFn = "function(key, values) {"
+	}
+
+	private static String reduceReferencesFn() {
+		return "function(key, values) {"
 				+ "    var result = { locations: [] };"
 				+ "    values.forEach(function(value) {"
 				+ "      result.locations = value.locations.concat(result.locations);"
 				+ "    });"
 				+ "    return result;"
 				+ "  }";
-		// filter sequences where PubMed Ids is not null
-		final DBObject query = new BasicDBObject(DB_PREFIX + "pmids", new BasicDBObject("$ne", null));
-		final List<BasicDBObject> results = MONGODB_CONN.mapReduce(COLLECTION, mapFn, reduceFn, query);
+	}
+
+	private void transformReferenceLocations(final List<Localizable<Point>> localizables, final List<BasicDBObject> results) {
 		final List<InnerReference> innerRefs = from(results).transform(new Function<BasicDBObject, InnerReference>() {
 			@Override
 			public InnerReference apply(final BasicDBObject obj) {
@@ -277,7 +305,6 @@ public enum SequenceDAO implements BaseDAO<SequenceKey, Sequence> {
 				});
 			}
 		}
-		return localizables;
 	}
 
 	private BasicDBObject key(final SequenceKey key) {

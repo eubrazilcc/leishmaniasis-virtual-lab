@@ -396,7 +396,7 @@ public enum MongoDBConnector implements Closeable2 {
 			return (BasicDBList) cmdResult.get("results");
 		} finally {
 			db.requestDone();
-		}	
+		}
 	}
 
 	public List<BasicDBObject> geoWithin(final String locationField, final String collection, final Polygon polygon) {
@@ -429,16 +429,39 @@ public enum MongoDBConnector implements Closeable2 {
 	}
 
 	/**
+	 * Wrapper method to {@link MongoDBConnector#mapReduce(String, String, String, DBObject)} that performs a search by proximity
+	 * to select the documents from the collection that will be used as input of the map function.
+	 * @param collection - collection whose objects are searched
+	 * @param field - geospatial field that defines the 2dsphere index for location data defined as GeoJSON points
+	 * @param mapFn - map function
+	 * @param reduceFn - reduce function
+	 * @param longitude - longitude in WGS84 coordinate reference system (CRS)
+	 * @param latitude - latitude in WGS84 coordinate reference system (CRS)
+	 * @param maxDistance - limits the results to those objects that fall within the specified 
+	 *        distance (in meters) from the center point
+	 * @return a list of {@code BasicDBObject} which contains the results of this map reduce operation.
+	 */
+	public List<BasicDBObject> mapReduce(final String collection, final String field, final String mapFn, final String reduceFn, 
+			final double longitude, final double latitude, final double maxDistance) {
+		final BasicDBObject query = new BasicDBObject(field, new BasicDBObject("$nearSphere", 
+				new BasicDBObject("$geometry", new BasicDBObject("type", "Point").append("coordinates", new double[]{ longitude, latitude }))
+		.append("$maxDistance", maxDistance)));
+		LOGGER.trace("geoNear query: " + JSON.serialize(query));
+		return mapReduce(collection, mapFn, reduceFn, query);
+	}
+
+	/**
 	 * Runs a map-reduce aggregation over a collection and saves the result to a temporary collection, which is deleted at the end
 	 * of the execution. The results of the operation are returned to the caller in a list of {@code BasicDBObject}.
 	 * @param collection - collection whose objects are searched
 	 * @param mapFn - map function
 	 * @param reduceFn - reduce function
-	 * @param query - specifies the selection criteria using query operators for determining the documents input to the map function
+	 * @param query - (optional) specifies the selection criteria using query operators for determining the documents input to the 
+	 *        map function. Set this parameter to {@code null} to use all documents in the collection
 	 * @return a list of {@code BasicDBObject} which contains the results of this map reduce operation.
 	 * @see <a href="http://cookbook.mongodb.org/patterns/pivot/">The MongoDB Cookbook - Pivot Data with Map reduce</a>
 	 */
-	public List<BasicDBObject> mapReduce(final String collection, final String mapFn, final String reduceFn, final DBObject query) {
+	public List<BasicDBObject> mapReduce(final String collection, final String mapFn, final String reduceFn, final @Nullable DBObject query) {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		checkArgument(isNotBlank(mapFn), "Uninitialized or map function");
 		checkArgument(isNotBlank(reduceFn), "Uninitialized or reduce function");

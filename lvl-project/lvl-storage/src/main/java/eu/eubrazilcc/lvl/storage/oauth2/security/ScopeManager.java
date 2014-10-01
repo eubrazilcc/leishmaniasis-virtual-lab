@@ -68,7 +68,7 @@ public final class ScopeManager {
 	public static final String PENDING_SEQUENCES = "pending_sequences";
 	public static final String MY_SEQUENCES      = "my_sequences";
 	public static final String PIPELINES         = "pipelines";
-	public static final String PUBLICATIONS      = "publications";
+	public static final String REFERENCES        = "references";
 	public static final String PUBLIC_LINKS      = "public_links";
 	public static final String TASKS             = "tasks";
 
@@ -90,7 +90,7 @@ public final class ScopeManager {
 				grantFullAccess(PENDING_SEQUENCES),
 				grantFullAccess(inherit(MY_SEQUENCES, ALL)),				
 				grantFullAccess(PIPELINES),
-				grantFullAccess(PUBLICATIONS),
+				grantFullAccess(REFERENCES),
 				grantFullAccess(PUBLIC_LINKS),
 				grantFullAccess(TASKS));
 	}
@@ -102,7 +102,7 @@ public final class ScopeManager {
 				SEQUENCES,
 				grantFullAccess(inherit(MY_SEQUENCES, username)),
 				PIPELINES,
-				PUBLICATIONS,
+				REFERENCES,
 				grantFullAccess(inherit(PUBLIC_LINKS, username)));
 	}
 
@@ -110,14 +110,14 @@ public final class ScopeManager {
 		return on(SCOPE_SEPARATOR).skipNulls().join(
 				grantFullAccess(SEQUENCES),
 				grantFullAccess(PENDING_SEQUENCES),
-				grantFullAccess(PUBLICATIONS));
+				grantFullAccess(REFERENCES));
 	}
 
 	public static final String defaultScope() {
 		return on(SCOPE_SEPARATOR).skipNulls().join(
 				SEQUENCES,
 				PIPELINES,
-				PUBLICATIONS);
+				REFERENCES);
 	}
 
 	public static final String grantFullAccess(final String scope) {

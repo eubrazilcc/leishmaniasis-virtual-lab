@@ -96,6 +96,9 @@ public class LocalizableAnalyzer<T extends Localizable<Point>> {
 				return sequence != null && sequence.getLocation() != null ? sequence : null;
 			}			
 		}).filter(notNull()).toList();
+		if (filtered.isEmpty()) {
+			return newArrayList();
+		}		
 		// create a disjoint set and process the items		
 		final DisjointSet<Localizable<Point>> disjointSet = DisjointSet.of(filtered);
 		final boolean[] visited = new boolean[filtered.size()];

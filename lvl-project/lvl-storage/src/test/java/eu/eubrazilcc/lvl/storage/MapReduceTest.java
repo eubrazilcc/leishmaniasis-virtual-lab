@@ -72,10 +72,10 @@ public class MapReduceTest {
 				SEQUENCE_DAO.insert(sequence);
 			}
 
-			// test map sequence locations to references
-			final List<Localizable<Point>> localizables = SEQUENCE_DAO.getReferenceLocations();
+			// test map sequence locations to references using all sequences with not null location
+			List<Localizable<Point>> localizables = SEQUENCE_DAO.getReferenceLocations();
 			assertThat("localizables is not null", localizables, notNullValue());
-			assertThat("localizables is not empty", localizables.isEmpty(), equalTo(false));
+			assertThat("localizables is not empty", !localizables.isEmpty(), equalTo(true));
 			assertThat("number of localizables coincides with expected", localizables.size(), equalTo(3));
 			/* uncomment for additional output */
 			for (final Localizable<Point> localizable : localizables) {
@@ -83,15 +83,39 @@ public class MapReduceTest {
 			}
 			
 			// test converting to feature collection
-			final FeatureCollection features = toFeatureCollection(localizables, Crs.builder().wgs84().build(), true, true);
+			FeatureCollection features = toFeatureCollection(localizables, Crs.builder().wgs84().build(), true, true);
 			assertThat("features is not null", features, notNullValue());
 			assertThat("features list is not null", features.getFeatures(), notNullValue());
-			assertThat("features list is not empty", features.getFeatures().isEmpty(), equalTo(false));
+			assertThat("features list is not empty", !features.getFeatures().isEmpty(), equalTo(true));
 			assertThat("number of features coincides with expected", features.getFeatures().size(), equalTo(3));
 			/* uncomment for additional output */
 			for (final Feature feature : features.getFeatures()) {
 				System.out.println(" >> Feature : " + feature.toString());
 			}
+			
+			// test map sequence locations to references using the sequences near to a point
+			localizables = SEQUENCE_DAO.getReferenceLocations(Point.builder()
+					.coordinates(LngLatAlt.builder().coordinates(-122.90d, 38.08d).build()).build(), 
+					1000.0d);
+			assertThat("localizables (geo near) is not null", localizables, notNullValue());
+			assertThat("localizables (geo near) is not empty", !localizables.isEmpty(), equalTo(true));
+			assertThat("number of localizables (geo near) coincides with expected", localizables.size(), equalTo(1));
+			/* uncomment for additional output */
+			for (final Localizable<Point> localizable : localizables) {
+				System.out.println(" >> Localizable (geo near) : " + localizable.toString());
+			}
+			
+			// test map sequence locations to references that returns an empty set
+			localizables = SEQUENCE_DAO.getReferenceLocations(Point.builder()
+					.coordinates(LngLatAlt.builder().coordinates(0.0d, 0.0d).build()).build(), 
+					10.0d);
+			assertThat("localizables (empty set) is not null", localizables, notNullValue());
+			assertThat("localizables (empty set) is empty", localizables.isEmpty(), equalTo(true));
+			
+			features = toFeatureCollection(localizables, Crs.builder().wgs84().build(), true, true);
+			assertThat("features (empty set) is not null", features, notNullValue());
+			assertThat("features (empty set) list is not null", features.getFeatures(), notNullValue());
+			assertThat("features (empty set) list is empty", features.getFeatures().isEmpty(), equalTo(true));
 			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
