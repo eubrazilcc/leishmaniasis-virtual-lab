@@ -41,6 +41,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<org.apache.httpcomponents.version>4.3.5</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
 		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
 		<mongodb.driver.version>2.12.3</mongodb.driver.version>
+		<e-science-central.version>3.1-SNAPSHOT</e-science-central.version>
 	</properties>
 
 	<dependencyManagement>
@@ -213,6 +214,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>com.google.code.geocoder-java</groupId>
 				<artifactId>geocoder-java</artifactId>
 				<version>0.16</version>
+			</dependency>
+			
+			<!-- e-Science Central client API -->
+			<dependency>
+				<groupId>com.connexience</groupId>
+				<artifactId>api-model</artifactId>
+				<version>${e-science-central.version}</version>
 			</dependency>
 
 			<!-- Logback -->

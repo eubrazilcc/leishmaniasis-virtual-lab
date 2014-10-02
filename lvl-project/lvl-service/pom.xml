@@ -108,6 +108,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.apache.oltu.oauth2</groupId>
 			<artifactId>org.apache.oltu.oauth2.resourceserver</artifactId>
 		</dependency>
+		
+		<!-- e-Science Central client API -->
+		<dependency>
+			<groupId>com.connexience</groupId>
+			<artifactId>api-model</artifactId>
+		</dependency>
 
 		<!-- Logback and SLF4J logging framework -->
 		<dependency>
