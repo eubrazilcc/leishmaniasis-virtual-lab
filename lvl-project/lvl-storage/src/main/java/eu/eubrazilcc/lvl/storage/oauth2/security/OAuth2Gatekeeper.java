@@ -28,9 +28,12 @@ import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getClientAddress;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_HEADER_OAUTH2;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_QUERY_OAUTH2;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.oltu.oauth2.common.message.types.ParameterStyle.HEADER;
+import static org.apache.oltu.oauth2.common.message.types.ParameterStyle.QUERY;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -49,7 +52,6 @@ import org.apache.oltu.oauth2.common.error.OAuthError;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.OAuthResponse;
-import org.apache.oltu.oauth2.common.message.types.ParameterStyle;
 import org.apache.oltu.oauth2.common.utils.OAuthUtils;
 import org.apache.oltu.oauth2.rs.request.OAuthAccessResourceRequest;
 import org.apache.oltu.oauth2.rs.response.OAuthRSResponse;
@@ -130,8 +132,8 @@ public final class OAuth2Gatekeeper {
 			ImmutableMap<String, String> access = null;
 
 			// make the OAuth request out of this request
-			final OAuthAccessResourceRequest oauthRequest = new OAuthAccessResourceRequest(
-					new OAuth2RequestWrapper(request, form, headers), ParameterStyle.HEADER);		
+			final OAuthAccessResourceRequest oauthRequest = new OAuthAccessResourceRequest(new OAuth2RequestWrapper(request, form, headers), 
+					isNotBlank(request.getParameter(AUTHORIZATION_QUERY_OAUTH2)) ? QUERY : HEADER);			
 
 			// get the access token
 			final String accessToken = oauthRequest.getAccessToken();

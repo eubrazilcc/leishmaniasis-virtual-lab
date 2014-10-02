@@ -33,4 +33,6 @@ public final class OAuth2Common {
 	
 	public static final String AUTHORIZATION_HEADER_OAUTH2 = "Bearer ";
 	
+	public static final String AUTHORIZATION_QUERY_OAUTH2 = "access_token";
+	
 }

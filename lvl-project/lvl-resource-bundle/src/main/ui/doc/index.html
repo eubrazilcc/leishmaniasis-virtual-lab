@@ -602,6 +602,34 @@ location /lvl-pub/ {
             <h2>
               <a id="security_oauth2_authorization"></a>OAuth 2.0 authorization
             </h2>
+            
+            <p>LVL clients must include an HTTP authorization request header as defined in the 
+              <a href="https://tools.ietf.org/html/rfc6750#section-2.1" target="_blank">section 2.1</a> 
+              - "Authorization Request Header Field" of the RFC 6750:</p>
+            
+<pre>Authorization: Bearer CelWb/k6GP3heYhrPBSa4wZGSSdW9HM1TuGZrOyE/+0=</pre>
+
+            <p>Alternatively, a query parameter can be used to send the access token in the HTTP request URI as defined in the 
+              <a href="https://tools.ietf.org/html/rfc6750#section-2.3" target="_blank">section 2.3</a> - "URI Query Parameter" of the RFC 6750:</p>
+
+<pre>GET /resource?access_token=CelWb/k6GP3heYhrPBSa4wZGSSdW9HM1TuGZrOyE/+0= HTTP/1.1</pre>
+
+            <div class="alert alert-success">
+              <div class="media">
+                <div class="pull-left">
+                  <h1>
+                    <span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
+                  </h1>
+                </div>
+                <div class="media-body">
+                  <h4 class="media-heading">LVL authenticated requests</h4>
+                  <p>
+                    The preferred method to send the bearer access tokens in resource requests to the LVL server is the <code>Authorization</code> 
+                    request header field. Clients <strong>MUST NOT</strong> use more than one method to transmit the token in each request.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <p>
               <em>TODO:</em> improve this section with a better description.

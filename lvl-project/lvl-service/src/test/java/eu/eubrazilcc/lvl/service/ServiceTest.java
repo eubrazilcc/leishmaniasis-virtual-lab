@@ -36,6 +36,7 @@ import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SEQUENCES;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_QUERY_OAUTH2;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
@@ -194,7 +195,8 @@ public class ServiceTest {
 					.ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
 
-			Response response = target.path(path.value()).request()
+			Response response = target.path(path.value())					
+					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.post(entity(task, APPLICATION_JSON_TYPE));
 			assertThat("Create import sequences task response is not null", response, notNullValue());
@@ -558,6 +560,27 @@ public class ServiceTest {
 			/* uncomment for additional output */
 			System.out.println(" >> Get nearby sequences result (plain): " + featCol.toString());
 
+			// test find sequences near to a location (using plain REST, no Jersey client, and query style authz token)
+			uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
+					.queryParam("maxDistance", 4000.0d)
+					.queryParam(AUTHORIZATION_QUERY_OAUTH2, TOKEN_ROOT)
+					.getUri();
+			response2 = Request.Get(uri)
+					.addHeader("Accept", "application/json")
+					.execute()
+					.returnContent()
+					.asString();
+			assertThat("Get nearby sequences result (plain + query token) is not null", response2, notNullValue());
+			assertThat("Get nearby sequences result (plain + query token) is not empty", isNotBlank(response2));
+			/* uncomment for additional output */
+			System.out.println(" >> Get nearby sequences result (plain + query token): " + response2);
+			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
+			assertThat("Get nearby sequences result (plain + query token) is not null", featCol, notNullValue());
+			assertThat("Get nearby sequences (plain + query token) list is not null", featCol.getFeatures(), notNullValue());
+			assertThat("Get nearby sequences (plain + query token) list is not empty", featCol.getFeatures().size() > 0);
+			/* uncomment for additional output */
+			System.out.println(" >> Get nearby sequences result (plain + query token): " + featCol.toString());
+
 			// test delete sequence
 			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
@@ -770,7 +793,7 @@ public class ServiceTest {
 
 			// test create new reference
 			final String pmid = "00000000";
-			
+
 			final Sequence sequence3 = Sequence.builder()
 					.dataSource(GENBANK)
 					.accession("ABC12345678")
