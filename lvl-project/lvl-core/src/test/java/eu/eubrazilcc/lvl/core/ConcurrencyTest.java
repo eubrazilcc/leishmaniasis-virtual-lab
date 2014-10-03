@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -34,7 +35,6 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -90,7 +90,7 @@ public class ConcurrencyTest {
 				}				
 			});
 			assertThat("task future is not null", future, notNullValue());
-			final String result = future.get(20, TimeUnit.SECONDS);
+			final String result = future.get(20, SECONDS);
 			assertThat("task result is not null", result, notNullValue());			
 			assertThat("task result is not empty", isNotBlank(result));
 			assertThat("task result coincides with expected", result, equalTo(success));
@@ -102,7 +102,7 @@ public class ConcurrencyTest {
 					public void run() {
 						System.out.println(" >> Scheluded job runs");
 					}
-				}, 0, 20, TimeUnit.SECONDS);
+				}, 0, 20, SECONDS);
 				fail("Should have thrown an IllegalStateException because task runner is uninitialized");
 			} catch (IllegalStateException e) {
 				assertThat(e.getMessage(), containsString("Task scheduler uninitialized"));
@@ -115,7 +115,7 @@ public class ConcurrencyTest {
 				public void run() {
 					System.out.println(" >> Scheluded job runs");
 				}
-			}, 0, 20, TimeUnit.SECONDS);
+			}, 0, 20, SECONDS);
 			assertThat("scheduled task future is not null", future2, notNullValue());			
 			future2.addListener(new Runnable() {				
 				@Override

@@ -164,6 +164,22 @@ public enum ConfigurationManager implements Closeable2 {
 		return configuration().getPublicLocation();
 	}
 
+	public String getWfHostname() {
+		return configuration().getWfHostname();
+	}
+	public boolean isWfSecure() {
+		return configuration().isWfSecure();
+	}
+	public int getWfPort() {
+		return configuration().getWfPort();
+	}
+	public String getWfUsername() {
+		return configuration().getWfUsername().or("");
+	}
+	public String getWfPasswd() {
+		return configuration().getWfPasswd().or("");
+	}
+
 	public File getGenBankDir(final Format format) {
 		switch (format) {
 		case GB_SEQ_XML:
@@ -261,6 +277,11 @@ public enum ConfigurationManager implements Closeable2 {
 							final String smtpNoreplyEmail = getString("smtp.noreply-email", configuration, foundNameList, "noreply@example.com");
 							final String portalEndpoint = getString("portal.endpoint", configuration, foundNameList, null);
 							final String publicLocation = getString("portal.public", configuration, foundNameList, "lvl-pub");
+							final String wfHostname = getString("workflow.endpoint.hostname", configuration, foundNameList, "localhost");
+							final boolean wfSecure = getBoolean("workflow.endpoint.secure", configuration, foundNameList, false);
+							final int wfPort = getInteger("workflow.endpoint.port", configuration, foundNameList, wfSecure ? 443 : 80);							
+							final String wfUsername = getString("workflow.credentials.username", configuration, foundNameList, null);
+							final String wfPasswd = getString("workflow.credentials.password", configuration, foundNameList, null);
 							// get secondary property will return null if the requested property is missing
 							configuration.setThrowExceptionOnMissing(false);
 							// nothing yet
@@ -277,7 +298,8 @@ public enum ConfigurationManager implements Closeable2 {
 								}
 							}
 							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dataDir, dbName, dbUsername, dbPassword, dbHosts, 
-									smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, publicLocation, othersMap);
+									smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, publicLocation, wfHostname, 
+									wfSecure, wfPort, wfUsername, wfPasswd, othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
 							throw new IllegalStateException("Main configuration not found");
@@ -334,6 +356,12 @@ public enum ConfigurationManager implements Closeable2 {
 		return configuration.getInt(name, defaultValue);
 	}
 
+	private static @Nullable Boolean getBoolean(final String name, final CombinedConfiguration configuration, 
+			final List<String> foundNameList, final @Nullable Boolean defaultValue) {
+		foundNameList.add(name);
+		return configuration.getBoolean(name, defaultValue);
+	}
+
 	private static @Nullable ImmutableList<String> getStringList(final String name, final Pattern pattern, 
 			final CombinedConfiguration configuration, final List<String> foundNameList, 
 			final @Nullable List<String> defaultValue) {
@@ -379,14 +407,19 @@ public enum ConfigurationManager implements Closeable2 {
 		private final String smtpSupportEmail;
 		private final String smtpNoreplyEmail;
 		private final Optional<String> portalEndpoint;
-		private final String publicLocation;
+		private final String publicLocation;		
+		private final String wfHostname;
+		private final boolean wfSecure;
+		private final int wfPort;							
+		private final Optional<String> wfUsername;
+		private final Optional<String> wfPasswd;		
 		// other configurations
 		private final ImmutableMap<String, String> othersMap;
 		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, final File dataDir, 
 				final String dbName, final @Nullable String dbUsername, final @Nullable String dbPassword, final ImmutableList<String> dbHosts,
 				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
-				final @Nullable String portalEndpoint,
-				final @Nullable String publicLocation,
+				final @Nullable String portalEndpoint, final @Nullable String publicLocation,
+				final @Nullable String wfHostname, final boolean wfSecure, final int wfPort, final @Nullable String wfUsername, final @Nullable String wfPasswd,
 				final @Nullable Map<String, String> othersMap) {
 			this.rootDir = checkNotNull(rootDir, "Uninitialized root directory");
 			this.localCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
@@ -402,6 +435,11 @@ public enum ConfigurationManager implements Closeable2 {
 			this.smtpNoreplyEmail = smtpNoreplyEmail;
 			this.portalEndpoint = fromNullable(trimToNull(portalEndpoint));
 			this.publicLocation = publicLocation;
+			this.wfHostname = wfHostname;
+			this.wfSecure = wfSecure;
+			this.wfPort = wfPort;
+			this.wfUsername = fromNullable(trimToNull(wfUsername));
+			this.wfPasswd = fromNullable(trimToNull(wfPasswd));
 			this.othersMap = new ImmutableMap.Builder<String, String>().putAll(othersMap).build();			
 		}
 		public File getRootDir() {
@@ -445,6 +483,21 @@ public enum ConfigurationManager implements Closeable2 {
 		}
 		public String getPublicLocation() {
 			return publicLocation;
+		}		
+		public String getWfHostname() {
+			return wfHostname;
+		}
+		public boolean isWfSecure() {
+			return wfSecure;
+		}
+		public int getWfPort() {
+			return wfPort;
+		}
+		public Optional<String> getWfUsername() {
+			return wfUsername;
+		}
+		public Optional<String> getWfPasswd() {
+			return wfPasswd;
 		}
 		public ImmutableMap<String, String> getOthersMap() {
 			return othersMap;
@@ -473,6 +526,11 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("smtpNoreplyEmail", smtpNoreplyEmail)
 					.add("portalEndpoint", portalEndpoint.orNull())
 					.add("publicLocation", publicLocation)
+					.add("wfHostname", wfHostname)
+					.add("wfSecure", wfSecure)
+					.add("wfPort", wfPort)
+					.add("wfUsername", wfUsername.orNull())
+					.add("wfPasswd", wfPasswd.orNull())
 					.add("customProperties", customPropertiesToString())
 					.toString();
 		}

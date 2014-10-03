@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.service.mock;
 
 import static com.google.common.collect.Queues.newArrayDeque;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 
 import java.io.Closeable;
@@ -54,6 +55,9 @@ public enum CloserServiceMock implements CloserServiceIf {
 		// load MongoDB connector and register it for closing
 		MONGODB_CONN.preload();
 		register(MONGODB_CONN);
+		// load e-SC connector and register it for closing
+		ESCENTRAL_CONN.preload();
+		register(ESCENTRAL_CONN);
 	}
 
 	@Override

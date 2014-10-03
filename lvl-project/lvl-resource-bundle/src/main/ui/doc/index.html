@@ -38,7 +38,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
       <div class="row">
         <div class="col-xs-12">
           <h1>Leishmaniasis Virtual Laboratory (LVL) Administration &amp; Development Guide</h1>
-          <p class="lead">Version 0.0.1 - September 2014</p>
+          <p class="lead">Version 0.0.1 - October 2014</p>
           <p>
             <strong>Abstract.</strong> This document is a guide to the administration and configuration of the Leishmaniasis Virtual Laboratory (LVL).
           </p>
@@ -69,6 +69,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               <li><a href="#security">Security</a>
                 <ul>
                   <li><a href="#security_general">General considerations</a></li>
+                  <li><a href="#security_external_services_and_apps">External services and applications</a></li>
                   <li><a href="#security_oauth2_authorization">OAuth 2.0 authorization</a></li>
                 </ul></li>
               <li><a href="#database">Database</a>
@@ -598,6 +599,20 @@ location /lvl-pub/ {
 
             <code> $ keytool -import -alias serverCert -file ./server.cert -keystore ./client-truststore </code>
             <p></p>
+            
+            <h2>
+            	<a id="security_external_services_and_apps"></a>External services and applications
+            </h2>
+            
+            <h3>Configuring LVL to access e-Science Central (e-SC) over HTTPS</h3>
+            
+            <p>Import the e-SC certificate to the Java trust store that before starting the LVL service:</p>
+            
+            <code> $ keytool -import -alias esc-server -file ./esc-server.cer -keystore ./client-truststore </code>
+            <p></p>
+            
+            <p>Valid e-SC certificates are provided in the <a href="http://eubrazilcc-rm.i3m.upv.es/projects/eubrazilcc/wiki/WP3_infrastructure">Wiki</a>
+              of the project EUBrazilCC.</p>
 
             <h2>
               <a id="security_oauth2_authorization"></a>OAuth 2.0 authorization

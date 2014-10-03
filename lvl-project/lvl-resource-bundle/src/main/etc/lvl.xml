@@ -107,4 +107,22 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	
 	</portal>
 
+	<!-- Workflow manager configuration -->
+	<workflow>
+	
+		<!-- Endpoint where the workflow manager is listening for incoming requests -->
+		<endpoint>
+			<hostname>158.42.105.23</hostname>		
+			<port>443</port>		
+			<secure>true</secure>		
+		</endpoint>
+		
+		<!-- User identity to access the workflow manager -->
+		<credentials>		
+			<username>lvl-user</username>			
+			<password>nopass</password>		
+		</credentials>
+	
+	</workflow>
+
 </config>
