@@ -1,154 +1,158 @@
 @CHARSET "UTF-8";
 
 .lvl-login-body {
-  background-color: #1abc9c;
+	background-color: #1abc9c;
 }
 
 .lvl-login-form {
-  background-color: #ECF0F1;
+	background-color: #ECF0F1;
 }
 
 a.lvl-login {
-  color: #2C3E50;
+	color: #2C3E50;
 }
 
-a.lvl-login:hover,a.lvl-login:focus {
-  color: #7F8C8D;
+a.lvl-login:hover, a.lvl-login:focus {
+	color: #7F8C8D;
 }
 
 .lvl-main-container {
-  padding-top: 50px;
+	padding-top: 50px;
 }
 
 .lvl-jumbo-shadow {
-  margin-top: 50px;
-  height: 12px;
-  position: fixed;
-  z-index: +1;
-  width: 100%;
-  background-color: #BDC3C7;
-  opacity: 0.6;
-  filter: alpha(opacity = 60);
+	margin-top: 50px;
+	height: 12px;
+	position: fixed;
+	z-index: +1;
+	width: 100%;
+	background-color: #BDC3C7;
+	opacity: 0.6;
+	filter: alpha(opacity = 60);
 }
 
 .lvl-jumbo {
-  margin-top: 12px;
-  padding-top: 23px;
-  padding-bottom: 23px;
-  opacity: 0.9;
-  filter: alpha(opacity = 90);
-  background-image: url("../img/bg.svg");
-  background-size: auto 100%;
-  background-origin: content-box;
-  background-repeat: no-repeat;
-  background-position: center top;
-  background-image: url("../img/bg.svg");
-  filter: alpha(opacity = 80);
-  filter: alpha(opacity = 80);
+	margin-top: 12px;
+	padding-top: 23px;
+	padding-bottom: 23px;
+	opacity: 0.9;
+	filter: alpha(opacity = 90);
+	background-image: url("../img/bg.svg");
+	background-size: auto 100%;
+	background-origin: content-box;
+	background-repeat: no-repeat;
+	background-position: center top;
+	background-image: url("../img/bg.svg");
+	filter: alpha(opacity = 80);
+	filter: alpha(opacity = 80);
 }
 
 .lvl-social {
-  background-color: #ECF0F1;
+	background-color: #ECF0F1;
 }
 
 .lvl-tiles-top {
-  margin-top: 23px;
+	margin-top: 23px;
 }
 
 .lvl-tiles-bottom {
-  margin-bottom: 23px;
+	margin-bottom: 23px;
 }
 
 .lvl-footer {
-  box-shadow: 0px 500px 0px 500px #34495E;
-  margin-top: 23px;
-  padding-top: 10px;
-  padding-bottom: 10px;
+	box-shadow: 0px 500px 0px 500px #34495E;
+	margin-top: 23px;
+	padding-top: 10px;
+	padding-bottom: 10px;
 }
 
 .lvl-nav-tabs-wrapper {
-  width: 100%;
-  padding: 0%;
-  margin: 0%;
+	width: 100%;
+	padding: 0%;
+	margin: 0%;
 }
 
 .lvl-nav-tabs {
-  position: fixed;
-  z-index: +1;
-  width: inherit;
-  background-color: #ECF0F1;
+	position: fixed;
+	z-index: +1;
+	width: inherit;
+	background-color: #ECF0F1;
 }
 
 .lvl-nav-tabs-shadow {
-  margin-top: 97px;
-  height: 10px;
-  position: fixed;
-  z-index: +1;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.9);
+	margin-top: 97px;
+	height: 10px;
+	position: fixed;
+	z-index: +1;
+	width: 100%;
+	background: rgba(255, 255, 255, 0.9);
 }
 
 .lvl-tab-content {
-  position: relative;
-  top: 110px;
-  z-index: 0;
-  padding-bottom: 100px;
+	position: relative;
+	top: 110px;
+	z-index: 0;
+	padding-bottom: 100px;
 }
 
 #tab-nav {
-  position: fixed;
+	position: fixed;
 }
 
 .lvl-filter-container {
-  margin: 10px 0px 20px 0px !important;
-  padding: 0px;
+	margin: 6px 0px 20px 0px !important;
+	padding: 0px;
+}
+
+.lvl-notifications-container {
+	max-width: 300px !important;
 }
 
 /* Override Boostrap styles: adjust form icons position */
 .has-feedback .form-control-feedback {
-  top: 14px;
-  right: -32px;
+	top: 14px;
+	right: -32px;
 }
 
 .has-feedback .input-group .form-control-feedback {
-  top: 14px;
-  right: -32px;
+	top: 14px;
+	right: -32px;
 }
 
 /* Override Backgrid.js styles */
 .backgrid-container {
-  position: relative;
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  /* height: 465px; */
-  height: auto !important;
-  padding: 0;
-  overflow: auto;
-  border: 0;
+	position: relative;
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	/* height: 465px; */
+	height: auto !important;
+	padding: 0;
+	overflow: auto;
+	border: 0;
 }
 
-.backgrid-paginator ul>li>a,.backgrid-paginator ul>li>span {
-  float: left;
-  width: 45px !important;
-  height: 30px;
-  padding: 0;
-  line-height: 30px;
-  text-decoration: none;
+.backgrid-paginator ul>li>a, .backgrid-paginator ul>li>span {
+	float: left;
+	width: 45px !important;
+	height: 30px;
+	padding: 0;
+	line-height: 30px;
+	text-decoration: none;
 }
 
 /* OpenLayers */
 .lvl-map {
-  height: 400px;
-  width: 100%;
-  background: url(../img/textured_paper.jpg) repeat;
+	height: 400px;
+	width: 100%;
+	background: url(../img/textured_paper.jpg) repeat;
 }
 
 .lvl-map-menu {
-  top: 4.643em;
-  left: .5em
+	top: 4.643em;
+	left: .5em
 }
 
 .lvl-map-menu button {
-  line-height: 1.4em
+	line-height: 1.4em
 }

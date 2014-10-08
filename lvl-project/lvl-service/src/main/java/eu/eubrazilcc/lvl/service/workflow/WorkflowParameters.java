@@ -34,7 +34,7 @@ import eu.eubrazilcc.lvl.core.ImmutablePair;
  * Container of workflow parameters.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class WorkspaceParameters {
+public class WorkflowParameters {
 
 	private Map<String, ImmutablePair<String, String>> parameters = newHashMap();
 
@@ -52,10 +52,10 @@ public class WorkspaceParameters {
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof WorkspaceParameters)) {
+		if (obj == null || !(obj instanceof WorkflowParameters)) {
 			return false;
 		}
-		final WorkspaceParameters other = WorkspaceParameters.class.cast(obj);
+		final WorkflowParameters other = WorkflowParameters.class.cast(obj);
 		return Objects.equals(parameters, other.parameters);
 	}
 
@@ -79,7 +79,7 @@ public class WorkspaceParameters {
 
 	public static class Builder {
 
-		private final WorkspaceParameters instance = new WorkspaceParameters();
+		private final WorkflowParameters instance = new WorkflowParameters();
 
 		public Builder parameter(final String block, final String parameter, final String value) {
 			instance.getParameters().put(block, ImmutablePair.of(parameter, value));
@@ -91,7 +91,7 @@ public class WorkspaceParameters {
 			return this;
 		}
 
-		public WorkspaceParameters build() {
+		public WorkflowParameters build() {
 			return instance;
 		}
 

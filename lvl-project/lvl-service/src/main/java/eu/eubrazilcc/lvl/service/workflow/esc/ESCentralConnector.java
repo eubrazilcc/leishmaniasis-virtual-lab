@@ -54,8 +54,8 @@ import com.google.common.collect.ImmutableList;
 import eu.eubrazilcc.lvl.core.Closeable2;
 import eu.eubrazilcc.lvl.core.ImmutablePair;
 import eu.eubrazilcc.lvl.service.workflow.WorkflowDefinition;
+import eu.eubrazilcc.lvl.service.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.service.workflow.WorkflowStatus;
-import eu.eubrazilcc.lvl.service.workflow.WorkspaceParameters;
 
 /**
  * Workflow connector based on e-Science Central.
@@ -102,7 +102,7 @@ public enum ESCentralConnector implements Closeable2 {
 	public ImmutableList<WorkflowDefinition> listWorkflows() {
 		try {
 			final ImmutableList.Builder<WorkflowDefinition> builder = new ImmutableList.Builder<WorkflowDefinition>();
-			for (final EscWorkflow escWorkflow : workflowClient().listWorkflows()) {
+			for (final EscWorkflow escWorkflow : workflowClient().listAllWorkflows()) {
 				builder.add(WorkflowDefinition.builder()
 						.id(escWorkflow.getId())
 						.name(escWorkflow.getName())
@@ -130,17 +130,35 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 	}
 
-	public WorkspaceParameters getParameters(final String workflowId) {
+	public WorkflowParameters getParameters(final String workflowId) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		try {
-			// TODO : do something useful here
-			return WorkspaceParameters.builder().build();
+			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);
+			checkState(escWorkflow != null, "Workflow not found");
+			final WorkflowParameters.Builder builder = WorkflowParameters.builder();			
+			// TODO : this method fails
+			final Map<String, String> map = workflowClient().listCallableWorkflowParameters(workflowId);
+			
+			
+			System.err.println("\n\nPARAMETERS\n");
+			
+			for (final Map.Entry<String, String> entry : map.entrySet()) {
+				builder.parameter(entry.getKey(), entry.getValue(), entry.getValue());
+				
+				System.err.println("\n\nPARAM: " + entry.getKey() + ", " + entry.getValue() + "\n");
+				
+			}
+			
+			// TODO : this method fails
+			
+			
+			return builder.build();
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to get workflow parameters", e);			
 		}
 	}
 
-	public String executeWorkflow(final String workflowId, final @Nullable WorkspaceParameters parameters) {
+	public String executeWorkflow(final String workflowId, final @Nullable WorkflowParameters parameters) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		final EscWorkflowParameterList parametersList = new EscWorkflowParameterList();
 		if (parameters != null) {			

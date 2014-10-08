@@ -3,7 +3,7 @@
  * uses a dissolve transition.
  */
 
-define([ 'marionette', 'jquery-ui' ], function(Marionette) {
+define([ 'marionette' ], function(Marionette) {
     Marionette.Region.FadeInRegion = Marionette.Region.extend({
         open : function(view) {
             this.$el.hide();

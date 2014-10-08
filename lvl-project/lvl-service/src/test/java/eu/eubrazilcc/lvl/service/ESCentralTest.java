@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.service;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.service.util.TestUtils.getFastaFiles;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static java.lang.System.getProperty;
@@ -48,7 +49,7 @@ import org.junit.Test;
 
 import eu.eubrazilcc.lvl.service.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.service.workflow.WorkflowStatus;
-import eu.eubrazilcc.lvl.service.workflow.WorkspaceParameters;
+import eu.eubrazilcc.lvl.service.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector;
 
 /**
@@ -102,8 +103,10 @@ public class ESCentralTest {
 
 			// test listing available workflows from e-SC
 			final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
-			assertThat("workflow list is not null", workflows, notNullValue());
-			// TODO : after the API is updated, check that the list is not empty
+			assertThat("workflows list is not null", workflows, notNullValue());
+			assertThat("workflows list is not empty", !workflows.isEmpty(), equalTo(true));
+			/* uncomment for additional output */
+			System.out.println(" >> Available workflows: " + collectionToString(workflows));			
 
 			// test get workflow definition from e-SC
 			final WorkflowDefinition workflow = ESCENTRAL_CONN.getWorkflow("677");
@@ -112,10 +115,12 @@ public class ESCentralTest {
 			System.out.println(" >> Workflow definition: " + workflow.toString());
 
 			// test get workflow parameters from e-SC
+			final WorkflowParameters parameters = ESCENTRAL_CONN.getParameters(workflow.getId());
+			assertThat("workflow parameters are not null", parameters, notNullValue());
 			// TODO : after the API is updated, get and check the parameters
 
 			// modify the default parameters for execution
-			final WorkspaceParameters parameters = WorkspaceParameters.builder()
+			final WorkflowParameters parameters2 = WorkflowParameters.builder()
 					.parameter("input_file", "Source", inputFileId)
 					.parameter("seqboot", "Number of replicates", "5")
 					.parameter("seqboot", "Random number seed", "13457")
@@ -124,7 +129,7 @@ public class ESCentralTest {
 					.build();
 
 			// test submitting a workflow to e-SC
-			final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflow.getId(), parameters);
+			final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflow.getId(), parameters2);
 			assertThat("workflow invocation Id is not null", invocationId, notNullValue());
 			assertThat("workflow invocation Id is not empty", isNotBlank(invocationId));
 			/* uncomment for additional output */

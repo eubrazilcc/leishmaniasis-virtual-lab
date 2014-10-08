@@ -71,6 +71,7 @@ public final class ScopeManager {
 	public static final String REFERENCES        = "references";
 	public static final String PUBLIC_LINKS      = "public_links";
 	public static final String TASKS             = "tasks";
+	public static final String NOTIFICATIONS     = "notifications";
 
 	public static final String ALL               = "*";
 
@@ -92,7 +93,8 @@ public final class ScopeManager {
 				grantFullAccess(PIPELINES),
 				grantFullAccess(REFERENCES),
 				grantFullAccess(PUBLIC_LINKS),
-				grantFullAccess(TASKS));
+				grantFullAccess(TASKS),
+				grantFullAccess(NOTIFICATIONS));
 	}
 
 	public static final String user(final String username) {

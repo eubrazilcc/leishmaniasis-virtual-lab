@@ -1,40 +1,39 @@
 /**
- * RequireJS module that defines the view: collection->browse.
+ * RequireJS module that defines the view: links->show.
  */
 
-define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/config/marionette/styles/style', 'entities/sequence', 'pace',
-		'common/country_names', 'backbone.oauth2', 'flatui-checkbox', 'flatui-radio', 'backgrid', 'backgrid-paginator', 'backgrid-select-all',
-		'backgrid-filter' ], function(Lvl, BrowseTpl, Style, SequenceModel, pace, mapCn) {
-	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/config/marionette/styles/style', 'pace', 'backbone.oauth2', 'flatui-checkbox',
+		'flatui-radio', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, Marionette, LinksTpl, Style, pace) {
+	Lvl.module('LinksApp.Show.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
 				{
-					name : 'dataSource',
-					label : 'Source',
+					name : 'path',
+					label : 'Path',
 					editable : false,
 					cell : 'string'
 				},
 				{
-					name : 'definition',
-					label : 'Definition',
+					name : 'mime',
+					label : 'MIME type',
 					editable : false,
 					cell : 'string'
 				},
 				{
-					name : 'accession',
-					label : 'Accession',
+					name : 'downloadUri',
+					label : 'Download URI',
+					editable : false,
+					cell : 'uri'
+				},
+				{
+					name : 'description',
+					label : 'Description',
 					editable : false,
 					cell : 'string'
 				},
 				{
-					name : 'organism',
-					label : 'Organism',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'locale',
-					label : 'Country',
+					name : 'path',
+					label : '',
 					editable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
@@ -42,13 +41,11 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								var twoLetterCode = formattedValue.split("_")[1];
-								var code2 = twoLetterCode ? twoLetterCode.toUpperCase() : '';
-								var countryName = mapCn[code2];
-								if (countryName) {
-									this.$el.append('<a href="/#collection/map/country/' + code2.toLowerCase() + '"><img src="img/blank.gif" class="flag flag-'
-											+ code2.toLowerCase() + '" alt="' + countryName + '" /> ' + countryName + '</a>');
-								}
+								this.$el.append('<a title="Remove public link" class="text-muted" data-remove="' + formattedValue
+										+ '"><i class="fa fa-times fa-fw"></i></a>');
+
+								// TODO
+
 							}
 							this.delegateEvents();
 							return this;
@@ -56,8 +53,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 					})
 				} ];
 		View.Content = Marionette.ItemView.extend({
-			id : 'browse',
-			template : BrowseTpl,
+			template : LinksTpl,
 			initialize : function() {
 				this.listenTo(this.collection, 'request', this.displaySpinner);
 				this.listenTo(this.collection, 'sync error', this.removeSpinner);
@@ -68,7 +64,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 						headerCell : 'select-all'
 					} ].concat(columns),
 					collection : this.collection,
-					emptyText : 'No sequences found'
+					emptyText : 'No links found'
 				});
 			},
 			displaySpinner : function() {
@@ -83,24 +79,33 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				}, '500', 'swing');
 			},
 			events : {
-				'click a#link-btn' : 'createLink',
 				'click a#uncheck-btn' : 'deselectAll',
-			},
-			createLink : function(e) {
-				e.preventDefault();
-				var selectedModels = this.grid.getSelectedModels();
-				this.trigger('sequences:link:create', selectedModels);
+				'click a[data-remove]' : 'removeLink'
 			},
 			deselectAll : function(e) {
 				e.preventDefault();
 				this.grid.clearSelectedModels();
+			},
+			removeLink : function(e) {
+				e.preventDefault();
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.getAttribute('data-remove');
+				var item = this.collection.get(itemId);
+				this.collection.remove(item);
+				item.destroy({
+					success : function(e) {
+						console.log('Link deleted')
+					},
+					error : function(e) {
+						console.log('Error deleting link');
+					}
+				});
 			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {
 					var stylesLoader = new Style();
 					stylesLoader.loadCss(Lvl.request('styles:backgrid:entities').toJSON());
 					stylesLoader.loadCss(Lvl.request('styles:pace:entities').toJSON());
-					stylesLoader.loadCss(Lvl.request('styles:flags:entities').toJSON());
 				});
 			},
 			onClose : function() {
@@ -129,7 +134,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				var filter = new Backgrid.Extension.ServerSideFilter({
 					collection : this.collection,
 					name : 'q',
-					placeholder : 'filter sequences'
+					placeholder : 'filter links'
 				});
 
 				var filterToolbar = this.$('#grid-filter-toolbar');
@@ -158,5 +163,5 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 			}
 		});
 	});
-	return Lvl.CollectionApp.Browse.View;
+	return Lvl.LinksApp.Show.View;
 });

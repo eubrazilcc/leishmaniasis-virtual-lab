@@ -563,7 +563,7 @@ public class ServiceTest {
 			// test find sequences near to a location (using plain REST, no Jersey client, and query style authz token)
 			uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d)
-					.queryParam(AUTHORIZATION_QUERY_OAUTH2, TOKEN_ROOT)
+					.queryParam(AUTHORIZATION_QUERY_OAUTH2, TOKEN_ROOT) // TODO : urlencode : 4SUSt0YZ1Vvcw9+8GwkbG3j6yIEAZ7RTlMSWa9+c1zg=
 					.getUri();
 			response2 = Request.Get(uri)
 					.addHeader("Accept", "application/json")
