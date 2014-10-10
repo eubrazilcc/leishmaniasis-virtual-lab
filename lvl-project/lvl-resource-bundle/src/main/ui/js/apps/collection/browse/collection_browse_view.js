@@ -3,8 +3,8 @@
  */
 
 define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/config/marionette/styles/style', 'entities/sequence', 'pace',
-		'common/country_names', 'backbone.oauth2', 'flatui-checkbox', 'flatui-radio', 'backgrid', 'backgrid-paginator', 'backgrid-select-all',
-		'backgrid-filter' ], function(Lvl, BrowseTpl, Style, SequenceModel, pace, mapCn) {
+		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl,
+		Style, SequenceModel, pace, mapCn) {
 	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [

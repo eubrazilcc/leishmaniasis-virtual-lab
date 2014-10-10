@@ -57,7 +57,11 @@ public class WorkflowStatus implements Comparable<WorkflowStatus> {
 	}
 	
 	public boolean isCompleted() {
-		return completeness == 100 && "Finished".equalsIgnoreCase(status);
+		return (completeness == 100 && "Finished".equalsIgnoreCase(status)) || "ExecutionError".equalsIgnoreCase(status);
+	}
+	
+	public boolean hasFailed() {
+		return "ExecutionError".equalsIgnoreCase(status);
 	}
 
 	@Override

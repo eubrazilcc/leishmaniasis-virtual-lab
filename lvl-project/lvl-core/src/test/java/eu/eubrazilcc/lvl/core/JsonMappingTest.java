@@ -34,6 +34,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Locale;
 
 import javax.ws.rs.core.Link;
@@ -92,6 +93,7 @@ public class JsonMappingTest {
 			assertThat("reference is not null", reference, notNullValue());
 
 			final PublicLink publicLink = PublicLink.builder()
+					.created(new Date())
 					.target(Target.builder().type("sequence").ids(newArrayList("gb:JP540074", "gb:JP553239")).filter("export_fasta").compression("gzip").build())
 					.description("Optional description")
 					.build();

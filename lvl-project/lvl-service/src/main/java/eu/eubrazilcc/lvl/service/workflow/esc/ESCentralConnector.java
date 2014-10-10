@@ -136,22 +136,13 @@ public enum ESCentralConnector implements Closeable2 {
 			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);
 			checkState(escWorkflow != null, "Workflow not found");
 			final WorkflowParameters.Builder builder = WorkflowParameters.builder();			
-			// TODO : this method fails
 			final Map<String, String> map = workflowClient().listCallableWorkflowParameters(workflowId);
-			
-			
-			System.err.println("\n\nPARAMETERS\n");
-			
 			for (final Map.Entry<String, String> entry : map.entrySet()) {
-				builder.parameter(entry.getKey(), entry.getValue(), entry.getValue());
 				
-				System.err.println("\n\nPARAM: " + entry.getKey() + ", " + entry.getValue() + "\n");
+				// TODO : get default values
 				
+				builder.parameter(entry.getKey(), entry.getValue(), "DEFAULT VALUE");
 			}
-			
-			// TODO : this method fails
-			
-			
 			return builder.build();
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to get workflow parameters", e);			

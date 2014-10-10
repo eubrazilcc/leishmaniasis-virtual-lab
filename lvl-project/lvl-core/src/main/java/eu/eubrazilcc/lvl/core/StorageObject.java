@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
+import java.util.Date;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -39,6 +40,7 @@ public class StorageObject {
 	private String mime;
 	private String description;	// (optional)
 	private String owner;
+	private Date created;
 
 	public StorageObject() { }
 
@@ -74,6 +76,14 @@ public class StorageObject {
 		this.owner = owner;
 	}
 
+	public Date getCreated() {
+		return created;
+	}
+
+	public void setCreated(final Date created) {
+		this.created = created;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof StorageObject)) {
@@ -83,12 +93,13 @@ public class StorageObject {
 		return Objects.equals(path, other.path)
 				&& Objects.equals(mime, other.mime)				
 				&& Objects.equals(description, other.description)
-				&& Objects.equals(owner, other.owner);
+				&& Objects.equals(owner, other.owner)
+				&& Objects.equals(created, other.created);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(path, mime, description, owner);
+		return Objects.hash(path, mime, description, owner, created);
 	}
 
 	@Override
@@ -98,6 +109,7 @@ public class StorageObject {
 				.add("mime", mime)
 				.add("description", description)
 				.add("owner", owner)
+				.add("created", created)
 				.toString();
 	}
 

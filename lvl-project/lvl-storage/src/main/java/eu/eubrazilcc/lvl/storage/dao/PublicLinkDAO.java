@@ -73,12 +73,14 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 	public static final String DB_PREFIX   = "publicLink.";
 	public static final String PRIMARY_KEY = DB_PREFIX + "path";
 	public static final String OWNER_KEY   = DB_PREFIX + "owner";
+	public static final String CREATED_KEY   = DB_PREFIX + "created";
 
 	private URI downloadBaseUri = null;
 
 	private PublicLinkDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		MONGODB_CONN.createNonUniqueIndex(OWNER_KEY, COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(CREATED_KEY, COLLECTION, false);
 		// reset parameters to their default values
 		reset();
 	}

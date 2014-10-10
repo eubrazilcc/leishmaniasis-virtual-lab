@@ -46,6 +46,8 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Math.min;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.getProperty;
+import static java.net.URLEncoder.encode;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -78,6 +80,7 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.client.fluent.Request;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.InboundEvent;
@@ -149,6 +152,7 @@ public class ServiceTest {
 				.build();
 		// configure Web target
 		target = client.target(BASE_URI);
+		target.property(ClientProperties.FOLLOW_REDIRECTS, true);
 		// insert valid tokens in the database
 		TOKEN_DAO.insert(AccessToken.builder()
 				.token(TOKEN_ROOT)
@@ -661,14 +665,30 @@ public class ServiceTest {
 
 			// test get public link
 			publicLink.setOwner("user1");
-			final PublicLink publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
+			PublicLink publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.get(PublicLink.class);
-			assertThat("Get public link result is not null", publicLink2, notNullValue());			
+			assertThat("Get public link result is not null", publicLink2, notNullValue());
+			assertThat("Get public link creation time is not null", publicLink2.getCreated(), notNullValue());
+			publicLink.setCreated(publicLink2.getCreated());
 			assertThat("Get public link coincides with expected", publicLink2.equalsIgnoringVolatile(publicLink), equalTo(true));
 			/* uncomment for additional output */
 			System.out.println(" >> Get public link result: " + publicLink2.toString());
+
+			// test get public link using encoded identifier
+			final String encodedId = encode(publicLinks.getElements().get(0).getUrlSafePath(), UTF_8.name());			
+			publicLink2 = target.path(path.value()).path(encodedId)
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.get(PublicLink.class);
+			assertThat("Get public link (url encoded Id) result is not null", publicLink2, notNullValue());
+			assertThat("Get public link (url encoded Id) creation time is not null", publicLink2.getCreated(), notNullValue());
+			publicLink.setCreated(publicLink2.getCreated());
+			assertThat("Get public link (url encoded Id) coincides with expected", publicLink2.equalsIgnoringVolatile(publicLink), equalTo(true));
+			/* uncomment for additional output */
+			System.out.println(" >> URL encoded Id: " + encodedId);
+			System.out.println(" >> Get public link (url encoded Id) result: " + publicLink2.toString());			
 
 			// test update public link
 			publicLink.setDescription("Different description");

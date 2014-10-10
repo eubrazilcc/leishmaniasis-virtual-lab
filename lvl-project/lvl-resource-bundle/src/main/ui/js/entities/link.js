@@ -8,7 +8,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 		var config = new Configuration();
 		Entities.Link = Backbone.Model.extend({
 			urlRoot : config.get('service', '') + '/public_links/',
-			idAttribute : 'path',
+			idAttribute : 'urlSafePath',
 			defaults : {
 				description : '',
 				downloadUri : '',

@@ -170,7 +170,7 @@ public final class OAuth2Gatekeeper {
 						.errorResponse(HttpServletResponse.SC_UNAUTHORIZED)
 						.setRealm(resourceName)
 						.buildHeaderMessage();
-				LOGGER.warn("Access from " + getClientAddress(request) + " is denied due to: bad request");
+				LOGGER.warn("Access from " + getClientAddress(request) + " is denied due to: bad request", e);
 				// if no error code then throw a standard 401 unauthorized error
 				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
 						.header(OAuth.HeaderType.WWW_AUTHENTICATE, oauthResponse.getHeader(OAuth.HeaderType.WWW_AUTHENTICATE))

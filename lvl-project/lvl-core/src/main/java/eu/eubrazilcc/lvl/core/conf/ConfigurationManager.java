@@ -36,6 +36,7 @@ import static com.google.common.collect.Maps.newTreeMap;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.parseURL;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.FileUtils.getTempDirectoryPath;
 import static org.apache.commons.io.FileUtils.getUserDirectoryPath;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -63,7 +64,6 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.OverrideCombiner;
 import org.slf4j.Logger;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -548,7 +548,7 @@ public enum ConfigurationManager implements Closeable2 {
 			if (file != null) {
 				if (file.canRead()) {
 					try {
-						str = trimToEmpty(Files.toString(file, Charsets.UTF_8));
+						str = trimToEmpty(Files.toString(file, UTF_8));
 					} catch (Exception e) {
 						LOGGER.error("Failed to read file: " + file.getPath(), e);
 					}	

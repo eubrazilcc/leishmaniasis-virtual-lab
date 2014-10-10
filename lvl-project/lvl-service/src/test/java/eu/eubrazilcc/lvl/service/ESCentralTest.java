@@ -117,7 +117,10 @@ public class ESCentralTest {
 			// test get workflow parameters from e-SC
 			final WorkflowParameters parameters = ESCENTRAL_CONN.getParameters(workflow.getId());
 			assertThat("workflow parameters are not null", parameters, notNullValue());
-			// TODO : after the API is updated, get and check the parameters
+			assertThat("workflow parameters list is not null", parameters.getParameters(), notNullValue());
+			assertThat("workflow parameters list is not empty", !parameters.getParameters().isEmpty(), equalTo(true));
+			/* uncomment for additional output */
+			System.out.println(" >> Workflow parameters: " + parameters.toString());			
 
 			// modify the default parameters for execution
 			final WorkflowParameters parameters2 = WorkflowParameters.builder()
@@ -137,8 +140,9 @@ public class ESCentralTest {
 
 			// test workflow completion
 			boolean isCompleted = false;
+			WorkflowStatus status = null;
 			while (!isCompleted) {
-				final WorkflowStatus status = ESCENTRAL_CONN.getStatus(invocationId);
+				status = ESCENTRAL_CONN.getStatus(invocationId);
 				assertThat("workflow status is not null", status, notNullValue());
 				/* uncomment for additional output */
 				System.out.println(" >> Workflow status: " + status.toString());
@@ -148,12 +152,14 @@ public class ESCentralTest {
 					Thread.sleep(2000l);
 				}
 			}
+			assertThat("workflow status is not null", status, notNullValue());
+			assertThat("workflow execution is successful", !status.hasFailed(), equalTo(true));
 
 			// test retrieving products from e-SC
 			ESCENTRAL_CONN.saveProducts(invocationId, TEST_OUTPUT_DIR);
 			final Collection<File> outputFiles = listFiles(TEST_OUTPUT_DIR, null, true);
 			assertThat("product files is not null", outputFiles, notNullValue());
-			assertThat("product files is not empty", !outputFiles.isEmpty());
+			assertThat("product files is not empty", !outputFiles.isEmpty(), equalTo(true));
 			/* uncomment for additional output */
 			for (final File file : outputFiles) {
 				System.out.println(" >> Product file: " + file.getCanonicalPath());

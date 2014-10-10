@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage.security;
 
 import static java.lang.System.arraycopy;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.security.MessageDigest.getInstance;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
@@ -137,7 +138,7 @@ public final class SecurityProvider {
 				}
 			}
 			// compute digest
-			final byte[] bytesOfMixName = mixName.getBytes("UTF-8");
+			final byte[] bytesOfMixName = mixName.getBytes(UTF_8.name());
 			final char[] charOfMixName = new String(bytesOfMixName).toCharArray();
 			final byte[] salt = generateSalt(DEFAULT_STRENGTH);
 			final SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");

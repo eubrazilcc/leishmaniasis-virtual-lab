@@ -24,15 +24,16 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
+import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getPortalEndpoint;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.parsePublicLinkId;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.writePublicLink;
 import static eu.eubrazilcc.lvl.storage.dao.PublicLinkDAO.PUBLIC_LINK_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.OWNER_ID;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.ACCESS_TYPE;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.OWNER_ID;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.RESOURCE_WIDE_ACCESS;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.UriBuilder.fromUri;
@@ -42,6 +43,7 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -67,7 +69,6 @@ import org.apache.commons.lang.mutable.MutableLong;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.PublicLink;
-import eu.eubrazilcc.lvl.core.servlet.ServletUtils;
 import eu.eubrazilcc.lvl.service.PublicLinks;
 
 /**
@@ -77,7 +78,7 @@ import eu.eubrazilcc.lvl.service.PublicLinks;
 @Path("/public_links")
 public class PublicLinkResource {
 
-	public static final String RESOURCE_NAME = LVL_NAME + " Shared Object Resource";
+	public static final String RESOURCE_NAME = LVL_NAME + " Public Link Resource";
 	public static final String RESOURCE_SCOPE = resourceScope(PublicLinkResource.class);
 
 	public static final String PATH_PATTERN = "[a-zA-Z_0-9\\.-]+";
@@ -105,14 +106,19 @@ public class PublicLinkResource {
 	}
 
 	@GET
-	@Path("{path :" + PATH_PATTERN + "}" + ID_FRAGMENT_SEPARATOR + "{name: " + NAME_PATTERN + "}")
+	@Path("{id}")
 	@Produces(APPLICATION_JSON)
-	public PublicLink getPublicLink(final @PathParam("path") String path, final @PathParam("name") String name,
-			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+	public PublicLink getPublicLink(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
-		if (isBlank(path) || isBlank(name)) {
+		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		final String[] splitted = parsePublicLinkId(id);
+		if (splitted == null || splitted.length != 2) {
+			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
+		}
+		final String path = splitted[0], name = splitted[1];		
 		// get from database
 		final PublicLink publicLink = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo))
 				.find(path + "/" + name, getOwnerId(access));
@@ -133,6 +139,7 @@ public class PublicLinkResource {
 		publicLink.setPath(key + "/" + getName(fullpath));
 		publicLink.setMime(mimeType(new File(fullpath)));
 		publicLink.setOwner(access.get(OWNER_ID));
+		publicLink.setCreated(new Date());
 		// create entry in the database
 		PUBLIC_LINK_DAO.insert(publicLink);		
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(publicLink.getUrlSafePath());		
@@ -140,14 +147,19 @@ public class PublicLinkResource {
 	}
 
 	@PUT
-	@Path("{path :" + PATH_PATTERN + "}" + ID_FRAGMENT_SEPARATOR + "{name: " + NAME_PATTERN + "}")
+	@Path("{id}")
 	@Consumes(APPLICATION_JSON)
-	public void updatePublicLink(final @PathParam("path") String path, final @PathParam("name") String name, 
-			final PublicLink update, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+	public void updatePublicLink(final @PathParam("id") String id, final PublicLink update, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
-		if (isBlank(path) || isBlank(name)) {
+		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		final String[] splitted = parsePublicLinkId(id);
+		if (splitted == null || splitted.length != 2) {
+			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
+		}
+		final String path = splitted[0], name = splitted[1];
 		final String fullpath = path + "/" + name;
 		if (update == null || !update.getPath().equals(fullpath)) {
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
@@ -166,13 +178,18 @@ public class PublicLinkResource {
 	}
 
 	@DELETE
-	@Path("{path :" + PATH_PATTERN + "}" + ID_FRAGMENT_SEPARATOR + "{name: " + NAME_PATTERN + "}")
-	public void deletePublicLink(final @PathParam("path") String path, final @PathParam("name") String name,
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+	@Path("{id}")
+	public void deletePublicLink(final @PathParam("id") String id, final @Context HttpServletRequest request, 
+			final @Context HttpHeaders headers) {
 		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
-		if (isBlank(path) || isBlank(name)) {
+		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		final String[] splitted = parsePublicLinkId(id);
+		if (splitted == null || splitted.length != 2) {
+			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
+		}
+		final String path = splitted[0], name = splitted[1];
 		final String fullpath = path + "/" + name;
 		// get from database
 		final PublicLink publicLink = PUBLIC_LINK_DAO.find(fullpath);
@@ -190,7 +207,7 @@ public class PublicLinkResource {
 
 	public static URI getDownloadBaseUri(final UriInfo uriInfo) {
 		final URI thisResourceEndpoint = uriInfo.getBaseUriBuilder().clone().build();
-		final URI portalEndpoint = ServletUtils.getPortalEndpoint(thisResourceEndpoint);		
+		final URI portalEndpoint = getPortalEndpoint(thisResourceEndpoint);		
 		return fromUri(portalEndpoint).path(CONFIG_MANAGER.getPublicLocation()).build();
 	}
 

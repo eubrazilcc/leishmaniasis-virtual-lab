@@ -2,7 +2,7 @@
  * RequireJS module that defines the view: collection->create_link.
  */
 
-define([ 'app', 'tpl!apps/collection/link/templates/collection_create_link', 'apps/config/marionette/configuration', 'backbone.syphon', 'qtip' ], function(Lvl,
+define([ 'app', 'tpl!apps/collection/link/templates/collection_create_link', 'apps/config/marionette/configuration', 'backbone.syphon' ], function(Lvl,
 		CreateLinkTpl, Configuration) {
 	Lvl.module('CollectionApp.Link.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var config = new Configuration();
@@ -42,44 +42,46 @@ define([ 'app', 'tpl!apps/collection/link/templates/collection_create_link', 'ap
 					self.trigger('close');
 				}).fail(function() {
 					self.trigger('close');
-					var message = $('<p />', {
-						text : 'The public link cannot be created.'
-					}), ok = $('<button />', {
-						text : 'Close',
-						'class' : 'full'
-					});
-					$('#alert').qtip({
-						content : {
-							text : message.add(ok),
-							title : {
-								text : 'Error',
-								button : true
-							}
-						},
-						position : {
-							my : 'center',
-							at : 'center',
-							target : $(window)
-						},
-						show : {
-							ready : true,
-							modal : {
-								on : true,
-								blur : false
-							}
-						},
-						hide : false,
-						style : 'qtip-bootstrap dialogue',
-						events : {
-							render : function(event, api) {
-								$('button', api.elements.content).click(function() {
-									api.hide();
-								});
+					require([ 'qtip' ], function(qtip) {
+						var message = $('<p />', {
+							text : 'The public link cannot be created.'
+						}), ok = $('<button />', {
+							text : 'Close',
+							'class' : 'full'
+						});
+						$('#alert').qtip({
+							content : {
+								text : message.add(ok),
+								title : {
+									text : 'Error',
+									button : true
+								}
 							},
-							hide : function(event, api) {
-								api.destroy();
+							position : {
+								my : 'center',
+								at : 'center',
+								target : $(window)
+							},
+							show : {
+								ready : true,
+								modal : {
+									on : true,
+									blur : false
+								}
+							},
+							hide : false,
+							style : 'qtip-bootstrap dialogue',
+							events : {
+								render : function(event, api) {
+									$('button', api.elements.content).click(function() {
+										api.hide();
+									});
+								},
+								hide : function(event, api) {
+									api.destroy();
+								}
 							}
-						}
+						});
 					});
 				});
 			}

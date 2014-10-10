@@ -2,28 +2,67 @@
  * RequireJS module that defines the view: links->show.
  */
 
-define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/config/marionette/styles/style', 'pace', 'backbone.oauth2', 'flatui-checkbox',
-		'flatui-radio', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, Marionette, LinksTpl, Style, pace) {
+define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'pace',
+		'moment', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, Marionette, LinksTpl, Style,
+		Configuration, pace, moment) {
 	Lvl.module('LinksApp.Show.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
+		var config = new Configuration();
 		var columns = [
 				{
-					name : 'path',
-					label : 'Path',
+					name : 'urlSafePath',
+					label : 'Name',
 					editable : false,
 					cell : 'string'
 				},
 				{
 					name : 'mime',
-					label : 'MIME type',
+					label : 'Type',
 					editable : false,
-					cell : 'string'
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'string') {
+								var image = '', type = '';
+								switch (formattedValue.trim().toLowerCase()) {
+								case 'text/plain':
+									image = 'fa-file-text-o';
+									type = 'text';
+									break;
+								case 'application/gzip':
+									image = 'fa-file-zip-o';
+									type = 'zip';
+									break;
+								default:
+									image = 'fa-file-o';
+									type = 'unknown';
+									break;
+								}
+								this.$el.append('<i class="fa ' + image + ' fa-fw"></i> ' + type);
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
 				},
 				{
-					name : 'downloadUri',
-					label : 'Download URI',
+					name : 'created',
+					label : 'Created',
 					editable : false,
-					cell : 'uri'
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'number') {
+								this.$el.append(moment(formattedValue).format('MMM DD[,] YYYY [at] HH[:]mm'));
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
 				},
 				{
 					name : 'description',
@@ -32,7 +71,7 @@ define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/confi
 					cell : 'string'
 				},
 				{
-					name : 'path',
+					name : 'downloadUri',
 					label : '',
 					editable : false,
 					cell : Backgrid.Cell.extend({
@@ -41,11 +80,26 @@ define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/confi
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a title="Remove public link" class="text-muted" data-remove="' + formattedValue
+								this.$el.append('<a href="' + formattedValue
+										+ '" target="_blank" title="Download" class="text-muted"><i class="fa fa-download fa-fw"></i></a>');
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},
+				{
+					name : 'urlSafePath',
+					label : '',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'string') {
+								this.$el.append('<a href="#" title="Remove" class="text-muted" data-remove="' + formattedValue
 										+ '"><i class="fa fa-times fa-fw"></i></a>');
-
-								// TODO
-
 							}
 							this.delegateEvents();
 							return this;
@@ -88,16 +142,58 @@ define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/confi
 			},
 			removeLink : function(e) {
 				e.preventDefault();
+				var self = this;
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.getAttribute('data-remove');
 				var item = this.collection.get(itemId);
+				item.oauth2_token = config.authorizationToken()
 				this.collection.remove(item);
 				item.destroy({
 					success : function(e) {
-						console.log('Link deleted')
 					},
-					error : function(e) {
-						console.log('Error deleting link');
+					error : function(e) {						
+						require([ 'qtip' ], function(qtip) {
+							var message = $('<p />', {
+								text : 'The public link cannot be removed.'
+							}), ok = $('<button />', {
+								text : 'Close',
+								'class' : 'full'
+							});
+							$('#alert').qtip({
+								content : {
+									text : message.add(ok),
+									title : {
+										text : 'Error',
+										button : true
+									}
+								},
+								position : {
+									my : 'center',
+									at : 'center',
+									target : $(window)
+								},
+								show : {
+									ready : true,
+									modal : {
+										on : true,
+										blur : false
+									}
+								},
+								hide : false,
+								style : 'qtip-bootstrap dialogue',
+								events : {
+									render : function(event, api) {
+										$('button', api.elements.content).click(function() {
+											api.hide();
+										});
+									},
+									hide : function(event, api) {
+										self.grid.insertRow([item]);
+										api.destroy();
+									}
+								}
+							});
+						});						
 					}
 				});
 			},

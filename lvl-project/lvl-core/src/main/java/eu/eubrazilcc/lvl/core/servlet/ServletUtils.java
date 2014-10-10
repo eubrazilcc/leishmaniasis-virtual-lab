@@ -62,7 +62,7 @@ public final class ServletUtils {
 	/**
 	 * Gets the portal endpoint by inspecting the application configuration. In case that the endpoint
 	 * cannot be discovered from the configuration, 
-	 * @param baseUri - 
+	 * @param baseUri - the base URI where the service is running
 	 * @return
 	 */
 	public static final URI getPortalEndpoint(final URI baseUri) {

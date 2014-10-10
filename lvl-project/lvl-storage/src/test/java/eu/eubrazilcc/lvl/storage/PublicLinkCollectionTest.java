@@ -29,6 +29,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.mutable.MutableLong;
@@ -51,6 +52,7 @@ public class PublicLinkCollectionTest {
 			final PublicLink publicLink = PublicLink.builder()
 					.path("path/files.gz")
 					.owner("username1")
+					.created(new Date())
 					.mime("application/x-gzip")
 					.description("Optional description")
 					.target(Target.builder().type("sequence").id("JP540074").filter("export_fasta").compression("gzip").build())

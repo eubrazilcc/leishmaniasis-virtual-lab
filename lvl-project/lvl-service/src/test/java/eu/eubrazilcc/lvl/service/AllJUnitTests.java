@@ -37,7 +37,8 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ ESCentralTest.class })
+// TODO @SuiteClasses({ ESCentralTest.class })
+@SuiteClasses({ })
 public class AllJUnitTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

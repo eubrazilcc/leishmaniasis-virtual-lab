@@ -31,6 +31,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,7 +41,6 @@ import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -68,7 +68,6 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 	private String downloadUri;
 
-	@JsonIgnore
 	private String urlSafePath;
 
 	public PublicLink() {
@@ -88,7 +87,7 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 			this.links = null;
 		}
 	}
-	
+
 	@Override
 	public void setPath(final String path) {		
 		super.setPath(path);
@@ -111,12 +110,10 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 		this.downloadUri = downloadUri;
 	}
 
-	@JsonIgnore
 	public String getUrlSafePath() {
 		return urlSafePath;
 	}
 
-	@JsonIgnore
 	public void setUrlSafePath(final String urlSafePath) {
 		this.urlSafePath = urlSafePath;
 	}
@@ -191,6 +188,12 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 		public Builder owner(final String owner) {
 			checkArgument(isNotBlank(owner), "Uninitialized or invalid owner");
 			instance.setOwner(owner.trim());
+			return this;
+		}
+
+		public Builder created(final Date created) {
+			checkArgument(created != null, "Uninitialized creation time");
+			instance.setCreated(created);			
 			return this;
 		}
 
