@@ -65,6 +65,33 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 				return resp.elements;
 			}
 		});
+		Entities.LinkAllCollection = Backbone.PageableCollection.extend({
+			model : Entities.Link,
+			url : config.get('service', '') + '/public_links',
+			initialize : function(options) {
+				this.oauth2_token = options.oauth2_token
+			},
+			state : {
+				pageSize : 1000000,
+				firstPage : 0
+			},
+			queryParams : {
+				totalPages : null,
+				totalRecords : null,
+				currentPage : 'page',
+				pageSize : 'per_page',
+				sortKey : 'sort',
+				order : 'order'
+			},
+			parseState : function(resp, queryParams, state, options) {
+				return {
+					totalRecords : resp.totalCount
+				};
+			},
+			parseRecords : function(resp, options) {
+				return resp.elements;
+			}
+		});
 	});
 	return Lvl.Entities.Link;
 });

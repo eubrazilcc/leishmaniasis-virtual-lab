@@ -20,26 +20,65 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service.workflow;
+package eu.eubrazilcc.lvl.core.workflow;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.core.Link;
 
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Optional;
 
+import eu.eubrazilcc.lvl.core.Linkable;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+
 /**
- * Definition status.
+ * Defines workflows.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class WorkflowDefinition {
+public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
+
+	@InjectLinks({
+		@InjectLink(value="public_links/{id}", rel=SELF, type=APPLICATION_JSON, 
+				bindings={@Binding(name="id", value="${instance.id}")})
+	})
+	@JsonSerialize(using = LinkListSerializer.class)
+	@JsonDeserialize(using = LinkListDeserializer.class)
+	@JsonProperty("links")
+	private List<Link> links; // HATEOAS links
 
 	private String id;
 	private String name;
 	private Optional<String> description;
+
+	@Override
+	public List<Link> getLinks() {
+		return links;
+	}
+
+	@Override
+	public void setLinks(final List<Link> links) {
+		if (links != null) {
+			this.links = newArrayList(links);
+		} else {
+			this.links = null;
+		}
+	}
 
 	public String getId() {
 		return id;
@@ -66,6 +105,12 @@ public class WorkflowDefinition {
 			return false;
 		}
 		final WorkflowDefinition other = WorkflowDefinition.class.cast(obj);
+		return Objects.equals(links, other.links)
+				&& equalsIgnoringVolatile(other);
+	}
+
+	@Override
+	public boolean equalsIgnoringVolatile(final WorkflowDefinition other) {
 		return Objects.equals(id, other.id)
 				&& Objects.equals(name, other.name)
 				&& Objects.equals(description.orNull(), other.description.orNull());
@@ -73,12 +118,13 @@ public class WorkflowDefinition {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, description);
+		return Objects.hash(links, id, name, description);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
+				.add("links", links)
 				.add("id", id)
 				.add("name", name)
 				.add("description", description.orNull())
@@ -114,6 +160,6 @@ public class WorkflowDefinition {
 			return instance;
 		}
 
-	}
+	}	
 
 }

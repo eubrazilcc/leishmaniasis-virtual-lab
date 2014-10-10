@@ -20,33 +20,35 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service.workflow;
+package eu.eubrazilcc.lvl.core.workflow;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.collect.Maps.newHashMap;
 
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import eu.eubrazilcc.lvl.core.ImmutablePair;
+import eu.eubrazilcc.lvl.core.Pair;
 
 /**
- * Container of workflow parameters.
+ * Contains workflow parameters.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class WorkflowParameters {
 
-	private Map<String, ImmutablePair<String, String>> parameters = newHashMap();
+	private Map<String, List<Pair<String, String>>> parameters = new Hashtable<String, List<Pair<String, String>>>();
 
-	public Map<String, ImmutablePair<String, String>> getParameters() {
+	public Map<String, List<Pair<String, String>>> getParameters() {
 		return parameters;
 	}
 
-	public void setParameters(final Map<String, ImmutablePair<String, String>> parameters) {
+	public void setParameters(final Map<String, List<Pair<String, String>>> parameters) {
 		if (parameters != null) {
 			this.parameters = parameters;
 		} else {
-			this.parameters = newHashMap();
+			this.parameters = new Hashtable<String, List<Pair<String, String>>>();
 		}
 	}
 
@@ -82,11 +84,14 @@ public class WorkflowParameters {
 		private final WorkflowParameters instance = new WorkflowParameters();
 
 		public Builder parameter(final String block, final String parameter, final String value) {
-			instance.getParameters().put(block, ImmutablePair.of(parameter, value));
+			final List<Pair<String, String>> pairs = instance.getParameters().containsKey(block) ? instance.getParameters().get(block) 
+					: new ArrayList<Pair<String,String>>();			
+			pairs.add(Pair.of(parameter, value));		
+			instance.getParameters().put(block, pairs);			
 			return this;
 		}
 
-		public Builder parameters(final Map<String, ImmutablePair<String, String>> parameters) {
+		public Builder parameters(final Map<String, List<Pair<String, String>>> parameters) {
 			instance.setParameters(parameters);
 			return this;
 		}

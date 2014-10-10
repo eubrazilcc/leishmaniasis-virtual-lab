@@ -606,13 +606,83 @@ location /lvl-pub/ {
             
             <h3>Configuring LVL to access e-Science Central (e-SC) over HTTPS</h3>
             
-            <p>Import the e-SC certificate to the Java trust store that before starting the LVL service:</p>
-            
-            <code> $ keytool -import -alias esc-server -file ./esc-server.cer -keystore ./client-truststore </code>
-            <p></p>
+            <p>The e-SC certificate must be importd to the Java trust store before starting the LVL service both to execute JUnit and interation
+              tests as well as to deploy a LVL server in production.</p>
             
             <p>Valid e-SC certificates are provided in the <a href="http://eubrazilcc-rm.i3m.upv.es/projects/eubrazilcc/wiki/WP3_infrastructure">Wiki</a>
               of the project EUBrazilCC.</p>
+            
+            <h4>Installing e-SC certificate in production</h4>
+            
+            <p>First, download the e-SC service certificate from the EUBrazilCC site:</p>
+            
+            <code>$ wget http://eubrazilcc-rm.i3m.upv.es/attachments/download/22/upv-vm-2.crt</code>
+            <p></p>
+            
+            <p>It's highly recommended to check the validity of the certificate before installing it to the Java trusted repository:</p>
+            
+            <code>$ openssl x509 -in upv-vm-2.crt -noout -text</code>
+            <p></p>
+
+<pre>
+...
+
+Issuer: C=ES, ST=Catalonia, L=Valencia, O=Newcastle University, OU=School of Computing Science, CN=158.42.105.23
+Validity
+    Not Before: Oct  1 23:00:54 2014 GMT
+    Not After : Dec 30 23:00:54 2014 GMT
+Subject: C=ES, ST=Catalonia, L=Valencia, O=Newcastle University, OU=School of Computing Science, CN=158.42.105.23
+</pre>
+
+            <p>Install the certificate in the default Java key store:</p>
+            
+            <code>$ sudo keytool -import -alias esc-server -file upv-vm-2.crt -keystore $JAVA_HOME/jre/lib/security/cacerts</code>
+            <p></p>
+
+<pre>
+Enter keystore password:  (Default Password: changeit)
+
+...
+
+Trust this certificate? [no]:  yes
+
+Certificate was added to keystore
+</pre>
+
+            <p>Check that the certificate is accessible from Java:</p>
+
+            <code>$ keytool -list -alias esc-server -keystore $JAVA_HOME/jre/lib/security/cacerts</code>
+            <p></p>
+
+<pre>
+esc-server, Oct 10, 2014, trustedCertEntry, 
+Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:10:BF:5C:93
+</pre>
+
+            <p>Optionally, you can create a link in your local system to configure Java to use your key store as the default key store:</p>
+
+            <code>$ ln -s $JAVA_HOME/jre/lib/security/cacerts $HOME/.keystore</code>
+            <p></p>
+
+            <p>Now, you don't have to specify the path to the Java key store:</p>
+
+            <code>$ keytool -list -alias esc-server</code>
+            <p></p>
+
+<pre>
+esc-server, Oct 10, 2014, trustedCertEntry, 
+Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:10:BF:5C:93
+</pre>
+
+            <p>To remove the certificate from the Java key store:</p>
+
+            <code>$ keytool -delete -alias esc-server -keystore $JAVA_HOME/jre/lib/security/cacerts</code>
+            <p></p>
+
+            <h4>Installing e-SC certificate in development or testbed</h4>            
+            
+            <code> $ keytool -import -alias esc-server -file ./esc-server.cer -keystore ./client-truststore </code>
+            <p></p>
 
             <h2>
               <a id="security_oauth2_authorization"></a>OAuth 2.0 authorization

@@ -25,7 +25,7 @@ package eu.eubrazilcc.lvl.service.workflow.esc;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static eu.eubrazilcc.lvl.service.workflow.WorkflowStatus.checkPercent;
+import static eu.eubrazilcc.lvl.core.workflow.WorkflowStatus.checkPercent;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -52,10 +53,10 @@ import com.connexience.api.model.EscWorkflowParameterList;
 import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
-import eu.eubrazilcc.lvl.core.ImmutablePair;
-import eu.eubrazilcc.lvl.service.workflow.WorkflowDefinition;
-import eu.eubrazilcc.lvl.service.workflow.WorkflowParameters;
-import eu.eubrazilcc.lvl.service.workflow.WorkflowStatus;
+import eu.eubrazilcc.lvl.core.Pair;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 
 /**
  * Workflow connector based on e-Science Central.
@@ -138,9 +139,9 @@ public enum ESCentralConnector implements Closeable2 {
 			final WorkflowParameters.Builder builder = WorkflowParameters.builder();			
 			final Map<String, String> map = workflowClient().listCallableWorkflowParameters(workflowId);
 			for (final Map.Entry<String, String> entry : map.entrySet()) {
-				
+
 				// TODO : get default values
-				
+
 				builder.parameter(entry.getKey(), entry.getValue(), "DEFAULT VALUE");
 			}
 			return builder.build();
@@ -152,9 +153,11 @@ public enum ESCentralConnector implements Closeable2 {
 	public String executeWorkflow(final String workflowId, final @Nullable WorkflowParameters parameters) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		final EscWorkflowParameterList parametersList = new EscWorkflowParameterList();
-		if (parameters != null) {			
-			for (final Map.Entry<String, ImmutablePair<String, String>> entry : parameters.getParameters().entrySet()) {
-				parametersList.addParameter(entry.getKey(), entry.getValue().getKey(), entry.getValue().getValue());
+		if (parameters != null) {
+			for (final Map.Entry<String, List<Pair<String, String>>> entry : parameters.getParameters().entrySet()) {
+				for (final Pair<String, String> pair : entry.getValue()) {
+					parametersList.addParameter(entry.getKey(), pair.getKey(), pair.getValue());				
+				}
 			}
 		}
 		try {
@@ -162,6 +165,15 @@ public enum ESCentralConnector implements Closeable2 {
 			return invocation.getId();
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to execute the workflow", e);
+		}
+	}
+
+	public void cancelExecution(final String invocationId) {
+		checkArgument(isNotBlank(invocationId), "Uninitialized or invalid invocation identifier");
+		try {
+			workflowClient().terminateInvocation(invocationId);
+		} catch (Exception e) {
+			throw new IllegalStateException("Failed to cancel workflow execution", e);
 		}
 	}
 

@@ -70,6 +70,7 @@ public final class ScopeManager {
 	public static final String PIPELINES         = "pipelines";
 	public static final String REFERENCES        = "references";
 	public static final String PUBLIC_LINKS      = "public_links";
+	public static final String PIPELINE_RUNS     = "pipeline_runs";
 	public static final String TASKS             = "tasks";
 	public static final String NOTIFICATIONS     = "notifications";
 
@@ -93,6 +94,7 @@ public final class ScopeManager {
 				grantFullAccess(PIPELINES),
 				grantFullAccess(REFERENCES),
 				grantFullAccess(PUBLIC_LINKS),
+				grantFullAccess(PIPELINE_RUNS),
 				grantFullAccess(TASKS),
 				grantFullAccess(NOTIFICATIONS));
 	}
@@ -105,7 +107,8 @@ public final class ScopeManager {
 				grantFullAccess(inherit(MY_SEQUENCES, username)),
 				PIPELINES,
 				REFERENCES,
-				grantFullAccess(inherit(PUBLIC_LINKS, username)));
+				grantFullAccess(inherit(PUBLIC_LINKS, username)),
+				grantFullAccess(inherit(PIPELINE_RUNS, username)));
 	}
 
 	public static final String dataCurator() {

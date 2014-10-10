@@ -47,9 +47,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.service.workflow.WorkflowDefinition;
-import eu.eubrazilcc.lvl.service.workflow.WorkflowStatus;
-import eu.eubrazilcc.lvl.service.workflow.WorkflowParameters;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 import eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector;
 
 /**

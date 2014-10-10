@@ -5,6 +5,7 @@
 define([ 'app', 'tpl!apps/collection/link/templates/collection_create_link', 'apps/config/marionette/configuration', 'backbone.syphon' ], function(Lvl,
 		CreateLinkTpl, Configuration) {
 	Lvl.module('CollectionApp.Link.View', function(View, Lvl, Backbone, Marionette, $, _) {
+		'use strict';
 		var config = new Configuration();
 		View.Content = Marionette.ItemView.extend({
 			template : CreateLinkTpl,
@@ -44,7 +45,7 @@ define([ 'app', 'tpl!apps/collection/link/templates/collection_create_link', 'ap
 					self.trigger('close');
 					require([ 'qtip' ], function(qtip) {
 						var message = $('<p />', {
-							text : 'The public link cannot be created.'
+							text : 'Failed to create public link in the LVL service.'
 						}), ok = $('<button />', {
 							text : 'Close',
 							'class' : 'full'

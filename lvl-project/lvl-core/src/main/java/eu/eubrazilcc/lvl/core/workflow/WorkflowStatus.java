@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service.workflow;
+package eu.eubrazilcc.lvl.core.workflow;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -55,11 +55,11 @@ public class WorkflowStatus implements Comparable<WorkflowStatus> {
 	public void setStatus(final String status) {
 		this.status = status;
 	}
-	
+
 	public boolean isCompleted() {
 		return (completeness == 100 && "Finished".equalsIgnoreCase(status)) || "ExecutionError".equalsIgnoreCase(status);
 	}
-	
+
 	public boolean hasFailed() {
 		return "ExecutionError".equalsIgnoreCase(status);
 	}

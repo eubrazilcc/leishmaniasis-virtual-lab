@@ -37,7 +37,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-// TODO @SuiteClasses({ ESCentralTest.class })
+//TODO @SuiteClasses({ ESCentralTest.class })
 @SuiteClasses({ })
 public class AllJUnitTests {
 
