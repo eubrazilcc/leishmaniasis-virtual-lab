@@ -87,13 +87,13 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
         var iniSettingsLinks = function() {
             Entities.settingsLinks = new Entities.NavigationCollection([ {
-                id : 7,
+                id : 8,
                 href : '/#account',
                 icon : 'fa-user',
                 text : 'Account',
                 isFirst : 'settings'
             }, {
-                id : 8,
+                id : 9,
                 href : '/#settings',
                 icon : 'fa-cog',
                 text : 'Settings'

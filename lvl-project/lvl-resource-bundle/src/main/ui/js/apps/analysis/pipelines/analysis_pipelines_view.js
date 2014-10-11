@@ -2,9 +2,9 @@
  * RequireJS module that defines the view: analysis->browse.
  */
 
-define([ 'app', 'tpl!apps/analysis/browse/templates/analysis_browse', 'apps/config/marionette/styles/style', 'entities/workflow', 'pace', 'backbone.oauth2',
-		'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, Style, WorkflowModel, pace) {
-	Lvl.module('AnalysisApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'tpl!apps/analysis/pipelines/templates/analysis_pipelines', 'apps/config/marionette/styles/style', 'entities/workflow', 'pace', 'backbone.oauth2',
+		'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, PipelinesTpl, Style, WorkflowModel, pace) {
+	Lvl.module('AnalysisApp.Pipelines.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [ {
 			name : 'id',
@@ -39,7 +39,7 @@ define([ 'app', 'tpl!apps/analysis/browse/templates/analysis_browse', 'apps/conf
 		} ];
 		View.Content = Marionette.ItemView.extend({
 			id : 'browse',
-			template : BrowseTpl,
+			template : PipelinesTpl,
 			initialize : function() {
 				this.listenTo(this.collection, 'request', this.displaySpinner);				
 				this.listenTo(this.collection, 'sync error', this.removeSpinner);
@@ -140,5 +140,5 @@ define([ 'app', 'tpl!apps/analysis/browse/templates/analysis_browse', 'apps/conf
 			}
 		});
 	});
-	return Lvl.AnalysisApp.Browse.View;
+	return Lvl.AnalysisApp.Pipelines.View;
 });

@@ -32,61 +32,45 @@ import com.google.common.collect.ComparisonChain;
 /**
  * Stores a pair consisting of two elements.
  * @author Erik Torres <ertorser@upv.es>
- * @param <L> the left element type
- * @param <R> the right element type
+ * @param <K> the key element type
+ * @param <V> the value element type
  */
-public class Pair<L extends Comparable<L>, R extends Comparable<R>> implements Map.Entry<L, R>, Comparable<Pair<L, R>> {
+public class Pair<K extends Comparable<K>, V extends Comparable<V>> implements Map.Entry<K, V>, Comparable<Pair<K, V>> {
 
-	public L left;
-	public R right;
+	public K key;
+	public V value;
 
 	public Pair() { }
 
-	public Pair(final L left, final R right) {
-		setLeft(left);
-		setRight(right);		
-	}
-
-	public L getLeft() {
-		return left;
-	}
-
-	public void setLeft(final L left) {
-		this.left = left;
-	}
-
-	public R getRight() {
-		return right;
-	}
-
-	public void setRight(final R right) {
-		this.right = right;
+	public Pair(final K key, final V value) {
+		setKey(key);
+		setValue(value);		
 	}
 
 	@Override
-	public L getKey() {
-		return getLeft();
+	public K getKey() {
+		return key;
 	}
 
-	public void setKey(final L key) {
-		setLeft(key);
-	}
-
-	@Override
-	public R getValue() {
-		return getRight();
-	}
-
-	public R setValue(final R value) {
-		setRight(value);
-		return getRight();
+	public void setKey(final K key) {
+		this.key = key;
 	}
 
 	@Override
-	public int compareTo(final Pair<L, R> other) {
+	public V getValue() {
+		return value;
+	}
+
+	public V setValue(final V value) {
+		this.value = value;
+		return this.value;
+	}
+
+	@Override
+	public int compareTo(final Pair<K, V> other) {
 		return ComparisonChain.start()				
-				.compare(left, other.left)
-				.compare(right, other.right)
+				.compare(key, other.key)
+				.compare(value, other.value)
 				.result();		
 	}
 
@@ -96,27 +80,27 @@ public class Pair<L extends Comparable<L>, R extends Comparable<R>> implements M
 			return false;
 		}
 		final  Pair<?, ?> other =  Pair.class.cast(obj);
-		return Objects.equals(left, other.left)
-				&& Objects.equals(right, other.right);
+		return Objects.equals(key, other.key)
+				&& Objects.equals(value, other.value);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(left, right);
+		return Objects.hash(key, value);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
-				.add("left", left)
-				.add("right", right)				
+				.add("key", key)
+				.add("value", value)				
 				.toString();
 	}	
 
 	/* Fluent API */
 
-	public static <L extends Comparable<L>, R extends Comparable<R>>  Pair<L, R> of(final L left, final R right) {
-		return new  Pair<L, R>(left, right);
+	public static <K extends Comparable<K>, V extends Comparable<V>>  Pair<K, V> of(final K key, final V value) {
+		return new  Pair<K, V>(key, value);
 	}
 
 }

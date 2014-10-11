@@ -2,12 +2,12 @@
  * RequireJS module that defines the controller: analysis->browse.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow', 'apps/analysis/browse/analysis_browse_view' ], function(Lvl, Configuration,
+define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow', 'apps/analysis/pipelines/analysis_pipelines_view' ], function(Lvl, Configuration,
 		WorkflowModel, View) {
-	Lvl.module('AnalysisApp.Browse', function(Browse, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('AnalysisApp.Pipelines', function(Pipelines, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
-		Browse.Controller = {
+		Pipelines.Controller = {
 			showSection : function() {
 				var view = new View.Content({
 					collection : new WorkflowModel.WorkflowDefinitionPageableCollection({
@@ -15,11 +15,11 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow', 'ap
 					})
 				});
 				view.on('analysis:workflow:run', function(workflowId) {
-					require([ 'entities/link', 'apps/analysis/run/run_workflow_view' ], function(LinkModel, EditView) {
+					require([ 'entities/link', 'apps/analysis/submit/submit_pipeline_view' ], function(LinkModel, SubmitView) {
 						var links = new LinkModel.LinkAllCollection({
 							oauth2_token : config.authorizationToken()
 						});
-						var dialogView = new EditView.Content({
+						var dialogView = new SubmitView.Content({
 							collection : links,
 							'workflowId' : workflowId
 						});
@@ -35,5 +35,5 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow', 'ap
 			}
 		}
 	});
-	return Lvl.AnalysisApp.Browse.Controller;
+	return Lvl.AnalysisApp.Pipelines.Controller;
 });

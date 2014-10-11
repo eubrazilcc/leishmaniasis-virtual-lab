@@ -47,6 +47,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
+import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
@@ -100,6 +103,13 @@ public class ESCentralTest {
 			ESC_DOCUMENTS.add(inputFileId);
 			/* uncomment for additional output */
 			System.out.println(" >> e-SC document Id: " + inputFileId);
+
+			// test listing available files in e-SC
+			final ImmutableList<WorkflowDataObject> remoteFiles = ESCENTRAL_CONN.listFiles();
+			assertThat("remote files is not null", remoteFiles, notNullValue());
+			assertThat("remote files is not empty", !remoteFiles.isEmpty(), equalTo(true));
+			/* uncomment for additional output */
+			System.out.println(" >> Available remote files: " + remoteFiles);
 
 			// test listing available workflows from e-SC
 			final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();

@@ -46,7 +46,7 @@ import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
-import eu.eubrazilcc.lvl.service.rest.WorkflowResource;
+import eu.eubrazilcc.lvl.service.rest.WorkflowDefinitionResource;
 
 /**
  * Wraps a collection of {@link WorkflowDefinition}.
@@ -55,28 +55,28 @@ import eu.eubrazilcc.lvl.service.rest.WorkflowResource;
 public class WorkflowDefinitions extends Paginable<WorkflowDefinition> {
 
 	@InjectLinks({
-		@InjectLink(resource=WorkflowResource.class, method="getWorkflows", bindings={
+		@InjectLink(resource=WorkflowDefinitionResource.class, method="getWorkflows", bindings={
 			@Binding(name="page", value="${instance.page - 1}"),
 			@Binding(name="per_page", value="${instance.perPage}"),
 			@Binding(name="sort", value="${instance.sort}"),
 			@Binding(name="order", value="${instance.order}"),
 			@Binding(name="q", value="${instance.query}")
 		}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=WorkflowResource.class, method="getWorkflows", bindings={
+		@InjectLink(resource=WorkflowDefinitionResource.class, method="getWorkflows", bindings={
 			@Binding(name="page", value="${0}"),
 			@Binding(name="per_page", value="${instance.perPage}"),
 			@Binding(name="sort", value="${instance.sort}"),
 			@Binding(name="order", value="${instance.order}"),
 			@Binding(name="q", value="${instance.query}")
 		}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=WorkflowResource.class, method="getWorkflows", bindings={
+		@InjectLink(resource=WorkflowDefinitionResource.class, method="getWorkflows", bindings={
 			@Binding(name="page", value="${instance.page + 1}"),
 			@Binding(name="per_page", value="${instance.perPage}"),
 			@Binding(name="sort", value="${instance.sort}"),
 			@Binding(name="order", value="${instance.order}"),
 			@Binding(name="q", value="${instance.query}")
 		}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-		@InjectLink(resource=WorkflowResource.class, method="getWorkflows", bindings={
+		@InjectLink(resource=WorkflowDefinitionResource.class, method="getWorkflows", bindings={
 			@Binding(name="page", value="${instance.totalPages - 1}"),
 			@Binding(name="per_page", value="${instance.perPage}"),
 			@Binding(name="sort", value="${instance.sort}"),

@@ -70,12 +70,12 @@ import eu.eubrazilcc.lvl.service.WorkflowRuns;
  * @author Erik Torres <ertorser@upv.es>
  */
 @Path("/pipeline_runs")
-public class WorkflowRunsResource {
+public class WorkflowRunResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Runs Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(WorkflowRunsResource.class);
+	public static final String RESOURCE_SCOPE = resourceScope(WorkflowRunResource.class);
 
-	private final static Logger LOGGER = getLogger(WorkflowRunsResource.class);
+	private final static Logger LOGGER = getLogger(WorkflowRunResource.class);
 
 	@GET
 	@Produces(APPLICATION_JSON)
@@ -122,6 +122,10 @@ public class WorkflowRunsResource {
 		if (isBlank(run.getWorkflowId())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		// upload input files when needed
+		
+		// TODO final String inputFileId = ESCENTRAL_CONN.uploadFile(fastaFile);
+		
 		// submit
 		final String invocationId = ESCENTRAL_CONN.executeWorkflow(run.getWorkflowId(), run.getParameters());
 		run.setId(randomUUID().toString());
@@ -137,7 +141,7 @@ public class WorkflowRunsResource {
 	@PUT
 	@Path("{id}")
 	@Consumes(APPLICATION_JSON)
-	public void updatePublicLink(final @PathParam("id") String id, final WorkflowRun update, 
+	public void updateWorkflowRun(final @PathParam("id") String id, final WorkflowRun update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
 		if (isBlank(id)) {
@@ -162,7 +166,7 @@ public class WorkflowRunsResource {
 
 	@DELETE
 	@Path("{id}")
-	public void deletePublicLink(final @PathParam("id") String id, final @Context HttpServletRequest request, 
+	public void deleteWorkflowRun(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
 		if (isBlank(id)) {

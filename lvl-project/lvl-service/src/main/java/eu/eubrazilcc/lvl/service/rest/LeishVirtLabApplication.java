@@ -65,8 +65,9 @@ public class LeishVirtLabApplication extends Application {
 		// create LVL resources
 		instances.add(new SequenceResource());
 		instances.add(new ReferenceResource());
-		instances.add(new WorkflowResource());
-		instances.add(new WorkflowRunsResource());
+		instances.add(new WorkflowDefinitionResource());
+		instances.add(new WorkflowDataResource());
+		instances.add(new WorkflowRunResource());
 		instances.add(new TaskResource());
 		instances.add(new PublicLinkResource());
 		// add additional JAX-RS providers

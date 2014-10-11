@@ -44,35 +44,35 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
-import eu.eubrazilcc.lvl.service.WorkflowDefinitions;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
+import eu.eubrazilcc.lvl.service.WorkflowDataObjects;
 
 /**
- * Workflows resource.
+ * Workflows data resource.
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/pipelines")
-public class WorkflowResource {
+@Path("/pipelines_data")
+public class WorkflowDataResource {
 
-	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Resource";
+	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Data Resource";
 	public static final String RESOURCE_SCOPE = resourceScope(PublicLinkResource.class);
-
+	
 	@GET
 	@Produces(APPLICATION_JSON)
-	public WorkflowDefinitions getWorkflows(final @QueryParam("page") @DefaultValue("0") int page,
+	public WorkflowDataObjects getWorkflowDataObjects(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
-		final WorkflowDefinitions paginable = WorkflowDefinitions.start()
+		final WorkflowDataObjects paginable = WorkflowDataObjects.start()
 				.page(page)
 				.perPage(per_page)
 				.build();
-		// get workflows from e-SC		
-		final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
+		// get workflow data objects from e-SC		
+		final List<WorkflowDataObject> dataObjects = ESCENTRAL_CONN.listFiles();
 		// TODO : implement pagination
-		paginable.setElements(workflows);
+		paginable.setElements(dataObjects);
 		// set total count and return to the caller
-		final int totalEntries = workflows.size();
+		final int totalEntries = dataObjects.size();
 		paginable.setTotalCount(totalEntries);
 		return paginable;
 	}
@@ -80,24 +80,24 @@ public class WorkflowResource {
 	@GET
 	@Path("{id}")
 	@Produces(APPLICATION_JSON)
-	public WorkflowDefinition getWorkflow(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+	public WorkflowDataObject getWorkflowDataObject(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}			
-		// get workflows from e-SC		
-		final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
-		WorkflowDefinition workflow = null;
-		for (int i = 0; i < workflows.size() && workflow == null; i++) {
-			if (workflows.get(i).getId().equals(id)) {
-				workflow = workflows.get(i);
+		// get workflow data objects from e-SC		
+		final List<WorkflowDataObject> dataObjects = ESCENTRAL_CONN.listFiles();
+		WorkflowDataObject dataObject = null;
+		for (int i = 0; i < dataObjects.size() && dataObject == null; i++) {
+			if (dataObjects.get(i).getId().equals(id)) {
+				dataObject = dataObjects.get(i);
 			}
 		}
-		if (workflow == null) {
+		if (dataObject == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
-		return workflow;
+		return dataObject;
 	}
-
+	
 }

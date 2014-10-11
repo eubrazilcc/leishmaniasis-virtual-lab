@@ -47,14 +47,19 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 		var iniNavigationLinks = function() {
 			Entities.navigationLinks = new Entities.NavigationAnalysis([ {
 				id : 1,
-				link : 'browse',
-				icon : 'fa-table',
-				text : 'Browse'
+				link : 'pipelines',
+				icon : 'fa-sitemap',
+				text : 'Pipelines'
 			}, {
 				id : 2,
-				link : 'monitor',
+				link : 'datasets',
+				icon : 'fa-cloud',
+				text : 'Datasets'
+			}, {
+				id : 3,
+				link : 'runs',
 				icon : 'fa-desktop',
-				text : 'Monitor'
+				text : 'Runs'
 			} ]);
 		};
 

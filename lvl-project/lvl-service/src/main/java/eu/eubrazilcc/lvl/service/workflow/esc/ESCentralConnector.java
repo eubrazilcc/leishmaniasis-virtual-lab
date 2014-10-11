@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -54,6 +55,7 @@ import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
 import eu.eubrazilcc.lvl.core.Pair;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
@@ -201,6 +203,27 @@ public enum ESCentralConnector implements Closeable2 {
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to upload file", e);
 		}
+	}
+
+	public ImmutableList<WorkflowDataObject> listFiles() {
+		final ImmutableList.Builder<WorkflowDataObject> builder = new ImmutableList.Builder<WorkflowDataObject>();
+		try {
+			final EscFolder home = storageClient().homeFolder();
+			final EscDocument[] docs = storageClient().folderDocuments(home.getId());
+			if (docs != null) {
+				for (final EscDocument doc : docs) {
+					builder.add(WorkflowDataObject.builder()
+							.id(doc.getId())
+							.name(doc.getName())
+							.description(doc.getDescription())
+							.created(new Date(doc.getCreationTime()))
+							.build());
+				}
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException("Failed to list files", e);
+		}
+		return builder.build();
 	}
 
 	public void deleteFile(final String documentId) {

@@ -28,6 +28,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,13 +49,13 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Defines workflows.
+ * Defines workflow data object.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
+public class WorkflowDataObject implements Linkable<WorkflowDataObject> {
 
 	@InjectLinks({
-		@InjectLink(value="pipelines/{id}", rel=SELF, type=APPLICATION_JSON, 
+		@InjectLink(value="pipeline_objects/{id}", rel=SELF, type=APPLICATION_JSON, 
 				bindings={@Binding(name="id", value="${instance.id}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
@@ -65,6 +66,7 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 	private String id;
 	private String name;
 	private Optional<String> description;
+	private Date created;
 
 	@Override
 	public List<Link> getLinks() {
@@ -99,26 +101,35 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 		this.description = fromNullable(description);
 	}
 
+	public Date getCreated() {
+		return created;
+	}
+
+	public void setCreated(final Date created) {
+		this.created = created;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof WorkflowDefinition)) {
+		if (obj == null || !(obj instanceof WorkflowDataObject)) {
 			return false;
 		}
-		final WorkflowDefinition other = WorkflowDefinition.class.cast(obj);
+		final WorkflowDataObject other = WorkflowDataObject.class.cast(obj);
 		return Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final WorkflowDefinition other) {
+	public boolean equalsIgnoringVolatile(final WorkflowDataObject other) {
 		return Objects.equals(id, other.id)
 				&& Objects.equals(name, other.name)
-				&& Objects.equals(description.orNull(), other.description.orNull());
+				&& Objects.equals(description.orNull(), other.description.orNull())
+				&& Objects.equals(created, other.created);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, id, name, description);
+		return Objects.hash(links, id, name, description, created);
 	}
 
 	@Override
@@ -128,6 +139,7 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 				.add("id", id)
 				.add("name", name)
 				.add("description", description.orNull())
+				.add("created", created)
 				.toString();
 	}
 
@@ -139,7 +151,7 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 
 	public static class Builder {
 
-		private final WorkflowDefinition instance = new WorkflowDefinition();
+		private final WorkflowDataObject instance = new WorkflowDataObject();
 
 		public Builder id(final String id) {
 			instance.setId(id);
@@ -156,10 +168,15 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 			return this;
 		}
 
-		public WorkflowDefinition build() {
+		public Builder created(final Date created) {
+			instance.setCreated(created);
+			return this;
+		}
+
+		public WorkflowDataObject build() {
 			return instance;
 		}
 
-	}	
+	}
 
 }

@@ -2,13 +2,13 @@
  * RequireJS module that defines the view: analysis->run_workflow.
  */
 
-define([ 'app', 'tpl!apps/analysis/run/templates/analysis_run_workflow', 'apps/config/marionette/configuration', 'backbone.syphon' ], function(Lvl,
-		RunWorkflowTpl, Configuration) {
-	Lvl.module('AnalysisApp.Run.View', function(View, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'tpl!apps/analysis/submit/templates/analysis_submit_pipeline', 'apps/config/marionette/configuration', 'backbone.syphon' ], function(Lvl,
+		SubmitPipelineTpl, Configuration) {
+	Lvl.module('AnalysisApp.Submit.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
 		View.Content = Marionette.ItemView.extend({
-			template : RunWorkflowTpl,
+			template : SubmitPipelineTpl,
 			initialize : function(options) {
 				this.workflowId = options.workflowId
 			},
@@ -24,33 +24,36 @@ define([ 'app', 'tpl!apps/analysis/run/templates/analysis_run_workflow', 'apps/c
 					'workflowId' : self.workflowId,
 					'invocationId' : null,
 					'parameters' : {
-						'input_file' : [ {
-							'left' : 'Source',
-							'right' : formData.fasta_select
-						} ],
-						'seqboot' : [ {
-							'left' : 'Number of replicates',
-							'right' : formData.replicates_input
-						}, {
-							'left' : 'Random number seed',
-							'right' : formData.seed_input
-						} ],
-						'dnapars' : [ {
-							'left' : 'Number of data sets',
-							'right' : formData.data_sets_input
-						}, {
-							'left' : 'Outgroup root',
-							'right' : formData.outgroup_input
-						} ]
+						'parameters' : {
+							'input_file' : [ {
+								'key' : 'Source',
+								'value' : formData.fasta_select
+							} ],
+							'dnapars' : [ {
+								'key' : 'Number of data sets',
+								'value' : formData.data_sets_input
+							}, {
+								'key' : 'Outgroup root',
+								'value' : formData.outgroup_input
+							} ],
+							'seqboot' : [ {
+								'key' : 'Number of replicates',
+								'value' : formData.replicates_input
+							}, {
+								'key' : 'Random number seed',
+								'value' : formData.seed_input
+							} ]
+						}
 					},
 					'submitter' : null,
-					'submitted' : null
+					'submitted' : null,
+					'links' : null
 				};
-				
+
 				// TODO
 				console.log('Submitting: ' + JSON.stringify(requestData));
 				// TODO
-				
+
 				// submit request to LVL server
 				$('#submit-btn').attr('disabled', 'disabled');
 				var jqxhr = $.ajax({
@@ -109,5 +112,5 @@ define([ 'app', 'tpl!apps/analysis/run/templates/analysis_run_workflow', 'apps/c
 			}
 		});
 	});
-	return Lvl.AnalysisApp.Run.View;
+	return Lvl.AnalysisApp.Submit.View;
 });

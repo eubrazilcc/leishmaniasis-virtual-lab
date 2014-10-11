@@ -23,7 +23,7 @@ define([ 'app' ], function(Lvl) {
         Lvl.commands.setHandler('analysis:set:active', function(section) {
             section = section || 'default';
             if (AnalysisApp.currentSection !== section) {
-                if (section === 'browse' || section === 'monitor') {
+                if (section === 'pipelines' || section === 'datasets' || section === 'runs') {
                     require([ 'apps/analysis/layout/analysis_layout_ctrl' ], function(LayoutController) {
                         AnalysisApp.currentSection = LayoutController.showLayout(section);
                     });

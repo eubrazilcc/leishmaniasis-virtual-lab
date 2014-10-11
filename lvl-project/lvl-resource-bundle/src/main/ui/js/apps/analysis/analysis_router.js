@@ -9,8 +9,9 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
         var Router = Backbone.Router.extend({
             routes : {
                 'analysis' : 'defaultAnalysis',
-                'analysis/browse' : 'browseAnalysis',
-                'analysis/monitor' : 'monitorAnalysis'
+                'analysis/pipelines' : 'showPipelines',
+                'analysis/datasets' : 'showDatasets',
+                'analysis/runs' : 'showRuns'
             },
             before : function() {
                 if (!config.isAuthenticated()) {
@@ -29,16 +30,19 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
             },
             defaultAnalysis : function() {
                 var self = this;
-                Lvl.navigate('analysis/browse', {
+                Lvl.navigate('analysis/pipelines', {
                     trigger : true,
                     replace : true
                 });
             },
-            browseAnalysis : function() {
-                Lvl.execute('analysis:set:active', 'browse');
+            showPipelines : function() {
+                Lvl.execute('analysis:set:active', 'pipelines');
             },
-            monitorAnalysis : function() {
-                Lvl.execute('analysis:set:active', 'monitor');
+            showDatasets : function() {
+                Lvl.execute('analysis:set:active', 'datasets');
+            },
+            showRuns : function() {
+                Lvl.execute('analysis:set:active', 'runs');
             }
         });
         Lvl.addInitializer(function() {

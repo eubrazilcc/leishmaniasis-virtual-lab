@@ -45,38 +45,38 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
-import eu.eubrazilcc.lvl.core.workflow.WorkflowRun;
-import eu.eubrazilcc.lvl.service.rest.WorkflowDefinitionResource;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
+import eu.eubrazilcc.lvl.service.rest.WorkflowDataResource;
 
 /**
- * Wraps a collection of {@link WorkflowRun}.
+ * Wraps a collection of {@link WorkflowDataObject}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class WorkflowRuns extends Paginable<WorkflowRun> {
+public class WorkflowDataObjects extends Paginable<WorkflowDataObject> {
 
 	@InjectLinks({
-		@InjectLink(resource=WorkflowDefinitionResource.class, method="getWorkflowRuns", bindings={
+		@InjectLink(resource=WorkflowDataResource.class, method="getWorkflowDataObjects", bindings={
 			@Binding(name="page", value="${instance.page - 1}"),
 			@Binding(name="per_page", value="${instance.perPage}"),
 			@Binding(name="sort", value="${instance.sort}"),
 			@Binding(name="order", value="${instance.order}"),
 			@Binding(name="q", value="${instance.query}")
 		}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=WorkflowDefinitionResource.class, method="getWorkflowRuns", bindings={
+		@InjectLink(resource=WorkflowDataResource.class, method="getWorkflowDataObjects", bindings={
 			@Binding(name="page", value="${0}"),
 			@Binding(name="per_page", value="${instance.perPage}"),
 			@Binding(name="sort", value="${instance.sort}"),
 			@Binding(name="order", value="${instance.order}"),
 			@Binding(name="q", value="${instance.query}")
 		}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=WorkflowDefinitionResource.class, method="getWorkflowRuns", bindings={
+		@InjectLink(resource=WorkflowDataResource.class, method="getWorkflowDataObjects", bindings={
 			@Binding(name="page", value="${instance.page + 1}"),
 			@Binding(name="per_page", value="${instance.perPage}"),
 			@Binding(name="sort", value="${instance.sort}"),
 			@Binding(name="order", value="${instance.order}"),
 			@Binding(name="q", value="${instance.query}")
 		}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-		@InjectLink(resource=WorkflowDefinitionResource.class, method="getWorkflowRuns", bindings={
+		@InjectLink(resource=WorkflowDataResource.class, method="getWorkflowDataObjects", bindings={
 			@Binding(name="page", value="${instance.totalPages - 1}"),
 			@Binding(name="per_page", value="${instance.perPage}"),
 			@Binding(name="sort", value="${instance.sort}"),
@@ -110,50 +110,50 @@ public class WorkflowRuns extends Paginable<WorkflowRun> {
 				.toString();
 	}
 
-	public static WorkflowRunsBuilder start() {
-		return new WorkflowRunsBuilder();
+	public static WorkflowDataObjectsBuilder start() {
+		return new WorkflowDataObjectsBuilder();
 	}
 
-	public static class WorkflowRunsBuilder {
+	public static class WorkflowDataObjectsBuilder {
 
-		private final WorkflowRuns instance = new WorkflowRuns();
+		private final WorkflowDataObjects instance = new WorkflowDataObjects();
 
-		public WorkflowRunsBuilder page(final int page) {
+		public WorkflowDataObjectsBuilder page(final int page) {
 			instance.setPage(page);
 			return this;
 		}
 
-		public WorkflowRunsBuilder perPage(final int perPage) {
+		public WorkflowDataObjectsBuilder perPage(final int perPage) {
 			instance.setPerPage(perPage);
 			return this;
 		}
 
-		public WorkflowRunsBuilder sort(final String sort) {
+		public WorkflowDataObjectsBuilder sort(final String sort) {
 			instance.setSort(sort);
 			return this;
 		}
 
-		public WorkflowRunsBuilder order(final String order) {
+		public WorkflowDataObjectsBuilder order(final String order) {
 			instance.setOrder(order);
 			return this;
 		}
 
-		public WorkflowRunsBuilder query(final String query) {
+		public WorkflowDataObjectsBuilder query(final String query) {
 			instance.setQuery(query);
 			return this;
 		}
 
-		public WorkflowRunsBuilder totalCount(final int totalCount) {
+		public WorkflowDataObjectsBuilder totalCount(final int totalCount) {
 			instance.setTotalCount(totalCount);
 			return this;
 		}
 
-		public WorkflowRunsBuilder workflows(final List<WorkflowRun> workflows) {
-			instance.setElements(workflows);
+		public WorkflowDataObjectsBuilder dataObjects(final List<WorkflowDataObject> dataObjects) {
+			instance.setElements(dataObjects);
 			return this;			
 		}
 
-		public WorkflowRuns build() {
+		public WorkflowDataObjects build() {
 			return instance;
 		}
 
