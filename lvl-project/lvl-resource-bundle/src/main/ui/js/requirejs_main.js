@@ -46,6 +46,9 @@ requirejs.config({
 		/* qTip2 */
 		'imagesloaded' : 'vendor/provided/imagesloaded.pkgd.min',
 		'qtip' : [ '//cdn.jsdelivr.net/qtip2/2.2.1/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ],
+		/* jsPhyloSVG */
+		'raphael' : [ '//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min', 'vendor/cached/raphael-min' ],
+		'jsphylosvg' : 'vendor/provided/jsphylosvg-min',
 		/* Add support for underscore templates */
 		'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
 		'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
@@ -88,6 +91,10 @@ requirejs.config({
 		'pace' : [ 'jquery' ],
 		'imagesloaded' : [ 'jquery' ],
 		'qtip' : [ 'jquery', 'imagesloaded' ],
+		'raphael' : {
+			exports : 'Raphael'
+		},
+		'jsphylosvg' : [ 'raphael' ],
 		'tpl' : [ 'text' ]
 	}
 });

@@ -10,11 +10,11 @@
 			<p>Execution parameters:</p>			
             <form role="form">
                 <div class="form-group">
-            		<label for="fasta_select">Select filter:</label>
+            		<label for="fasta_select">Select dataset:</label>
             		<select class="form-control" name="fasta_select" id="fasta_select">
-            		    <option class="text-muted" value="" selected>Select input dataset...</option>
+            		    <option class="text-muted" value="" selected>Select dataset...</option>
             		    <% _.each(items, function(item){ %>
-            		    <option value="<%= item.urlSafePath %>"><%= item.urlSafePath %></option>
+            		    <option value="<%= item.id %>"><%= item.id %></option>
                         <% }); %>
 					</select>
             	</div>

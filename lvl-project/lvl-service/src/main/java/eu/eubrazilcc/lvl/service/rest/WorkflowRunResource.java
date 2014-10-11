@@ -121,11 +121,7 @@ public class WorkflowRunResource {
 		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
 		if (isBlank(run.getWorkflowId())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
-		// upload input files when needed
-		
-		// TODO final String inputFileId = ESCENTRAL_CONN.uploadFile(fastaFile);
-		
+		}		
 		// submit
 		final String invocationId = ESCENTRAL_CONN.executeWorkflow(run.getWorkflowId(), run.getParameters());
 		run.setId(randomUUID().toString());

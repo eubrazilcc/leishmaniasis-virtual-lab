@@ -1,5 +1,5 @@
 /**
- * RequireJS module that defines the controller: analysis->browse.
+ * RequireJS module that defines the controller: analysis->pipelines.
  */
 
 define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow', 'apps/analysis/pipelines/analysis_pipelines_view' ], function(Lvl, Configuration,
@@ -15,15 +15,15 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow', 'ap
 					})
 				});
 				view.on('analysis:pipeline:run', function(workflowId) {
-					require([ 'entities/link', 'apps/analysis/submit/submit_pipeline_view' ], function(LinkModel, SubmitView) {
-						var links = new LinkModel.LinkAllCollection({
+					require([ 'entities/workflow_data', 'apps/analysis/submit/submit_pipeline_view' ], function(WorkflowDataModel, SubmitView) {
+						var datasets = new WorkflowDataModel.WorkflowDataAllCollection({
 							oauth2_token : config.authorizationToken()
 						});
 						var dialogView = new SubmitView.Content({
-							collection : links,
+							collection : datasets,
 							'workflowId' : workflowId
 						});
-						links.fetch({
+						datasets.fetch({
 							reset : true
 						}).done(function() {
 							Lvl.dialogRegion.show(dialogView);

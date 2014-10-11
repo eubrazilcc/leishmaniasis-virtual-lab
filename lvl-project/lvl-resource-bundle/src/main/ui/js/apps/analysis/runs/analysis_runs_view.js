@@ -1,29 +1,47 @@
 /**
- * RequireJS module that defines the view: analysis->browse.
+ * RequireJS module that defines the view: analysis->runs.
  */
 
 define(
-		[ 'app', 'tpl!apps/analysis/datasets/templates/analysis_datasets', 'apps/config/marionette/styles/style', 'entities/workflow_data',
+		[ 'app', 'tpl!apps/analysis/runs/templates/analysis_runs', 'apps/config/marionette/styles/style', 'entities/workflow_run',
 				'apps/config/marionette/configuration', 'pace', 'moment', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all',
-				'backgrid-filter' ], function(Lvl, DatasetsTpl, Style, WorkflowDataModel, Configuration, pace, moment) {
-			Lvl.module('AnalysisApp.Datasets.View', function(View, Lvl, Backbone, Marionette, $, _) {
+				'backgrid-filter' ], function(Lvl, PipelinesTpl, Style, WorkflowRunModel, Configuration, pace, moment) {
+			Lvl.module('AnalysisApp.Runs.View', function(View, Lvl, Backbone, Marionette, $, _) {
 				'use strict';
 				var config = new Configuration();
 				var columns = [
 						{
 							name : 'id',
 							label : 'Identifier',
-							cell : 'string'
+							editable : false,
+							cell : Backgrid.Cell.extend({
+								render : function() {
+									this.$el.empty();
+									var rawValue = this.model.get(this.column.get('name'));
+									var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+									if (formattedValue && typeof formattedValue === 'string') {
+										this.$el.append('<a href="#" title="Open" data-open="' + formattedValue + '">' + formattedValue + '</a>');
+									}
+									this.delegateEvents();
+									return this;
+								}
+							})
 						},
 						{
-							name : 'name',
-							label : 'Name',
+							name : 'workflowId',
+							label : 'Workflow',
 							editable : false,
 							cell : 'string'
 						},
 						{
-							name : 'created',
-							label : 'Created',
+							name : 'invocationId',
+							label : 'Invocation',
+							editable : false,
+							cell : 'string'
+						},
+						{
+							name : 'submitted',
+							label : 'Submitted',
 							editable : false,
 							cell : Backgrid.Cell.extend({
 								render : function() {
@@ -37,12 +55,6 @@ define(
 									return this;
 								}
 							})
-						},
-						{
-							name : 'description',
-							label : 'Description',
-							editable : false,
-							cell : 'string'
 						},
 						{
 							name : 'id',
@@ -63,12 +75,11 @@ define(
 							})
 						} ];
 				View.Content = Marionette.ItemView.extend({
-					id : 'datasets',
-					template : DatasetsTpl,
+					id : 'runs',
+					template : PipelinesTpl,
 					initialize : function() {
 						this.listenTo(this.collection, 'request', this.displaySpinner);
 						this.listenTo(this.collection, 'sync error', this.removeSpinner);
-						this.listenTo(this.collection, 'analysis:dataset:added', this.reloadDataset);
 						this.grid = new Backgrid.Grid({
 							columns : [ {
 								name : '',
@@ -76,7 +87,7 @@ define(
 								headerCell : 'select-all'
 							} ].concat(columns),
 							collection : this.collection,
-							emptyText : 'No datasets found'
+							emptyText : 'No executions found'
 						});
 					},
 					displaySpinner : function() {
@@ -90,25 +101,27 @@ define(
 							scrollTop : 0
 						}, '500', 'swing');
 					},
-					reloadDataset : function() {
-						this.collection.fetch({
-							reset : true
-						});						
-					},
 					events : {
-						'click a#add-btn' : 'addDataset',
-						'click a[data-remove]' : 'removeDataset',
+						'click a[data-open]' : 'openRun',
+						'click a[data-remove]' : 'removeRun',
 						'click a#uncheck-btn' : 'deselectAll',
 					},
-					addDataset : function(e) {
-						e.preventDefault();
-						this.trigger('analysis:dataset:add', this.collection);
-					},
-					removeDataset : function(e) {
+					openRun : function(e) {
 						e.preventDefault();
 						var self = this;
 						var target = $(e.target);
-						var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.attr('data-remove');
+						var itemId = target.attr('data-open');
+						
+						// TODO
+						console.log('OPENING: ' + itemId);
+						// TODO
+						
+					},
+					removeRun : function(e) {
+						e.preventDefault();
+						var self = this;
+						var target = $(e.target);
+						var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.getAttribute('data-remove');
 						var item = this.collection.get(itemId);
 						item.oauth2_token = config.authorizationToken()
 						this.collection.remove(item);
@@ -118,7 +131,7 @@ define(
 							error : function(e) {
 								require([ 'qtip' ], function(qtip) {
 									var message = $('<p />', {
-										text : 'The dataset cannot be removed.'
+										text : 'The execution cannot be canceled.'
 									}), ok = $('<button />', {
 										text : 'Close',
 										'class' : 'full'
@@ -199,7 +212,7 @@ define(
 						var filter = new Backgrid.Extension.ServerSideFilter({
 							collection : this.collection,
 							name : 'q',
-							placeholder : 'filter datasets'
+							placeholder : 'filter executions'
 						});
 
 						var filterToolbar = this.$('#grid-filter-toolbar');
@@ -228,5 +241,5 @@ define(
 					}
 				});
 			});
-			return Lvl.AnalysisApp.Datasets.View;
+			return Lvl.AnalysisApp.Runs.View;
 		});

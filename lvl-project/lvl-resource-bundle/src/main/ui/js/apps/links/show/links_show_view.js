@@ -144,7 +144,7 @@ define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/confi
 				e.preventDefault();
 				var self = this;
 				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.getAttribute('data-remove');
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.attr('data-remove');
 				var item = this.collection.get(itemId);
 				item.oauth2_token = config.authorizationToken()
 				this.collection.remove(item);

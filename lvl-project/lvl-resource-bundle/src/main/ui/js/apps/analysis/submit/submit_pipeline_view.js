@@ -49,11 +49,6 @@ define([ 'app', 'tpl!apps/analysis/submit/templates/analysis_submit_pipeline', '
 					'submitted' : null,
 					'links' : null
 				};
-
-				// TODO
-				console.log('Submitting: ' + JSON.stringify(requestData));
-				// TODO
-
 				// submit request to LVL server
 				$('#submit-btn').attr('disabled', 'disabled');
 				var jqxhr = $.ajax({

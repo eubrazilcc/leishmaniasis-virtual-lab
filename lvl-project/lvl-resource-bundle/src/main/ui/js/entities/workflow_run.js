@@ -1,18 +1,20 @@
 /**
- * RequireJS module that defines the entity: workflow_data.
+ * RequireJS module that defines the entity: workflow_run.
  */
 
 define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
-	Lvl.module('Entities.WorkflowData', function(Entities, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('Entities.WorkflowRun', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
-		Entities.WorkflowData = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/pipelines_data/',
+		Entities.WorkflowRun = Backbone.Model.extend({
+			urlRoot : config.get('service', '') + '/pipeline_runs/',
 			defaults : {
 				id : '',
-				name : '',
-				description : '',
-				created : ''
+				workflowId : '',
+				invocationId : '',
+				parameters : null,
+				submitter : '',
+				submitted : ''
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);
@@ -22,31 +24,37 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				var errors = {};
 				if (!attrs.id) {
 					errors.id = 'can\'t be empty';
+				}				
+				if (!attrs.workflowId) {
+					errors.workflowId = 'can\'t be empty';
 				}
-				if (!attrs.name) {
-					errors.name = 'can\'t be empty';
+				if (!attrs.invocationId) {
+					errors.invocationId = 'can\'t be empty';
 				}
-				if (!attrs.created) {
-					errors.created = 'can\'t be empty';
+				if (!attrs.submitter) {
+					errors.submitter = 'can\'t be empty';
 				}
+				if (!attrs.submitted) {
+					errors.submitted = 'can\'t be empty';
+				}				
 				if (!_.isEmpty(errors)) {
 					return errors;
 				}
 			}
 		});
-		Entities.WorkflowDataCollection = Backbone.Collection.extend({
-			model : Entities.WorkflowData,
+		Entities.WorkflowRunCollection = Backbone.Collection.extend({
+			model : Entities.WorkflowRun,
 			comparator : 'id',
 			initialize : function() {
 				var singleSelect = new Backbone.Picky.SingleSelect(this);
 				_.extend(this, singleSelect);
 			}
 		});
-		Entities.WorkflowDataPageableCollection = Backbone.PageableCollection.extend({
-			model : Entities.WorkflowData,
+		Entities.WorkflowRunPageableCollection = Backbone.PageableCollection.extend({
+			model : Entities.WorkflowRun,
 			mode : 'server',
 			// url : 'wrokflow_data.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/pipelines_data',
+			url : config.get('service', '') + '/pipeline_runs',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -71,9 +79,9 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				return resp.elements;
 			}
 		});
-		Entities.WorkflowDataAllCollection = Backbone.PageableCollection.extend({
-			model : Entities.WorkflowData,
-			url : config.get('service', '') + '/pipelines_data',
+		Entities.WorkflowRunAllCollection = Backbone.PageableCollection.extend({
+			model : Entities.WorkflowRun,
+			url : config.get('service', '') + '/pipeline_runs',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -99,5 +107,5 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 			}
 		});
 	});
-	return Lvl.Entities.WorkflowData;
+	return Lvl.Entities.WorkflowRun;
 });
