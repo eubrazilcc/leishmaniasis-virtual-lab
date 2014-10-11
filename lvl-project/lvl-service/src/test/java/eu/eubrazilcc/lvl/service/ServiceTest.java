@@ -990,7 +990,7 @@ public class ServiceTest {
 			/* uncomment for additional output */			
 			System.out.println(" >> Get workflow run response body (JSON): " + payload);
 			System.out.println(" >> Get workflow run response JAX-RS object: " + response);
-			System.out.println(" >> Get workflow run HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Get workflow run HTTP headers: " + response.getStringHeaders());			
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

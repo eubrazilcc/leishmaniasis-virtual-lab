@@ -1,16 +1,18 @@
 /**
- * RequireJS module that defines the entity: workflow.
+ * RequireJS module that defines the entity: workflow_data.
  */
 
 define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
-	Lvl.module('Entities.Workflow', function(Entities, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('Entities.WorkflowData', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
-		Entities.WorkflowDefinition = Backbone.Model.extend({
+		Entities.WorkflowData = Backbone.Model.extend({
+			urlRoot : config.get('service', '') + '/pipelines_data/',
 			defaults : {
 				id : '',
 				name : '',
-				description : ''				
+				description : '',
+				created : ''
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);
@@ -23,25 +25,28 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				}
 				if (!attrs.name) {
 					errors.name = 'can\'t be empty';
-				}				
+				}
+				if (!attrs.created) {
+					errors.created = 'can\'t be empty';
+				}
 				if (!_.isEmpty(errors)) {
 					return errors;
 				}
 			}
 		});
-		Entities.WorkflowDefinitionCollection = Backbone.Collection.extend({
-			model : Entities.WorkflowDefinition,
+		Entities.WorkflowDataCollection = Backbone.Collection.extend({
+			model : Entities.WorkflowData,
 			comparator : 'id',
 			initialize : function() {
 				var singleSelect = new Backbone.Picky.SingleSelect(this);
 				_.extend(this, singleSelect);
 			}
 		});
-		Entities.WorkflowDefinitionPageableCollection = Backbone.PageableCollection.extend({
-			model : Entities.WorkflowDefinition,
+		Entities.WorkflowDataPageableCollection = Backbone.PageableCollection.extend({
+			model : Entities.WorkflowData,
 			mode : 'server',
-			// url : 'wrokflow_definition.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/pipelines',
+			// url : 'wrokflow_data.json?burst=' + Math.random(),
+			url : config.get('service', '') + '/pipelines_data',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -67,5 +72,5 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 			}
 		});		
 	});
-	return Lvl.Entities.Workflow;
+	return Lvl.Entities.WorkflowData;
 });

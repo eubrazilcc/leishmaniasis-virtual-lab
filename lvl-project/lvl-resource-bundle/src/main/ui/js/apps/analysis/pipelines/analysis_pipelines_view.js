@@ -1,5 +1,5 @@
 /**
- * RequireJS module that defines the view: analysis->browse.
+ * RequireJS module that defines the view: analysis->pipelines.
  */
 
 define([ 'app', 'tpl!apps/analysis/pipelines/templates/analysis_pipelines', 'apps/config/marionette/styles/style', 'entities/workflow', 'pace', 'backbone.oauth2',
@@ -30,7 +30,7 @@ define([ 'app', 'tpl!apps/analysis/pipelines/templates/analysis_pipelines', 'app
 					var rawValue = this.model.get(this.column.get('name'));
 					var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 					if (formattedValue && typeof formattedValue === 'string') {
-						this.$el.append('<a href="#" data-workflow="' + formattedValue + '" title="Run" class="text-muted"><i class="fa fa-play fa-fw"></i></i></a>');
+						this.$el.append('<a href="#" data-pipeline="' + formattedValue + '" title="Run" class="text-muted"><i class="fa fa-play fa-fw"></i></i></a>');
 					}
 					this.delegateEvents();
 					return this;
@@ -38,7 +38,7 @@ define([ 'app', 'tpl!apps/analysis/pipelines/templates/analysis_pipelines', 'app
 			})
 		} ];
 		View.Content = Marionette.ItemView.extend({
-			id : 'browse',
+			id : 'pipelines',
 			template : PipelinesTpl,
 			initialize : function() {
 				this.listenTo(this.collection, 'request', this.displaySpinner);				
@@ -50,7 +50,7 @@ define([ 'app', 'tpl!apps/analysis/pipelines/templates/analysis_pipelines', 'app
 						headerCell : 'select-all'
 					} ].concat(columns),
 					collection : this.collection,
-					emptyText : 'No workflows found'
+					emptyText : 'No pipelines found'
 				});
 			},
 			displaySpinner : function() {
@@ -65,14 +65,14 @@ define([ 'app', 'tpl!apps/analysis/pipelines/templates/analysis_pipelines', 'app
 				}, '500', 'swing');
 			},
 			events : {
-				'click a[data-workflow]' : 'runWorkflow',
+				'click a[data-pipeline]' : 'runPipeline',
 				'click a#uncheck-btn' : 'deselectAll',
 			},
-			runWorkflow : function(e) {
+			runPipeline : function(e) {
 				e.preventDefault();
 				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-workflow') : target.getAttribute('data-workflow');
-				this.trigger('analysis:workflow:run', itemId);							
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pipeline') : target.getAttribute('data-pipeline');
+				this.trigger('analysis:pipeline:run', itemId);							
 			},
 			deselectAll : function(e) {
 				e.preventDefault();
@@ -111,7 +111,7 @@ define([ 'app', 'tpl!apps/analysis/pipelines/templates/analysis_pipelines', 'app
 				var filter = new Backgrid.Extension.ServerSideFilter({
 					collection : this.collection,
 					name : 'q',
-					placeholder : 'filter workflows'
+					placeholder : 'filter pipelines'
 				});
 
 				var filterToolbar = this.$('#grid-filter-toolbar');

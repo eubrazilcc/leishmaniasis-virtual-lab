@@ -14,7 +14,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow', 'ap
 						oauth2_token : config.authorizationToken()
 					})
 				});
-				view.on('analysis:workflow:run', function(workflowId) {
+				view.on('analysis:pipeline:run', function(workflowId) {
 					require([ 'entities/link', 'apps/analysis/submit/submit_pipeline_view' ], function(LinkModel, SubmitView) {
 						var links = new LinkModel.LinkAllCollection({
 							oauth2_token : config.authorizationToken()
