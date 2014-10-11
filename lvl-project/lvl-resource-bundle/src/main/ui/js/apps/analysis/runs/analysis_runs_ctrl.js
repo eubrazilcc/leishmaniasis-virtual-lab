@@ -14,6 +14,15 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow_run',
 						oauth2_token : config.authorizationToken()
 					})
 				});
+				view.on('analysis:pipeline:monitor', function(workflowRun) {
+					require([ 'apps/analysis/monitor/analysis_monitor_invocation_view' ], function(MonitorView) {
+						workflowRun.oauth2_token = config.authorizationToken();
+						var dialogView = new MonitorView.Content({
+							model : workflowRun
+						});
+						Lvl.dialogRegion.show(dialogView);
+					});
+				});
 				Lvl.mainRegion.currentView.tabContent.show(view);
 				return View.Content.id;
 			}

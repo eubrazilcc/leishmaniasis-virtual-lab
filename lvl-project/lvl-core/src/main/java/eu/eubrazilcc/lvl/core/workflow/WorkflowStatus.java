@@ -30,6 +30,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Range;
 
 /**
@@ -56,10 +57,12 @@ public class WorkflowStatus implements Comparable<WorkflowStatus> {
 		this.status = status;
 	}
 
+	@JsonIgnore
 	public boolean isCompleted() {
 		return (completeness == 100 && "Finished".equalsIgnoreCase(status)) || "ExecutionError".equalsIgnoreCase(status);
 	}
 
+	@JsonIgnore
 	public boolean hasFailed() {
 		return "ExecutionError".equalsIgnoreCase(status);
 	}

@@ -111,11 +111,8 @@ define(
 						var self = this;
 						var target = $(e.target);
 						var itemId = target.attr('data-open');
-						
-						// TODO
-						console.log('OPENING: ' + itemId);
-						// TODO
-						
+						var item = self.collection.get(itemId);
+						this.trigger('analysis:pipeline:monitor', item);
 					},
 					removeRun : function(e) {
 						e.preventDefault();

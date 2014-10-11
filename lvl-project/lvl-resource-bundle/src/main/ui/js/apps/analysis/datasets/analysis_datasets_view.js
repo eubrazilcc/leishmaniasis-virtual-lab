@@ -110,7 +110,7 @@ define(
 						var target = $(e.target);
 						var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.attr('data-remove');
 						var item = this.collection.get(itemId);
-						item.oauth2_token = config.authorizationToken()
+						item.oauth2_token = config.authorizationToken();
 						this.collection.remove(item);
 						item.destroy({
 							success : function(e) {

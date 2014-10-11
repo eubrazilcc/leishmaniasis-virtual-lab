@@ -14,7 +14,11 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				invocationId : '',
 				parameters : null,
 				submitter : '',
-				submitted : ''
+				submitted : '',
+				status : {
+					'completeness' : 0,
+					'status' : 'Unknown'
+				}
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);
@@ -24,7 +28,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				var errors = {};
 				if (!attrs.id) {
 					errors.id = 'can\'t be empty';
-				}				
+				}
 				if (!attrs.workflowId) {
 					errors.workflowId = 'can\'t be empty';
 				}
@@ -36,7 +40,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				}
 				if (!attrs.submitted) {
 					errors.submitted = 'can\'t be empty';
-				}				
+				}
 				if (!_.isEmpty(errors)) {
 					return errors;
 				}

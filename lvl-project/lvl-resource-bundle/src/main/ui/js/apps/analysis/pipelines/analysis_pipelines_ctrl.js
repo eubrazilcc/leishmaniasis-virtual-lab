@@ -15,7 +15,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow', 'ap
 					})
 				});
 				view.on('analysis:pipeline:run', function(workflowId) {
-					require([ 'entities/workflow_data', 'apps/analysis/submit/submit_pipeline_view' ], function(WorkflowDataModel, SubmitView) {
+					require([ 'entities/workflow_data', 'apps/analysis/submit/analysis_submit_pipeline_view' ], function(WorkflowDataModel, SubmitView) {
 						var datasets = new WorkflowDataModel.WorkflowDataAllCollection({
 							oauth2_token : config.authorizationToken()
 						});

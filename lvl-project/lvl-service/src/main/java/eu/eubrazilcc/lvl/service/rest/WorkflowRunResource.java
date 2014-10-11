@@ -63,6 +63,7 @@ import org.slf4j.Logger;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.workflow.WorkflowRun;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 import eu.eubrazilcc.lvl.service.WorkflowRuns;
 
 /**
@@ -110,6 +111,12 @@ public class WorkflowRunResource {
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, getOwnerId(access));
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+		}
+		// update status (when needed)
+		if (run.getStatus() == null || !run.getStatus().isCompleted()) {
+			final WorkflowStatus status = ESCENTRAL_CONN.getStatus(run.getInvocationId());
+			run.setStatus(status);
+			WORKFLOW_RUN_DAO.update(run);
 		}
 		return run;
 	}
