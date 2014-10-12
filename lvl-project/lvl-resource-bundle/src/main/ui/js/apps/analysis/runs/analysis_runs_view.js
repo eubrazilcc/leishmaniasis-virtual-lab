@@ -5,7 +5,7 @@
 define(
 		[ 'app', 'tpl!apps/analysis/runs/templates/analysis_runs', 'apps/config/marionette/styles/style', 'entities/workflow_run',
 				'apps/config/marionette/configuration', 'pace', 'moment', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all',
-				'backgrid-filter' ], function(Lvl, PipelinesTpl, Style, WorkflowRunModel, Configuration, pace, moment) {
+				'backgrid-filter' ], function(Lvl, RunsTpl, Style, WorkflowRunModel, Configuration, pace, moment) {
 			Lvl.module('AnalysisApp.Runs.View', function(View, Lvl, Backbone, Marionette, $, _) {
 				'use strict';
 				var config = new Configuration();
@@ -20,7 +20,7 @@ define(
 									var rawValue = this.model.get(this.column.get('name'));
 									var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 									if (formattedValue && typeof formattedValue === 'string') {
-										this.$el.append('<a href="#" title="Open" data-open="' + formattedValue + '">' + formattedValue + '</a>');
+										this.$el.append('<a href="/#analysis/runs/' + formattedValue + '" title="Open">' + formattedValue + '</a>');
 									}
 									this.delegateEvents();
 									return this;
@@ -76,7 +76,7 @@ define(
 						} ];
 				View.Content = Marionette.ItemView.extend({
 					id : 'runs',
-					template : PipelinesTpl,
+					template : RunsTpl,
 					initialize : function() {
 						this.listenTo(this.collection, 'request', this.displaySpinner);
 						this.listenTo(this.collection, 'sync error', this.removeSpinner);
@@ -102,25 +102,16 @@ define(
 						}, '500', 'swing');
 					},
 					events : {
-						'click a[data-open]' : 'openRun',
 						'click a[data-remove]' : 'removeRun',
-						'click a#uncheck-btn' : 'deselectAll',
-					},
-					openRun : function(e) {
-						e.preventDefault();
-						var self = this;
-						var target = $(e.target);
-						var itemId = target.attr('data-open');
-						var item = self.collection.get(itemId);
-						this.trigger('analysis:pipeline:monitor', item);
-					},
+						'click a#uncheck-btn' : 'deselectAll'
+					},					
 					removeRun : function(e) {
 						e.preventDefault();
 						var self = this;
 						var target = $(e.target);
 						var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.getAttribute('data-remove');
 						var item = this.collection.get(itemId);
-						item.oauth2_token = config.authorizationToken()
+						item.oauth2_token = config.authorizationToken();
 						this.collection.remove(item);
 						item.destroy({
 							success : function(e) {

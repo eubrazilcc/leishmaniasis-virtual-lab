@@ -67,6 +67,7 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 	private String submitter;
 	private Date submitted;
 	private WorkflowStatus status;
+	private List<WorkflowProduct> products;
 
 	@Override
 	public List<Link> getLinks() {
@@ -124,6 +125,12 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 	public void setStatus(final WorkflowStatus status) {
 		this.status = status;
 	}
+	public List<WorkflowProduct> getProducts() {
+		return products;
+	}
+	public void setProducts(final List<WorkflowProduct> products) {
+		this.products = products;
+	}
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -143,12 +150,13 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 				&& Objects.equals(parameters, other.parameters)
 				&& Objects.equals(submitter, other.submitter)
 				&& Objects.equals(submitted, other.submitted)
-				&& Objects.equals(status, other.status);
+				&& Objects.equals(status, other.status)
+				&& Objects.equals(products, other.products);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, id, workflowId, invocationId, parameters, submitted, status);
+		return Objects.hash(links, id, workflowId, invocationId, parameters, submitted, status, products);
 	}
 
 	@Override
@@ -162,6 +170,7 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 				.add("submitter", submitter)
 				.add("submitted", submitted)
 				.add("status", status)
+				.add("products", products)
 				.toString();
 	}
 
@@ -184,7 +193,7 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 			instance.setWorkflowId(workflowId);
 			return this;
 		}
-		
+
 		public Builder invocationId(final String invocationId) {
 			instance.setInvocationId(invocationId);
 			return this;
@@ -199,14 +208,19 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 			instance.setSubmitter(submitter);			
 			return this;
 		}
-		
+
 		public Builder submitted(final Date submitted) {
 			instance.setSubmitted(submitted);			
 			return this;
 		}
-		
+
 		public Builder status(final WorkflowStatus status) {
 			instance.setStatus(status);		
+			return this;
+		}
+
+		public Builder products(final List<WorkflowProduct> products) {
+			instance.setProducts(products);
 			return this;
 		}
 

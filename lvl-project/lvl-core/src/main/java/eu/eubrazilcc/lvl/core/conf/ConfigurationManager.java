@@ -203,6 +203,10 @@ public enum ConfigurationManager implements Closeable2 {
 	public File getSharedDir() {
 		return new File(getDataDir(), "shared");
 	}
+	
+	public File getProductsDir() {
+		return new File(getDataDir(), "products");
+	}
 
 	@Override
 	public void setup(final @Nullable Collection<URL> urls) {		
@@ -213,7 +217,7 @@ public enum ConfigurationManager implements Closeable2 {
 	@Override
 	public void preload() {
 		// an initial access is needed due to lazy load, we create the application environment
-		for (final File file : of(getGenBankDir(GB_SEQ_XML), getPubMedDir(PUBMED_XML), getSharedDir())) {
+		for (final File file : of(getGenBankDir(GB_SEQ_XML), getPubMedDir(PUBMED_XML), getSharedDir(), getProductsDir())) {
 			try {
 				file.mkdirs();
 			} catch (Exception e) { }

@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.workflow.WorkflowStatus.checkPercent;
+import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -58,6 +59,7 @@ import eu.eubrazilcc.lvl.core.Pair;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
+import eu.eubrazilcc.lvl.core.workflow.WorkflowProduct;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 
 /**
@@ -235,8 +237,9 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 	}
 
-	public void saveProducts(final String invocationId, final File outputDir) throws IllegalStateException {
+	public ImmutableList<WorkflowProduct> saveProducts(final String invocationId, final File outputDir) throws IllegalStateException {
 		checkArgument(isNotBlank(invocationId), "Uninitialized or invalid invocation identifier");
+		final ImmutableList.Builder<WorkflowProduct> builder = new ImmutableList.Builder<WorkflowProduct>();
 		try {
 			final EscFolder[] folders = storageClient().listChildFolders(invocationId);			
 			for (final EscFolder folder : folders) {
@@ -248,12 +251,16 @@ public enum ESCentralConnector implements Closeable2 {
 				for (final EscDocument doc : docs) {
 					final File outputFile = new File(outputDir2, doc.getName());									
 					storageClient().download(doc, outputFile);
+					builder.add(WorkflowProduct.builder()
+							.path(concat(folder.getName(), doc.getName()))
+							.build());
 					LOGGER.trace("Workflow '" + invocationId + "' product saved '" + doc.getId() + "' to local file " + outputFile.getCanonicalPath());
 				}
 			}
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to retrieve workflow products", e);
 		}
+		return builder.build();
 	}
 
 	@Override

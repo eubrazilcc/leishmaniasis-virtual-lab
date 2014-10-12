@@ -11,7 +11,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
                 'analysis' : 'defaultAnalysis',
                 'analysis/pipelines' : 'showPipelines',
                 'analysis/datasets' : 'showDatasets',
-                'analysis/runs' : 'showRuns'
+                'analysis/runs' : 'showRuns',
+                'analysis/runs/:id' : 'showRun'
             },
             before : function() {
                 if (!config.isAuthenticated()) {
@@ -43,6 +44,9 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
             },
             showRuns : function() {
                 Lvl.execute('analysis:set:active', 'runs');
+            },
+            showRun : function(id) {
+            	Lvl.execute('analysis:set:active', 'runs', id);            	
             }
         });
         Lvl.addInitializer(function() {

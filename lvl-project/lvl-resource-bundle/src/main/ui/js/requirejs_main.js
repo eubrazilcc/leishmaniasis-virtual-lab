@@ -45,7 +45,7 @@ requirejs.config({
 		'pace' : [ '//cdnjs.cloudflare.com/ajax/libs/pace/0.5.5/pace.min', 'vendor/cached/pace.min' ],
 		/* qTip2 */
 		'imagesloaded' : 'vendor/provided/imagesloaded.pkgd.min',
-		'qtip' : [ '//cdn.jsdelivr.net/qtip2/2.2.1/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ],
+		'qtip' : [ '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ],
 		/* jsPhyloSVG */
 		'raphael' : [ '//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min', 'vendor/cached/raphael-min' ],
 		'jsphylosvg' : 'vendor/provided/jsphylosvg-min',
@@ -94,7 +94,10 @@ requirejs.config({
 		'raphael' : {
 			exports : 'Raphael'
 		},
-		'jsphylosvg' : [ 'raphael' ],
+		'jsphylosvg' : {
+			deps : [ 'raphael' ],
+			exports : 'Smits'
+		},
 		'tpl' : [ 'text' ]
 	}
 });

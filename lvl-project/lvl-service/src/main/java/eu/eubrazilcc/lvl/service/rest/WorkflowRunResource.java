@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.parsePublicLinkId;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
@@ -31,11 +32,19 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.OWNER_I
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.RESOURCE_WIDE_ACCESS;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
+import static java.net.URLDecoder.decode;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static org.apache.commons.codec.binary.Base64.decodeBase64;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -60,8 +69,10 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import eu.eubrazilcc.lvl.core.workflow.WorkflowProduct;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowRun;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 import eu.eubrazilcc.lvl.service.WorkflowRuns;
@@ -115,6 +126,13 @@ public class WorkflowRunResource {
 		// update status (when needed)
 		if (run.getStatus() == null || !run.getStatus().isCompleted()) {
 			final WorkflowStatus status = ESCENTRAL_CONN.getStatus(run.getInvocationId());
+			// retrieve products
+			if (status != null && status.isCompleted()) {
+				final ImmutableList<WorkflowProduct> products = ESCENTRAL_CONN.saveProducts(run.getInvocationId(), 
+						new File(CONFIG_MANAGER.getProductsDir(), run.getId()));
+				run.setProducts(products);
+			}
+			// update the entry in the database
 			run.setStatus(status);
 			WORKFLOW_RUN_DAO.update(run);
 		}
@@ -153,7 +171,7 @@ public class WorkflowRunResource {
 		final String[] splitted = parsePublicLinkId(id);
 		if (splitted == null || splitted.length != 2) {
 			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
-		}		
+		}
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id);
 		if (run == null) {
@@ -186,6 +204,7 @@ public class WorkflowRunResource {
 		}
 		// delete
 		WORKFLOW_RUN_DAO.delete(id);
+		deleteQuietly(new File(CONFIG_MANAGER.getProductsDir(), run.getId()));		
 		// cancel the execution in the remote workflow service
 		try {
 			ESCENTRAL_CONN.cancelExecution(run.getInvocationId());
@@ -193,6 +212,40 @@ public class WorkflowRunResource {
 			LOGGER.warn("Invocation cannot be terminated in the remote workflow service", e);
 		}
 	}
+
+	/**
+	 * It uses the solution #1 described here: 
+	 * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_.22Unicode_Problem.22">Base64 encoding and decoding</a>
+	 */
+	@GET
+	@Path("text_product/{id}/{path}")
+	@Produces(TEXT_PLAIN)
+	public String getTextProduct(final @PathParam("id") String id, final @PathParam("path") String path,
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
+		if (isBlank(id) || isBlank(path)) {
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
+		}
+		// get from database
+		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, getOwnerId(access));
+		if (run == null) {
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+		}
+		final File workflowRunBaseDir = new File(CONFIG_MANAGER.getProductsDir(), run.getId());
+		String content = null;
+		try {			
+			final File file = new File(workflowRunBaseDir, decode(new String(decodeBase64(path)), UTF_8.name()));
+			if (!file.canRead()) {
+				throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+			}
+			content = readFileToString(file);
+		} catch (WebApplicationException wap) {
+			throw wap;
+		} catch (IOException e) {
+			LOGGER.error("Failed to read product text file", e);
+		}		
+		return content;
+	}	
 
 	private static String getOwnerId(final ImmutableMap<String, String> access) {
 		return !RESOURCE_WIDE_ACCESS.equals(access.get(ACCESS_TYPE)) ? access.get(OWNER_ID) : null;

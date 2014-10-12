@@ -18,7 +18,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				status : {
 					'completeness' : 0,
 					'status' : 'Unknown'
-				}
+				},
+				products : null
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);
