@@ -49,7 +49,6 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
                 Lvl.execute('collection:set:active', 'submit');
             }
         });
-
         Lvl.addInitializer(function() {
             var router = new Router();
         });

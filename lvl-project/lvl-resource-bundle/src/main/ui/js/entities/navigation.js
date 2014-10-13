@@ -79,9 +79,9 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
                 text : 'Ecological Niche Modelling'
             }, {
                 id : 7,
-                href : '/#links',
-                icon : 'fa-link',
-                text : 'Public links'
+                href : '/#files',
+                icon : 'fa-folder',
+                text : 'Files'
             } ]);
         };
 

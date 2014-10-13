@@ -2,10 +2,10 @@
  * RequireJS module that defines the view: links->show.
  */
 
-define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'pace',
+define([ 'app', 'marionette', 'tpl!apps/files/links/templates/files_links', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'pace',
 		'moment', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, Marionette, LinksTpl, Style,
 		Configuration, pace, moment) {
-	Lvl.module('LinksApp.Show.View', function(View, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('FilesApp.Links.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
 		var columns = [
@@ -107,6 +107,7 @@ define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/confi
 					})
 				} ];
 		View.Content = Marionette.ItemView.extend({
+			id : 'links',
 			template : LinksTpl,
 			initialize : function() {
 				this.listenTo(this.collection, 'request', this.displaySpinner);
@@ -259,5 +260,5 @@ define([ 'app', 'marionette', 'tpl!apps/links/show/templates/links', 'apps/confi
 			}
 		});
 	});
-	return Lvl.LinksApp.Show.View;
+	return Lvl.FilesApp.Links.View;
 });

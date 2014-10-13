@@ -57,19 +57,22 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 					model : options.navLinks.selected || options.navLinks.at(0),
 					collection : options.navLinks
 				}));
-				this.$('#btnAlerts').qtip({
+
+				this.$('#btnAlerts').click(function(event) {
+					event.preventDefault();
+				}).qtip({
 					content : {
 						text : function(event, api) {
 							api.elements.content.html('<img src="/img/ajax_loader_gray_32.gif" alt="Loading..."/>');
 							return $.ajax({
 								url : config.get('service', '') + '/notifications',
-								type: 'GET',
+								type : 'GET',
 								headers : config.authorizationHeader(),
-								dataType: 'json'
+								dataType : 'json'
 							}).then(function(content) {
-								
+
 								// TODO
-								
+
 								return content;
 							}, function(xhr, status, error) {
 								api.set('content.text', status + ': ' + error);
@@ -79,6 +82,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 					style : {
 						classes : 'qtip-bootstrap lvl-notifications-container'
 					},
+					show : 'click',
 					hide : {
 						fixed : true,
 						delay : 300

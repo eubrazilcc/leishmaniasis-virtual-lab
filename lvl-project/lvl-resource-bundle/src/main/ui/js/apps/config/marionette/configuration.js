@@ -125,7 +125,7 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 		},
 		authorizationQuery : function() {
 			var token = this.authorizationToken();
-			return (token !== null ? 'access_token=' + token : null);
+			return (token !== null ? 'access_token=' + encodeURIComponent(token) : null);
 		}
 	});
 	return Marionette.Controller.Configuration;

@@ -13,7 +13,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow_run',
 					collection : new WorkflowRunModel.WorkflowRunPageableCollection({
 						oauth2_token : config.authorizationToken()
 					})
-				});				
+				});
 				Lvl.mainRegion.currentView.tabContent.show(view);
 				return View.Content.id;
 			}

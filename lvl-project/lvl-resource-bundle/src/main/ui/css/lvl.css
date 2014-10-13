@@ -108,6 +108,10 @@ a.lvl-login:hover, a.lvl-login:focus {
 	max-width: 300px !important;
 }
 
+.lvl-theme-color {
+	color: #16A085;
+}
+
 /* Override Boostrap styles: adjust form icons position */
 .has-feedback .form-control-feedback {
 	top: 14px;
@@ -139,6 +143,12 @@ a.lvl-login:hover, a.lvl-login:focus {
 	padding: 0;
 	line-height: 30px;
 	text-decoration: none;
+}
+
+@media all and (max-width: 768px) and (min-width: 0px) {
+	.backgrid-filter input[type="search"] {
+		width: 106px !important;
+	}
 }
 
 /* OpenLayers */
