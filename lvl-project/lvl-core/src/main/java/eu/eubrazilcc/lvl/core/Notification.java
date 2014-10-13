@@ -24,8 +24,8 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.lang.System.currentTimeMillis;
 
+import java.util.Date;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -41,13 +41,13 @@ public class Notification {
 	private Priority priority;
 	private String addressee;
 	private String scope;
-	private long issuedAt;
+	private Date issuedAt;
 	private String message;
 	private Action action;
 
 	public Notification() {
 		this.priority = Priority.NORMAL;
-		this.issuedAt = currentTimeMillis() / 1000l;
+		this.issuedAt = new Date();
 	}
 
 	public @Nullable String getId() {
@@ -74,10 +74,10 @@ public class Notification {
 	public void setScope(final String scope) {
 		this.scope = scope;
 	}
-	public long getIssuedAt() {
+	public Date getIssuedAt() {
 		return issuedAt;
 	}
-	public void setIssuedAt(final long issuedAt) {
+	public void setIssuedAt(final Date issuedAt) {
 		this.issuedAt = issuedAt;
 	}
 	public String getMessage() {
@@ -163,8 +163,8 @@ public class Notification {
 			return this;
 		}
 
-		public Builder issuedAt(final long issuedAt) {
-			checkArgument(issuedAt >= 0l, "Invalid issued at");
+		public Builder issuedAt(final Date issuedAt) {
+			checkArgument(issuedAt != null, "Invalid issued at");
 			instance.setIssuedAt(issuedAt);
 			return this;
 		}

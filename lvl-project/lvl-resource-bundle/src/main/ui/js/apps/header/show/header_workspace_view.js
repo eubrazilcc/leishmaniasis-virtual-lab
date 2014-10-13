@@ -3,8 +3,9 @@
  */
 
 define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/header/show/templates/header_nav',
-		'tpl!apps/header/show/templates/header_nav_link', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'qtip',
-		'flatui-checkbox', 'flatui-radio' ], function(Lvl, WorkspaceHeaderTpl, NavigationTpl, NavigationLinkTpl, Style, Configuration) {
+		'tpl!apps/header/show/templates/header_nav_link', 'tpl!apps/header/show/templates/header_notifications', 'apps/config/marionette/styles/style',
+		'apps/config/marionette/configuration', 'moment', 'qtip' ], function(Lvl, WorkspaceHeaderTpl, NavigationTpl, NavigationLinkTpl, NotificationsTpl,
+		Style, Configuration, moment) {
 	Lvl.module('HeaderApp.Workspace.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var config = new Configuration();
 		View.id = 'workspace';
@@ -70,10 +71,27 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 								headers : config.authorizationHeader(),
 								dataType : 'json'
 							}).then(function(content) {
-
-								// TODO
-
-								return content;
+								var tplData = {
+									notifications : null
+								};
+								if (content && content.elements) {
+									content.elements.sort(function(a, b) {
+										return b.date - a.date;
+									});
+									var notifications = [];
+									for (i = 0; i < content.elements.length && i < 10; i++) {
+										var msg = content.elements[i].message || '';
+										notifications.push({
+											date : moment(content.elements[i].issuedAt).format('MMM DD[,] YYYY [at] HH[:]mm'),
+											message : (msg.length > 24 ? msg.substr(0, 23) + '&hellip;' : msg)
+										});
+									}
+									tplData = {
+										'notifications' : notifications
+									};
+								}
+								// console.log('DEBUG_NOTIF: ' + NotificationsTpl(tplData));
+								return NotificationsTpl(tplData);
 							}, function(xhr, status, error) {
 								api.set('content.text', status + ': ' + error);
 							});
@@ -83,10 +101,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 						classes : 'qtip-bootstrap lvl-notifications-container'
 					},
 					show : 'click',
-					hide : {
-						fixed : true,
-						delay : 300
-					},
+					hide : 'unfocus',
 					position : {
 						my : 'top center',
 						at : 'bottom center'

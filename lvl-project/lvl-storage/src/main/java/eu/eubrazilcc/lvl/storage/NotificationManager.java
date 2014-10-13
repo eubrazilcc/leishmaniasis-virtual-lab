@@ -66,7 +66,7 @@ public enum NotificationManager {
 			if (!n1.getPriority().equals(n2.getPriority())) {
 				return (new Integer(n1.getPriority().getNumVal())).compareTo(new Integer(n2.getPriority().getNumVal()));
 			}
-			return (new Long(n1.getIssuedAt())).compareTo(new Long(n2.getIssuedAt()));
+			return (n1.getIssuedAt()).compareTo(n2.getIssuedAt());
 		}
 	});
 
