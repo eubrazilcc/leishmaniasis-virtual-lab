@@ -207,6 +207,7 @@ define([ 'app', 'marionette', 'tpl!apps/files/links/templates/files_links', 'app
 			},
 			onClose : function() {
 				// don't remove the styles in order to enable them to be reused
+				pace.stop();
 			},
 			onRender : function() {
 				var self = this;

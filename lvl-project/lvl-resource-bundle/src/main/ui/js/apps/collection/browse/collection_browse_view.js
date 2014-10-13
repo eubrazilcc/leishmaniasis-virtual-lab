@@ -105,6 +105,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 			},
 			onClose : function() {
 				// don't remove the styles in order to enable them to be reused
+				pace.stop();
 			},
 			onRender : function() {
 				var self = this;

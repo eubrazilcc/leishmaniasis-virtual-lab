@@ -67,6 +67,7 @@ define([ 'app', 'tpl!apps/analysis/runs_item/templates/analysis_runs_item', 'app
 			},
 			onClose : function() {
 				this.terminateTimer();
+				pace.stop();
 			},
 			onRender : function() {
 				var self = this;

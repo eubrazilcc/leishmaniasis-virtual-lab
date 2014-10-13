@@ -2,8 +2,8 @@
  * RequireJS module that defines the view: analysis->tree_viewer.
  */
 
-define([ 'app', 'tpl!apps/analysis/tree_viewer/templates/analysis_tree_viewer', 'apps/config/marionette/configuration' ], function(Lvl, TreeViewerTpl,
-		Configuration) {
+define([ 'app', 'tpl!apps/analysis/tree_viewer/templates/analysis_tree_viewer', 'apps/config/marionette/configuration', 'pace' ], function(Lvl, TreeViewerTpl,
+		Configuration, pace) {
 	Lvl.module('AnalysisApp.TreeViewer.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
@@ -29,6 +29,7 @@ define([ 'app', 'tpl!apps/analysis/tree_viewer/templates/analysis_tree_viewer', 
 			},
 			onRender : function() {
 				var self = this;
+				pace.start();
 				require([ 'raphael', 'jsphylosvg' ], function(Raphael, Smits) {
 					var jqxhr = $.ajax(
 							{
@@ -89,6 +90,9 @@ define([ 'app', 'tpl!apps/analysis/tree_viewer/templates/analysis_tree_viewer', 
 						});
 					});
 				});
+			},
+			onClose : function() {
+				pace.stop();
 			}
 		});
 	});

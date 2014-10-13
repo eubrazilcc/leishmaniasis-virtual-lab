@@ -79,7 +79,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 										return b.date - a.date;
 									});
 									var notifications = [];
-									for (i = 0; i < content.elements.length && i < 10; i++) {
+									for (i = 0; i < content.elements.length && i < 5; i++) {
 										var msg = content.elements[i].message || '';
 										notifications.push({
 											date : moment(content.elements[i].issuedAt).format('MMM DD[,] YYYY [at] HH[:]mm'),

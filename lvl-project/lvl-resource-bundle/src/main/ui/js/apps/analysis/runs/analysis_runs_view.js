@@ -174,8 +174,8 @@ define(
 						});
 					},
 					onClose : function() {
-						// don't remove the styles in order to enable them to be
-						// reused
+						// don't remove the styles in order to enable them to be reused
+						pace.stop();
 					},
 					onRender : function() {
 						var self = this;

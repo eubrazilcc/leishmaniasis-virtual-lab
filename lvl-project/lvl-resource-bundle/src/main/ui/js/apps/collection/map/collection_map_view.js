@@ -3,7 +3,7 @@
  */
 
 define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
-		'openlayers', 'flatui-checkbox', 'flatui-radio', 'jquery.toolbar' ], function(Lvl, MapTpl, Style, Configuration) {
+		'openlayers', 'jquery.toolbar' ], function(Lvl, MapTpl, Style, Configuration) {
 	Lvl.module('CollectionApp.Map.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var config = new Configuration();
 		var center = {

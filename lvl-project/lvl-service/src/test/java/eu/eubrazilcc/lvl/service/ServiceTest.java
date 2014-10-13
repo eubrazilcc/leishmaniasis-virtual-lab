@@ -35,7 +35,6 @@ import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SEQUENCES;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
-import static eu.eubrazilcc.lvl.storage.dao.WorkflowRunDAO.WORKFLOW_RUN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_QUERY_OAUTH2;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
@@ -101,13 +100,10 @@ import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
-import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
-import eu.eubrazilcc.lvl.core.workflow.WorkflowRun;
 import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
 import eu.eubrazilcc.lvl.service.rest.ReferenceResource;
 import eu.eubrazilcc.lvl.service.rest.SequenceResource;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
-import eu.eubrazilcc.lvl.service.rest.WorkflowRunResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 
@@ -957,40 +953,6 @@ public class ServiceTest {
 			System.out.println(" >> Delete reference response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Delete reference response JAX-RS object: " + response);
 			System.out.println(" >> Delete reference HTTP headers: " + response.getStringHeaders());
-			
-			// test get workflow run
-			final WorkflowParameters parameters = WorkflowParameters.builder()
-					.parameter("input_file", "Source", "INPUT_FILE_ID")
-					.parameter("seqboot", "Number of replicates", "5")
-					.parameter("seqboot", "Random number seed", "13457")
-					.parameter("dnapars", "Number of data sets", "5")
-					.parameter("dnapars", "Outgroup root", "10")	
-					.build();
-			
-			final WorkflowRun run = WorkflowRun.builder()
-					.id("ABCD123")
-					.workflowId("980TYHN1")
-					.invocationId("1209")
-					.parameters(parameters)
-					.submitter("username")
-					.submitted(new Date())					
-					.build();
-			WORKFLOW_RUN_DAO.insert(run);
-			
-			path = WorkflowRunResource .class.getAnnotation(Path.class);
-			response = target.path(path.value()).path(run.getId()).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.get();
-			assertThat("Get workflow run response is not null", response, notNullValue());
-			assertThat("Get workflow run is OK", response.getStatus(), equalTo(OK.getStatusCode()));
-			assertThat("Get workflow run is not empty", response.getEntity(), notNullValue());
-			payload = response.readEntity(String.class);
-			assertThat("Get workflow run response entity is not null", payload, notNullValue());
-			assertThat("Get workflow run response entity is not empty", isNotBlank(payload));
-			/* uncomment for additional output */			
-			System.out.println(" >> Get workflow run response body (JSON): " + payload);
-			System.out.println(" >> Get workflow run response JAX-RS object: " + response);
-			System.out.println(" >> Get workflow run HTTP headers: " + response.getStringHeaders());			
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

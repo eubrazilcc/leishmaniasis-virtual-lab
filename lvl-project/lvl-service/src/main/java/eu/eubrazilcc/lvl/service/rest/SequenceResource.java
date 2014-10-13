@@ -58,13 +58,12 @@ import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sorting;
-import eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.core.geojson.Crs;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.service.Sequences;
+import eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 
 /**
@@ -201,12 +200,15 @@ public class SequenceResource {
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
-		// get from database
+		return SequenceGeolocationCache.findNearbySequences(Point.builder()
+				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), 
+				maxDistance, group, heatmap);
+		/* // get from database
 		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
 				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build())
 				.build(), maxDistance);
 		// transform to improve visualization
-		return SequenceAnalyzer.toFeatureCollection(sequences, Crs.builder().wgs84().build(), group, heatmap);		
+		return SequenceAnalyzer.toFeatureCollection(sequences, Crs.builder().wgs84().build(), group, heatmap); */		
 	}
 
 }

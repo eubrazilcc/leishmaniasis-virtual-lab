@@ -67,6 +67,7 @@ define([ 'app', 'tpl!apps/e-compendium/browse/templates/e-compendium_browse', 'a
 			},
 			onClose : function() {
 				// don't remove the styles in order to enable them to be reused
+				pace.stop();
 			},
 			onRender : function() {
 				var self = this;

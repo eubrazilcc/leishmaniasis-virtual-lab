@@ -77,6 +77,11 @@ public class Point extends GeoJsonObject {
 
 		private Point instance = new Point();
 
+		public Builder crs(final Crs crs) {
+			instance.setCrs(crs);
+			return this;
+		}
+
 		public Builder coordinates(final LngLatAlt coordinates) {
 			instance.setCoordinates(coordinates);
 			return this;
