@@ -25,11 +25,12 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow_run',
 							Lvl.dialogRegion.show(dialogView);
 						});
 					} else {
-
-						// TODO
-						console.log('TEXT VIEWER: ' + JSON.stringify(product));
-						// TODO
-
+						require([ 'apps/analysis/text_viewer/analysis_text_viewer_view' ], function(TextViewerView) {
+							var dialogView = new TextViewerView.Content({
+								'product' : product
+							});
+							Lvl.dialogRegion.show(dialogView);
+						});
 					}
 				});
 				Lvl.mainRegion.currentView.tabContent.show(view);

@@ -112,6 +112,10 @@ a.lvl-login:hover, a.lvl-login:focus {
 	color: #16A085;
 }
 
+.lvl-menu-color {
+	color: #f3f4f5;
+}
+
 /* Override Boostrap styles: adjust form icons position */
 .has-feedback .form-control-feedback {
 	top: 14px;
