@@ -111,6 +111,8 @@ public final class EntrezHelper {
 	public static final String PHLEBOTOMUS_QUERY = "phlebotomus[Organism]";
 	public static final String PHLEBOTOMUS_CYTOCHROME_OXIDASE_I = "(sandfly[Organism] OR sand fly[Organism] OR Phlebotomus[Organism] OR Sergentomyia[Organism] OR Lutzomyia[Organism]) AND (cytochrome oxidase I[Gene Name] OR cytochrome oxidase 1[Gene Name] OR coi[Gene Name] OR COI[Gene Name] OR co1[Gene Name] OR CO1[Gene Name] OR coxi[Gene Name] OR cox1[Gene Name] OR COXI[Gene Name])";
 
+	public static final String LEISHMANIA_QUERY = "leishmania[Organism]";
+	
 	/**
 	 * Lists the identifiers of the sequences found in the nucleotide database. Searching the nucleotide 
 	 * database with general text queries will produce links to results in Nucleotide, Genome Survey 
