@@ -27,11 +27,17 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 					cell : 'string'
 				},
 				{
+					name : 'length',
+					label : 'Length',
+					editable : false,
+					cell : 'integer'
+				},
+				{
 					name : 'organism',
 					label : 'Organism',
 					editable : false,
 					cell : 'string'
-				},
+				},				
 				{
 					name : 'locale',
 					label : 'Country',

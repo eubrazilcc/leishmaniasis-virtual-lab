@@ -26,7 +26,8 @@ define([ 'app', 'tpl!apps/collection/link/templates/collection_create_link', 'ap
 						'compression' : formData.compression_select,
 						'filter' : formData.filter_select,
 						'ids' : _.pluck(this.collection.toJSON(), 'id'),
-						'type' : 'sequence'
+						'type' : 'sequence',
+						'collection' : 'sandflies'
 					}
 				};
 				// submit request to LVL server

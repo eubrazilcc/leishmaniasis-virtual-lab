@@ -111,7 +111,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 					var vectorLayer = new ol.layer.Vector({
 						source : new ol.source.GeoJSON({
 							projection : 'EPSG:3857',
-							url : config.get('service', '') + '/sequences/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&'
+							url : config.get('service', '') + '/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&'
 									+ config.authorizationQuery()
 						}),
 						style : function(feature, resolution) {
@@ -127,7 +127,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 						source : new ol.source.GeoJSON({
 							extractStyles : false,
 							projection : 'EPSG:3857',
-							url : config.get('service', '') + '/sequences/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&'
+							url : config.get('service', '') + '/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&'
 									+ config.authorizationQuery()
 						}),
 						radius : 5

@@ -13,7 +13,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				definition : '',
 				accession : '',
 				version : '',
-				organism : ''
+				organism : '',
+				length : 0
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);
@@ -36,6 +37,9 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				if (!attrs.organism) {
 					errors.organism = 'can\'t be empty';
 				}
+				if (!attrs.length) {
+					errors.length = 'can\'t be empty';
+				}
 				if (!_.isEmpty(errors)) {
 					return errors;
 				}
@@ -53,7 +57,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 			model : Entities.Sequence,
 			mode : 'server',
 			// url : 'sequences.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/sequences',
+			url : config.get('service', '') + '/sandflies',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
