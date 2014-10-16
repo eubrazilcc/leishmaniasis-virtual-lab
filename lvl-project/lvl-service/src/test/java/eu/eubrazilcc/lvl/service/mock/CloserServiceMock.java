@@ -23,13 +23,20 @@
 package eu.eubrazilcc.lvl.service.mock;
 
 import static com.google.common.collect.Queues.newArrayDeque;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 
 import java.io.Closeable;
+import java.net.URL;
 import java.util.Deque;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Monitor;
 
 import eu.eubrazilcc.lvl.core.CloserServiceIf;
@@ -49,12 +56,29 @@ public enum CloserServiceMock implements CloserServiceIf {
 	private CloserServiceMock() { }
 
 	@Override
-	public void preload() {		
-		// load default configuration
+	public void preload() {
+		// load test configuration
+		final ImmutableList.Builder<URL> builder = new ImmutableList.Builder<URL>();
+		final ImmutableList<URL> defaultUrls = getDefaultConfiguration();
+		for (final URL url : defaultUrls) {
+			if (!url.toString().endsWith(REST_SERVICE_CONFIG)) {
+				builder.add(url);
+			} else {
+				builder.add(this.getClass().getResource("/config/lvl-service.xml"));
+			}
+		}
+		CONFIG_MANAGER.setup(builder.build());
 		CONFIG_MANAGER.preload();
 		// load MongoDB connector and register it for closing
 		MONGODB_CONN.preload();
 		register(MONGODB_CONN);
+		// load task runner, task scheduler and task storage
+		TASK_RUNNER.preload();
+		register(TASK_RUNNER);
+		TASK_SCHEDULER.preload();
+		register(TASK_SCHEDULER);
+		TASK_STORAGE.preload();
+		register(TASK_STORAGE);	
 		// load e-SC connector and register it for closing
 		ESCENTRAL_CONN.preload();
 		register(ESCENTRAL_CONN);

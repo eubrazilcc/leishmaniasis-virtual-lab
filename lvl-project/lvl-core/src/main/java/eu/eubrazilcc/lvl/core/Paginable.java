@@ -45,7 +45,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties({ "page", "perPage", "query", "sort", "order", "pageFirstEntry", "totalPages" })
 public abstract class Paginable<T> {
 
-	public final static int PER_PAGE_MIN = 1;
+	public final static int PER_PAGE_MIN = 1;	
 	
 	private int page; // query parameters
 	private int perPage = PER_PAGE_MIN;	

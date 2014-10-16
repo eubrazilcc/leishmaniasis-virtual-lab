@@ -77,7 +77,7 @@ import eu.eubrazilcc.lvl.service.WorkflowDataObjects;
 public class WorkflowDataResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Data Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(PublicLinkResource.class);
+	public static final String RESOURCE_SCOPE = resourceScope(WorkflowDefinitionResource.class);
 
 	private final static Logger LOGGER = getLogger(WorkflowDataResource.class);
 

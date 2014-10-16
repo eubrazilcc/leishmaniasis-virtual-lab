@@ -52,7 +52,7 @@ public class SequenceAnalyzer {
 	 *                  better display in a map (items visualization in a heat-maps will improve considerably)
 	 * @return the input items prepared for export and display using GeoJSON format.
 	 */
-	public static FeatureCollection toFeatureCollection(final List<Sequence> sequences, final Crs crs, 
+	public static <T extends Sequence> FeatureCollection toFeatureCollection(final List<T> sequences, final Crs crs, 
 			final boolean group, final boolean heatmap) {
 		checkArgument(sequences != null, "Uninitialized list of sequences");
 		return LocalizableAnalyzer.toFeatureCollection(from(sequences).transform(new Function<Sequence, Localizable<Point>>() {

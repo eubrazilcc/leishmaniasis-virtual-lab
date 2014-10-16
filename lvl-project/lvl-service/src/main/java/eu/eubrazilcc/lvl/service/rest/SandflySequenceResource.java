@@ -23,23 +23,22 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
-import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
-import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
+import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearbySandfly;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.REFERENCES;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SEQUENCES;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -71,130 +70,143 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
-import eu.eubrazilcc.lvl.core.Localizable;
 import eu.eubrazilcc.lvl.core.Paginable;
-import eu.eubrazilcc.lvl.core.Reference;
+import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.Sorting;
-import eu.eubrazilcc.lvl.core.analysis.LocalizableAnalyzer;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.core.geojson.Crs;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+import eu.eubrazilcc.lvl.storage.SequenceKey;
 
 /**
- * References resource.
+ * Sandfly sequences resource. Since a sequence is uniquely identified by the combination of the data source and the accession (i.e. GenBank, U49845), 
+ * this class uses the reserved character ':' allowed in an URI segment to delimit or dereference the sequence identifier. Short and long notation
+ * of data source are accepted (GenBank or gb). This resource converts the data source to the long notation (used to store the sequence in the
+ * database) before calling a method of the database. For example, the following URIs are valid and identifies the same sequence mentioned before:
+ * <ul>
+ * <li>https://localhost/webapp/sequences/GenBank:U49845</li>
+ * <li>https://localhost/webapp/sequences/gb:U49845</li>
+ * </ul>
+ * Identifiers that don't follow this convention will be rejected by this server with an HTTP Error 400 (Bad request).
  * @author Erik Torres <ertorser@upv.es>
- * @see {@link Reference} class
+ * @see {@link Sandfly} class
+ * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.3">RFC3986 - Uniform Resource Identifier (URI): Generic Syntax; Section 3.3 - Path</a>
  */
-@Path("/references")
-public class ReferenceResource {
+@Path("/sandflies")
+public class SandflySequenceResource {
 
-	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Reference Resource";
-	public static final String RESOURCE_SCOPE = REFERENCES;
+	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence (sandflies) Resource";
+	public static final String RESOURCE_SCOPE = SEQUENCES;
 
-	public static final String REF_ID_PATTERN = "[0-9]+";
+	public static final String SEQ_ID_PATTERN = "[a-zA-Z_0-9]+:[a-zA-Z_0-9]+";
 
 	@GET
 	@Produces(APPLICATION_JSON)
-	public References getReferences(final @QueryParam("page") @DefaultValue("0") int page,
+	public Sequences getSequences(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @QueryParam("q") @DefaultValue("") String q,			
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
-		final References paginable = References.start()
+		final Sequences paginable = Sequences.start()
 				.page(page)
 				.perPage(per_page)
 				.sort(sort)
 				.order(order)
 				.query(q)
 				.build();
-		// get references from database
+		// get sequences from database
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Reference> references = REFERENCE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, count);
-		paginable.setElements(references);
+		final List<Sandfly> sequences = SANDFLY_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, count);
+		paginable.setElements(sequences);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
-		paginable.setTotalCount(totalEntries);
+		paginable.setTotalCount(totalEntries);		
 		return paginable;
 	}
 
 	@GET
-	@Path("{id: " + REF_ID_PATTERN + "}")
+	@Path("{id: " + SEQ_ID_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public Reference getReference(final @PathParam("id") String id, final @Context UriInfo uriInfo,
+	public Sandfly getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final Reference reference = REFERENCE_DAO.find(id);
-		if (reference == null) {
+		final Sandfly sequence = SANDFLY_DAO.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
+		if (sequence == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
-		return reference;
+		return sequence;
 	}
 
 	@POST
 	@Consumes(APPLICATION_JSON)
-	public Response createReference(final Reference reference, final @Context UriInfo uriInfo,
+	public Response createSequence(final Sandfly sequence, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
-		if (reference == null || isBlank(reference.getPubmedId())) {
+		if (sequence == null || isBlank(sequence.getAccession())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		// create reference in the database
-		REFERENCE_DAO.insert(reference);
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(reference.getPubmedId());		
+		// create sequence in the database
+		SANDFLY_DAO.insert(sequence);
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sequence.getAccession());		
 		return Response.created(uriBuilder.build()).build();
 	}
 
 	@PUT
-	@Path("{id: " + REF_ID_PATTERN + "}")
+	@Path("{id: " + SEQ_ID_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public void updateReference(final @PathParam("id") String id, final Reference update,
+	public void updateSequence(final @PathParam("id") String id, final Sandfly update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}		
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
+		if (sequenceKey == null || !sequenceKey.getDataSource().equals(update.getDataSource()) 
+				|| !sequenceKey.getAccession().equals(update.getAccession())) {
+			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
+		}
 		// get from database
-		final Reference current = REFERENCE_DAO.find(id);
+		final Sandfly current = SANDFLY_DAO.find(sequenceKey);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// update
-		REFERENCE_DAO.update(update);			
+		SANDFLY_DAO.update(update);			
 	}
 
 	@DELETE
-	@Path("{id: " + REF_ID_PATTERN + "}")
-	public void deleteReference(final @PathParam("id") String id, final @Context HttpServletRequest request, 
+	@Path("{id: " + SEQ_ID_PATTERN + "}")
+	public void deleteSequence(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
 		// get from database
-		final Reference current = REFERENCE_DAO.find(id);
+		final Sandfly current = SANDFLY_DAO.find(sequenceKey);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// delete
-		REFERENCE_DAO.delete(id);
+		SANDFLY_DAO.delete(sequenceKey);
 	}
 
 	@GET
 	@Path("nearby/{longitude}/{latitude}")
 	@Produces(APPLICATION_JSON)
-	public FeatureCollection findNearbyReferences(final @PathParam("longitude") double longitude, 
+	public FeatureCollection findNearbySequences(final @PathParam("longitude") double longitude, 
 			final @PathParam("latitude") double latitude, 
 			final @QueryParam("maxDistance") @DefaultValue("1000.0d") double maxDistance, 
 			final @QueryParam("group") @DefaultValue("true") boolean group,
@@ -203,44 +215,45 @@ public class ReferenceResource {
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
-		// get from database
-		final Point point = Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build();
-		final List<Localizable<Point>> localizables = fromNullable(SANDFLY_DAO.getReferenceLocations(point, maxDistance))
-				.or(new ArrayList<Localizable<Point>>());
-		localizables.addAll(LEISHMANIA_DAO.getReferenceLocations(point, maxDistance));
+		return findNearbySandfly(Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), 
+				maxDistance, group, heatmap);
+		/* // get from database
+		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
+				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build())
+				.build(), maxDistance);
 		// transform to improve visualization
-		return LocalizableAnalyzer.toFeatureCollection(localizables, Crs.builder().wgs84().build(), group, heatmap);		
+		return SequenceAnalyzer.toFeatureCollection(sequences, Crs.builder().wgs84().build(), group, heatmap); */		
 	}
 
 	/**
-	 * Wraps a collection of PubMed publications.
+	 * Wraps a collection of {@link Sandfly}.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	public static class References extends Paginable<Reference> {
+	public static class Sequences extends Paginable<Sandfly> {
 
 		@InjectLinks({
-			@InjectLink(resource=ReferenceResource.class, method="getReferences", bindings={
+			@InjectLink(resource=SandflySequenceResource.class, method="getSequences", bindings={
 				@Binding(name="page", value="${instance.page - 1}"),
 				@Binding(name="per_page", value="${instance.perPage}"),
 				@Binding(name="sort", value="${instance.sort}"),
 				@Binding(name="order", value="${instance.order}"),
 				@Binding(name="q", value="${instance.query}")
 			}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=ReferenceResource.class, method="getReferences", bindings={
+			@InjectLink(resource=SandflySequenceResource.class, method="getSequences", bindings={
 				@Binding(name="page", value="${0}"),
 				@Binding(name="per_page", value="${instance.perPage}"),
 				@Binding(name="sort", value="${instance.sort}"),
 				@Binding(name="order", value="${instance.order}"),
 				@Binding(name="q", value="${instance.query}")
 			}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=ReferenceResource.class, method="getReferences", bindings={
+			@InjectLink(resource=SandflySequenceResource.class, method="getSequences", bindings={
 				@Binding(name="page", value="${instance.page + 1}"),
 				@Binding(name="per_page", value="${instance.perPage}"),
 				@Binding(name="sort", value="${instance.sort}"),
 				@Binding(name="order", value="${instance.order}"),
 				@Binding(name="q", value="${instance.query}")
 			}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-			@InjectLink(resource=ReferenceResource.class, method="getReferences", bindings={
+			@InjectLink(resource=SandflySequenceResource.class, method="getSequences", bindings={
 				@Binding(name="page", value="${instance.totalPages - 1}"),
 				@Binding(name="per_page", value="${instance.perPage}"),
 				@Binding(name="sort", value="${instance.sort}"),
@@ -274,50 +287,50 @@ public class ReferenceResource {
 					.toString();
 		}
 
-		public static ReferencesBuilder start() {
-			return new ReferencesBuilder();
+		public static SequencesBuilder start() {
+			return new SequencesBuilder();
 		}
 
-		public static class ReferencesBuilder {
+		public static class SequencesBuilder {
 
-			private final References instance = new References();
+			private final Sequences instance = new Sequences();
 
-			public ReferencesBuilder page(final int page) {
+			public SequencesBuilder page(final int page) {
 				instance.setPage(page);
 				return this;
 			}
 
-			public ReferencesBuilder perPage(final int perPage) {
+			public SequencesBuilder perPage(final int perPage) {
 				instance.setPerPage(perPage);
 				return this;
 			}
 
-			public ReferencesBuilder sort(final String sort) {
+			public SequencesBuilder sort(final String sort) {
 				instance.setSort(sort);
 				return this;
 			}
 
-			public ReferencesBuilder order(final String order) {
+			public SequencesBuilder order(final String order) {
 				instance.setOrder(order);
 				return this;
 			}
 
-			public ReferencesBuilder query(final String query) {
+			public SequencesBuilder query(final String query) {
 				instance.setQuery(query);
 				return this;
 			}
 
-			public ReferencesBuilder totalCount(final int totalCount) {
+			public SequencesBuilder totalCount(final int totalCount) {
 				instance.setTotalCount(totalCount);
 				return this;
 			}
 
-			public ReferencesBuilder references(final List<Reference> references) {
-				instance.setElements(references);
+			public SequencesBuilder sequences(final List<Sandfly> sequences) {
+				instance.setElements(sequences);
 				return this;			
 			}
 
-			public References build() {
+			public Sequences build() {
 				return instance;
 			}
 

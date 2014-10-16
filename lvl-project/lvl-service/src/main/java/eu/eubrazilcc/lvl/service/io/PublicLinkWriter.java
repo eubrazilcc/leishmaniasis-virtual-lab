@@ -34,7 +34,7 @@ import static eu.eubrazilcc.lvl.core.io.FileCompressor.gzip;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
-import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SequenceDAOHelper.fromString;
 import static java.nio.file.Files.delete;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
@@ -62,6 +62,7 @@ import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSet;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
+import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
 
 /**
  * Utility class to help with public link creation.
@@ -77,11 +78,12 @@ public final class PublicLinkWriter {
 	public static final String GZIP = "gzip";
 	public static final String NONE = "none";
 
-	public static String writePublicLink(final PublicLink publicLink, final File outputDir) {
+	public static String writePublicLink(final PublicLink publicLink, final File outputDir) {		
 		checkArgument(publicLink != null, "Uninitialized public link");
 		checkArgument(publicLink.getTarget() != null, "Uninitialized target");
 		checkArgument(publicLink.getTarget().getIds() != null && !publicLink.getTarget().getIds().isEmpty(), "Uninitialized or invalid id");
 		checkArgument(isNotBlank(publicLink.getTarget().getType()), "Uninitialized or invalid type");
+		checkArgument(isNotBlank(publicLink.getTarget().getCollection()), "Uninitialized or invalid collection");
 		final String type = publicLink.getTarget().getType().trim().toLowerCase();
 		String path = null;
 		if ("sequence".equals(type)) {
@@ -100,10 +102,11 @@ public final class PublicLinkWriter {
 			final List<File> files = from(publicLink.getTarget().getIds()).transform(new Function<String, File>() {
 				@Override
 				public File apply(final String id) {
-					final Sequence sequence = SEQUENCE_DAO.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
+					final SequenceDAO<? extends Sequence> dao = fromString(publicLink.getTarget().getCollection());
+					final Sequence sequence = dao.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
 					checkState(sequence != null, "Sequence not found: " + id);
 					return openGenBankFile(sequence, GB_SEQ_XML);					
-				}				
+				}
 			}).toList();
 			try {
 				if (EXPORT_FASTA.equals(filter)) {

@@ -61,7 +61,7 @@ public class JsonMappingTest {
 		System.out.println("JsonMappingTest.test()");
 		try {
 			// create test dataset
-			final Link seqLink = Link.fromUri(UriBuilder.fromUri("http://localhost/sequence").path("gb:ABC12345678").build())
+			final Link seqLink = Link.fromUri(UriBuilder.fromUri("http://localhost/sanfly").path("gb:ABC12345678").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
 			final Link refLink = Link.fromUri(UriBuilder.fromUri("http://localhost/paper").path("ADGJ87950").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
@@ -70,7 +70,7 @@ public class JsonMappingTest {
 
 			final Point point = Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build();
 
-			final Sequence sequence = Sequence.builder()
+			final Sandfly sandfly = Sandfly.builder()
 					.dataSource(GENBANK)
 					.accession("ABC12345678")
 					.version("3.0")
@@ -82,7 +82,21 @@ public class JsonMappingTest {
 					.locale(new Locale("es", "ES"))
 					.pmids(newHashSet("1234R", "AV99O0"))
 					.build();
-			assertThat("sequence is not null", sequence, notNullValue());
+			assertThat("sanfly is not null", sandfly, notNullValue());
+
+			final Leishmania leishmania = Leishmania.builder()
+					.dataSource(GENBANK)
+					.accession("ABC12345678")
+					.version("3.0")
+					.gi(1239841)
+					.definition("definition")
+					.organism("organism")
+					.countryFeature("Spain: Murcia")
+					.location(point)
+					.locale(new Locale("es", "ES"))
+					.pmids(newHashSet("1234R", "AV99O0"))
+					.build();
+			assertThat("leishmania is not null", leishmania, notNullValue());
 
 			final Reference reference = Reference.builder()
 					.pubmedId("ADGJ87950")
@@ -94,17 +108,24 @@ public class JsonMappingTest {
 
 			final PublicLink publicLink = PublicLink.builder()
 					.created(new Date())
-					.target(Target.builder().type("sequence").ids(newArrayList("gb:JP540074", "gb:JP553239")).filter("export_fasta").compression("gzip").build())
+					.target(Target.builder().type("sanfly").collection("sandfly").ids(newArrayList("gb:JP540074", "gb:JP553239")).filter("export_fasta").compression("gzip").build())
 					.description("Optional description")
 					.build();
 			assertThat("public link is not null", publicLink, notNullValue());			
 
-			// test sequence with no links
-			testSequence(sequence);
+			// test sanfly with no links
+			testSandfly(sandfly);
 
-			// test sequence with links
-			sequence.setLinks(newArrayList(seqLink));
-			testSequence(sequence);
+			// test sanfly with links
+			sandfly.setLinks(newArrayList(seqLink));
+			testSandfly(sandfly);
+
+			// test leishmania with no links
+			testLeishmania(leishmania);
+
+			// test leishmania with links
+			leishmania.setLinks(newArrayList(seqLink));
+			testLeishmania(leishmania);
 
 			// test references with no links
 			testReference(reference);
@@ -128,18 +149,32 @@ public class JsonMappingTest {
 		}
 	}
 
-	private void testSequence(final Sequence sequence) throws IOException {
-		// test sequence JSON serialization
-		final String payload = JSON_MAPPER.writeValueAsString(sequence);
-		assertThat("serialized sequence is not null", payload, notNullValue());
-		assertThat("serialized sequence is not empty", isNotBlank(payload), equalTo(true));
+	private void testSandfly(final Sandfly sanfly) throws IOException {
+		// test sanfly JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(sanfly);
+		assertThat("serialized sanfly is not null", payload, notNullValue());
+		assertThat("serialized sanfly is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized sequence (JSON): " + payload);
+		System.out.println(" >> Serialized sanfly (JSON): " + payload);
 
-		// test sequence JSON deserialization
-		final Sequence sequence2 = JSON_MAPPER.readValue(payload, Sequence.class);
-		assertThat("deserialized sequence is not null", sequence2, notNullValue());
-		assertThat("deserialized sequence coincides with expected", sequence2, equalTo(sequence));
+		// test sanfly JSON deserialization
+		final Sandfly sanfly2 = JSON_MAPPER.readValue(payload, Sandfly.class);
+		assertThat("deserialized sanfly is not null", sanfly2, notNullValue());
+		assertThat("deserialized sanfly coincides with expected", sanfly2, equalTo(sanfly));
+	}
+	
+	private void testLeishmania(final Leishmania leishmania) throws IOException {
+		// test leishmania JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(leishmania);
+		assertThat("serialized leishmania is not null", payload, notNullValue());
+		assertThat("serialized leishmania is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized leishmania (JSON): " + payload);
+
+		// test leishmania JSON deserialization
+		final Leishmania leishmania2 = JSON_MAPPER.readValue(payload, Leishmania.class);
+		assertThat("deserialized sanfly is not null", leishmania2, notNullValue());
+		assertThat("deserialized sanfly coincides with expected", leishmania2, equalTo(leishmania));
 	}
 
 	private void testReference(final Reference reference) throws IOException {

@@ -106,11 +106,11 @@ public final class EntrezHelper {
 	public static final int MAX_RECORDS_LISTED = 10000;  // esearch maximum 100,000
 	public static final int MAX_RECORDS_FETCHED = 10000; // efetch maximum 100,000
 
-	public static final Charset DEFAULT_CHARSET = forName("UTF-8");
+	public static final Charset DEFAULT_CHARSET = forName("UTF-8");	
 
-	public static final String PHLEBOTOMUS_QUERY = "phlebotomus[Organism]";
-	public static final String PHLEBOTOMUS_CYTOCHROME_OXIDASE_I = "(sandfly[Organism] OR sand fly[Organism] OR Phlebotomus[Organism] OR Sergentomyia[Organism] OR Lutzomyia[Organism]) AND (cytochrome oxidase I[Gene Name] OR cytochrome oxidase 1[Gene Name] OR coi[Gene Name] OR COI[Gene Name] OR co1[Gene Name] OR CO1[Gene Name] OR coxi[Gene Name] OR cox1[Gene Name] OR COXI[Gene Name])";
-
+	public static final String SANDFLY_QUERY = "sandfly[Organism] OR sand fly[Organism] OR Phlebotomus[Organism] OR Sergentomyia[Organism] OR Lutzomyia[Organism] OR Nyssomia[Organism]";
+	public static final String SANDFLY_CYTOCHROME_OXIDASE_I_QUERY = "(" + SANDFLY_QUERY + ") AND (cytochrome oxidase I[Gene Name] OR cytochrome oxidase 1[Gene Name] OR coi[Gene Name] OR COI[Gene Name] OR co1[Gene Name] OR CO1[Gene Name] OR coxi[Gene Name] OR cox1[Gene Name] OR COXI[Gene Name])";
+	
 	public static final String LEISHMANIA_QUERY = "leishmania[Organism]";
 	
 	/**

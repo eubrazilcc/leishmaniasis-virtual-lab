@@ -24,9 +24,11 @@ package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLSetFiles;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLFiles;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getGeneNames;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getGenInfoIdentifier;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedIds;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedReferences;
@@ -102,7 +104,7 @@ public class NCBIXmlBindingTest {
 			// test parsing GenBank XML records
 			Collection<File> files = getGBSeqXMLSetFiles();
 			for (final File file : files) {
-				System.out.println(" >> GenBank sequence XML file: " + file.getCanonicalPath());
+				System.out.println(" >> GenBank sequence set XML file: " + file.getCanonicalPath());
 				final GBSet gbSet = GBSEQ_XMLB.typeFromFile(file);
 				assertThat("GenBank XML set is not null", gbSet, notNullValue());
 				assertThat("GenBank XML sequences is not null", gbSet.getGBSeq(), notNullValue());
@@ -117,6 +119,13 @@ public class NCBIXmlBindingTest {
 					System.out.println(" >> Definition : " + seq.getGBSeqDefinition());
 					System.out.println(" >> Version    : " + seq.getGBSeqAccessionVersion());
 					System.out.println(" >> Organism   : " + seq.getGBSeqOrganism());
+					System.out.println(" >> Length     : " + seq.getGBSeqLength());
+					
+					final Set<String> gene = getGeneNames(seq);
+					if (gene != null) {
+						/* Uncomment for additional output */
+						System.out.println(" >> Gene names : " + gene);
+					}
 
 					final List<Reference> references = getPubMedReferences(seq);
 					assertThat("References is not null", references, notNullValue());
@@ -130,7 +139,7 @@ public class NCBIXmlBindingTest {
 					/* Uncomment for additional output */
 					System.out.println(" >> Reference PMIDS : " + pmids);
 
-					final Sequence sequence = parseSequence(seq);
+					final Sequence sequence = parseSequence(seq, Sandfly.builder());
 					assertThat("Sequence is not null", sequence, notNullValue());
 					assertThat("Sequence data source is not empty", isNotBlank(sequence.getDataSource()));
 					assertThat("Sequence accession is not empty", isNotBlank(sequence.getAccession()));
@@ -140,6 +149,52 @@ public class NCBIXmlBindingTest {
 					/* Uncomment for additional output */
 					System.out.println(" >> Sequence  : " + sequence.toString());
 				}
+			}
+
+			// test parsing GenBank isolated sequences
+			files = getGBSeqXMLFiles();
+			for (final File file : files) {
+				System.out.println(" >> GenBank sequence XML file: " + file.getCanonicalPath());
+				final GBSeq seq = GBSEQ_XMLB.typeFromFile(file);
+				assertThat("GenBank XML sequence is not null", seq, notNullValue());				
+				assertThat("GenBank XML sequence accession is not empty", isNotBlank(seq.getGBSeqPrimaryAccession()));
+				assertThat("GenBank XML sequence definition is not empty", isNotBlank(seq.getGBSeqDefinition()));
+				assertThat("GenBank XML sequence version is not empty", isNotBlank(seq.getGBSeqAccessionVersion()));
+				assertThat("GenBank XML sequence organism is not empty", isNotBlank(seq.getGBSeqOrganism()));
+				/* Uncomment for additional output */
+				System.out.println(" >> Accession  : " + seq.getGBSeqPrimaryAccession());
+				System.out.println(" >> Definition : " + seq.getGBSeqDefinition());
+				System.out.println(" >> Version    : " + seq.getGBSeqAccessionVersion());
+				System.out.println(" >> Organism   : " + seq.getGBSeqOrganism());
+				System.out.println(" >> Length     : " + seq.getGBSeqLength());
+
+				final Set<String> gene = getGeneNames(seq);
+				if (gene != null) {
+					/* Uncomment for additional output */
+					System.out.println(" >> Gene names : " + gene);
+				}
+				
+				final List<Reference> references = getPubMedReferences(seq);
+				assertThat("References is not null", references, notNullValue());
+				assertThat("References is not empty", references.isEmpty(), equalTo(false));
+				/* Uncomment for additional output */
+				System.out.println(" >> References : " + references);
+
+				final Set<String> pmids = getPubMedIds(seq);
+				assertThat("References PMIDS are not null", pmids, notNullValue());
+				assertThat("References PMIDS are not empty", pmids.isEmpty(), equalTo(false));
+				/* Uncomment for additional output */
+				System.out.println(" >> Reference PMIDS : " + pmids);
+
+				final Sequence sequence = parseSequence(seq, Sandfly.builder());
+				assertThat("Sequence is not null", sequence, notNullValue());
+				assertThat("Sequence data source is not empty", isNotBlank(sequence.getDataSource()));
+				assertThat("Sequence accession is not empty", isNotBlank(sequence.getAccession()));
+				assertThat("Sequence definition is not empty", isNotBlank(sequence.getDefinition()));
+				assertThat("Sequence version is not empty", isNotBlank(sequence.getVersion()));
+				assertThat("Sequence organism is not empty", isNotBlank(sequence.getOrganism()));
+				/* Uncomment for additional output */
+				System.out.println(" >> Sequence  : " + sequence.toString());
 			}
 
 			// test parsing PubMed XML records

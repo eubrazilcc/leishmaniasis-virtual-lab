@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.service.io;
 
 import static com.google.common.base.Joiner.on;
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
@@ -38,7 +39,6 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_FETCHED;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_LISTED;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.NUCLEOTIDE_DB;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.PHLEBOTOMUS_QUERY;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
@@ -48,7 +48,6 @@ import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedIds;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.parseSequence;
 import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
-import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SEQUENCES;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
@@ -56,6 +55,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -74,7 +74,9 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import eu.eubrazilcc.lvl.core.Leishmania;
 import eu.eubrazilcc.lvl.core.Notification;
+import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
@@ -82,6 +84,7 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.ESearchResult;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.service.io.filter.NewReferenceFilter;
 import eu.eubrazilcc.lvl.service.io.filter.RecordFilter;
+import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
 
 /**
  * Discovers and imports new sequences in the LVL collection. Sequences are discovered from public databases, such as GenBank. Sequence
@@ -90,7 +93,7 @@ import eu.eubrazilcc.lvl.service.io.filter.RecordFilter;
  * concurrent use from different threads without expensive synchronization.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ImportSequencesTask extends CancellableTask<Integer> {
+public class ImportSequencesTask<T extends Sequence> extends CancellableTask<Integer> {
 
 	private static final Logger LOGGER = getLogger(ImportSequencesTask.class);
 
@@ -104,10 +107,17 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 	private final AtomicInteger fetched = new AtomicInteger(0);
 
 	private final List<String> pmids = synchronizedList(new ArrayList<String>());
-	
+
 	private UUID importPublicationsTaskId = null;
 
-	public ImportSequencesTask() {
+	private final String query;
+	private final Sequence.Builder<T> builder;
+	private final SequenceDAO<T> dao;
+
+	public ImportSequencesTask(final String query, final Sequence.Builder<T> builder, final SequenceDAO<T> dao) {
+		this.query = query;
+		this.builder = builder;
+		this.dao = dao;
 		this.task = create(importSequencesTask());
 	}
 
@@ -196,14 +206,14 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 		do {
 			setStatus("Searching GenBank for sequence identifiers");
 			try {
-				final ESearchResult result = esearch(NUCLEOTIDE_DB, PHLEBOTOMUS_QUERY, retstart, retmax);
+				final ESearchResult result = esearch(NUCLEOTIDE_DB, query, retstart, retmax);
 				if (esearchCount < 0) {
 					esearchCount = getCount(result);
 				}
 				final List<String> ids = getIds(result);
 				count = ids.size();
 				subTasks.add(TASK_RUNNER.submit(importGenBankSubTask(ids, tmpDir, GB_SEQ_XML, "xml")));
-				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records");
+				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records. Query: " + query);
 				retstart += count;
 			} catch (Exception e) {
 				if (++retries > 3) {
@@ -256,9 +266,9 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 							LOGGER.info("New GBSeqXML file stored: " + target.toString());
 							// insert sequence in the database
 							final GBSeq gbSeq = GBSEQ_XMLB.typeFromFile(target.toFile());
-							final Sequence sequence = parseSequence(gbSeq);
-							SEQUENCE_DAO.insert(sequence);
-							efetchCount++;							
+							final T sequence = parseSequence(gbSeq, builder);
+							dao.insert(sequence);
+							efetchCount++;
 							// update progress
 							int fetchedCount = fetched.incrementAndGet();
 							setProgress(100.0d * fetchedCount / pending.get());							
@@ -294,25 +304,53 @@ public class ImportSequencesTask extends CancellableTask<Integer> {
 
 	/* Fluent API */
 
-	public static Builder builder() {
-		return new Builder();
+	public static Builder<Leishmania>leishmaniaBuilder() {
+		return new Builder<Leishmania>();
 	}
 
-	public static class Builder {
+	public static Builder<Sandfly> sandflyBuilder() {
+		return new Builder<Sandfly>();
+	}
 
-		private final ImportSequencesTask instance = new ImportSequencesTask();
+	public static class Builder<T extends Sequence> {
 
-		public Builder filter(final RecordFilter filter) {
-			instance.setFilters(of(filter));
+		private String query;
+		private Sequence.Builder<T> builder;
+		private SequenceDAO<T> dao;		
+		private ImmutableList<RecordFilter> filters;
+
+		public Builder<T> query(final String query) {
+			this.query = query;
 			return this;
 		}
 
-		public Builder filters(final Iterable<RecordFilter> filters) {
+		public Builder<T> dao(final SequenceDAO<T> dao) {
+			this.dao = dao;
+			return this;
+		}
+
+		public Builder<T> builder(final Sequence.Builder<T> builder) {
+			this.builder = builder;
+			return this;
+		}
+
+		public Builder<T> filter(final RecordFilter filter) {
+			this.filters = of(filter);
+			return this;
+		}
+
+		public Builder<T> filters(final Iterable<RecordFilter> filters) {
+			final ImmutableList.Builder<RecordFilter> builder = new ImmutableList.Builder<RecordFilter>();
+			this.filters = (filters != null ? builder.addAll(filters).build() : builder.build());
+			return this;
+		}
+
+		public ImportSequencesTask<T> build() {
+			checkArgument(isNotBlank(query), "Uninitialized or invalid database query");
+			checkArgument(builder != null, "Uninitialized or invalid sequence builder");
+			checkArgument(dao != null, "Uninitialized or invalid sequence DAO");
+			final ImportSequencesTask<T> instance = new ImportSequencesTask<T>(query, builder, dao);
 			instance.setFilters(filters);
-			return this;
-		}
-
-		public ImportSequencesTask build() {
 			return instance;
 		}
 

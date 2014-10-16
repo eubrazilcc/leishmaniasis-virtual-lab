@@ -37,7 +37,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-//TODO @SuiteClasses({ ESCentralTest.class })
+// @SuiteClasses({ ESCentralTest.class })
 @SuiteClasses({ })
 public class AllJUnitTests {
 
@@ -45,7 +45,7 @@ public class AllJUnitTests {
 
 	@BeforeClass
 	public static void setup() {
-		System.out.println("AllTests.setup()");
+		System.out.println("AllJUnitTests.setup()");
 		final URL anchorURL = AllJUnitTests.class.getClassLoader().getResource(ANCHOR_FILENAME);
 		File anchorFile = null;
 		try {
@@ -73,6 +73,7 @@ public class AllJUnitTests {
 
 	@AfterClass
 	public static void release() {
+		System.out.println("AllJUnitTests.release()");
 		CLOSER_SERVICE_MOCK.close();
 	}
 

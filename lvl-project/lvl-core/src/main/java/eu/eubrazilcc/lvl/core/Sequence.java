@@ -23,32 +23,19 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toId;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.ws.rs.core.Link;
 
-import org.glassfish.jersey.linking.Binding;
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.InjectLinks;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
  * Stores a nucleotide sequence as a subset of GenBank fields (since most sequences comes from GenBank) 
@@ -62,22 +49,13 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
  * to georeference the sequence. Jackson annotations are included to serialize this class to JSON. These
  * annotations are preferred to JAXB annotations (which are supported in most JSON processing libraries
  * and besides JSON, they also support XML serialization) due to compatibility issues with the current
- * version of JAX-RS that produces errors when unmarshaling {@link Link}. In addition, Jersey annotations
- * are included to inject links from a RESTful resource.
+ * version of JAX-RS that produces errors when unmarshaling {@link Link}.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://opengeocode.org/download.php">Americas Open Geocode (AOG) database</a>
  * @see <a href="http://geojson.org/">GeoJSON open standard format for encoding geographic data structures</a>
  * @see <a href="http://www.ncbi.nlm.nih.gov/genbank/">GenBank collection of publicly available DNA sequences</a>
  */
-public class Sequence implements Linkable<Sequence>, Localizable<Point> {
-
-	@InjectLinks({
-		@InjectLink(value="sequences/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.id}")})
-	})
-	@JsonSerialize(using = LinkListSerializer.class)
-	@JsonDeserialize(using = LinkListDeserializer.class)
-	@JsonProperty("links")
-	private List<Link> links;      // HATEOAS links
+public class Sequence implements Localizable<Point> {
 
 	private String id;             // Resource identifier
 
@@ -87,26 +65,14 @@ public class Sequence implements Linkable<Sequence>, Localizable<Point> {
 	private String version;        // GenBank version
 	private int gi;                // GenBank GenInfo Identifier (Entrez default search field)
 	private String organism;       // GenBank organism
+	private int length;            // Sequence length
+	private Set<String> gene;      // List of gene names
 	private String countryFeature; // GenBank country feature
 	private Point location;        // Geospatial location
 	private Locale locale;         // Represents country with standards
 	private Set<String> pmids;     // References mentioning this sequence in PubMed
 
-	public Sequence() { }
-
-	@Override
-	public List<Link> getLinks() {
-		return links;
-	}
-
-	@Override
-	public void setLinks(final List<Link> links) {
-		if (links != null) {
-			this.links = newArrayList(links);
-		} else {
-			this.links = null;
-		}
-	}
+	public Sequence() { }	
 
 	public String getId() {
 		return id;
@@ -166,6 +132,22 @@ public class Sequence implements Linkable<Sequence>, Localizable<Point> {
 		this.organism = organism;
 	}
 
+	public int getLength() {
+		return length;
+	}
+
+	public void setLength(final int length) {
+		this.length = length;
+	}
+
+	public Set<String> getGene() {
+		return gene;
+	}
+
+	public void setGene(final Set<String> gene) {
+		this.gene = gene;
+	}
+
 	public String getCountryFeature() {
 		return countryFeature;
 	}
@@ -212,15 +194,6 @@ public class Sequence implements Linkable<Sequence>, Localizable<Point> {
 			return false;
 		}
 		final Sequence other = Sequence.class.cast(obj);
-		return Objects.equals(links, other.links)
-				&& equalsIgnoringVolatile(other);
-	}
-
-	@Override
-	public boolean equalsIgnoringVolatile(final Sequence other) {
-		if (other == null) {
-			return false;
-		}
 		return Objects.equals(id, other.id)
 				&& Objects.equals(dataSource, other.dataSource)
 				&& Objects.equals(definition, other.definition)
@@ -228,6 +201,8 @@ public class Sequence implements Linkable<Sequence>, Localizable<Point> {
 				&& Objects.equals(version, other.version)
 				&& Objects.equals(gi, other.gi)
 				&& Objects.equals(organism, other.organism)
+				&& Objects.equals(length, other.length)
+				&& Objects.equals(gene, other.gene)
 				&& Objects.equals(countryFeature, other.countryFeature)
 				&& Objects.equals(location, other.location)
 				&& Objects.equals(locale, other.locale)
@@ -236,21 +211,22 @@ public class Sequence implements Linkable<Sequence>, Localizable<Point> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, links, dataSource, definition, accession, version, gi, organism, 
+		return Objects.hash(id, dataSource, definition, accession, version, gi, organism, length, gene,
 				countryFeature, location, locale, pmids);
-	}
+	}	
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("id", id)
-				.add("links", links)
 				.add("dataSource", dataSource)
 				.add("definition", definition)
 				.add("accession", accession)
 				.add("version", version)
 				.add("gi", gi)
 				.add("organism", organism)
+				.add("length", length)
+				.add("gene", gene)
 				.add("countryFeature", countryFeature)
 				.add("location", location)
 				.add("locale", locale)
@@ -264,70 +240,79 @@ public class Sequence implements Linkable<Sequence>, Localizable<Point> {
 
 	/* Fluent API */
 
-	public static Builder builder() {
-		return new Builder();
-	}	
+	public static class Builder<T extends Sequence> {
 
-	public static class Builder {
+		protected final T instance;
 
-		private final Sequence instance = new Sequence();
-
-		public Builder links(final List<Link> links) {
-			instance.setLinks(links);
-			return this;
+		public Builder(final Class<T> clazz) {
+			T tmp = null;
+			try {
+				tmp = clazz.newInstance();
+			} catch (Exception ignore) { }
+			instance = tmp;
 		}
 
-		public Builder dataSource(final String dataSource) {
+		public Builder<T> dataSource(final String dataSource) {
 			instance.setDataSource(dataSource);
 			return this;
 		}
 
-		public Builder definition(final String definition) {
+		public Builder<T> definition(final String definition) {
 			instance.setDefinition(definition);
 			return this;
 		}
 
-		public Builder accession(final String accession) {
+		public Builder<T> accession(final String accession) {
 			instance.setAccession(accession);
 			return this;
 		}	
 
-		public Builder version(final String version) {
+		public Builder<T> version(final String version) {
 			instance.setVersion(version);
 			return this;
 		}
 
-		public Builder gi(final int gi) {
+		public Builder<T> gi(final int gi) {
 			instance.setGi(gi);
 			return this;
 		}
 
-		public Builder organism(final String organism) {
+		public Builder<T> organism(final String organism) {
 			instance.setOrganism(organism);
 			return this;
 		}
 
-		public Builder countryFeature(final String countryFeature) {
+		public Builder<T> length(final int length) {
+			instance.setLength(length);
+			return this;
+		}
+
+		public Builder<T> gene(final Set<String> gene) {
+			instance.setGene(gene);
+			return this;
+		}
+
+		public Builder<T> countryFeature(final String countryFeature) {
 			instance.setCountryFeature(countryFeature);
 			return this;
 		}
 
-		public Builder location(final Point location) {
+		public Builder<T> location(final Point location) {
 			instance.setLocation(location);
 			return this;
 		}
 
-		public Builder locale(final Locale locale) {
+		public Builder<T> locale(final Locale locale) {
 			instance.setLocale(locale);
 			return this;
 		}
 
-		public Builder pmids(final Set<String> pmids) {
+		public Builder<T> pmids(final Set<String> pmids) {
 			instance.setPmids(pmids);
 			return this;
 		}
 
-		public Sequence build() {
+		public T build() {
 			return instance;
 		}
 

@@ -22,13 +22,20 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
-import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
+import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearbyLeishmania;
+import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SEQUENCES;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -48,26 +55,34 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.mutable.MutableLong;
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
-import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.Leishmania;
+import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
-import eu.eubrazilcc.lvl.service.Sequences;
-import eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 
 /**
- * Sequences resource. Since a sequence is uniquely identified by the combination of the data source and the accession (i.e. GenBank, U49845), 
+ * Leishmania sequences resource. Since a sequence is uniquely identified by the combination of the data source and the accession (i.e. GenBank, U49845), 
  * this class uses the reserved character ':' allowed in an URI segment to delimit or dereference the sequence identifier. Short and long notation
  * of data source are accepted (GenBank or gb). This resource converts the data source to the long notation (used to store the sequence in the
  * database) before calling a method of the database. For example, the following URIs are valid and identifies the same sequence mentioned before:
@@ -77,14 +92,14 @@ import eu.eubrazilcc.lvl.storage.SequenceKey;
  * </ul>
  * Identifiers that don't follow this convention will be rejected by this server with an HTTP Error 400 (Bad request).
  * @author Erik Torres <ertorser@upv.es>
- * @see {@link Sequence} class
+ * @see {@link Leishmania} class
  * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.3">RFC3986 - Uniform Resource Identifier (URI): Generic Syntax; Section 3.3 - Path</a>
  */
-@Path("/sequences")
-public class SequenceResource {
+@Path("/leishmania")
+public class LeishmaniaSequenceResource {
 
-	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(SequenceResource.class);
+	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence (leishmania) Resource";
+	public static final String RESOURCE_SCOPE = SEQUENCES;
 
 	public static final String SEQ_ID_PATTERN = "[a-zA-Z_0-9]+:[a-zA-Z_0-9]+";
 
@@ -108,7 +123,7 @@ public class SequenceResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Sequence> sequences = SEQUENCE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, count);
+		final List<Leishmania> sequences = LEISHMANIA_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, count);
 		paginable.setElements(sequences);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
@@ -119,14 +134,14 @@ public class SequenceResource {
 	@GET
 	@Path("{id: " + SEQ_ID_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public Sequence getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
+	public Leishmania getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final Sequence sequence = SEQUENCE_DAO.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
+		final Leishmania sequence = LEISHMANIA_DAO.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
 		if (sequence == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -135,14 +150,14 @@ public class SequenceResource {
 
 	@POST
 	@Consumes(APPLICATION_JSON)
-	public Response createSequence(final Sequence sequence, final @Context UriInfo uriInfo,
+	public Response createSequence(final Leishmania sequence, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (sequence == null || isBlank(sequence.getAccession())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// create sequence in the database
-		SEQUENCE_DAO.insert(sequence);
+		LEISHMANIA_DAO.insert(sequence);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sequence.getAccession());		
 		return Response.created(uriBuilder.build()).build();
 	}
@@ -150,7 +165,7 @@ public class SequenceResource {
 	@PUT
 	@Path("{id: " + SEQ_ID_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public void updateSequence(final @PathParam("id") String id, final Sequence update,
+	public void updateSequence(final @PathParam("id") String id, final Leishmania update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
@@ -162,12 +177,12 @@ public class SequenceResource {
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final Sequence current = SEQUENCE_DAO.find(sequenceKey);
+		final Leishmania current = LEISHMANIA_DAO.find(sequenceKey);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// update
-		SEQUENCE_DAO.update(update);			
+		LEISHMANIA_DAO.update(update);			
 	}
 
 	@DELETE
@@ -180,12 +195,12 @@ public class SequenceResource {
 		}
 		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
 		// get from database
-		final Sequence current = SEQUENCE_DAO.find(sequenceKey);
+		final Leishmania current = LEISHMANIA_DAO.find(sequenceKey);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// delete
-		SEQUENCE_DAO.delete(sequenceKey);
+		LEISHMANIA_DAO.delete(sequenceKey);
 	}
 
 	@GET
@@ -200,15 +215,127 @@ public class SequenceResource {
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
-		return SequenceGeolocationCache.findNearbySequences(Point.builder()
-				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), 
+		return findNearbyLeishmania(Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), 
 				maxDistance, group, heatmap);
 		/* // get from database
-		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
+		final List<Sequence> sequences = LEISHMANIA_DAO.getNear(Point.builder()
 				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build())
 				.build(), maxDistance);
 		// transform to improve visualization
 		return SequenceAnalyzer.toFeatureCollection(sequences, Crs.builder().wgs84().build(), group, heatmap); */		
+	}
+
+	/**
+	 * Wraps a collection of {@link Leishmania}.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public static class Sequences extends Paginable<Leishmania> {		
+
+		@InjectLinks({
+			@InjectLink(resource=LeishmaniaSequenceResource.class, method="getSequences", bindings={
+				@Binding(name="page", value="${instance.page - 1}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="q", value="${instance.query}")
+			}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
+			@InjectLink(resource=LeishmaniaSequenceResource.class, method="getSequences", bindings={
+				@Binding(name="page", value="${0}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="q", value="${instance.query}")
+			}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
+			@InjectLink(resource=LeishmaniaSequenceResource.class, method="getSequences", bindings={
+				@Binding(name="page", value="${instance.page + 1}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="q", value="${instance.query}")
+			}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
+			@InjectLink(resource=LeishmaniaSequenceResource.class, method="getSequences", bindings={
+				@Binding(name="page", value="${instance.totalPages - 1}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="q", value="${instance.query}")
+			}, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}")
+		})
+		@JsonSerialize(using = LinkListSerializer.class)
+		@JsonDeserialize(using = LinkListDeserializer.class)
+		@JsonProperty("links")
+		private List<Link> links; // HATEOAS links
+
+		@Override
+		public List<Link> getLinks() {
+			return links;
+		}
+
+		@Override
+		public void setLinks(final List<Link> links) {
+			if (links != null) {
+				this.links = newArrayList(links);
+			} else {
+				this.links = null;
+			}
+		}
+
+		@Override
+		public String toString() {
+			return toStringHelper(this)
+					.add("paginable", super.toString())
+					.toString();
+		}
+
+		public static SequencesBuilder start() {
+			return new SequencesBuilder();
+		}
+
+		public static class SequencesBuilder {
+
+			private final Sequences instance = new Sequences();
+
+			public SequencesBuilder page(final int page) {
+				instance.setPage(page);
+				return this;
+			}
+
+			public SequencesBuilder perPage(final int perPage) {
+				instance.setPerPage(perPage);
+				return this;
+			}
+
+			public SequencesBuilder sort(final String sort) {
+				instance.setSort(sort);
+				return this;
+			}
+
+			public SequencesBuilder order(final String order) {
+				instance.setOrder(order);
+				return this;
+			}
+
+			public SequencesBuilder query(final String query) {
+				instance.setQuery(query);
+				return this;
+			}
+
+			public SequencesBuilder totalCount(final int totalCount) {
+				instance.setTotalCount(totalCount);
+				return this;
+			}
+
+			public SequencesBuilder sequences(final List<Leishmania> sequences) {
+				instance.setElements(sequences);
+				return this;			
+			}
+
+			public Sequences build() {
+				return instance;
+			}
+
+		}
+
 	}
 
 }

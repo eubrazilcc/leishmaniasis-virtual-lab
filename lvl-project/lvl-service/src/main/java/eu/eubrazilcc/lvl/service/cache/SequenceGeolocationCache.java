@@ -27,9 +27,12 @@ import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.cache.CacheBuilder.newBuilder;
+import static eu.eubrazilcc.lvl.core.SequenceCollection.LEISHMANIA_COLLECTION;
+import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer.toFeatureCollection;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
-import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static java.lang.Double.valueOf;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -49,7 +52,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.Leishmania;
+import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.geojson.Crs;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
@@ -87,14 +91,23 @@ public final class SequenceGeolocationCache {
 				}
 			});
 
-	public static FeatureCollection findNearbySequences(final Point point, final double maxDistance, final boolean group, final boolean heatmap) {
-		Optional<FeatureCollection> collection = absent();
+	public static FeatureCollection findNearbySandfly(final Point point, final double maxDistance, final boolean group, final boolean heatmap) {
+		return findNearbySequences(SANDFLY_COLLECTION, point, maxDistance, group, heatmap);
+	}
+
+	public static FeatureCollection findNearbyLeishmania(final Point point, final double maxDistance, final boolean group, final boolean heatmap) {
+		return findNearbySequences(LEISHMANIA_COLLECTION, point, maxDistance, group, heatmap);
+	}
+
+	private static FeatureCollection findNearbySequences(final String collection, final Point point, final double maxDistance, final boolean group, 
+			final boolean heatmap) {
+		Optional<FeatureCollection> features = absent();
 		try {
-			collection = CACHE.get(key(point, maxDistance, group, heatmap));
+			features = CACHE.get(key(collection, point, maxDistance, group, heatmap));
 		} catch (ExecutionException e) {
 			LOGGER.error("Failed to get sequence geolocation from cache", e);
 		}
-		return collection.or(FeatureCollection.builder().build());
+		return features.or(FeatureCollection.builder().build());
 	}
 
 	private static Optional<FeatureCollection> findNearbySequences(final String key) {
@@ -103,6 +116,9 @@ public final class SequenceGeolocationCache {
 		final Iterator<String> it = Splitter.on(SEPARATOR)
 				.trimResults()
 				.split(key).iterator();
+		// collection
+		checkState(it.hasNext(), "Invalid key");
+		final String collection = it.next();
 		// longitude
 		checkState(it.hasNext(), "Invalid key");		
 		final double longitude = doubleValue(it.next());
@@ -119,14 +135,23 @@ public final class SequenceGeolocationCache {
 		checkState(it.hasNext(), "Invalid key");
 		final boolean heatmap = booleanValue(it.next());
 		// get from database
-		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()
-				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), maxDistance);
+		final Crs crs = Crs.builder().wgs84().build();
+		final Point location = Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build();
+		Optional<FeatureCollection> featureCollection = absent();
+		if (SANDFLY_COLLECTION.equals(collection)) {
+			final List<Sandfly> sandflies = SANDFLY_DAO.getNear(location, maxDistance);
+			featureCollection = fromNullable(toFeatureCollection(sandflies, crs, group, heatmap));
+		} else if (LEISHMANIA_COLLECTION.equals(collection)) {
+			final List<Leishmania> leishmania = LEISHMANIA_DAO.getNear(location, maxDistance);
+			featureCollection = fromNullable(toFeatureCollection(leishmania, crs, group, heatmap));
+		}		
 		// transform to improve visualization
-		return fromNullable(toFeatureCollection(sequences, Crs.builder().wgs84().build(), group, heatmap));
+		return featureCollection;
 	}
 
-	private static String key(final Point point, final double maxDistance, final boolean group, final boolean heatmap) {
-		return key(point) + SEPARATOR + key(maxDistance) + SEPARATOR + (group ? "t" : "f") + SEPARATOR + (heatmap ? "t" : "f"); 
+	private static String key(final String collection, final Point point, final double maxDistance, final boolean group, final boolean heatmap) {
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
+		return collection + SEPARATOR + key(point) + SEPARATOR + key(maxDistance) + SEPARATOR + (group ? "t" : "f") + SEPARATOR + (heatmap ? "t" : "f"); 
 	}
 
 	private static String key(final Point point) {

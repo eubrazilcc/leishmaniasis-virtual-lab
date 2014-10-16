@@ -91,7 +91,7 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 	private ImmutableList<RecordFilter> filters = of();
 
 	private final ImmutableList<String> pmids;
-	
+
 	private AtomicInteger pending = new AtomicInteger(0);
 	private AtomicInteger fetched = new AtomicInteger(0);
 
@@ -220,7 +220,7 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 							// insert publication in the database
 							final PubmedArticle pmArticle = PUBMED_XMLB.typeFromFile(target.toFile());
 							final Reference reference = parseArticle(pmArticle);
-							REFERENCE_DAO.insert(reference, true);							
+							REFERENCE_DAO.insert(reference, true);
 							efetchCount++;							
 							// update progress
 							int fetchedCount = fetched.incrementAndGet();

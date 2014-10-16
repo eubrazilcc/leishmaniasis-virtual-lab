@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.core.xml;
 
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
@@ -36,6 +37,7 @@ import static org.apache.commons.lang.StringUtils.isNumeric;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -244,28 +246,64 @@ public final class GbSeqXmlBinder extends XmlBinder {
 		}).filter(notNull()).toSet();
 	}
 
+	private static final List<GBFeature> getFeatures(final GBSeq sequence) {
+		checkArgument(sequence != null, "Uninitialized or invalid sequence");
+		List<GBFeature> features = null;
+		if (sequence.getGBSeqFeatureTable() != null && sequence.getGBSeqFeatureTable().getGBFeature() != null) {
+			features = sequence.getGBSeqFeatureTable().getGBFeature();			
+		}
+		return fromNullable(features).or(new ArrayList<GBFeature>());
+	}
+
+	/**
+	 * Parses gene name (and possible synonyms) found in a GenBank entry.
+	 * @param sequence - GenBank sequence entry
+	 * @return a deduplicated list of gene names.
+	 */
+	public static final Set<String> getGeneNames(final GBSeq sequence) {
+		checkArgument(sequence != null, "Uninitialized or invalid sequence");
+		return from(getFeatures(sequence)).transform(new Function<GBFeature, String>() {
+			@Override
+			public String apply(final GBFeature feature) {
+				String name = null;
+				if (feature != null && "gene".equals(feature.getGBFeatureKey()) && feature.getGBFeatureQuals() != null
+						&& feature.getGBFeatureQuals().getGBQualifier() != null) {
+					final List<GBQualifier> quals = feature.getGBFeatureQuals().getGBQualifier();
+					for (int i = 0; i < quals.size() && name == null; i++) {
+						final GBQualifier qualifier = quals.get(i);
+						if (qualifier != null && "gene".equals(qualifier.getGBQualifierName()) && isNotBlank(qualifier.getGBQualifierValue())) {
+							name = qualifier.getGBQualifierValue().trim();
+						}
+					}
+				}
+				return name;
+			}
+		}).filter(notNull()).toSet();		
+	}
+
 	/**
 	 * Parses DNA sequence from a GenBank entry.
 	 * @param gbSeq - GenBank sequence entry
 	 * @return a {@link Sequence} built from the input GenBank sequence.
 	 */
-	public static final Sequence parseSequence(final GBSeq gbSeq) {
+	public static final <T extends Sequence> T parseSequence(final GBSeq gbSeq, final Sequence.Builder<T> builder) {
 		checkArgument(gbSeq != null, "Uninitialized or invalid sequence");
 		final String countryFeature = countryFeature(gbSeq);		
-		return Sequence.builder()
-				.dataSource(GENBANK)
+		return builder.dataSource(GENBANK)
 				.definition(gbSeq.getGBSeqDefinition())
 				.accession(gbSeq.getGBSeqPrimaryAccession())
 				.version(gbSeq.getGBSeqAccessionVersion())
 				.gi(getGenInfoIdentifier(gbSeq))
 				.organism(gbSeq.getGBSeqOrganism())
+				.length(parseInt(gbSeq.getGBSeqLength()))
+				.gene(getGeneNames(gbSeq))
 				.countryFeature(countryFeature)
 				.location(isNotBlank(countryFeature) ? geocode(countryFeature).orNull() : null)
 				.locale(isNotBlank(countryFeature) ? countryFeatureToLocale(countryFeature) : null)
 				.pmids(getPubMedIds(gbSeq))
 				.build();
 	}
-	
+
 	public static String sequenceId(final GBSeq gbSeq) {
 		return "AC:" + gbSeq.getGBSeqPrimaryAccession() + ", GI:" + getGenInfoIdentifier(gbSeq);
 	}

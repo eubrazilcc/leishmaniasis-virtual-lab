@@ -81,7 +81,7 @@ public class NamingUtilsTest {
 			// create sequence dataset
 			final List<Sequence> sequences = newArrayList();
 			for (int i = 0; i < 5; i++) {
-				sequences.add(Sequence.builder()
+				sequences.add(Sandfly.builder()
 						.dataSource(GENBANK)
 						.accession("SEQ_" + i)
 						.build());

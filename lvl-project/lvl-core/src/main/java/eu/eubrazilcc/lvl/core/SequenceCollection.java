@@ -20,18 +20,15 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.dao;
-
-import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.storage.SequenceGiKey;
-import eu.eubrazilcc.lvl.storage.SequenceKey;
+package eu.eubrazilcc.lvl.core;
 
 /**
- * {@link Sequence} DAO that should be implements to manage sequence collections in the database.
+ * Stores sequence collection names as {@link String}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public interface SequenceDAO<T extends Sequence> extends BaseDAO<SequenceKey, T> {
+public class SequenceCollection {
 
-	T find(SequenceGiKey sequenceGiKey);
-
+	public static final String SANDFLY_COLLECTION = "sandflies";
+    public static final String LEISHMANIA_COLLECTION = "leishmania";
+	
 }

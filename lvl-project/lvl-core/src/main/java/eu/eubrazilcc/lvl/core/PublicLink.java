@@ -221,6 +221,7 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 	public static class Target {
 
 		private String type;
+		private String collection;
 		private List<String> ids;
 		private String filter;
 		private String compression;
@@ -233,6 +234,14 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 		public void setType(final String type) {
 			this.type = type;
+		}
+
+		public String getCollection() {
+			return collection;
+		}
+
+		public void setCollection(final String collection) {
+			this.collection = collection;
 		}
 
 		public List<String> getIds() {
@@ -269,7 +278,8 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 				return false;
 			}
 			final Target other = Target.class.cast(obj);
-			return Objects.equals(type, other.type)				
+			return Objects.equals(type, other.type)
+					&& Objects.equals(collection, other.collection)
 					&& Objects.equals(ids, other.ids)
 					&& Objects.equals(filter, other.filter)
 					&& Objects.equals(compression, other.compression);
@@ -277,13 +287,14 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(type, ids, filter, compression);
+			return Objects.hash(type, collection, ids, filter, compression);
 		}
 
 		@Override
 		public String toString() {
 			return toStringHelper(this)
 					.add("type", type)
+					.add("collection", collection)
 					.add("ids", ids)
 					.add("filter", filter)
 					.add("compression", compression)
@@ -302,6 +313,11 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 			public Builder type(final String type) {
 				instance.setType(type);
+				return this;
+			}
+			
+			public Builder collection(final String collection) {
+				instance.setCollection(collection);
 				return this;
 			}
 

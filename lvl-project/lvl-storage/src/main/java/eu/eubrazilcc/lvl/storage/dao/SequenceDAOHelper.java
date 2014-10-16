@@ -20,50 +20,35 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service.io.filter;
+package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.ImmutableList.of;
-import static eu.eubrazilcc.lvl.core.DataSource.PUBMED;
-import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
+import static com.google.common.base.Preconditions.checkState;
+import static eu.eubrazilcc.lvl.core.SequenceCollection.LEISHMANIA_COLLECTION;
+import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
+import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-
-import com.google.common.collect.ImmutableList;
+import eu.eubrazilcc.lvl.core.Sequence;
 
 /**
- * Implements a {@link RecordFilter} that filters out the references that are already stored 
- * in the application's database, returning to the caller the identifiers that are missing 
- * in the application's database.
+ * Selects the {@link Sequence} DAO for handling a sequence collection.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class NewReferenceFilter extends RecordFilter {
+public class SequenceDAOHelper {
 
-	private static final ImmutableList<String> DATA_SOURCES = of(PUBMED);
-
-	public NewReferenceFilter() {
-		super(DATA_SOURCES);
-	}
-
-	@Override
-	public String filterById(final String id) {
-		checkArgument(isNotBlank(id), "Uninitialized or invalid identifier");	
-		return REFERENCE_DAO.find(id) == null ? id : null;
-	}
-
-	/* Fluent API */
-
-	public static Builder builder() {
-		return new Builder();
-	}
-
-	public static class Builder {
-
-		private final NewReferenceFilter instance = new NewReferenceFilter();
-
-		public NewReferenceFilter build() {
-			return instance;
+	@SuppressWarnings("unchecked")
+	public static <T extends Sequence> SequenceDAO<T> fromString(final String collection) {
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
+		final String collection2 = collection.trim();
+		SequenceDAO<T> dao = null;
+		if (SANDFLY_COLLECTION.equalsIgnoreCase(collection2)) {
+			dao = (SequenceDAO<T>) SANDFLY_DAO;
+		} else if (LEISHMANIA_COLLECTION.equalsIgnoreCase(collection2)) {
+			dao = (SequenceDAO<T>) LEISHMANIA_DAO;
 		}
-
+		checkState(dao != null, "No DAO is available to handle the collection: " + collection);
+		return dao;
 	}
 
 }

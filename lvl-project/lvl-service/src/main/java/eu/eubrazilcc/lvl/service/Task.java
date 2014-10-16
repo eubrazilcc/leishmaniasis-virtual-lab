@@ -86,7 +86,8 @@ public class Task {
 	/* Task types */
 
 	public static enum TaskType {
-		IMPORT_SEQUENCES;
+		IMPORT_SANDFLY_SEQ,
+		IMPORT_LEISMANIA_SEQ;
 	}
 
 	/* Fluent API */

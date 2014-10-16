@@ -55,7 +55,7 @@ import eu.eubrazilcc.lvl.service.WorkflowDefinitions;
 public class WorkflowDefinitionResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(PublicLinkResource.class);
+	public static final String RESOURCE_SCOPE = resourceScope(WorkflowDefinitionResource.class);
 
 	@GET
 	@Produces(APPLICATION_JSON)

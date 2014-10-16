@@ -29,7 +29,13 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.LEISHMANIA_QUERY;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.SANDFLY_QUERY;
 import static eu.eubrazilcc.lvl.service.CloserService.CLOSER_SERVICE;
+import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.net.URL;
@@ -41,6 +47,8 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import eu.eubrazilcc.lvl.core.Leishmania;
+import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.service.io.ImportPublicationsTask;
 import eu.eubrazilcc.lvl.service.io.ImportSequencesTask;
 import eu.eubrazilcc.lvl.service.io.filter.NewSequenceFilter;
@@ -55,7 +63,11 @@ import eu.eubrazilcc.lvl.service.io.filter.SequenceIdFilter;
  * <br>
  * $ watch "ls -l sequences/genbank/xml/ | wc -l ; ls -l papers/pubmed/xml/ | wc -l"<br>
  * <br>
- * September 2014: 25,828 sequences imported from GenBank and 65 publication references imported from PubMed.
+ * October 2014:<br>
+ * <ul>
+ * <li>33,921 sandfly sequences imported from GenBank.</li>
+ * <li>60,031 leishmania sequences imported from GenBank.</li>
+ * <li>65 publication references imported from PubMed.</li>
  * @author Erik Torres <ertorser@upv.es>
  */
 public class FullDatabaseLoadTest {
@@ -88,30 +100,63 @@ public class FullDatabaseLoadTest {
 	public void test() {
 		System.out.println("FullDatabaseLoadTest.test()");
 		try {
-			// import sequences
-			final List<String> seqIds = null; newArrayList("353470160");
-			final ImportSequencesTask seqTask = ImportSequencesTask.builder()
-					.filter(seqIds == null || seqIds.isEmpty() ? NewSequenceFilter.builder().build() : SequenceIdFilter.builder().ids(seqIds).build())
+			// import Sandfly sequences
+			List<String> seqIds = newArrayList("353470160", "219663935"); // null;
+			final ImportSequencesTask<Sandfly> sandflyTask = ImportSequencesTask.sandflyBuilder()
+					.query(SANDFLY_QUERY)
+					.builder(Sandfly.builder())
+					.dao(SANDFLY_DAO)
+					.filter(seqIds == null || seqIds.isEmpty() ? NewSequenceFilter.sandflyBuilder().dao(SANDFLY_DAO).build() : SequenceIdFilter.builder().ids(seqIds).build())
 					.build();
-			TASK_RUNNER.execute(seqTask);
-			TASK_STORAGE.add(seqTask);
+			TASK_RUNNER.execute(sandflyTask);
+			TASK_STORAGE.add(sandflyTask);
 
-			while (!seqTask.isDone()) {
-				System.out.println(" >> Progress: " + seqTask.toString());
+			while (!sandflyTask.isDone()) {
+				System.out.println(" >> Sandfly progress: " + sandflyTask.toString());
 				Thread.sleep(2000l);
 			}
 
-			System.out.println(" >> Import sequences final: " + seqTask.toString());
+			System.out.println(" >> Import Sandfly sequences final: " + sandflyTask.toString());
 
 			// import publications
-			final ImportPublicationsTask pubTask = (ImportPublicationsTask) TASK_STORAGE.get(seqTask.getImportPublicationsTaskId());
+			ImportPublicationsTask pubTask = (ImportPublicationsTask) TASK_STORAGE.get(sandflyTask.getImportPublicationsTaskId());
+			assertThat("import Sandfly publications task is not null", pubTask, notNullValue());
 
 			while (!pubTask.isDone()) {
-				System.out.println(" >> Progress: " + pubTask.toString());
+				System.out.println(" >> Sandfly publication progress: " + pubTask.toString());
 				Thread.sleep(2000l);
 			}
 
-			System.out.println(" >> Import publications final: " + pubTask.toString());
+			System.out.println(" >> Import Sandfly publications final: " + pubTask.toString());
+
+			// import Leishmania sequences
+			seqIds = newArrayList("384562879", "77864608"); // null;
+			final ImportSequencesTask<Leishmania> leishmaniaTask = ImportSequencesTask.leishmaniaBuilder()
+					.query(LEISHMANIA_QUERY)
+					.builder(Leishmania.builder())
+					.dao(LEISHMANIA_DAO)
+					.filter(seqIds == null || seqIds.isEmpty() ? NewSequenceFilter.leishmaniaBuilder().dao(LEISHMANIA_DAO).build() : SequenceIdFilter.builder().ids(seqIds).build())
+					.build();
+			TASK_RUNNER.execute(leishmaniaTask);
+			TASK_STORAGE.add(leishmaniaTask);
+
+			while (!leishmaniaTask.isDone()) {
+				System.out.println(" >> Leishmania progress: " + leishmaniaTask.toString());
+				Thread.sleep(2000l);
+			}
+
+			System.out.println(" >> Import Leishmania sequences final: " + leishmaniaTask.toString());
+
+			// import publications
+			pubTask = (ImportPublicationsTask) TASK_STORAGE.get(leishmaniaTask.getImportPublicationsTaskId());
+			assertThat("import Leishmania publications task is not null", pubTask, notNullValue());
+
+			while (!pubTask.isDone()) {
+				System.out.println(" >> Leishmania publication progress: " + pubTask.toString());
+				Thread.sleep(2000l);
+			}
+
+			System.out.println(" >> Import Leishmania publications final: " + pubTask.toString());
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

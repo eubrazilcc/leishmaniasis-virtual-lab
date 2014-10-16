@@ -85,7 +85,7 @@ import eu.eubrazilcc.lvl.service.WorkflowRuns;
 public class WorkflowRunResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Runs Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(WorkflowRunResource.class);
+	public static final String RESOURCE_SCOPE = resourceScope(WorkflowDefinitionResource.class);
 
 	private final static Logger LOGGER = getLogger(WorkflowRunResource.class);
 

@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.service;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
+import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
@@ -32,9 +33,9 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.decodePublicLinkPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
-import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SEQUENCES;
+import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
-import static eu.eubrazilcc.lvl.storage.dao.SequenceDAO.SEQUENCE_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_QUERY_OAUTH2;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
@@ -93,16 +94,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
+import eu.eubrazilcc.lvl.core.Leishmania;
 import eu.eubrazilcc.lvl.core.PublicLink;
 import eu.eubrazilcc.lvl.core.PublicLink.Target;
 import eu.eubrazilcc.lvl.core.Reference;
-import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.service.rest.LeishmaniaSequenceResource;
 import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
 import eu.eubrazilcc.lvl.service.rest.ReferenceResource;
-import eu.eubrazilcc.lvl.service.rest.SequenceResource;
+import eu.eubrazilcc.lvl.service.rest.ReferenceResource.References;
+import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource;
+import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource.Sequences;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
@@ -192,10 +197,10 @@ public class ServiceTest {
 	public void test() {
 		System.out.println("ServiceTest.test()");
 		try {
-			// test import sequences task
+			// test import sandflies task
 			Path path = TaskResource.class.getAnnotation(Path.class);
 			Task task = Task.builder()
-					.type(IMPORT_SEQUENCES)
+					.type(IMPORT_SANDFLY_SEQ)
 					.ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
 
@@ -203,19 +208,19 @@ public class ServiceTest {
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.post(entity(task, APPLICATION_JSON_TYPE));
-			assertThat("Create import sequences task response is not null", response, notNullValue());
-			assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create import sequences task response is not empty", response.getEntity(), notNullValue());
+			assertThat("Create import sandflies task response is not null", response, notNullValue());
+			assertThat("Create import sandflies task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create import sandflies task response is not empty", response.getEntity(), notNullValue());
 			String payload = response.readEntity(String.class);
-			assertThat("Create import sequences task response entity is not null", payload, notNullValue());
-			assertThat("Create import sequences task response entity is empty", isBlank(payload));
+			assertThat("Create import sandflies task response entity is not null", payload, notNullValue());
+			assertThat("Create import sandflies task response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			System.out.println(" >> Create import sequences task response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create import sequences task response JAX-RS object: " + response);
-			System.out.println(" >> Create import sequences task HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create import sandflies task response JAX-RS object: " + response);
+			System.out.println(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
 			URI location = new URI((String)response.getHeaders().get("Location").get(0));
 
-			// test import sequences task progress
+			// test import sandflies task progress
 			EventInput eventInput = target.path(path.value())
 					.path("progress")
 					.path(getName(location.getPath()))
@@ -238,25 +243,25 @@ public class ServiceTest {
 				assertThat("Progress event data is not empty", isNotBlank(data));
 				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);				
 				assertThat("Progress event decoded object is not null", progress, notNullValue());
-				assertThat("Import sequences task does not have errors", !progress.isHasErrors());
+				assertThat("Import sandflies task does not have errors", !progress.isHasErrors());
 				/* uncomment for additional output */				
 				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: id=" 
 						+ id + "; name=" + name + "; data=" + data + "; object=" + progress);
 			}
 
-			// repeat the import new sequences task to test how the subscription is made from a client using the JavaScript EventSource interface
+			// repeat the import new sandflies task to test how the subscription is made from a client using the JavaScript EventSource interface
 			task = Task.builder()
-					.type(IMPORT_SEQUENCES)
+					.type(IMPORT_SANDFLY_SEQ)
 					.ids(newArrayList("430902590"))
 					.build();
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.post(entity(task, APPLICATION_JSON_TYPE));
-			assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create import sandflies task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			/* uncomment for additional output */
-			System.out.println(" >> Create import sequences task response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create import sequences task response JAX-RS object: " + response);
-			System.out.println(" >> Create import sequences task HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create import sandflies task response JAX-RS object: " + response);
+			System.out.println(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));
 
 			eventInput = target.path(path.value())
@@ -276,98 +281,98 @@ public class ServiceTest {
 				assertThat("Progress event data is not empty", isNotBlank(data));
 				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);
 				assertThat("Progress event decoded object is not null", progress, notNullValue());
-				assertThat("Import sequences task does not have errors", !progress.isHasErrors());
+				assertThat("Import sandflies task does not have errors", !progress.isHasErrors());
 				/* uncomment for additional output */				
 				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
 			}			
 
-			// test create new sequence
-			path = SequenceResource.class.getAnnotation(Path.class);
-			final Sequence sequence = Sequence.builder()
+			// test create new sandfly
+			path = SandflySequenceResource.class.getAnnotation(Path.class);
+			final Sandfly sandfly = Sandfly.builder()
 					.dataSource(DataSource.GENBANK)
-					.definition("Example sequence")
+					.definition("Example sandfly")
 					.accession("LVL00000")
 					.version("0.0")
 					.organism("Example organism")
 					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(1.2d, 3.4d).build()).build())
 					.build();
-			final SequenceKey sequenceKey = SequenceKey.builder()
-					.dataSource(sequence.getDataSource())
-					.accession(sequence.getAccession())
+			SequenceKey sequenceKey = SequenceKey.builder()
+					.dataSource(sandfly.getDataSource())
+					.accession(sandfly.getAccession())
 					.build();			
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.post(entity(sequence, APPLICATION_JSON_TYPE));			
-			assertThat("Create new sequence response is not null", response, notNullValue());
-			assertThat("Create new sequence response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create new sequence response is not empty", response.getEntity(), notNullValue());
+					.post(entity(sandfly, APPLICATION_JSON_TYPE));			
+			assertThat("Create new sandfly response is not null", response, notNullValue());
+			assertThat("Create new sandfly response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create new sandfly response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Create new sequence response entity is not null", payload, notNullValue());
-			assertThat("Create new sequence response entity is empty", isBlank(payload));
+			assertThat("Create new sandfly response entity is not null", payload, notNullValue());
+			assertThat("Create new sandfly response entity is empty", isBlank(payload));
 			/* uncomment for additional output */			
-			System.out.println(" >> Create new sequence response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create new sequence response JAX-RS object: " + response);
-			System.out.println(" >> Create new sequence HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create new sandfly response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create new sandfly response JAX-RS object: " + response);
+			System.out.println(" >> Create new sandfly HTTP headers: " + response.getStringHeaders());
 
-			// test get sequences (JSON encoded)
+			// test get sandflies (JSON encoded)
 			response = target.path(path.value()).request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get();
-			assertThat("Get sequences response is not null", response, notNullValue());
-			assertThat("Get sequences response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
-			assertThat("Get sequences response is not empty", response.getEntity(), notNullValue());
+			assertThat("Get sandflies response is not null", response, notNullValue());
+			assertThat("Get sandflies response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+			assertThat("Get sandflies response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Get sequences response entity is not null", payload, notNullValue());
-			assertThat("Get sequences response entity is not empty", isNotBlank(payload));
+			assertThat("Get sandflies response entity is not null", payload, notNullValue());
+			assertThat("Get sandflies response entity is not empty", isNotBlank(payload));
 			/* uncomment for additional output */			
-			System.out.println(" >> Get sequences response body (JSON): " + payload);
-			System.out.println(" >> Get sequences response JAX-RS object: " + response);
-			System.out.println(" >> Get sequences HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Get sandflies response body (JSON): " + payload);
+			System.out.println(" >> Get sandflies response JAX-RS object: " + response);
+			System.out.println(" >> Get sandflies HTTP headers: " + response.getStringHeaders());
 
-			// test get sequences (Java object)
-			Sequences sequences = target.path(path.value()).request(APPLICATION_JSON)
+			// test get sandflies (Java object)
+			Sequences sandflies = target.path(path.value()).request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
-			assertThat("Get sequences result is not null", sequences, notNullValue());
-			assertThat("Get sequences list is not null", sequences.getElements(), notNullValue());
-			assertThat("Get sequences list is not empty", !sequences.getElements().isEmpty());
-			assertThat("Get sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
+			assertThat("Get sandflies result is not null", sandflies, notNullValue());
+			assertThat("Get sandflies list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Get sandflies list is not empty", !sandflies.getElements().isEmpty());
+			assertThat("Get sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
 			/* uncomment for additional output */			
-			System.out.println(" >> Get sequences result: " + sequences.toString());
+			System.out.println(" >> Get sandflies result: " + sandflies.toString());
 
-			// test sequence pagination (JSON encoded)
+			// test sandfly pagination (JSON encoded)
 			final int perPage = 2;
 			response = target.path(path.value())
 					.queryParam("per_page", perPage)
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get();
-			assertThat("Paginate sequences first page response is not null", response, notNullValue());
-			assertThat("Paginate sequences first page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
-			assertThat("Paginate sequences first page response is not empty", response.getEntity(), notNullValue());
+			assertThat("Paginate sandflies first page response is not null", response, notNullValue());
+			assertThat("Paginate sandflies first page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+			assertThat("Paginate sandflies first page response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Paginate sequences first page response entity is not null", payload, notNullValue());
-			assertThat("Paginate sequences first page response entity is not empty", isNotBlank(payload));			
-			sequences = JSON_MAPPER.readValue(payload, Sequences.class);			
-			assertThat("Paginate sequences first page result is not null", sequences, notNullValue());
-			assertThat("Paginate sequences first page list is not null", sequences.getElements(), notNullValue());
-			assertThat("Paginate sequences first page list is not empty", !sequences.getElements().isEmpty());
-			assertThat("Paginate sequences first page items count coincide with page size", sequences.getElements().size(), 
-					equalTo(min(perPage, sequences.getTotalCount())));
+			assertThat("Paginate sandflies first page response entity is not null", payload, notNullValue());
+			assertThat("Paginate sandflies first page response entity is not empty", isNotBlank(payload));			
+			sandflies = JSON_MAPPER.readValue(payload, Sequences.class);			
+			assertThat("Paginate sandflies first page result is not null", sandflies, notNullValue());
+			assertThat("Paginate sandflies first page list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Paginate sandflies first page list is not empty", !sandflies.getElements().isEmpty());
+			assertThat("Paginate sandflies first page items count coincide with page size", sandflies.getElements().size(), 
+					equalTo(min(perPage, sandflies.getTotalCount())));
 			/* uncomment for additional output */			
-			System.out.println(" >> Paginate sequences first page response body (JSON): " + payload);
+			System.out.println(" >> Paginate sandflies first page response body (JSON): " + payload);
 
-			assertThat("Paginate sequences first page links is not null", sequences.getLinks(), notNullValue());
-			assertThat("Paginate sequences first page links is not empty", !sequences.getLinks().isEmpty());
-			assertThat("Paginate sequences first page links count coincide with expected", sequences.getLinks().size(), equalTo(2));
+			assertThat("Paginate sandflies first page links is not null", sandflies.getLinks(), notNullValue());
+			assertThat("Paginate sandflies first page links is not empty", !sandflies.getLinks().isEmpty());
+			assertThat("Paginate sandflies first page links count coincide with expected", sandflies.getLinks().size(), equalTo(2));
 			Link lastLink = null;
-			for (int i = 0; i < sequences.getLinks().size() && lastLink == null; i++) {
-				final Link link = sequences.getLinks().get(i);
+			for (int i = 0; i < sandflies.getLinks().size() && lastLink == null; i++) {
+				final Link link = sandflies.getLinks().get(i);
 				if (LAST.equalsIgnoreCase(link.getRel())) {
 					lastLink = link;
 				}
 			}
-			assertThat("Paginate sequences first page link to last page is not null", lastLink, notNullValue());
+			assertThat("Paginate sandflies first page link to last page is not null", lastLink, notNullValue());
 
 			response = target.path(getPath(lastLink).substring(SERVICE.length()))
 					.queryParam("page", parseInt(getQueryParams(lastLink).get("page")))
@@ -375,176 +380,176 @@ public class ServiceTest {
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get();
-			assertThat("Paginate sequences last page response is not null", response, notNullValue());
-			assertThat("Paginate sequences last page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
-			assertThat("Paginate sequences last page response is not empty", response.getEntity(), notNullValue());
+			assertThat("Paginate sandflies last page response is not null", response, notNullValue());
+			assertThat("Paginate sandflies last page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+			assertThat("Paginate sandflies last page response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Paginate sequences last page response entity is not null", payload, notNullValue());
-			assertThat("Paginate sequences last page response entity is not empty", isNotBlank(payload));			
-			sequences = JSON_MAPPER.readValue(payload, Sequences.class);			
-			assertThat("Paginate sequences last page result is not null", sequences, notNullValue());
-			assertThat("Paginate sequences last page list is not null", sequences.getElements(), notNullValue());
-			assertThat("Paginate sequences last page list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Paginate sandflies last page response entity is not null", payload, notNullValue());
+			assertThat("Paginate sandflies last page response entity is not empty", isNotBlank(payload));			
+			sandflies = JSON_MAPPER.readValue(payload, Sequences.class);			
+			assertThat("Paginate sandflies last page result is not null", sandflies, notNullValue());
+			assertThat("Paginate sandflies last page list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Paginate sandflies last page list is not empty", !sandflies.getElements().isEmpty());
 			/* uncomment for additional output */			
-			System.out.println(" >> Paginate sequences last page response body (JSON): " + payload);
+			System.out.println(" >> Paginate sandflies last page response body (JSON): " + payload);
 
-			assertThat("Paginate sequences last page links is not null", sequences.getLinks(), notNullValue());
-			assertThat("Paginate sequences last page links is not empty", !sequences.getLinks().isEmpty());
-			assertThat("Paginate sequences last page links count coincide with expected", sequences.getLinks().size(), equalTo(2));
+			assertThat("Paginate sandflies last page links is not null", sandflies.getLinks(), notNullValue());
+			assertThat("Paginate sandflies last page links is not empty", !sandflies.getLinks().isEmpty());
+			assertThat("Paginate sandflies last page links count coincide with expected", sandflies.getLinks().size(), equalTo(2));
 
-			// test get sequences pagination (Java object)
-			sequences = target.path(path.value())
+			// test get sandflies pagination (Java object)
+			sandflies = target.path(path.value())
 					.queryParam("per_page", perPage)
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
-			assertThat("Paginate sequences first page result is not null", sequences, notNullValue());
-			assertThat("Paginate sequences first page list is not null", sequences.getElements(), notNullValue());
-			assertThat("Paginate sequences first page list is not empty", !sequences.getElements().isEmpty());
-			assertThat("Paginate sequences first page items count coincide with list size", sequences.getElements().size(), 
-					equalTo(min(perPage, sequences.getTotalCount())));
+			assertThat("Paginate sandflies first page result is not null", sandflies, notNullValue());
+			assertThat("Paginate sandflies first page list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Paginate sandflies first page list is not empty", !sandflies.getElements().isEmpty());
+			assertThat("Paginate sandflies first page items count coincide with list size", sandflies.getElements().size(), 
+					equalTo(min(perPage, sandflies.getTotalCount())));
 			/* uncomment for additional output */			
-			System.out.println(" >> Paginate sequences first page result: " + sequences.toString());
+			System.out.println(" >> Paginate sandflies first page result: " + sandflies.toString());
 
-			assertThat("Paginate sequences first page links is not null", sequences.getLinks(), notNullValue());
-			assertThat("Paginate sequences first page links is not empty", !sequences.getLinks().isEmpty());
-			assertThat("Paginate sequences first page links count coincide with expected", sequences.getLinks().size(), equalTo(2));
+			assertThat("Paginate sandflies first page links is not null", sandflies.getLinks(), notNullValue());
+			assertThat("Paginate sandflies first page links is not empty", !sandflies.getLinks().isEmpty());
+			assertThat("Paginate sandflies first page links count coincide with expected", sandflies.getLinks().size(), equalTo(2));
 			lastLink = null;
-			for (int i = 0; i < sequences.getLinks().size() && lastLink == null; i++) {
-				final Link link = sequences.getLinks().get(i);
+			for (int i = 0; i < sandflies.getLinks().size() && lastLink == null; i++) {
+				final Link link = sandflies.getLinks().get(i);
 				if (LAST.equalsIgnoreCase(link.getRel())) {
 					lastLink = link;
 				}
 			}
-			assertThat("Paginate sequences first page link to last page is not null", lastLink, notNullValue());
+			assertThat("Paginate sandflies first page link to last page is not null", lastLink, notNullValue());
 
-			sequences = target.path(getPath(lastLink).substring(SERVICE.length()))
+			sandflies = target.path(getPath(lastLink).substring(SERVICE.length()))
 					.queryParam("page", parseInt(getQueryParams(lastLink).get("page")))
 					.queryParam("per_page", parseInt(getQueryParams(lastLink).get("per_page")))
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
-			assertThat("Paginate sequences last page result is not null", sequences, notNullValue());
-			assertThat("Paginate sequences last page list is not null", sequences.getElements(), notNullValue());
-			assertThat("Paginate sequences last page list is not empty", !sequences.getElements().isEmpty());
+			assertThat("Paginate sandflies last page result is not null", sandflies, notNullValue());
+			assertThat("Paginate sandflies last page list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Paginate sandflies last page list is not empty", !sandflies.getElements().isEmpty());
 			/* uncomment for additional output */			
-			System.out.println(" >> Paginate sequences last page result: " + sequences.toString());
+			System.out.println(" >> Paginate sandflies last page result: " + sandflies.toString());
 
-			assertThat("Paginate sequences last page links is not null", sequences.getLinks(), notNullValue());
-			assertThat("Paginate sequences last page links is not empty", !sequences.getLinks().isEmpty());
-			assertThat("Paginate sequences last page links count coincide with expected", sequences.getLinks().size(), equalTo(2));
+			assertThat("Paginate sandflies last page links is not null", sandflies.getLinks(), notNullValue());
+			assertThat("Paginate sandflies last page links is not empty", !sandflies.getLinks().isEmpty());
+			assertThat("Paginate sandflies last page links count coincide with expected", sandflies.getLinks().size(), equalTo(2));
 
-			// test get sequences applying a full-text search filter
-			sequences = target.path(path.value())
+			// test get sandflies applying a full-text search filter
+			sandflies = target.path(path.value())
 					.queryParam("q", "papatasi")
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
-			assertThat("Search sequences result is not null", sequences, notNullValue());
-			assertThat("Search sequences list is not null", sequences.getElements(), notNullValue());
-			assertThat("Search sequences list is not empty", !sequences.getElements().isEmpty());
-			assertThat("Search sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
-			assertThat("Search sequences coincides result with expected", sequences.getElements().size(), equalTo(3));
+			assertThat("Search sandflies result is not null", sandflies, notNullValue());
+			assertThat("Search sandflies list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Search sandflies list is not empty", !sandflies.getElements().isEmpty());
+			assertThat("Search sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
+			assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(3));
 			/* uncomment for additional output */			
-			System.out.println(" >> Search sequences result: " + sequences.toString());
+			System.out.println(" >> Search sandflies result: " + sandflies.toString());
 
-			// test get sequences applying a keyword matching filter
-			sequences = target.path(path.value())
+			// test get sandflies applying a keyword matching filter
+			sandflies = target.path(path.value())
 					.queryParam("q", "accession:JP553239")
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
-			assertThat("Search sequences result is not null", sequences, notNullValue());
-			assertThat("Search sequences list is not null", sequences.getElements(), notNullValue());
-			assertThat("Search sequences list is not empty", !sequences.getElements().isEmpty());
-			assertThat("Search sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
-			assertThat("Search sequences coincides result with expected", sequences.getElements().size(), equalTo(1));
+			assertThat("Search sandflies result is not null", sandflies, notNullValue());
+			assertThat("Search sandflies list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Search sandflies list is not empty", !sandflies.getElements().isEmpty());
+			assertThat("Search sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
+			assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(1));
 			/* uncomment for additional output */			
-			System.out.println(" >> Search sequences result: " + sequences.toString());
+			System.out.println(" >> Search sandflies result: " + sandflies.toString());
 
-			// test get sequences applying a full-text search combined with a keyword matching filter
-			sequences = target.path(path.value())
+			// test get sandflies applying a full-text search combined with a keyword matching filter
+			sandflies = target.path(path.value())
 					.queryParam("q", "source:GenBank Phlebotomus")
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
-			assertThat("Search sequences result is not null", sequences, notNullValue());
-			assertThat("Search sequences list is not null", sequences.getElements(), notNullValue());
-			assertThat("Search sequences list is not empty", !sequences.getElements().isEmpty());
-			assertThat("Search sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
-			assertThat("Search sequences coincides result with expected", sequences.getElements().size(), equalTo(4));
+			assertThat("Search sandflies result is not null", sandflies, notNullValue());
+			assertThat("Search sandflies list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Search sandflies list is not empty", !sandflies.getElements().isEmpty());
+			assertThat("Search sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
+			assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(4));
 			/* uncomment for additional output */			
-			System.out.println(" >> Search sequences result: " + sequences.toString());
+			System.out.println(" >> Search sandflies result: " + sandflies.toString());
 
-			// test get sequences sorted by accession number
-			sequences = target.path(path.value())
+			// test get sandflies sorted by accession number
+			sandflies = target.path(path.value())
 					.queryParam("sort", "accession")
 					.queryParam("order", "asc")
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Sequences.class);
-			assertThat("Sorted sequences result is not null", sequences, notNullValue());
-			assertThat("Sorted sequences list is not null", sequences.getElements(), notNullValue());
-			assertThat("Sorted sequences list is not empty", !sequences.getElements().isEmpty());
-			assertThat("Sorted sequences items count coincide with list size", sequences.getElements().size(), equalTo(sequences.getTotalCount()));
+			assertThat("Sorted sandflies result is not null", sandflies, notNullValue());
+			assertThat("Sorted sandflies list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Sorted sandflies list is not empty", !sandflies.getElements().isEmpty());
+			assertThat("Sorted sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
 			String last = "-1";
-			for (final Sequence seq : sequences.getElements()) {
-				assertThat("Sequences are properly sorted", seq.getAccession().compareTo(last) > 0);
+			for (final Sandfly seq : sandflies.getElements()) {
+				assertThat("Sandflies are properly sorted", seq.getAccession().compareTo(last) > 0);
 				last = seq.getAccession();
 			}
 			/* uncomment for additional output */			
-			System.out.println(" >> Sorted sequences result: " + sequences.toString());
+			System.out.println(" >> Sorted sandflies result: " + sandflies.toString());
 
-			// test get sequence by data source + accession number
-			Sequence sequence2 = target.path(path.value()).path(sequenceKey.toId())
+			// test get sandfly by data source + accession number
+			Sandfly sandfly2 = target.path(path.value()).path(sequenceKey.toId())
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.get(Sequence.class);
-			assertThat("Get sequence by accession number result is not null", sequence2, notNullValue());
-			assertThat("Get sequence by accession number coincides with expected", sequence2.equalsIgnoringVolatile(sequence));
+					.get(Sandfly.class);
+			assertThat("Get sandfly by accession number result is not null", sandfly2, notNullValue());
+			assertThat("Get sandfly by accession number coincides with expected", sandfly2.equalsIgnoringVolatile(sandfly));
 			/* uncomment for additional output */
-			System.out.println(" >> Get sequence by accession number result: " + sequence2.toString());
+			System.out.println(" >> Get sandfly by accession number result: " + sandfly2.toString());
 
-			// test update sequence
-			sequence.setDefinition("Modified example sequence");
+			// test update sandfly
+			sandfly.setDefinition("Modified example sandfly");
 			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.put(entity(sequence, APPLICATION_JSON_TYPE));
-			assertThat("Update sequence response is not null", response, notNullValue());
-			assertThat("Update sequence response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
-			assertThat("Update sequence response is not empty", response.getEntity(), notNullValue());
+					.put(entity(sandfly, APPLICATION_JSON_TYPE));
+			assertThat("Update sandfly response is not null", response, notNullValue());
+			assertThat("Update sandfly response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Update sandfly response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Update sequence response entity is not null", payload, notNullValue());
-			assertThat("Update sequence response entity is empty", isBlank(payload));
+			assertThat("Update sandfly response entity is not null", payload, notNullValue());
+			assertThat("Update sandfly response entity is empty", isBlank(payload));
 			/* uncomment for additional output */			
-			System.out.println(" >> Update sequence response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Update sequence response JAX-RS object: " + response);
-			System.out.println(" >> Update sequence HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Update sandfly response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Update sandfly response JAX-RS object: " + response);
+			System.out.println(" >> Update sandfly HTTP headers: " + response.getStringHeaders());
 
-			// test get sequence by accession number after update
-			sequence2 = target.path(path.value()).path(sequenceKey.toId())
+			// test get sandfly by accession number after update
+			sandfly2 = target.path(path.value()).path(sequenceKey.toId())
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.get(Sequence.class);
-			assertThat("Get sequence by accession number after update result is not null", sequence2, notNullValue());
-			assertThat("Get sequence by accession number after update coincides with expected", sequence2.equalsIgnoringVolatile(sequence));
+					.get(Sandfly.class);
+			assertThat("Get sandfly by accession number after update result is not null", sandfly2, notNullValue());
+			assertThat("Get sandfly by accession number after update coincides with expected", sandfly2.equalsIgnoringVolatile(sandfly));
 			/* uncomment for additional output */
-			System.out.println(" >> Get sequence by accession number after update result: " + sequence2.toString());			
+			System.out.println(" >> Get sandfly by accession number after update result: " + sandfly2.toString());			
 
-			// test find sequences near to a location
+			// test find sandflies near to a location
 			FeatureCollection featCol = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d)
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(FeatureCollection.class);
-			assertThat("Get nearby sequences result is not null", featCol, notNullValue());
-			assertThat("Get nearby sequences list is not null", featCol.getFeatures(), notNullValue());
-			assertThat("Get nearby sequences list is not empty", featCol.getFeatures().size() > 0);
+			assertThat("Get nearby sandflies result is not null", featCol, notNullValue());
+			assertThat("Get nearby sandflies list is not null", featCol.getFeatures(), notNullValue());
+			assertThat("Get nearby sandflies list is not empty", featCol.getFeatures().size() > 0);
 			/* uncomment for additional output */			
-			System.out.println(" >> Get nearby sequences result: " + featCol.toString());
+			System.out.println(" >> Get nearby sandflies result: " + featCol.toString());
 
-			// test find sequences near to a location (using plain REST, no Jersey client)
+			// test find sandflies near to a location (using plain REST, no Jersey client)
 			URI uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d).getUri();
 			String response2 = Request.Get(uri)
@@ -553,74 +558,201 @@ public class ServiceTest {
 					.execute()
 					.returnContent()
 					.asString();
-			assertThat("Get nearby sequences result (plain) is not null", response2, notNullValue());
-			assertThat("Get nearby sequences result (plain) is not empty", isNotBlank(response2));
+			assertThat("Get nearby sandflies result (plain) is not null", response2, notNullValue());
+			assertThat("Get nearby sandflies result (plain) is not empty", isNotBlank(response2));
 			/* uncomment for additional output */
-			System.out.println(" >> Get nearby sequences result (plain): " + response2);
+			System.out.println(" >> Get nearby sandflies result (plain): " + response2);
 			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
-			assertThat("Get nearby sequences result (plain) is not null", featCol, notNullValue());
-			assertThat("Get nearby sequences (plain) list is not null", featCol.getFeatures(), notNullValue());
-			assertThat("Get nearby sequences (plain) list is not empty", featCol.getFeatures().size() > 0);
+			assertThat("Get nearby sandflies result (plain) is not null", featCol, notNullValue());
+			assertThat("Get nearby sandflies (plain) list is not null", featCol.getFeatures(), notNullValue());
+			assertThat("Get nearby sandflies (plain) list is not empty", featCol.getFeatures().size() > 0);
 			/* uncomment for additional output */
-			System.out.println(" >> Get nearby sequences result (plain): " + featCol.toString());
+			System.out.println(" >> Get nearby sandflies result (plain): " + featCol.toString());
 
-			// test find sequences near to a location (using plain REST, no Jersey client, and query style authz token)
+			// test find sandflies near to a location (using plain REST, no Jersey client, and query style authz token)
 			uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d)
-					.queryParam(AUTHORIZATION_QUERY_OAUTH2, TOKEN_ROOT) // TODO : urlencode : 4SUSt0YZ1Vvcw9+8GwkbG3j6yIEAZ7RTlMSWa9+c1zg=
+					.queryParam(AUTHORIZATION_QUERY_OAUTH2, TOKEN_ROOT)
 					.getUri();
 			response2 = Request.Get(uri)
 					.addHeader("Accept", "application/json")
 					.execute()
 					.returnContent()
 					.asString();
-			assertThat("Get nearby sequences result (plain + query token) is not null", response2, notNullValue());
-			assertThat("Get nearby sequences result (plain + query token) is not empty", isNotBlank(response2));
+			assertThat("Get nearby sandflies result (plain + query token) is not null", response2, notNullValue());
+			assertThat("Get nearby sandflies result (plain + query token) is not empty", isNotBlank(response2));
 			/* uncomment for additional output */
-			System.out.println(" >> Get nearby sequences result (plain + query token): " + response2);
+			System.out.println(" >> Get nearby sandflies result (plain + query token): " + response2);
 			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
-			assertThat("Get nearby sequences result (plain + query token) is not null", featCol, notNullValue());
-			assertThat("Get nearby sequences (plain + query token) list is not null", featCol.getFeatures(), notNullValue());
-			assertThat("Get nearby sequences (plain + query token) list is not empty", featCol.getFeatures().size() > 0);
+			assertThat("Get nearby sandflies result (plain + query token) is not null", featCol, notNullValue());
+			assertThat("Get nearby sandflies (plain + query token) list is not null", featCol.getFeatures(), notNullValue());
+			assertThat("Get nearby sandflies (plain + query token) list is not empty", featCol.getFeatures().size() > 0);
 			/* uncomment for additional output */
-			System.out.println(" >> Get nearby sequences result (plain + query token): " + featCol.toString());
+			System.out.println(" >> Get nearby sandflies result (plain + query token): " + featCol.toString());
 
-			// test delete sequence
+			// test delete sandfly
 			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.delete();
-			assertThat("Delete sequence response is not null", response, notNullValue());
-			assertThat("Delete sequence response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
-			assertThat("Delete sequence response is not empty", response.getEntity(), notNullValue());
+			assertThat("Delete sandfly response is not null", response, notNullValue());
+			assertThat("Delete sandfly response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Delete sandfly response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Delete sequence response entity is not null", payload, notNullValue());
-			assertThat("Delete sequence response entity is empty", isBlank(payload));
+			assertThat("Delete sandfly response entity is not null", payload, notNullValue());
+			assertThat("Delete sandfly response entity is empty", isBlank(payload));
 			/* uncomment for additional output */			
-			System.out.println(" >> Delete sequence response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Delete sequence response JAX-RS object: " + response);
-			System.out.println(" >> Delete sequence HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Delete sandfly response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Delete sandfly response JAX-RS object: " + response);
+			System.out.println(" >> Delete sandfly HTTP headers: " + response.getStringHeaders());
 
-			// test create public link (GZIP compressed FASTA sequence)
+			// test create new leishmania
+			path = LeishmaniaSequenceResource.class.getAnnotation(Path.class);
+			final Leishmania leishmania = Leishmania.builder()
+					.dataSource(DataSource.GENBANK)
+					.definition("Example leishmania")
+					.accession("LVL00000")
+					.version("0.0")
+					.organism("Example organism")
+					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(1.2d, 3.4d).build()).build())
+					.build();
+			sequenceKey = SequenceKey.builder()
+					.dataSource(leishmania.getDataSource())
+					.accession(leishmania.getAccession())
+					.build();			
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.post(entity(leishmania, APPLICATION_JSON_TYPE));			
+			assertThat("Create new leishmania response is not null", response, notNullValue());
+			assertThat("Create new leishmania response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create new leishmania response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create new leishmania response entity is not null", payload, notNullValue());
+			assertThat("Create new leishmania response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println(" >> Create new leishmania response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create new leishmania response JAX-RS object: " + response);
+			System.out.println(" >> Create new leishmania HTTP headers: " + response.getStringHeaders());
+
+			// test get leishmania (JSON encoded)
+			response = target.path(path.value()).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.get();
+			assertThat("Get leishmania response is not null", response, notNullValue());
+			assertThat("Get leishmania response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+			assertThat("Get leishmania response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Get leishmania response entity is not null", payload, notNullValue());
+			assertThat("Get leishmania response entity is not empty", isNotBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println(" >> Get leishmania response body (JSON): " + payload);
+			System.out.println(" >> Get leishmania response JAX-RS object: " + response);
+			System.out.println(" >> Get leishmania HTTP headers: " + response.getStringHeaders());
+
+			// test leishmania pagination (JSON encoded)
+			response = target.path(path.value())
+					.queryParam("per_page", perPage)
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.get();
+			assertThat("Paginate leishmania first page response is not null", response, notNullValue());
+			assertThat("Paginate leishmania first page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+			assertThat("Paginate leishmania first page response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Paginate leishmania first page response entity is not null", payload, notNullValue());
+			assertThat("Paginate leishmania first page response entity is not empty", isNotBlank(payload));			
+			final LeishmaniaSequenceResource.Sequences leishmanias = JSON_MAPPER.readValue(payload, LeishmaniaSequenceResource.Sequences.class);			
+			assertThat("Paginate leishmania first page result is not null", leishmanias, notNullValue());
+			assertThat("Paginate leishmania first page list is not null", leishmanias.getElements(), notNullValue());
+			assertThat("Paginate leishmania first page list is not empty", !leishmanias.getElements().isEmpty());
+			assertThat("Paginate leishmania first page items count coincide with page size", leishmanias.getElements().size(), 
+					equalTo(min(perPage, leishmanias.getTotalCount())));
+			/* uncomment for additional output */			
+			System.out.println(" >> Paginate leishmanias first page response body (JSON): " + payload);
+
+			// test update leishmania
+			leishmania.setDefinition("Modified example leishmania");
+			response = target.path(path.value()).path(sequenceKey.toId())
+					.request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.put(entity(leishmania, APPLICATION_JSON_TYPE));
+			assertThat("Update leishmania response is not null", response, notNullValue());
+			assertThat("Update leishmania response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Update leishmania response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Update leishmania response entity is not null", payload, notNullValue());
+			assertThat("Update leishmania response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println(" >> Update leishmania response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Update leishmania response JAX-RS object: " + response);
+			System.out.println(" >> Update leishmania HTTP headers: " + response.getStringHeaders());
+
+			// test get leishmania by accession number after update
+			final Leishmania leishmania2 = target.path(path.value()).path(sequenceKey.toId())
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.get(Leishmania.class);
+			assertThat("Get leishmania by accession number after update result is not null", leishmania2, notNullValue());
+			assertThat("Get leishmania by accession number after update coincides with expected", leishmania2.equalsIgnoringVolatile(leishmania));
+			/* uncomment for additional output */
+			System.out.println(" >> Get leishmania by accession number after update result: " + leishmania2.toString());			
+
+			// test find leishmania near to a location (using plain REST, no Jersey client)
+			uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
+					.queryParam("maxDistance", 4000.0d).getUri();
+			response2 = Request.Get(uri)
+					.addHeader("Accept", "application/json")
+					.addHeader(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.execute()
+					.returnContent()
+					.asString();
+			assertThat("Get nearby leishmania result (plain) is not null", response2, notNullValue());
+			assertThat("Get nearby leishmania result (plain) is not empty", isNotBlank(response2));
+			/* uncomment for additional output */
+			System.out.println(" >> Get nearby leishmania result (plain): " + response2);
+			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
+			assertThat("Get nearby leishmania result (plain) is not null", featCol, notNullValue());
+			assertThat("Get nearby leishmania (plain) list is not null", featCol.getFeatures(), notNullValue());
+			assertThat("Get nearby leishmania (plain) list is not empty", featCol.getFeatures().size() > 0);
+			/* uncomment for additional output */
+			System.out.println(" >> Get nearby leishmania result (plain): " + featCol.toString());
+
+			// test delete leishmania
+			response = target.path(path.value()).path(sequenceKey.toId())
+					.request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.delete();
+			assertThat("Delete leishmania response is not null", response, notNullValue());
+			assertThat("Delete leishmania response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Delete leishmania response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Delete leishmania response entity is not null", payload, notNullValue());
+			assertThat("Delete leishmania response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println(" >> Delete leishmania response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Delete leishmania response JAX-RS object: " + response);
+			System.out.println(" >> Delete leishmania HTTP headers: " + response.getStringHeaders());
+
+			// test create public link (GZIP compressed FASTA sandfly)
 			path = PublicLinkResource.class.getAnnotation(Path.class);
 			PublicLink publicLink = PublicLink.builder()
-					.target(Target.builder().type("sequence").id("gb:JP540074").filter("export_fasta").compression("gzip").build())
+					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export_fasta").compression("gzip").build())
 					.description("Optional description")
 					.build();
 
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (FASTA.GZIP sequence) response is not null", response, notNullValue());
-			assertThat("Create public link (FASTA.GZIP sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (FASTA.GZIP sequence) is not empty", response.getEntity(), notNullValue());
+			assertThat("Create public link (FASTA.GZIP sandfly) response is not null", response, notNullValue());
+			assertThat("Create public link (FASTA.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (FASTA.GZIP sandfly) is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Create public link (FASTA.GZIP sequence) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (FASTA.GZIP sequence) response entity is empty", isBlank(payload));
+			assertThat("Create public link (FASTA.GZIP sandfly) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (FASTA.GZIP sandfly) response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			System.out.println(" >> Create public link (FASTA.GZIP sequence) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (FASTA.GZIP sequence) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (FASTA.GZIP sequence) HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create public link (FASTA.GZIP sandfly) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (FASTA.GZIP sandfly) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (FASTA.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));
 			final String publicLinkPath = getPathFromLocation(location);
 			publicLink.setPath(publicLinkPath);
@@ -723,111 +855,111 @@ public class ServiceTest {
 			System.out.println(" >> Delete public link response JAX-RS object: " + response);
 			System.out.println(" >> Delete public link HTTP headers: " + response.getStringHeaders());
 
-			// test create public link (GZIP compressed NCBI sequence)
+			// test create public link (GZIP compressed NCBI sandfly)
 			publicLink = PublicLink.builder()
-					.target(Target.builder().type("sequence").id("gb:JP540074").filter("export").compression("gzip").build())
+					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export").compression("gzip").build())
 					.description("Optional description")
 					.build();
 
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (NCBI.GZIP sequence) response is not null", response, notNullValue());
-			assertThat("Create public link (NCBI.GZIP sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (NCBI.GZIP sequence) response is not empty", response.getEntity(), notNullValue());
+			assertThat("Create public link (NCBI.GZIP sandfly) response is not null", response, notNullValue());
+			assertThat("Create public link (NCBI.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (NCBI.GZIP sandfly) response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Create public link (NCBI.GZIP sequence) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (NCBI.GZIP sequence) response entity is empty", isBlank(payload));
+			assertThat("Create public link (NCBI.GZIP sandfly) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (NCBI.GZIP sandfly) response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			System.out.println(" >> Create public link (NCBI.GZIP sequence) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (NCBI.GZIP sequence) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (NCBI.GZIP sequence) HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create public link (NCBI.GZIP sandfly) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (NCBI.GZIP sandfly) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));			
 			addPublicLinkForClean(getPathFromLocation(location));
 
-			// test create public link (uncompressed FASTA sequence)
+			// test create public link (uncompressed FASTA sandfly)
 			publicLink = PublicLink.builder()
-					.target(Target.builder().type("sequence").id("gb:JP540074").filter("export_fasta").build())
+					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export_fasta").build())
 					.description("Optional description")
 					.build();
 
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (FASTA sequence) response is not null", response, notNullValue());
-			assertThat("Create public link (FASTA sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (FASTA sequence) response is not empty", response.getEntity(), notNullValue());
+			assertThat("Create public link (FASTA sandfly) response is not null", response, notNullValue());
+			assertThat("Create public link (FASTA sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (FASTA sandfly) response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Create public link (FASTA sequence) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (FASTA sequence) response entity is empty", isBlank(payload));
+			assertThat("Create public link (FASTA sandfly) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (FASTA sandfly) response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			System.out.println(" >> Create public link (FASTA sequence) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (FASTA sequence) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (FASTA sequence) HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create public link (FASTA sandfly) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (FASTA sandfly) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (FASTA sandfly) HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));			
 			addPublicLinkForClean(getPathFromLocation(location));
 
-			// test create public link (uncompressed NCBI sequence)
+			// test create public link (uncompressed NCBI sandfly)
 			publicLink = PublicLink.builder()
-					.target(Target.builder().type("sequence").id("gb:JP540074").filter("export").compression("none").build())
+					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export").compression("none").build())
 					.description("Optional description")
 					.build();
 
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (NCBI sequence) response is not null", response, notNullValue());
-			assertThat("Create public link (NCBI sequence) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (NCBI sequence) response is not empty", response.getEntity(), notNullValue());
+			assertThat("Create public link (NCBI sandfly) response is not null", response, notNullValue());
+			assertThat("Create public link (NCBI sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (NCBI sandfly) response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Create public link (NCBI sequence) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (NCBI sequence) response entity is empty", isBlank(payload));
+			assertThat("Create public link (NCBI sandfly) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (NCBI sandfly) response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			System.out.println(" >> Create public link (NCBI sequence) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (NCBI sequence) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (NCBI sequence) HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create public link (NCBI sandfly) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (NCBI sandfly) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (NCBI sandfly) HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));			
 			addPublicLinkForClean(getPathFromLocation(location));
 
-			// test create public link (GZIP compressed NCBI bulk of sequences)
+			// test create public link (GZIP compressed NCBI bulk of sandflies)
 			publicLink = PublicLink.builder()
-					.target(Target.builder().type("sequence").ids(newArrayList("gb:JP540074", "gb:JP553239")).filter("export").compression("gzip").build())
+					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).ids(newArrayList("gb:JP540074", "gb:JP553239")).filter("export").compression("gzip").build())
 					.description("Optional description")
 					.build();
 
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (NCBI.GZIP sequences bulk) response is not null", response, notNullValue());
-			assertThat("Create public link (NCBI.GZIP sequences bulk) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (NCBI.GZIP sequences bulk) response is not empty", response.getEntity(), notNullValue());
+			assertThat("Create public link (NCBI.GZIP sandflies bulk) response is not null", response, notNullValue());
+			assertThat("Create public link (NCBI.GZIP sandflies bulk) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create public link (NCBI.GZIP sandflies bulk) response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Create public link (NCBI.GZIP sequences bulk) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (NCBI.GZIP sequences bulk) response entity is empty", isBlank(payload));
+			assertThat("Create public link (NCBI.GZIP sandflies bulk) response entity is not null", payload, notNullValue());
+			assertThat("Create public link (NCBI.GZIP sandflies bulk) response entity is empty", isBlank(payload));
 			/* uncomment for additional output */
-			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (NCBI.GZIP sequences bulk) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (NCBI.GZIP sequence) HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Create public link (NCBI.GZIP sandflies bulk) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create public link (NCBI.GZIP sandflies bulk) response JAX-RS object: " + response);
+			System.out.println(" >> Create public link (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
 			location = new URI((String)response.getHeaders().get("Location").get(0));			
 			addPublicLinkForClean(getPathFromLocation(location));
 
 			// test create new reference
 			final String pmid = "00000000";
 
-			final Sequence sequence3 = Sequence.builder()
+			final Sandfly sandfly3 = Sandfly.builder()
 					.dataSource(GENBANK)
 					.accession("ABC12345678")
 					.gi(123)
 					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.90d, 38.08d).build()).build())
 					.pmids(newHashSet(pmid)).build();
-			SEQUENCE_DAO.insert(sequence3);
+			SANDFLY_DAO.insert(sandfly3);
 
 			path = ReferenceResource.class.getAnnotation(Path.class);
 			final Reference reference = Reference.builder()
 					.title("The best paper in the world")
 					.pubmedId(pmid)
 					.publicationYear(1984)
-					.seqids(newHashSet(sequence3.getId()))
+					.seqids(newHashSet(sandfly3.getId()))
 					.build();					
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))

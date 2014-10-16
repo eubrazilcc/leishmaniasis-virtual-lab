@@ -33,6 +33,7 @@ import org.junit.runners.Suite.SuiteClasses;
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
+// @SuiteClasses({ ServiceTest.class, FullDatabaseLoadTest.class })
 @SuiteClasses({ ServiceTest.class })
 public class AllIntegrationTests {
 
@@ -42,6 +43,8 @@ public class AllIntegrationTests {
 	}
 
 	@AfterClass
-	public static void release() { }
+	public static void release() {
+		System.out.println("AllIntegrationTests.release()");
+	}
 
 }

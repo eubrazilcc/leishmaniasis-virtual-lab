@@ -27,11 +27,10 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 /**
- * This class stores data sources as {@link String}, which is an alternative to BioJava 
- * {@link org.biojava3.core.sequence.DataSource}. This is more convenient than BioJava to exchange 
- * information to a client application where BioJava is not available (for example, a Web application).
- * In addition, this class provides information about other sources of data than sequence databases.
- * In particular, publication database like PubMed.
+ * Stores data sources as {@link String}, providing an alternative to BioJava {@link org.biojava3.core.sequence.DataSource}. 
+ * This class is more convenient than BioJava to exchange information to a client application where BioJava is not available 
+ * (for example, a Web application). In addition, this class provides information about other sources of data than sequence 
+ * databases. In particular, publication database like PubMed.
  * @author Erik Torres <ertorser@upv.es>
  */
 public final class DataSource {

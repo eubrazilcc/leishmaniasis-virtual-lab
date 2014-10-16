@@ -61,14 +61,14 @@ public class ReferenceCollectionTest {
 			assertThat("insert write result Id is not null", writeResult.getId(), notNullValue());
 			assertThat("insert write result Id is not empty", isNotBlank(writeResult.getId()), equalTo(true));
 			final String dbId = writeResult.getId();
-			
+
 			// insert ignoring duplicates
 			writeResult = REFERENCE_DAO.insert(reference, true);
 			assertThat("insert write result is not null after duplicate insertion", writeResult, notNullValue());
 			assertThat("insert write result Id is not null after duplicate insertion", writeResult.getId(), notNullValue());
 			assertThat("insert write result Id is not empty after duplicate insertion", isNotBlank(writeResult.getId()), equalTo(true));
 			assertThat("insert write result Id coincides with expected after duplicate insertion", writeResult.getId(), equalTo(dbId));
-			
+
 			try {
 				REFERENCE_DAO.insert(reference, false);
 				fail("Expected Exception due to duplicate insertion");

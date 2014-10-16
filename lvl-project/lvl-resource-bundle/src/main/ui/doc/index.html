@@ -124,6 +124,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                       <li><a href="#examples_tasks_import_sequences">Import sequences from external databases (PubMed)</a></li>
                     </ul></li>
                 </ul></li>
+              <li><a href="#limitations">Known limitations</a>
+                <ul>
+                  <li><a href="#limitations_usage_limits">Usage limits</a></li>
+                  <li><a href="#limitations_desired_features">Desired features list</a></li>
+                </ul></li>
             </ul>
           </div>
         </div>
@@ -183,7 +188,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               <li class="list-group-item">
                 <h4 class="list-group-item-heading">LVL collection</h4>
                 <p class="list-group-item-text">
-                  A database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>. <em>Recommended version:</em> 2.6.4.
+                  A database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>. <em>Recommended version:</em> 2.6.5.
                 </p>
               </li>
               <li class="list-group-item">
@@ -1623,7 +1628,7 @@ Serving HTTP on 0.0.0.0 port 8000 ...
             </h3>
 
             <code> $ curl -v -X POST -H 'Authorization: Bearer 4NYglPbKiSx3aNKSY8aIrSnpa3tOj2WytUP+MIaSDB0=' -H 'Content-Type: application/json' -d '{
-              "type" : "IMPORT_SEQUENCES", "ids" : [ "353470160", "353483325", "384562886" ] }' http://lvl.i3m.upv.es/lvl-service/rest/v1/tasks </code>
+              "type" : "IMPORT_SANDFLY_SEQ", "ids" : [ "353470160", "353483325", "384562886" ] }' http://lvl.i3m.upv.es/lvl-service/rest/v1/tasks </code>
             <p></p>
 
             <pre>
@@ -1673,6 +1678,7 @@ Serving HTTP on 0.0.0.0 port 8000 ...
     "owner": null,
     "path": null,
     "target": {
+        "collection": "sandfly",
         "compression": "gzip",
         "filter": "export_fasta",
         "ids": [
@@ -1685,9 +1691,10 @@ Serving HTTP on 0.0.0.0 port 8000 ...
 </pre>              
 
             <p>The only field required in the request is <code>target</code>. In this case, the origin of the public link is of <code>type</code> sequence
-              and two sequence identifiers are passed. A <code>filter</code> is applied to export the sequence to FASTA and GZIP <code>compression</code>
-              is requested. Other possible values are: <code>filter:export</code> to export the sequences in the default format (NCBI XML sequence format),
-              and <code>compression:null</code> or <code>compression:none</code> to export the sequences with no compression.</p>
+              from the collection of <code>sandfly</code> and two sequence identifiers are passed. A <code>filter</code> is applied to export the 
+              sequences to FASTA and GZIP <code>compression</code> is requested. Other possible values are: <code>filter:export</code> to export the 
+              sequences in the default format (NCBI XML sequence format), and <code>compression:null</code> or <code>compression:none</code> to export 
+              the sequences with no compression.</p>
             
             <div class="alert alert-info">
               <div class="media">
@@ -1709,7 +1716,7 @@ Serving HTTP on 0.0.0.0 port 8000 ...
             
             <p>After submitting the request to the LVL, the server response header will include the standar <code>location</code> field.</p>
             
-            <code>$ curl -i -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' -X POST -H "Content-Type: application/json" -d '{"path":null,"mime":null,"description":"Public link to FASTA.GZIP sequences","owner":null,"target":{"type":"sequence","ids":["gb:JP540074","gb:JP553239"],"filter":"export_fasta","compression":"gzip"},"downloadUri":null,"links":null}' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links</code>
+            <code>$ curl -i -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' -X POST -H "Content-Type: application/json" -d '{"path":null,"mime":null,"description":"Public link to FASTA.GZIP sequences","owner":null,"target":{"type":"sequence","collection":"sandfly","ids":["gb:JP540074","gb:JP553239"],"filter":"export_fasta","compression":"gzip"},"downloadUri":null,"links":null}' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links</code>
             <p></p>
             
 <pre>
@@ -1746,6 +1753,7 @@ Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so
     "owner": "user1",
     "path": "bui6vm4cinxg9so5/sequences.fasta.gz",
     "target": {
+        "collection": "sandfly",
         "compression": "gzip",
         "filter": "export_fasta",
         "ids": [
@@ -2135,15 +2143,59 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
             </h3>
 
             <code> $ curl -H 'Authorization: Bearer ubauFeNkTWiVGQWTcfJPUW55nWTIY3c+yu25p/Sm7KU=' -X POST -H "Content-Type: application/json" 
-              -d '{"uuid":null,"type":"IMPORT_SEQUENCES"}' http://lvl.i3m.upv.es/lvl-service/rest/v1/tasks </code>
+              -d '{"uuid":null,"type":"IMPORT_SANDFLY_SEQ"}' http://lvl.i3m.upv.es/lvl-service/rest/v1/tasks </code>
             <p></p>
 
           </div>
         </div>
       </div>
     </div>
+    
+    <div class="clearfix">
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="page-header">
+            <h1 id="type">
+              <a id="limitations"></a>Known limitations
+            </h1>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+            <h2>
+              <a id="limitations_usage_limits"></a>Usage limits
+            </h2>
 
-    <h2>&nbsp;</h2>
+            <p>The Leishmaniasis Virtual Laboratory is a non-profit project mainly funded with public means. Therefore, many services have usage limitations
+              with the objective of providing the best possible service to the most users.
+            
+              </p>
+            
+            
+            
+            
+            
+            Google Geocoding API <a href="https://developers.google.com/maps/documentation/geocoding/#Limits" target="_blank">usage limits</a>
+            
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+            <h2>
+              <a id="limitations_desired_features"></a>Desired features list
+            </h2>
+
+            <p>TODO</p>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
     <hr />
 
     <footer>

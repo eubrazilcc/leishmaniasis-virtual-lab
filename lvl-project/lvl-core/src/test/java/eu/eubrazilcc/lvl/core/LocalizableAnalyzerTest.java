@@ -47,6 +47,7 @@ import org.junit.Test;
 import com.google.common.base.Function;
 
 import eu.eubrazilcc.lvl.core.analysis.LocalizableAnalyzer;
+import eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer;
 import eu.eubrazilcc.lvl.core.geojson.Feature;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
@@ -78,7 +79,7 @@ public class LocalizableAnalyzerTest {
 			};
 			final List<Sequence> sequences = newArrayList();
 			for (int i = 0; i < points.length; i++) {
-				sequences.add(Sequence.builder()
+				sequences.add(Sandfly.builder()
 						.dataSource(GENBANK)
 						.accession("SEQ_" + i)
 						.location(points[i])
