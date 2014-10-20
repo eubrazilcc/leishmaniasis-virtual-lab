@@ -214,7 +214,7 @@ public class WorkflowRunResource {
 	}
 
 	/**
-	 * It uses the solution #1 described here: 
+	 * It uses the solution #1 described here to encode a path in the URL: 
 	 * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_.22Unicode_Problem.22">Base64 encoding and decoding</a>
 	 */
 	@GET

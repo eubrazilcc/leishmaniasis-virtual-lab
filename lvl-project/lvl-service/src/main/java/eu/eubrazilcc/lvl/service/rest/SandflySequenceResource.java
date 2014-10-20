@@ -223,7 +223,7 @@ public class SandflySequenceResource {
 				.build(), maxDistance);
 		// transform to improve visualization
 		return SequenceAnalyzer.toFeatureCollection(sequences, Crs.builder().wgs84().build(), group, heatmap); */		
-	}
+	}	
 
 	/**
 	 * Wraps a collection of {@link Sandfly}.

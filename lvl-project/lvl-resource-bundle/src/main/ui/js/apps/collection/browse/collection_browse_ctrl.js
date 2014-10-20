@@ -14,6 +14,18 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/sequence', 'ap
 						oauth2_token : config.authorizationToken()
 					})
 				});
+				view.on('sequences:view:sequence', function(accession) {
+					require([ 'apps/collection/sequence_viewer/collection_sequence_viewer', 'entities/gb_sequence' ], function(SequenceView, GbSequenceModel) {
+						var gbSequenceModel = new GbSequenceModel.GbSequence({
+							'GBSeq_primary-accession' : accession
+						});
+						gbSequenceModel.oauth2_token = config.authorizationToken();
+						var dialogView = new SequenceView.Content({
+							model : gbSequenceModel
+						});
+						Lvl.dialogRegion.show(dialogView);
+					});
+				});
 				view.on('sequences:link:create', function(selectedModels) {
 					require([ 'apps/collection/link/link_view' ], function(EditView) {
 						var sequences = selectedModels.filter(function(element) {

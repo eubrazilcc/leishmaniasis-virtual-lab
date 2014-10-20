@@ -1,0 +1,42 @@
+<div class="modal-dialog modal-lg">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">
+				<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+			</button>
+			<h4 class="modal-title" id="myModalLabel">Sequence viewer</h4>
+		</div>
+		<div class="modal-body">
+			<div class="row">
+				<div class="col-xs-12">
+					<div class="btn-group" id="edition-toolbar">
+						<a class="btn btn-link" href="http://www.ncbi.nlm.nih.gov/nuccore/<%= gbField('GBSeq_primary-accession') %>" target="_blank"><i class="fa fa-external-link fa-fw"></i> GenBank</a>          
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-xs-12">
+					<dl class="dl-horizontal">
+						<dt>Locus</dt>
+						<dd><%= gbField('GBSeq_locus') %> &middot; <%= gbField('GBSeq_length') %> bp &middot; <%= gbField('GBSeq_moltype') %> &middot; <%= gbField('GBSeq_division') %> &middot; <%= gbField('GBSeq_update-date') %></dd>			
+						<dt>Definition</dt>
+						<dd><%= gbField('GBSeq_definition') %></dd>
+						<dt>Accession</dt>
+						<dd><%= gbField('GBSeq_primary-accession') %></dd>
+						<dt>Version</dt>
+						<dd><%= gbField('GBSeq_accession-version') %> &middot; GI:<%= gbGI() %></dd>
+						<dt>Source</dt>
+						<dd><%= gbField('GBSeq_source') %></dd>
+						<dt>Organism</dt>
+						<dd><%= gbField('GBSeq_organism') %></dd>
+						<dt>Origin</dt>
+						<dd><div class="well well-sm lvl-dna-sequence"><%= gbSequence() %></div></dd>				
+					</dl>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		</div>
+	</div>
+</div>

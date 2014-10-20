@@ -116,6 +116,35 @@ a.lvl-login:hover, a.lvl-login:focus {
 	color: #f3f4f5;
 }
 
+.lvl-dna-sequence {
+	font: bold 12px 'Courier New', Courier, monospace;
+	text-transform: uppercase;
+	line-height: 1.5em;
+	letter-spacing: 2px;
+	white-space: pre;
+	width: 98%;
+}
+
+.lvl-dna-a {
+	color: rgb(80, 80, 255);
+}
+
+.lvl-dna-g {
+	color: rgb(0, 192, 0);
+}
+
+.lvl-dna-t {
+	color: rgb(230, 230, 0);
+}
+
+.lvl-dna-c {
+	color: rgb(224, 0, 0);
+}
+
+.lvl-dna-u {
+	color: rgb(204, 153, 0);
+}
+
 /* Override Boostrap styles: adjust form icons position */
 .has-feedback .form-control-feedback {
 	top: 14px;

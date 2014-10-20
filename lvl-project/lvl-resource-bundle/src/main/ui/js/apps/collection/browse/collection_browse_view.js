@@ -30,14 +30,43 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 					name : 'length',
 					label : 'Length',
 					editable : false,
-					cell : 'integer'
+					cell : 'integer',
+					formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
+						innerFormatter : new Backgrid.NumberFormatter({
+							decimals : 0
+						}),
+						fromRaw : function(rawValue, model) {
+							var self = this;
+							return self.innerFormatter.fromRaw(rawValue) + " bp";
+						}
+					})
+				},
+				{
+					name : 'gene',
+					label : 'Gene',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							if (rawValue !== undefined) {
+								var names = '';
+								for (var i = 0; i < rawValue.length; i++) {
+									names += rawValue[i] + ' ';
+								}
+								this.$el.append(names.trim());
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
 				},
 				{
 					name : 'organism',
 					label : 'Organism',
 					editable : false,
 					cell : 'string'
-				},				
+				},
 				{
 					name : 'locale',
 					label : 'Country',
@@ -55,6 +84,24 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 									this.$el.append('<a href="/#collection/map/country/' + code2.toLowerCase() + '"><img src="img/blank.gif" class="flag flag-'
 											+ code2.toLowerCase() + '" alt="' + countryName + '" /> ' + countryName + '</a>');
 								}
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},
+				{
+					name : 'accession',
+					label : '',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'string') {
+								this.$el.append('<a href="#" title="Open" data-accession="' + formattedValue
+										+ '" class="text-muted"><i class="fa fa-eye fa-fw"></i></a>');
 							}
 							this.delegateEvents();
 							return this;
@@ -91,6 +138,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 			events : {
 				'click a#link-btn' : 'createLink',
 				'click a#uncheck-btn' : 'deselectAll',
+				'click a[data-accession]' : 'showGenBankRecord'
 			},
 			createLink : function(e) {
 				e.preventDefault();
@@ -100,6 +148,13 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 			deselectAll : function(e) {
 				e.preventDefault();
 				this.grid.clearSelectedModels();
+			},
+			showGenBankRecord : function(e) {
+				e.preventDefault();
+				var self = this;
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-accession') : target.attr('data-accession');
+				this.trigger('sequences:view:sequence', itemId);
 			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {

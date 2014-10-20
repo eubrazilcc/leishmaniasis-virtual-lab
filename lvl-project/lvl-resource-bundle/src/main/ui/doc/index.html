@@ -2169,16 +2169,14 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
             </h2>
 
             <p>The Leishmaniasis Virtual Laboratory is a non-profit project mainly funded with public means. Therefore, many services have usage limitations
-              with the objective of providing the best possible service to the most users.
+              with the objective of providing the best possible service to the most users. The following list describe the current limitations of the LVL service:
+            </p>
             
-              </p>
-            
-            
-            
-            
-            
-            Google Geocoding API <a href="https://developers.google.com/maps/documentation/geocoding/#Limits" target="_blank">usage limits</a>
-            
+            <ul>
+              <li>The Google Geocoding API imposes <a href="https://developers.google.com/maps/documentation/geocoding/#Limits" target="_blank">usage limits</a>
+                to free users. When these limits are overpassed the error <code>OVER_QUERY_LIMIT</code> is returned to the caller.</li>
+            </ul>
+                                    
           </div>
         </div>
       </div>
@@ -2188,9 +2186,61 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
             <h2>
               <a id="limitations_desired_features"></a>Desired features list
             </h2>
-
-            <p>TODO</p>
             
+            <ul>
+              <li>Store tasks with the LVL database:
+                <ul><li>Tasks must be stored in the database of the LVL and the service replica that runs the task should update the status in the database, 
+                  while the other service replicas should read the status of the task from the database.</li></ul></li>
+              <li>Extend user support to include social network capabilities.
+                <ul><li>Add the following fields to the current user specification: location, country, joining date, description (optional). Create lists of
+                  followers/following.</li></ul></li>
+              <li>Periodically remove from the LVL database tasks completed after 30 days.</li>
+              <li>Periodically fetch new sequences from external databases.</li>
+              <li>Improve the inference of geographic coordinates from DNA sequences imported from GenBank.</li>
+            </ul>
+            
+            <p>
+              Currently, the geographic coordinates are inferred from the country feature of the GenBank record using the Google Geocoding API. However, this
+              field is annotated with a free-text format, difficulting the inference in many cases. When this occurs a <code>ZERO_RESULTS</code> error is
+              returned to the caller. The following examples were extracted from the logging system of the LVL service, demonstrating that in many cases
+              there are misspelling errors in the records or mixture of terms expressed in different languages:
+            </p>
+            
+            <code>$ sed '/ZERO_RESULTS/!d;s/^java.lang.IllegalStateException: Searching for //;s/ produces invalid Google Geocoding server response: ZERO_RESULTS$//' lvl-service.log | sort -u</code>
+            <p></p>
+            
+<pre>            
+'Algeria: Adama'
+'Algeria: Fdoules'
+'Algeria: Khola'
+'Algeria: Madjana'
+'Algeria: Vieux Mila'
+'Brazil: Keur Moussa, Senegal'
+'Cyprus: Mandria cave'
+'Egypt: colony from Southern Sina'
+'Egypt: Sinai, colony'
+'France: Rosis, Cevennes area'
+'France: Trois-puits, near Heims'
+'Greece: Psili Rahi'
+'Kenya: Utut Reserve'
+'Lebanon: Drya'
+'Lebanon: Nachgura'
+'Madagascar: Androdroka'
+'Madagascar: Bemaraha-Anjohikinakina'
+'Madagascar: Mahajanga-Anjohikely'
+'Mali: Sougoula village'
+'Montenegro: Dabcevici'
+'Oman: Djebel Quara'
+'Oman: Rowda'
+'Saudi Arabia: Hofouf, colony'
+'Sudan: Moyleih, Khartoum State'
+'Sudan: Sirougia, Khartoum State'
+'Sudan: Wad Shariefai, Kassala State'
+'Syria: Rhuaibe'
+'Syria: Rhuhaibe'
+'Thailand: Ratchabun province, Muang district, Huay-Phai sub-district'
+</pre>      
+
           </div>
         </div>
       </div>

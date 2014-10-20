@@ -12,7 +12,7 @@ define([ 'marionette', 'apps/config/marionette/configuration' ], function(Marion
 				url : '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css' + this.bust
 			}, {
 				id : 'font-awesome',
-				url : '//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css' + this.bust				
+				url : '//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css' + this.bust				
 			}, {
 				id : 'google_fonts',
 				url : '//fonts.googleapis.com/css?family=Lato:300,400,700,900,400italic,700italic' + this.bust
