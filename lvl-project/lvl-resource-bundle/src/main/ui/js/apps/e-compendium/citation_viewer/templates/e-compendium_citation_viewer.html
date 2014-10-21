@@ -1,0 +1,36 @@
+<div class="modal-dialog modal-lg">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">
+				<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+			</button>
+			<h4 class="modal-title" id="myModalLabel">Citation viewer</h4>
+		</div>
+		<div class="modal-body">
+			<div class="row">
+				<div class="col-xs-12">
+					<div class="btn-group" id="edition-toolbar">
+						<a class="btn btn-link" href="http://www.ncbi.nlm.nih.gov/pubmed/<%= gbField('id') %>" target="_blank"><i class="fa fa-external-link fa-fw"></i> PubMed</a>          
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-11 col-xs-12">
+					<dl class="dl-horizontal">
+						<dt>Citation</dt>
+						<dd><%= getISOAbbreviation() %> &middot; <%= getIssue() %></dd>
+						<dt>Title</dt>
+						<dd><%= getTitle() %></dd>
+						<dt>Authors</dt>
+						<dd><%= getAuthors() %></dd>
+						<dt>Abstract</dt>
+						<dd><%= getAbstract() %></dd>
+					</dl>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		</div>
+	</div>
+</div>

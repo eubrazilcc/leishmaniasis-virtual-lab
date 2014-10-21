@@ -94,6 +94,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 					name : 'id',
 					label : '',
 					editable : false,
+					sortable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();

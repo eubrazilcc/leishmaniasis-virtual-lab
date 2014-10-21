@@ -31,6 +31,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
+import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.CITATION_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
@@ -95,8 +96,6 @@ public class ReferenceResource {
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Reference Resource";
 	public static final String RESOURCE_SCOPE = REFERENCES;
 
-	public static final String REF_ID_PATTERN = "[0-9]+";
-
 	@GET
 	@Produces(APPLICATION_JSON)
 	public References getReferences(final @QueryParam("page") @DefaultValue("0") int page,
@@ -126,7 +125,7 @@ public class ReferenceResource {
 	}
 
 	@GET
-	@Path("{id: " + REF_ID_PATTERN + "}")
+	@Path("{id: " + CITATION_ID_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public Reference getReference(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -157,7 +156,7 @@ public class ReferenceResource {
 	}
 
 	@PUT
-	@Path("{id: " + REF_ID_PATTERN + "}")
+	@Path("{id: " + CITATION_ID_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
 	public void updateReference(final @PathParam("id") String id, final Reference update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -175,7 +174,7 @@ public class ReferenceResource {
 	}
 
 	@DELETE
-	@Path("{id: " + REF_ID_PATTERN + "}")
+	@Path("{id: " + CITATION_ID_PATTERN + "}")
 	public void deleteReference(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);

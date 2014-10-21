@@ -7,7 +7,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky' ], func
 		'use strict';
 		var config = new Configuration();
 		Entities.GbSequence = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/nucleotide/',
+			urlRoot : config.get('service', '') + '/gb_nucleotides/',
 			idAttribute : 'GBSeq_primary-accession',
 			defaults : {
 				'GBSeq_locus' : '',

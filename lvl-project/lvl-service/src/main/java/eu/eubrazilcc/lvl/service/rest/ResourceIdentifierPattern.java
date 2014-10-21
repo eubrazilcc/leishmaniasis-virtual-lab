@@ -29,5 +29,6 @@ package eu.eubrazilcc.lvl.service.rest;
 public interface ResourceIdentifierPattern {
 
 	public static final String SEQUENCE_ID_PATTERN = "[a-zA-Z_0-9]+(:|%3A)[a-zA-Z_0-9]+";
+	public static final String CITATION_ID_PATTERN = "[0-9]+";
 	
 }

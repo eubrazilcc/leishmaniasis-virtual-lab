@@ -22,16 +22,13 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
-import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
-import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
-import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.SEQUENCE_ID_PATTERN;
-import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
-import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
+import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
+import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.CITATION_ID_PATTERN;
+import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SEQUENCES;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.REFERENCES;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -52,56 +49,51 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 
-import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
-import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
-import eu.eubrazilcc.lvl.storage.SequenceKey;
+import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 
 /**
- * GenBank sequence resource.
+ * PubMed citations resource.
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/gb_nucleotides")
-public class GbSequenceResource {
+@Path("/pm_citations")
+public class PmCitationsResource {
 
-	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " GenBank Sequence Resource";
-	public static final String RESOURCE_SCOPE = SEQUENCES;
+	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " PubMed Citation Resource";
+	public static final String RESOURCE_SCOPE = REFERENCES;
 
-	private final static Logger LOGGER = getLogger(GbSequenceResource.class);
+	private final static Logger LOGGER = getLogger(PmCitationsResource.class);
 
 	@GET
-	@Path("{id: " + SEQUENCE_ID_PATTERN + "}")
+	@Path("{id: " + CITATION_ID_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public GBSeq getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+	public PubmedArticle getCitation(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final SequenceKey key = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);		
-		Sequence sequence = SANDFLY_DAO.find(key);
-		if (sequence == null) {
-			sequence = LEISHMANIA_DAO.find(key);			
-		}
-		if (sequence == null) {
+		final Reference reference = REFERENCE_DAO.find(id);
+		if (reference == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// get from file-system
-		final File file = new File(CONFIG_MANAGER.getGenBankDir(GB_SEQ_XML), sequence.getGi() + ".xml");
+		final File file = new File(CONFIG_MANAGER.getPubMedDir(PUBMED_XML), reference.getPubmedId() + ".xml");
 		if (!file.canRead()) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
-		GBSeq gbSeq = null;
+		PubmedArticle pmArticle = null;
 		try {
-			gbSeq = GBSEQ_XMLB.typeFromFile(file);
+			pmArticle = PUBMED_XMLB.typeFromFile(file);
 		} catch (IOException e) {
-			LOGGER.error("Failed to load GenBank sequence from file", e);
+			LOGGER.error("Failed to load PubMed citation from file", e);
 		}
-		if (gbSeq == null) {
+		if (pmArticle == null) {
 			throw new WebApplicationException("Unable to complete the operation", Response.Status.INTERNAL_SERVER_ERROR);
 		}
-		return gbSeq;
+		return pmArticle;
 	}
 
 }

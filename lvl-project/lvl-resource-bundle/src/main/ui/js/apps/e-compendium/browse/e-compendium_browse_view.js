@@ -22,6 +22,23 @@ define([ 'app', 'tpl!apps/e-compendium/browse/templates/e-compendium_browse', 'a
 			label : 'Title',
 			editable : false,
 			cell : 'string'
+		}, {
+			name : 'pubmedId',
+			label : '',
+			editable : false,
+			sortable : false,
+			cell : Backgrid.Cell.extend({
+				render : function() {
+					this.$el.empty();
+					var rawValue = this.model.get(this.column.get('name'));
+					var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+					if (formattedValue && typeof formattedValue === 'string') {
+						this.$el.append('<a href="#" title="Open" data-pmid="' + formattedValue + '" class="text-muted"><i class="fa fa-eye fa-fw"></i></a>');
+					}
+					this.delegateEvents();
+					return this;
+				}
+			})
 		} ];
 		View.Content = Marionette.ItemView.extend({
 			id : 'browse',
@@ -51,11 +68,19 @@ define([ 'app', 'tpl!apps/e-compendium/browse/templates/e-compendium_browse', 'a
 				}, '500', 'swing');
 			},
 			events : {
-				'click a#uncheck-btn' : 'deselectAll'
-			},			
+				'click a#uncheck-btn' : 'deselectAll',
+				'click a[data-pmid]' : 'showCitationRecord'
+			},
 			deselectAll : function(e) {
 				e.preventDefault();
 				this.grid.clearSelectedModels();
+			},
+			showCitationRecord : function(e) {
+				e.preventDefault();
+				var self = this;
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pmid') : target.attr('data-pmid');
+				this.trigger('references:view:citation', itemId);
 			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {

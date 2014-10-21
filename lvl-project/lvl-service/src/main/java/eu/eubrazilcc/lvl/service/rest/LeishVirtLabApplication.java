@@ -67,6 +67,7 @@ public class LeishVirtLabApplication extends Application {
 		instances.add(new LeishmaniaSequenceResource());
 		instances.add(new GbSequenceResource());
 		instances.add(new ReferenceResource());
+		instances.add(new PmCitationsResource());
 		instances.add(new WorkflowDefinitionResource());
 		instances.add(new WorkflowDataResource());
 		instances.add(new WorkflowRunResource());
