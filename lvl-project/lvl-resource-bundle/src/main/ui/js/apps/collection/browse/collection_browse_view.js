@@ -91,7 +91,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 					})
 				},
 				{
-					name : 'accession',
+					name : 'id',
 					label : '',
 					editable : false,
 					cell : Backgrid.Cell.extend({
@@ -100,7 +100,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="#" title="Open" data-accession="' + formattedValue
+								this.$el.append('<a href="#" title="Open" data-seq_id="' + formattedValue
 										+ '" class="text-muted"><i class="fa fa-eye fa-fw"></i></a>');
 							}
 							this.delegateEvents();
@@ -138,7 +138,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 			events : {
 				'click a#link-btn' : 'createLink',
 				'click a#uncheck-btn' : 'deselectAll',
-				'click a[data-accession]' : 'showGenBankRecord'
+				'click a[data-seq_id]' : 'showSequenceRecord'
 			},
 			createLink : function(e) {
 				e.preventDefault();
@@ -149,11 +149,11 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				e.preventDefault();
 				this.grid.clearSelectedModels();
 			},
-			showGenBankRecord : function(e) {
+			showSequenceRecord : function(e) {
 				e.preventDefault();
 				var self = this;
 				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-accession') : target.attr('data-accession');
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-seq_id') : target.attr('data-seq_id');
 				this.trigger('sequences:view:sequence', itemId);
 			},
 			onBeforeRender : function() {

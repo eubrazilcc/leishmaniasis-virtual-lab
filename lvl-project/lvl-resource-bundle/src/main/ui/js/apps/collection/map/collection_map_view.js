@@ -17,6 +17,16 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 			initialize : function() {
 				$(window).on('resize', this.resize);
 			},
+			events : {
+				'click a[data-seq_id]' : 'showSequenceRecord'
+			},
+			showSequenceRecord : function(e) {
+				e.preventDefault();
+				var self = this;
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-seq_id') : target.attr('data-seq_id');				
+				this.trigger('sequences:view:sequence', itemId);
+			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {
 					var styleLoader = new Style();
@@ -253,7 +263,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 						var text = '';
 						var seqs = name.split(',');
 						for (i = 0; i < seqs.length; i++) {
-							text += '<a href="/#sequence/' + seqs[i] + '">' + seqs[i] + '</a> ';
+							text += '<a href="#" data-seq_id="' + seqs[i] + '">' + seqs[i] + '</a> '; // TODO
 						}
 						return text;
 					}

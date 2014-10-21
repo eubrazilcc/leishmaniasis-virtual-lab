@@ -33,6 +33,7 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearbyLeishmania;
+import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.SEQUENCE_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SEQUENCES;
@@ -101,8 +102,6 @@ public class LeishmaniaSequenceResource {
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence (leishmania) Resource";
 	public static final String RESOURCE_SCOPE = SEQUENCES;
 
-	public static final String SEQ_ID_PATTERN = "[a-zA-Z_0-9]+:[a-zA-Z_0-9]+";
-
 	@GET
 	@Produces(APPLICATION_JSON)
 	public Sequences getSequences(final @QueryParam("page") @DefaultValue("0") int page,
@@ -132,7 +131,7 @@ public class LeishmaniaSequenceResource {
 	}
 
 	@GET
-	@Path("{id: " + SEQ_ID_PATTERN + "}")
+	@Path("{id: " + SEQUENCE_ID_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public Leishmania getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -163,7 +162,7 @@ public class LeishmaniaSequenceResource {
 	}
 
 	@PUT
-	@Path("{id: " + SEQ_ID_PATTERN + "}")
+	@Path("{id: " + SEQUENCE_ID_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
 	public void updateSequence(final @PathParam("id") String id, final Leishmania update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -186,7 +185,7 @@ public class LeishmaniaSequenceResource {
 	}
 
 	@DELETE
-	@Path("{id: " + SEQ_ID_PATTERN + "}")
+	@Path("{id: " + SEQUENCE_ID_PATTERN + "}")
 	public void deleteSequence(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);

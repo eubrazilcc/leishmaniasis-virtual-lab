@@ -22,10 +22,12 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
-import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
+import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
+import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.SEQUENCE_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
@@ -65,21 +67,19 @@ public class GbSequenceResource {
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " GenBank Sequence Resource";
 	public static final String RESOURCE_SCOPE = SEQUENCES;
 
-	public static final String ACCESSION_PATTERN = "[a-zA-Z0-9]+";
-
 	private final static Logger LOGGER = getLogger(GbSequenceResource.class);
 
 	@GET
-	@Path("{accession: " + ACCESSION_PATTERN + "}")
+	@Path("{id: " + SEQUENCE_ID_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public GBSeq getSequence(final @PathParam("accession") String accession, final @Context UriInfo uriInfo, 
+	public GBSeq getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
-		if (isBlank(accession)) {
+		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// get from database
-		final SequenceKey key = SequenceKey.builder().dataSource(GENBANK).accession(accession).build();		
+		final SequenceKey key = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);		
 		Sequence sequence = SANDFLY_DAO.find(key);
 		if (sequence == null) {
 			sequence = LEISHMANIA_DAO.find(key);			
