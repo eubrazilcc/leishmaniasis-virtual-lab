@@ -145,6 +145,20 @@ a.lvl-login:hover, a.lvl-login:focus {
 	color: rgb(204, 153, 0);
 }
 
+#lvl-qtip-growl-container {
+	position: fixed;
+	top: 110px;
+	right: 10px;
+	z-index: +1002 !important;
+}
+
+#lvl-qtip-growl-container .qtip {
+	position: static;
+	min-height: 0;
+	overflow: hidden;
+	margin: 0 0 5px 0;
+}
+
 /* Override Boostrap styles: adjust form icons position */
 .has-feedback .form-control-feedback {
 	top: 14px;

@@ -136,9 +136,15 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				}, '500', 'swing');
 			},
 			events : {
+				'click a#export-btn' : 'exportFile',
 				'click a#link-btn' : 'createLink',
 				'click a#uncheck-btn' : 'deselectAll',
 				'click a[data-seq_id]' : 'showSequenceRecord'
+			},
+			exportFile : function(e) {
+				e.preventDefault();
+				var selectedModels = this.grid.getSelectedModels();
+				this.trigger('sequences:file:export', selectedModels);
 			},
 			createLink : function(e) {
 				e.preventDefault();

@@ -40,8 +40,15 @@ define([ 'app', 'tpl!apps/collection/link/templates/collection_create_link', 'ap
 					url : config.get('service', '') + '/public_links',
 					data : JSON.stringify(requestData),
 					headers : config.authorizationHeader()
-				}).done(function() {
+				}).done(function(data, textStatus, request) {
 					self.trigger('close');
+					require([ 'common/growl' ], function(createGrowl) {
+						var anchor = $('<a>', {
+							href : request.getResponseHeader('Location')
+						})[0];
+						var filename = anchor.pathname.substring(anchor.pathname.lastIndexOf('/') + 1);
+						createGrowl('New link created', filename + ' <a href="/#files/links"><i class="fa fa-hand-o-right fa-fw"></i> links</a>', false);
+					});
 				}).fail(function() {
 					self.trigger('close');
 					require([ 'qtip' ], function(qtip) {

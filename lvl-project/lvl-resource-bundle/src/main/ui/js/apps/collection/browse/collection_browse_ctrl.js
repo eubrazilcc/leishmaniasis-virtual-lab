@@ -26,6 +26,11 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/sequence', 'ap
 						Lvl.dialogRegion.show(dialogView);
 					});
 				});
+				view.on('sequences:file:export', function(selectedModels) {
+					
+					// TODO
+					
+				});
 				view.on('sequences:link:create', function(selectedModels) {
 					require([ 'apps/collection/link/link_view' ], function(EditView) {
 						var sequences = selectedModels.filter(function(element) {
