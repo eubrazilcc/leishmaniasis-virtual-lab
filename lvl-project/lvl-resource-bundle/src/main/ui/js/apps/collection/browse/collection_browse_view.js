@@ -145,12 +145,24 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 			exportFile : function(e) {
 				e.preventDefault();
 				var selectedModels = this.grid.getSelectedModels();
-				this.trigger('sequences:file:export', selectedModels);
+				if (selectedModels && selectedModels.length > 0) {
+					this.trigger('sequences:file:export', selectedModels);
+				} else {
+					require([ 'common/growl' ], function(createGrowl) {
+						createGrowl('No sequences selected', 'Select at least one sequence to be exported', false);
+					});
+				}				
 			},
 			createLink : function(e) {
 				e.preventDefault();
 				var selectedModels = this.grid.getSelectedModels();
-				this.trigger('sequences:link:create', selectedModels);
+				if (selectedModels && selectedModels.length > 0) {
+					this.trigger('sequences:link:create', selectedModels);
+				} else {
+					require([ 'common/growl' ], function(createGrowl) {
+						createGrowl('No sequences selected', 'Select at least one sequence to be linked', false);
+					});
+				}
 			},
 			deselectAll : function(e) {
 				e.preventDefault();

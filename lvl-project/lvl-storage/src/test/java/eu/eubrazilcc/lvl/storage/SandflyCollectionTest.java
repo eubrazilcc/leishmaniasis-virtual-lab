@@ -70,6 +70,8 @@ public class SandflyCollectionTest {
 					.gi(Integer.MAX_VALUE)
 					.definition("definition")
 					.organism("organism")
+					.gene(newHashSet("COI"))
+					.length(850) // use a large value here to enable length filters, additional entries will be created in the interval 100-111
 					.countryFeature("Spain: Murcia")
 					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build())
 					.locale(new Locale("es", "ES"))
@@ -170,13 +172,14 @@ public class SandflyCollectionTest {
 					"Spain", "Lebanon", "Oman", "Syrian Arab Republic", "Cyprus", "Portugal", "Morocco", "Turkey", "Malta", "Madagascar",
 					"New Caledonia", "Brazil" };
 			final List<String> ids = newArrayList();
-			final int numItems = 11;
+			final int numItems = 11, initialLength = 100;
 			for (int i = 0; i < numItems; i++) {
 				final Sandfly sandfly3 = Sandfly.builder()
 						.dataSource(GENBANK)
 						.accession(Integer.toString(i))
 						.definition("This is an example")
 						.gi(i)
+						.length(initialLength + i)
 						.countryFeature(countries[random.nextInt(countries.length)])
 						.locale(i%2 != 0 ? Locale.ENGLISH : Locale.FRANCE)
 						.build();
@@ -238,6 +241,22 @@ public class SandflyCollectionTest {
 			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(0));
+
+			// filter with operator (valid lengths: 100-111)
+			filter = of("length", Integer.toString(initialLength));
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			assertThat("filtered sandfly is not null", sandflies, notNullValue());
+			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(1));
+
+			filter = of("length", ">" + initialLength);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			assertThat("filtered sandfly is not null", sandflies, notNullValue());
+			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems - 1));
+			
+			filter = of("length", "<=" + initialLength + numItems);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			assertThat("filtered sandfly is not null", sandflies, notNullValue());
+			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems));
 
 			// sorting by accession in ascending order
 			Sorting sorting = Sorting.builder()

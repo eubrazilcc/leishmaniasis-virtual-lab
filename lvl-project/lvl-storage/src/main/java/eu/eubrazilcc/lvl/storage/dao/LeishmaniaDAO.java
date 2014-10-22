@@ -29,6 +29,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore.startStore;
@@ -89,16 +90,19 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 	public static final String PRIMARY_KEY_PART1 = DB_PREFIX + "dataSource";
 	public static final String PRIMARY_KEY_PART2 = DB_PREFIX + "accession";
 	public static final String GI_KEY            = DB_PREFIX + "gi";
+	public static final String LENGTH_KEY        = DB_PREFIX + "length";
 	public static final String GEOLOCATION_KEY   = DB_PREFIX + "location";
 
 	private LeishmaniaDAO() {
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, GI_KEY), COLLECTION);
+		MONGODB_CONN.createNonUniqueIndex(LENGTH_KEY, COLLECTION, false);
 		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
 				DB_PREFIX + "dataSource", 
 				DB_PREFIX + "definition", 
 				DB_PREFIX + "accession", 
+				DB_PREFIX + "gene",
 				DB_PREFIX + "organism",
 				DB_PREFIX + "countryFeature"), 
 				COLLECTION);
@@ -329,6 +333,10 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 				field = DB_PREFIX + "definition";
 			} else if ("accession".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "accession";
+			} else if ("length".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "length";
+			} else if ("gene".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "gene";
 			} else if ("organism".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "organism";
 			} else if ("countryFeature".equalsIgnoreCase(sorting.getField())) {
@@ -379,6 +387,10 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 				field = DB_PREFIX + "definition";
 			} else if ("accession".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "accession";
+			} else if ("length".equalsIgnoreCase(parameter)) {
+				field = DB_PREFIX + "length";
+			} else if ("gene".equalsIgnoreCase(parameter)) {
+				field = DB_PREFIX + "gene";
 			} else if ("organism".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "organism";
 			} else if ("country".equalsIgnoreCase(parameter)) {
@@ -394,6 +406,9 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 					// regular expression to match the language part of the locale
 					final Pattern regex = compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");					
 					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);
+				} else if ("length".equalsIgnoreCase(parameter)) {
+					// comparison operator
+					query2 = mongoNumeriComparison(field, expression);
 				} else {
 					// regular expression to match all entries that contains the keyword
 					final Pattern regex = compile(".*" + expression + ".*", CASE_INSENSITIVE);
