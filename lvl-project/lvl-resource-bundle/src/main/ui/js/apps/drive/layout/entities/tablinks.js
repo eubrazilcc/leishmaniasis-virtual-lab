@@ -1,9 +1,9 @@
 /**
- * RequireJS module that defines the entity: analysis->tab-link.
+ * RequireJS module that defines the entity: drive->tab-link.
  */
 
 define([ 'app', 'backbone.picky' ], function(Lvl) {
-	Lvl.module('FilesApp.Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('DriveApp.Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		Entities.Navigation = Backbone.Model.extend({
 			defaults : {
 				link : '',
@@ -35,7 +35,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 			}
 		});
 
-		Entities.NavigationFiles = Backbone.Collection.extend({
+		Entities.NavigationDrive = Backbone.Collection.extend({
 			model : Entities.Navigation,
 			comparator : 'id',
 			initialize : function() {
@@ -45,8 +45,13 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 		});
 
 		var iniNavigationLinks = function() {
-			Entities.navigationLinks = new Entities.NavigationFiles([ {
+			Entities.navigationLinks = new Entities.NavigationDrive([ {
 				id : 1,
+				link : 'files',
+				icon : 'fa-folder',
+				text : 'Files'
+			}, {
+				id : 2,
 				link : 'links',
 				icon : 'fa-link',
 				text : 'Links'
@@ -62,7 +67,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 			}
 		}
 
-		Lvl.reqres.setHandler('files:navigation:entities', function() {
+		Lvl.reqres.setHandler('drive:navigation:entities', function() {
 			return API.getNavigationEntities();
 		});
 	});

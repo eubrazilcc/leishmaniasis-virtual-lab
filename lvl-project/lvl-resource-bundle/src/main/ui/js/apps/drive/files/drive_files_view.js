@@ -1,11 +1,11 @@
 /**
- * RequireJS module that defines the view: links->show.
+ * RequireJS module that defines the view: drive->files.
  */
 
-define([ 'app', 'marionette', 'tpl!apps/files/links/templates/files_links', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'pace',
+define([ 'app', 'marionette', 'tpl!apps/drive/links/templates/drive_links', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'pace',
 		'moment', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, Marionette, LinksTpl, Style,
 		Configuration, pace, moment) {
-	Lvl.module('FilesApp.Links.View', function(View, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('DriveApp.Links.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
 		var columns = [
@@ -261,5 +261,5 @@ define([ 'app', 'marionette', 'tpl!apps/files/links/templates/files_links', 'app
 			}
 		});
 	});
-	return Lvl.FilesApp.Links.View;
+	return Lvl.DriveApp.Links.View;
 });

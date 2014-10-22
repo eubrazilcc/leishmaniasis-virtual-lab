@@ -1,9 +1,9 @@
 /**
- * RequireJS module that defines the controller: files->links.
+ * RequireJS module that defines the controller: drive->links.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'entities/link', 'apps/files/links/files_links_view' ], function(Lvl, Configuration, LinkModel, View) {
-	Lvl.module('FilesApp.Links', function(Links, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'apps/config/marionette/configuration', 'entities/link', 'apps/drive/links/drive_links_view' ], function(Lvl, Configuration, LinkModel, View) {
+	Lvl.module('DriveApp.Links', function(Links, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
 		Links.Controller = {
@@ -18,5 +18,5 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/link', 'apps/f
 			}
 		}
 	});
-	return Lvl.FilesApp.Links.Controller;
+	return Lvl.DriveApp.Links.Controller;
 });

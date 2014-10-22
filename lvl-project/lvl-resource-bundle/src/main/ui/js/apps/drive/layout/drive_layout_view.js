@@ -1,10 +1,10 @@
 /**
- * RequireJS module that defines the view: files->layout.
+ * RequireJS module that defines the view: drive->layout.
  */
 
-define([ 'app', 'apps/config/marionette/regions/fadein', 'tpl!apps/files/layout/templates/files-layout', 'tpl!apps/files/layout/templates/tab-list',
-		'tpl!apps/files/layout/templates/tab-link' ], function(Lvl, FadeInRegion, LayoutTpl, TabListTpl, TabLinkTpl) {
-	Lvl.module('FilesApp.Layout.View', function(View, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'apps/config/marionette/regions/fadein', 'tpl!apps/drive/layout/templates/drive-layout', 'tpl!apps/drive/layout/templates/tab-list',
+		'tpl!apps/drive/layout/templates/tab-link' ], function(Lvl, FadeInRegion, LayoutTpl, TabListTpl, TabLinkTpl) {
+	Lvl.module('DriveApp.Layout.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		View.TabLink = Marionette.ItemView.extend({
 			tagName : 'li',
 			template : TabLinkTpl,
@@ -17,8 +17,8 @@ define([ 'app', 'apps/config/marionette/regions/fadein', 'tpl!apps/files/layout/
 		View.TabList = Marionette.CompositeView.extend({
 			template : TabListTpl,
 			itemView : View.TabLink,
-			appendHtml : function(filesView, itemView) {
-				filesView.$('ul').append(itemView.el);
+			appendHtml : function(driveView, itemView) {
+				driveView.$('ul').append(itemView.el);
 			}
 		});
 		View.Layout = Marionette.Layout.extend({
@@ -39,5 +39,5 @@ define([ 'app', 'apps/config/marionette/regions/fadein', 'tpl!apps/files/layout/
 			}
 		});
 	});
-	return Lvl.FilesApp.Layout.View;
+	return Lvl.DriveApp.Layout.View;
 });

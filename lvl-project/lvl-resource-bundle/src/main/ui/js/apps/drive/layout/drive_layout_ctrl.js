@@ -1,15 +1,15 @@
 /**
- * RequireJS module that defines the controller: files->layout.
+ * RequireJS module that defines the controller: drive->layout.
  */
 
-define([ 'app', 'apps/files/layout/files_layout_view' ], function(Lvl, View) {
-	Lvl.module('FilesApp.Layout', function(Layout, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'apps/drive/layout/drive_layout_view' ], function(Lvl, View) {
+	Lvl.module('DriveApp.Layout', function(Layout, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Layout.Controller = {
 			showLayout : function(section, id) {
 				var subapp = section + (id ? '_item' : '');
-				require([ 'apps/files/' + subapp + '/files_' + subapp + '_ctrl', 'apps/files/layout/entities/tablinks' ], function(SectionController) {
-					var tabLinks = Lvl.request('files:navigation:entities');
+				require([ 'apps/drive/' + subapp + '/drive_' + subapp + '_ctrl', 'apps/drive/layout/entities/tablinks' ], function(SectionController) {
+					var tabLinks = Lvl.request('drive:navigation:entities');
 					var tabLinkToSelect = tabLinks.find(function(tabLink) {
 						return tabLink.get('link') === section;
 					});
@@ -24,5 +24,5 @@ define([ 'app', 'apps/files/layout/files_layout_view' ], function(Lvl, View) {
 			}
 		}
 	});
-	return Lvl.FilesApp.Layout.Controller;
+	return Lvl.DriveApp.Layout.Controller;
 });
