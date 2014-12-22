@@ -1,111 +1,110 @@
 /**
- * RequireJS module that defines the view: drive->files.
+ * RequireJS module that defines the view: drive->datasets.
  */
 
-define([ 'app', 'marionette', 'tpl!apps/drive/links/templates/drive_links', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'pace',
-		'moment', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, Marionette, LinksTpl, Style,
-		Configuration, pace, moment) {
-	Lvl.module('DriveApp.Links.View', function(View, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'marionette', 'tpl!apps/drive/datasets/templates/drive_datasets', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 
+         'pace', 'moment', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, Marionette, LinksTpl, 
+        		 Style, Configuration, pace, moment) {
+	Lvl.module('DriveApp.Datasets.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
-		var columns = [
-				{
-					name : 'urlSafePath',
-					label : 'Name',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'mime',
-					label : 'Type',
-					editable : false,
-					cell : Backgrid.Cell.extend({
-						render : function() {
-							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));
-							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'string') {
-								var image = '', type = '';
-								switch (formattedValue.trim().toLowerCase()) {
-								case 'text/plain':
-									image = 'fa-file-text-o';
-									type = 'text';
-									break;
-								case 'application/gzip':
-									image = 'fa-file-zip-o';
-									type = 'zip';
-									break;
-								default:
-									image = 'fa-file-o';
-									type = 'unknown';
-									break;
-								}
-								this.$el.append('<i class="fa ' + image + ' fa-fw"></i> ' + type);
-							}
-							this.delegateEvents();
-							return this;
+		var columns = [ {
+			name : 'urlSafePath',
+			label : 'Name',
+			editable : false,
+			cell : 'string'
+		},
+		{
+			name : 'mime',
+			label : 'Type',
+			editable : false,
+			cell : Backgrid.Cell.extend({
+				render : function() {
+					this.$el.empty();
+					var rawValue = this.model.get(this.column.get('name'));
+					var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+					if (formattedValue && typeof formattedValue === 'string') {
+						var image = '', type = '';
+						switch (formattedValue.trim().toLowerCase()) {
+						case 'text/plain':
+							image = 'fa-file-text-o';
+							type = 'text';
+							break;
+						case 'application/gzip':
+							image = 'fa-file-zip-o';
+							type = 'zip';
+							break;
+						default:
+							image = 'fa-file-o';
+						type = 'unknown';
+						break;
 						}
-					})
-				},
-				{
-					name : 'created',
-					label : 'Created',
-					editable : false,
-					cell : Backgrid.Cell.extend({
-						render : function() {
-							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));
-							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'number') {
-								this.$el.append(moment(formattedValue).format('MMM DD[,] YYYY [at] HH[:]mm'));
-							}
-							this.delegateEvents();
-							return this;
-						}
-					})
-				},
-				{
-					name : 'description',
-					label : 'Description',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'downloadUri',
-					label : '',
-					editable : false,
-					cell : Backgrid.Cell.extend({
-						render : function() {
-							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));
-							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="' + formattedValue
-										+ '" target="_blank" title="Download" class="text-muted"><i class="fa fa-download fa-fw"></i></a>');
-							}
-							this.delegateEvents();
-							return this;
-						}
-					})
-				},
-				{
-					name : 'urlSafePath',
-					label : '',
-					editable : false,
-					cell : Backgrid.Cell.extend({
-						render : function() {
-							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));
-							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="#" title="Remove" class="text-muted" data-remove="' + formattedValue
-										+ '"><i class="fa fa-times fa-fw"></i></a>');
-							}
-							this.delegateEvents();
-							return this;
-						}
-					})
-				} ];
+						this.$el.append('<i class="fa ' + image + ' fa-fw"></i> ' + type);
+					}
+					this.delegateEvents();
+					return this;
+				}
+			})
+		},
+		{
+			name : 'created',
+			label : 'Created',
+			editable : false,
+			cell : Backgrid.Cell.extend({
+				render : function() {
+					this.$el.empty();
+					var rawValue = this.model.get(this.column.get('name'));
+					var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+					if (formattedValue && typeof formattedValue === 'number') {
+						this.$el.append(moment(formattedValue).format('MMM DD[,] YYYY [at] HH[:]mm'));
+					}
+					this.delegateEvents();
+					return this;
+				}
+			})
+		},
+		{
+			name : 'description',
+			label : 'Description',
+			editable : false,
+			cell : 'string'
+		},
+		{
+			name : 'downloadUri',
+			label : '',
+			editable : false,
+			cell : Backgrid.Cell.extend({
+				render : function() {
+					this.$el.empty();
+					var rawValue = this.model.get(this.column.get('name'));
+					var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+					if (formattedValue && typeof formattedValue === 'string') {
+						this.$el.append('<a href="' + formattedValue
+								+ '" target="_blank" title="Download" class="text-muted"><i class="fa fa-download fa-fw"></i></a>');
+					}
+					this.delegateEvents();
+					return this;
+				}
+			})
+		},
+		{
+			name : 'urlSafePath',
+			label : '',
+			editable : false,
+			cell : Backgrid.Cell.extend({
+				render : function() {
+					this.$el.empty();
+					var rawValue = this.model.get(this.column.get('name'));
+					var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+					if (formattedValue && typeof formattedValue === 'string') {
+						this.$el.append('<a href="#" title="Remove" class="text-muted" data-remove="' + formattedValue
+								+ '"><i class="fa fa-times fa-fw"></i></a>');
+					}
+					this.delegateEvents();
+					return this;
+				}
+			})
+		} ];
 		View.Content = Marionette.ItemView.extend({
 			id : 'links',
 			template : LinksTpl,
@@ -261,5 +260,5 @@ define([ 'app', 'marionette', 'tpl!apps/drive/links/templates/drive_links', 'app
 			}
 		});
 	});
-	return Lvl.DriveApp.Links.View;
+	return Lvl.DriveApp.Datasets.View;
 });

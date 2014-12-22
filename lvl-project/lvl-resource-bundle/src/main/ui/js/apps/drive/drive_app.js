@@ -23,7 +23,7 @@ define([ 'app' ], function(Lvl) {
         Lvl.commands.setHandler('drive:set:active', function(section) {
         	section = section || 'default';
             if (DriveApp.currentSection !== section) {
-                if (section === 'files' || section === 'links') {
+                if (section === 'datasets' || section === 'links') {
                     require([ 'apps/drive/layout/drive_layout_ctrl' ], function(LayoutController) {
                     	DriveApp.currentSection = LayoutController.showLayout(section);
                     });

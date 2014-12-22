@@ -10,7 +10,7 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 	var bust = requirejs.s.contexts._.config.urlArgs ? '?' + requirejs.s.contexts._.config.urlArgs : '';
 	Marionette.Controller.Configuration = Marionette.Controller.extend({
 		initialize : function(options) {
-			this.endpoint = 'http://lvl.i3m.upv.es';
+			this.endpoint = 'https://lvl.i3m.upv.es';
 			this.config = [ {
 				id : 'bust',
 				value : bust
@@ -39,7 +39,7 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 		},
 		getUserLocation : function(callback, error) {
 			if ('function' === typeof callback) {
-				$.ajax('http://freegeoip.net/json/').done(function(location) {
+				$.ajax('https://freegeoip.net/json/').done(function(location) {
 					callback(location);
 				}).fail(function(jqXHR, textStatus) {
 					if ('function' === typeof error) {

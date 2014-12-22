@@ -47,9 +47,9 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 		var iniNavigationLinks = function() {
 			Entities.navigationLinks = new Entities.NavigationDrive([ {
 				id : 1,
-				link : 'files',
-				icon : 'fa-folder',
-				text : 'Files'
+				link : 'datasets',
+				icon : 'fa-cloud',
+				text : 'Datasets'
 			}, {
 				id : 2,
 				link : 'links',

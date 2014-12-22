@@ -9,7 +9,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 		var Router = Backbone.Router.extend({
 			routes : {
 				'drive' : 'defaultDrive',
-				'drive/files' : 'showFiles',
+				'drive/datasets' : 'showDatasets',
 				'drive/links' : 'showLinks'
 			},
 			before : function() {
@@ -29,13 +29,13 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 			},
 			defaultDrive : function() {
 				var self = this;
-				Lvl.navigate('drive/files', {
+				Lvl.navigate('drive/datasets', {
 					trigger : true,
 					replace : true
 				});
 			},
-			showFiles : function() {
-				Lvl.execute('drive:set:active', 'files');
+			showDatasets : function() {
+				Lvl.execute('drive:set:active', 'datasets');
 			},
 			showLinks : function() {
 				Lvl.execute('drive:set:active', 'links');

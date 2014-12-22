@@ -372,6 +372,11 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 				query = parseFilter(entry.getKey(), entry.getValue(), query);
 			}
 		}
+		
+		// TODO
+		System.err.println("\n\n >> QUERY: " + (query != null ? query.toString() : "NULL") + "\n");
+		// TODO
+		
 		return query;
 	}
 
@@ -400,18 +405,18 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 			if (isNotBlank(field)) {
 				if ("accession".equalsIgnoreCase(parameter)) {
 					// convert the expression to upper case and compare for exact matching
-					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toUpperCase());
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toUpperCase()); // TODO
 				} else if ("locale".equalsIgnoreCase(parameter)) {
 					// regular expression to match the language part of the locale
 					final Pattern regex = compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");
-					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex); // TODO
 				} else if ("length".equalsIgnoreCase(parameter)) {
 					// comparison operator
-					query2 = mongoNumeriComparison(field, expression);					
+					query2 = mongoNumeriComparison(field, expression); // TODO
 				} else {
 					// regular expression to match all entries that contains the keyword
 					final Pattern regex = compile(".*" + expression + ".*", CASE_INSENSITIVE);
-					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);					
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex); // TODO
 				}
 			} else {
 				// full-text search

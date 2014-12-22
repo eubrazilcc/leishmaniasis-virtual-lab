@@ -38,7 +38,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
       <div class="row">
         <div class="col-xs-12">
           <h1>Leishmaniasis Virtual Laboratory (LVL) Administration &amp; Development Guide</h1>
-          <p class="lead">Version 0.0.1 - October 2014</p>
+          <p class="lead">Version 0.0.1 - December 2014</p>
           <p>
             <strong>Abstract.</strong> This document is a guide to the administration and configuration of the Leishmaniasis Virtual Laboratory (LVL).
           </p>
@@ -100,6 +100,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                     <ul>
                       <li><a href="#user_interface_country_flags">Country flags</a></li>
                     </ul></li>
+                </ul></li>
+              <li><a href="#query_language">Query language</a>
+                <ul>
+                  <li><a href="#query_language_definition">LVL query language definition</a></li>                  
                 </ul></li>
               <li><a href="#examples">Examples</a>
                 <ul>
@@ -210,7 +214,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                 <p class="list-group-item-text">
                   A pure-JavaScript application that needs an HTTP server. <em>Recommended setup:</em> <a href="http://nginx.org/" target="_blank">nginx</a>
                   1.4.6. Optionally, you can include <a href="https://github.com/nbs-system/naxsi/wiki" target="_blank">Naxsi</a> with nginx to protect your
-                  server against XSS &amp; SQL injection.
+                  server against <a href="http://en.wikipedia.org/wiki/Cross-site_scripting" target="_blank">XSS</a> &amp; 
+                  <a href="http://en.wikipedia.org/wiki/SQL_injection" target="_blank">SQL injection</a>.
                 </p>                
               </li>
             </ul>
@@ -336,8 +341,38 @@ that you distribute must include a readable copy of the "NOTICE" text file.
             <p></p>
 
             <h3>Install &amp; configure Web portal</h3>
-
-            <p><em>TODO</em></p>            
+            
+            <p>Configure your HTTP server as usual: assign an HTTP port (usually 80), a root directory for your installation and a server name. Copy the
+              content of the <code>htdocs</code> directory of the LVL distribution to your root directory. Optionally, enable compression on your server 
+              and tune-up other parameters, such as expiration time, etc.</p>
+              
+            <p>The LVL requires two services to be enabled in the HTTP server, which are served by a Java Application Server. You can simply configure
+              your HTTP server to proxy your Java services. For example, in nginx, add two location aliases in the <code>server</code> section of the 
+              configuration to proxy your Java services:</p>
+              
+<pre>
+location ^~ /lvl-auth/ {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_redirect   off;
+    proxy_set_header Host            $host;
+    proxy_set_header X-Real-IP       $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_read_timeout 5m;
+    proxy_connect_timeout 120;
+}
+</pre>
+            
+<pre>
+location ^~ /lvl-service/ {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_redirect   off;
+    proxy_set_header Host            $host;
+    proxy_set_header X-Real-IP       $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_read_timeout 5m;
+    proxy_connect_timeout 120;
+}
+</pre>
             
             <p>Create an alias to your folder where the public files are stored. For example, in nginx, add a location alias in the <code>server</code>
               section of the configuration to serve the public files from the filesystem in a static manner:</p>
@@ -346,7 +381,53 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 location /lvl-pub/ {
     alias /opt/lvl/data/shared/;
 }
-</pre>      
+</pre>
+
+            <h4>Securing your connection</h4>
+
+            <p>If you are going to provide access to the LVL using a secure chennel (<strong>*RECOMMENDED*</strong>) you will need to configure your
+              HTTP server to support HTTPS connections. For example, in nginx, add the following to the <code>server</code> section of the configuration:</p>
+              
+<pre>
+listen 443 ssl;
+
+keepalive_timeout 70;
+
+ssl_certificate /etc/nginx/ssl/cert.pem;
+ssl_certificate_key /etc/nginx/ssl/key.pem;
+
+ssl_session_cache   shared:SSL:10m;
+ssl_session_timeout 10m;
+
+ssl_protocols SSLv3 TLSv1 TLSv1.1 TLSv1.2;
+ssl_ciphers RC4:HIGH:!aNULL:!MD5;
+ssl_prefer_server_ciphers on;
+</pre>
+
+            <p>Export your server certificate and private key:</p>
+
+<pre>
+openssl pkcs12 -in lvl_i3m_upv_es@pkirisgrid.p12 -nocerts -nodes -out key.pem
+openssl pkcs12 -in lvl_i3m_upv_es@pkirisgrid.p12 -nokeys -nodes -out cert.pem
+</pre>
+
+            <p>Configure your certificate permissionsand restart your HTTP server:</p>
+
+<pre>
+root@lvl:~# chown root.www-data /etc/nginx/ssl/*.pem
+root@lvl:~# chmod 0640 /etc/nginx/ssl/*.pem
+root@lvl:~# ls -lh /etc/nginx/ssl/
+total 8.0K
+-rw-r----- 1 root www-data 1.9K Dec 17 13:57 cert.pem
+-rw-r----- 1 root www-data 1.9K Dec 17 13:57 key.pem
+</pre>
+
+            <p>More details in the nginx online <a href="http://nginx.org/en/docs/http/configuring_https_servers.html" target="_blank">documentation</a>.</p>
+
+            <h4>Access to the sandbox endpoint</h4>
+            
+            <p>Install the <a href="http://pki.irisgrid.es/ca/cert/" target="_blank">pkIRISGrid CA</a> certificate in your browser to trust the server 
+               certificate presented by the sandbox. This is the PKI CA for the spanish e-science, which is part of the European Grid Infrastructure (EGI).</p>           
 
             <h3>Performance optimization</h3>
 
@@ -563,6 +644,131 @@ location /lvl-pub/ {
 
             <p>A 200 response means that the client can continue with the operation. If request is invalid, or is not permitted, then request is rejected
               with HTTP status code 403 (Forbidden).</p>
+              
+            <h3>Compression is not enabled</h3>
+            
+            <p>By default, GZIP compression is enabled selectively in the LVL REST API for those methods that returns a very large response to the 
+              caller. This compression is performed at the level of the RESTful web service as described here, and includes the complete body of the
+              response entity sent to the caller:</p>
+              
+            <ul>
+              <li><a href="https://jersey.java.net/documentation/latest/user-guide.html#d0e8359" target="_blank">Jersey User Guide - Interceptors</a></li>
+              <li><a href="http://www.javacodegeeks.com/2014/11/how-to-compress-responses-in-java-rest-api-with-gzip-and-jersey.html" target="_blank">How to compress responses in Java REST API with GZip and Jersey</a></li>
+            </ul>
+            
+            <p>While this approach has the advantage of performing the compression in the server where the LVL service runs, the request headers are
+              not available when the compression is performed, so the response will be compressed ALWAYS, regardless of the <code>Accept-encoding</code>
+              sent by the caller.</p>
+            
+            <p>As an alternative to the REST API compression, you can optionally configure your HTTP server to compress the content it serves from the 
+              LVL services. There are two places where you can configure compression:</p>
+              
+            <p>The standard HTTP connectors provided by Apache Tomcat supports the configuration attribute <code>compression</code>, however the
+              configuration is tricky to work as it depends on the sendfile feature to be enabled or not in the connector as described here: 
+              <a href="http://tomcat.apache.org/tomcat-7.0-doc/config/http.html" target="_blank">Apache Tomcat 7, The HTTP Connector: Standard Implementation</a></p>
+              
+            <p>The second option (recomended) is to enable compression on the load balancer. For example, in nginx, add a GZIP compression block in 
+              the server section of the configuration to compress CSS style sheets, text files and JSON-encoded documents:</p>
+            
+            <pre>
+gzip on;              
+gzip_types text/css text/plain application/xml application/json application/x-javascript text/javascript;
+gzip_comp_level 5;
+# gzip_proxied no-store no-cache private expired auth;
+gzip_proxied any;
+</pre>
+
+            <p>The following example shows the responde header sent by an HTTP server where GZIP compression is enabled:</p>
+            
+            <code> $ curl -I -H 'Authorization: Bearer oeZseY/z/3T/LG8R9o4AjKI+J7ySQUcoWF0N7YVL7Kc=' -H 'Accept-encoding: gzip,deflate' 
+              'http://lvl.i3m.upv.es/lvl-service/rest/v1/sandflies?per_page=1' </code>
+            <p></p>
+
+            <pre>
+HTTP/1.1 200 OK
+Server: nginx/1.4.6 (Ubuntu)
+Date: Mon, 15 Dec 2014 15:34:40 GMT
+Content-Type: application/json
+Connection: keep-alive
+Content-Encoding: gzip
+</pre>
+
+            <p>The same server will sent the following response header when GZIP compression is disabled:</p>
+
+            <pre>
+HTTP/1.1 200 OK
+Server: nginx/1.4.6 (Ubuntu)
+Date: Mon, 15 Dec 2014 16:00:15 GMT
+Content-Type: application/json
+Content-Length: 809
+Connection: keep-alive
+</pre>
+
+            <p>The following example shows the responde body sent by an HTTP server where GZIP compression is enabled. Note that the response is
+              decompressed (<code>gunzip</code>) and formatted (Python <code>json.tool</code>) before showing it in the console:</p>
+
+            <code> $ curl -s -H 'Authorization: Bearer oeZseY/z/3T/LG8R9o4AjKI+J7ySQUcoWF0N7YVL7Kc=' -H 'Accept-encoding: gzip,deflate' 
+              'http://lvl.i3m.upv.es/lvl-service/rest/v1/sandflies?per_page=1' | gunzip | python -m json.tool</code>
+              
+<p></p>
+
+            <pre>
+{
+    "elements": [
+        {
+            "accession": "AB174769",
+            "collected": null,
+            "countryFeature": "Ecuador",
+            "dataSource": "GenBank",
+            "definition": "Lutzomyia ayacuchensis gene for 18S rRNA, partial sequence",
+            "gene": [],
+            "gi": 52546157,
+            "id": "gb:AB174769",
+            "length": 405,
+            "links": [
+                {
+                    "href": "/lvl-service/rest/v1/sandflies/gb:AB174769",
+                    "params": {
+                        "rel": "self",
+                        "type": "application/json"
+                    }
+                }
+            ],
+            "locale": "_EC",
+            "location": {
+                "coordinates": [
+                    -78.18340599999999,
+                    -1.831239
+                ],
+                "type": "Point"
+            },
+            "organism": "Lutzomyia ayacuchensis",
+            "pmids": [
+                "15728872"
+            ],
+            "version": "AB174769.1"
+        }
+    ],
+    "links": [
+        {
+            "href": "/lvl-service/rest/v1/sandflies?page=1&amp;per_page=1&amp;q=&amp;sort=&amp;order=asc",
+            "params": {
+                "rel": "next",
+                "type": "application/json"
+            }
+        },
+        {
+            "href": "/lvl-service/rest/v1/sandflies?page=22125&amp;per_page=1&amp;q=&amp;sort=&amp;order=asc",
+            "params": {
+                "rel": "last",
+                "type": "application/json"
+            }
+        }
+    ],
+    "totalCount": 22126
+}
+</pre>
+
           </div>
         </div>
       </div>
@@ -1333,6 +1539,157 @@ Serving HTTP on 0.0.0.0 port 8000 ...
               <li><a href="https://github.com/usrz/bootstrap-languages" target="_blank">Language labels and icons for Bootstrap 3</a></li>
             </ul>
 
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="clearfix">
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="page-header">
+            <h1 id="type">
+              <a id="query_language"></a>Query language
+            </h1>
+            
+            <p>Strictly speaking, the LVL is a data-intensive application that provides access to several collections of data curated by experts. Therefore,
+              searching and filtering collections are among the most important features of the LVL. To this end, a query language is provided that extends
+              the NCBI GenBank <a href="http://www.ncbi.nlm.nih.gov/nuccore/advanced" target="_blank">advanced search</a> language. The rest of this section
+              explains the differences between the two languages, providing examples of the query capabilities of the LVL query language and describing
+              the grammar syntax and the key semantics of this language.</p>            
+            
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+
+            <h2>
+              <a id="query_language_definition"></a>LVL query language definition
+            </h2>
+            
+            <p>The LVL query language (LvLQL) was developed with <a href="http://www.antlr.org/" target="_blank">ANTLR v4</a>, which is a
+              parser generator for structured text. The lexical rules as well as the syntax of the LvLQL language are available in the 
+              source code <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/tree/master/lvl-project/lvl-storage/src/main/antlr4/" target="_blank">repository</a>
+              of the project. An editor is available for ANTLR v4 grammars: <a href="http://tunnelvisionlabs.com/products/demo/antlrworks" target="_blank">ANTLRWorks 2</a>,
+              which can be used to visualize the file format <code>g4</code>.</p>
+              
+            <p>Unless you are planning to extend the LvLQL language with your own rules, there is no need for installing ANTLR or any other
+              tool related with this framework to use the LVL.</p>
+              
+            <p>Railroad diagrams (RRD) for LvLQL grammar rules are provided <a href="lvlql">here</a>. These diagrams were created using 
+              <a href="https://github.com/bkiers/rrd-antlr4" target="_blank">RRD for ANTLR4</a>.</p>
+              
+            <p>An advanced query builder is included in the LVL portal that allow end-users to rely on a graphical user interface to create
+              LvLQL queries that could be applied to the different collections provided with the LVL. Application developers are the expected 
+              users of the LvLQL language, while end-users who connect to the LVL through the portal will use this GUI-based query builder.</p>
+            
+            <h3>LvLQL language features</h3>
+            
+            <p>The LvLQL language provides users with the means for creating queries that are executed in the data collections provided
+              by the LVL. The motivation for this language is in the NCBI GenBank advanced search, but the syntax of the language was
+              largelly improved in order to support more advances features than GenBank does. For example, the following search was created
+              using the GenBank query language to search the DNA sequences that were obtained from the gen <i>coi</i> of the organism 
+              <i>phlebotomus papatasi</i>:</p>
+            
+            <code>(phlebotomus papatasi[Organism]) AND coi[Gene Name]</code>
+            <p></p>
+            
+            <p>The same search can be expressed using the LvLQL language:</p>
+            
+            <code>"phlebotomus papatasi":Organism AND "Gene Name":coi</code>
+            <p></p>
+            
+            <p>The main difference is in the use of the double-quote for delimitating values that include spaces, and the use of the colon
+              punctuation symbol to separate field names from values.</p>
+            
+            <p>Beyond these differences in syntax, the LvLQL language support comparison operators that can be used to filter the results.
+              For example, limit the results obtained in the previous queries to the sequences with more than 600 bp:</p>
+            
+            <code>"phlebotomus papatasi":Organism AND "Gene Name":coi AND Length > 600</code>
+            <p></p>
+            
+            <p>One additional feature of the LvLQL language is that supports <a href="http://www.ebi.ac.uk/Tools/sss/" target="_blank">sequence similarity searching</a>
+              operators that allows users to filter the sequence collections by similarity with a target sequence or with a species:</p>
+            
+            <code>SIMSEQ(gb:JX105037) > 90</code>
+            <p></p>
+            
+            <code>SIMSEQ(species:"Phlebotomus papatasi") > 90</code>
+            <p></p>
+            
+            <p>In the first example, the prefix <code>gb</code> is used to indicate that the sequence identifier <code>JX105037</code> 
+              links to a DNA sequence in the GenBank database, while the second example the target sequence will be the consensus
+              sequence of the species <code>Phlebotomus papatasi</code>.</p>
+            
+            <h4>LvLQL query examples:</h4>
+            
+            <dl>
+              <dt><code>Phlebotomus OR sandfly</code></dt>
+              <dd>Find all the sequences with the strings <code>Phlebotomus</code> or <code>sandfly</code> present in any field of the
+                record.</dd>
+              <dt><code>Phlebotomus AND NOT papatasi</code></dt>
+              <dd>Find all the sequences with the string <code>Phlebotomus</code> present in any field, and the string <code>sandfly</code>
+                <strong>*NOT*</strong> being present.</dd>
+              <dt><code>Phlebotomus AND "Gene Name":coi AND Length > 600</code></dt>
+              <dd>Find all the sequences with the string <code>Phlebotomus</code> present in any field, the string <code>coi</code>
+                in the field <code>Gene Name</code>, and the sequence lengh being larger than 600 bp.</dd>
+              <dt><code>SIMSEQ(gb:JX105037) > 90</code></dt>
+              <dd>Find all the sequences with more than 90% of similaryty with the sequence <code>JX105037</code> from 
+                <code>GenBank</code>.</dd>
+              <dt><code>SIMSEQ(species:"Phlebotomus papatasi") > 90</code></dt>
+              <dd>Find all the sequences with more than 90% of similaryty with the consensus sequence of the species <code>Phlebotomus 
+                papatasi</code>.</dd>
+              <dt><code>Organism:"phlebotomus papatasi" AND SIMSEQ(gb:JX105037) > 90</code></dt>
+              <dd>Find all the sequences reported for the organism <code>Phlebotomus papatasi</code> that share more than 90% of similaryty 
+                with the sequence <code>JX105037</code> from <code>GenBank</code>.</dd>
+            </dl>            
+            
+            <h3>Extending the LvLQL language:</h3>
+            
+            <p>There are several options that you can use to build ANTLR 4 grammar files. ANTLRWorks 2 allows building the parsers from
+              the grammar files, the ANTLR 4 <a href="http://www.antlr.org/api/maven-plugin/latest/index.html" target="_blank">Maven plugin</a>
+              allows to build the parsers as part of the project building, and finally, the method described below consists in creating
+              the parsers statically and test them.</p> 
+            
+            <p>This section describes the steps performed to build the LvLQL parsers statically. First, the standalone version of ANTLR 4 
+              is installed locally:</p>
+            
+            <code>$ cd /usr/local/lib ; wget http://www.antlr.org/download/antlr-4.4-complete.jar</code>
+            <p></p>
+            
+            <p>Some configuration is needed before you can start using ANTLR 4:</p>
+            
+            <code>$ export CLASSPATH="$CLASSPATH:/usr/local/lib/antlr-4.4-complete.jar" ; alias antlr4='java -jar /usr/local/lib/antlr-4.4-complete.jar' ; alias grun='java org.antlr.v4.runtime.misc.TestRig'</code>
+            <p></p>            
+            
+            <p>Compiling the LvLQL grammar:</p>
+            
+            <code>$ cd /tmp/lvlql</code>
+            <p></p>
+            
+            <code>$ rm -f *.java *.class *.tokens ; antlr4 &lt;WORKSPACE&gt;/leishmaniasis-virtual-lab/lvl-project/lvl-storage/src/main/antlr4/eu/eubrazilcc/lvl/storage/ql/antlr4/*.g4 -o . -listener -no-visitor -encoding UTF-8 ; javac *.java</code>
+            <p></p>
+              
+            <p>Checking your changes after extending the LvLQL grammar:</p>
+            
+            <code>$ grun LvLQL query -gui</code>
+            <p></p>
+            
+            <p>For example, to run the tests of the <code>query</code> target:</p>
+            
+            <code>$ grun LvLQL query -gui &lt;WORKSPACE&gt;/leishmaniasis-virtual-lab/lvl-project/lvl-storage/src/test/resources/files/antlr4/query-*.txt</code>
+            <p></p>
+            
+            <p>You can visit the ANTLR4 <a href="https://theantlrguy.atlassian.net/wiki/display/ANTLR4/ANTLR+4+Documentation" target="_blank">online documentation</a> 
+              for other possible <code>grun</code> options like: tree and tokens.</p>
+            
+            <p>Notice that the binaries created in this way <strong>*CANNOT*</strong> be used with the LVL project. Since the LVL is build with Maven, you will 
+              need the parsers to be generated with the ANTLR 4 <a href="http://www.antlr.org/api/maven-plugin/latest/index.html" target="_blank">Maven plugin</a>.
+              Simply copy your grammar files (*.g4) to the LVL source code directory. Don't forget to include the 
+              <a href="http://mvnrepository.com/artifact/org.antlr/antlr4-runtime" target="_blank">ANTLR 4 runtime</a> with your application.</p>
+            
           </div>
         </div>
       </div>
@@ -2189,13 +2546,27 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
             
             <ul>
               <li>Store tasks with the LVL database:
-                <ul><li>Tasks must be stored in the database of the LVL and the service replica that runs the task should update the status in the database, 
-                  while the other service replicas should read the status of the task from the database.</li></ul></li>
+                <ul>
+                  <li>Tasks must be stored in the database of the LVL and the service replica that runs the task should update the status in the database, 
+                    while the other service replicas should read the status of the task from the database.</li></ul></li>
               <li>Extend user support to include social network capabilities.
                 <ul><li>Add the following fields to the current user specification: location, country, joining date, description (optional). Create lists of
                   followers/following.</li></ul></li>
-              <li>Periodically remove from the LVL database tasks completed after 30 days.</li>
-              <li>Periodically fetch new sequences from external databases.</li>
+              <li>Implement periodic maintenance tasks:
+                <ul>
+                  <li>Periodically remove from the LVL database tasks completed after 30 days.</li>
+                  <li>Periodically fetch new sequences from external databases.</li>
+                  <li>An option could be to integrate the <a href="http://www.javacodegeeks.com/2012/04/configuring-quartz-with-jdbcjobstore-in.html" target="_blank">Quartz</a>
+                    scheduler into the LVL service with a permanent store.</li>
+                </ul>
+              </li>
+              <li>Improve user experience:
+                <ul>
+                  <li>Migrate login waiting sreeen by the <a href="http://www.webcodegeeks.com/javascript/boot-your-ajax-app-creating-a-splash-screen-with-nprogress/" target="_blank">NProgress</a>
+                    library.</li>
+                  <li>Communicate between views: <a href="http://www.webcodegeeks.com/javascript/backbone-js/communicating-between-views-in-backbone/" target="_blank">here</a>.</li>
+                </ul>
+              </li>
               <li>Improve the inference of geographic coordinates from DNA sequences imported from GenBank.</li>
             </ul>
             

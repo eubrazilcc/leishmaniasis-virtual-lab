@@ -41,6 +41,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<org.apache.httpcomponents.version>4.3.5</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
 		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
 		<mongodb.driver.version>2.12.3</mongodb.driver.version>
+		<antlr4.version>4.3</antlr4.version>
 		<e-science-central.version>3.1-SNAPSHOT</e-science-central.version>
 	</properties>
 
@@ -216,7 +217,16 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<version>0.16</version>
 			</dependency>
 			
+			<!-- The ANTLR 4 Runtime -->
+			
+			<dependency>
+				<groupId>org.antlr</groupId>
+				<artifactId>antlr4-runtime</artifactId>
+				<version>${antlr4.version}</version>
+			</dependency>
+			
 			<!-- e-Science Central client API -->
+			
 			<dependency>
 				<groupId>com.connexience</groupId>
 				<artifactId>api-model</artifactId>

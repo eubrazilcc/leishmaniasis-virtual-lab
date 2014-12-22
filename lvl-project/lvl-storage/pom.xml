@@ -60,7 +60,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
 			<scope>provided</scope>
-		</dependency>		
+		</dependency>
+		
+		<!-- The ANTLR 4 Runtime -->
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>antlr4-runtime</artifactId>
+		</dependency>
 		
 		<!-- Transitively includes Jackson JSON processor from Jersey. Jackson must be 
 			provided in production (e.g. with Jersey) -->
@@ -120,6 +126,23 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	
 	<build>
 		<plugins>
+			<!-- Parse ANTLR 4 grammar files *.g4 and transforms them into Java source files -->
+			<plugin>
+				<groupId>org.antlr</groupId>
+				<artifactId>antlr4-maven-plugin</artifactId>
+				<version>${antlr4.version}</version>
+				<executions>
+					<execution>
+						<id>antlr</id>
+						<goals>
+							<goal>antlr4</goal>
+						</goals>
+						<configuration>
+							<encoding>UTF-8</encoding>							
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<!-- Build -->
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>

@@ -102,7 +102,7 @@ public class SandflySequenceResource {
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence (sandflies) Resource";
 	public static final String RESOURCE_SCOPE = SEQUENCES;
 
-	@GET
+	@GET	
 	@Produces(APPLICATION_JSON)
 	public Sequences getSequences(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
@@ -203,7 +203,7 @@ public class SandflySequenceResource {
 	}
 
 	@GET
-	@Path("nearby/{longitude}/{latitude}")
+	@Path("nearby/{longitude}/{latitude}")	
 	@Produces(APPLICATION_JSON)
 	public FeatureCollection findNearbySequences(final @PathParam("longitude") double longitude, 
 			final @PathParam("latitude") double latitude, 

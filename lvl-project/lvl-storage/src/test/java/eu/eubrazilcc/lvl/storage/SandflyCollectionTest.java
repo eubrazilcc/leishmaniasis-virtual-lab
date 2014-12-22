@@ -179,6 +179,7 @@ public class SandflyCollectionTest {
 						.accession(Integer.toString(i))
 						.definition("This is an example")
 						.gi(i)
+						.organism(i < numItems/2 ? "papatasi" : "lutzomyia")
 						.length(initialLength + i)
 						.countryFeature(countries[random.nextInt(countries.length)])
 						.locale(i%2 != 0 ? Locale.ENGLISH : Locale.FRANCE)
@@ -242,7 +243,7 @@ public class SandflyCollectionTest {
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(0));
 
-			// filter with operator (valid lengths: 100-111)
+			// filter with numeric comparison operator (valid lengths: 100-111)
 			filter = of("length", Integer.toString(initialLength));
 			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
@@ -257,6 +258,16 @@ public class SandflyCollectionTest {
 			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems));
+			
+			// filter using a duplicated field
+			filter = of("organism", "papatasi", "organism", "lutzomyia");
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			assertThat("filtered sandfly is not null", sandflies, notNullValue());
+			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems));
+			
+			
+			
+			// TODO : db.sandflies.find({"$or":[{"sandfly.accession":"AB288341"}, {"sandfly.accession":"AB174770"}]}).count()
 
 			// sorting by accession in ascending order
 			Sorting sorting = Sorting.builder()
