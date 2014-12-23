@@ -54,7 +54,7 @@ public interface BaseDAO<K, E> {
 	WriteResult<E> insert(E e);
 	
 	/**
-	 * Inserts a new element in the database. If the input record is a duplicate and the parameter {@code ignoreDuplicates} is set tu {@code true}, 
+	 * Inserts a new element in the database. If the input record is a duplicate and the parameter {@code ignoreDuplicates} is set to {@code true}, 
 	 * then this method will discard the operation silently without generating an error.
 	 * @param e - element to be inserted in the database
 	 * @param ignoreDuplicates - set to {@code true} to ignore duplicated records

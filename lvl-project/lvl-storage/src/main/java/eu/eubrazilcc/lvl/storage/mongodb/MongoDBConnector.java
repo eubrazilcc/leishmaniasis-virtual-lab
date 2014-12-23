@@ -33,12 +33,14 @@ import static com.mongodb.MapReduceCommand.OutputType.REDUCE;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
 import static com.mongodb.util.JSON.parse;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
@@ -75,6 +77,9 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
+import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSDBFile;
+import com.mongodb.gridfs.GridFSInputFile;
 import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
@@ -530,7 +535,7 @@ public enum MongoDBConnector implements Closeable2 {
 		} finally {
 			db.requestDone();
 		}
-	}	
+	}
 
 	/**
 	 * Writes statistics about a collection to the specified output stream.
@@ -557,6 +562,111 @@ public enum MongoDBConnector implements Closeable2 {
 			db.requestDone();
 			os.flush();
 		}	
+	}
+
+	/**
+	 * Saves a file into the current database.
+	 * @param file - file to be saved to the database
+	 * @param namespace - name space under the file is saved
+	 * @param metadata - optional file metadata
+	 * @return the id associated to the file in the collection
+	 */
+	public String saveFile(final File file, final @Nullable String namespace, final @Nullable DBObject metadata) {
+		checkArgument(file != null && file.canRead() && file.isFile(), "Uninitialized or invalid file");		
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();			
+			try {
+				final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+				final GridFSInputFile gfsFile = gfsNs.createFile(file);
+				gfsFile.setFilename(file.getName());
+				gfsFile.setContentType(mimeType(file));
+				gfsFile.setMetaData(metadata);
+				gfsFile.save();
+				return ObjectId.class.cast(gfsFile.get("_id")).toString();
+			} catch (DuplicateKeyException dke) {
+				throw new MongoDBDuplicateKeyException(dke.getMessage());			
+			} catch (IOException ioe) {
+				throw new IllegalStateException("Failed to save file", ioe);
+			}
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	/**
+	 * Reads a file object from the current database and saves a copy to the local file-system using the specified output file. 
+	 * The file is identified by the original filename stored in the database and the name space under the file was stored.
+	 * @param filename - filename to be searched for in the database
+	 * @param namespace - name space to be searched for in the database
+	 * @param output - file where the output will be saved, this file must exists and must be writable
+	 */
+	public GridFSDBFile readFile(final String filename, final @Nullable String namespace) {
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+			return gfsNs.findOne(filename);			
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	/**
+	 * Lists all the files in the specified name space.
+	 * @param namespace - name space to be searched for files
+	 * @param sortCriteria - objects in the collection are sorted with this criteria
+	 * @param start - starting index
+	 * @param size - maximum number of objects returned
+	 * @param count - (optional) is updated with the number of objects in the database
+	 * @return a view of the files stored under the specified name space that contains the specified range.
+	 */
+	public List<GridFSDBFile> listFiles(final @Nullable String namespace, final DBObject sortCriteria, final int start, final int size, 
+			final @Nullable MutableLong count) {
+		final List<GridFSDBFile> list = newArrayList();
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();			
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+			final DBCursor cursor = gfsNs.getFileList();
+			cursor.sort(sortCriteria);
+			cursor.skip(start).limit(size);
+			try {
+				while (cursor.hasNext()) {
+					list.add((GridFSDBFile) cursor.next());
+				}
+			} finally {
+				cursor.close();
+			}
+			if (count != null) {				
+				count.setValue(cursor.count());
+			}
+			return list;			
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	/**
+	 * Removes a file from the specified name space.
+	 * @param filename - filename to be removed from the database
+	 * @param namespace - name space where the file was stored under
+	 */
+	public void removeFile(final String filename, final @Nullable String namespace) {
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+			gfsNs.remove(filename);
+		} finally {
+			db.requestDone();
+		}
 	}
 
 	@Override

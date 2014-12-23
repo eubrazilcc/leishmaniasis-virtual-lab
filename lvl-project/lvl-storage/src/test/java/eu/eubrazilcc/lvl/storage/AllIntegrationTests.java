@@ -39,9 +39,11 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith(Suite.class)
 /* TODO @SuiteClasses({ SandflyCollectionTest.class, LeishmaniaCollectionTest.class , ReferenceCollectionTest.class, TokenCollectionTest.class, 
 	AuthCodeCollectionTest.class, ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class, 
-	NotificationCollectionTest.class, PublicLinkCollectionTest.class, WorkflowRunCollectionTest.class, LvLQLTest.class, MapReduceTest.class }) */
+	NotificationCollectionTest.class, PublicLinkCollectionTest.class, WorkflowRunCollectionTest.class, DatasetCollectionTest.class, 
+	LvLQLTest.class, MapReduceTest.class }) */
 // TODO @SuiteClasses({ SandflyCollectionTest.class })
-@SuiteClasses({ LvLQLTest.class })
+//TODO @SuiteClasses({ LvLQLTest.class })
+@SuiteClasses({ DatasetCollectionTest.class })
 public class AllIntegrationTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

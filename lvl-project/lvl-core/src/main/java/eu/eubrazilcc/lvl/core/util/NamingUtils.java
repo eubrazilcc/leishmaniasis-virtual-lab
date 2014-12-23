@@ -31,6 +31,7 @@ import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
 import static java.lang.String.valueOf;
 import static java.net.URLDecoder.decode;
+import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -144,13 +145,29 @@ public final class NamingUtils {
 		return dataSource2 + ID_FRAGMENT_SEPARATOR + accession;
 	}
 
+	public static String encodeDatasetPath(final String path) {
+		String encoded = path;
+		try {
+			encoded = encode(path, UTF_8.name());
+		} catch (UnsupportedEncodingException ignore) { }
+		return encoded;
+	}
+
+	public static String decodeDatasetPath(final String path) {
+		String decoded = path;
+		try {
+			decoded = decode(path, UTF_8.name());
+		} catch (UnsupportedEncodingException ignore) { }
+		return decoded;
+	}
+
 	public static String encodePublicLinkPath(final String path) {
 		return path != null ? path.replaceAll("/", ID_FRAGMENT_SEPARATOR_STRING) : path;
 	}
 
 	public static String decodePublicLinkPath(final String path) {
 		return path != null ? path.replaceAll(ID_FRAGMENT_SEPARATOR_STRING, "/") : path;
-	}
+	}	
 
 	public static String[] parsePublicLinkId(final String id) {
 		final String[] arr = new String[2];

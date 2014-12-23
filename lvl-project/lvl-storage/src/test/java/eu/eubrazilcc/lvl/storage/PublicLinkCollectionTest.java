@@ -36,7 +36,7 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.PublicLink;
-import eu.eubrazilcc.lvl.core.PublicLink.Target;
+import eu.eubrazilcc.lvl.core.Target;
 
 /**
  * Tests public link collection in the database.

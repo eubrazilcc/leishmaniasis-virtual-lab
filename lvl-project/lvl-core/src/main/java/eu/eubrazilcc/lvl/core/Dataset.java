@@ -26,7 +26,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.encodePublicLinkPath;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
@@ -52,22 +51,19 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
  * A private object that can be shared with other users who are authorized to access the object.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Dataset extends StorageObject implements Linkable<Dataset> {
+public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	@InjectLinks({
-		@InjectLink(value="datasets/{urlSafePath}", rel=SELF, type=APPLICATION_JSON, 
-				bindings={@Binding(name="urlSafePath", value="${instance.urlSafePath}")})
+		@InjectLink(value="datasets/{namespace}/{filename}", rel=SELF, type=APPLICATION_JSON, bindings={
+				@Binding(name="namespace", value="${instance.namespace}"),
+				@Binding(name="filename", value="${instance.filename}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
 
-	private Target target;
-
-	private String downloadUri;
-
-	private String urlSafePath;
+	private String namespace;
 
 	public Dataset() {
 		super();
@@ -87,34 +83,12 @@ public class Dataset extends StorageObject implements Linkable<Dataset> {
 		}
 	}
 
-	@Override
-	public void setPath(final String path) {		
-		super.setPath(path);
-		setUrlSafePath(encodePublicLinkPath(path)); // TODO
+	public String getNamespace() {
+		return namespace;
 	}
 
-	public Target getTarget() {
-		return target;
-	}
-
-	public void setTarget(final Target target) {
-		this.target = target;
-	}	
-
-	public String getDownloadUri() {
-		return downloadUri;
-	}
-
-	public void setDownloadUri(final String downloadUri) {
-		this.downloadUri = downloadUri;
-	}
-
-	public String getUrlSafePath() {
-		return urlSafePath;
-	}
-
-	public void setUrlSafePath(final String urlSafePath) {
-		this.urlSafePath = urlSafePath;
+	public void setNamespace(final String namespace) {
+		this.namespace = namespace;
 	}
 
 	@Override
@@ -123,9 +97,7 @@ public class Dataset extends StorageObject implements Linkable<Dataset> {
 			return false;
 		}
 		final Dataset other = Dataset.class.cast(obj);
-		return Objects.equals(links, other.links)
-				&& Objects.equals(downloadUri, other.downloadUri)
-				&& Objects.equals(urlSafePath, other.urlSafePath)
+		return Objects.equals(links, other.links)				
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -134,23 +106,94 @@ public class Dataset extends StorageObject implements Linkable<Dataset> {
 		if (other == null) {
 			return false;
 		}
-		return super.equals((StorageObject)other)
-				&& Objects.equals(target, other.target);
+		return super.equals((BaseFile)other)
+				&& Objects.equals(namespace, other.namespace);
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, target, downloadUri, urlSafePath);
+		return super.hashCode() + Objects.hash(links, namespace);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
-				.add("StorageObject", super.toString())
-				.add("target", target)
-				.add("downloadUri", downloadUri)
-				.add("urlSafePath", urlSafePath)
+				.add("BaseFile", super.toString())
+				.add("namespace", namespace)
 				.toString();
+	}
+
+	/* Inner classes */
+
+	public static class DatasetMetadata implements Metadata {
+
+		private String description;
+		private Target target;
+
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(final String description) {
+			this.description = description;
+		}
+
+		public Target getTarget() {
+			return target;
+		}
+
+		public void setTarget(final Target target) {
+			this.target = target;
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (obj == null || !(obj instanceof DatasetMetadata)) {
+				return false;
+			}
+			final DatasetMetadata other = DatasetMetadata.class.cast(obj);
+			return Objects.equals(description, other.description)
+					&& Objects.equals(target, other.target);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(description, target);
+		}
+
+		@Override
+		public String toString() {
+			return toStringHelper(this)
+					.add("description", description)
+					.add("target", target)
+					.toString();
+		}
+
+		/* Fluent API */
+
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		public static class Builder {
+
+			private final DatasetMetadata instance = new DatasetMetadata();
+
+			public Builder description(final String description) {
+				instance.setDescription(description);
+				return this;
+			}
+
+			public Builder target(final Target target) {
+				instance.setTarget(target);
+				return this;
+			}
+
+			public DatasetMetadata build() {
+				return instance;
+			}
+
+		}
 	}
 
 	/* Fluent API */
@@ -168,181 +211,56 @@ public class Dataset extends StorageObject implements Linkable<Dataset> {
 			return this;
 		}
 
-		public Builder path(final String path) {
-			checkArgument(isNotBlank(path), "Uninitialized or invalid path");
-			instance.setPath(path.trim());
+		public Builder namespace(final String namespace) {
+			instance.setNamespace(trimToEmpty(namespace));
+			return this;
+		}		
+
+		/* Inherited from BaseFile */
+
+		public Builder length(final long length) {
+			instance.setLength(length);
 			return this;
 		}
 
-		public Builder mime(final String mime) {
-			instance.setMime(trimToEmpty(mime));
+		public Builder chunkSize(final long chunkSize) {
+			instance.setChunkSize(chunkSize);
 			return this;
 		}
 
-		public Builder description(final String description) {
-			instance.setDescription(trimToEmpty(description));
+		public Builder uploadDate(final Date uploadDate) {
+			instance.setUploadDate(uploadDate);
 			return this;
 		}
 
-		public Builder owner(final String owner) {
-			checkArgument(isNotBlank(owner), "Uninitialized or invalid owner");
-			instance.setOwner(owner.trim());
+		public Builder md5(final String md5) {
+			instance.setMd5(md5);
 			return this;
 		}
 
-		public Builder created(final Date created) {
-			checkArgument(created != null, "Uninitialized creation time");
-			instance.setCreated(created);			
+		public Builder filename(final String filename) {
+			checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
+			instance.setFilename(filename.trim());
 			return this;
 		}
 
-		public Builder target(final Target target) {
-			instance.setTarget(target);
+		public Builder contentType(final String contentType) {
+			instance.setContentType(contentType);
 			return this;
 		}
 
-		public Builder downloadUri(final String downloadUri) {
-			instance.setDownloadUri(trimToEmpty(downloadUri));
+		public Builder aliases(final List<String> aliases) {
+			instance.setAliases(aliases);
 			return this;
 		}
 
-		public Builder urlSafePath(final String urlSafePath) {
-			instance.setUrlSafePath(trimToEmpty(urlSafePath));
+		public Builder metadata(final Metadata metadata) {
+			instance.setMetadata(metadata);			
 			return this;
-		}
+		}		
 
 		public Dataset build() {
 			return instance;
-		}
-
-	}
-
-	public static class Target {
-
-		private String type;
-		private String collection;
-		private List<String> ids;
-		private String filter;
-		private String compression;
-
-		public Target() { }
-
-		public String getType() {
-			return type;
-		}
-
-		public void setType(final String type) {
-			this.type = type;
-		}
-
-		public String getCollection() {
-			return collection;
-		}
-
-		public void setCollection(final String collection) {
-			this.collection = collection;
-		}
-
-		public List<String> getIds() {
-			return ids;
-		}
-
-		public void setIds(final List<String> ids) {
-			if (ids != null) {
-				this.ids = newArrayList(ids);
-			} else {
-				this.ids = null;
-			}
-		}
-
-		public String getFilter() {
-			return filter;
-		}
-
-		public void setFilter(final String filter) {
-			this.filter = filter;
-		}
-
-		public String getCompression() {
-			return compression;
-		}
-
-		public void setCompression(final String compression) {
-			this.compression = compression;
-		}
-
-		@Override
-		public boolean equals(final Object obj) {
-			if (obj == null || !(obj instanceof Target)) {
-				return false;
-			}
-			final Target other = Target.class.cast(obj);
-			return Objects.equals(type, other.type)
-					&& Objects.equals(collection, other.collection)
-					&& Objects.equals(ids, other.ids)
-					&& Objects.equals(filter, other.filter)
-					&& Objects.equals(compression, other.compression);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(type, collection, ids, filter, compression);
-		}
-
-		@Override
-		public String toString() {
-			return toStringHelper(this)
-					.add("type", type)
-					.add("collection", collection)
-					.add("ids", ids)
-					.add("filter", filter)
-					.add("compression", compression)
-					.toString();
-		}
-
-		/* Fluent API */
-
-		public static Builder builder() {
-			return new Builder();
-		}
-
-		public static class Builder {
-
-			private final Target instance = new Target();
-
-			public Builder type(final String type) {
-				instance.setType(type);
-				return this;
-			}
-
-			public Builder collection(final String collection) {
-				instance.setCollection(collection);
-				return this;
-			}
-
-			public Builder id(final String id) {
-				return ids(newArrayList(id));
-			}
-
-			public Builder ids(final List<String> ids) {
-				instance.setIds(ids);
-				return this;
-			}
-
-			public Builder filter(final String filter) {
-				instance.setFilter(filter);
-				return this;
-			}
-
-			public Builder compression(final String compression) {
-				instance.setCompression(compression);
-				return this;
-			}
-
-			public Target build() {
-				return instance;
-			}
-
 		}
 
 	}

@@ -242,7 +242,7 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 		try {
 			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new PublicLinkEntity(store.purge())));
 		} catch (JsonProcessingException e) {
-			LOGGER.error("Failed to write authN code to DB object", e);
+			LOGGER.error("Failed to write public link to DB object", e);
 		}
 		return obj;
 	}
