@@ -24,8 +24,6 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -46,23 +44,23 @@ import javax.ws.rs.core.UriInfo;
 
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.service.WorkflowDefinitions;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
  * Workflows resource.
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/pipelines")
+@Path("/pipelines/definitions")
 public class WorkflowDefinitionResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(WorkflowDefinitionResource.class);
 
 	@GET
 	@Produces(APPLICATION_JSON)
 	public WorkflowDefinitions getWorkflows(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:definitions:public:*:view");
 		final WorkflowDefinitions paginable = WorkflowDefinitions.start()
 				.page(page)
 				.perPage(per_page)
@@ -82,10 +80,10 @@ public class WorkflowDefinitionResource {
 	@Produces(APPLICATION_JSON)
 	public WorkflowDefinition getWorkflow(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}			
+		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:definitions:*:" + id.trim() + ":view");
 		// get workflows from e-SC		
 		final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
 		WorkflowDefinition workflow = null;

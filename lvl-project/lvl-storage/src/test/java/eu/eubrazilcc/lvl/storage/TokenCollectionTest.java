@@ -87,15 +87,9 @@ public class TokenCollectionTest {
 			boolean validity = TOKEN_DAO.isValid(accessToken.getToken());
 			assertThat("access token is valid", validity, equalTo(true));
 			
-			AtomicReference<String> ownerIdRef = new AtomicReference<String>();
-			validity = TOKEN_DAO.isValid(accessToken.getToken(), "scope2", false, false, ownerIdRef);
+			final AtomicReference<String> ownerIdRef = new AtomicReference<String>();
+			validity = TOKEN_DAO.isValid(accessToken.getToken(), ownerIdRef);
 			assertThat("access token is valid using target scope", validity, equalTo(true));
-			assertThat("owner id coincides is not null", ownerIdRef.get(), notNullValue());
-			assertThat("owner id coincides with expected", ownerIdRef.get(), equalTo(accessToken.getOwnerId()));
-			
-			ownerIdRef = new AtomicReference<String>();
-			validity = TOKEN_DAO.isValid(accessToken.getToken(), "scope2", false, true, ownerIdRef);
-			assertThat("access token is valid using target scope and resource owner Id", validity, equalTo(true));
 			assertThat("owner id coincides is not null", ownerIdRef.get(), notNullValue());
 			assertThat("owner id coincides with expected", ownerIdRef.get(), equalTo(accessToken.getOwnerId()));
 			

@@ -25,7 +25,7 @@ package eu.eubrazilcc.lvl.storage.oauth2.security;
 import static com.google.common.base.Joiner.on;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authzHeader;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.authzHeader;
 import static java.util.Arrays.asList;
 import static java.util.Locale.getAvailableLocales;
 import static java.util.Locale.getDefault;

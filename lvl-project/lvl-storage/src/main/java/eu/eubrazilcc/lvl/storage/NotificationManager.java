@@ -26,9 +26,11 @@ import static com.google.common.base.Preconditions.checkState;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.storage.dao.NotificationDAO.NOTIFICATION_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.assertValidResourceOwnerId;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.hasRole;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.isAccessible;
 
 import java.util.Comparator;
 import java.util.List;
@@ -81,7 +83,7 @@ public enum NotificationManager {
 		}		
 	}
 
-	public void broadcast(final Notification notification) {		
+	public void broadcast(final Notification notification) {
 		checkArgument(notification != null && notification.getPriority() != null && isNotBlank(notification.getScope()),
 				"Uninitialized or invalid notification");
 		checkState(queue.offer(notification), "No space is currently available");
@@ -114,24 +116,31 @@ public enum NotificationManager {
 							do {
 								resourceOwners = RESOURCE_OWNER_DAO.list(start, PAGE_SIZE, null, null, count);
 								for (final ResourceOwner resourceOwner : resourceOwners) {
-									if (isAccessible(notification.getScope(), resourceOwner.getUser().getScopes(), true)) {
-										notification.setAddressee(resourceOwner.getUser().getUsername());
+									if (hasRole(notification.getScope(), resourceOwner.getUser())) {
+										notification.setAddressee(resourceOwner.getUser().getUserid());
 										NOTIFICATION_DAO.insert(notification);
 										LOGGER.trace("Notification broadcasted: " + notification);
-									}									
+									}
 								}
 								start += resourceOwners.size();
 							} while (!resourceOwners.isEmpty());							
 						} else {
-							// send to user
-							final String username = notification.getAddressee();
-							if (RESOURCE_OWNER_DAO.exist(username, username, null)) {
+							// send to user converting user-names to valid resource-owner-identifiers
+							try {
+								assertValidResourceOwnerId(notification.getAddressee());
+							} catch (Exception ignore) {
+								try {
+									final String ownerid = toResourceOwnerId(notification.getAddressee());
+									notification.setAddressee(ownerid);
+								} catch (Exception ignore2) { }
+							}
+							if (RESOURCE_OWNER_DAO.exist(notification.getAddressee())) {
 								NOTIFICATION_DAO.insert(notification);
 								LOGGER.trace("Notification sent: " + notification);
 							} else {
 								LOGGER.info("Discarding notification after checking that the addressee user does not exist: " + notification);
 							}
-						}						
+						}
 					}					
 				} while (notification != null);
 				return null;

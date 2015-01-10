@@ -45,8 +45,8 @@ import org.junit.Test;
 
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
-import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Tests OAuth2 resource owner collection in the database.
@@ -58,17 +58,17 @@ public class ResourceOwnerCollectionTest {
 	public void test() {
 		System.out.println("ResourceOwnerCollectionTest.test()");
 		try {
-			final Collection<String> scopes = newArrayList("scope1", "scope2");
-
+			final Collection<String> roles = newArrayList("role1", "role2");
+			final Collection<String> permissions = newArrayList("sequences:leishmania:public:*:view", "sequences:sandflies:public:*:view");
 			// insert (no salt)
 			final ResourceOwner resourceOwner = ResourceOwner.builder()
-					.id("username")
 					.user(User.builder()
-							.username("username")
+							.userid("username")
 							.password("password")
 							.email("username@example.com")
 							.fullname("Fullname")
-							.scopes(scopes)
+							.roles(roles)
+							.permissions(permissions)
 							.build()).build();
 			WriteResult<ResourceOwner> result = RESOURCE_OWNER_DAO.insert(resourceOwner);
 			assertThat("insert resource owner result is not null", result, notNullValue());
@@ -102,14 +102,14 @@ public class ResourceOwnerCollectionTest {
 
 			// insert element with hard link
 			final ResourceOwner resourceOwner1 = ResourceOwner.builder()
-					.id("username1")
 					.user(User.builder()
 							.links(newArrayList(Link.fromUri("http://example.com/users/username1").rel(SELF).type(APPLICATION_JSON).build()))
-							.username("username1")
+							.userid("username1")
 							.password("password1")
 							.email("username1@example.com")
 							.fullname("Fullname 1")
-							.scopes(scopes)
+							.roles(roles)
+							.permissions(permissions)
 							.build()).build();
 
 			result = RESOURCE_OWNER_DAO.insert(resourceOwner1);
@@ -136,7 +136,7 @@ public class ResourceOwnerCollectionTest {
 			// check validity using owner Id and username
 			AtomicReference<String> ownerIdRef = new AtomicReference<String>();
 			boolean validity = RESOURCE_OWNER_DAO.isValid(hashed.getOwnerId(), 
-					hashed.getUser().getUsername(), 
+					hashed.getUser().getUserid(), 
 					plainPassword, 
 					false, 
 					null,
@@ -155,18 +155,18 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner is valid (using email)", validity, equalTo(true));
 			assertThat("resource owner Id passed as reference coincides with expected", ownerIdRef.get(), equalTo(hashed.getOwnerId()));
 
-			// add scopes
-			RESOURCE_OWNER_DAO.addScopes(resourceOwner.getOwnerId(), "scope3");
+			// add roles
+			RESOURCE_OWNER_DAO.addRoles(resourceOwner.getOwnerId(), "role3");
 
-			// remove scopes
-			RESOURCE_OWNER_DAO.removeScopes(resourceOwner.getOwnerId(), "scope2");
+			// remove roles
+			RESOURCE_OWNER_DAO.removeRoles(resourceOwner.getOwnerId(), "role2");
 
 			// get OAuth scope
 			resourceOwner2 = RESOURCE_OWNER_DAO.find(resourceOwner.getOwnerId());
 			final String oauthScope = ResourceOwnerDAO.oauthScope(resourceOwner2, true);
 			assertThat("resource owner OAuth scope is not null", oauthScope, notNullValue());
 			assertThat("resource owner OAuth scope is not blank", isNotBlank(oauthScope));
-			assertThat("resource owner OAuth scope coincided with expected", oauthScope, equalTo("scope1 scope3"));
+			assertThat("resource owner OAuth scope coincided with expected", oauthScope, equalTo("role1 role3"));
 			System.out.println("OAuth scope: '" + oauthScope + "'");
 
 			// remove (default LVL administrator is not removed)
@@ -190,13 +190,13 @@ public class ResourceOwnerCollectionTest {
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {
 				final ResourceOwner resourceOwner3 = ResourceOwner.builder()
-						.id(Integer.toString(i))
 						.user(User.builder()
-								.username(Integer.toString(i))
+								.userid(Integer.toString(i))
 								.password("password")
 								.email("username" + i + "@example.com")
 								.fullname("Fullname")
-								.scopes(scopes)
+								.roles(roles)
+								.permissions(permissions)
 								.build()).build();								
 				ids.add(resourceOwner3.getOwnerId());
 				RESOURCE_OWNER_DAO.insert(resourceOwner3);

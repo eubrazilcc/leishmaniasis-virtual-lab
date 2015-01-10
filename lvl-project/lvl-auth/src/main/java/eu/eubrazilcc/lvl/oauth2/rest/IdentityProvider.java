@@ -25,9 +25,9 @@ package eu.eubrazilcc.lvl.oauth2.rest;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.inherit;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
+import static eu.eubrazilcc.lvl.storage.security.UserAnonymizer.AnonymizationLevel.HARD;
+import static eu.eubrazilcc.lvl.storage.security.UserAnonymizer.AnonymizationLevel.NONE;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.util.List;
@@ -56,10 +56,9 @@ import org.apache.commons.lang.mutable.MutableLong;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.oauth2.Users;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
-import eu.eubrazilcc.lvl.storage.oauth2.User;
-import eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.AnonymizationLevel.HARD;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.AnonymizationLevel.NONE;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
+import eu.eubrazilcc.lvl.storage.security.User;
+import eu.eubrazilcc.lvl.storage.security.UserAnonymizer;
 
 /**
  * Implements an identity provider as an OAuth 2.0 Resource Server using Apache Oltu. It receives the 
@@ -72,7 +71,6 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.UserAnonymizer.Anonymiza
 public class IdentityProvider {	
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " User Resource (IdP)";
-	public static final String RESOURCE_SCOPE = resourceScope(IdentityProvider.class);
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -80,7 +78,7 @@ public class IdentityProvider {
 			final @QueryParam("per_page") @DefaultValue("10") int per_page, 
 			final @QueryParam("plain") @DefaultValue("false") boolean plain, 
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:*:*:*:view");
 		final Users paginable = Users.start()
 				.page(page)
 				.perPage(per_page)
@@ -91,7 +89,7 @@ public class IdentityProvider {
 		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.useGravatar(true)
 				.list(paginable.getPageFirstEntry(), per_page, null, null, count);
 		paginable.setElements(from(owners).transform(UserAnonymizer.start(plain ? NONE : HARD))
-						.filter(notNull()).toList());
+				.filter(notNull()).toList());
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
 		paginable.setTotalCount(totalEntries);
@@ -115,7 +113,7 @@ public class IdentityProvider {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// check authorization
-		authorize(request, null, headers, inherit(RESOURCE_SCOPE, owner.getOwnerId()), false, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:*:*:" + id + ":view");
 		// get from database		
 		return UserAnonymizer.start(plain ? NONE : HARD).apply(owner);
 	}
@@ -124,13 +122,13 @@ public class IdentityProvider {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createUser(final User user, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {		
-		if (user == null || isBlank(user.getUsername())) {
+		if (user == null || isBlank(user.getUserid())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		authorize(request, null, headers, inherit(RESOURCE_SCOPE, user.getUsername()), true, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:*:*:*:create");
 		// create user in the database
-		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder().id(user.getUsername()).user(user).build());
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(user.getUsername());		
+		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder().user(user).build());
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(user.getUserid());		
 		return Response.created(uriBuilder.build()).build();
 	}
 
@@ -139,17 +137,17 @@ public class IdentityProvider {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void updateUser(final @PathParam("id") String id, final User update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		if (isBlank(id) || update == null || !id.equals(update.getUsername())) {
+		if (isBlank(id) || update == null || !id.equals(toResourceOwnerId(update))) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:*:*:" + id + ":edit");
 		// get from database
 		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// update
-		RESOURCE_OWNER_DAO.update(ResourceOwner.builder().id(update.getUsername()).user(update).build());			
+		RESOURCE_OWNER_DAO.update(ResourceOwner.builder().user(update).build());			
 	}
 
 	@DELETE
@@ -159,7 +157,7 @@ public class IdentityProvider {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		authorize(request, null, headers, inherit(RESOURCE_SCOPE, id), true, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:*:*:" + id + ":edit");
 		// get from database
 		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {

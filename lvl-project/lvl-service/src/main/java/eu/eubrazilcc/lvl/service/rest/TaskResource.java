@@ -26,19 +26,17 @@ import static com.google.common.collect.Range.closed;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.LEISHMANIA_QUERY;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.SANDFLY_QUERY;
 import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getClientAddress;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.SseSubscriptionHttpHeaders.ssehHttpHeaders;
 import static java.util.UUID.fromString;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.SANDFLY_QUERY;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.LEISHMANIA_QUERY;
 
 import java.io.IOException;
 import java.util.List;
@@ -81,6 +79,7 @@ import eu.eubrazilcc.lvl.service.Task;
 import eu.eubrazilcc.lvl.service.io.ImportSequencesTask;
 import eu.eubrazilcc.lvl.service.io.filter.NewSequenceFilter;
 import eu.eubrazilcc.lvl.service.io.filter.SequenceIdFilter;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
  * Tasks resource.
@@ -92,7 +91,6 @@ public class TaskResource {
 	private final static Logger LOGGER = getLogger(TaskResource.class);
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Task Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(TaskResource.class);
 
 	public static final String PROGRESS_EVENT = "progress";
 
@@ -103,14 +101,14 @@ public class TaskResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createTask(final Task task, final @Context UriInfo uriInfo,
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {		
 		if (task == null) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		switch (task.getType()) {
 		case IMPORT_SANDFLY_SEQ:
 		case IMPORT_LEISMANIA_SEQ:
+			OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("tasks:data:maintenance:*:create");
 			final List<String> ids = task.getIds();
 			ImportSequencesTask<? extends Sequence> importSequencesTask = null;
 			if (IMPORT_SANDFLY_SEQ.equals(task.getType())) {
@@ -145,10 +143,10 @@ public class TaskResource {
 	public EventOutput getServerSentEvents(final @PathParam("id") String id, final @QueryParam("refresh") @DefaultValue("30") int refresh,
 			final @QueryParam("token") @DefaultValue("") String token, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, isBlank(token) ? headers : ssehHttpHeaders(token), RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id) || !REFRESH_RANGE.contains(refresh)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, isBlank(token) ? headers : ssehHttpHeaders(token), RESOURCE_NAME).requiresPermissions("tasks:*:*:" + id.trim() + ":view");
 		// get from task storage
 		final CancellableTask<?> task = TASK_STORAGE.get(fromString(id));
 		if (task == null) {

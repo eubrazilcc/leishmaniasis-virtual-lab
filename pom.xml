@@ -40,6 +40,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<slf4j.version>1.7.7</slf4j.version>
 		<org.apache.httpcomponents.version>4.3.5</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
 		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
+		<org.apache.shiro.version>1.2.3</org.apache.shiro.version>
 		<mongodb.driver.version>2.12.3</mongodb.driver.version>
 		<antlr4.version>4.3</antlr4.version>
 		<e-science-central.version>3.1-SNAPSHOT</e-science-central.version>
@@ -139,6 +140,27 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>org.apache.tika</groupId>
 				<artifactId>tika-core</artifactId>
 				<version>1.6</version>
+			</dependency>
+			
+			<!-- Apache Shiro: an open-source security framework that handles authentication, authorization, 
+				enterprise session management, single sign-on and cryptography services -->
+			
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-core</artifactId>
+				<version>${org.apache.shiro.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-ehcache</artifactId>
+				<version>${org.apache.shiro.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>org.apache.shiro</groupId>
+				<artifactId>shiro-web</artifactId>
+				<version>${org.apache.shiro.version}</version>
 			</dependency>
 
 			<!-- Guava: Google Core Libraries for Java -->

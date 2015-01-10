@@ -46,7 +46,7 @@ import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.parseArticle;
 import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
 import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.REFERENCES;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.DATA_CURATOR_ROLE;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -157,7 +157,7 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 					LOGGER.warn(msg + " - errors reported");
 				}
 				NOTIFICATION_MANAGER.broadcast(Notification.builder()
-						.scope(REFERENCES)
+						.scope(DATA_CURATOR_ROLE)
 						.message(msg).build());
 				// unregister this task before returning the result to the execution service
 				TASK_STORAGE.remove(getUuid());

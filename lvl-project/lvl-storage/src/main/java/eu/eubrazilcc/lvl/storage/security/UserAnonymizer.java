@@ -20,13 +20,12 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.oauth2.security;
+package eu.eubrazilcc.lvl.storage.security;
 
 import com.google.common.base.Function;
-import static com.google.common.base.Preconditions.checkNotNull;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
-import eu.eubrazilcc.lvl.storage.oauth2.User;
 
 /**
  * Removes the information that can be used to impersonate a user, such as passwords 

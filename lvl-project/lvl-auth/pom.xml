@@ -20,9 +20,8 @@ file for details on the various modules and licenses.
 The "NOTICE" text file is part of the distribution. Any derivative works
 that you distribute must include a readable copy of the "NOTICE" text file.
 -->
-<project
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
@@ -125,6 +124,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.apache.oltu.oauth2</groupId>
 			<artifactId>org.apache.oltu.oauth2.dynamicreg.client</artifactId>
 			<scope>test</scope>
+		</dependency>
+		
+		<!-- Apache Shiro -->
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-web</artifactId>
 		</dependency>
 		
 		<!-- MongoDB Java driver -->

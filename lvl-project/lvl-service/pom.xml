@@ -111,12 +111,18 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
 			<scope>provided</scope>
-		</dependency>		
+		</dependency>
 
 		<!-- Apache Oltu -->
 		<dependency>
 			<groupId>org.apache.oltu.oauth2</groupId>
 			<artifactId>org.apache.oltu.oauth2.resourceserver</artifactId>
+		</dependency>
+		
+		<!-- Apache Shiro -->
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-web</artifactId>
 		</dependency>
 		
 		<!-- e-Science Central client API -->

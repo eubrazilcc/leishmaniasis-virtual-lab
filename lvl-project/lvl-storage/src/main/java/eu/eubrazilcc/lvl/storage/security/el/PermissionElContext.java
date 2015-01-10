@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.oauth2.security.el;
+package eu.eubrazilcc.lvl.storage.security.el;
 
 import javax.el.BeanELResolver;
 import javax.el.CompositeELResolver;
@@ -29,17 +29,17 @@ import javax.el.ELResolver;
 import javax.el.FunctionMapper;
 import javax.el.VariableMapper;
 
-import eu.eubrazilcc.lvl.storage.oauth2.User;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Encapsulates the information for use with the EL expression evaluator.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ScopeElContext extends ELContext {
+public class PermissionElContext extends ELContext {
 
 	private User user;
 
-	public ScopeElContext() { }
+	public PermissionElContext() { }
 
 	public User getUser() {
 		return user;
@@ -52,7 +52,7 @@ public class ScopeElContext extends ELContext {
 	@Override
 	public ELResolver getELResolver() {
 		final CompositeELResolver resolver = new CompositeELResolver();
-		resolver.add(new ScopeElContextResolver(user));
+		resolver.add(new PermissionElContextResolver(user));
 		resolver.add(new BeanELResolver(true));
 		return resolver;
 	}
@@ -75,14 +75,14 @@ public class ScopeElContext extends ELContext {
 
 	public static class Builder {
 
-		private final ScopeElContext instance = new ScopeElContext();
+		private final PermissionElContext instance = new PermissionElContext();
 
 		public Builder user(final User user) {
 			instance.setUser(user);
 			return this;
 		}
 
-		public ScopeElContext build() {
+		public PermissionElContext build() {
 			return instance;
 		}
 

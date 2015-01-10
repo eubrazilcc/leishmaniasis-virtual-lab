@@ -26,10 +26,15 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.readValid;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermissions;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.generateFastUrlSafeSecret;
+import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.NO_CONTENT;
+import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -92,9 +97,8 @@ import eu.eubrazilcc.lvl.oauth2.rest.OAuth2TokenRevocation;
 import eu.eubrazilcc.lvl.oauth2.rest.UserRegistration;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
-import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
-import eu.eubrazilcc.lvl.storage.security.SecurityProvider;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Integration test.
@@ -142,16 +146,16 @@ public class AuthTest {
 		System.out.println("AuthTest.test()");
 		try {
 			final String redirectURI = "https://localhost:8443/redirect";
-			final String state = SecurityProvider.generateFastUrlSafeSecret();
-			final String scope = all();
+			final String state = generateFastUrlSafeSecret();
+			final String permissions = allPermissions();
 			final ResourceOwner resourceOwner = ResourceOwner.builder()
-					.id("test_username")
 					.user(User.builder()
-							.username("test_username")
+							.userid("test_username")
 							.password("test_password")
 							.email("username@example.com")
 							.fullname("Fullname")
-							.scopes(asList(scope))
+							.role("user")
+							.permissions(asPermissionList(permissions))
 							.build()).build();			
 			RESOURCE_OWNER_DAO.insert(resourceOwner);
 
@@ -230,14 +234,14 @@ public class AuthTest {
 					.setGrantType(GrantType.PASSWORD)
 					.setClientId(clientId)
 					.setClientSecret(clientSecret)
-					.setUsername(resourceOwner.getUser().getUsername())
+					.setUsername(resourceOwner.getUser().getUserid())
 					.setPassword(resourceOwner.getUser().getPassword())
-					.buildBodyMessage();
+					.buildBodyMessage();			
 			OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());			
 			OAuthJSONAccessTokenResponse response2 = oAuthClient.accessToken(request);
 			assertThat("Access token is valid", response2.getAccessToken(), notNullValue());
 			assertThat("Access token expiration is not null", response2.getExpiresIn(), notNullValue());
-			assertThat("Access token scope is not null", response2.getScope(), notNullValue());
+			assertThat("Access token permission is not null", response2.getScope(), notNullValue());
 			String accessToken = response2.getAccessToken();
 			/* uncomment the following lines for additional output */
 			System.out.println("     >> Access token: " + response2.getAccessToken());
@@ -260,7 +264,7 @@ public class AuthTest {
 			response2 = oAuthClient.accessToken(request);
 			assertThat("Access token is valid (using email address)", response2.getAccessToken(), notNullValue());
 			assertThat("Access token expiration is not null (using email address)", response2.getExpiresIn(), notNullValue());
-			assertThat("Access token scope is not null (using email address)", response2.getScope(), notNullValue());
+			assertThat("Access token permission is not null (using email address)", response2.getScope(), notNullValue());
 			accessToken = response2.getAccessToken();
 			/* uncomment the following lines for additional output */
 			System.out.println("     >> Access token (using email address): " + response2.getAccessToken());
@@ -273,7 +277,7 @@ public class AuthTest {
 					.setGrantType(GrantType.PASSWORD)
 					.setClientId(clientId)
 					.setClientSecret(clientSecret)
-					.setUsername(resourceOwner.getUser().getUsername())
+					.setUsername(resourceOwner.getUser().getUserid())
 					.setPassword(resourceOwner.getUser().getPassword())
 					.buildBodyMessage();
 			oAuthClient = new OAuthClient(new URLConnectionClient());
@@ -290,7 +294,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken2))
 					.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 			assertThat("Revoke token response is not null", response3, notNullValue());
-			assertThat("Revoke token response is OK", response3.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
+			assertThat("Revoke token response is OK", response3.getStatus(), equalTo(OK.getStatusCode()));
 			assertThat("Revoke token response is not empty", response3.getEntity(), notNullValue());
 			String payload = response3.readEntity(String.class);
 			assertThat("Revoke token response entity is not null", payload, notNullValue());
@@ -303,18 +307,19 @@ public class AuthTest {
 			// test identity provider (IdP) create new user
 			path = IdentityProvider.class.getAnnotation(Path.class);
 			final User user = User.builder()
-					.username("username2")
+					.userid("username2")
 					.password("password2")
 					.email("username2@example.com")
 					.fullname("Fullname2")
-					.scopes(asList(user("username2")))
+					.role("user")
+					.permissions(asPermissionList(userPermissions(toResourceOwnerId("username2"))))
 					.build();
 			System.out.println(" >> IdP resource server: " + target.path(path.value()).getUri().toString());
 			response3 = target.path(path.value()).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.post(Entity.entity(user, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("Create new user response is not null", response3, notNullValue());
-			assertThat("Create new user response is CREATED", response3.getStatus(), equalTo(Response.Status.CREATED.getStatusCode()));
+			assertThat("Create new user response is CREATED", response3.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create new user response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Create new user response entity is not null", payload, notNullValue());
@@ -329,7 +334,7 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get();
 			assertThat("Get users response is not null", response3, notNullValue());
-			assertThat("Get users response is OK", response3.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
+			assertThat("Get users response is OK", response3.getStatus(), equalTo(OK.getStatusCode()));
 			assertThat("Get users response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Get users response entity is not null", payload, notNullValue());
@@ -351,7 +356,7 @@ public class AuthTest {
 			System.out.println("     >> Get users result: " + users.toString());
 
 			// test identity provider (IdP) get user by username
-			User user2 = target.path(path.value()).path(user.getUsername()).queryParam("plain", true)
+			User user2 = target.path(path.value()).path(toResourceOwnerId(user.getUserid())).queryParam("plain", true)
 					.request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(User.class);
@@ -372,11 +377,11 @@ public class AuthTest {
 
 			// test identity provider (IdP) update user
 			user.setPassword("updated_password2");
-			response3 = target.path(path.value()).path(user.getUsername()).request()
+			response3 = target.path(path.value()).path(toResourceOwnerId(user.getUserid())).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.put(Entity.entity(user, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("Update user response is not null", response3, notNullValue());
-			assertThat("Update user response is OK", response3.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
+			assertThat("Update user response is OK", response3.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Update user response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Update user response entity is not null", payload, notNullValue());
@@ -387,7 +392,7 @@ public class AuthTest {
 			System.out.println("     >> Update user HTTP headers: " + response3.getStringHeaders());
 
 			// test identity provider (IdP) get user by username after update
-			user2 = target.path(path.value()).path(user.getUsername()).queryParam("plain", true)
+			user2 = target.path(path.value()).path(toResourceOwnerId(user.getUserid())).queryParam("plain", true)
 					.request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(User.class);
@@ -398,7 +403,7 @@ public class AuthTest {
 
 			// test identity provider (IdP) get user by username with revoked token
 			try {
-				target.path(path.value()).path(user.getUsername())
+				target.path(path.value()).path(toResourceOwnerId(user.getUserid()))
 				.request(MediaType.APPLICATION_JSON)
 				.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken2))
 				.get(User.class);
@@ -408,11 +413,11 @@ public class AuthTest {
 			}
 
 			// test identity provider (IdP) delete user
-			response3 = target.path(path.value()).path(user.getUsername()).request()
+			response3 = target.path(path.value()).path(toResourceOwnerId(user.getUserid())).request()
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.delete();
 			assertThat("Delete user response is not null", response3, notNullValue());
-			assertThat("Delete user response is OK", response3.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
+			assertThat("Delete user response is OK", response3.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Delete user response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Delete user response entity is not null", payload, notNullValue());
@@ -428,12 +433,12 @@ public class AuthTest {
 			response3 = target.path(path.value()).queryParam("skip_activation", true).request()
 					.post(Entity.entity(user, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("Create pending user response is not null", response3, notNullValue());
-			assertThat("Create pending user response is CREATED", response3.getStatus(), equalTo(Response.Status.CREATED.getStatusCode()));
+			assertThat("Create pending user response is CREATED", response3.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create pending user response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Create pending user response entity is not null", payload, notNullValue());
 			assertThat("Create pending user response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			/* uncomment for additional output */
 			System.out.println("     >> Create pending user response body (JSON), empty is OK: " + payload);
 			System.out.println("     >> Create pending user response JAX-RS object: " + response3);
 			System.out.println("     >> Create pending user HTTP headers: " + response3.getStringHeaders());
@@ -447,7 +452,7 @@ public class AuthTest {
 			response3 = target.path(path.value()).path(user.getEmail()).request()
 					.put(Entity.entity(pendingUser2, MediaType.APPLICATION_JSON_TYPE));
 			assertThat("New user activation response is not null", response3, notNullValue());			
-			assertThat("New user activation response is OK", response3.getStatus(), equalTo(Response.Status.NO_CONTENT.getStatusCode()));
+			assertThat("New user activation response is OK", response3.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("New user activation response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("New user activation response entity is not null", payload, notNullValue());
@@ -460,13 +465,13 @@ public class AuthTest {
 			// test identity provider (IdP) get user by username after activation
 			path = IdentityProvider.class.getAnnotation(Path.class);
 			System.out.println(" >> IdP resource server: " + target.path(path.value()).getUri().toString());
-			user2 = target.path(path.value()).path(user.getUsername()).queryParam("plain", true)
+			user2 = target.path(path.value()).path(toResourceOwnerId(user.getUserid())).queryParam("plain", true)
 					.request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(User.class);
 			assertThat("Get user by username after validation result is not null", user2, notNullValue());
-			assertThat("Get user by username after validation scopes is not null", user2.getScopes(), notNullValue());
-			assertThat("Get user by username after validation scopes is not empty", !user2.getScopes().isEmpty());
+			assertThat("Get user by username after validation permissions are not null", user2.getPermissions(), notNullValue());
+			assertThat("Get user by username after validation permissions are not empty", !user2.getPermissions().isEmpty());			
 			assertThat("Get user by username after validation coincides with expected", user2.equalsToUnprotectedIgnoringVolatile(user), equalTo(true));
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by username after validation result: " + user2.toString());
@@ -477,11 +482,11 @@ public class AuthTest {
 			System.out.println(" >> Check user availability: " + target.path(path.value()).path(innerPath.value()).getUri().toString());
 			form = new Form();
 			form.param("type", "username");
-			form.param("username", user.getUsername());
+			form.param("username", user.getUserid());
 			response3 = target.path(path.value()).path(innerPath.value()).request(MediaType.APPLICATION_JSON)
 					.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
 			assertThat("Check user availability response is not null", response3, notNullValue());
-			assertThat("Check user availability response is OK", response3.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
+			assertThat("Check user availability response is OK", response3.getStatus(), equalTo(OK.getStatusCode()));
 			assertThat("Check user availability response is not empty", response3.getEntity(), notNullValue());
 			payload = response3.readEntity(String.class);
 			assertThat("Check user availability response entity is not null", payload, notNullValue());

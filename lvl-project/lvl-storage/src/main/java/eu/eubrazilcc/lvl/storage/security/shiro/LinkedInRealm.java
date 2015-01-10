@@ -20,29 +20,33 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.oauth2.security.el;
+package eu.eubrazilcc.lvl.storage.security.shiro;
 
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.inheritElUsername;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.LINKEDIN_IDENTITY_PROVIDER;
 
-import javax.el.ExpressionFactory;
-import javax.el.ValueExpression;
-
-import eu.eubrazilcc.lvl.storage.oauth2.User;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.credential.SimpleCredentialsMatcher;
 
 /**
- * Builds and parses scope expression from EL (expression language) templates.
+ * Security realm that relies on LinkedIn users authenticated through access tokens.
  * @author Erik Torres <ertorser@upv.es>
- * @see <a href="https://java.net/projects/el-spec/">Expression Language Specification</a>
+ * @see <a href="https://developer.linkedin.com/documents/authentication">LinkedIn API: Authentication</a>
  */
-public final class ScopeElBuilder {
+public class LinkedInRealm extends BaseAuthorizingRealm {
 
-	private static final ExpressionFactory EXPR_FACTORY = ExpressionFactory.newInstance();
-
-	public static String buildScope(final String scope, final User user) {
-		final ScopeElContext ctxt = ScopeElContext.builder().user(user).build();
-		final String template = inheritElUsername(scope);
-		final ValueExpression expr = EXPR_FACTORY.createValueExpression(ctxt, template, String.class);
-		return expr.getValue(ctxt).toString();
+	public LinkedInRealm() {
+		super(new SimpleCredentialsMatcher());
+		// add support for token-based authentication
+		setAuthenticationTokenClass(AccessTokenToken.class);
 	}
+
+	@Override
+	protected AuthenticationInfo doGetAuthenticationInfo(final AuthenticationToken token) throws AuthenticationException {
+	
+		// TODO
+		return null;
+	}	
 
 }

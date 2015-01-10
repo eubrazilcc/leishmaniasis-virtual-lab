@@ -47,7 +47,7 @@ import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.oauth2.rest.IdentityProvider;
-import eu.eubrazilcc.lvl.storage.oauth2.User;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Wraps a collection of {@link User}.

@@ -60,8 +60,8 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
 		if (Backbone.history) {
 			Backbone.history instanceof History || (Backbone.history = new History());
 			require([ 'apps/config/marionette/styles/style', 'apps/header/header_app', 'apps/footer/footer_app', 'apps/home/home_router',
-					'apps/access/access_router', 'apps/collection/collection_router', 'apps/social/social_router', 'apps/e-compendium/e-compendium_router',
-					'apps/analysis/analysis_router', 'apps/drive/drive_router' ], function(Style) {
+			          'apps/access/access_router', 'apps/collection/collection_router', 'apps/social/social_router', 'apps/e-compendium/e-compendium_router',
+			          'apps/analysis/analysis_router', 'apps/drive/drive_router' ], function(Style) {
 				// load base styles
 				new Style().loadBaseStyles();
 				// start history

@@ -25,6 +25,8 @@ package eu.eubrazilcc.lvl.service.rest;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
@@ -32,14 +34,16 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearbySandfly;
 import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.SEQUENCE_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SEQUENCES;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -65,6 +69,7 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -73,6 +78,7 @@ import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.Sandfly;
+import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
@@ -80,7 +86,9 @@ import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
  * Sandfly sequences resource. Since a sequence is uniquely identified by the combination of the data source and the accession (i.e. GenBank, U49845), 
@@ -96,12 +104,13 @@ import eu.eubrazilcc.lvl.storage.SequenceKey;
  * @see {@link Sandfly} class
  * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.3">RFC3986 - Uniform Resource Identifier (URI): Generic Syntax; Section 3.3 - Path</a>
  */
-@Path("/sandflies")
+@Path("/sequences/sandflies")
 public class SandflySequenceResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence (sandflies) Resource";
-	public static final String RESOURCE_SCOPE = SEQUENCES;
 
+	private final static Logger LOGGER = getLogger(SandflySequenceResource.class);
+	
 	@GET	
 	@Produces(APPLICATION_JSON)
 	public Sequences getSequences(final @QueryParam("page") @DefaultValue("0") int page,
@@ -110,7 +119,7 @@ public class SandflySequenceResource {
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:public:*:view");
 		final Sequences paginable = Sequences.start()
 				.page(page)
 				.perPage(per_page)
@@ -135,12 +144,13 @@ public class SandflySequenceResource {
 	@Produces(APPLICATION_JSON)
 	public Sandfly getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:*:" + sequenceKey.toId() + ":view");
 		// get from database
-		final Sandfly sequence = SANDFLY_DAO.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
+		final Sandfly sequence = SANDFLY_DAO.find(sequenceKey);
 		if (sequence == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -151,10 +161,10 @@ public class SandflySequenceResource {
 	@Consumes(APPLICATION_JSON)
 	public Response createSequence(final Sandfly sequence, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:*:*:create");
 		if (sequence == null || isBlank(sequence.getAccession())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
+		}		
 		// create sequence in the database
 		SANDFLY_DAO.insert(sequence);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sequence.getAccession());		
@@ -166,7 +176,6 @@ public class SandflySequenceResource {
 	@Consumes(APPLICATION_JSON)
 	public void updateSequence(final @PathParam("id") String id, final Sandfly update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}		
@@ -175,6 +184,7 @@ public class SandflySequenceResource {
 				|| !sequenceKey.getAccession().equals(update.getAccession())) {
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:*:" + sequenceKey.toId() + ":edit");
 		// get from database
 		final Sandfly current = SANDFLY_DAO.find(sequenceKey);
 		if (current == null) {
@@ -188,11 +198,11 @@ public class SandflySequenceResource {
 	@Path("{id: " + SEQUENCE_ID_PATTERN + "}")
 	public void deleteSequence(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:*:" + sequenceKey.toId() + ":edit");
 		// get from database
 		final Sandfly current = SANDFLY_DAO.find(sequenceKey);
 		if (current == null) {
@@ -213,7 +223,7 @@ public class SandflySequenceResource {
 			final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:public:*:view");
 		return findNearbySandfly(Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), 
 				maxDistance, group, heatmap);
 		/* // get from database
@@ -224,6 +234,49 @@ public class SandflySequenceResource {
 		return SequenceAnalyzer.toFeatureCollection(sequences, Crs.builder().wgs84().build(), group, heatmap); */		
 	}	
 
+	@GET
+	@Path("{id: " + SEQUENCE_ID_PATTERN + "}/export/gb/xml")
+	@Produces(APPLICATION_JSON)
+	public GBSeq exportSequenceXml(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		if (isBlank(id)) {
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
+		}
+		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:*:" + sequenceKey.toId() + ":edit");
+		// get from database
+		final Sequence sequence = SANDFLY_DAO.find(sequenceKey);
+		if (sequence == null) {
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+		}
+		// get from file-system
+		final File file = new File(CONFIG_MANAGER.getGenBankDir(GB_SEQ_XML), sequence.getGi() + ".xml");
+		if (!file.canRead()) {
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+		}
+		GBSeq gbSeq = null;
+		try {
+			gbSeq = GBSEQ_XMLB.typeFromFile(file);
+		} catch (IOException e) {
+			LOGGER.error("Failed to load GenBank sequence from file", e);
+		}
+		if (gbSeq == null) {
+			throw new WebApplicationException("Unable to complete the operation", Response.Status.INTERNAL_SERVER_ERROR);
+		}
+		return gbSeq;
+	}
+
+	@GET
+	@Path("{id: " + SEQUENCE_ID_PATTERN + "}/export/gb/text")
+	@Produces(APPLICATION_JSON)
+	public String exportSequenceText(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final GBSeq gbSeq = exportSequenceXml(id, uriInfo, request, headers);
+		// transform to plain text format
+		// TODO
+		return null;
+	}
+	
 	/**
 	 * Wraps a collection of {@link Sandfly}.
 	 * @author Erik Torres <ertorser@upv.es>

@@ -27,11 +27,6 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.parsePublicLinkId;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static eu.eubrazilcc.lvl.storage.dao.WorkflowRunDAO.WORKFLOW_RUN_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.ACCESS_TYPE;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.OWNER_ID;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.RESOURCE_WIDE_ACCESS;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static java.net.URLDecoder.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.UUID.randomUUID;
@@ -70,12 +65,12 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.workflow.WorkflowProduct;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowRun;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 import eu.eubrazilcc.lvl.service.WorkflowRuns;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
  * Workflow runs resource.
@@ -85,7 +80,6 @@ import eu.eubrazilcc.lvl.service.WorkflowRuns;
 public class WorkflowRunResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Runs Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(WorkflowDefinitionResource.class);
 
 	private final static Logger LOGGER = getLogger(WorkflowRunResource.class);
 
@@ -94,14 +88,16 @@ public class WorkflowRunResource {
 	public WorkflowRuns getWorkflowRuns(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("pipelines:runs:public:*:view")
+				.getPrincipal();
 		final WorkflowRuns paginable = WorkflowRuns.start()
 				.page(page)
 				.perPage(per_page)
 				.build();
 		// get public links from database
 		final MutableLong count = new MutableLong(0l);
-		final List<WorkflowRun> publicLinks = WORKFLOW_RUN_DAO.list(paginable.getPageFirstEntry(), per_page, null, null, count, getOwnerId(access));
+		final List<WorkflowRun> publicLinks = WORKFLOW_RUN_DAO.list(paginable.getPageFirstEntry(), per_page, null, null, count, ownerid);
 		paginable.setElements(publicLinks);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
@@ -114,12 +110,14 @@ public class WorkflowRunResource {
 	@Produces(APPLICATION_JSON)
 	public WorkflowRun getWorkflowRun(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("pipelines:runs:*:" + id.trim() + ":view")
+				.getPrincipal();
 		// get from database
-		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, getOwnerId(access));
+		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, ownerid);
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -143,7 +141,9 @@ public class WorkflowRunResource {
 	@Consumes(APPLICATION_JSON)
 	public Response createWorkflowRun(final WorkflowRun run, final @Context UriInfo uriInfo, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("pipelines:runs:*:*:create")
+				.getPrincipal();
 		if (isBlank(run.getWorkflowId())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}		
@@ -151,7 +151,7 @@ public class WorkflowRunResource {
 		final String invocationId = ESCENTRAL_CONN.executeWorkflow(run.getWorkflowId(), run.getParameters());
 		run.setId(randomUUID().toString());
 		run.setInvocationId(invocationId);
-		run.setSubmitter(access.get(OWNER_ID));
+		run.setSubmitter(ownerid);
 		run.setSubmitted(new Date());		
 		// create entry in the database
 		WORKFLOW_RUN_DAO.insert(run);		
@@ -164,10 +164,10 @@ public class WorkflowRunResource {
 	@Consumes(APPLICATION_JSON)
 	public void updateWorkflowRun(final @PathParam("id") String id, final WorkflowRun update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:*:" + id.trim() + ":edit");
 		final String[] splitted = parsePublicLinkId(id);
 		if (splitted == null || splitted.length != 2) {
 			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
@@ -177,10 +177,6 @@ public class WorkflowRunResource {
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
-		// check permissions
-		if (!isAllowed(access, run)) {
-			throw new WebApplicationException("Operation not permitted", Response.Status.BAD_REQUEST);
-		}
 		// update
 		WORKFLOW_RUN_DAO.update(update);
 	}
@@ -189,19 +185,15 @@ public class WorkflowRunResource {
 	@Path("{id}")
 	public void deleteWorkflowRun(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}		
+		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:*:" + id.trim() + ":edit");
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id);
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}		
-		// check permissions
-		if (!isAllowed(access, run)) {
-			throw new WebApplicationException("Operation not permitted", Response.Status.BAD_REQUEST);
-		}
 		// delete
 		WORKFLOW_RUN_DAO.delete(id);
 		deleteQuietly(new File(CONFIG_MANAGER.getProductsDir(), run.getId()));		
@@ -222,12 +214,14 @@ public class WorkflowRunResource {
 	@Produces(TEXT_PLAIN)
 	public String getTextProduct(final @PathParam("id") String id, final @PathParam("path") String path,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
 		if (isBlank(id) || isBlank(path)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("pipelines:runs:*:" + id.trim() + ":view")
+				.getPrincipal();
 		// get from database
-		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, getOwnerId(access));
+		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, ownerid);
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -245,14 +239,6 @@ public class WorkflowRunResource {
 			LOGGER.error("Failed to read product text file", e);
 		}		
 		return content;
-	}	
-
-	private static String getOwnerId(final ImmutableMap<String, String> access) {
-		return !RESOURCE_WIDE_ACCESS.equals(access.get(ACCESS_TYPE)) ? access.get(OWNER_ID) : null;
-	}
-
-	private static boolean isAllowed(final ImmutableMap<String, String> access, final WorkflowRun run) {
-		return RESOURCE_WIDE_ACCESS.equals(access.get(ACCESS_TYPE)) || access.get(OWNER_ID).equals(run.getSubmitter());
 	}
 
 }

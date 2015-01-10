@@ -27,11 +27,6 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.parsePublicLinkId;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static eu.eubrazilcc.lvl.storage.dao.PublicLinkDAO.PUBLIC_LINK_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.ACCESS_TYPE;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.OWNER_ID;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.RESOURCE_WIDE_ACCESS;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static java.lang.System.getProperty;
 import static java.nio.file.Files.createSymbolicLink;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -63,11 +58,10 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 
-import com.google.common.collect.ImmutableMap;
-
 import eu.eubrazilcc.lvl.core.PublicLink;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
 import eu.eubrazilcc.lvl.service.WorkflowDataObjects;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
  * Workflows data resource.
@@ -77,7 +71,6 @@ import eu.eubrazilcc.lvl.service.WorkflowDataObjects;
 public class WorkflowDataResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Data Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(WorkflowDefinitionResource.class);
 
 	private final static Logger LOGGER = getLogger(WorkflowDataResource.class);
 
@@ -86,7 +79,7 @@ public class WorkflowDataResource {
 	public WorkflowDataObjects getWorkflowDataObjects(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("datasets:*:public:*:view");		
 		final WorkflowDataObjects paginable = WorkflowDataObjects.start()
 				.page(page)
 				.perPage(per_page)
@@ -106,10 +99,10 @@ public class WorkflowDataResource {
 	@Produces(APPLICATION_JSON)
 	public WorkflowDataObject getWorkflowDataObject(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("datasets:*:*:" + id.trim() + ":view");
 		// get workflow data objects from e-SC		
 		final List<WorkflowDataObject> dataObjects = ESCENTRAL_CONN.listFiles();
 		WorkflowDataObject dataObject = null;
@@ -128,7 +121,9 @@ public class WorkflowDataResource {
 	@Consumes(APPLICATION_JSON)
 	public Response createWorkflowDataObject(final WorkflowDataObject dataset, final @Context UriInfo uriInfo, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("datasets:*:*:*:create")
+				.getPrincipal();
 		if (isBlank(dataset.getName())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
@@ -138,12 +133,8 @@ public class WorkflowDataResource {
 			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
 		}
 		final String path = splitted[0], name = splitted[1];		
-		final PublicLink publicLink = PUBLIC_LINK_DAO.find(path + "/" + name, getOwnerId(access));
-		final File inputFile = new File(CONFIG_MANAGER.getSharedDir(), publicLink.getPath());
-		// check permissions
-		if (!isAllowed(access, publicLink)) {
-			throw new WebApplicationException("Operation not permitted", Response.Status.BAD_REQUEST);
-		}
+		final PublicLink publicLink = PUBLIC_LINK_DAO.find(path + "/" + name, ownerid);
+		final File inputFile = new File(CONFIG_MANAGER.getSharedDir(), publicLink.getPath());		
 		// upload to e-SC
 		String inputFileId = null;
 		final File link = new File(concat(getProperty("java.io.tmpdir"), dataset.getName()));
@@ -167,12 +158,12 @@ public class WorkflowDataResource {
 
 	@DELETE
 	@Path("{id}")
-	public void deleteWorkflowRun(final @PathParam("id") String id, final @Context HttpServletRequest request, 
+	public void deleteWorkflowDataObject(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("datasets:*:*:" + id.trim() + ":edit");
 
 		// TODO : modify once the collection is created
 
@@ -182,14 +173,6 @@ public class WorkflowDataResource {
 		} catch (Exception e) {
 			LOGGER.warn("Dataset cannot be removed in the remote workflow service", e);
 		}		
-	}
-
-	private static String getOwnerId(final ImmutableMap<String, String> access) {
-		return !RESOURCE_WIDE_ACCESS.equals(access.get(ACCESS_TYPE)) ? access.get(OWNER_ID) : null;
-	}
-
-	private static boolean isAllowed(final ImmutableMap<String, String> access, final PublicLink publicLink) {
-		return RESOURCE_WIDE_ACCESS.equals(access.get(ACCESS_TYPE)) || access.get(OWNER_ID).equals(publicLink.getOwner());
 	}
 
 }

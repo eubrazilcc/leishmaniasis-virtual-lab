@@ -25,8 +25,6 @@ package eu.eubrazilcc.lvl.service.rest;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.storage.dao.NotificationDAO.NOTIFICATION_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -58,6 +56,7 @@ import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.service.Notifications;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
  * Notification resources.
@@ -67,10 +66,11 @@ import eu.eubrazilcc.lvl.service.Notifications;
 public class NotificationResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Notification Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(NotificationResource.class);
 
 	public static final String NOTIF_ID_PATTERN = "[a-zA-Z_0-9]+";
 
+	// TODO : notifications are not public, they should be listed for the user who is addressed
+	
 	@GET
 	@Produces(APPLICATION_JSON)
 	public Notifications getNotifications(final @QueryParam("page") @DefaultValue("0") int page,
@@ -79,7 +79,7 @@ public class NotificationResource {
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:public:*:view");
 		final Notifications paginable = Notifications.start()
 				.page(page)
 				.perPage(per_page)
@@ -104,10 +104,10 @@ public class NotificationResource {
 	@Produces(APPLICATION_JSON)
 	public Notification getNotification(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:*:" + id.trim() + ":view");
 		// get from database
 		final Notification notification = NOTIFICATION_DAO.find(id);
 		if (notification == null) {
@@ -120,7 +120,7 @@ public class NotificationResource {
 	@Consumes(APPLICATION_JSON)
 	public Response createNotification(final Notification notification, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:*:*:create");
 		if (notification == null || isBlank(notification.getId())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
@@ -135,10 +135,10 @@ public class NotificationResource {
 	@Consumes(APPLICATION_JSON)
 	public void updateNotification(final @PathParam("id") String id, final Notification update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}		
+		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:*:" + id.trim() + ":edit");
 		// get from database
 		final Notification current = NOTIFICATION_DAO.find(id);
 		if (current == null) {
@@ -152,10 +152,10 @@ public class NotificationResource {
 	@Path("{id: " + NOTIF_ID_PATTERN + "}")
 	public void deleteNotification(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:*:" + id.trim() + ":edit");
 		// get from database
 		final Notification current = NOTIFICATION_DAO.find(id);
 		if (current == null) {

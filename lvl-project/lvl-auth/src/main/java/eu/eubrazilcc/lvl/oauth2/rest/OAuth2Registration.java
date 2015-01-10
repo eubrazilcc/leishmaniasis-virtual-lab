@@ -22,7 +22,9 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.toAsciiSafeName;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO.CLIENT_APP_DAO;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.generateSecret;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,9 +42,7 @@ import org.apache.oltu.oauth2.ext.dynamicreg.server.request.JSONHttpServletReque
 import org.apache.oltu.oauth2.ext.dynamicreg.server.request.OAuthServerRegistrationRequest;
 import org.apache.oltu.oauth2.ext.dynamicreg.server.response.OAuthServerRegistrationResponse;
 
-import eu.eubrazilcc.lvl.core.util.NamingUtils;
 import eu.eubrazilcc.lvl.storage.oauth2.ClientApp;
-import eu.eubrazilcc.lvl.storage.security.SecurityProvider;
 
 /**
  * Implements the OAuth 2.0 Registration Endpoint using Apache Oltu.
@@ -73,8 +73,8 @@ public class OAuth2Registration {
 					.description(oauthRequest.getClientDescription())
 					.icon(oauthRequest.getClientIcon())
 					.redirectURL(oauthRequest.getRedirectURI())
-					.clientId(NamingUtils.toAsciiSafeName(oauthRequest.getClientName()))
-					.clientSecret(SecurityProvider.generateSecret())
+					.clientId(toAsciiSafeName(oauthRequest.getClientName()))
+					.clientSecret(generateSecret())
 					.issuedAt(System.currentTimeMillis() / 1000l)
 					.expiresIn(REGISTRATION_EXPIRATION_SECONDS)
 					.build();

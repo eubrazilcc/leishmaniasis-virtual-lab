@@ -29,9 +29,9 @@ import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getPortalEndpoint;
 import static eu.eubrazilcc.lvl.oauth2.mail.EmailSender.EMAIL_SENDER;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asSet;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionSet;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermissions;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -60,7 +60,7 @@ import javax.ws.rs.core.UriInfo;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
-import eu.eubrazilcc.lvl.storage.oauth2.User;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Provides new user sign-up logic to identity provider (IdP).
@@ -75,7 +75,6 @@ public class UserRegistration {
 	public static final long CONFIRMATION_CODE_EXPIRATION_SECONDS = 86400l; // 1 day	
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " User Registration";
-	public static final String RESOURCE_SCOPE = resourceScope(UserRegistration.class);
 
 	@GET
 	@Path("{email}")
@@ -103,21 +102,22 @@ public class UserRegistration {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createPendingUser(final User user, final @Context UriInfo uriInfo,
 			final @QueryParam("skip_activation") @DefaultValue("false") boolean skipActivation) {
-		if (user == null || isBlank(user.getUsername()) || isBlank(user.getEmail()) || isBlank(user.getPassword())) {
+		if (user == null || isBlank(user.getUserid()) || isBlank(user.getEmail()) || isBlank(user.getPassword())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// verify that no other user exists in the database with the same username or email address
-		if (RESOURCE_OWNER_DAO.find(user.getUsername()) != null || RESOURCE_OWNER_DAO.findByEmail(user.getEmail()) != null) {
+		final String ownerid = toResourceOwnerId(user.getUserid());
+		if (RESOURCE_OWNER_DAO.find(ownerid) != null || RESOURCE_OWNER_DAO.findByEmail(user.getEmail()) != null) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		// set the correct scopes that the new user must have
-		user.setScopes(asSet(user(user.getUsername())));
-		// create pending user in the database		
+		// set the correct permissions that the new user must have
+		user.setPermissions(asPermissionSet(userPermissions(ownerid)));
+		// create pending user in the database
 		final PendingUser pendingUser = PendingUser.builder()
 				.activationCode(randomAlphanumeric(8))
 				.issuedAt(currentTimeMillis() / 1000l)
 				.expiresIn(CONFIRMATION_CODE_EXPIRATION_SECONDS)
-				.id(user.getUsername())
+				.id(user.getUserid())
 				.user(user)
 				.build();
 		PENDING_USER_DAO.insert(pendingUser);
@@ -126,7 +126,7 @@ public class UserRegistration {
 			final URI baseUri = uriInfo.getBaseUriBuilder().clone().build();
 			sendActivation(baseUri, pendingUser);
 		}
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(pendingUser.getUser().getUsername());		
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(pendingUser.getUser().getUserid());		
 		return Response.created(uriBuilder.build()).build();
 	}
 
@@ -144,13 +144,12 @@ public class UserRegistration {
 		if (pendingUser == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
-		if (!PENDING_USER_DAO.isValid(pendingUser.getPendingUserId(), pendingUser.getUser().getUsername(), 
+		if (!PENDING_USER_DAO.isValid(pendingUser.getPendingUserId(), pendingUser.getUser().getUserid(), 
 				update.getActivationCode(), false)) {
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
 		}
-		// create regular user in the database		
+		// create regular user in the database	
 		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder()
-				.id(pendingUser.getUser().getUsername())
 				.user(pendingUser.getUser())
 				.build());
 		// delete pending user from database
@@ -166,7 +165,7 @@ public class UserRegistration {
 		final String field = getValidationField(type, form);
 		boolean isAvailable = false;		
 		if ("username".equals(type)) {
-			isAvailable = RESOURCE_OWNER_DAO.find(field) == null;
+			isAvailable = RESOURCE_OWNER_DAO.find(toResourceOwnerId(field)) == null;
 		} else if ("email".equals(type)) {
 			isAvailable = RESOURCE_OWNER_DAO.findByEmail(field) == null;
 		} else {
@@ -180,7 +179,7 @@ public class UserRegistration {
 
 	private static final void sendActivation(final URI baseUri, final PendingUser pendingUser) {
 		EMAIL_SENDER.sendTextEmail(pendingUser.getUser().getEmail(), emailActivationSubject(), 
-				emailActivationMessage(pendingUser.getUser().getUsername(), pendingUser.getUser().getEmail(), pendingUser.getActivationCode(), 
+				emailActivationMessage(pendingUser.getUser().getUserid(), pendingUser.getUser().getEmail(), pendingUser.getActivationCode(), 
 						getPortalEndpoint(baseUri)));
 	}
 

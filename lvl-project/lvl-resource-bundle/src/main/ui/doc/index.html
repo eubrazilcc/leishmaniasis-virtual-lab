@@ -459,25 +459,24 @@ total 8.0K
 
             <p>Enter to the LVL project main folder and install the LVL project BOM and POM files in your local Maven repository:</p>
 
-            <code>
-              $ cd leishmaniasis-virtual-lab <br /> $ mvn install:install-file -Dfile=pom.xml -DpomFile=pom.xml <br /> $ mvn clean install -pl lvl-project
-            </code>
+            <code> $ cd leishmaniasis-virtual-lab </code>
+            <br />
+            <code> $ mvn install:install-file -Dfile=pom.xml -DpomFile=pom.xml </code>
+            <br />
+            <code> $ mvn clean install -pl lvl-project </code>
             <p></p>
 
             <p>Enter to the project folder, build and install the LVL core libraries in your local Maven repository:</p>
 
-            <code>
-              $ cd lvl-project <br /> $ mvn clean install -pl lvl-core,lvl-storage
-            </code>
+            <code> $ cd lvl-project </code>
+            <br />
+            <code> $ mvn clean install -pl lvl-core,lvl-storage </code>            
             <p></p>
 
             <p>Build the LVL services:</p>
 
-            <code> $ mvn clean package -pl lvl-auth </code>
-            <p></p>
-
+            <code> $ mvn clean package -pl lvl-auth </code>            
             <br />
-
             <code> $ mvn clean package -pl lvl-service </code>
             <p></p>
 
@@ -1199,6 +1198,63 @@ Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:
               <a id="restful_api_resources"></a>Resources
             </h2>
 
+            <p>List of resources accessible through the RESTful API:</p>
+            
+            <ul>
+              <li>/sequences
+                <ul>
+                  <li>/leismania/{id}
+                    <ul>
+                      <li>/export/gb (GenBank file format)
+                        <ul>
+                          <li>/xml</li>
+                          <li>/text</li>
+                        </ul></li>
+                    </ul>
+                  </li>
+                  <li>/sandflies/{id}
+                    <ul>
+                      <li>/export/gb (GenBank file format)
+                        <ul>
+                          <li>/xml</li>
+                          <li>/text</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>/citations/{id}
+                <ul>
+                  <li>/pubmed
+                    <ul>
+                      <li>/xml</li>
+                    </ul>
+                  </li>
+                  <li>/fulltext
+                    <ul>
+                      <li>/pdf</li>
+                      <li>/html</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>/datasets
+                <ul>
+                  <li>/files</li>
+                  <li>/shared</li>
+                </ul>
+              </li>
+              <li>/pipelines
+                <ul>
+                  <li>/definitions</li>
+                  <li>/runs</li>
+                </ul>
+              </li>
+              <li>/tasks</li>
+              <li>/notifications</li>
+            </ul>
+            
             <p>
               <em>TODO LIST</em>
             </p>

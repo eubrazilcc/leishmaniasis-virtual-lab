@@ -36,13 +36,16 @@ import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_QUERY_OAUTH2;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.bearerHeader;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.user;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.USER_ROLE;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermissions;
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.min;
 import static java.lang.System.currentTimeMillis;
@@ -96,21 +99,23 @@ import com.google.common.collect.ImmutableList;
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Leishmania;
 import eu.eubrazilcc.lvl.core.PublicLink;
-import eu.eubrazilcc.lvl.core.PublicLink.Target;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sandfly;
+import eu.eubrazilcc.lvl.core.Target;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.service.rest.CitationResource;
+import eu.eubrazilcc.lvl.service.rest.CitationResource.References;
 import eu.eubrazilcc.lvl.service.rest.LeishmaniaSequenceResource;
 import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
-import eu.eubrazilcc.lvl.service.rest.ReferenceResource;
-import eu.eubrazilcc.lvl.service.rest.ReferenceResource.References;
 import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource;
 import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource.Sequences;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
+import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Tests REST Web service.
@@ -158,27 +163,50 @@ public class ServiceTest {
 		// configure Web target
 		target = client.target(BASE_URI);
 		target.property(ClientProperties.FOLLOW_REDIRECTS, true);
+		// insert valid users in the database (they are needed for properly authentication/authorization)
+		final String ownerId1 = toResourceOwnerId("user1"),
+				ownerId2 = toResourceOwnerId("user2");
+		final User user1 = User.builder()
+				.userid("user1")
+				.password("password1")
+				.email("user1@example.com")
+				.fullname("User 1")
+				.role(USER_ROLE)
+				.permissions(asPermissionList(userPermissions(ownerId1)))
+				.build(),
+				user2 = User.builder()
+				.userid("user2")
+				.password("password2")
+				.email("user2@example.com")
+				.fullname("User 2")
+				.role(USER_ROLE)
+				.permissions(asPermissionList(userPermissions(ownerId2)))
+				.build();
+		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder()
+				.user(user1).build());
+		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder()
+				.user(user2).build());
 		// insert valid tokens in the database
 		TOKEN_DAO.insert(AccessToken.builder()
 				.token(TOKEN_ROOT)
 				.issuedAt(currentTimeMillis() / 1000l)
 				.expiresIn(604800l)
-				.ownerId("root")
-				.scope(asList(all()))
+				.ownerId(toResourceOwnerId("root"))
+				.scope(asPermissionList(allPermissions()))
 				.build());
 		TOKEN_DAO.insert(AccessToken.builder()
 				.token(TOKEN_USER)
 				.issuedAt(currentTimeMillis() / 1000l)
 				.expiresIn(604800l)
-				.ownerId("user1")
-				.scope(asList(user("user1")))
+				.ownerId(ownerId1)
+				.scope(user1.getPermissions())
 				.build());
 		TOKEN_DAO.insert(AccessToken.builder()
 				.token(TOKEN_USER2)
 				.issuedAt(currentTimeMillis() / 1000l)
 				.expiresIn(604800l)
-				.ownerId("user2")
-				.scope(asList(user("user2")))
+				.ownerId(ownerId2)
+				.scope(user2.getPermissions())
 				.build());
 	}
 
@@ -794,9 +822,9 @@ public class ServiceTest {
 					equalTo(publicLinks.getTotalCount()));
 			/* uncomment for additional output */			
 			System.out.println(" >> Get public links (user account) result: " + publicLinks.toString());
-
+			
 			// test get public link
-			publicLink.setOwner("user1");
+			publicLink.setOwner(toResourceOwnerId("user1"));
 			PublicLink publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
@@ -954,7 +982,7 @@ public class ServiceTest {
 					.pmids(newHashSet(pmid)).build();
 			SANDFLY_DAO.insert(sandfly3);
 
-			path = ReferenceResource.class.getAnnotation(Path.class);
+			path = CitationResource.class.getAnnotation(Path.class);
 			final Reference reference = Reference.builder()
 					.title("The best paper in the world")
 					.pubmedId(pmid)

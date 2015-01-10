@@ -22,11 +22,13 @@
 
 package eu.eubrazilcc.lvl.storage.oauth2;
 
+import eu.eubrazilcc.lvl.storage.security.User;
+
 /**
- * The base type for classes that implements a specific user role, such as resource owner or account for approval.
+ * The base type for classes that implements a specific type of user, such as resource owner or account pending for approval.
  * @author Erik Torres <ertorser@upv.es>
  */
-public interface UserRole {
+public interface UserType {
 
 	User getUser();
 	

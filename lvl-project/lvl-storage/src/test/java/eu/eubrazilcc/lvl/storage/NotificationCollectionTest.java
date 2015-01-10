@@ -25,6 +25,8 @@ package eu.eubrazilcc.lvl.storage;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
 import static eu.eubrazilcc.lvl.storage.dao.NotificationDAO.NOTIFICATION_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.ADMIN_USER;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.ADMIN_ROLE;
 import static java.util.Collections.shuffle;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -40,8 +42,6 @@ import org.junit.Test;
 import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.Notification.Action;
 import eu.eubrazilcc.lvl.core.Notification.Priority;
-import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
-import eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager;
 
 /**
  * Tests notification collection in the database.
@@ -127,7 +127,7 @@ public class NotificationCollectionTest {
 				}
 				final Notification notification3 = Notification.builder()
 						.priority(priority)
-						.addressee(ResourceOwnerDAO.ADMIN_USER)
+						.addressee(ADMIN_USER)
 						.message(Integer.toString(i)).build();
 				notifications2.add(notification3);
 			}
@@ -145,8 +145,8 @@ public class NotificationCollectionTest {
 
 			// test notification broadcasting
 			final Notification notification3 = Notification.builder()
-					.scope(ScopeManager.SEQUENCES)
-					.message("Notification to all users with full access to the sequences").build();
+					.scope(ADMIN_ROLE)
+					.message("Notification to all users granted with full access to the system").build();
 			NOTIFICATION_MANAGER.broadcast(notification3);
 			tries = 0;
 			while (NOTIFICATION_MANAGER.hasPendingNotifications() && tries++ < 30) {

@@ -43,7 +43,7 @@ import org.junit.Test;
 
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
-import eu.eubrazilcc.lvl.storage.oauth2.User;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Tests pending user collection in the database.
@@ -55,7 +55,7 @@ public class PendingUserCollectionTest {
 	public void test() {
 		System.out.println("PendingUserCollectionTest.test()");
 		try {
-			final Collection<String> scopes = newArrayList("scope1", "scope2");
+			final Collection<String> roles = newArrayList("scope1", "scope2");
 
 			// insert (no salt)
 			final PendingUser pendingUser = PendingUser.builder()
@@ -64,11 +64,11 @@ public class PendingUserCollectionTest {
 					.issuedAt(2000l)
 					.activationCode("1234567890abcDEF")
 					.user(User.builder()
-							.username("username")
+							.userid("username")
 							.password("password")
 							.email("username@example.com")
 							.fullname("Fullname")
-							.scopes(scopes)
+							.roles(roles)
 							.build()).build();
 			WriteResult<PendingUser> result = PENDING_USER_DAO.insert(pendingUser);
 			assertThat("insert pending user result is not null", result, notNullValue());
@@ -98,11 +98,11 @@ public class PendingUserCollectionTest {
 					.activationCode("1234567890abcDEF")
 					.user(User.builder()
 							.links(newArrayList(Link.fromUri("http://example.com/users/username").rel(SELF).type(APPLICATION_JSON).build()))
-							.username("username1")
+							.userid("username1")
 							.password("password1")
 							.email("username1@example.com")
 							.fullname("Fullname 1")
-							.scopes(scopes)
+							.roles(roles)
 							.build()).build();			
 
 			PENDING_USER_DAO.insert(pendingUser1);
@@ -129,7 +129,7 @@ public class PendingUserCollectionTest {
 
 			// check validity using pending user Id and username
 			boolean validity = PENDING_USER_DAO.isValid(pendingUser.getPendingUserId(), 
-					pendingUser.getUser().getUsername(), 
+					pendingUser.getUser().getUserid(), 
 					pendingUser.getActivationCode(), 
 					false);
 			assertThat("pending user is valid (using owner Id & username)", validity);
@@ -167,11 +167,11 @@ public class PendingUserCollectionTest {
 						.issuedAt(2000l)
 						.activationCode("1234567890abcDEF")
 						.user(User.builder()
-								.username(Integer.toString(i))
+								.userid(Integer.toString(i))
 								.password("password")
 								.email("username" + i + "@example.com")
 								.fullname("Fullname")
-								.scopes(scopes)
+								.roles(roles)
 								.build()).build();								
 				ids.add(pendingUser4.getPendingUserId());
 				PENDING_USER_DAO.insert(pendingUser4);

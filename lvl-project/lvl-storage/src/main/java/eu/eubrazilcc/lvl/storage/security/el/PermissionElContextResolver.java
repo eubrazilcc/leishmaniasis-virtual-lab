@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.oauth2.security.el;
+package eu.eubrazilcc.lvl.storage.security.el;
 
 import static com.google.common.collect.Maps.newHashMap;
 
@@ -32,20 +32,20 @@ import javax.el.ELContext;
 import javax.el.ELResolver;
 import javax.el.PropertyNotWritableException;
 
-import eu.eubrazilcc.lvl.storage.oauth2.User;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * The context resolver that resolves the instance objects that can be used in a scope EL expression.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ScopeElContextResolver extends ELResolver {
+public class PermissionElContextResolver extends ELResolver {
 
-	private Map<String, Object> scopeObjects;
+	private Map<String, Object> permissionObjects;
 	public final static String USER_OBJECT = "user";
 
-	public ScopeElContextResolver(final User user) {
-		scopeObjects = newHashMap();
-		scopeObjects.put(USER_OBJECT, user);
+	public PermissionElContextResolver(final User user) {
+		permissionObjects = newHashMap();
+		permissionObjects.put(USER_OBJECT, user);
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public class ScopeElContextResolver extends ELResolver {
 	@Override
 	public Object getValue(final ELContext ctxt, final Object base, final Object property) {
 		if (isHandled(ctxt, base, property)) {
-			return scopeObjects.get(property.toString());
+			return permissionObjects.get(property.toString());
 		}
 		return null;
 	}
@@ -91,7 +91,7 @@ public class ScopeElContextResolver extends ELResolver {
 		if (base != null) {
 			return false;
 		}
-		if (scopeObjects.containsKey(property.toString())) {
+		if (permissionObjects.containsKey(property.toString())) {
 			ctxt.setPropertyResolved(true);
 			return true;
 		}

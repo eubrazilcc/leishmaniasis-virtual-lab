@@ -24,16 +24,19 @@ package eu.eubrazilcc.lvl.storage.oauth2;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.io.Serializable;
 import java.util.Objects;
 
+import eu.eubrazilcc.lvl.storage.security.User;
+
 /**
- * Simple implementation of the OAuth 2.0 resource owner using user+password.
+ * Simple implementation of the OAuth 2.0 resource owner using username+password.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ResourceOwner implements UserRole, Serializable {
+public class ResourceOwner implements UserType, Serializable {
 
 	private static final long serialVersionUID = -6701870173207375701L;
 
@@ -105,7 +108,7 @@ public class ResourceOwner implements UserRole, Serializable {
 
 		private final ResourceOwner instance = new ResourceOwner();
 
-		public Builder id(final String ownerId) {
+		protected Builder id(final String ownerId) {
 			checkArgument(isNotBlank(ownerId), "Uninitialized or invalid owner Id");
 			instance.setOwnerId(ownerId);
 			return this;
@@ -113,6 +116,7 @@ public class ResourceOwner implements UserRole, Serializable {
 
 		public Builder user(final User user) {
 			checkArgument(user != null, "Uninitialized user");
+			instance.setOwnerId(toResourceOwnerId(user));
 			instance.setUser(user);
 			return this;
 		}

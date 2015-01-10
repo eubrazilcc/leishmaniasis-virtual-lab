@@ -27,8 +27,7 @@ import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.PendingUser.copyOf;
-import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.computeHash;
-import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.obfuscatePassword;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.hashAndSaltPassword;
 import static eu.eubrazilcc.lvl.storage.transform.UserTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -97,7 +96,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 		} else {
 			// protect sensitive fields before storing the element in the database
 			final PendingUser copy = copyOf(pendingUser);
-			final String[] shadowed = obfuscatePassword(copy.getUser().getPassword());			
+			final String[] shadowed = hashAndSaltPassword(copy.getUser().getPassword());
 			copy.getUser().setSalt(shadowed[0]);
 			copy.getUser().setPassword(shadowed[1]);
 			// remove transient fields from the element before saving it to the database
@@ -230,7 +229,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	}
 
 	public static void updatePassword(final PendingUser pendingUser, final String newPassword) {
-		final String shadowed = computeHash(newPassword, pendingUser.getUser().getSalt());
+		final String shadowed = hashAndSaltPassword(newPassword, pendingUser.getUser().getSalt());
 		pendingUser.getUser().setPassword(shadowed);		
 	}
 
@@ -268,7 +267,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 		checkArgument(isNotBlank(activationCode), "Uninitialized or invalid activation code");
 		final PendingUser pendingUser = find(pendingUserId);
 		final boolean isValid = (pendingUser != null && pendingUser.getUser() != null 
-				&& username.equals(pendingUser.getUser().getUsername())
+				&& username.equals(pendingUser.getUser().getUserid())
 				&& activationCode.equals(pendingUser.getActivationCode()));
 		return isValid;
 	}

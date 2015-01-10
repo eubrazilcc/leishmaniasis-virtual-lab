@@ -30,11 +30,8 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.parsePublicLinkId;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.writePublicLink;
 import static eu.eubrazilcc.lvl.storage.dao.PublicLinkDAO.PUBLIC_LINK_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.ACCESS_TYPE;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.OWNER_ID;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.RESOURCE_WIDE_ACCESS;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.resourceScope;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.OWNERID_EL_TEMPLATE;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.ADMIN_ROLE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.UriBuilder.fromUri;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -66,20 +63,18 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.mutable.MutableLong;
 
-import com.google.common.collect.ImmutableMap;
-
 import eu.eubrazilcc.lvl.core.PublicLink;
 import eu.eubrazilcc.lvl.service.PublicLinks;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
- * Public link resources.
+ * Shared data-sources (with a public link) resource.
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/public_links")
+@Path("/datasets/shared")
 public class PublicLinkResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Public Link Resource";
-	public static final String RESOURCE_SCOPE = resourceScope(PublicLinkResource.class);
 
 	public static final String PATH_PATTERN = "[a-zA-Z_0-9\\.-]+";
 	public static final String NAME_PATTERN = "[a-zA-Z_0-9\\.-]+";
@@ -89,7 +84,9 @@ public class PublicLinkResource {
 	public PublicLinks getPublicLinks(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
+		final OAuth2SecurityManager securityManager = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("datasets:shared:" + OWNERID_EL_TEMPLATE + ":*:view");
+		final String ownerid = securityManager.getPrincipal();
 		final PublicLinks paginable = PublicLinks.start()
 				.page(page)
 				.perPage(per_page)
@@ -97,7 +94,7 @@ public class PublicLinkResource {
 		// get public links from database
 		final MutableLong count = new MutableLong(0l);
 		final List<PublicLink> publicLinks = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo))
-				.list(paginable.getPageFirstEntry(), per_page, null, null, count, getOwnerId(access));
+				.list(paginable.getPageFirstEntry(), per_page, null, null, count, securityManager.hasRole(ADMIN_ROLE) ? null : ownerid);
 		paginable.setElements(publicLinks);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
@@ -110,7 +107,6 @@ public class PublicLinkResource {
 	@Produces(APPLICATION_JSON)
 	public PublicLink getPublicLink(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, false, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
@@ -118,10 +114,14 @@ public class PublicLinkResource {
 		if (splitted == null || splitted.length != 2) {
 			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
 		}
-		final String path = splitted[0], name = splitted[1];		
+		final String path = splitted[0], name = splitted[1];
+		final String fullpath = path + "/" + name;
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("datasets:shared:" + OWNERID_EL_TEMPLATE + ":" + fullpath + ":view")
+				.getPrincipal();
 		// get from database
 		final PublicLink publicLink = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo))
-				.find(path + "/" + name, getOwnerId(access));
+				.find(fullpath, ownerid);
 		if (publicLink == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -132,13 +132,15 @@ public class PublicLinkResource {
 	@Consumes(APPLICATION_JSON)
 	public Response createPublicLink(final PublicLink publicLink, final @Context UriInfo uriInfo, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("datasets:shared:" + OWNERID_EL_TEMPLATE + ":*:create")
+				.getPrincipal();
 		final String key = randomAlphanumeric(16).toLowerCase();
 		final File outputDir = new File(CONFIG_MANAGER.getSharedDir(), key);
 		final String fullpath = writePublicLink(publicLink, outputDir);
 		publicLink.setPath(key + "/" + getName(fullpath));
 		publicLink.setMime(mimeType(new File(fullpath)));
-		publicLink.setOwner(access.get(OWNER_ID));
+		publicLink.setOwner(ownerid);
 		publicLink.setCreated(new Date());
 		// create entry in the database
 		PUBLIC_LINK_DAO.insert(publicLink);		
@@ -151,10 +153,9 @@ public class PublicLinkResource {
 	@Consumes(APPLICATION_JSON)
 	public void updatePublicLink(final @PathParam("id") String id, final PublicLink update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
+		}		
 		final String[] splitted = parsePublicLinkId(id);
 		if (splitted == null || splitted.length != 2) {
 			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
@@ -164,14 +165,12 @@ public class PublicLinkResource {
 		if (update == null || !update.getPath().equals(fullpath)) {
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+		.requiresPermissions("datasets:shared:" + OWNERID_EL_TEMPLATE + ":" + fullpath + ":edit");
 		// get from database
 		final PublicLink publicLink = PUBLIC_LINK_DAO.find(fullpath);
 		if (publicLink == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
-		}
-		// check permissions
-		if (!isAllowed(access, publicLink)) {
-			throw new WebApplicationException("Operation not permitted", Response.Status.BAD_REQUEST);
 		}
 		// update
 		PUBLIC_LINK_DAO.update(update);
@@ -181,24 +180,21 @@ public class PublicLinkResource {
 	@Path("{id}")
 	public void deletePublicLink(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		final ImmutableMap<String, String> access = authorize(request, null, headers, RESOURCE_SCOPE, true, true, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
+		}		
 		final String[] splitted = parsePublicLinkId(id);
 		if (splitted == null || splitted.length != 2) {
 			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
 		}
 		final String path = splitted[0], name = splitted[1];
 		final String fullpath = path + "/" + name;
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+		.requiresPermissions("datasets:shared:" + OWNERID_EL_TEMPLATE + ":" + fullpath + ":edit");
 		// get from database
 		final PublicLink publicLink = PUBLIC_LINK_DAO.find(fullpath);
 		if (publicLink == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
-		}		
-		// check permissions
-		if (!isAllowed(access, publicLink)) {
-			throw new WebApplicationException("Operation not permitted", Response.Status.BAD_REQUEST);
 		}		
 		// delete
 		PUBLIC_LINK_DAO.delete(fullpath);
@@ -209,14 +205,6 @@ public class PublicLinkResource {
 		final URI thisResourceEndpoint = uriInfo.getBaseUriBuilder().clone().build();
 		final URI portalEndpoint = getPortalEndpoint(thisResourceEndpoint);		
 		return fromUri(portalEndpoint).path(CONFIG_MANAGER.getPublicLocation()).build();
-	}
-
-	private static String getOwnerId(final ImmutableMap<String, String> access) {
-		return !RESOURCE_WIDE_ACCESS.equals(access.get(ACCESS_TYPE)) ? access.get(OWNER_ID) : null;
-	}
-
-	private static boolean isAllowed(final ImmutableMap<String, String> access, final PublicLink publicLink) {
-		return RESOURCE_WIDE_ACCESS.equals(access.get(ACCESS_TYPE)) || access.get(OWNER_ID).equals(publicLink.getOwner());
 	}
 
 }

@@ -48,7 +48,7 @@ import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedIds;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.parseSequence;
 import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.SEQUENCES;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.DATA_CURATOR_ROLE;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -182,7 +182,7 @@ public class ImportSequencesTask<T extends Sequence> extends CancellableTask<Int
 					LOGGER.warn(msg + " - errors reported");
 				}
 				NOTIFICATION_MANAGER.broadcast(Notification.builder()
-						.scope(SEQUENCES)
+						.scope(DATA_CURATOR_ROLE)
 						.message(msg).build());			
 				// schedule publication import
 				final ImportPublicationsTask importPublicationsTask = ImportPublicationsTask.builder()

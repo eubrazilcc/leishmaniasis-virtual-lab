@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,12 +38,17 @@ import javax.ws.rs.core.UriInfo;
 import eu.eubrazilcc.lvl.service.Datasets;
 
 /**
- * Datasets resources.
+ * Datasets resource.
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/datasets")
+@Path("/datasets/files")
 public class DatasetResource {
 
+	public static final String RESOURCE_NAME = LVL_NAME + " Dataset Resource";
+	
+	public static final String PATH_PATTERN = "[a-zA-Z_0-9\\.-]+";
+	public static final String NAME_PATTERN = "[a-zA-Z_0-9\\.-]+";
+	
 	@GET
 	@Produces(APPLICATION_JSON)
 	public Datasets getDatasets(final @QueryParam("page") @DefaultValue("0") int page,

@@ -22,10 +22,10 @@
 
 package eu.eubrazilcc.lvl.oauth2.security;
 
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.generateSecret;
+
 import org.apache.oltu.oauth2.as.issuer.ValueGenerator;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
-
-import eu.eubrazilcc.lvl.storage.security.SecurityProvider;
 
 /**
  * OAuth3 Token Generator.
@@ -36,7 +36,7 @@ public class OAuth2TokenGenerator implements ValueGenerator {
 	@Override
 	public String generateValue() throws OAuthSystemException {
 		try {
-			return SecurityProvider.generateSecret();
+			return generateSecret();
 		} catch (Exception e) {
 			throw new OAuthSystemException("OAuth2 token cannot be generated", e);
 		}
@@ -45,7 +45,7 @@ public class OAuth2TokenGenerator implements ValueGenerator {
 	@Override
 	public String generateValue(final String param) throws OAuthSystemException {
 		try {
-			return (param != null ? SecurityProvider.generateSecret(param) : generateValue());
+			return (param != null ? generateSecret(param) : generateValue());
 		} catch (Exception e) {
 			throw new OAuthSystemException("OAuth2 token cannot be generated", e);
 		}

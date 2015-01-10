@@ -26,8 +26,9 @@ import static eu.eubrazilcc.lvl.storage.oauth2.dao.AuthCodeDAO.AUTH_CODE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ClientAppDAO.CLIENT_APP_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.defaultScope;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.defaultPermissions;
 import static java.lang.System.currentTimeMillis;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -116,7 +117,7 @@ public class OAuth2Token {
 				}
 			} else if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.PASSWORD.toString())) {
 				final AtomicReference<String> scopeRef = new AtomicReference<String>(), ownerIdRef = new AtomicReference<String>();
-				if (!RESOURCE_OWNER_DAO.isValid(oauthRequest.getUsername(), oauthRequest.getUsername(), oauthRequest.getPassword(), 
+				if (!RESOURCE_OWNER_DAO.isValid(toResourceOwnerId(oauthRequest.getUsername()), oauthRequest.getUsername(), oauthRequest.getPassword(), 
 						"true".equalsIgnoreCase(oauthRequest.getParam(USE_EMAIL)), scopeRef, ownerIdRef)) {
 					final OAuthResponse response = OAuthASResponse
 							.errorResponse(HttpServletResponse.SC_BAD_REQUEST)
@@ -145,13 +146,13 @@ public class OAuth2Token {
 			}
 
 			// set scope, depending on user or default scope if grant type is code
-			scope = (scope != null ? scope : defaultScope());
+			scope = (scope != null ? scope : defaultPermissions());
 
 			final AccessToken accessToken = AccessToken.builder()
 					.token(oauthIssuerImpl.accessToken())
 					.issuedAt(currentTimeMillis() / 1000l)
 					.expiresIn(TOKEN_EXPIRATION_SECONDS)
-					.scope(asList(scope))
+					.scope(asPermissionList(scope))
 					.ownerId(ownerId)
 					.build();
 			TOKEN_DAO.insert(accessToken);

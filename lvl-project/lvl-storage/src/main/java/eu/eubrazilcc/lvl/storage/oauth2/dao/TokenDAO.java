@@ -26,8 +26,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.isAccessible;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.el.ScopeElBuilder.buildScope;
 import static eu.eubrazilcc.lvl.storage.transform.SameTransientStore.startStore;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -62,7 +60,6 @@ import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
-import eu.eubrazilcc.lvl.storage.oauth2.User;
 import eu.eubrazilcc.lvl.storage.transform.SameTransientStore;
 
 /**
@@ -219,6 +216,24 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	/**
 	 * Checks whether or not the specified secret (token) was previously stored and is currently valid (not expired).
 	 * @param token - the secret associated to the token
+	 * @param ownerIdRef - if set and the resource owner is valid, then the Id of the resource owner is returned 
+	 *        to the caller
+	 * @return {@code true} only if the provided secret (token) is found in the storage and is currently valid (not expired). 
+	 *         Otherwise, returns {@code false}.
+	 */
+	public boolean isValid(final String token, final @Nullable AtomicReference<String> ownerIdRef) {
+		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
+		final AccessToken accessToken = find(token);		
+		final boolean isValid = isValid(token);
+		if (isValid(token) && ownerIdRef != null) {
+			ownerIdRef.set(accessToken.getOwnerId());
+		}
+		return isValid;
+	}
+
+	/**
+	 * Checks whether or not the specified secret (token) was previously stored and is currently valid (not expired).
+	 * @param token - the secret associated to the token
 	 * @return {@code true} only if the provided secret (token) is found in the
 	 *         storage and is currently valid (not expired). Otherwise, returns 
 	 *         {@code false}.
@@ -228,34 +243,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 		final AccessToken accessToken = find(token);		
 		return (accessToken != null && accessToken.getToken() != null && token.equals(accessToken.getToken())
 				&& (accessToken.getIssuedAt() + accessToken.getExpiresIn()) > (currentTimeMillis() / 1000l));
-	}
-
-	/**
-	 * Checks whether or not the specified secret (token) was previously stored, is currently valid (not expired) and grant access to the specified scope.
-	 * When needed, the method can also check if the provided token grants full access to the target scope.
-	 * @param token - the secret associated to the token
-	 * @param targetScope - the scope where the caller operations will be performed
-	 * @param requestFullAccess - {@code true} if the caller is requesting other kind of access than read only access
-	 * @param addResourceOwner - set this to {@code true} when the identity of the resource owner is unknown and the target scope is under the
-	 *        scope of the resource owner. For example: {@code target_scope/username}.
-	 * @param ownerIdRef - if set and the resource owner is valid, then the Id of the resource owner is returned 
-	 *        to the caller
-	 * @return {@code true} only if the provided secret (token) is found in the storage, is currently valid (not expired) and grant access to the 
-	 *         specified scope with the specified permissions. Otherwise, returns {@code false}.
-	 */
-	public boolean isValid(final String token, final String targetScope, final boolean requestFullAccess, final boolean addResourceOwner,
-			final @Nullable AtomicReference<String> ownerIdRef) {
-		checkArgument(isNotBlank(token), "Uninitialized or invalid token");
-		checkArgument(isNotBlank(targetScope), "Uninitialized or invalid target scope");
-		final AccessToken accessToken = find(token);		
-		final boolean isValid = isValid(token) && isAccessible(addResourceOwner 
-				? buildScope(targetScope, User.builder().username(accessToken.getOwnerId()).build()) 
-						: targetScope, accessToken.getScopes(), requestFullAccess);
-		if (isValid && ownerIdRef != null) {
-			ownerIdRef.set(accessToken.getOwnerId());
-		}
-		return isValid;
-	}
+	}	
 
 	/**
 	 * Token entity.

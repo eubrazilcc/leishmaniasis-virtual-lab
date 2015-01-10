@@ -25,21 +25,25 @@ package eu.eubrazilcc.lvl.service.rest;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
+import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.CITATION_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Gatekeeper.authorize;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.REFERENCES;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,6 +70,7 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -84,17 +89,20 @@ import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
- * References resource.
+ * Citations resource.
  * @author Erik Torres <ertorser@upv.es>
  * @see {@link Reference} class
  */
-@Path("/references")
-public class ReferenceResource {
+@Path("/citations")
+public class CitationResource {
 
-	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Reference Resource";
-	public static final String RESOURCE_SCOPE = REFERENCES;
+	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Citation Resource";
+
+	private final static Logger LOGGER = getLogger(CitationResource.class);
 
 	@GET
 	@Produces(APPLICATION_JSON)
@@ -104,7 +112,7 @@ public class ReferenceResource {
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:public:*:view");
 		final References paginable = References.start()
 				.page(page)
 				.perPage(per_page)
@@ -129,10 +137,10 @@ public class ReferenceResource {
 	@Produces(APPLICATION_JSON)
 	public Reference getReference(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:*:" + id.trim() + ":view");
 		// get from database
 		final Reference reference = REFERENCE_DAO.find(id);
 		if (reference == null) {
@@ -145,7 +153,7 @@ public class ReferenceResource {
 	@Consumes(APPLICATION_JSON)
 	public Response createReference(final Reference reference, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:*:*:create");
 		if (reference == null || isBlank(reference.getPubmedId())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
@@ -160,10 +168,10 @@ public class ReferenceResource {
 	@Consumes(APPLICATION_JSON)
 	public void updateReference(final @PathParam("id") String id, final Reference update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}		
+		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:*:" + id.trim() + ":edit");
 		// get from database
 		final Reference current = REFERENCE_DAO.find(id);
 		if (current == null) {
@@ -177,10 +185,10 @@ public class ReferenceResource {
 	@Path("{id: " + CITATION_ID_PATTERN + "}")
 	public void deleteReference(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, true, false, RESOURCE_NAME);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:*:" + id.trim() + ":edit");
 		// get from database
 		final Reference current = REFERENCE_DAO.find(id);
 		if (current == null) {
@@ -201,7 +209,7 @@ public class ReferenceResource {
 			final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		authorize(request, null, headers, RESOURCE_SCOPE, false, false, RESOURCE_NAME);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:public:*:view");
 		// get from database
 		final Point point = Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build();
 		final List<Localizable<Point>> localizables = fromNullable(SANDFLY_DAO.getReferenceLocations(point, maxDistance))
@@ -211,6 +219,50 @@ public class ReferenceResource {
 		return LocalizableAnalyzer.toFeatureCollection(localizables, Crs.builder().wgs84().build(), group, heatmap);		
 	}
 
+	@GET
+	@Path("{id: " + CITATION_ID_PATTERN + "}/export/pubmed")
+	@Produces(APPLICATION_JSON)
+	public PubmedArticle exportCitationPubmed(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		if (isBlank(id)) {
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
+		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:*:" + id.trim() + ":view");
+		// get from database
+		final Reference reference = REFERENCE_DAO.find(id);
+		if (reference == null) {
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+		}
+		// get from file-system
+		final File file = new File(CONFIG_MANAGER.getPubMedDir(PUBMED_XML), reference.getPubmedId() + ".xml");
+		if (!file.canRead()) {
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+		}
+		PubmedArticle pmArticle = null;
+		try {
+			pmArticle = PUBMED_XMLB.typeFromFile(file);
+		} catch (IOException e) {
+			LOGGER.error("Failed to load PubMed citation from file", e);
+		}
+		if (pmArticle == null) {
+			throw new WebApplicationException("Unable to complete the operation", Response.Status.INTERNAL_SERVER_ERROR);
+		}
+		return pmArticle;
+	}
+
+	@GET
+	@Path("{id: " + CITATION_ID_PATTERN + "}/export/fulltext")
+	@Produces(APPLICATION_JSON)
+	public PubmedArticle exportCitationFulltext(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		if (isBlank(id)) {
+			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
+		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:*:" + id.trim() + ":view");
+		// TODO
+		return null;
+	}
+
 	/**
 	 * Wraps a collection of PubMed publications.
 	 * @author Erik Torres <ertorser@upv.es>
@@ -218,28 +270,28 @@ public class ReferenceResource {
 	public static class References extends Paginable<Reference> {
 
 		@InjectLinks({
-			@InjectLink(resource=ReferenceResource.class, method="getReferences", bindings={
+			@InjectLink(resource=CitationResource.class, method="getReferences", bindings={
 				@Binding(name="page", value="${instance.page - 1}"),
 				@Binding(name="per_page", value="${instance.perPage}"),
 				@Binding(name="sort", value="${instance.sort}"),
 				@Binding(name="order", value="${instance.order}"),
 				@Binding(name="q", value="${instance.query}")
 			}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=ReferenceResource.class, method="getReferences", bindings={
+			@InjectLink(resource=CitationResource.class, method="getReferences", bindings={
 				@Binding(name="page", value="${0}"),
 				@Binding(name="per_page", value="${instance.perPage}"),
 				@Binding(name="sort", value="${instance.sort}"),
 				@Binding(name="order", value="${instance.order}"),
 				@Binding(name="q", value="${instance.query}")
 			}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=ReferenceResource.class, method="getReferences", bindings={
+			@InjectLink(resource=CitationResource.class, method="getReferences", bindings={
 				@Binding(name="page", value="${instance.page + 1}"),
 				@Binding(name="per_page", value="${instance.perPage}"),
 				@Binding(name="sort", value="${instance.sort}"),
 				@Binding(name="order", value="${instance.order}"),
 				@Binding(name="q", value="${instance.query}")
 			}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-			@InjectLink(resource=ReferenceResource.class, method="getReferences", bindings={
+			@InjectLink(resource=CitationResource.class, method="getReferences", bindings={
 				@Binding(name="page", value="${instance.totalPages - 1}"),
 				@Binding(name="per_page", value="${instance.perPage}"),
 				@Binding(name="sort", value="${instance.sort}"),

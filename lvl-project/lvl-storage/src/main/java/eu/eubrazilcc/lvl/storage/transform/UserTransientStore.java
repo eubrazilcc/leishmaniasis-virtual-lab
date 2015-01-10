@@ -26,15 +26,15 @@ import java.util.List;
 
 import javax.ws.rs.core.Link;
 
-import eu.eubrazilcc.lvl.storage.oauth2.UserRole;
+import eu.eubrazilcc.lvl.storage.oauth2.UserType;
 
 /**
- * A {@link TransientStore} that extracts from an entity that implements {@link UserRole} the volatile information referred to the user. This 
+ * A {@link TransientStore} that extracts from an entity that implements {@link UserType} the volatile information referred to the user. This 
  * information is stored in this class and can be reinserted at any time in the entity.
  * @author Erik Torres <ertorser@upv.es>
  * @param <T> - the type of elements in this store
  */
-public class UserTransientStore<T extends UserRole> extends TransientStore<T> {
+public class UserTransientStore<T extends UserType> extends TransientStore<T> {
 
 	private List<Link> links;
 	private String prictureUrl;
@@ -69,7 +69,7 @@ public class UserTransientStore<T extends UserRole> extends TransientStore<T> {
 
 	/* Fluent API */
 
-	public static <T extends UserRole> UserTransientStore<T> startStore(final T element) {
+	public static <T extends UserType> UserTransientStore<T> startStore(final T element) {
 		return new UserTransientStore<T>(element);
 	}
 

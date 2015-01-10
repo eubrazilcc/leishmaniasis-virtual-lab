@@ -22,11 +22,12 @@
 
 package eu.eubrazilcc.lvl.storage;
 
-import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.generateFastUrlSafeSecret;
-import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.generateSalt;
-import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.generateSecret;
-import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.obfuscatePassword;
-import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.validatePassword;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.SALT_BYTES_SIZE;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.generateFastUrlSafeSecret;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.generateSalt;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.generateSecret;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.hashAndSaltPassword;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.passwordsMatch;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -37,34 +38,39 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.storage.security.SecurityProvider;
-
 /**
- * Tests secret provider.
+ * Tests secret generator.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SecurityProviderTest {
+public class CryptProviderTest {
 
 	@Test
 	public void test() {
-		System.out.println("SecretProviderTest.test()");
+		System.out.println("CryptProviderTest.test()");
 		try {
-			// generate secret
-			String secret = generateSecret("Hello world!");
+			// generate secret (no token provided)
+			String secret = generateSecret();
 			assertThat("secret is not null", secret, notNullValue());
 			assertThat("secret is not empty", isNotBlank(secret));
 			/* uncomment for additional output */
-			System.out.println(" >> Secret: " + secret);
+			System.out.println(" >> Secret (no token provided)    : " + secret);
+			
+			// generate secret from provided tokens
+			secret = generateSecret("Hello world!");
+			assertThat("secret is not null", secret, notNullValue());
+			assertThat("secret is not empty", isNotBlank(secret));
+			/* uncomment for additional output */
+			System.out.println(" >> Secret (from provided tokens) : " + secret);
 
 			// generate fast URL-safe secret
 			secret = generateFastUrlSafeSecret();
 			assertThat("fast URL-safe secret is not null", secret, notNullValue());
 			assertThat("fast URL-safe secret is not empty", isNotBlank(secret));
 			/* uncomment for additional output */
-			System.out.println(" >> Fast URL-safe secret: " + secret);
+			System.out.println(" >> Fast URL-safe secret          : " + secret);
 
 			// generate salt
-			final byte[] salt = generateSalt(SecurityProvider.DEFAULT_STRENGTH);
+			final byte[] salt = generateSalt(SALT_BYTES_SIZE);
 			assertThat("salt is not null", salt, notNullValue());
 			assertThat("salt is not empty", isNotBlank(new String(salt)));
 			/* uncomment for additional output */
@@ -72,7 +78,7 @@ public class SecurityProviderTest {
 
 			// protect password
 			final String password = "piece of cake";
-			final String[] secret2 = obfuscatePassword(password);
+			final String[] secret2 = hashAndSaltPassword(password);
 			assertThat("protected password is not null", secret2, notNullValue());
 			assertThat("protected password is correct", secret2.length, equalTo(2));
 			assertThat("protected password - salt is not empty", isNotBlank(secret2[0]));
@@ -81,17 +87,23 @@ public class SecurityProviderTest {
 			System.out.println(" >> Protected password: " + Arrays.toString(secret2));
 
 			// validate password
-			assertThat("correct password is valid", validatePassword(password, secret2[0], secret2[1]), equalTo(true));
-			assertThat("incorrect hash is invalid   ", validatePassword(password, secret2[0], "bad hash"), equalTo(false));
-			assertThat("incorrect salt is invalid", validatePassword(password, "bad salt", secret2[1]), equalTo(false));			
-			assertThat("incorrect salt and password  is invalid", validatePassword(password, "bad salt", "bad hash"), equalTo(false));
-			assertThat("incorrect password is invalid", validatePassword("bad password", secret2[0], secret2[1]), equalTo(false));
+			assertThat("correct password is valid", passwordsMatch(password, secret2[0], secret2[1]), equalTo(true));
+			assertThat("incorrect hash is invalid", passwordsMatch(password, secret2[0], "bad hash"), equalTo(false));
+			assertThat("incorrect salt is invalid", passwordsMatch(password, "0123456789abcdef", secret2[1]), equalTo(false));			
+			assertThat("incorrect salt and password is invalid", passwordsMatch(password, "0123456789abcdef", "bad hash"), equalTo(false));
+			assertThat("incorrect password is invalid", passwordsMatch("bad password", secret2[0], secret2[1]), equalTo(false));
+			
+			// invalid salt (not Hex representation)
+			try {
+				passwordsMatch(password, "bad salt", secret2[1]);
+				throw new Exception("expected exception was not caught when no hexadecimal salt was provided");
+			} catch (IllegalArgumentException ignore) { }			
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			fail("SecretProviderTest.test() failed: " + e.getMessage());
+			fail("CryptProviderTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("SecretProviderTest.test() has finished");
+			System.out.println("CryptProviderTest.test() has finished");
 		}			
 	}
 

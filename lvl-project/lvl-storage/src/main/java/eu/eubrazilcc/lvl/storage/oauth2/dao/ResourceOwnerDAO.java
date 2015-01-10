@@ -28,11 +28,11 @@ import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner.copyOf;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.all;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asList;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.ScopeManager.asOAuthString;
-import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.computeHash;
-import static eu.eubrazilcc.lvl.storage.security.SecurityProvider.obfuscatePassword;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.ADMIN_ROLE;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asOAuthString;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
+import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.hashAndSaltPassword;
 import static eu.eubrazilcc.lvl.storage.transform.UserTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -68,7 +68,7 @@ import eu.eubrazilcc.lvl.storage.gravatar.Gravatar;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
-import eu.eubrazilcc.lvl.storage.oauth2.User;
+import eu.eubrazilcc.lvl.storage.security.User;
 import eu.eubrazilcc.lvl.storage.transform.UserTransientStore;
 
 /**
@@ -102,15 +102,15 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		final List<ResourceOwner> owners = list(0, 1, null, null, null);
 		if (owners == null || owners.isEmpty()) {
 			final ResourceOwner admin = ResourceOwner.builder()
-					.id(ADMIN_USER)
 					.user(User.builder()
-							.username(ADMIN_USER)
+							.userid(ADMIN_USER)
 							.password(ADMIN_DEFAULT_PASSWD)
 							.email(ADMIN_DEFAULT_EMAIL)
 							.fullname("LVL root user")
-							.scopes(asList(all()))
+							.role(ADMIN_ROLE)
+							.permissions(asPermissionList(allPermissions()))
 							.build()).build();
-			final String[] shadowed = obfuscatePassword(admin.getUser().getPassword());			
+			final String[] shadowed = hashAndSaltPassword(admin.getUser().getPassword());			
 			admin.getUser().setSalt(shadowed[0]);
 			admin.getUser().setPassword(shadowed[1]);
 			insert(admin);
@@ -140,7 +140,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		} else {
 			// protect sensitive fields before storing the element in the database
 			final ResourceOwner copy = copyOf(resourceOwner);
-			final String[] shadowed = obfuscatePassword(copy.getUser().getPassword());			
+			final String[] shadowed = hashAndSaltPassword(copy.getUser().getPassword());			
 			copy.getUser().setSalt(shadowed[0]);
 			copy.getUser().setPassword(shadowed[1]);
 			// remove transient fields from the element before saving it to the database
@@ -288,7 +288,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	public static void updatePassword(final ResourceOwner resourceOwner, final String newPassword) {
-		final String shadowed = computeHash(newPassword, resourceOwner.getUser().getSalt());
+		final String shadowed = hashAndSaltPassword(newPassword, resourceOwner.getUser().getSalt());
 		resourceOwner.getUser().setPassword(shadowed);
 	}
 
@@ -331,8 +331,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		checkArgument(isNotBlank(password), "Uninitialized or invalid password");
 		final ResourceOwner resourceOwner = find(ownerId);
 		final boolean isValid = (resourceOwner != null && resourceOwner.getUser() != null 
-				&& username.equals(resourceOwner.getUser().getUsername())				
-				&& computeHash(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));		
+				&& username.equals(resourceOwner.getUser().getUserid())				
+				&& hashAndSaltPassword(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));		
 		if (isValid) {
 			if (scopeRef != null) {
 				scopeRef.set(oauthScope(resourceOwner, false));
@@ -351,7 +351,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		final ResourceOwner resourceOwner = findByEmail(email);
 		final boolean isValid = (resourceOwner != null && resourceOwner.getUser() != null 
 				&& email.equals(resourceOwner.getUser().getEmail())
-				&& computeHash(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));
+				&& hashAndSaltPassword(password, resourceOwner.getUser().getSalt()).equals(resourceOwner.getUser().getPassword()));
 		if (isValid) {
 			if (scopeRef != null) {
 				scopeRef.set(oauthScope(resourceOwner, false));
@@ -370,34 +370,44 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 * @param username - user name to be validated, or email address if {@code useEmail} is set to true
 	 * @param scopeRef - if set and the resource owner is valid, then the scopes associated with the resource 
 	 *        owner are concatenated and returned to the caller to be used with OAuth 
-	 * @return {@code true} only if the provided user name and password coincides
-	 *        with those stored for the resource owner. Otherwise, returns {@code false}.
+	 * @return {@code true} only if the provided identifier and user name coincide with those stored for the 
+	 *         resource owner. Otherwise, returns {@code false}.
 	 */
 	public boolean exist(final String ownerId, final String username, final @Nullable AtomicReference<String> scopeRef) {
 		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
 		checkArgument(isNotBlank(username), "Uninitialized or invalid username");
 		final ResourceOwner resourceOwner = find(ownerId);
 		final boolean exist = (resourceOwner != null && resourceOwner.getUser() != null 
-				&& username.equals(resourceOwner.getUser().getUsername()));
+				&& username.equals(resourceOwner.getUser().getUserid()));
 		if (exist && scopeRef != null) {
 			scopeRef.set(oauthScope(resourceOwner, false));
 		}
 		return exist;		
 	}
+	
+	/**
+	 * Simply check whether a resource owner exists in the database using its identifier.
+	 * @param ownerId - identifier of the resource owner
+	 * @return 
+	 */
+	public boolean exist(final String ownerId) {
+		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");	
+		return find(ownerId) != null;		
+	}
 
 	/**
 	 * Adds one or more scopes to the resource owner identified by the provided id.
 	 * @param ownerId - identifier of the resource owner whose scopes will be modified
-	 * @param scopes - scopes to be added to the resource owner
+	 * @param roles - roles to be added to the resource owner
 	 */
-	public void addScopes(final String ownerId, final String... scopes) {
+	public void addRoles(final String ownerId, final String... roles) {
 		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
-		checkArgument(scopes != null && scopes.length > 0, "Uninitialized or invalid scopes");
+		checkArgument(roles != null && roles.length > 0, "Uninitialized or invalid roles");
 		final ResourceOwner resourceOwner = find(ownerId);
 		checkState(resourceOwner != null, "Resource owner not found");
-		for (final String scope : scopes) {
-			if (isNotBlank(scope)) {
-				resourceOwner.getUser().getScopes().add(scope);
+		for (final String role : roles) {
+			if (isNotBlank(role)) {
+				resourceOwner.getUser().getRoles().add(role);
 			}
 		}
 		update(resourceOwner);
@@ -406,23 +416,23 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	/**
 	 * Removes one or more scopes from the resource owner identified by the provided id.
 	 * @param ownerId - identifier of the resource owner whose scopes will be modified
-	 * @param scopes - scopes to be removed from the resource owner
+	 * @param roles - roles to be removed from the resource owner
 	 */
-	public void removeScopes(final String ownerId, final String... scopes) {
+	public void removeRoles(final String ownerId, final String... roles) {
 		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
-		checkArgument(scopes != null && scopes.length > 0, "Uninitialized or invalid scopes");
+		checkArgument(roles != null && roles.length > 0, "Uninitialized or invalid scopes");
 		final ResourceOwner resourceOwner = find(ownerId);
 		checkState(resourceOwner != null, "Resource owner not found");
-		for (final String scope : scopes) {
-			if (isNotBlank(scope)) {
-				resourceOwner.getUser().getScopes().remove(scope);
+		for (final String role : roles) {
+			if (isNotBlank(role)) {
+				resourceOwner.getUser().getRoles().remove(role);
 			}
 		}
 		update(resourceOwner);
 	}
 
 	/**
-	 * Concatenates in a single string all the scopes of the specified resource owner 
+	 * Concatenates in a single string all the roles of the specified resource owner 
 	 * and returns the generated string to the caller. This string can be used to transmit 
 	 * the scope in OAuth.
 	 * @param resourceOwner - the resource owner whose scopes will be returned
@@ -431,8 +441,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 */
 	public static final String oauthScope(final ResourceOwner resourceOwner, final boolean sort) {
 		checkArgument(resourceOwner != null, "Uninitialized or invalid resource owner");		
-		return (resourceOwner.getUser() != null && resourceOwner.getUser().getScopes() != null 
-				? asOAuthString(resourceOwner.getUser().getScopes(), sort) : null);
+		return (resourceOwner.getUser() != null && resourceOwner.getUser().getRoles() != null 
+				? asOAuthString(resourceOwner.getUser().getRoles(), sort) : null);
 	}	
 
 	/**

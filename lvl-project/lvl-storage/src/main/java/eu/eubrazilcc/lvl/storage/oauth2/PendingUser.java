@@ -29,11 +29,13 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import java.io.Serializable;
 import java.util.Objects;
 
+import eu.eubrazilcc.lvl.storage.security.User;
+
 /**
- * Pending users are supposed to send a confirmation code.
+ * Pending users are supposed to send a confirmation code before they have access to the application.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PendingUser implements UserRole, Serializable {
+public class PendingUser implements UserType, Serializable {
 
 	private static final long serialVersionUID = 4734782376847178866L;
 

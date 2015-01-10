@@ -20,13 +20,14 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.oauth2;
+package eu.eubrazilcc.lvl.storage.security;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.isEmpty;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.defaultIdentityProvider;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -52,30 +53,32 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * User identity provider. Include JAXB annotations to serialize this class to XML and JSON.
- * Most JSON processing libraries like Jackson support these JAXB annotations.
+ * Provides user information (profile). Jackson annotations are included to serialize this class to XML and JSON.
+ * Also includes the identity provider and the identifier assigned in the provider.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class User implements Serializable, Linkable<User> {
 
-	private static final long serialVersionUID = -8320525767063830149L;
+	private static final long serialVersionUID = -8320525767063830149L;	
 
 	@InjectLinks({
-		@InjectLink(value="users/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.username}")})
+		@InjectLink(value="users/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.userid}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
-	private List<Link> links; // HATEOAS links
+	private List<Link> links;        // HATEOAS links
 
-	private String pictureUrl;
+	private String pictureUrl;       // URL to user's picture
 
-	private String username;
-	private String password;
-	private String email;
-	private String fullname;
-	private Set<String> scopes;
-	private String salt;
+	private String provider;         // identity provider (LVL, LinkedId, etc.)
+	private String userid;           // user identity (assigned in the provider)
+	private String password;         // password
+	private String salt;             // salt to defend the password against dictionary attacks
+	private String email;            // email address
+	private String fullname;         // (optional) full name
+	private Set<String> roles;       // roles
+	private Set<String> permissions; // permissions
 
 	public User() { }
 
@@ -98,18 +101,30 @@ public class User implements Serializable, Linkable<User> {
 	}
 	public void setPictureUrl(final String pictureUrl) {
 		this.pictureUrl = pictureUrl;
+	}	
+	public String getProvider() {
+		return provider;
 	}
-	public String getUsername() {
-		return username;
+	public void setProvider(final String provider) {
+		this.provider = provider;
 	}
-	public void setUsername(final String username) {
-		this.username = username;
+	public String getUserid() {
+		return userid;
 	}
+	public void setUserid(final String userid) {
+		this.userid = userid;
+	}	
 	public String getPassword() {
 		return password;
 	}
 	public void setPassword(final String password) {
 		this.password = password;
+	}
+	public String getSalt() {
+		return salt;
+	}
+	public void setSalt(final String salt) {
+		this.salt = salt;
 	}
 	public String getEmail() {
 		return email;
@@ -123,17 +138,17 @@ public class User implements Serializable, Linkable<User> {
 	public void setFullname(final String fullname) {
 		this.fullname = fullname;
 	}
-	public Set<String> getScopes() {
-		return scopes;
+	public Set<String> getRoles() {
+		return roles;
 	}
-	public void setScopes(final Set<String> scopes) {
-		this.scopes = scopes;
+	public void setRoles(final Set<String> roles) {
+		this.roles = roles;
 	}
-	public String getSalt() {
-		return salt;
+	public Set<String> getPermissions() {
+		return permissions;
 	}
-	public void setSalt(final String salt) {
-		this.salt = salt;
+	public void setPermissions(final Set<String> permissions) {
+		this.permissions = permissions;
 	}
 
 	@Override
@@ -152,12 +167,14 @@ public class User implements Serializable, Linkable<User> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equals(username, other.username)
+		return Objects.equals(provider, other.provider)
+				&& Objects.equals(userid, other.userid)
 				&& Objects.equals(password, other.password)
-				&& Objects.equals(email, other.email)				
+				&& Objects.equals(salt, other.salt)
+				&& Objects.equals(email, other.email)
 				&& Objects.equals(fullname, other.fullname)
-				&& Objects.equals(scopes, other.scopes)
-				&& Objects.equals(salt, other.salt);
+				&& Objects.equals(roles, other.roles)
+				&& Objects.equals(permissions, other.permissions);
 	}
 
 	/**
@@ -169,9 +186,12 @@ public class User implements Serializable, Linkable<User> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equals(username, other.username)			
+		return Objects.equals(provider, other.provider)
+				&& Objects.equals(userid, other.userid)
+				&& Objects.equals(email, other.email)							
 				&& Objects.equals(fullname, other.fullname)
-				&& Objects.equals(scopes, other.scopes);
+				&& Objects.equals(roles, other.roles)
+				&& Objects.equals(permissions, other.permissions);
 	}
 
 	/**
@@ -200,28 +220,32 @@ public class User implements Serializable, Linkable<User> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equals(username, other.username)
-				&& Objects.equals(email, other.email)				
+		return Objects.equals(provider, other.provider)
+				&& Objects.equals(userid, other.userid)
+				&& Objects.equals(email, other.email)										
 				&& Objects.equals(fullname, other.fullname)
-				&& Objects.equals(scopes, other.scopes);
+				&& Objects.equals(roles, other.roles)
+				&& Objects.equals(permissions, other.permissions);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, pictureUrl, username, password, email, fullname, scopes, salt);
+		return Objects.hash(links, pictureUrl, provider, userid, password, salt, email, fullname, roles, permissions);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("link", links)
-				.add("pictureUrl", pictureUrl)
-				.add("username", username)
+				.add("pictureUrl", pictureUrl)							
+				.add("provider", provider)
+				.add("userid", userid)
 				.add("password", password)
-				.add("email", email)				
-				.add("fullname", fullname)
-				.add("scopes", scopes)
 				.add("salt", salt)
+				.add("email", email)
+				.add("fullname", fullname)
+				.add("roles", roles)
+				.add("permissions", permissions)
 				.toString();
 	}
 
@@ -235,8 +259,10 @@ public class User implements Serializable, Linkable<User> {
 
 		private final User instance = new User();
 
-		public Builder() {			
-			instance.setScopes(new HashSet<String>());
+		public Builder() {
+			instance.setProvider(defaultIdentityProvider());
+			instance.setRoles(new HashSet<String>());
+			instance.setPermissions(new HashSet<String>());
 		}
 
 		public Builder links(final List<Link> links) {
@@ -247,47 +273,65 @@ public class User implements Serializable, Linkable<User> {
 		public Builder pictureUrl(final String pictureUrl) {
 			instance.setPictureUrl(pictureUrl);
 			return this;
-		}
+		}		
 
-		public Builder username(final String username) {
-			checkArgument(isNotBlank(username), "Uninitialized or invalid username");
-			instance.setUsername(username);
+		public Builder provider(final String provider) {
+			checkArgument(isNotBlank(provider), "Uninitialized or invalid provider");
+			instance.setProvider(provider.trim());
+			return this;
+		}		
+
+		public Builder userid(final String userid) {
+			checkArgument(isNotBlank(userid), "Uninitialized or invalid user identifier");
+			instance.setUserid(userid.trim());
 			return this;
 		}
 
 		public Builder password(final String password) {
 			checkArgument(isNotBlank(password), "Uninitialized or invalid password");
-			instance.setPassword(password);
-			return this;
-		}
-
-		public Builder email(final String email) {
-			checkArgument(isNotBlank(email), "Uninitialized or invalid email");
-			instance.setEmail(email);
-			return this;
-		}
-
-		public Builder fullname(final String fullname) {
-			checkArgument(isNotBlank(fullname), "Uninitialized or invalid fullname");
-			instance.setFullname(fullname);
-			return this;
-		}
-
-		public Builder scope(final String scope) {
-			checkArgument(isNotBlank(scope), "Uninitialized or invalid scope");
-			instance.getScopes().add(scope);
-			return this;
-		}
-
-		public Builder scopes(final Collection<String> scopes) {
-			checkArgument(scopes != null && !isEmpty(scopes), "Uninitialized scopes");
-			instance.getScopes().addAll(scopes);
+			instance.setPassword(password.trim());
 			return this;
 		}
 
 		public Builder salt(final String salt) {
 			checkArgument(isNotBlank(salt), "Uninitialized or invalid salt");
-			instance.setSalt(salt);
+			instance.setSalt(salt.trim());
+			return this;
+		}
+
+		public Builder email(final String email) {
+			checkArgument(isNotBlank(email), "Uninitialized or invalid email");
+			instance.setEmail(email.trim());
+			return this;
+		}
+
+		public Builder fullname(final String fullname) {
+			checkArgument(isNotBlank(fullname), "Uninitialized or invalid fullname");
+			instance.setFullname(fullname.trim());
+			return this;
+		}
+
+		public Builder role(final String role) {
+			checkArgument(isNotBlank(role), "Uninitialized or invalid role");
+			instance.getRoles().add(role);
+			return this;
+		}
+
+		public Builder roles(final Collection<String> roles) {
+			checkArgument(roles != null && !isEmpty(roles), "Uninitialized roles");
+			instance.getRoles().addAll(roles);
+			return this;
+		}
+
+		public Builder permission(final String permission) {
+			checkArgument(isNotBlank(permission), "Uninitialized or invalid permission");
+			instance.getPermissions().add(permission);
+			return this;
+		}
+
+		public Builder permissions(final Collection<String> permissions) {
+			checkArgument(permissions != null && !isEmpty(permissions), "Uninitialized permissions");
+			instance.getPermissions().addAll(permissions);
 			return this;
 		}
 
@@ -307,7 +351,8 @@ public class User implements Serializable, Linkable<User> {
 		if (original != null) {
 			final Builder builder = builder()
 					.pictureUrl(original.pictureUrl)
-					.username(original.username)
+					.provider(original.provider)
+					.userid(original.userid)
 					.password(original.password)
 					.email(original.email)
 					.fullname(original.fullname);
@@ -318,11 +363,14 @@ public class User implements Serializable, Linkable<User> {
 				}				
 				builder.links(linksCopy);
 			}
-			if (original.getScopes() != null) {
-				builder.scopes(original.scopes);
-			}
 			if (isNotBlank(original.salt)) {
 				builder.salt(original.salt);
+			}
+			if (original.roles != null && !original.roles.isEmpty()) {
+				builder.roles(original.roles);
+			}
+			if (original.permissions != null && !original.permissions.isEmpty()) {
+				builder.permissions(original.permissions);
 			}
 			return builder.build();
 		}
