@@ -23,10 +23,10 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Represents the target of any object stored with the filesystem or the database.
@@ -36,7 +36,7 @@ public class Target {
 
 	private String type;
 	private String collection;
-	private List<String> ids;
+	private Set<String> ids;
 	private String filter;
 	private String compression;
 
@@ -58,13 +58,13 @@ public class Target {
 		this.collection = collection;
 	}
 
-	public List<String> getIds() {
+	public Set<String> getIds() {
 		return ids;
 	}
 
-	public void setIds(final List<String> ids) {
+	public void setIds(final Set<String> ids) {
 		if (ids != null) {
-			this.ids = newArrayList(ids);
+			this.ids = newHashSet(ids);
 		} else {
 			this.ids = null;
 		}
@@ -136,10 +136,10 @@ public class Target {
 		}
 
 		public Builder id(final String id) {
-			return ids(newArrayList(id));
+			return ids(newHashSet(id));
 		}
 
-		public Builder ids(final List<String> ids) {
+		public Builder ids(final Set<String> ids) {
 			instance.setIds(ids);
 			return this;
 		}

@@ -110,7 +110,7 @@ public class JsonMappingTest {
 
 			final PublicLink publicLink = PublicLink.builder()
 					.created(new Date())
-					.target(Target.builder().type("sanfly").collection("sandfly").ids(newArrayList("gb:JP540074", "gb:JP553239")).filter("export_fasta").compression("gzip").build())
+					.target(Target.builder().type("sanfly").collection("sandfly").ids(newHashSet("gb:JP540074", "gb:JP553239")).filter("export_fasta").compression("gzip").build())
 					.description("Optional description")
 					.build();
 			assertThat("public link is not null", publicLink, notNullValue());

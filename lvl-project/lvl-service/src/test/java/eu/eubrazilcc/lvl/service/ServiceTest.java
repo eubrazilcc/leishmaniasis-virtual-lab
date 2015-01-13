@@ -822,7 +822,7 @@ public class ServiceTest {
 					equalTo(publicLinks.getTotalCount()));
 			/* uncomment for additional output */			
 			System.out.println(" >> Get public links (user account) result: " + publicLinks.toString());
-			
+
 			// test get public link
 			publicLink.setOwner(toResourceOwnerId("user1"));
 			PublicLink publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
@@ -951,7 +951,7 @@ public class ServiceTest {
 
 			// test create public link (GZIP compressed NCBI bulk of sandflies)
 			publicLink = PublicLink.builder()
-					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).ids(newArrayList("gb:JP540074", "gb:JP553239")).filter("export").compression("gzip").build())
+					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).ids(newHashSet("gb:JP540074", "gb:JP553239")).filter("export").compression("gzip").build())
 					.description("Optional description")
 					.build();
 

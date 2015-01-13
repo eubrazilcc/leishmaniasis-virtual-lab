@@ -566,25 +566,28 @@ public enum MongoDBConnector implements Closeable2 {
 
 	/**
 	 * Saves a file into the current database.
-	 * @param file - file to be saved to the database
+	 * @param filename - filename to be assigned to the file in the database
 	 * @param namespace - name space under the file is saved
+	 * @param file - file to be saved to the database
 	 * @param metadata - optional file metadata
 	 * @return the id associated to the file in the collection
 	 */
-	public String saveFile(final File file, final @Nullable String namespace, final @Nullable DBObject metadata) {
+	public String saveFile(final String filename, final @Nullable String namespace, final File file, final @Nullable DBObject metadata) {
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 		checkArgument(file != null && file.canRead() && file.isFile(), "Uninitialized or invalid file");		
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
 		try {
-			db.requestEnsureConnection();			
+			db.requestEnsureConnection();
+			createIndex("filename", namespace + ".files");
 			try {
 				final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
 				final GridFSInputFile gfsFile = gfsNs.createFile(file);
-				gfsFile.setFilename(file.getName());
+				gfsFile.setFilename(filename.trim());
 				gfsFile.setContentType(mimeType(file));
 				gfsFile.setMetaData(metadata);
 				gfsFile.save();
-				return ObjectId.class.cast(gfsFile.get("_id")).toString();
+				return ObjectId.class.cast(gfsFile.getId()).toString();
 			} catch (DuplicateKeyException dke) {
 				throw new MongoDBDuplicateKeyException(dke.getMessage());			
 			} catch (IOException ioe) {
@@ -649,6 +652,21 @@ public enum MongoDBConnector implements Closeable2 {
 		} finally {
 			db.requestDone();
 		}
+	}
+
+	/**
+	 * Updates an existing file with the content of the provided file. <em>Notice:</em> this method updates the file in two steps, therefore 
+	 * atomic consistency is <strong>NOT</strong> ensured.
+	 * @param filename - filename to be updated in the database
+	 * @param namespace - name space where the file was stored under
+	 * @param metadata - optional file metadata
+	 * @param update - file to be used to replace the content of the database
+	 * @return the new id associated to the file in the collection after the update
+	 * @see <a href="http://docs.mongodb.org/manual/faq/developers/#when-should-i-use-gridfs">When should I use GridFS?</a>
+	 */
+	public String updateFileNonAtomically(final String filename, final @Nullable String namespace, final File update, final @Nullable DBObject metadata) {
+		removeFile(filename, namespace);
+		return saveFile(filename, namespace, update, metadata);
 	}
 
 	/**

@@ -53,7 +53,18 @@ public interface FileBaseDAO<K, E extends BaseFile> {
 	 * @return an instance of {@link WriteResult} that includes the id assigned to the file in the database and a copy of the file
 	 *         information inserted in the database.
 	 */
-	WriteResult<E> insert(@Nullable String namespace, File file, @Nullable Metadata metadata);
+	WriteResult<E> insert(@Nullable String namespace, File file, @Nullable Metadata metadata);	
+	
+	/**
+	 * Updates an existing file in the database.
+	 * @param namespace - name space where the file is stored
+	 * @param filename - filename of the file to be updated in the database
+	 * @param update - new version of the file to be inserted in the database
+	 * @param metadata - optional metadata
+	 * @return a copy of the file updated in the database. When the file is stored in the database unmodified, this method can 
+	 *         return {@code null}.
+	 */
+	WriteResult<E> update(@Nullable String namespace, String filename, File update, @Nullable Metadata metadata);
 
 	/**
 	 * Removes a file from the database.

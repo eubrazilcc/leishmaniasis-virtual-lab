@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.io.FileCompressor.gunzip;
 import static eu.eubrazilcc.lvl.core.io.FileCompressor.gzip;
@@ -79,7 +80,7 @@ public class DatasetCollectionTest {
 		System.out.println("DatasetCollectionTest.test()");
 		try {
 			// create test files
-			final File textFile1 = new File(TEST_OUTPUT_DIR, "file1.txt");
+			File textFile1 = new File(TEST_OUTPUT_DIR, "file1.txt");
 			write(textFile1, "This is a test", UTF_8.name());
 			assertThat("test Text file exists", textFile1.exists(), equalTo(true));
 			assertThat("test Text file is not empty", textFile1.length() > 0l, equalTo(true));
@@ -89,37 +90,68 @@ public class DatasetCollectionTest {
 			assertThat("test GZIP filename is not empty", isNotEmpty(gzipFilename1), equalTo(true));
 			final File gzipFile1 = new File(gzipFilename1);
 			assertThat("test GZIP file exists", gzipFile1.exists(), equalTo(true));
-			assertThat("test GZIP file is not empty", gzipFile1.length() > 0l, equalTo(true));			
+			assertThat("test GZIP file is not empty", gzipFile1.length() > 0l, equalTo(true));
 
 			// insert
 			DatasetMetadata metadata = DatasetMetadata.builder()
+					.tags(newHashSet("tag1", "tag2", "tag3"))					
 					.description("Optional description")
 					.target(Target.builder().type("sequence").id("JP540074").filter("export_fasta").build())
 					.build();
-			DATASET_DAO.insert("namespace", textFile1, metadata);			
+			DATASET_DAO.insert("namespace", textFile1, metadata);
 			DATASET_DAO.insert("namespace", gzipFile1, null);
 
 			// find
 			File file = new File(TEST_OUTPUT_DIR, "out_" + textFile1.getName());
 			Dataset dataset = DATASET_DAO.find("namespace", textFile1.getName(), file);			
-			assertThat("dataset is not null", dataset, notNullValue());
-			assertThat("file is not null", file, notNullValue());
-			assertThat("file exists", file.exists(), equalTo(true));
-			assertThat("file is not empty", file.length() > 0l, equalTo(true));
+			assertThat("text dataset is not null", dataset, notNullValue());
+			assertThat("text file is not null", file, notNullValue());
+			assertThat("text file exists", file.exists(), equalTo(true));
+			assertThat("text file is not empty", file.length() > 0l, equalTo(true));
 			checkDataset(dataset, textFile1, metadata);
 			checkFile(textFile1, file);
+			/* Uncomment for additional output */
 			System.out.println(dataset.toString());
 
 			file = new File(TEST_OUTPUT_DIR, "out_" + gzipFile1.getName());
 			dataset = DATASET_DAO.find("namespace", gzipFile1.getName(), file);			
-			assertThat("dataset is not null", dataset, notNullValue());
-			assertThat("file is not null", file, notNullValue());
-			assertThat("file exists", file.exists(), equalTo(true));
-			assertThat("file is not empty", file.length() > 0l, equalTo(true));
+			assertThat("binary dataset is not null", dataset, notNullValue());
+			assertThat("binary file is not null", file, notNullValue());
+			assertThat("binary file exists", file.exists(), equalTo(true));
+			assertThat("binary file is not empty", file.length() > 0l, equalTo(true));
 			checkDataset(dataset, gzipFile1, null);
 			final File uncompressedFile = new File(TEST_OUTPUT_DIR, "uncompressed_" + textFile1.getName());
 			gunzip(file.getCanonicalPath(), uncompressedFile.getCanonicalPath());
 			checkFile(textFile1, uncompressedFile);
+			/* Uncomment for additional output */
+			System.out.println(dataset.toString());
+
+			// duplicates are not allowed
+			try {
+				DATASET_DAO.insert("namespace", textFile1, metadata);
+				fail("Duplicated files are not allowed");
+			} catch (Exception e) {
+				System.out.println("Exception caught while trying to insert a duplicated file");
+			}
+
+			// update
+			metadata.setPublicLink("public_link");
+			textFile1 = new File(TEST_OUTPUT_DIR, "file1.txt");
+			write(textFile1, "The second test is a file larger than the previous one", UTF_8.name());
+			assertThat("test Text file exists", textFile1.exists(), equalTo(true));
+			assertThat("test Text file is not empty", textFile1.length() > 0l, equalTo(true));
+			DATASET_DAO.update("namespace", textFile1.getName(), textFile1, metadata);
+
+			// find after update
+			file = new File(TEST_OUTPUT_DIR, "out2_" + textFile1.getName());
+			dataset = DATASET_DAO.find("namespace", textFile1.getName(), file);			
+			assertThat("text dataset is not null", dataset, notNullValue());
+			assertThat("text file is not null", file, notNullValue());
+			assertThat("text file exists", file.exists(), equalTo(true));
+			assertThat("text file is not empty", file.length() > 0l, equalTo(true));
+			checkDataset(dataset, textFile1, metadata);
+			checkFile(textFile1, file);
+			/* Uncomment for additional output */
 			System.out.println(dataset.toString());
 
 			// remove

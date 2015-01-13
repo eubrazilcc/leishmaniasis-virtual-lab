@@ -145,7 +145,7 @@ public final class NamingUtils {
 		return dataSource2 + ID_FRAGMENT_SEPARATOR + accession;
 	}
 
-	public static String encodeDatasetPath(final String path) {
+	public static String urlEncodePath(final String path) {
 		String encoded = path;
 		try {
 			encoded = encode(path, UTF_8.name());
@@ -153,7 +153,7 @@ public final class NamingUtils {
 		return encoded;
 	}
 
-	public static String decodeDatasetPath(final String path) {
+	public static String urlDecodePath(final String path) {
 		String decoded = path;
 		try {
 			decoded = decode(path, UTF_8.name());

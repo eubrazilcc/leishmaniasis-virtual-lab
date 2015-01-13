@@ -66,13 +66,19 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 	public static final String COLLECTION  = "files";
 	public static final String DEFAULT_NAMESPACE  = "fs";
 
-	private DatasetDAO() {		
+	private DatasetDAO() {
 	}
 
 	@Override
-	public WriteResult<Dataset> insert(final @Nullable String namespace, final File file, final @Nullable Metadata metadata) {		
-		final String id = MONGODB_CONN.saveFile(file, namespace, fromMetadata(metadata));
+	public WriteResult<Dataset> insert(final @Nullable String namespace, final File file, final @Nullable Metadata metadata) {
+		final String id = MONGODB_CONN.saveFile(file.getName(), namespace, file, fromMetadata(metadata));
 		return new WriteResult.Builder<Dataset>().id(id).build();		
+	}
+	
+	@Override
+	public WriteResult<Dataset> update(final @Nullable String namespace, final String filename, final File update, final @Nullable Metadata metadata) {
+		final String id = MONGODB_CONN.updateFileNonAtomically(filename, namespace, update, fromMetadata(metadata));
+		return new WriteResult.Builder<Dataset>().id(id).build();
 	}
 
 	@Override

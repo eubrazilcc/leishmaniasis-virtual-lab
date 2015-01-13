@@ -25,15 +25,20 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodePath;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
 
 import org.glassfish.jersey.linking.Binding;
@@ -48,15 +53,19 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * A private object that can be shared with other users who are authorized to access the object.
+ * Represents a single object or a collection of objects that is backed to a file in the application's database. Besides the properties
+ * that are provided by the base class {@link BaseFile}, this class also provides the following additional properties: a list of 
+ * {@link #getEditors() editors} to facilitate the application to control who is accessing the data, a collection of {@link #getTags() tags} 
+ * for indexing the data sets, a {@link DatasetMetadata#getNamespace() namespace} for isolating the data sets and an optional {@link #getPublicLink() public link} 
+ * that can be used to share the data with users who are not required to authenticate with the application.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	@InjectLinks({
-		@InjectLink(value="datasets/{namespace}/{filename}", rel=SELF, type=APPLICATION_JSON, bindings={
-				@Binding(name="namespace", value="${instance.namespace}"),
-				@Binding(name="filename", value="${instance.filename}")})
+		@InjectLink(value="datasets/{urlSafeNs}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
+				@Binding(name="urlSafeNs", value="${instance.urlSafeNs}"),
+				@Binding(name="urlSafeId", value="${instance.urlSafeId}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
@@ -64,6 +73,9 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 	private List<Link> links; // HATEOAS links
 
 	private String namespace;
+
+	private String urlSafeNs;
+	private String urlSafeId;
 
 	public Dataset() {
 		super();
@@ -83,12 +95,35 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		}
 	}
 
+	@Override
+	public void setFilename(final String filename) {
+		super.setFilename(filename);
+		setUrlSafeId(urlEncodePath(filename));
+	}
+
 	public String getNamespace() {
 		return namespace;
 	}
 
 	public void setNamespace(final String namespace) {
 		this.namespace = namespace;
+		setUrlSafeNs(urlEncodePath(namespace));
+	}
+
+	public String getUrlSafeNs() {
+		return urlSafeNs;
+	}
+
+	public void setUrlSafeNs(final String urlSafeNs) {
+		this.urlSafeNs = urlSafeNs;
+	}
+
+	public String getUrlSafeId() {
+		return urlSafeId;
+	}
+
+	public void setUrlSafeId(String urlSafeId) {
+		this.urlSafeId = urlSafeId;
 	}
 
 	@Override
@@ -97,7 +132,9 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			return false;
 		}
 		final Dataset other = Dataset.class.cast(obj);
-		return Objects.equals(links, other.links)				
+		return Objects.equals(namespace, other.namespace)
+				&& Objects.equals(urlSafeNs, other.urlSafeNs)
+				&& Objects.equals(urlSafeId, other.urlSafeId)
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -107,19 +144,22 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			return false;
 		}
 		return super.equals((BaseFile)other)
-				&& Objects.equals(namespace, other.namespace);
+				&& Objects.equals(links, other.links);
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, namespace);
+		return super.hashCode() + Objects.hash(links, namespace, urlSafeNs, urlSafeId);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("BaseFile", super.toString())
+				.add("links", links)
 				.add("namespace", namespace)
+				.add("urlSafeNs", urlSafeNs)
+				.add("urlSafeId", urlSafeId)
 				.toString();
 	}
 
@@ -127,22 +167,44 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	public static class DatasetMetadata implements Metadata {
 
+		private Set<String> tags = newHashSet();
+		private String publicLink;		
 		private String description;
-		private Target target;
+		private Target target;		
 
-		public String getDescription() {
+		public Set<String> getTags() {
+			return tags;
+		}
+
+		public void setTags(final Set<String> tags) {
+			if (tags != null) {
+				this.tags = newHashSet(tags);
+			} else {
+				this.tags = newHashSet();
+			}
+		}
+
+		public @Nullable String getPublicLink() {
+			return publicLink;
+		}
+
+		public void setPublicLink(final String publicLink) {
+			this.publicLink = publicLink;
+		}
+
+		public @Nullable String getDescription() {
 			return description;
 		}
 
-		public void setDescription(final String description) {
+		public void setDescription(final @Nullable String description) {
 			this.description = description;
 		}
 
-		public Target getTarget() {
+		public @Nullable Target getTarget() {
 			return target;
 		}
 
-		public void setTarget(final Target target) {
+		public void setTarget(final @Nullable Target target) {
 			this.target = target;
 		}
 
@@ -152,18 +214,22 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 				return false;
 			}
 			final DatasetMetadata other = DatasetMetadata.class.cast(obj);
-			return Objects.equals(description, other.description)
+			return Objects.equals(tags, other.tags)
+					&& Objects.equals(publicLink, other.publicLink)
+					&& Objects.equals(description, other.description)
 					&& Objects.equals(target, other.target);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(description, target);
+			return Objects.hash(tags, publicLink, description, target);
 		}
 
 		@Override
 		public String toString() {
-			return toStringHelper(this)
+			return toStringHelper(this)					
+					.add("tags", tags)
+					.add("publicLink", publicLink)
 					.add("description", description)
 					.add("target", target)
 					.toString();
@@ -177,10 +243,20 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 		public static class Builder {
 
-			private final DatasetMetadata instance = new DatasetMetadata();
+			private final DatasetMetadata instance = new DatasetMetadata();			
+
+			public Builder tags(final Set<String> tags) {
+				instance.setTags(tags);
+				return this;
+			}
+
+			public Builder publicLink(final String publicLink) {
+				instance.setPublicLink(trimToNull(publicLink));
+				return this;
+			}
 
 			public Builder description(final String description) {
-				instance.setDescription(description);
+				instance.setDescription(trimToNull(description));
 				return this;
 			}
 
@@ -210,11 +286,11 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			instance.setLinks(links);
 			return this;
 		}
-
+		
 		public Builder namespace(final String namespace) {
 			instance.setNamespace(trimToEmpty(namespace));
 			return this;
-		}		
+		}
 
 		/* Inherited from BaseFile */
 
