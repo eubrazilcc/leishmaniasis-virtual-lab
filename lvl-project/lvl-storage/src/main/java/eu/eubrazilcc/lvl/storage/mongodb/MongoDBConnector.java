@@ -27,8 +27,10 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.base.Splitter.on;
 import static com.google.common.collect.FluentIterable.from;
+import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.toMap;
+import static com.google.common.collect.Range.closedOpen;
 import static com.mongodb.MapReduceCommand.OutputType.REDUCE;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
 import static com.mongodb.util.JSON.parse;
@@ -60,6 +62,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Range;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -565,7 +568,10 @@ public enum MongoDBConnector implements Closeable2 {
 	}
 
 	/**
-	 * Saves a file into the current database.
+	 * Saves a file into the current database using the specified <tt>namespace</tt> and <tt>filename</tt>. All files sharing the same 
+	 * <tt>filename</tt> are considered versions of the same file. So, inserting a new file with an existing <tt>namespace</tt> and 
+	 * <tt>filename</tt> will create a new entry in the database. The method {@link #readFile(String, String)} will retrieve the latest
+	 * version of the file and the method {@link #readFile(String, String)} will remove all the versions of the file.
 	 * @param filename - filename to be assigned to the file in the database
 	 * @param namespace - name space under the file is saved
 	 * @param file - file to be saved to the database
@@ -579,7 +585,7 @@ public enum MongoDBConnector implements Closeable2 {
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-			createIndex("filename", namespace + ".files");
+			// uncommenting this line will avoid duplicates (versions) to be created: createIndex("filename", namespace + ".files");
 			try {
 				final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
 				final GridFSInputFile gfsFile = gfsNs.createFile(file);
@@ -599,8 +605,9 @@ public enum MongoDBConnector implements Closeable2 {
 	}
 
 	/**
-	 * Reads a file object from the current database and saves a copy to the local file-system using the specified output file. 
-	 * The file is identified by the original filename stored in the database and the name space under the file was stored.
+	 * Reads a file object from the current database. The file is identified by the original filename stored in the database 
+	 * and the name space under the file was stored. When several versions exist of the same file, the version with the latest 
+	 * uploaded date will be retrieved.
 	 * @param filename - filename to be searched for in the database
 	 * @param namespace - name space to be searched for in the database
 	 * @param output - file where the output will be saved, this file must exists and must be writable
@@ -612,7 +619,7 @@ public enum MongoDBConnector implements Closeable2 {
 		try {
 			db.requestEnsureConnection();
 			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			return gfsNs.findOne(filename);			
+			return getFirst(gfsNs.find(filename, new BasicDBObject("uploadDate", -1)), null);			
 		} finally {
 			db.requestDone();
 		}
@@ -633,10 +640,54 @@ public enum MongoDBConnector implements Closeable2 {
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
 		try {
+			db.requestEnsureConnection();
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(), new BasicDBObject(ImmutableMap.of("filename", 1, "uploadDate", -1)));
+			int uniqueCount = 0;
+			String previous = null;
+			final Range<Integer> range = closedOpen(start, start + size);
+			try {				
+				while (cursor.hasNext() && list.size() < size) {
+					final GridFSDBFile file = (GridFSDBFile) cursor.next();
+					final String current = file.getFilename();
+					if (previous == null || !previous.equals(current)) {
+						uniqueCount++;
+						if (range.contains(uniqueCount)) {
+							list.add(file);
+						}						
+					}
+					previous = current;
+				}
+			} finally {
+				cursor.close();
+			}
+			if (count != null) {				
+				count.setValue(uniqueCount);
+			}
+			return list;			
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	/**
+	 * Lists all the files (including versions) in the specified name space.
+	 * @param namespace - name space to be searched for files
+	 * @param sortCriteria - objects in the collection are sorted with this criteria
+	 * @param start - starting index
+	 * @param size - maximum number of objects returned
+	 * @param count - (optional) is updated with the number of objects in the database
+	 * @return a view of the files stored under the specified name space that contains the specified range.
+	 */
+	public List<GridFSDBFile> listFileVersions(final @Nullable String namespace, final DBObject sortCriteria, final int start, final int size, 
+			final @Nullable MutableLong count) {
+		final List<GridFSDBFile> list = newArrayList();
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {			
 			db.requestEnsureConnection();			
 			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			final DBCursor cursor = gfsNs.getFileList();
-			cursor.sort(sortCriteria);
+			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(), sortCriteria);
 			cursor.skip(start).limit(size);
 			try {
 				while (cursor.hasNext()) {
@@ -655,22 +706,7 @@ public enum MongoDBConnector implements Closeable2 {
 	}
 
 	/**
-	 * Updates an existing file with the content of the provided file. <em>Notice:</em> this method updates the file in two steps, therefore 
-	 * atomic consistency is <strong>NOT</strong> ensured.
-	 * @param filename - filename to be updated in the database
-	 * @param namespace - name space where the file was stored under
-	 * @param metadata - optional file metadata
-	 * @param update - file to be used to replace the content of the database
-	 * @return the new id associated to the file in the collection after the update
-	 * @see <a href="http://docs.mongodb.org/manual/faq/developers/#when-should-i-use-gridfs">When should I use GridFS?</a>
-	 */
-	public String updateFileNonAtomically(final String filename, final @Nullable String namespace, final File update, final @Nullable DBObject metadata) {
-		removeFile(filename, namespace);
-		return saveFile(filename, namespace, update, metadata);
-	}
-
-	/**
-	 * Removes a file from the specified name space.
+	 * Removes a file (with all its versions) from the specified name space.
 	 * @param filename - filename to be removed from the database
 	 * @param namespace - name space where the file was stored under
 	 */

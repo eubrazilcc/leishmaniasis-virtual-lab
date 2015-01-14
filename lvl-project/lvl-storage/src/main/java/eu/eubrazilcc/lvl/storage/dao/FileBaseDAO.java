@@ -46,7 +46,7 @@ import eu.eubrazilcc.lvl.core.Sorting;
 public interface FileBaseDAO<K, E extends BaseFile> {
 
 	/**
-	 * Inserts a new file in the database.
+	 * Inserts a new file (or version) in the database.
 	 * @param namespace - name space where the file will be stored
 	 * @param file - file to be inserted in the database
 	 * @param metadata - optional metadata
@@ -56,31 +56,21 @@ public interface FileBaseDAO<K, E extends BaseFile> {
 	WriteResult<E> insert(@Nullable String namespace, File file, @Nullable Metadata metadata);	
 	
 	/**
-	 * Updates an existing file in the database.
-	 * @param namespace - name space where the file is stored
-	 * @param filename - filename of the file to be updated in the database
-	 * @param update - new version of the file to be inserted in the database
-	 * @param metadata - optional metadata
-	 * @return a copy of the file updated in the database. When the file is stored in the database unmodified, this method can 
-	 *         return {@code null}.
-	 */
-	WriteResult<E> update(@Nullable String namespace, String filename, File update, @Nullable Metadata metadata);
-
-	/**
-	 * Removes a file from the database.
+	 * Removes a file (and all its versions) from the database.
 	 * @param namespace - name space of the file to be removed from the database
 	 * @param filename - filename of the file to be removed from the database
 	 */
 	void delete(@Nullable String namespace, String filename);
 
 	/**
-	 * Returns all the files from the database under the specified name space.
+	 * Returns all the files from the database under the specified name space. Versions are not included, only the latest uploaded file is returned.
 	 * @return all the files that are in the database
 	 */
 	List<E> findAll(@Nullable String namespace);
 
 	/**
-	 * Search for a file in the database using the specified name space and filename.
+	 * Search for a file in the database using the specified name space and filename. When several versions of the file exist in the database,
+	 * the one with the latest upload date will be retrieved.
 	 * @param namespace - name space to be searched in the database
 	 * @param filename - filename whose associate file is to be returned
 	 * @param outfile - file where the result will be written
@@ -92,7 +82,8 @@ public interface FileBaseDAO<K, E extends BaseFile> {
 	/**
 	 * Returns a view of the files in the database that contains the specified range. The files are sorted by the key in ascending order.
 	 * An optional filter can be specified to filter the database response. However, if the filter is invalid, an empty list will be returned
-	 * to the caller. Optionally, the number of files found in the database is returned to the caller.
+	 * to the caller. Optionally, the number of files found in the database is returned to the caller. Versions are not included, only the 
+	 * latest uploaded file is returned.
 	 * @param namespace - name space to be searched in the database
 	 * @param start - starting index
 	 * @param size - maximum number of files returned
@@ -105,7 +96,7 @@ public interface FileBaseDAO<K, E extends BaseFile> {
 			@Nullable MutableLong count);
 
 	/**
-	 * Returns the number of files in the database under the specified name space.
+	 * Returns the number of files in the database (including versions) under the specified name space.
 	 * @param namespace - name space to be searched in the database
 	 * @return the number of files in the database
 	 */

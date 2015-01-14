@@ -63,8 +63,7 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	@InjectLinks({
-		@InjectLink(value="datasets/{urlSafeNs}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
-				@Binding(name="urlSafeNs", value="${instance.urlSafeNs}"),
+		@InjectLink(value="datasets/files/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
 				@Binding(name="urlSafeId", value="${instance.urlSafeId}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
@@ -73,8 +72,6 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 	private List<Link> links; // HATEOAS links
 
 	private String namespace;
-
-	private String urlSafeNs;
 	private String urlSafeId;
 
 	public Dataset() {
@@ -107,15 +104,6 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	public void setNamespace(final String namespace) {
 		this.namespace = namespace;
-		setUrlSafeNs(urlEncodePath(namespace));
-	}
-
-	public String getUrlSafeNs() {
-		return urlSafeNs;
-	}
-
-	public void setUrlSafeNs(final String urlSafeNs) {
-		this.urlSafeNs = urlSafeNs;
 	}
 
 	public String getUrlSafeId() {
@@ -133,7 +121,6 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		}
 		final Dataset other = Dataset.class.cast(obj);
 		return Objects.equals(namespace, other.namespace)
-				&& Objects.equals(urlSafeNs, other.urlSafeNs)
 				&& Objects.equals(urlSafeId, other.urlSafeId)
 				&& equalsIgnoringVolatile(other);
 	}
@@ -149,7 +136,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, namespace, urlSafeNs, urlSafeId);
+		return super.hashCode() + Objects.hash(links, namespace, urlSafeId);
 	}
 
 	@Override
@@ -158,7 +145,6 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 				.add("BaseFile", super.toString())
 				.add("links", links)
 				.add("namespace", namespace)
-				.add("urlSafeNs", urlSafeNs)
 				.add("urlSafeId", urlSafeId)
 				.toString();
 	}
@@ -167,10 +153,19 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	public static class DatasetMetadata implements Metadata {
 
+		private String editor;
 		private Set<String> tags = newHashSet();
 		private String publicLink;		
 		private String description;
 		private Target target;		
+		
+		public String getEditor() {
+			return editor;
+		}
+
+		public void setEditor(final String editor) {
+			this.editor = editor;
+		}
 
 		public Set<String> getTags() {
 			return tags;
@@ -214,7 +209,8 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 				return false;
 			}
 			final DatasetMetadata other = DatasetMetadata.class.cast(obj);
-			return Objects.equals(tags, other.tags)
+			return Objects.equals(editor, other.editor)
+					&& Objects.equals(tags, other.tags)
 					&& Objects.equals(publicLink, other.publicLink)
 					&& Objects.equals(description, other.description)
 					&& Objects.equals(target, other.target);
@@ -222,12 +218,13 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(tags, publicLink, description, target);
+			return Objects.hash(editor, tags, publicLink, description, target);
 		}
 
 		@Override
 		public String toString() {
-			return toStringHelper(this)					
+			return toStringHelper(this)
+					.add("editor", editor)
 					.add("tags", tags)
 					.add("publicLink", publicLink)
 					.add("description", description)
@@ -245,6 +242,11 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 			private final DatasetMetadata instance = new DatasetMetadata();			
 
+			public Builder editor(final String editor) {
+				instance.setEditor(trimToNull(editor));
+				return this;
+			}
+			
 			public Builder tags(final Set<String> tags) {
 				instance.setTags(tags);
 				return this;
@@ -286,7 +288,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			instance.setLinks(links);
 			return this;
 		}
-		
+
 		public Builder namespace(final String namespace) {
 			instance.setNamespace(trimToEmpty(namespace));
 			return this;
