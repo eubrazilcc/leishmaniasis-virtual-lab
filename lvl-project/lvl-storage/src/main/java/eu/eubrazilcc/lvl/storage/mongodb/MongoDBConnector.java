@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage.mongodb;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.base.Splitter.on;
@@ -30,7 +31,6 @@ import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.toMap;
-import static com.google.common.collect.Range.closedOpen;
 import static com.mongodb.MapReduceCommand.OutputType.REDUCE;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
 import static com.mongodb.util.JSON.parse;
@@ -40,6 +40,8 @@ import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_M
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -62,7 +64,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Range;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -85,13 +86,18 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.mongodb.util.JSON;
 
+import eu.eubrazilcc.lvl.core.BaseFile;
 import eu.eubrazilcc.lvl.core.Closeable2;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 
 /**
- * Data connector based on mongoDB.
+ * Data connector based on mongoDB. Access to file collections is provided through the GridFS specification. While other objects
+ * rely only on the final version, previous file versions are kept in the database. The additional attribute {@link #FILE_VERSION_ATTR isLastestVersion} 
+ * of the {@link BaseFile base file class} is used to create a sparse index with a unique constraint, enforcing the integrity of 
+ * the files within a collection (only one version of a file can be labeled as the latest version of the file).
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="https://www.mongodb.org/">mongoDB</a>
+ * @see <a href="http://docs.mongodb.org/manual/core/gridfs/">GridFS</a>
  */
 public enum MongoDBConnector implements Closeable2 {
 
@@ -101,8 +107,16 @@ public enum MongoDBConnector implements Closeable2 {
 
 	public static final String TMP_COLLECTION_PREFIX = "tmp_";
 
+	/**
+	 * The name of the MongoDB GridFS files collection.
+	 * @see <a href="http://docs.mongodb.org/manual/core/gridfs/#gridfs-collections">GridFS Collections</a>
+	 */
+	private static final String GRIDFS_FILES_COLLECTION = "files";
+
+	public static final String FILE_VERSION_ATTR = "isLastestVersion";
+
 	private Lock mutex = new ReentrantLock();
-	private MongoClient __client = null;
+	private MongoClient __client = null;	
 
 	private MongoClient client() {
 		mutex.lock();
@@ -142,6 +156,12 @@ public enum MongoDBConnector implements Closeable2 {
 							CONFIG_MANAGER.getDbName(), CONFIG_MANAGER.getDbPassword().toCharArray()));
 				}
 				__client = new MongoClient(seeds, credentials, options);
+				// check class attributes accessed by reflection
+				try {
+					checkNotNull(BaseFile.class.getDeclaredField(FILE_VERSION_ATTR));
+				} catch (Exception e) {
+					LOGGER.warn("Version (" + FILE_VERSION_ATTR + ") not found in file base class: " + BaseFile.class.getCanonicalName());
+				}
 			}
 			return __client;
 		} finally {
@@ -206,7 +226,7 @@ public enum MongoDBConnector implements Closeable2 {
 
 	/**
 	 * Creates an index on a set of fields, if one does not already exist on the specified collection.
-	 * Indexes created with this method are created in the background and stores unique elements.
+	 * Indexes created with this method are created in the background and could stores unique elements.
 	 * @param fields - fields that are used to index the elements
 	 * @param collection - collection where the index is created
 	 * @param descending - (optional) sort the elements of the index in descending order
@@ -249,6 +269,11 @@ public enum MongoDBConnector implements Closeable2 {
 		}
 	}
 
+	/**
+	 * Creates a text index in a collection. Text indexes are created using English as the default language.
+	 * @param fields - fields that are used to index the elements
+	 * @param collection - collection where the index is created
+	 */
 	public void createTextIndex(final List<String> fields, final String collection) {
 		checkArgument(fields != null && !fields.isEmpty(), "Uninitialized or invalid fields");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
@@ -263,6 +288,30 @@ public enum MongoDBConnector implements Closeable2 {
 					return "text";
 				}
 			})), new BasicDBObject("default_language", "english").append("name", collection + ".text_idx"));
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	/**
+	 * Creates a sparse index with a unique constraint on a field, if one does not already exist on the specified collection.
+	 * Indexes created with this method are created in the background. <strong>Note:</strong> Do NOT use compound indexes to
+	 * create an sparse index, since the results are unexpected.
+	 * @param field - field that is used to index the elements
+	 * @param collection - collection where the index is created
+	 * @param descending - (optional) sort the elements of the index in descending order
+	 * @see <a href="http://docs.mongodb.org/manual/core/index-sparse/">MongoDB: Sparse Indexes</a>
+	 */
+	public void createSparseIndexWithUniqueConstraint(final String field, final String collection, final boolean descending) {
+		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");		
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		final DBCollection dbcol = db.getCollection(collection);
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();
+			dbcol.createIndex(new BasicDBObject(field, descending ? -1 : 1),
+					new BasicDBObject(ImmutableMap.of("unique", true, "background", true, "sparse", true)));				
 		} finally {
 			db.requestDone();
 		}
@@ -567,67 +616,115 @@ public enum MongoDBConnector implements Closeable2 {
 		}	
 	}
 
+	/* GridFS */
+
 	/**
 	 * Saves a file into the current database using the specified <tt>namespace</tt> and <tt>filename</tt>. All files sharing the same 
-	 * <tt>filename</tt> are considered versions of the same file. So, inserting a new file with an existing <tt>namespace</tt> and 
-	 * <tt>filename</tt> will create a new entry in the database. The method {@link #readFile(String, String)} will retrieve the latest
-	 * version of the file and the method {@link #readFile(String, String)} will remove all the versions of the file.
+	 * <tt>namespace</tt> and <tt>filename</tt> are considered versions of the same file. So, inserting a new file with an existing 
+	 * <tt>namespace</tt> and <tt>filename</tt> will create a new entry in the database. The method {@link #readFile(String, String)} will 
+	 * retrieve the latest version of the file and the method {@link #readFile(String, String)} will remove all the versions of the file. 
+	 * Other possible options could be to define a unique index in the <tt>files</tt> collection to avoid duplicates (versions) to be 
+	 * created: <code>createIndex("filename", namespace + ".files");</code>
+	 * @param namespace - (optional) name space under the file is saved. When nothing specified, the default bucket is used
 	 * @param filename - filename to be assigned to the file in the database
-	 * @param namespace - name space under the file is saved
 	 * @param file - file to be saved to the database
 	 * @param metadata - optional file metadata
 	 * @return the id associated to the file in the collection
 	 */
-	public String saveFile(final String filename, final @Nullable String namespace, final File file, final @Nullable DBObject metadata) {
+	public String saveFile(final @Nullable String namespace, final String filename, final File file, final @Nullable DBObject metadata) {
 		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		checkArgument(file != null && file.canRead() && file.isFile(), "Uninitialized or invalid file");		
+		checkArgument(file != null && file.canRead() && file.isFile(), "Uninitialized or invalid file");
+		String objectId = null;
+		final String namespace2 = trimToEmpty(namespace);
+		final String filename2 = filename.trim();			
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
 		try {
-			db.requestEnsureConnection();
-			// uncommenting this line will avoid duplicates (versions) to be created: createIndex("filename", namespace + ".files");
-			try {
-				final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+			db.requestEnsureConnection();			
+			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
+			// enforce isolation property: each namespace has its own bucket (encompassing 2 collections: files and chunks) and indexes in the database
+			createSparseIndexWithUniqueConstraint(FILE_VERSION_ATTR, gfsNs.getBucketName() + "." + GRIDFS_FILES_COLLECTION, false);
+			try {				
+				// insert new file/version in the database
 				final GridFSInputFile gfsFile = gfsNs.createFile(file);
-				gfsFile.setFilename(filename.trim());
-				gfsFile.setContentType(mimeType(file));
+				gfsFile.setFilename(filename2);
+				gfsFile.setContentType(mimeType(file));				
 				gfsFile.setMetaData(metadata);
 				gfsFile.save();
-				return ObjectId.class.cast(gfsFile.getId()).toString();
+				objectId = ObjectId.class.cast(gfsFile.getId()).toString();
+				// unset the latest version in the database
+				final GridFSDBFile latestVersion = getLatestVersion(gfsNs, filename2);
+				if (latestVersion != null) {
+					latestVersion.put(FILE_VERSION_ATTR, null);
+					latestVersion.save();
+				}
 			} catch (DuplicateKeyException dke) {
-				throw new MongoDBDuplicateKeyException(dke.getMessage());			
+				throw new MongoDBDuplicateKeyException(dke.getMessage());
 			} catch (IOException ioe) {
-				throw new IllegalStateException("Failed to save file", ioe);
+				throw new IllegalStateException("Failed to save file", ioe);				
+			} finally {
+				// enforce versioning property by always restoring the latest version in the database
+				try {
+					final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
+					if (latestUploadedVersion != null) {
+						latestUploadedVersion.put(FILE_VERSION_ATTR, filename2);
+						latestUploadedVersion.save();
+					}
+				} catch (Exception ignore) {
+					LOGGER.error("Failed to restore latest version namespace=" + namespace2 + ", filename=" + filename2);
+				}
 			}
 		} finally {
 			db.requestDone();
 		}
+		return objectId;
+	}
+
+	/**
+	 * Gets the version of the <tt>filename</tt> labeled with the {@link #FILE_VERSION_ATTR} property.
+	 * @param gridfs - GridFS client
+	 * @param filename - filename to be searched for in the database
+	 * @return
+	 */
+	private GridFSDBFile getLatestVersion(final GridFS gridfs, final String filename) {
+		return gridfs.findOne(new BasicDBObject(FILE_VERSION_ATTR, filename.trim()));
+	}
+
+	/**
+	 * Gets the version of the <tt>filename</tt> with the latest uploaded date.
+	 * @param gridfs - GridFS client
+	 * @param filename - filename to be searched for in the database
+	 * @return the version of the file identified by the provided filename with the latest uploaded date. 
+	 */
+	private GridFSDBFile getLatestUploadedFile(final GridFS gridfs, final String filename) {
+		return getFirst(gridfs.find(filename.trim(), new BasicDBObject("uploadDate", -1)), null);
 	}
 
 	/**
 	 * Reads a file object from the current database. The file is identified by the original filename stored in the database 
-	 * and the name space under the file was stored. When several versions exist of the same file, the version with the latest 
-	 * uploaded date will be retrieved.
+	 * and the name space under the file was stored. When several versions exist of the same file, the latest version will 
+	 * be retrieved.
+	 * @param namespace - (optional) name space to be searched for in the database. When nothing specified, the default bucket 
+	 *                    is used
 	 * @param filename - filename to be searched for in the database
-	 * @param namespace - name space to be searched for in the database
 	 * @param output - file where the output will be saved, this file must exists and must be writable
 	 */
-	public GridFSDBFile readFile(final String filename, final @Nullable String namespace) {
+	public GridFSDBFile readFile(final @Nullable String namespace, final String filename) {
 		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			return getFirst(gfsNs.find(filename, new BasicDBObject("uploadDate", -1)), null);			
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
+			return getLatestVersion(gfsNs, filename);
 		} finally {
 			db.requestDone();
 		}
 	}
 
 	/**
-	 * Lists all the files in the specified name space.
-	 * @param namespace - name space to be searched for files
+	 * Lists all the files in the specified name space. Only latest versions are included in the list.
+	 * @param namespace - (optional) name space to be searched for files. When nothing specified, the default bucket is used
 	 * @param sortCriteria - objects in the collection are sorted with this criteria
 	 * @param start - starting index
 	 * @param size - maximum number of objects returned
@@ -639,55 +736,47 @@ public enum MongoDBConnector implements Closeable2 {
 		final List<GridFSDBFile> list = newArrayList();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
-		try {
+		try {			
 			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(), new BasicDBObject(ImmutableMap.of("filename", 1, "uploadDate", -1)));
-			int uniqueCount = 0;
-			String previous = null;
-			final Range<Integer> range = closedOpen(start, start + size);
-			try {				
-				while (cursor.hasNext() && list.size() < size) {
-					final GridFSDBFile file = (GridFSDBFile) cursor.next();
-					final String current = file.getFilename();
-					if (previous == null || !previous.equals(current)) {
-						uniqueCount++;
-						if (range.contains(uniqueCount)) {
-							list.add(file);
-						}						
-					}
-					previous = current;
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
+			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_ATTR, new BasicDBObject("$ne", null)), sortCriteria);
+			cursor.skip(start).limit(size);
+			try {
+				while (cursor.hasNext()) {
+					list.add((GridFSDBFile) cursor.next());
 				}
 			} finally {
 				cursor.close();
 			}
 			if (count != null) {				
-				count.setValue(uniqueCount);
+				count.setValue(cursor.count());
 			}
 			return list;			
 		} finally {
 			db.requestDone();
 		}
 	}
-
+	
 	/**
-	 * Lists all the files (including versions) in the specified name space.
-	 * @param namespace - name space to be searched for files
+	 * Lists all the versions of the specified file.
+	 * @param namespace - (optional) name space to be searched for files. When nothing specified, the default bucket is used
+	 * @param filename - filename to be searched for in the database
 	 * @param sortCriteria - objects in the collection are sorted with this criteria
 	 * @param start - starting index
 	 * @param size - maximum number of objects returned
 	 * @param count - (optional) is updated with the number of objects in the database
-	 * @return a view of the files stored under the specified name space that contains the specified range.
+	 * @return a view of the versions stored of the specified file that contains the specified range.
 	 */
-	public List<GridFSDBFile> listFileVersions(final @Nullable String namespace, final DBObject sortCriteria, final int start, final int size, 
-			final @Nullable MutableLong count) {
+	public List<GridFSDBFile> listFileVersions(final @Nullable String namespace, final String filename, final DBObject sortCriteria, final int start, 
+			final int size, final @Nullable MutableLong count) {
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 		final List<GridFSDBFile> list = newArrayList();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
-		try {			
-			db.requestEnsureConnection();			
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(), sortCriteria);
+		try {
+			db.requestEnsureConnection();
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
+			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject("filename", filename.trim()), sortCriteria);
 			cursor.skip(start).limit(size);
 			try {
 				while (cursor.hasNext()) {
@@ -707,10 +796,10 @@ public enum MongoDBConnector implements Closeable2 {
 
 	/**
 	 * Removes a file (with all its versions) from the specified name space.
+	 * @param namespace - (optional) name space where the file was stored under. When nothing specified, the default bucket is used
 	 * @param filename - filename to be removed from the database
-	 * @param namespace - name space where the file was stored under
 	 */
-	public void removeFile(final String filename, final @Nullable String namespace) {
+	public void removeFile(final @Nullable String namespace, final String filename) {
 		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
@@ -722,6 +811,39 @@ public enum MongoDBConnector implements Closeable2 {
 			db.requestDone();
 		}
 	}
+
+	/**
+	 * Counts the files stored in the specified name space.
+	 * @param namespace - (optional) name space whose files are counted
+	 * @return the number of objects stored in the collection
+	 */
+	public long countFiles(final @Nullable String namespace) {
+		String namespace2 = trimToNull(namespace);
+		if (namespace2 == null) {
+			final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+			final GridFS gfsNs = new GridFS(db);
+			namespace2 = gfsNs.getBucketName();
+		}
+		return count(namespace2 + "." + GRIDFS_FILES_COLLECTION);		
+	}
+
+	/**
+	 * Writes statistics about a files name space to the specified output stream.
+	 * @param os - the output stream to write the statistics to
+	 * @param namespace - (optional) name space from which the statistics are collected
+	 * @throws IOException - If an I/O error occurred
+	 */
+	public void statsFiles(final OutputStream os, final @Nullable String namespace) throws IOException {
+		String namespace2 = trimToNull(namespace);
+		if (namespace2 == null) {
+			final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+			final GridFS gfsNs = new GridFS(db);
+			namespace2 = gfsNs.getBucketName();
+		}
+		stats(os, namespace2 + "." + GRIDFS_FILES_COLLECTION);
+	}
+
+	/* General methods */
 
 	@Override
 	public void setup(final Collection<URL> urls) { }

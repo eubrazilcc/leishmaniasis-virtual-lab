@@ -1,0 +1,1 @@
+SIMSEQ(gb:JX105037, local) > 90

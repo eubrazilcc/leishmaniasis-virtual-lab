@@ -45,9 +45,16 @@ expression : OPEN_PAREN expression CLOSE_PAREN  # EmbeddedEx
 
 // the second parameter in sequence similarity search is reserved for future use (e.g. program name, local/global strategy)
 atomic_expression : SEQUENCE_SIMILARITY_SEARCH OPEN_PAREN term (COMMA STRING)? CLOSE_PAREN  # SSSSimpleEx
+                  | NEAR_SEARCH OPEN_PAREN coordinates CLOSE_PAREN                          # NearSearchEx
                   | term                                                                    # TermSimpleEx
                   | NUMERIC                                                                 # NumericSimpleEx
                   ;
+
+coordinates : longitude COMMA latitude ;
+
+latitude : NUMERIC ;
+
+longitude : NUMERIC ;
 
 term : field   # FieldTerm
      | STRING  # StringTerm

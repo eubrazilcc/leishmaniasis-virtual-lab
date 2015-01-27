@@ -53,6 +53,8 @@ import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.Dataset;
 import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
+import eu.eubrazilcc.lvl.core.Sorting;
+import eu.eubrazilcc.lvl.core.Sorting.Order;
 import eu.eubrazilcc.lvl.core.Target;
 
 /**
@@ -98,8 +100,8 @@ public class DatasetCollectionTest {
 					.description("Optional description")
 					.target(Target.builder().type("sequence").id("JP540074").filter("export_fasta").build())
 					.build();
-			DATASET_DAO.insert("namespace", textFile1, metadata);
-			DATASET_DAO.insert("namespace", gzipFile1, null);
+			DATASET_DAO.insert("namespace", null, textFile1, metadata);
+			DATASET_DAO.insert("namespace", null, gzipFile1, null);
 
 			// find
 			File file = new File(TEST_OUTPUT_DIR, "out_" + textFile1.getName());
@@ -108,7 +110,7 @@ public class DatasetCollectionTest {
 			assertThat("text file is not null", file, notNullValue());
 			assertThat("text file exists", file.exists(), equalTo(true));
 			assertThat("text file is not empty", file.length() > 0l, equalTo(true));
-			checkDataset(dataset, textFile1, metadata);
+			checkDataset(dataset, textFile1, "namespace", metadata);
 			checkFile(textFile1, file);
 			/* Uncomment for additional output */
 			System.out.println(dataset.toString());
@@ -119,21 +121,21 @@ public class DatasetCollectionTest {
 			assertThat("binary file is not null", file, notNullValue());
 			assertThat("binary file exists", file.exists(), equalTo(true));
 			assertThat("binary file is not empty", file.length() > 0l, equalTo(true));
-			checkDataset(dataset, gzipFile1, null);
+			checkDataset(dataset, gzipFile1, "namespace", null);
 			final File uncompressedFile = new File(TEST_OUTPUT_DIR, "uncompressed_" + textFile1.getName());
 			gunzip(file.getCanonicalPath(), uncompressedFile.getCanonicalPath());
 			checkFile(textFile1, uncompressedFile);
 			/* Uncomment for additional output */
 			System.out.println(dataset.toString());			
-			
+
 			// insert duplicates (versions)
 			write(textFile1, "The second version of the text file is larger than the previous one", UTF_8.name());
 			assertThat("test Text file exists", textFile1.exists(), equalTo(true));
 			assertThat("test Text file is not empty", textFile1.length() > 0l, equalTo(true));
 			metadata.setPublicLink("public_link");
 			metadata.setDescription("New version of text file 1");
-			DATASET_DAO.insert("namespace", textFile1, metadata);
-			
+			DATASET_DAO.insert("namespace", null, textFile1, metadata);
+
 			// find the latest version after inserting the new version
 			file = new File(TEST_OUTPUT_DIR, "out2_" + textFile1.getName());
 			dataset = DATASET_DAO.find("namespace", textFile1.getName(), file);			
@@ -141,11 +143,11 @@ public class DatasetCollectionTest {
 			assertThat("text file is not null", file, notNullValue());
 			assertThat("text file exists", file.exists(), equalTo(true));
 			assertThat("text file is not empty", file.length() > 0l, equalTo(true));
-			checkDataset(dataset, textFile1, metadata);
+			checkDataset(dataset, textFile1, "namespace", metadata);
 			checkFile(textFile1, file);
 			/* Uncomment for additional output */
 			System.out.println(dataset.toString());
-			
+
 			// list all files ignoring previous versions
 			List<Dataset> datasets = DATASET_DAO.findAll("namespace");
 			assertThat("datasets is not null", datasets, notNullValue());
@@ -154,16 +156,37 @@ public class DatasetCollectionTest {
 			boolean found1 = false, found2 = false;
 			for (int i = 0; i < datasets.size() && !found1 && ! found2; i++) {
 				dataset = datasets.get(i);
-				metadata = (DatasetMetadata)dataset.getMetadata();
+				metadata = (DatasetMetadata)dataset.getMetadata();				
 				if (textFile1.getName().equals(dataset.getFilename()) && "New version of text file 1".equals(metadata.getDescription())) {
 					found1 = true;
-				} else if (gzipFile1.getName().equals(dataset.getFilename()) && "Optional description".equals(metadata.getDescription())) {
-					found1 = true;
+				} else if (gzipFile1.getName().equals(dataset.getFilename()) && metadata == null) {
+					found2 = true;
 				} else {
 					throw new Exception("Unexpected dataset found: " + dataset);
 				}
 			}
-			
+
+			// list all the available versions of a given file
+			datasets = DATASET_DAO.listVersions("namespace", textFile1.getName(), 0, Integer.MAX_VALUE, 
+					Sorting.builder().field("uploadDate").order(Order.ASC).build(), null);			
+			assertThat("datasets is not null", datasets, notNullValue());
+			assertThat("datasets is not empty", datasets.isEmpty(), equalTo(false));
+			assertThat("datasets size coincides with expected", datasets.size(), equalTo(2));
+			found1 = false; found2 = false;
+			for (int i = 0; i < datasets.size() && !found1 && ! found2; i++) {
+				dataset = datasets.get(i);
+				metadata = (DatasetMetadata)dataset.getMetadata();				
+				if (textFile1.getName().equals(dataset.getFilename()) && "New version of text file 1".equals(metadata.getDescription()) 
+						&& "public_link".equals(metadata.getPublicLink())) {
+					found1 = true;
+				} else if (textFile1.getName().equals(dataset.getFilename()) && "Optional description".equals(metadata.getDescription())
+						&& metadata.getPublicLink() == null) {
+					found2 = true;
+				} else {
+					throw new Exception("Unexpected dataset found: " + dataset);
+				}
+			}
+
 			// remove all versions
 			DATASET_DAO.delete("namespace", textFile1.getName());
 			final long numRecords = DATASET_DAO.count("namespace");
@@ -175,7 +198,7 @@ public class DatasetCollectionTest {
 				final File file2 = new File(TEST_OUTPUT_DIR, "files_" + Integer.toString(i) + ".txt");
 				write(file2, "This is a test " + Integer.toString(i), UTF_8.name());				
 				ids.add(file2.getCanonicalPath());
-				DATASET_DAO.insert("namespace", file2, null);				
+				DATASET_DAO.insert("namespace", null, file2, null);				
 			}
 			final int size = 3;
 			int start = 0;
@@ -192,6 +215,22 @@ public class DatasetCollectionTest {
 				DATASET_DAO.delete("namespace", id2);
 			}
 			DATASET_DAO.stats("namespace", System.out);
+			
+			// test default namespace
+			DATASET_DAO.insert(null, null, textFile1, metadata);
+			
+			file = new File(TEST_OUTPUT_DIR, "out_" + textFile1.getName());
+			dataset = DATASET_DAO.find(null, textFile1.getName(), file);			
+			assertThat("text dataset is not null", dataset, notNullValue());
+			assertThat("text file is not null", file, notNullValue());
+			assertThat("text file exists", file.exists(), equalTo(true));
+			assertThat("text file is not empty", file.length() > 0l, equalTo(true));
+			checkDataset(dataset, textFile1, "", metadata);
+			checkFile(textFile1, file);
+			/* Uncomment for additional output */
+			System.out.println(dataset.toString());
+			
+			DATASET_DAO.stats(null, System.out);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -201,11 +240,11 @@ public class DatasetCollectionTest {
 		}
 	}
 
-	private static void checkDataset(final Dataset dataset, final File file, final DatasetMetadata metadata) {
+	private static void checkDataset(final Dataset dataset, final File file, final String namespace, final DatasetMetadata metadata) {
 		assertThat("lenght type coincides with expected", dataset.getLength(), equalTo(file.length()));
 		assertThat("content type coincides with expected", dataset.getContentType(), equalTo(mimeType(file)));
 		assertThat("filename coincides with expected", dataset.getFilename(), equalTo(file.getName()));
-		assertThat("namespace coincides with expected", dataset.getNamespace(), equalTo("namespace"));
+		assertThat("namespace coincides with expected", dataset.getNamespace(), equalTo(namespace));
 		assertThat("metadata coincides with expected", (DatasetMetadata)dataset.getMetadata(), equalTo(metadata));
 	}
 

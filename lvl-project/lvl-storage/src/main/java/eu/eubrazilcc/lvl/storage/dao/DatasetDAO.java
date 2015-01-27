@@ -23,11 +23,13 @@
 package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.FILE_VERSION_ATTR;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
+import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
-import static com.google.common.collect.Lists.transform;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +39,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang.mutable.MutableLong;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -63,21 +66,18 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 
 	private final static Logger LOGGER = getLogger(DatasetDAO.class);
 
-	public static final String COLLECTION  = "files";
-	public static final String DEFAULT_NAMESPACE  = "fs";
-
 	private DatasetDAO() {
 	}
 
 	@Override
-	public WriteResult<Dataset> insert(final @Nullable String namespace, final File file, final @Nullable Metadata metadata) {
-		final String id = MONGODB_CONN.saveFile(file.getName(), namespace, file, fromMetadata(metadata));
-		return new WriteResult.Builder<Dataset>().id(id).build();		
+	public WriteResult<Dataset> insert(final @Nullable String namespace, final @Nullable String filename, final File file, final @Nullable Metadata metadata) {
+		final String id = MONGODB_CONN.saveFile(namespace, getFilename(filename, file), file, fromMetadata(metadata));
+		return new WriteResult.Builder<Dataset>().id(id).build();
 	}	
 
 	@Override
 	public void delete(final @Nullable String namespace, final String filename) {
-		MONGODB_CONN.removeFile(filename, namespace);
+		MONGODB_CONN.removeFile(namespace, filename);
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 			final File parentDir = outfile.getParentFile();
 			if (parentDir.exists() || parentDir.mkdirs());
 			if ((outfile.isFile() && outfile.canWrite()) || outfile.createNewFile());
-			return parseGridFSDBFileOrNull(MONGODB_CONN.readFile(filename, namespace), outfile, namespace);
+			return parseGridFSDBFileOrNull(MONGODB_CONN.readFile(namespace, filename), outfile, namespace);
 		} catch (IOException e) {
 			throw new IllegalStateException("Failed to read file", e);
 		}		
@@ -118,13 +118,33 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 	}
 
 	@Override
+	public List<Dataset> listVersions(final @Nullable String namespace, final String filename, final int start, final int size, 
+			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
+		// parse the sorting information or return an empty list if the sort is invalid
+		BasicDBObject sort = null;
+		try {
+			sort = sortCriteria(sorting, namespace);
+		} catch (InvalidSortParseException e) {
+			LOGGER.warn("Discarding operation after an invalid sort was found: " + e.getMessage());
+			return newArrayList();
+		}
+		// execute the query in the database using the user to filter the results in case that a valid one is provided
+		return transform(MONGODB_CONN.listFileVersions(namespace, filename, sort, start, size, count), new Function<GridFSDBFile, Dataset>() {
+			@Override
+			public Dataset apply(final GridFSDBFile gfsFile) {
+				return toDataset(gfsFile, namespace);
+			}
+		});
+	}
+
+	@Override
 	public long count(final @Nullable String namespace) {
-		return MONGODB_CONN.count((isNotBlank(namespace) ? namespace.trim() : DEFAULT_NAMESPACE) + "." + COLLECTION);
+		return MONGODB_CONN.countFiles(namespace);
 	}
 
 	@Override
 	public void stats(final @Nullable String namespace, final OutputStream os) throws IOException {
-		MONGODB_CONN.stats(os, (isNotBlank(namespace) ? namespace.trim() : DEFAULT_NAMESPACE) + "." + COLLECTION);
+		MONGODB_CONN.statsFiles(os, namespace);
 	}
 
 	private Dataset parseGridFSDBFileOrNull(final GridFSDBFile gfsFile, final File outfile, final String namespace) throws IOException {
@@ -138,6 +158,7 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 
 	private Dataset toDataset(final GridFSDBFile gfsFile, final String namespace) {
 		return Dataset.builder()
+				.id(ObjectId.class.cast(gfsFile.getId()).toString())
 				.length(gfsFile.getLength())
 				.chunkSize(gfsFile.getChunkSize())
 				.uploadDate(gfsFile.getUploadDate())
@@ -146,6 +167,7 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 				.contentType(gfsFile.getContentType())
 				.aliases(gfsFile.getAliases())
 				.metadata(toMetadata(gfsFile.getMetaData()))
+				.isLastestVersion((String)gfsFile.get(FILE_VERSION_ATTR))
 				.namespace(namespace)
 				.build();		
 	}
@@ -207,6 +229,10 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 		}
 		// insertion order
 		return new BasicDBObject(ImmutableMap.of("uploadDate", 1));
+	}
+
+	private static String getFilename(final @Nullable String filename, final File file) {
+		return isNotBlank(filename) ? getName(filename) : file.getName();
 	}
 
 }

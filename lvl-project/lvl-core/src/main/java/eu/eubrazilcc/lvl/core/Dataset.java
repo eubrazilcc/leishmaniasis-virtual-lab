@@ -27,7 +27,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodePath;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
@@ -91,11 +91,11 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			this.links = null;
 		}
 	}
-
+	
 	@Override
-	public void setFilename(final String filename) {
-		super.setFilename(filename);
-		setUrlSafeId(urlEncodePath(filename));
+	public void setId(final String id) {
+		super.setFilename(id);
+		setUrlSafeId(urlEncodeUtf8(id));
 	}
 
 	public String getNamespace() {
@@ -295,6 +295,11 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		}
 
 		/* Inherited from BaseFile */
+		
+		public Builder id(final String id) {
+			instance.setId(id);
+			return this;
+		}
 
 		public Builder length(final long length) {
 			instance.setLength(length);
@@ -335,7 +340,12 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		public Builder metadata(final Metadata metadata) {
 			instance.setMetadata(metadata);			
 			return this;
-		}		
+		}
+		
+		public Builder isLastestVersion(final String isLastestVersion) {
+			instance.setIsLastestVersion(isLastestVersion);
+			return this;
+		}
 
 		public Dataset build() {
 			return instance;

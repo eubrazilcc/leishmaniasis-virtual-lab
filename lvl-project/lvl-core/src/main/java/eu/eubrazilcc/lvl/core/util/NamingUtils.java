@@ -145,18 +145,18 @@ public final class NamingUtils {
 		return dataSource2 + ID_FRAGMENT_SEPARATOR + accession;
 	}
 
-	public static String urlEncodePath(final String path) {
-		String encoded = path;
+	public static String urlEncodeUtf8(final String str) {
+		String encoded = str;
 		try {
-			encoded = encode(path, UTF_8.name());
+			encoded = encode(str, UTF_8.name());
 		} catch (UnsupportedEncodingException ignore) { }
 		return encoded;
 	}
 
-	public static String urlDecodePath(final String path) {
-		String decoded = path;
+	public static String urlDecodeUtf8(final String str) {
+		String decoded = str;
 		try {
-			decoded = decode(path, UTF_8.name());
+			decoded = decode(str, UTF_8.name());
 		} catch (UnsupportedEncodingException ignore) { }
 		return decoded;
 	}

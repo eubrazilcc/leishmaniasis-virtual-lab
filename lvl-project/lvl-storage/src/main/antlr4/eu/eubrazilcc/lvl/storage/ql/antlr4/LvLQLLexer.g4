@@ -24,6 +24,7 @@ lexer grammar LvLQLLexer;
 
 // Function Names
 SEQUENCE_SIMILARITY_SEARCH : S I M S E Q ;
+NEAR_SEARCH : N E A R ;
 
 // Control Chars
 FIELD_SEP : ':' ;

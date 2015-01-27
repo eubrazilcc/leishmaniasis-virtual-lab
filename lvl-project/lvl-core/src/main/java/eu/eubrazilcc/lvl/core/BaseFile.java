@@ -23,19 +23,25 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 /**
  * Base class from which to extend to create objects stored in the file-system and referred in the application's database.
- * The attributes are derived from the MongoDB files collection, which is part of the GridFS specification.
+ * The attributes are derived from the MongoDB files collection, which is part of the GridFS specification. In addition, the
+ * {@link #isLastestVersion} attribute serves to explicitly indicate the latest version of a file, aiming at improving searches
+ * performance. This attribute is set to <tt>null</tt> in all versions, except the latest one where it set to {@link #filename}.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://docs.mongodb.org/manual/reference/gridfs/#gridfs-files-collection">GridFS Reference: The files Collection</a>
  */
 public class BaseFile {
 
+	private String id;
 	private long length;
 	private long chunkSize;
 	private Date uploadDate;
@@ -44,6 +50,19 @@ public class BaseFile {
 	private String contentType;
 	private List<String> aliases;
 	private Metadata metadata;
+
+	/**
+	 * Not part of the GridFS specification: a property to explicitly indicate the latest version of a file.
+	 */
+	private String isLastestVersion = null;
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
+	}
 
 	public long getLength() {
 		return length;
@@ -82,7 +101,11 @@ public class BaseFile {
 	}
 
 	public void setFilename(final String filename) {
-		this.filename = filename;
+		this.filename = trimToNull(filename);
+		// update latest version property
+		if (isLastestVersion != null) {
+			isLastestVersion();
+		}
 	}
 
 	public String getContentType() {
@@ -109,30 +132,49 @@ public class BaseFile {
 		this.metadata = metadata;
 	}
 
+	public @Nullable String getIsLastestVersion() {
+		return isLastestVersion;
+	}
+
+	public void setIsLastestVersion(final @Nullable String isLastestVersion) {
+		this.isLastestVersion = isLastestVersion;
+	}
+
+	public void isLastestVersion() {
+		isLastestVersion = getFilename();
+	}
+
+	public void isNotLastestVersion() {
+		isLastestVersion = null;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof BaseFile)) {
 			return false;
 		}
 		final BaseFile other = BaseFile.class.cast(obj);
-		return Objects.equals(length, other.length)
+		return Objects.equals(id, other.id)
+				&& Objects.equals(length, other.length)
 				&& Objects.equals(chunkSize, other.chunkSize)				
 				&& Objects.equals(uploadDate, other.uploadDate)
 				&& Objects.equals(md5, other.md5)
 				&& Objects.equals(filename, other.filename)
 				&& Objects.equals(contentType, other.contentType)
 				&& Objects.equals(aliases, other.aliases)
-				&& Objects.equals(metadata, other.metadata);
+				&& Objects.equals(metadata, other.metadata)
+				&& Objects.equals(isLastestVersion, other.isLastestVersion);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(length, chunkSize, uploadDate, md5, filename, contentType, aliases, metadata);
+		return Objects.hash(id, length, chunkSize, uploadDate, md5, filename, contentType, aliases, metadata, isLastestVersion);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
+				.add("id", id)
 				.add("length", length)
 				.add("chunkSize", chunkSize)
 				.add("uploadDate", uploadDate)
@@ -140,13 +182,14 @@ public class BaseFile {
 				.add("filename", filename)
 				.add("contentType", contentType)
 				.add("aliases", aliases)
-				.add("metadata", metadata)				
+				.add("metadata", metadata)
+				.add("isLastestVersion", isLastestVersion)
 				.toString();
 	}
 
 	/* Inner classes */
 
-	public static interface Metadata {		
-	}	
+	public static interface Metadata {
+	}
 
 }
