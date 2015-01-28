@@ -84,14 +84,14 @@ public interface FileBaseDAO<K, E extends BaseFile> {
 
 	/**
 	 * Search for a file in the database using the specified name space and filename. When several versions of the file exist in 
-	 * the database, the one with the latest upload date will be retrieved.
+	 * the database, the one with the latest upload date will be retrieved. Callers can use the method {@link BaseFile#getOutfile()}
+	 * to get the file where the result is to be written.
 	 * @param namespace - (optional) name space to be searched in the database. When nothing specified, the default namespace is used
 	 * @param filename - filename whose associate file is to be returned
-	 * @param outfile - file where the result will be written
 	 * @return the file to which the specified filename is associated in the database under the specified name space, or {@code null} 
 	 *         if the database contains no entry for the filename.
 	 */
-	E find(@Nullable String namespace, String filename, File outfile);
+	E find(@Nullable String namespace, String filename);
 
 	/**
 	 * Returns a view of the files in the database that contains the specified range. The files are sorted by the key in ascending 

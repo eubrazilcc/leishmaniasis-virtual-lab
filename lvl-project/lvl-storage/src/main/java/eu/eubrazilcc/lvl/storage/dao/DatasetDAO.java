@@ -54,6 +54,8 @@ import eu.eubrazilcc.lvl.core.Dataset;
 import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
+import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedFile;
+import eu.eubrazilcc.lvl.storage.mongodb.cache.FileSystemPersistingCache;
 
 /**
  * {@link Dataset} DAO.
@@ -65,8 +67,7 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 
 	private final static Logger LOGGER = getLogger(DatasetDAO.class);
 
-	private DatasetDAO() {
-	}
+	private final FileSystemPersistingCache persistingCache = new FileSystemPersistingCache();	
 
 	@Override
 	public WriteResult<Dataset> insert(final @Nullable String namespace, final @Nullable String filename, final File file, final @Nullable Metadata metadata) {
@@ -85,12 +86,9 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 	}
 
 	@Override
-	public Dataset find(final @Nullable String namespace, final String filename, final File outfile) {
+	public Dataset find(final @Nullable String namespace, final String filename) {
 		try {
-			final File parentDir = outfile.getParentFile();
-			if (parentDir.exists() || parentDir.mkdirs());
-			if ((outfile.isFile() && outfile.canWrite()) || outfile.createNewFile());
-			return parseGridFSDBFileOrNull(MONGODB_CONN.readFile(namespace, filename), outfile, namespace);
+			return parseGridFSDBFileOrNull(MONGODB_CONN.readFile(namespace, filename), namespace);
 		} catch (IOException e) {
 			throw new IllegalStateException("Failed to read file", e);
 		}		
@@ -135,12 +133,12 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 			}
 		});
 	}
-	
+
 	@Override
 	public boolean fileExists(final @Nullable String namespace, final String filename) {
 		return MONGODB_CONN.fileExists(namespace, filename);
 	}
-	
+
 	@Override
 	public void undoLatestVersion(final @Nullable String namespace, final String filename) {
 		MONGODB_CONN.undoLatestVersion(namespace, filename);		
@@ -155,13 +153,25 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 	public void stats(final @Nullable String namespace, final OutputStream os) throws IOException {
 		MONGODB_CONN.statsFiles(os, namespace);
 	}
+	
+	public void cleanCache() {
+		persistingCache.invalidateAll();
+	}
 
-	private Dataset parseGridFSDBFileOrNull(final GridFSDBFile gfsFile, final File outfile, final String namespace) throws IOException {
+	private Dataset parseGridFSDBFileOrNull(final GridFSDBFile gfsFile, final String namespace) throws IOException {
 		Dataset dataset = null;
 		if (gfsFile != null) {
 			dataset = toDataset(gfsFile, namespace);
-			gfsFile.writeTo(outfile); // TODO : implement cache here!
-		}		
+			CachedFile cachedFile = persistingCache.getIfPresent(namespace, gfsFile.getFilename());
+			if (cachedFile != null) {
+				if (!cachedFile.getMd5().equals(gfsFile.getMD5())) {
+					cachedFile = persistingCache.update(namespace, gfsFile);
+				}
+			} else {
+				cachedFile = persistingCache.put(namespace, gfsFile);
+			}
+			dataset.setOutfile(new File(cachedFile.getCachedFilename()));
+		}
 		return dataset;
 	}
 

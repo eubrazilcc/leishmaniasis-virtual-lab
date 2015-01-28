@@ -25,16 +25,21 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Base class from which to extend to create objects stored in the file-system and referred in the application's database.
- * The attributes are derived from the MongoDB files collection, which is part of the GridFS specification.
+ * The attributes are derived from the MongoDB files collection, which is part of the GridFS specification. The additional
+ * property {@link #outfile} can used to store a copy of the object in a file. 
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://docs.mongodb.org/manual/reference/gridfs/#gridfs-files-collection">GridFS Reference: The files Collection</a>
  */
+@JsonIgnoreProperties({ "outfile" })
 public class BaseFile {
 
 	private String id;
@@ -46,6 +51,11 @@ public class BaseFile {
 	private String contentType;
 	private List<String> aliases;
 	private Metadata metadata;
+
+	/**
+	 * Additional property (not part of the GridFS specification) that can be used to store a copy of the object in a file.
+	 */
+	private File outfile;
 
 	public String getId() {
 		return id;
@@ -117,7 +127,15 @@ public class BaseFile {
 
 	public void setMetadata(final Metadata metadata) {
 		this.metadata = metadata;
-	}	
+	}
+
+	public File getOutfile() {
+		return outfile;
+	}
+
+	public void setOutfile(final File outfile) {
+		this.outfile = outfile;
+	}
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -152,7 +170,8 @@ public class BaseFile {
 				.add("filename", filename)
 				.add("contentType", contentType)
 				.add("aliases", aliases)
-				.add("metadata", metadata)				
+				.add("metadata", metadata)
+				.add("outfile", outfile)
 				.toString();
 	}
 
