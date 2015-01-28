@@ -128,6 +128,12 @@ public class DatasetCollectionTest {
 			/* Uncomment for additional output */
 			System.out.println(dataset.toString());			
 
+			boolean fileExists = DATASET_DAO.fileExists("namespace", textFile1.getName());
+			assertThat("file exists result coincides with expected", fileExists, equalTo(true));
+			
+			fileExists = DATASET_DAO.fileExists(null, textFile1.getName());
+			assertThat("file exists result coincides with expected", fileExists, equalTo(false));
+			
 			// insert duplicates (versions)
 			write(textFile1, "The second version of the text file is larger than the previous one", UTF_8.name());
 			assertThat("test Text file exists", textFile1.exists(), equalTo(true));
@@ -186,6 +192,38 @@ public class DatasetCollectionTest {
 					throw new Exception("Unexpected dataset found: " + dataset);
 				}
 			}
+			
+			// remove latest version
+			final File textFile2 = new File(TEST_OUTPUT_DIR, "file2.txt");
+			write(textFile2, "Third version to be removed", UTF_8.name());
+			assertThat("test Text file exists", textFile2.exists(), equalTo(true));
+			assertThat("test Text file is not empty", textFile2.length() > 0l, equalTo(true));
+			DATASET_DAO.insert("namespace", textFile1.getName(), textFile2, metadata);
+			
+			datasets = DATASET_DAO.listVersions("namespace", textFile1.getName(), 0, Integer.MAX_VALUE, null, null);
+			assertThat("datasets is not null", datasets, notNullValue());
+			assertThat("datasets is not empty", datasets.isEmpty(), equalTo(false));
+			assertThat("datasets size coincides with expected", datasets.size(), equalTo(3));
+			
+			DATASET_DAO.undoLatestVersion("namespace", textFile1.getName());
+			
+			datasets = DATASET_DAO.listVersions("namespace", textFile1.getName(), 0, Integer.MAX_VALUE, null, null);
+			assertThat("datasets is not null", datasets, notNullValue());
+			assertThat("datasets is not empty", datasets.isEmpty(), equalTo(false));
+			assertThat("datasets size coincides with expected", datasets.size(), equalTo(2));
+			
+			file = new File(TEST_OUTPUT_DIR, "out3_" + textFile1.getName());
+			dataset = DATASET_DAO.find("namespace", textFile1.getName(), file);			
+			assertThat("text dataset is not null", dataset, notNullValue());
+			assertThat("text file is not null", file, notNullValue());
+			assertThat("text file exists", file.exists(), equalTo(true));
+			assertThat("text file is not empty", file.length() > 0l, equalTo(true));
+			checkDataset(dataset, textFile1, "namespace", metadata);
+			checkFile(textFile1, file);
+			/* Uncomment for additional output */
+			System.out.println(dataset.toString());
+			
+			// TODO
 
 			// remove all versions
 			DATASET_DAO.delete("namespace", textFile1.getName());

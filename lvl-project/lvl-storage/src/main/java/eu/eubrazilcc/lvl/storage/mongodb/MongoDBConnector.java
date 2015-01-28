@@ -158,7 +158,7 @@ public enum MongoDBConnector implements Closeable2 {
 				__client = new MongoClient(seeds, credentials, options);
 				// check class attributes accessed by reflection
 				try {
-					checkNotNull(BaseFile.class.getDeclaredField(FILE_VERSION_ATTR));
+					checkNotNull(BaseFile.class.getDeclaredField(FILE_VERSION_ATTR)); // TODO
 				} catch (Exception e) {
 					LOGGER.warn("Version (" + FILE_VERSION_ATTR + ") not found in file base class: " + BaseFile.class.getCanonicalName());
 				}
@@ -636,7 +636,7 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(file != null && file.canRead() && file.isFile(), "Uninitialized or invalid file");
 		String objectId = null;
 		final String namespace2 = trimToEmpty(namespace);
-		final String filename2 = filename.trim();			
+		final String filename2 = filename.trim();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
 		try {
@@ -664,15 +664,7 @@ public enum MongoDBConnector implements Closeable2 {
 				throw new IllegalStateException("Failed to save file", ioe);				
 			} finally {
 				// enforce versioning property by always restoring the latest version in the database
-				try {
-					final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
-					if (latestUploadedVersion != null) {
-						latestUploadedVersion.put(FILE_VERSION_ATTR, filename2);
-						latestUploadedVersion.save();
-					}
-				} catch (Exception ignore) {
-					LOGGER.error("Failed to restore latest version namespace=" + namespace2 + ", filename=" + filename2);
-				}
+				restoreLatestVersion(gfsNs, filename2);				
 			}
 		} finally {
 			db.requestDone();
@@ -701,11 +693,26 @@ public enum MongoDBConnector implements Closeable2 {
 	}
 
 	/**
-	 * Reads a file object from the current database. The file is identified by the original filename stored in the database 
-	 * and the name space under the file was stored. When several versions exist of the same file, the latest version will 
-	 * be retrieved.
-	 * @param namespace - (optional) name space to be searched for in the database. When nothing specified, the default bucket 
-	 *                    is used
+	 * Restores the latest version of a file in the database.
+	 * @param gridfs - GridFS client
+	 * @param filename - filename to be searched for in the database
+	 */
+	private void restoreLatestVersion(final GridFS gridfs, final String filename) {
+		try {
+			final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gridfs, filename);
+			if (latestUploadedVersion != null) {
+				latestUploadedVersion.put(FILE_VERSION_ATTR, filename);
+				latestUploadedVersion.save();
+			}
+		} catch (Exception ignore) {
+			LOGGER.error("Failed to restore latest version namespace=" + gridfs.getBucketName() + ", filename=" + filename);
+		}
+	}
+
+	/**
+	 * Reads a file object from the current database. The file is identified by the original filename stored in the database and the 
+	 * name space under the file was stored. When several versions exist of the same file, the latest version will be retrieved.
+	 * @param namespace - (optional) name space to be searched for in the database. When nothing specified, the default bucket is used
 	 * @param filename - filename to be searched for in the database
 	 * @param output - file where the output will be saved, this file must exists and must be writable
 	 */
@@ -717,6 +724,26 @@ public enum MongoDBConnector implements Closeable2 {
 			db.requestEnsureConnection();
 			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
 			return getLatestVersion(gfsNs, filename);
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	/**
+	 * Checks whether or not the specified file exists in the database, returning <tt>true</tt> only when the file exists in the 
+	 * specified namespace.
+	 * @param namespace - (optional) name space to be searched for in the database. When nothing specified, the default bucket is used
+	 * @param filename - filename to be searched for in the database
+	 * @return
+	 */
+	public boolean fileExists(final @Nullable String namespace, final String filename) {
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+			return gfsNs.findOne(filename.trim()) != null;
 		} finally {
 			db.requestDone();
 		}
@@ -756,7 +783,7 @@ public enum MongoDBConnector implements Closeable2 {
 			db.requestDone();
 		}
 	}
-	
+
 	/**
 	 * Lists all the versions of the specified file.
 	 * @param namespace - (optional) name space to be searched for files. When nothing specified, the default bucket is used
@@ -807,6 +834,32 @@ public enum MongoDBConnector implements Closeable2 {
 			db.requestEnsureConnection();
 			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
 			gfsNs.remove(filename);
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	/**
+	 * Deletes the latest version from the database. When a previous version exists for the file in the specified namespace, the latest
+	 * uploaded version will be the new latest version.
+	 * @param namespace - (optional) name space where the file was stored under. When nothing specified, the default bucket is used
+	 * @param filename - filename to be removed from the database
+	 */
+	public void undoLatestVersion(final @Nullable String namespace, final String filename) {
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
+		final String filename2 = filename.trim();
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+			try {
+				// remove latest version from the database
+				gfsNs.remove(new BasicDBObject(FILE_VERSION_ATTR, filename2));
+			} finally {
+				// enforce versioning property by always restoring the latest version in the database
+				restoreLatestVersion(gfsNs, filename2);
+			}
 		} finally {
 			db.requestDone();
 		}

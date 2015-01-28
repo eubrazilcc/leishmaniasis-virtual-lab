@@ -112,7 +112,7 @@ public interface FileBaseDAO<K, E extends BaseFile> {
 	/**
 	 * Returns a view of the available versions of a file in the specified <tt>namespace</tt>.
 	 * @param namespace - (optional) name space to be searched in the database. When nothing specified, the default namespace is used
-	 * @param filename - filename whose associate file is to be returned
+	 * @param filename - filename whose associate versions are to be returned
 	 * @param start - starting index
 	 * @param size - maximum number of files returned
 	 * @param sorting - (optional) sorting order
@@ -122,14 +122,21 @@ public interface FileBaseDAO<K, E extends BaseFile> {
 	List<E> listVersions(@Nullable String namespace, String filename, int start, int size, @Nullable Sorting sorting, @Nullable MutableLong count);
 
 	/**
-	 * TODO
-	 * Returns the number of files in the database under the specified name space. Unless the {@link #count(String, boolean) unique}
-	 * parameter is set to <tt>true</tt>, all the files stored in the database (including versions) will be counted.
-	 * @param namespace - name space to be searched in the database
-	 * @param unique - setting this to <tt>true</tt> will prevent the version to be counted
-	 * @return the number of files in the database
-	 *
-	long count(@Nullable String namespace, boolean unique); */
+	 * Checks whether or not the specified file exists in the database, returning <tt>true</tt> only when the file exists in the 
+	 * specified namespace.
+	 * @param namespace - (optional) name space to be searched in the database. When nothing specified, the default namespace is used
+	 * @param filename - filename whose associate file is to be searched in the database
+	 * @return <tt>true</tt> when the file exists in the specified namespace. Otherwise, <tt>false</tt>.
+	 */
+	boolean fileExists(@Nullable String namespace, String filename);
+	
+	/**
+	 * Deletes the latest version from the database. When a previous version exists for the file in the specified namespace, the latest
+	 * uploaded version will be the new latest version.
+	 * @param namespace - (optional) name space to be searched in the database. When nothing specified, the default namespace is used
+	 * @param filename - filename whose associate file is to be searched in the database
+	 */
+	void undoLatestVersion(@Nullable String namespace, String filename);
 	
 	/**
 	 * Returns the number of files in the database under the specified name space. All the files stored in the database (including versions) 

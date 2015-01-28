@@ -203,7 +203,7 @@ public class SecurityManagerTest {
 			assertThat("currently executing user is not null", currentUser, notNullValue());
 			assertThat("currently executing user is not authenticated", currentUser.isAuthenticated(), equalTo(false));
 
-			currentUser.login(accessToken);            
+			currentUser.login(accessToken);
 			assertThat("user logged in successfully", currentUser.isAuthenticated(), equalTo(true));
 
 			principal = currentUser.getPrincipal();
@@ -337,7 +337,7 @@ public class SecurityManagerTest {
 			assertThat("Public datasets are accessible for reading from user profile", 
 					currentUser.isPermitted("datasets:*:public:*:view"), equalTo(true));
 			assertThat("User own datasets are fully accessible from user profile", 
-					currentUser.isPermittedAll("datasets:shared:" + meremortalOwnerid + ":*:view,edit,create"), equalTo(true));			
+					currentUser.isPermittedAll("datasets:files:" + meremortalOwnerid + ":*:view,edit,create"), equalTo(true));			
 
 			currentUser.logout();
 

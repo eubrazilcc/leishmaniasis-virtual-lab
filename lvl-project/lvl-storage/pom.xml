@@ -95,10 +95,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.apache.shiro</groupId>
 			<artifactId>shiro-core</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.shiro</groupId>
-			<artifactId>shiro-ehcache</artifactId>
-		</dependency>		
 		
 		<!-- Apache Oltu -->		
 		<dependency>

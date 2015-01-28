@@ -63,8 +63,10 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	@InjectLinks({
-		@InjectLink(value="datasets/files/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
-				@Binding(name="urlSafeId", value="${instance.urlSafeId}")})
+		@InjectLink(value="datasets/files/{namespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
+				@Binding(name="namespace", value="${instance.namespace}"),
+				@Binding(name="urlSafeId", value="${instance.urlSafeId}")
+		})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
@@ -91,7 +93,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			this.links = null;
 		}
 	}
-	
+
 	@Override
 	public void setId(final String id) {
 		super.setFilename(id);
@@ -158,7 +160,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		private String publicLink;		
 		private String description;
 		private Target target;		
-		
+
 		public String getEditor() {
 			return editor;
 		}
@@ -246,7 +248,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 				instance.setEditor(trimToNull(editor));
 				return this;
 			}
-			
+
 			public Builder tags(final Set<String> tags) {
 				instance.setTags(tags);
 				return this;
@@ -295,7 +297,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		}
 
 		/* Inherited from BaseFile */
-		
+
 		public Builder id(final String id) {
 			instance.setId(id);
 			return this;
@@ -341,7 +343,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			instance.setMetadata(metadata);			
 			return this;
 		}
-		
+
 		public Builder isLastestVersion(final String isLastestVersion) {
 			instance.setIsLastestVersion(isLastestVersion);
 			return this;

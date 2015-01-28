@@ -33,11 +33,11 @@ import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.cache.CacheManager;
-import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
+import eu.eubrazilcc.lvl.storage.security.shiro.cache.GuavaCacheManager;
 
 /**
  * Provides common security realm methods that are used in this application. This class only implements authorization (access control) 
@@ -50,7 +50,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
  */
 public abstract class BaseAuthorizingRealm extends AuthorizingRealm {
 
-	private static final CacheManager CACHE_MANAGER = new EhCacheManager();	
+	private static final CacheManager CACHE_MANAGER = new GuavaCacheManager();
 
 	public static final long CONNECTION_TIMEOUT = 30000l; // 30 seconds
 

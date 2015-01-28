@@ -29,8 +29,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import javax.annotation.Nullable;
-
 /**
  * Base class from which to extend to create objects stored in the file-system and referred in the application's database.
  * The attributes are derived from the MongoDB files collection, which is part of the GridFS specification. In addition, the
@@ -39,7 +37,7 @@ import javax.annotation.Nullable;
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://docs.mongodb.org/manual/reference/gridfs/#gridfs-files-collection">GridFS Reference: The files Collection</a>
  */
-public class BaseFile {
+public class BaseFile extends Versionable {
 
 	private String id;
 	private long length;
@@ -50,11 +48,6 @@ public class BaseFile {
 	private String contentType;
 	private List<String> aliases;
 	private Metadata metadata;
-
-	/**
-	 * Not part of the GridFS specification: a property to explicitly indicate the latest version of a file.
-	 */
-	private String isLastestVersion = null;
 
 	public String getId() {
 		return id;
@@ -103,7 +96,7 @@ public class BaseFile {
 	public void setFilename(final String filename) {
 		this.filename = trimToNull(filename);
 		// update latest version property
-		if (isLastestVersion != null) {
+		if (getIsLastestVersion() != null) {
 			isLastestVersion();
 		}
 	}
@@ -132,20 +125,9 @@ public class BaseFile {
 		this.metadata = metadata;
 	}
 
-	public @Nullable String getIsLastestVersion() {
-		return isLastestVersion;
-	}
-
-	public void setIsLastestVersion(final @Nullable String isLastestVersion) {
-		this.isLastestVersion = isLastestVersion;
-	}
-
+	@Override
 	public void isLastestVersion() {
-		isLastestVersion = getFilename();
-	}
-
-	public void isNotLastestVersion() {
-		isLastestVersion = null;
+		setIsLastestVersion(getFilename());
 	}
 
 	@Override
@@ -163,12 +145,12 @@ public class BaseFile {
 				&& Objects.equals(contentType, other.contentType)
 				&& Objects.equals(aliases, other.aliases)
 				&& Objects.equals(metadata, other.metadata)
-				&& Objects.equals(isLastestVersion, other.isLastestVersion);
+				&& super.equals((Versionable)other);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, length, chunkSize, uploadDate, md5, filename, contentType, aliases, metadata, isLastestVersion);
+		return Objects.hash(id, length, chunkSize, uploadDate, md5, filename, contentType, aliases, metadata) + super.hashCode();
 	}
 
 	@Override
@@ -183,7 +165,7 @@ public class BaseFile {
 				.add("contentType", contentType)
 				.add("aliases", aliases)
 				.add("metadata", metadata)
-				.add("isLastestVersion", isLastestVersion)
+				.add("Versionable", super.toString())
 				.toString();
 	}
 

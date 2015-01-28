@@ -57,7 +57,7 @@ public class LvlBasicRealm extends BaseAuthorizingRealm {
 		matcher.setHashAlgorithmName(HASH_ALGORITHM);
 		matcher.setHashIterations(KEY_DEVIATION_ITERATIONS);
 	}
-	
+
 	public LvlBasicRealm() {
 		super(CREDENTIAL_MATCHER);
 		// add support for username/password authentication

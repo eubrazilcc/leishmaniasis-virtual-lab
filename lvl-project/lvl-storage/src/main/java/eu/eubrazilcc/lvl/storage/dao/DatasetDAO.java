@@ -136,6 +136,16 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 			}
 		});
 	}
+	
+	@Override
+	public boolean fileExists(final @Nullable String namespace, final String filename) {
+		return MONGODB_CONN.fileExists(namespace, filename);
+	}
+	
+	@Override
+	public void undoLatestVersion(final @Nullable String namespace, final String filename) {
+		MONGODB_CONN.undoLatestVersion(namespace, filename);		
+	}
 
 	@Override
 	public long count(final @Nullable String namespace) {
