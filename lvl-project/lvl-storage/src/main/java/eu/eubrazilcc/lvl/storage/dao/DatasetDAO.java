@@ -24,7 +24,6 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.FILE_VERSION_ATTR;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -177,9 +176,8 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 				.contentType(gfsFile.getContentType())
 				.aliases(gfsFile.getAliases())
 				.metadata(toMetadata(gfsFile.getMetaData()))
-				.isLastestVersion((String)gfsFile.get(FILE_VERSION_ATTR))
 				.namespace(namespace)
-				.build();		
+				.build();
 	}
 
 	private DBObject fromMetadata(final Metadata metadata) {

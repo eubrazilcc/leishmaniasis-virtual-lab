@@ -29,13 +29,15 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * Any object that can coexists with their versions.
+ * Any object that can coexists with their versions. The {@link #isLastestVersion} attribute serves to explicitly indicate the latest version 
+ * of an object, aiming at improving searches performance. This attribute is set to <tt>null</tt> in all versions, except the latest one where 
+ * it set to the object Id (e.g. filename when files are used).
  * @author Erik Torres <ertorser@upv.es>
  */
-public abstract class Versionable {
+public class Versionable {
 
 	/**
-	 * A property to explicitly indicate the latest version of a file.
+	 * A property to explicitly indicate the latest version of an object.
 	 */
 	private String isLastestVersion = null;
 
@@ -45,12 +47,6 @@ public abstract class Versionable {
 
 	public void setIsLastestVersion(final @Nullable String isLastestVersion) {
 		this.isLastestVersion = isLastestVersion;
-	}
-
-	public abstract void isLastestVersion();
-
-	public void isNotLastestVersion() {
-		isLastestVersion = null;
 	}
 
 	@Override

@@ -100,6 +100,19 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		setUrlSafeId(urlEncodeUtf8(id));
 	}
 
+	@Override
+	public void setFilename(final String filename) {
+		super.setFilename(filename);
+		// update latest version property
+		Metadata metadata2 = getMetadata();		
+		if (metadata2 == null) {
+			metadata2 = DatasetMetadata.builder().build(); 
+		}
+		if (metadata2.getIsLastestVersion() != null) {
+			metadata2.setIsLastestVersion(getFilename());
+		}
+	}
+
 	public String getNamespace() {
 		return namespace;
 	}
@@ -153,7 +166,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	/* Inner classes */
 
-	public static class DatasetMetadata implements Metadata {
+	public static class DatasetMetadata extends Metadata {
 
 		private String editor;
 		private Set<String> tags = newHashSet();
@@ -211,7 +224,8 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 				return false;
 			}
 			final DatasetMetadata other = DatasetMetadata.class.cast(obj);
-			return Objects.equals(editor, other.editor)
+			return super.equals((Metadata)other)
+					&& Objects.equals(editor, other.editor)
 					&& Objects.equals(tags, other.tags)
 					&& Objects.equals(publicLink, other.publicLink)
 					&& Objects.equals(description, other.description)
@@ -220,12 +234,13 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(editor, tags, publicLink, description, target);
+			return super.hashCode() + Objects.hash(editor, tags, publicLink, description, target);
 		}
 
 		@Override
 		public String toString() {
 			return toStringHelper(this)
+					.add("Metadata", super.toString())
 					.add("editor", editor)
 					.add("tags", tags)
 					.add("publicLink", publicLink)
@@ -242,7 +257,12 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 		public static class Builder {
 
-			private final DatasetMetadata instance = new DatasetMetadata();			
+			private final DatasetMetadata instance = new DatasetMetadata();
+
+			public Builder isLastestVersion(final String isLastestVersion) {
+				instance.setIsLastestVersion(isLastestVersion);
+				return this;
+			}
 
 			public Builder editor(final String editor) {
 				instance.setEditor(trimToNull(editor));
@@ -341,11 +361,6 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 		public Builder metadata(final Metadata metadata) {
 			instance.setMetadata(metadata);			
-			return this;
-		}
-
-		public Builder isLastestVersion(final String isLastestVersion) {
-			instance.setIsLastestVersion(isLastestVersion);
 			return this;
 		}
 

@@ -31,13 +31,11 @@ import java.util.Objects;
 
 /**
  * Base class from which to extend to create objects stored in the file-system and referred in the application's database.
- * The attributes are derived from the MongoDB files collection, which is part of the GridFS specification. In addition, the
- * {@link #isLastestVersion} attribute serves to explicitly indicate the latest version of a file, aiming at improving searches
- * performance. This attribute is set to <tt>null</tt> in all versions, except the latest one where it set to {@link #filename}.
+ * The attributes are derived from the MongoDB files collection, which is part of the GridFS specification.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://docs.mongodb.org/manual/reference/gridfs/#gridfs-files-collection">GridFS Reference: The files Collection</a>
  */
-public class BaseFile extends Versionable {
+public class BaseFile {
 
 	private String id;
 	private long length;
@@ -94,11 +92,7 @@ public class BaseFile extends Versionable {
 	}
 
 	public void setFilename(final String filename) {
-		this.filename = trimToNull(filename);
-		// update latest version property
-		if (getIsLastestVersion() != null) {
-			isLastestVersion();
-		}
+		this.filename = trimToNull(filename);		
 	}
 
 	public String getContentType() {
@@ -123,12 +117,7 @@ public class BaseFile extends Versionable {
 
 	public void setMetadata(final Metadata metadata) {
 		this.metadata = metadata;
-	}
-
-	@Override
-	public void isLastestVersion() {
-		setIsLastestVersion(getFilename());
-	}
+	}	
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -144,13 +133,12 @@ public class BaseFile extends Versionable {
 				&& Objects.equals(filename, other.filename)
 				&& Objects.equals(contentType, other.contentType)
 				&& Objects.equals(aliases, other.aliases)
-				&& Objects.equals(metadata, other.metadata)
-				&& super.equals((Versionable)other);
+				&& Objects.equals(metadata, other.metadata);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, length, chunkSize, uploadDate, md5, filename, contentType, aliases, metadata) + super.hashCode();
+		return Objects.hash(id, length, chunkSize, uploadDate, md5, filename, contentType, aliases, metadata);
 	}
 
 	@Override
@@ -164,14 +152,40 @@ public class BaseFile extends Versionable {
 				.add("filename", filename)
 				.add("contentType", contentType)
 				.add("aliases", aliases)
-				.add("metadata", metadata)
-				.add("Versionable", super.toString())
+				.add("metadata", metadata)				
 				.toString();
 	}
 
 	/* Inner classes */
 
-	public static interface Metadata {
+	/**
+	 * Provides the base for metadata storage, including a {@link Versionable#getIsLastestVersion() property} to label the latest 
+	 * version of a file.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public static class Metadata extends Versionable {
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (obj == null || !(obj instanceof Metadata)) {
+				return false;
+			}
+			final Metadata other = Metadata.class.cast(obj);
+			return super.equals((Versionable)other);
+		}
+
+		@Override
+		public int hashCode() {
+			return super.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return toStringHelper(this)
+					.add("Versionable", super.toString())
+					.toString();
+		}
+
 	}
 
 }

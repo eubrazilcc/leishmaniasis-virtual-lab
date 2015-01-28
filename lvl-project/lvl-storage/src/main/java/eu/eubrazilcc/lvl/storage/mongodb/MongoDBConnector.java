@@ -47,6 +47,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
@@ -88,11 +89,12 @@ import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.BaseFile;
 import eu.eubrazilcc.lvl.core.Closeable2;
+import eu.eubrazilcc.lvl.core.Versionable;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 
 /**
  * Data connector based on mongoDB. Access to file collections is provided through the GridFS specification. While other objects
- * rely only on the final version, previous file versions are kept in the database. The additional attribute {@link #FILE_VERSION_ATTR isLastestVersion} 
+ * rely only on the final version, previous file versions are kept in the database. The additional attribute {@link #IS_LATEST_VERSION_ATTR isLastestVersion} 
  * of the {@link BaseFile base file class} is used to create a sparse index with a unique constraint, enforcing the integrity of 
  * the files within a collection (only one version of a file can be labeled as the latest version of the file).
  * @author Erik Torres <ertorser@upv.es>
@@ -113,7 +115,9 @@ public enum MongoDBConnector implements Closeable2 {
 	 */
 	private static final String GRIDFS_FILES_COLLECTION = "files";
 
-	public static final String FILE_VERSION_ATTR = "isLastestVersion";
+	public static final String METADATA_ATTR = "metadata";
+	public static final String IS_LATEST_VERSION_ATTR = "isLastestVersion";
+	public static final String FILE_VERSION_PROP = METADATA_ATTR + "." + IS_LATEST_VERSION_ATTR;
 
 	private Lock mutex = new ReentrantLock();
 	private MongoClient __client = null;	
@@ -158,9 +162,17 @@ public enum MongoDBConnector implements Closeable2 {
 				__client = new MongoClient(seeds, credentials, options);
 				// check class attributes accessed by reflection
 				try {
-					checkNotNull(BaseFile.class.getDeclaredField(FILE_VERSION_ATTR)); // TODO
+					final Field metadataField = BaseFile.class.getDeclaredField(METADATA_ATTR);					
+					checkNotNull(metadataField, "Metadata property (" + METADATA_ATTR + ") not found in file base: " 
+							+ BaseFile.class.getCanonicalName());
+					final Class<?> metadataType = metadataField.getType();
+					checkState(Versionable.class.isAssignableFrom(metadataType), "Metadata does not implements versionable: " 
+							+ metadataType.getCanonicalName());
+					checkNotNull(Versionable.class.getDeclaredField(IS_LATEST_VERSION_ATTR), 
+							"Version property (" + IS_LATEST_VERSION_ATTR + ") not found in versionable: "
+									+ Versionable.class.getCanonicalName());
 				} catch (Exception e) {
-					LOGGER.warn("Version (" + FILE_VERSION_ATTR + ") not found in file base class: " + BaseFile.class.getCanonicalName());
+					throw new IllegalStateException("Object versioning needs a compatible version of the LVL core library, but none is available", e);
 				}
 			}
 			return __client;
@@ -637,13 +649,16 @@ public enum MongoDBConnector implements Closeable2 {
 		String objectId = null;
 		final String namespace2 = trimToEmpty(namespace);
 		final String filename2 = filename.trim();
+		if (metadata != null) {
+			metadata.removeField(IS_LATEST_VERSION_ATTR);
+		}
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		db.requestStart();
 		try {
 			db.requestEnsureConnection();			
 			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
 			// enforce isolation property: each namespace has its own bucket (encompassing 2 collections: files and chunks) and indexes in the database
-			createSparseIndexWithUniqueConstraint(FILE_VERSION_ATTR, gfsNs.getBucketName() + "." + GRIDFS_FILES_COLLECTION, false);
+			createSparseIndexWithUniqueConstraint(FILE_VERSION_PROP, gfsNs.getBucketName() + "." + GRIDFS_FILES_COLLECTION, false);
 			try {				
 				// insert new file/version in the database
 				final GridFSInputFile gfsFile = gfsNs.createFile(file);
@@ -654,8 +669,8 @@ public enum MongoDBConnector implements Closeable2 {
 				objectId = ObjectId.class.cast(gfsFile.getId()).toString();
 				// unset the latest version in the database
 				final GridFSDBFile latestVersion = getLatestVersion(gfsNs, filename2);
-				if (latestVersion != null) {
-					latestVersion.put(FILE_VERSION_ATTR, null);
+				if (latestVersion != null && latestVersion.getMetaData() != null) {
+					latestVersion.getMetaData().removeField(IS_LATEST_VERSION_ATTR);
 					latestVersion.save();
 				}
 			} catch (DuplicateKeyException dke) {
@@ -673,13 +688,13 @@ public enum MongoDBConnector implements Closeable2 {
 	}
 
 	/**
-	 * Gets the version of the <tt>filename</tt> labeled with the {@link #FILE_VERSION_ATTR} property.
+	 * Gets the version of the <tt>filename</tt> labeled with the {@link #FILE_VERSION_PROP} property.
 	 * @param gridfs - GridFS client
 	 * @param filename - filename to be searched for in the database
 	 * @return
 	 */
 	private GridFSDBFile getLatestVersion(final GridFS gridfs, final String filename) {
-		return gridfs.findOne(new BasicDBObject(FILE_VERSION_ATTR, filename.trim()));
+		return gridfs.findOne(new BasicDBObject(FILE_VERSION_PROP, filename.trim()));
 	}
 
 	/**
@@ -701,7 +716,10 @@ public enum MongoDBConnector implements Closeable2 {
 		try {
 			final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gridfs, filename);
 			if (latestUploadedVersion != null) {
-				latestUploadedVersion.put(FILE_VERSION_ATTR, filename);
+				if (latestUploadedVersion.getMetaData() == null) {
+					latestUploadedVersion.setMetaData(new BasicDBObject());
+				}
+				latestUploadedVersion.getMetaData().put(IS_LATEST_VERSION_ATTR, filename);				
 				latestUploadedVersion.save();
 			}
 		} catch (Exception ignore) {
@@ -765,8 +783,8 @@ public enum MongoDBConnector implements Closeable2 {
 		db.requestStart();
 		try {			
 			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
-			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_ATTR, new BasicDBObject("$ne", null)), sortCriteria);
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)), sortCriteria);
 			cursor.skip(start).limit(size);
 			try {
 				while (cursor.hasNext()) {
@@ -854,8 +872,8 @@ public enum MongoDBConnector implements Closeable2 {
 			db.requestEnsureConnection();
 			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
 			try {
-				// remove latest version from the database
-				gfsNs.remove(new BasicDBObject(FILE_VERSION_ATTR, filename2));
+				// remove latest version from the database				
+				gfsNs.remove(new BasicDBObject(FILE_VERSION_PROP, filename2));
 			} finally {
 				// enforce versioning property by always restoring the latest version in the database
 				restoreLatestVersion(gfsNs, filename2);
