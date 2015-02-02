@@ -28,7 +28,13 @@ package eu.eubrazilcc.lvl.service.rest;
  */
 public interface ResourceIdentifierPattern {
 
+	/**
+	 * ASCII set of characters that can be used to sent an URL over the Internet, as defined in the RFC 1738.
+	 * @see <a href="https://www.ietf.org/rfc/rfc1738.txt">RFC 1738: Uniform Resource Locators (URL)</a>
+	 */
+	public static final String US_ASCII_PRINTABLE_PATTERN = "^[\\u0021-\\u007E|]*$";
+	
 	public static final String SEQUENCE_ID_PATTERN = "[a-zA-Z_0-9]+(:|%3A)[a-zA-Z_0-9]+";
-	public static final String CITATION_ID_PATTERN = "[0-9]+";
+	public static final String CITATION_ID_PATTERN = "[0-9]+";	
 	
 }

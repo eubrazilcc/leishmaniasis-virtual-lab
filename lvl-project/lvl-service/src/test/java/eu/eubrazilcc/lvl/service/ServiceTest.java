@@ -31,6 +31,7 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONF
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.decodePublicLinkPath;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
@@ -61,12 +62,15 @@ import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.io.FilenameUtils.getName;
+import static org.apache.commons.lang.RandomStringUtils.random;
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -97,16 +101,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
+import eu.eubrazilcc.lvl.core.Dataset;
+import static eu.eubrazilcc.lvl.core.Dataset.DATASET_DEFAULT_NS;
 import eu.eubrazilcc.lvl.core.Leishmania;
-import eu.eubrazilcc.lvl.core.PublicLink;
+import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.Target;
+import eu.eubrazilcc.lvl.core.BaseFile.Metadata;
+import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.service.rest.CitationResource;
 import eu.eubrazilcc.lvl.service.rest.CitationResource.References;
+import eu.eubrazilcc.lvl.service.rest.DatasetResource;
 import eu.eubrazilcc.lvl.service.rest.LeishmaniaSequenceResource;
 import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
 import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource;
@@ -124,7 +133,7 @@ import eu.eubrazilcc.lvl.storage.security.User;
 public class ServiceTest {
 
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
-			"lvl-service-test-Hf330xKUcsn7vnlKQXFndptow52MvZNKWxxpbnVqAA"));
+			ServiceTest.class.getSimpleName() + "_" + random(8, true, true)));
 
 	private static final String HOST = "https://localhost:8443";
 	private static final String SERVICE = "/lvl-service/rest/v1";
@@ -286,6 +295,8 @@ public class ServiceTest {
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.post(entity(task, APPLICATION_JSON_TYPE));
 			assertThat("Create import sandflies task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create import sandflies task response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
 			/* uncomment for additional output */
 			System.out.println(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create import sandflies task response JAX-RS object: " + response);
@@ -761,9 +772,310 @@ public class ServiceTest {
 			System.out.println(" >> Delete leishmania response JAX-RS object: " + response);
 			System.out.println(" >> Delete leishmania HTTP headers: " + response.getStringHeaders());
 
+			// TODO
+			// test create dataset (GZIP compressed FASTA sandfly)
+			path = DatasetResource.class.getAnnotation(Path.class);
+			Target datasetTarget = Target.builder()
+					.type("sequence")
+					.collection(SANDFLY_COLLECTION)
+					.id("gb:JP540074")
+					.filter("export_fasta")
+					.compression("gzip").build();
+			DatasetMetadata datasetMetadata = DatasetMetadata.builder()
+					.target(datasetTarget)
+					.description("Optional description")
+					.build();
+			Dataset dataset = Dataset.builder()
+					.filename("my_fasta_sequences.zip")
+					.metadata(datasetMetadata)
+					.build();			
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(dataset, APPLICATION_JSON_TYPE));
+			assertThat("Create dataset (FASTA.GZIP sandfly) response is not null", response, notNullValue());
+			
+			// TODO
+			System.err.println("\n\nHERE: " + response.readEntity(String.class) + "\n");
+			// TODO
+			
+			assertThat("Create dataset (FASTA.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create dataset (FASTA.GZIP sandfly) is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create dataset (FASTA.GZIP sandfly) response entity is not null", payload, notNullValue());
+			assertThat("Create dataset (FASTA.GZIP sandfly) response entity is empty", isBlank(payload));
+			/* uncomment for additional output */
+			System.out.println(" >> Create dataset (FASTA.GZIP sandfly) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create dataset (FASTA.GZIP sandfly) response JAX-RS object: " + response);
+			System.out.println(" >> Create dataset (FASTA.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));
+			assertThat("Create dataset (FASTA.GZIP sandfly) location is not null", location, notNullValue());
+			assertThat("Create dataset (FASTA.GZIP sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
+
+			// test list datasets (from super-user account)
+			Datasets datasets = target.path(path.value()).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.get(Datasets.class);
+			assertThat("Get datasets (root account) result is not null", datasets, notNullValue());
+			assertThat("Get datasets (root account) list is not null", datasets.getElements(), notNullValue());
+			assertThat("Get datasets (root account) list is not empty", datasets.getElements().isEmpty(), equalTo(false));
+			assertThat("Get datasets (root account) items count coincide with list size", datasets.getElements().size(), 
+					equalTo(datasets.getTotalCount()));
+			/* uncomment for additional output */			
+			System.out.println(" >> Get datasets (root account) result: " + datasets.toString());
+
+			// test list datasets (from user unauthorized user account)
+			datasets = target.path(path.value()).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER2))
+					.get(Datasets.class);
+			assertThat("Get datasets (unauthorized user account) result is not null", datasets, notNullValue());
+			assertThat("Get datasets (unauthorized user account) list is not null", datasets.getElements(), notNullValue());
+			assertThat("Get datasets (unauthorized user account) list is empty", datasets.getElements().isEmpty(), equalTo(true));
+			assertThat("Get datasets (unauthorized user account) items count coincide with list size", datasets.getElements().size(), 
+					equalTo(datasets.getTotalCount()));
+			/* uncomment for additional output */			
+			System.out.println(" >> Get datasets (unauthorized user account) result: " + datasets.toString());
+
+			// test list datasets (from user account)
+			datasets = target.path(path.value()).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.get(Datasets.class);
+			assertThat("Get datasets (user account) result is not null", datasets, notNullValue());
+			assertThat("Get datasets (user account) list is not null", datasets.getElements(), notNullValue());
+			assertThat("Get datasets (user account) list is not empty", datasets.getElements().isEmpty(), equalTo(false));
+			assertThat("Get datasets (user account) items count coincide with list size", datasets.getElements().size(), 
+					equalTo(datasets.getTotalCount()));
+			/* uncomment for additional output */			
+			System.out.println(" >> Get datasets (user account) result: " + datasets.toString());
+
+			// test get dataset
+			Dataset dataset2 = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
+					.path(datasets.getElements().get(0).getUrlSafeFilename())
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.get(Dataset.class);
+			assertThat("Get dataset result is not null", dataset2, notNullValue());
+			assertThat("Get dataset namespace is not empty", isNotBlank(dataset2.getNamespace()), equalTo(true));
+			assertThat("Get dataset namespace coincides with expected", dataset2.getNamespace(), equalTo(dataset.getNamespace()));			
+			assertThat("Get dataset id is not empty", isNotBlank(dataset2.getId()), equalTo(true));
+			assertThat("Get dataset length coincides with expected", dataset2.getLength(), greaterThan(0L));
+			assertThat("Get dataset chunk size coincides with expected", dataset2.getChunkSize(), greaterThan(0L));
+			assertThat("Get dataset creation date is not null", dataset2.getUploadDate(), notNullValue());
+			assertThat("Get dataset md5 is not empty", isNotBlank(dataset2.getMd5()), equalTo(true));
+			assertThat("Get dataset filename is not empty", isNotBlank(dataset2.getFilename()), equalTo(true));
+			assertThat("Get dataset filename coincides with expected", dataset2.getFilename(), equalTo(dataset.getFilename()));
+			assertThat("Get dataset content type is not empty", isNotBlank(dataset2.getContentType()), equalTo(true));
+			assertThat("Get dataset content type coincides with expected", dataset2.getContentType(), equalTo("application/gzip"));
+			assertThat("Get dataset aliases coincides with expected", dataset2.getAliases(), equalTo(dataset.getAliases()));
+			assertThat("Get dataset metadata coincides with expected", dataset2.getMetadata(), equalTo(dataset.getMetadata()));
+			/* uncomment for additional output */
+			System.out.println(" >> Get dataset result: " + dataset2.toString());
+
+			// test get dataset manually encoding the namespace and filename
+			final String datasetId = dataset2.getId();
+			dataset2 = target.path(path.value()).path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getNamespace(), DATASET_DEFAULT_NS).trim()))
+					.path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getFilename(), DATASET_DEFAULT_NS).trim()))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.get(Dataset.class);			
+			assertThat("Get dataset (url encoded) result is not null", dataset2, notNullValue());
+			assertThat("Get dataset (url encoded) Id coincides with expected", dataset2.getId(), equalTo(datasetId));
+			/* uncomment for additional output */
+			System.out.println(" >> Get dataset (url encoded) result: " + dataset2.toString());			
+
+			// test update dataset
+			((DatasetMetadata)dataset.getMetadata()).setDescription("Different description");
+			response = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
+					.path(datasets.getElements().get(0).getUrlSafeFilename())
+					.request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.put(entity(dataset, APPLICATION_JSON_TYPE));
+			assertThat("Update dataset response is not null", response, notNullValue());
+			assertThat("Update dataset response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Update dataset response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Update dataset response entity is not null", payload, notNullValue());
+			assertThat("Update dataset response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println(" >> Update dataset response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Update dataset response JAX-RS object: " + response);
+			System.out.println(" >> Update dataset HTTP headers: " + response.getStringHeaders());
+
+			// test delete dataset
+			response = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
+					.path(datasets.getElements().get(0).getUrlSafeFilename())
+					.request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.delete();
+			assertThat("Delete dataset response is not null", response, notNullValue());
+			assertThat("Delete dataset response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Delete dataset response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Delete dataset response entity is not null", payload, notNullValue());
+			assertThat("Delete dataset response entity is empty", isBlank(payload));
+			/* uncomment for additional output */			
+			System.out.println(" >> Delete dataset response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Delete dataset response JAX-RS object: " + response);
+			System.out.println(" >> Delete dataset HTTP headers: " + response.getStringHeaders());
+
+			// test create dataset (GZIP compressed NCBI sandfly)
+			datasetTarget = Target.builder()
+					.type("sequence")
+					.collection(SANDFLY_COLLECTION)
+					.id("gb:JP540074")
+					.filter("export")
+					.compression("gzip")
+					.build();
+			datasetMetadata = DatasetMetadata.builder()
+					.target(datasetTarget)
+					.description("Optional description")
+					.build();
+			dataset = Dataset.builder()
+					.filename("my_ncbi_sequences.zip")
+					.metadata(datasetMetadata)
+					.build();
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(dataset, APPLICATION_JSON_TYPE));
+			assertThat("Create dataset (NCBI.GZIP sandfly) response is not null", response, notNullValue());
+			assertThat("Create dataset (NCBI.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create dataset (NCBI.GZIP sandfly) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create dataset (NCBI.GZIP sandfly) response entity is not null", payload, notNullValue());
+			assertThat("Create dataset (NCBI.GZIP sandfly) response entity is empty", isBlank(payload));
+			/* uncomment for additional output */
+			System.out.println(" >> Create dataset (NCBI.GZIP sandfly) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create dataset (NCBI.GZIP sandfly) response JAX-RS object: " + response);
+			System.out.println(" >> Create dataset (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			assertThat("Create dataset (NCBI.GZIP sandfly) location is not null", location, notNullValue());
+			assertThat("Create dataset (NCBI.GZIP sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
+
+			// test create dataset (uncompressed FASTA sandfly)
+			datasetTarget = Target.builder()
+					.type("sequence")
+					.collection(SANDFLY_COLLECTION)
+					.id("gb:JP540074")
+					.filter("export_fasta")
+					.build();
+			datasetMetadata = DatasetMetadata.builder()
+					.target(datasetTarget)
+					.description("Optional description")
+					.build();
+			dataset = Dataset.builder()
+					.filename("my_sequence.fasta")
+					.metadata(datasetMetadata)
+					.build();
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(dataset, APPLICATION_JSON_TYPE));
+			assertThat("Create dataset (FASTA sandfly) response is not null", response, notNullValue());
+			assertThat("Create dataset (FASTA sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create dataset (FASTA sandfly) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create dataset (FASTA sandfly) response entity is not null", payload, notNullValue());
+			assertThat("Create dataset (FASTA sandfly) response entity is empty", isBlank(payload));
+			/* uncomment for additional output */
+			System.out.println(" >> Create dataset (FASTA sandfly) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create dataset (FASTA sandfly) response JAX-RS object: " + response);
+			System.out.println(" >> Create dataset (FASTA sandfly) HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			assertThat("Create dataset (FASTA sandfly) location is not null", location, notNullValue());
+			assertThat("Create dataset (FASTA sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
+
+			// test create dataset (uncompressed NCBI sandfly)
+			datasetTarget = Target.builder()
+					.type("sequence")
+					.collection(SANDFLY_COLLECTION)
+					.id("gb:JP540074")
+					.filter("export")
+					.compression("none")
+					.build();
+			datasetMetadata = DatasetMetadata.builder()
+					.target(datasetTarget)
+					.description("Optional description")
+					.build();
+			dataset = Dataset.builder()
+					.filename("my_sequence.xml")
+					.metadata(datasetMetadata)
+					.build();
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(dataset, APPLICATION_JSON_TYPE));
+			assertThat("Create dataset (NCBI sandfly) response is not null", response, notNullValue());
+			assertThat("Create dataset (NCBI sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create dataset (NCBI sandfly) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create dataset (NCBI sandfly) response entity is not null", payload, notNullValue());
+			assertThat("Create dataset (NCBI sandfly) response entity is empty", isBlank(payload));
+			/* uncomment for additional output */
+			System.out.println(" >> Create dataset (NCBI sandfly) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create dataset (NCBI sandfly) response JAX-RS object: " + response);
+			System.out.println(" >> Create dataset (NCBI sandfly) HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			assertThat("Create dataset (NCBI sandfly) location is not null", location, notNullValue());
+			assertThat("Create dataset (NCBI sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
+
+			// test create dataset (GZIP compressed NCBI bulk of sandflies)
+			datasetTarget = Target.builder()
+					.type("sequence")
+					.collection(SANDFLY_COLLECTION)
+					.ids(newHashSet("gb:JP540074", "gb:JP553239"))
+					.filter("export")
+					.compression("gzip")
+					.build();
+			datasetMetadata = DatasetMetadata.builder()
+					.target(datasetTarget)
+					.description("Optional description")
+					.build();
+			dataset = Dataset.builder()
+					.filename("my_ncbi_sequences.xml")
+					.metadata(datasetMetadata)
+					.build();
+			response = target.path(path.value()).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(dataset, APPLICATION_JSON_TYPE));			
+			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is not null", response, notNullValue());
+			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response entity is not null", payload, notNullValue());
+			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response entity is empty", isBlank(payload));
+			/* uncomment for additional output */
+			System.out.println(" >> Create dataset (NCBI.GZIP sandflies bulk) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create dataset (NCBI.GZIP sandflies bulk) response JAX-RS object: " + response);
+			System.out.println(" >> Create dataset (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			assertThat("Create dataset (NCBI.GZIP sandfly) location is not null", location, notNullValue());
+			assertThat("Create dataset (NCBI.GZIP sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			if (true) {
+				return;
+			}
+
+			// TODO
+
 			// test create public link (GZIP compressed FASTA sandfly)
 			path = PublicLinkResource.class.getAnnotation(Path.class);
-			PublicLink publicLink = PublicLink.builder()
+			PublicLinkOLD publicLink = PublicLinkOLD.builder()
 					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export_fasta").compression("gzip").build())
 					.description("Optional description")
 					.build();
@@ -825,10 +1137,10 @@ public class ServiceTest {
 
 			// test get public link
 			publicLink.setOwner(toResourceOwnerId("user1"));
-			PublicLink publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
+			PublicLinkOLD publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
-					.get(PublicLink.class);
+					.get(PublicLinkOLD.class);
 			assertThat("Get public link result is not null", publicLink2, notNullValue());
 			assertThat("Get public link creation time is not null", publicLink2.getCreated(), notNullValue());
 			publicLink.setCreated(publicLink2.getCreated());
@@ -841,7 +1153,7 @@ public class ServiceTest {
 			publicLink2 = target.path(path.value()).path(encodedId)
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
-					.get(PublicLink.class);
+					.get(PublicLinkOLD.class);
 			assertThat("Get public link (url encoded Id) result is not null", publicLink2, notNullValue());
 			assertThat("Get public link (url encoded Id) creation time is not null", publicLink2.getCreated(), notNullValue());
 			publicLink.setCreated(publicLink2.getCreated());
@@ -884,7 +1196,7 @@ public class ServiceTest {
 			System.out.println(" >> Delete public link HTTP headers: " + response.getStringHeaders());
 
 			// test create public link (GZIP compressed NCBI sandfly)
-			publicLink = PublicLink.builder()
+			publicLink = PublicLinkOLD.builder()
 					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export").compression("gzip").build())
 					.description("Optional description")
 					.build();
@@ -906,7 +1218,7 @@ public class ServiceTest {
 			addPublicLinkForClean(getPathFromLocation(location));
 
 			// test create public link (uncompressed FASTA sandfly)
-			publicLink = PublicLink.builder()
+			publicLink = PublicLinkOLD.builder()
 					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export_fasta").build())
 					.description("Optional description")
 					.build();
@@ -928,7 +1240,7 @@ public class ServiceTest {
 			addPublicLinkForClean(getPathFromLocation(location));
 
 			// test create public link (uncompressed NCBI sandfly)
-			publicLink = PublicLink.builder()
+			publicLink = PublicLinkOLD.builder()
 					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export").compression("none").build())
 					.description("Optional description")
 					.build();
@@ -950,7 +1262,7 @@ public class ServiceTest {
 			addPublicLinkForClean(getPathFromLocation(location));
 
 			// test create public link (GZIP compressed NCBI bulk of sandflies)
-			publicLink = PublicLink.builder()
+			publicLink = PublicLinkOLD.builder()
 					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).ids(newHashSet("gb:JP540074", "gb:JP553239")).filter("export").compression("gzip").build())
 					.description("Optional description")
 					.build();
@@ -1123,11 +1435,23 @@ public class ServiceTest {
 	}
 
 	private static String getPathFromLocation(final URI location) {
-		return decodePublicLinkPath(getName(location.getPath()));		
+		return decodePublicLinkPath(getName(location.getPath()));
 	}
 
 	private static void addPublicLinkForClean(final String path) {
 		PUBLIC_LINKS.add(new File(CONFIG_MANAGER.getSharedDir(), path).getAbsolutePath());
+	}
+
+	protected static void printWadl(final WebTarget target) {
+		final Response response = target.path("application.wadl")					
+				.request()
+				.get();
+		assertThat("Get WADL response is not null", response, notNullValue());
+		assertThat("Get WADL response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+		assertThat("Get WADL response is not empty", response.getEntity(), notNullValue());
+		final String payload = response.readEntity(String.class);
+		/* uncomment for additional output */
+		System.out.println(" >> Get WADL response body: " + payload);
 	}
 
 }

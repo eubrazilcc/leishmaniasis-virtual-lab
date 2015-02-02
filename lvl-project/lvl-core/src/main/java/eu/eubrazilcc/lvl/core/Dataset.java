@@ -29,6 +29,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
@@ -62,20 +63,24 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
  */
 public class Dataset extends BaseFile implements Linkable<Dataset> {
 
+	public static final String DATASET_DEFAULT_NS = "files";
+	
 	@InjectLinks({
-		@InjectLink(value="datasets/files/{namespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
-				@Binding(name="namespace", value="${instance.namespace}"),
-				@Binding(name="urlSafeId", value="${instance.urlSafeId}")
+		@InjectLink(value="datasets/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={
+				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
+				@Binding(name="urlSafeFilename", value="${instance.urlSafeFilename}")
 		})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
+	
+	private String urlSafeNamespace;
+	private String urlSafeFilename;	
 
 	private String namespace;
-	private String urlSafeId;
-
+	
 	public Dataset() {
 		super();
 	}
@@ -94,15 +99,35 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		}
 	}
 
-	@Override
-	public void setId(final String id) {
-		super.setFilename(id);
-		setUrlSafeId(urlEncodeUtf8(id));
+	public String getUrlSafeNamespace() {
+		return urlSafeNamespace;
 	}
 
+	public void setUrlSafeNamespace(final String urlSafeNamespace) {
+		this.urlSafeNamespace = urlSafeNamespace;
+	}
+
+	public String getUrlSafeFilename() {
+		return urlSafeFilename;
+	}
+
+	public void setUrlSafeFilename(final String urlSafeFilename) {
+		this.urlSafeFilename = urlSafeFilename;
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public void setNamespace(final String namespace) {
+		this.namespace = namespace;
+		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(namespace, DATASET_DEFAULT_NS).trim()));
+	}
+	
 	@Override
 	public void setFilename(final String filename) {
 		super.setFilename(filename);
+		setUrlSafeFilename(urlEncodeUtf8(trimToEmpty(filename)));
 		// update latest version property
 		Metadata metadata2 = getMetadata();		
 		if (metadata2 == null) {
@@ -113,30 +138,15 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		}
 	}
 
-	public String getNamespace() {
-		return namespace;
-	}
-
-	public void setNamespace(final String namespace) {
-		this.namespace = namespace;
-	}
-
-	public String getUrlSafeId() {
-		return urlSafeId;
-	}
-
-	public void setUrlSafeId(String urlSafeId) {
-		this.urlSafeId = urlSafeId;
-	}
-
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof Dataset)) {
 			return false;
 		}
 		final Dataset other = Dataset.class.cast(obj);
-		return Objects.equals(namespace, other.namespace)
-				&& Objects.equals(urlSafeId, other.urlSafeId)
+		return  Objects.equals(urlSafeNamespace, other.urlSafeNamespace)
+				&& Objects.equals(urlSafeFilename, other.urlSafeFilename)
+				&& Objects.equals(namespace, other.namespace)
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -151,7 +161,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, namespace, urlSafeId);
+		return super.hashCode() + Objects.hash(links, urlSafeNamespace, urlSafeFilename, namespace);
 	}
 
 	@Override
@@ -159,8 +169,9 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		return toStringHelper(this)
 				.add("BaseFile", super.toString())
 				.add("links", links)
-				.add("namespace", namespace)
-				.add("urlSafeId", urlSafeId)
+				.add("urlSafeNamespace", urlSafeNamespace)
+				.add("urlSafeFilename", urlSafeFilename)
+				.add("namespace", namespace)				
 				.toString();
 	}
 
