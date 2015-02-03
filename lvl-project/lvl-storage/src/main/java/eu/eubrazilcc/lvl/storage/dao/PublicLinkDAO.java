@@ -51,7 +51,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.PublicLink;
+import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
@@ -60,10 +60,10 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore;
 
 /**
- * {@link PublicLink} DAO.
+ * {@link PublicLinkOLD} DAO.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
+public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLinkOLD> {
 
 	PUBLIC_LINK_DAO;
 
@@ -96,23 +96,23 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 	}
 
 	@Override
-	public WriteResult<PublicLink> insert(final PublicLink publicLink) {
+	public WriteResult<PublicLinkOLD> insert(final PublicLinkOLD publicLink) {
 		// remove transient fields from the element before saving it to the database
 		final PublicLinkTransientStore store = new PublicLinkTransientStore(publicLink);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return new WriteResult.Builder<PublicLink>().id(id).build();
+		return new WriteResult.Builder<PublicLinkOLD>().id(id).build();
 	}
 
 	@Override
-	public WriteResult<PublicLink> insert(final PublicLink publicLink, final boolean ignoreDuplicates) {
+	public WriteResult<PublicLinkOLD> insert(final PublicLinkOLD publicLink, final boolean ignoreDuplicates) {
 		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
-	public PublicLink update(final PublicLink publicLink) {		
+	public PublicLinkOLD update(final PublicLinkOLD publicLink) {		
 		// remove transient fields from the element before saving it to the database
 		final PublicLinkTransientStore store = new PublicLinkTransientStore(publicLink);
 		final DBObject obj = map(store);
@@ -128,40 +128,40 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 	}
 
 	@Override
-	public List<PublicLink> findAll() {
+	public List<PublicLinkOLD> findAll() {
 		return findAll(null);
 	}
 
 	@Override
-	public List<PublicLink> findAll(final String user) {
+	public List<PublicLinkOLD> findAll(final String user) {
 		return list(0, Integer.MAX_VALUE, null, null, null, user);
 	}
 
 	@Override
-	public PublicLink find(final String path) {	
+	public PublicLinkOLD find(final String path) {	
 		return find(path, null);
 	}
 
 	@Override
-	public PublicLink find(final String path, final String user) {
+	public PublicLinkOLD find(final String path, final String user) {
 		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(path, user) : key(path), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
-	public List<PublicLink> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
+	public List<PublicLinkOLD> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
 			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		return list(start, size, filter, sorting, count, null);
 	}	
 
 	@Override
-	public List<PublicLink> list(final int start, final int size, final ImmutableMap<String, String> filter, 
+	public List<PublicLinkOLD> list(final int start, final int size, final ImmutableMap<String, String> filter, 
 			final Sorting sorting, final MutableLong count, final String user) {
 		// execute the query in the database using the user to filter the results in case that a valid one is provided
 		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, isNotBlank(user) ? ownerKey(user) : null, count), 
-				new Function<BasicDBObject, PublicLink>() {
+				new Function<BasicDBObject, PublicLinkOLD>() {
 			@Override
-			public PublicLink apply(final BasicDBObject obj) {
+			public PublicLinkOLD apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
 			}
 		});		
@@ -173,22 +173,22 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 	}
 
 	@Override
-	public List<PublicLink> getNear(final Point point, final double maxDistance) {
+	public List<PublicLinkOLD> getNear(final Point point, final double maxDistance) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<PublicLink> getNear(final Point point, final double maxDistance, final String user) {
+	public List<PublicLinkOLD> getNear(final Point point, final double maxDistance, final String user) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<PublicLink> geoWithin(final Polygon polygon) {
+	public List<PublicLinkOLD> geoWithin(final Polygon polygon) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<PublicLink> geoWithin(final Polygon polygon, final String user) {
+	public List<PublicLinkOLD> geoWithin(final Polygon polygon, final String user) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
@@ -213,14 +213,14 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 		return new BasicDBObject(PRIMARY_KEY, 1);
 	}
 
-	private PublicLink parseBasicDBObject(final BasicDBObject obj) {
-		final PublicLink publicLink = map(obj).getPublicLink();
+	private PublicLinkOLD parseBasicDBObject(final BasicDBObject obj) {
+		final PublicLinkOLD publicLink = map(obj).getPublicLink();
 		addDownloadLink(publicLink);
 		return publicLink;
 	}
 
-	private PublicLink parseBasicDBObjectOrNull(final BasicDBObject obj) {
-		PublicLink publicLink = null;
+	private PublicLinkOLD parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		PublicLinkOLD publicLink = null;
 		if (obj != null) {
 			final PublicLinkEntity entity = map(obj);
 			if (entity != null) {
@@ -231,7 +231,7 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 		return publicLink;
 	}
 
-	private void addDownloadLink(final PublicLink publicLink) {
+	private void addDownloadLink(final PublicLinkOLD publicLink) {
 		if (downloadBaseUri != null) {
 			publicLink.setDownloadUri(fromUri(downloadBaseUri).path(publicLink.getPath()).build().toString());
 		}
@@ -262,11 +262,11 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 	 * These fields are stored in this class and can be reinserted later in the entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	public class PublicLinkTransientStore extends LinkableTransientStore<PublicLink> {
+	public class PublicLinkTransientStore extends LinkableTransientStore<PublicLinkOLD> {
 
 		private String downloadUri;
 
-		public PublicLinkTransientStore(final PublicLink element) {
+		public PublicLinkTransientStore(final PublicLinkOLD element) {
 			super(element);
 		}
 
@@ -279,7 +279,7 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 		}
 
 		@Override
-		public PublicLink purge() {
+		public PublicLinkOLD purge() {
 			super.purge();
 			downloadUri = element.getDownloadUri();
 			element.setDownloadUri(null);
@@ -287,7 +287,7 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 		}
 
 		@Override
-		public PublicLink restore() {
+		public PublicLinkOLD restore() {
 			super.restore();
 			element.setDownloadUri(downloadUri);
 			return element;
@@ -296,7 +296,7 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 	}	
 
 	/**
-	 * {@link PublicLink} entity.
+	 * {@link PublicLinkOLD} entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
 	public static class PublicLinkEntity {
@@ -306,11 +306,11 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 		@JsonProperty("_id")
 		private ObjectId id;
 
-		private PublicLink publicLink;
+		private PublicLinkOLD publicLink;
 
 		public PublicLinkEntity() { }
 
-		public PublicLinkEntity(final PublicLink publicLink) {
+		public PublicLinkEntity(final PublicLinkOLD publicLink) {
 			setPublicLink(publicLink);
 		}
 
@@ -322,11 +322,11 @@ public enum PublicLinkDAO implements AuthenticatedDAO<String, PublicLink> {
 			this.id = id;
 		}
 
-		public PublicLink getPublicLink() {
+		public PublicLinkOLD getPublicLink() {
 			return publicLink;
 		}
 
-		public void setPublicLink(final PublicLink publicLink) {
+		public void setPublicLink(final PublicLinkOLD publicLink) {
 			this.publicLink = publicLink;
 		}
 

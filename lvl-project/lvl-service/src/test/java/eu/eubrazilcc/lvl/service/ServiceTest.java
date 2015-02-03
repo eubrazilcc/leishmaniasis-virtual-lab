@@ -25,21 +25,19 @@ package eu.eubrazilcc.lvl.service;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
+import static eu.eubrazilcc.lvl.core.Dataset.DATASET_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
+import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.decodePublicLinkPath;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
-import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
-import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
 import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
-import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_QUERY_OAUTH2;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
@@ -47,8 +45,6 @@ import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.USER_ROLE;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermissions;
-import static java.lang.Integer.parseInt;
-import static java.lang.Math.min;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.getProperty;
 import static java.net.URLEncoder.encode;
@@ -56,6 +52,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
@@ -74,19 +71,27 @@ import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.fluent.Request;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -100,28 +105,21 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
-import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Dataset;
-import static eu.eubrazilcc.lvl.core.Dataset.DATASET_DEFAULT_NS;
-import eu.eubrazilcc.lvl.core.Leishmania;
+import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.Target;
-import eu.eubrazilcc.lvl.core.BaseFile.Metadata;
-import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.service.rest.CitationResource;
 import eu.eubrazilcc.lvl.service.rest.CitationResource.References;
 import eu.eubrazilcc.lvl.service.rest.DatasetResource;
-import eu.eubrazilcc.lvl.service.rest.LeishmaniaSequenceResource;
 import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
-import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource;
-import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource.Sequences;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
-import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.security.User;
@@ -142,7 +140,9 @@ public class ServiceTest {
 	private WebTarget target;
 	private static final String TOKEN_ROOT  = "1234567890abcdEFGhiJKlMnOpqrstUVWxyZ";
 	private static final String TOKEN_USER  = "0987654321zYXwvuTSRQPoNmLkjIHgfeDCBA";
-	private static final String TOKEN_USER2 = "zYXwvuTSRQPoNmLkjIHgfeDCBA1234567890";
+	private static final String TOKEN_USER2 = "zYXwvuTSRQPoNmLkjIHgfeDCBA1234567890";	
+	private String ownerId1;
+	private String ownerId2;
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
@@ -164,6 +164,7 @@ public class ServiceTest {
 		CONFIG_MANAGER.preload();
 		// setup test file-system environment
 		deleteQuietly(TEST_OUTPUT_DIR);		
+		TEST_OUTPUT_DIR.mkdirs();
 		// prepare client
 		final Client client = ClientBuilder.newBuilder()
 				.register(JacksonFeature.class)
@@ -173,8 +174,8 @@ public class ServiceTest {
 		target = client.target(BASE_URI);
 		target.property(ClientProperties.FOLLOW_REDIRECTS, true);
 		// insert valid users in the database (they are needed for properly authentication/authorization)
-		final String ownerId1 = toResourceOwnerId("user1"),
-				ownerId2 = toResourceOwnerId("user2");
+		ownerId1 = toResourceOwnerId("user1");
+		ownerId2 = toResourceOwnerId("user2");
 		final User user1 = User.builder()
 				.userid("user1")
 				.password("password1")
@@ -234,28 +235,34 @@ public class ServiceTest {
 	public void test() {
 		System.out.println("ServiceTest.test()");
 		try {
+			Path path = null;
+			Response response = null;
+			String payload, response2 = null;
+			URI location = null, uri = null;
+			FeatureCollection featCol = null;
+
 			// test import sandflies task
-			Path path = TaskResource.class.getAnnotation(Path.class);
+			path = TaskResource.class.getAnnotation(Path.class);
 			Task task = Task.builder()
 					.type(IMPORT_SANDFLY_SEQ)
 					.ids(newArrayList("353470160", "353483325", "384562886"))
 					.build();
 
-			Response response = target.path(path.value())					
+			response = target.path(path.value())					
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.post(entity(task, APPLICATION_JSON_TYPE));
 			assertThat("Create import sandflies task response is not null", response, notNullValue());
 			assertThat("Create import sandflies task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create import sandflies task response is not empty", response.getEntity(), notNullValue());
-			String payload = response.readEntity(String.class);
+			payload = response.readEntity(String.class);
 			assertThat("Create import sandflies task response entity is not null", payload, notNullValue());
 			assertThat("Create import sandflies task response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create import sandflies task response JAX-RS object: " + response);
 			System.out.println(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
-			URI location = new URI((String)response.getHeaders().get("Location").get(0));
+			location = new URI((String)response.getHeaders().get("Location").get(0));
 
 			// test import sandflies task progress
 			EventInput eventInput = target.path(path.value())
@@ -281,7 +288,7 @@ public class ServiceTest {
 				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);				
 				assertThat("Progress event decoded object is not null", progress, notNullValue());
 				assertThat("Import sandflies task does not have errors", !progress.isHasErrors());
-				/* uncomment for additional output */				
+				// uncomment for additional output				
 				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: id=" 
 						+ id + "; name=" + name + "; data=" + data + "; object=" + progress);
 			}
@@ -297,7 +304,7 @@ public class ServiceTest {
 			assertThat("Create import sandflies task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create import sandflies task response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create import sandflies task response JAX-RS object: " + response);
 			System.out.println(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
@@ -321,9 +328,11 @@ public class ServiceTest {
 				final Progress progress = JSON_MAPPER.readValue(data, Progress.class);
 				assertThat("Progress event decoded object is not null", progress, notNullValue());
 				assertThat("Import sandflies task does not have errors", !progress.isHasErrors());
-				/* uncomment for additional output */				
+				// uncomment for additional output				
 				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
-			}			
+			}
+
+			/* TODO
 
 			// test create new sandfly
 			path = SandflySequenceResource.class.getAnnotation(Path.class);
@@ -348,7 +357,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create new sandfly response entity is not null", payload, notNullValue());
 			assertThat("Create new sandfly response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Create new sandfly response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create new sandfly response JAX-RS object: " + response);
 			System.out.println(" >> Create new sandfly HTTP headers: " + response.getStringHeaders());
@@ -363,7 +372,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Get sandflies response entity is not null", payload, notNullValue());
 			assertThat("Get sandflies response entity is not empty", isNotBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get sandflies response body (JSON): " + payload);
 			System.out.println(" >> Get sandflies response JAX-RS object: " + response);
 			System.out.println(" >> Get sandflies HTTP headers: " + response.getStringHeaders());
@@ -376,7 +385,7 @@ public class ServiceTest {
 			assertThat("Get sandflies list is not null", sandflies.getElements(), notNullValue());
 			assertThat("Get sandflies list is not empty", !sandflies.getElements().isEmpty());
 			assertThat("Get sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get sandflies result: " + sandflies.toString());
 
 			// test sandfly pagination (JSON encoded)
@@ -398,7 +407,7 @@ public class ServiceTest {
 			assertThat("Paginate sandflies first page list is not empty", !sandflies.getElements().isEmpty());
 			assertThat("Paginate sandflies first page items count coincide with page size", sandflies.getElements().size(), 
 					equalTo(min(perPage, sandflies.getTotalCount())));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Paginate sandflies first page response body (JSON): " + payload);
 
 			assertThat("Paginate sandflies first page links is not null", sandflies.getLinks(), notNullValue());
@@ -429,7 +438,7 @@ public class ServiceTest {
 			assertThat("Paginate sandflies last page result is not null", sandflies, notNullValue());
 			assertThat("Paginate sandflies last page list is not null", sandflies.getElements(), notNullValue());
 			assertThat("Paginate sandflies last page list is not empty", !sandflies.getElements().isEmpty());
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Paginate sandflies last page response body (JSON): " + payload);
 
 			assertThat("Paginate sandflies last page links is not null", sandflies.getLinks(), notNullValue());
@@ -447,7 +456,7 @@ public class ServiceTest {
 			assertThat("Paginate sandflies first page list is not empty", !sandflies.getElements().isEmpty());
 			assertThat("Paginate sandflies first page items count coincide with list size", sandflies.getElements().size(), 
 					equalTo(min(perPage, sandflies.getTotalCount())));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Paginate sandflies first page result: " + sandflies.toString());
 
 			assertThat("Paginate sandflies first page links is not null", sandflies.getLinks(), notNullValue());
@@ -471,7 +480,7 @@ public class ServiceTest {
 			assertThat("Paginate sandflies last page result is not null", sandflies, notNullValue());
 			assertThat("Paginate sandflies last page list is not null", sandflies.getElements(), notNullValue());
 			assertThat("Paginate sandflies last page list is not empty", !sandflies.getElements().isEmpty());
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Paginate sandflies last page result: " + sandflies.toString());
 
 			assertThat("Paginate sandflies last page links is not null", sandflies.getLinks(), notNullValue());
@@ -489,7 +498,7 @@ public class ServiceTest {
 			assertThat("Search sandflies list is not empty", !sandflies.getElements().isEmpty());
 			assertThat("Search sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
 			assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(3));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Search sandflies result: " + sandflies.toString());
 
 			// test get sandflies applying a keyword matching filter
@@ -503,7 +512,7 @@ public class ServiceTest {
 			assertThat("Search sandflies list is not empty", !sandflies.getElements().isEmpty());
 			assertThat("Search sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
 			assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(1));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Search sandflies result: " + sandflies.toString());
 
 			// test get sandflies applying a full-text search combined with a keyword matching filter
@@ -517,7 +526,7 @@ public class ServiceTest {
 			assertThat("Search sandflies list is not empty", !sandflies.getElements().isEmpty());
 			assertThat("Search sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
 			assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(4));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Search sandflies result: " + sandflies.toString());
 
 			// test get sandflies sorted by accession number
@@ -536,7 +545,7 @@ public class ServiceTest {
 				assertThat("Sandflies are properly sorted", seq.getAccession().compareTo(last) > 0);
 				last = seq.getAccession();
 			}
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Sorted sandflies result: " + sandflies.toString());
 
 			// test get sandfly by data source + accession number
@@ -546,7 +555,7 @@ public class ServiceTest {
 					.get(Sandfly.class);
 			assertThat("Get sandfly by accession number result is not null", sandfly2, notNullValue());
 			assertThat("Get sandfly by accession number coincides with expected", sandfly2.equalsIgnoringVolatile(sandfly));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get sandfly by accession number result: " + sandfly2.toString());
 
 			// test update sandfly
@@ -561,7 +570,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Update sandfly response entity is not null", payload, notNullValue());
 			assertThat("Update sandfly response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Update sandfly response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Update sandfly response JAX-RS object: " + response);
 			System.out.println(" >> Update sandfly HTTP headers: " + response.getStringHeaders());
@@ -573,11 +582,11 @@ public class ServiceTest {
 					.get(Sandfly.class);
 			assertThat("Get sandfly by accession number after update result is not null", sandfly2, notNullValue());
 			assertThat("Get sandfly by accession number after update coincides with expected", sandfly2.equalsIgnoringVolatile(sandfly));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get sandfly by accession number after update result: " + sandfly2.toString());			
 
 			// test find sandflies near to a location
-			FeatureCollection featCol = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
+			featCol = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d)
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
@@ -585,13 +594,13 @@ public class ServiceTest {
 			assertThat("Get nearby sandflies result is not null", featCol, notNullValue());
 			assertThat("Get nearby sandflies list is not null", featCol.getFeatures(), notNullValue());
 			assertThat("Get nearby sandflies list is not empty", featCol.getFeatures().size() > 0);
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get nearby sandflies result: " + featCol.toString());
 
 			// test find sandflies near to a location (using plain REST, no Jersey client)
-			URI uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
+			uri = target.path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
 					.queryParam("maxDistance", 4000.0d).getUri();
-			String response2 = Request.Get(uri)
+			response2 = Request.Get(uri)
 					.addHeader("Accept", "application/json")
 					.addHeader(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.execute()
@@ -599,13 +608,13 @@ public class ServiceTest {
 					.asString();
 			assertThat("Get nearby sandflies result (plain) is not null", response2, notNullValue());
 			assertThat("Get nearby sandflies result (plain) is not empty", isNotBlank(response2));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get nearby sandflies result (plain): " + response2);
 			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
 			assertThat("Get nearby sandflies result (plain) is not null", featCol, notNullValue());
 			assertThat("Get nearby sandflies (plain) list is not null", featCol.getFeatures(), notNullValue());
 			assertThat("Get nearby sandflies (plain) list is not empty", featCol.getFeatures().size() > 0);
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get nearby sandflies result (plain): " + featCol.toString());
 
 			// test find sandflies near to a location (using plain REST, no Jersey client, and query style authz token)
@@ -620,13 +629,13 @@ public class ServiceTest {
 					.asString();
 			assertThat("Get nearby sandflies result (plain + query token) is not null", response2, notNullValue());
 			assertThat("Get nearby sandflies result (plain + query token) is not empty", isNotBlank(response2));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get nearby sandflies result (plain + query token): " + response2);
 			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
 			assertThat("Get nearby sandflies result (plain + query token) is not null", featCol, notNullValue());
 			assertThat("Get nearby sandflies (plain + query token) list is not null", featCol.getFeatures(), notNullValue());
 			assertThat("Get nearby sandflies (plain + query token) list is not empty", featCol.getFeatures().size() > 0);
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get nearby sandflies result (plain + query token): " + featCol.toString());
 
 			// test delete sandfly
@@ -640,7 +649,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Delete sandfly response entity is not null", payload, notNullValue());
 			assertThat("Delete sandfly response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Delete sandfly response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Delete sandfly response JAX-RS object: " + response);
 			System.out.println(" >> Delete sandfly HTTP headers: " + response.getStringHeaders());
@@ -668,7 +677,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create new leishmania response entity is not null", payload, notNullValue());
 			assertThat("Create new leishmania response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Create new leishmania response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create new leishmania response JAX-RS object: " + response);
 			System.out.println(" >> Create new leishmania HTTP headers: " + response.getStringHeaders());
@@ -683,7 +692,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Get leishmania response entity is not null", payload, notNullValue());
 			assertThat("Get leishmania response entity is not empty", isNotBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get leishmania response body (JSON): " + payload);
 			System.out.println(" >> Get leishmania response JAX-RS object: " + response);
 			System.out.println(" >> Get leishmania HTTP headers: " + response.getStringHeaders());
@@ -706,7 +715,7 @@ public class ServiceTest {
 			assertThat("Paginate leishmania first page list is not empty", !leishmanias.getElements().isEmpty());
 			assertThat("Paginate leishmania first page items count coincide with page size", leishmanias.getElements().size(), 
 					equalTo(min(perPage, leishmanias.getTotalCount())));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Paginate leishmanias first page response body (JSON): " + payload);
 
 			// test update leishmania
@@ -721,7 +730,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Update leishmania response entity is not null", payload, notNullValue());
 			assertThat("Update leishmania response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Update leishmania response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Update leishmania response JAX-RS object: " + response);
 			System.out.println(" >> Update leishmania HTTP headers: " + response.getStringHeaders());
@@ -733,7 +742,7 @@ public class ServiceTest {
 					.get(Leishmania.class);
 			assertThat("Get leishmania by accession number after update result is not null", leishmania2, notNullValue());
 			assertThat("Get leishmania by accession number after update coincides with expected", leishmania2.equalsIgnoringVolatile(leishmania));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get leishmania by accession number after update result: " + leishmania2.toString());			
 
 			// test find leishmania near to a location (using plain REST, no Jersey client)
@@ -747,13 +756,13 @@ public class ServiceTest {
 					.asString();
 			assertThat("Get nearby leishmania result (plain) is not null", response2, notNullValue());
 			assertThat("Get nearby leishmania result (plain) is not empty", isNotBlank(response2));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get nearby leishmania result (plain): " + response2);
 			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
 			assertThat("Get nearby leishmania result (plain) is not null", featCol, notNullValue());
 			assertThat("Get nearby leishmania (plain) list is not null", featCol.getFeatures(), notNullValue());
 			assertThat("Get nearby leishmania (plain) list is not empty", featCol.getFeatures().size() > 0);
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get nearby leishmania result (plain): " + featCol.toString());
 
 			// test delete leishmania
@@ -767,10 +776,10 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Delete leishmania response entity is not null", payload, notNullValue());
 			assertThat("Delete leishmania response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Delete leishmania response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Delete leishmania response JAX-RS object: " + response);
-			System.out.println(" >> Delete leishmania HTTP headers: " + response.getStringHeaders());
+			System.out.println(" >> Delete leishmania HTTP headers: " + response.getStringHeaders()); */
 
 			// TODO
 			// test create dataset (GZIP compressed FASTA sandfly)
@@ -789,7 +798,7 @@ public class ServiceTest {
 					.filename("my_fasta_sequences.zip")
 					.metadata(datasetMetadata)
 					.build();			
-			response = target.path(path.value()).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (FASTA.GZIP sandfly) response is not null", response, notNullValue());
@@ -798,7 +807,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create dataset (FASTA.GZIP sandfly) response entity is not null", payload, notNullValue());
 			assertThat("Create dataset (FASTA.GZIP sandfly) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create dataset (FASTA.GZIP sandfly) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create dataset (FASTA.GZIP sandfly) response JAX-RS object: " + response);
 			System.out.println(" >> Create dataset (FASTA.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
@@ -806,8 +815,8 @@ public class ServiceTest {
 			assertThat("Create dataset (FASTA.GZIP sandfly) location is not null", location, notNullValue());
 			assertThat("Create dataset (FASTA.GZIP sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
 
-			// test list datasets (from super-user account)
-			Datasets datasets = target.path(path.value()).request(APPLICATION_JSON)
+			// test list datasets (from super-user account)	
+			Datasets datasets = target.path(path.value()).path(urlEncodeUtf8(ownerId1)).request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
 					.get(Datasets.class);
 			assertThat("Get datasets (root account) result is not null", datasets, notNullValue());
@@ -815,23 +824,22 @@ public class ServiceTest {
 			assertThat("Get datasets (root account) list is not empty", datasets.getElements().isEmpty(), equalTo(false));
 			assertThat("Get datasets (root account) items count coincide with list size", datasets.getElements().size(), 
 					equalTo(datasets.getTotalCount()));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get datasets (root account) result: " + datasets.toString());
 
 			// test list datasets (from user unauthorized user account)
-			datasets = target.path(path.value()).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER2))
-					.get(Datasets.class);
-			assertThat("Get datasets (unauthorized user account) result is not null", datasets, notNullValue());
-			assertThat("Get datasets (unauthorized user account) list is not null", datasets.getElements(), notNullValue());
-			assertThat("Get datasets (unauthorized user account) list is empty", datasets.getElements().isEmpty(), equalTo(true));
-			assertThat("Get datasets (unauthorized user account) items count coincide with list size", datasets.getElements().size(), 
-					equalTo(datasets.getTotalCount()));
-			/* uncomment for additional output */			
-			System.out.println(" >> Get datasets (unauthorized user account) result: " + datasets.toString());
+			try {
+				datasets = target.path(path.value()).path(urlEncodeUtf8(ownerId1)).request(APPLICATION_JSON)
+						.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER2))
+						.get(Datasets.class);
+				fail("list datasets from user unauthorized user account must produce 401 error");
+			} catch (NotAuthorizedException e) {
+				// uncomment for additional output			
+				System.out.println(" >> Get datasets (unauthorized user account) produced the expected 401 error");
+			}			
 
 			// test list datasets (from user account)
-			datasets = target.path(path.value()).request(APPLICATION_JSON)
+			datasets = target.path(path.value()).path(urlEncodeUtf8(ownerId1)).request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.get(Datasets.class);
 			assertThat("Get datasets (user account) result is not null", datasets, notNullValue());
@@ -839,10 +847,25 @@ public class ServiceTest {
 			assertThat("Get datasets (user account) list is not empty", datasets.getElements().isEmpty(), equalTo(false));
 			assertThat("Get datasets (user account) items count coincide with list size", datasets.getElements().size(), 
 					equalTo(datasets.getTotalCount()));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
+			System.out.println(" >> Get datasets (user account) result: " + datasets.toString());
+
+			// test list datasets (from user account using default namespace)
+			datasets = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.get(Datasets.class);
+			assertThat("Get datasets (user account) result is not null", datasets, notNullValue());
+			assertThat("Get datasets (user account) list is not null", datasets.getElements(), notNullValue());
+			assertThat("Get datasets (user account) list is not empty", datasets.getElements().isEmpty(), equalTo(false));
+			assertThat("Get datasets (user account) items count coincide with list size", datasets.getElements().size(), 
+					equalTo(datasets.getTotalCount()));
+			// uncomment for additional output			
 			System.out.println(" >> Get datasets (user account) result: " + datasets.toString());
 
 			// test get dataset
+			datasetMetadata = (DatasetMetadata)dataset.getMetadata();
+			datasetMetadata.setEditor(ownerId1);
+			datasetMetadata.setIsLastestVersion(dataset.getFilename());
 			Dataset dataset2 = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
 					.path(datasets.getElements().get(0).getUrlSafeFilename())
 					.request(APPLICATION_JSON)
@@ -850,7 +873,7 @@ public class ServiceTest {
 					.get(Dataset.class);
 			assertThat("Get dataset result is not null", dataset2, notNullValue());
 			assertThat("Get dataset namespace is not empty", isNotBlank(dataset2.getNamespace()), equalTo(true));
-			assertThat("Get dataset namespace coincides with expected", dataset2.getNamespace(), equalTo(dataset.getNamespace()));			
+			assertThat("Get dataset namespace coincides with expected", dataset2.getNamespace(), equalTo(ownerId1));			
 			assertThat("Get dataset id is not empty", isNotBlank(dataset2.getId()), equalTo(true));
 			assertThat("Get dataset length coincides with expected", dataset2.getLength(), greaterThan(0L));
 			assertThat("Get dataset chunk size coincides with expected", dataset2.getChunkSize(), greaterThan(0L));
@@ -862,7 +885,7 @@ public class ServiceTest {
 			assertThat("Get dataset content type coincides with expected", dataset2.getContentType(), equalTo("application/gzip"));
 			assertThat("Get dataset aliases coincides with expected", dataset2.getAliases(), equalTo(dataset.getAliases()));
 			assertThat("Get dataset metadata coincides with expected", dataset2.getMetadata(), equalTo(dataset.getMetadata()));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get dataset result: " + dataset2.toString());
 
 			// test get dataset manually encoding the namespace and filename
@@ -874,7 +897,7 @@ public class ServiceTest {
 					.get(Dataset.class);			
 			assertThat("Get dataset (url encoded) result is not null", dataset2, notNullValue());
 			assertThat("Get dataset (url encoded) Id coincides with expected", dataset2.getId(), equalTo(datasetId));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get dataset (url encoded) result: " + dataset2.toString());			
 
 			// test update dataset
@@ -890,7 +913,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Update dataset response entity is not null", payload, notNullValue());
 			assertThat("Update dataset response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Update dataset response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Update dataset response JAX-RS object: " + response);
 			System.out.println(" >> Update dataset HTTP headers: " + response.getStringHeaders());
@@ -907,7 +930,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Delete dataset response entity is not null", payload, notNullValue());
 			assertThat("Delete dataset response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Delete dataset response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Delete dataset response JAX-RS object: " + response);
 			System.out.println(" >> Delete dataset HTTP headers: " + response.getStringHeaders());
@@ -928,7 +951,7 @@ public class ServiceTest {
 					.filename("my_ncbi_sequences.zip")
 					.metadata(datasetMetadata)
 					.build();
-			response = target.path(path.value()).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (NCBI.GZIP sandfly) response is not null", response, notNullValue());
@@ -937,7 +960,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create dataset (NCBI.GZIP sandfly) response entity is not null", payload, notNullValue());
 			assertThat("Create dataset (NCBI.GZIP sandfly) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create dataset (NCBI.GZIP sandfly) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create dataset (NCBI.GZIP sandfly) response JAX-RS object: " + response);
 			System.out.println(" >> Create dataset (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
@@ -960,7 +983,7 @@ public class ServiceTest {
 					.filename("my_sequence.fasta")
 					.metadata(datasetMetadata)
 					.build();
-			response = target.path(path.value()).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (FASTA sandfly) response is not null", response, notNullValue());
@@ -969,7 +992,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create dataset (FASTA sandfly) response entity is not null", payload, notNullValue());
 			assertThat("Create dataset (FASTA sandfly) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create dataset (FASTA sandfly) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create dataset (FASTA sandfly) response JAX-RS object: " + response);
 			System.out.println(" >> Create dataset (FASTA sandfly) HTTP headers: " + response.getStringHeaders());
@@ -993,7 +1016,7 @@ public class ServiceTest {
 					.filename("my_sequence.xml")
 					.metadata(datasetMetadata)
 					.build();
-			response = target.path(path.value()).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (NCBI sandfly) response is not null", response, notNullValue());
@@ -1002,7 +1025,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create dataset (NCBI sandfly) response entity is not null", payload, notNullValue());
 			assertThat("Create dataset (NCBI sandfly) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create dataset (NCBI sandfly) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create dataset (NCBI sandfly) response JAX-RS object: " + response);
 			System.out.println(" >> Create dataset (NCBI sandfly) HTTP headers: " + response.getStringHeaders());
@@ -1026,7 +1049,7 @@ public class ServiceTest {
 					.filename("my_ncbi_sequences.xml")
 					.metadata(datasetMetadata)
 					.build();
-			response = target.path(path.value()).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));			
 			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is not null", response, notNullValue());
@@ -1035,7 +1058,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response entity is not null", payload, notNullValue());
 			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create dataset (NCBI.GZIP sandflies bulk) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create dataset (NCBI.GZIP sandflies bulk) response JAX-RS object: " + response);
 			System.out.println(" >> Create dataset (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
@@ -1043,12 +1066,64 @@ public class ServiceTest {
 			assertThat("Create dataset (NCBI.GZIP sandfly) location is not null", location, notNullValue());
 			assertThat("Create dataset (NCBI.GZIP sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
 
+			// test file download
+			final URI downloadUri = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+					.path(urlEncodeUtf8(dataset.getFilename())).path("download").getUri();
+			final org.apache.http.client.fluent.Response response3 = Request.Get(downloadUri)
+					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
+					.addHeader("Accept", APPLICATION_OCTET_STREAM)
+					.addHeader(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.execute();
+			assertThat("Download dataset response is not null", response3, notNullValue());
+			final HttpResponse response4 = response3.returnResponse();
+			assertThat("Download dataset HTTP response is not null", response4, notNullValue());
+			assertThat("Download dataset status line is not null", response4.getStatusLine(), notNullValue());
+			assertThat("Download dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
+					equalTo(OK.getStatusCode()));
+			final Header[] headers = response4.getAllHeaders();
+			assertThat("Download dataset headers is not null", headers, notNullValue());
+			assertThat("Download dataset headers is not empty", headers.length, greaterThan(0));
+			String filename = null;
+			for (int i = 0; i < headers.length && filename == null; i++) {
+				if ("content-disposition".equalsIgnoreCase(headers[i].getName())) {
+					final HeaderElement[] elements = headers[i].getElements();
+					if (elements != null) {
+						for (int j = 0; j < elements.length && filename == null; j++) {							
+							if ("attachment".equalsIgnoreCase(elements[j].getName())) {
+								final NameValuePair pair = elements[j].getParameterByName("filename");
+								if (pair != null) {
+									filename = pair.getValue();
+								}
+							}
+						}
+					}
+				}
+			}
+			assertThat("Download dataset filename is not empty", isNotBlank(filename), equalTo(true));
+			final HttpEntity entity = response4.getEntity();
+			assertThat("Download dataset entity is not null", entity, notNullValue());
+			assertThat("Download dataset content length coincides with expected", entity.getContentLength(), greaterThan(0l));
+			final File outfile = new File(TEST_OUTPUT_DIR, filename);
+			outfile.createNewFile();
+			try (final InputStream inputStream = entity.getContent();
+					final FileOutputStream outputStream = new FileOutputStream(outfile)) {
+				int read = 0;
+				byte[] bytes = new byte[1024];
+				while ((read = inputStream.read(bytes)) != -1) {
+					outputStream.write(bytes, 0, read);
+				}
+			}
+			assertThat("Downloaded file exists", outfile.exists(), equalTo(true));
+			assertThat("Downloaded file is not empty", outfile.length(), greaterThan(0L));
+			final GBSeq sequence = getSequence(outfile);
+			assertThat("XML parsed from downloaded file is not null", sequence, notNullValue());
+			// uncomment for additional output
+			System.out.println(" >> Saved file: " + filename);
 
 
-
-
-
-
+			// TODO
+			// TODO : test share
+			// TODO : test public link operations
 
 
 
@@ -1084,7 +1159,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create public link (FASTA.GZIP sandfly) response entity is not null", payload, notNullValue());
 			assertThat("Create public link (FASTA.GZIP sandfly) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create public link (FASTA.GZIP sandfly) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (FASTA.GZIP sandfly) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (FASTA.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
@@ -1103,7 +1178,7 @@ public class ServiceTest {
 			assertThat("Get public links (root account) list is not empty", publicLinks.getElements().isEmpty(), equalTo(false));
 			assertThat("Get public links (root account) items count coincide with list size", publicLinks.getElements().size(), 
 					equalTo(publicLinks.getTotalCount()));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get public links (root account) result: " + publicLinks.toString());
 
 			// test list public links (from user unauthorized user account)
@@ -1115,7 +1190,7 @@ public class ServiceTest {
 			assertThat("Get public links (unauthorized user account) list is empty", publicLinks.getElements().isEmpty(), equalTo(true));
 			assertThat("Get public links (unauthorized user account) items count coincide with list size", publicLinks.getElements().size(), 
 					equalTo(publicLinks.getTotalCount()));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get public links (unauthorized user account) result: " + publicLinks.toString());
 
 			// test list public links (from user account)
@@ -1127,7 +1202,7 @@ public class ServiceTest {
 			assertThat("Get public links (user account) list is not empty", publicLinks.getElements().isEmpty(), equalTo(false));
 			assertThat("Get public links (user account) items count coincide with list size", publicLinks.getElements().size(), 
 					equalTo(publicLinks.getTotalCount()));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get public links (user account) result: " + publicLinks.toString());
 
 			// test get public link
@@ -1140,7 +1215,7 @@ public class ServiceTest {
 			assertThat("Get public link creation time is not null", publicLink2.getCreated(), notNullValue());
 			publicLink.setCreated(publicLink2.getCreated());
 			assertThat("Get public link coincides with expected", publicLink2.equalsIgnoringVolatile(publicLink), equalTo(true));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get public link result: " + publicLink2.toString());
 
 			// test get public link using encoded identifier
@@ -1153,7 +1228,7 @@ public class ServiceTest {
 			assertThat("Get public link (url encoded Id) creation time is not null", publicLink2.getCreated(), notNullValue());
 			publicLink.setCreated(publicLink2.getCreated());
 			assertThat("Get public link (url encoded Id) coincides with expected", publicLink2.equalsIgnoringVolatile(publicLink), equalTo(true));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> URL encoded Id: " + encodedId);
 			System.out.println(" >> Get public link (url encoded Id) result: " + publicLink2.toString());			
 
@@ -1169,7 +1244,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Update public link response entity is not null", payload, notNullValue());
 			assertThat("Update public link response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Update public link response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Update public link response JAX-RS object: " + response);
 			System.out.println(" >> Update public link HTTP headers: " + response.getStringHeaders());
@@ -1185,7 +1260,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Delete public link response entity is not null", payload, notNullValue());
 			assertThat("Delete public link response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Delete public link response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Delete public link response JAX-RS object: " + response);
 			System.out.println(" >> Delete public link HTTP headers: " + response.getStringHeaders());
@@ -1205,7 +1280,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create public link (NCBI.GZIP sandfly) response entity is not null", payload, notNullValue());
 			assertThat("Create public link (NCBI.GZIP sandfly) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create public link (NCBI.GZIP sandfly) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI.GZIP sandfly) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
@@ -1227,7 +1302,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create public link (FASTA sandfly) response entity is not null", payload, notNullValue());
 			assertThat("Create public link (FASTA sandfly) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create public link (FASTA sandfly) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (FASTA sandfly) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (FASTA sandfly) HTTP headers: " + response.getStringHeaders());
@@ -1249,7 +1324,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create public link (NCBI sandfly) response entity is not null", payload, notNullValue());
 			assertThat("Create public link (NCBI sandfly) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create public link (NCBI sandfly) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI sandfly) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (NCBI sandfly) HTTP headers: " + response.getStringHeaders());
@@ -1271,7 +1346,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create public link (NCBI.GZIP sandflies bulk) response entity is not null", payload, notNullValue());
 			assertThat("Create public link (NCBI.GZIP sandflies bulk) response entity is empty", isBlank(payload));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Create public link (NCBI.GZIP sandflies bulk) response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create public link (NCBI.GZIP sandflies bulk) response JAX-RS object: " + response);
 			System.out.println(" >> Create public link (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
@@ -1305,7 +1380,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Create new reference response entity is not null", payload, notNullValue());
 			assertThat("Create new reference response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Create new reference response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Create new reference response JAX-RS object: " + response);
 			System.out.println(" >> Create new reference HTTP headers: " + response.getStringHeaders());			
@@ -1317,7 +1392,7 @@ public class ServiceTest {
 					.get(Reference.class);
 			assertThat("Get reference by PMID result is not null", reference2, notNullValue());
 			assertThat("Get reference by PMID coincides with expected", reference2.equalsIgnoringVolatile(reference));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get reference by PMID result: " + reference2.toString());
 
 			// test list all references (JSON encoded)
@@ -1330,7 +1405,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Get references response entity is not null", payload, notNullValue());
 			assertThat("Get references response entity is not empty", isNotBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get references response body (JSON): " + payload);
 			System.out.println(" >> Get references response JAX-RS object: " + response);
 			System.out.println(" >> Get references HTTP headers: " + response.getStringHeaders());			
@@ -1343,7 +1418,7 @@ public class ServiceTest {
 			assertThat("Get references list is not null", references.getElements(), notNullValue());
 			assertThat("Get references list is not empty", !references.getElements().isEmpty());
 			assertThat("Get references items count coincide with list size", references.getElements().size(), equalTo(references.getTotalCount()));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get references result: " + references.toString());			
 
 			// test find references near to a location (JSON encoded)
@@ -1357,13 +1432,13 @@ public class ServiceTest {
 					.asString();
 			assertThat("Get nearby references result (plain) is not null", response2, notNullValue());
 			assertThat("Get nearby references result (plain) is not empty", isNotBlank(response2));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get nearby references result (plain): " + response2);
 			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
 			assertThat("Get nearby references result (plain) is not null", featCol, notNullValue());
 			assertThat("Get nearby references (plain) list is not null", featCol.getFeatures(), notNullValue());
 			assertThat("Get nearby references (plain) list is not empty", featCol.getFeatures().size() > 0);
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get nearby references result (plain): " + featCol.toString());			
 
 			// test find references near to a location (Java object)
@@ -1375,7 +1450,7 @@ public class ServiceTest {
 			assertThat("Get nearby references result is not null", featCol, notNullValue());
 			assertThat("Get nearby references list is not null", featCol.getFeatures(), notNullValue());
 			assertThat("Get nearby references list is not empty", featCol.getFeatures().size() > 0);
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Get nearby references result: " + featCol.toString());
 
 			// test update reference
@@ -1390,7 +1465,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Update reference response entity is not null", payload, notNullValue());
 			assertThat("Update reference response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Update reference response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Update reference response JAX-RS object: " + response);
 			System.out.println(" >> Update reference HTTP headers: " + response.getStringHeaders());
@@ -1402,7 +1477,7 @@ public class ServiceTest {
 					.get(Reference.class);
 			assertThat("Get reference by PMID after update result is not null", reference2, notNullValue());
 			assertThat("Get reference by PMID after update coincides with expected", reference2.equalsIgnoringVolatile(reference));
-			/* uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Get reference by PMID after update result: " + reference2.toString());
 
 			// test delete reference
@@ -1416,7 +1491,7 @@ public class ServiceTest {
 			payload = response.readEntity(String.class);
 			assertThat("Delete reference response entity is not null", payload, notNullValue());
 			assertThat("Delete reference response entity is empty", isBlank(payload));
-			/* uncomment for additional output */			
+			// uncomment for additional output			
 			System.out.println(" >> Delete reference response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Delete reference response JAX-RS object: " + response);
 			System.out.println(" >> Delete reference HTTP headers: " + response.getStringHeaders());
@@ -1445,7 +1520,7 @@ public class ServiceTest {
 		assertThat("Get WADL response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
 		assertThat("Get WADL response is not empty", response.getEntity(), notNullValue());
 		final String payload = response.readEntity(String.class);
-		/* uncomment for additional output */
+		// uncomment for additional output
 		System.out.println(" >> Get WADL response body: " + payload);
 	}
 

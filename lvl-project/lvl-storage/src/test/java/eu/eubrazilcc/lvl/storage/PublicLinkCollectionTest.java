@@ -35,7 +35,7 @@ import java.util.List;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.core.PublicLink;
+import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.Target;
 
 /**
@@ -49,7 +49,7 @@ public class PublicLinkCollectionTest {
 		System.out.println("PublicLinkCollectionTest.test()");
 		try {
 			// insert
-			final PublicLink publicLink = PublicLink.builder()
+			final PublicLinkOLD publicLink = PublicLinkOLD.builder()
 					.path("path/files.gz")
 					.owner("username1")
 					.created(new Date())
@@ -60,7 +60,7 @@ public class PublicLinkCollectionTest {
 			PUBLIC_LINK_DAO.insert(publicLink);
 
 			// find
-			PublicLink publicLink2 = PUBLIC_LINK_DAO.find(publicLink.getPath());
+			PublicLinkOLD publicLink2 = PUBLIC_LINK_DAO.find(publicLink.getPath());
 			assertThat("public link is not null", publicLink2, notNullValue());
 			assertThat("public link coincides with original", publicLink2, equalTo(publicLink));
 			System.out.println(publicLink2.toString());
@@ -76,7 +76,7 @@ public class PublicLinkCollectionTest {
 			System.out.println(publicLink2.toString());
 
 			// list all by owner Id
-			List<PublicLink> publicLinks = PUBLIC_LINK_DAO.findAll(publicLink.getOwner());
+			List<PublicLinkOLD> publicLinks = PUBLIC_LINK_DAO.findAll(publicLink.getOwner());
 			assertThat("public links are not null", publicLinks, notNullValue());
 			assertThat("public links are not empty", !publicLinks.isEmpty(), equalTo(true));
 			assertThat("number of public links coincides with expected", publicLinks.size(), equalTo(1));
@@ -90,7 +90,7 @@ public class PublicLinkCollectionTest {
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {
-				final PublicLink publicLink3 = PublicLink.builder()
+				final PublicLinkOLD publicLink3 = PublicLinkOLD.builder()
 						.path(Integer.toString(i)).build();
 				ids.add(publicLink3.getPath());
 				PUBLIC_LINK_DAO.insert(publicLink3);

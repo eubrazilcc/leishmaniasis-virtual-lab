@@ -25,8 +25,9 @@ package eu.eubrazilcc.lvl.service.rest;
 import static eu.eubrazilcc.lvl.core.Dataset.DATASET_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlDecodeUtf8;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.service.io.DatasetWriter.writeDataset;
-import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.US_ASCII_PRINTABLE_PATTERN;
+import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.OWNERID_EL_TEMPLATE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -67,6 +68,7 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 
 import eu.eubrazilcc.lvl.core.Dataset;
+import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.service.Datasets;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
@@ -75,7 +77,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
  * {@link Dataset} resource.
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/datasets/files")
+@Path("/datasets")
 public class DatasetResource {
 
 	private final static Logger LOGGER = getLogger(DatasetResource.class);
@@ -83,13 +85,14 @@ public class DatasetResource {
 	public static final String RESOURCE_NAME = LVL_NAME + " Dataset Resource";	
 
 	@GET
-	@Path("{namespace: " + US_ASCII_PRINTABLE_PATTERN + "}")
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public Datasets getDatasets(final @PathParam("namespace") String namespace, final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace);
 		final OAuth2SecurityManager securityManager = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("datasets:files:" + OWNERID_EL_TEMPLATE + ":*:view");
+				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":*:view");
 		final String ownerid = securityManager.getPrincipal();
 		final Datasets paginable = Datasets.start()
 				.page(page)
@@ -97,7 +100,7 @@ public class DatasetResource {
 				.build();
 		// get public links from database
 		final MutableLong count = new MutableLong(0l);
-		final List<Dataset> datasets = DATASET_DAO.list(ownerid, paginable.getPageFirstEntry(), per_page, null, null, count);
+		final List<Dataset> datasets = DATASET_DAO.list(ns2dbnamespace(namespace2, ownerid), paginable.getPageFirstEntry(), per_page, null, null, count);
 		paginable.setElements(datasets);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
@@ -106,7 +109,7 @@ public class DatasetResource {
 	}
 
 	@GET
-	@Path("{namespace: " + US_ASCII_PRINTABLE_PATTERN + "}/{filename: " + US_ASCII_PRINTABLE_PATTERN + "}")
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{filename: " + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public Dataset getDataset(final @PathParam("namespace") String namespace, final @PathParam("filename") String filename, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -123,14 +126,15 @@ public class DatasetResource {
 	}
 
 	@POST
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public Response createDataset(final Dataset dataset, final @Context UriInfo uriInfo, final @Context HttpServletRequest request, 
-			final @Context HttpHeaders headers) {
-		String namespace2 = null, filename2 = null;
-		if (dataset == null || isBlank(namespace2 = trimToNull(dataset.getNamespace())) 
-				|| isBlank(filename2 = trimToNull(dataset.getFilename()))) {
+	public Response createDataset(final @PathParam("namespace") String namespace, final Dataset dataset, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace);
+		String filename2 = null;
+		if (dataset == null || isBlank(filename2 = trimToNull(dataset.getFilename()))) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
-		}		
+		}
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":*:create")
 				.getPrincipal();
@@ -139,26 +143,30 @@ public class DatasetResource {
 		if (dataset.getOutfile() == null) {
 			throw new WebApplicationException("Failed to write dataset to file", INTERNAL_SERVER_ERROR);			
 		}
-		// insert ownerid as dataset editor
-		// TODO
-		// create new entry in the database
-		final WriteResult<Dataset> result = DATASET_DAO.insert(namespace2, filename2, dataset.getOutfile(), dataset.getMetadata());
-		LOGGER.debug("New dataset created: ns=" + namespace2 + ", fn=" + filename2 + ", id=" + result.getId());
+		// update dataset, setting ownerid as dataset editor
+		final String dbns = ns2dbnamespace(namespace2, ownerid);
+		dataset.setNamespace(dbns);
+		dataset.setFilename(filename2);		
+		((DatasetMetadata)dataset.getMetadata()).setEditor(ownerid);
+		// create new entry in the database		
+		final WriteResult<Dataset> result = DATASET_DAO.insert(dbns, filename2, dataset.getOutfile(), 
+				dataset.getMetadata());
+		LOGGER.debug("New dataset created: ns=" + dbns + ", fn=" + filename2 + ", id=" + result.getId());
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
-				.path(dataset.getUrlSafeNamespace())
-				.path(dataset.getUrlSafeFilename());		
+				.path(urlEncodeUtf8(dbns))
+				.path(dataset.getUrlSafeFilename());
 		return Response.created(uriBuilder.build()).build();
 	}
 
 	@PUT
-	@Path("{namespace: " + US_ASCII_PRINTABLE_PATTERN + "}/{filename: " + US_ASCII_PRINTABLE_PATTERN + "}")
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{filename: " + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
 	public void updateDataset(final @PathParam("namespace") String namespace, final @PathParam("filename") String filename, final Dataset update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), filename2 = parseParam(filename);
-		if (update == null || !namespace2.equals(update.getNamespace()) || !filename2.equals(update.getFilename())) {
+		/* if (update == null || !namespace2.equals(update.getNamespace()) || !filename2.equals(update.getFilename())) {
 			throw new WebApplicationException("Parameters do not match", BAD_REQUEST);
-		}		
+		} */
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":" + filename2 + ":edit")
 				.getPrincipal();
@@ -171,15 +179,18 @@ public class DatasetResource {
 		if (update.getOutfile() == null) {
 			throw new WebApplicationException("Failed to write dataset to file", INTERNAL_SERVER_ERROR);			
 		}
-		// insert ownerid as dataset editor
-		// TODO
-		// (update) insert new version in the database		
-		final WriteResult<Dataset> result = DATASET_DAO.insert(namespace2, filename2, update.getOutfile(), update.getMetadata());
-		LOGGER.debug("New version created: ns=" + namespace2 + ", fn=" + filename2 + ", id=" + result.getId());
+		// update dataset, setting ownerid as dataset editor
+		final String dbns = ns2dbnamespace(namespace2, ownerid);
+		update.setNamespace(dbns);
+		update.setFilename(filename2);		
+		((DatasetMetadata)update.getMetadata()).setEditor(ownerid);
+		// (update) insert new version in the database
+		final WriteResult<Dataset> result = DATASET_DAO.insert(dbns, filename2, update.getOutfile(), update.getMetadata());
+		LOGGER.debug("New version created: ns=" + dbns + ", fn=" + filename2 + ", id=" + result.getId());
 	}
 
 	@DELETE
-	@Path("{namespace: " + US_ASCII_PRINTABLE_PATTERN + "}/{filename: " + US_ASCII_PRINTABLE_PATTERN + "}")
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{filename: " + URL_FRAGMENT_PATTERN + "}")
 	public void deleteDataset(final @PathParam("namespace") String namespace, final @PathParam("filename") String filename, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {		
 		final String namespace2 = parseParam(namespace), filename2 = parseParam(filename);
@@ -195,7 +206,7 @@ public class DatasetResource {
 	}
 
 	@GET
-	@Path("{namespace: " + US_ASCII_PRINTABLE_PATTERN + "}/{filename: " + US_ASCII_PRINTABLE_PATTERN + "}/download")
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{filename: " + URL_FRAGMENT_PATTERN + "}/download")
 	@Produces(APPLICATION_OCTET_STREAM)
 	public Response downloadDataset(final @PathParam("namespace") String namespace, final @PathParam("filename") String filename, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {

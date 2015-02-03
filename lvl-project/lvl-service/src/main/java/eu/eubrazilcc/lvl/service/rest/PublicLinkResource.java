@@ -63,7 +63,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.mutable.MutableLong;
 
-import eu.eubrazilcc.lvl.core.PublicLink;
+import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.service.PublicLinks;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
@@ -93,7 +93,7 @@ public class PublicLinkResource {
 				.build();
 		// get public links from database
 		final MutableLong count = new MutableLong(0l);
-		final List<PublicLink> publicLinks = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo))
+		final List<PublicLinkOLD> publicLinks = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo))
 				.list(paginable.getPageFirstEntry(), per_page, null, null, count, securityManager.hasRole(ADMIN_ROLE) ? null : ownerid);
 		paginable.setElements(publicLinks);
 		// set total count and return to the caller
@@ -105,7 +105,7 @@ public class PublicLinkResource {
 	@GET
 	@Path("{id}")
 	@Produces(APPLICATION_JSON)
-	public PublicLink getPublicLink(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+	public PublicLinkOLD getPublicLink(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
@@ -120,7 +120,7 @@ public class PublicLinkResource {
 				.requiresPermissions("datasets:shared:" + OWNERID_EL_TEMPLATE + ":" + fullpath + ":view")
 				.getPrincipal();
 		// get from database
-		final PublicLink publicLink = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo))
+		final PublicLinkOLD publicLink = PUBLIC_LINK_DAO.downloadBaseUri(getDownloadBaseUri(uriInfo))
 				.find(fullpath, ownerid);
 		if (publicLink == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
@@ -130,7 +130,7 @@ public class PublicLinkResource {
 
 	@POST
 	@Consumes(APPLICATION_JSON)
-	public Response createPublicLink(final PublicLink publicLink, final @Context UriInfo uriInfo, final @Context HttpServletRequest request, 
+	public Response createPublicLink(final PublicLinkOLD publicLink, final @Context UriInfo uriInfo, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("datasets:shared:" + OWNERID_EL_TEMPLATE + ":*:create")
@@ -151,7 +151,7 @@ public class PublicLinkResource {
 	@PUT
 	@Path("{id}")
 	@Consumes(APPLICATION_JSON)
-	public void updatePublicLink(final @PathParam("id") String id, final PublicLink update, 
+	public void updatePublicLink(final @PathParam("id") String id, final PublicLinkOLD update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
@@ -168,7 +168,7 @@ public class PublicLinkResource {
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 		.requiresPermissions("datasets:shared:" + OWNERID_EL_TEMPLATE + ":" + fullpath + ":edit");
 		// get from database
-		final PublicLink publicLink = PUBLIC_LINK_DAO.find(fullpath);
+		final PublicLinkOLD publicLink = PUBLIC_LINK_DAO.find(fullpath);
 		if (publicLink == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -192,7 +192,7 @@ public class PublicLinkResource {
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 		.requiresPermissions("datasets:shared:" + OWNERID_EL_TEMPLATE + ":" + fullpath + ":edit");
 		// get from database
-		final PublicLink publicLink = PUBLIC_LINK_DAO.find(fullpath);
+		final PublicLinkOLD publicLink = PUBLIC_LINK_DAO.find(fullpath);
 		if (publicLink == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}		

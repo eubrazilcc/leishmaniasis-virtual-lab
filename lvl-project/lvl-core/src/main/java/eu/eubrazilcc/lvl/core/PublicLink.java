@@ -24,98 +24,45 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.encodePublicLinkPath;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
-
-import javax.ws.rs.core.Link;
-
-import org.glassfish.jersey.linking.Binding;
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.InjectLinks;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
  * A link that a user create to share a private object with other users without requiring authentication (any user that knows the link 
  * can access the content of the object).
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PublicLink extends StorageObject implements Linkable<PublicLink> {
+public class PublicLink {
 
-	@InjectLinks({
-		@InjectLink(value="public_links/{urlSafePath}", rel=SELF, type=APPLICATION_JSON, 
-				bindings={@Binding(name="urlSafePath", value="${instance.urlSafePath}")})
-	})
-	@JsonSerialize(using = LinkListSerializer.class)
-	@JsonDeserialize(using = LinkListDeserializer.class)
-	@JsonProperty("links")
-	private List<Link> links; // HATEOAS links
-
-	private Target target;
-
+	private String path; // path relative to the storage directory + filename with (optional) extension	
+	private Date created;
 	private String downloadUri;
 
-	private String urlSafePath;
-
-	public PublicLink() {
-		super();
+	public String getPath() {
+		return path;
 	}
-
-	@Override
-	public List<Link> getLinks() {
-		return links;
+	
+	public void setPath(final String path) {
+		this.path = path;
 	}
-
-	@Override
-	public void setLinks(final List<Link> links) {
-		if (links != null) {
-			this.links = newArrayList(links);
-		} else {
-			this.links = null;
-		}
-	}
-
-	@Override
-	public void setPath(final String path) {		
-		super.setPath(path);
-		setUrlSafePath(encodePublicLinkPath(path));
-	}
-
-	public Target getTarget() {
-		return target;
-	}
-
-	public void setTarget(final Target target) {
-		this.target = target;
-	}	
-
+	
 	public String getDownloadUri() {
 		return downloadUri;
 	}
-
+	
 	public void setDownloadUri(final String downloadUri) {
 		this.downloadUri = downloadUri;
 	}
-
-	public String getUrlSafePath() {
-		return urlSafePath;
+	
+	public Date getCreated() {
+		return created;
 	}
-
-	public void setUrlSafePath(final String urlSafePath) {
-		this.urlSafePath = urlSafePath;
+	
+	public void setCreated(final Date created) {
+		this.created = created;
 	}
 
 	@Override
@@ -124,33 +71,22 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 			return false;
 		}
 		final PublicLink other = PublicLink.class.cast(obj);
-		return Objects.equals(links, other.links)
-				&& Objects.equals(downloadUri, other.downloadUri)
-				&& Objects.equals(urlSafePath, other.urlSafePath)
-				&& equalsIgnoringVolatile(other);
-	}
-
-	@Override
-	public boolean equalsIgnoringVolatile(final PublicLink other) {
-		if (other == null) {
-			return false;
-		}
-		return super.equals((StorageObject)other)
-				&& Objects.equals(target, other.target);
+		return Objects.equals(path, other.path)
+				&& Objects.equals(created, other.created)
+				&& Objects.equals(downloadUri, other.downloadUri);
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, target, downloadUri, urlSafePath);
+		return super.hashCode() + Objects.hash(path, created, downloadUri);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
-				.add("StorageObject", super.toString())
-				.add("target", target)
-				.add("downloadUri", downloadUri)
-				.add("urlSafePath", urlSafePath)
+				.add("path", path)
+				.add("created", created)
+				.add("downloadUri", downloadUri)				
 				.toString();
 	}
 
@@ -164,30 +100,9 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 
 		private final PublicLink instance = new PublicLink();
 
-		public Builder links(final List<Link> links) {
-			instance.setLinks(links);
-			return this;
-		}
-
 		public Builder path(final String path) {
 			checkArgument(isNotBlank(path), "Uninitialized or invalid path");
 			instance.setPath(path.trim());
-			return this;
-		}
-
-		public Builder mime(final String mime) {
-			instance.setMime(trimToEmpty(mime));
-			return this;
-		}
-
-		public Builder description(final String description) {
-			instance.setDescription(trimToEmpty(description));
-			return this;
-		}
-
-		public Builder owner(final String owner) {
-			checkArgument(isNotBlank(owner), "Uninitialized or invalid owner");
-			instance.setOwner(owner.trim());
 			return this;
 		}
 
@@ -197,18 +112,8 @@ public class PublicLink extends StorageObject implements Linkable<PublicLink> {
 			return this;
 		}
 
-		public Builder target(final Target target) {
-			instance.setTarget(target);
-			return this;
-		}
-
 		public Builder downloadUri(final String downloadUri) {
 			instance.setDownloadUri(trimToEmpty(downloadUri));
-			return this;
-		}
-
-		public Builder urlSafePath(final String urlSafePath) {
-			instance.setUrlSafePath(trimToEmpty(urlSafePath));
 			return this;
 		}
 

@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
  * the application's database.
  * @author Erik Torres <ertorser@upv.es> 
  */
+@Deprecated
 public class StorageObject {
 
 	private String path; // path relative to the storage directory + filename with (optional) extension

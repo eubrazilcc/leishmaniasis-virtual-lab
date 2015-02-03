@@ -43,16 +43,16 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.Paginable;
-import eu.eubrazilcc.lvl.core.PublicLink;
+import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
 
 /**
- * Wraps a collection of {@link PublicLink}.
+ * Wraps a collection of {@link PublicLinkOLD}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PublicLinks extends Paginable<PublicLink> {
+public class PublicLinks extends Paginable<PublicLinkOLD> {
 
 	@InjectLinks({
 		@InjectLink(resource=PublicLinkResource.class, method="getPublicLinks", bindings={
@@ -116,7 +116,7 @@ public class PublicLinks extends Paginable<PublicLink> {
 			return this;
 		}
 
-		public PublicLinksBuilder sharedObjects(final List<PublicLink> sharedObjects) {
+		public PublicLinksBuilder sharedObjects(final List<PublicLinkOLD> sharedObjects) {
 			instance.setElements(sharedObjects);
 			return this;			
 		}

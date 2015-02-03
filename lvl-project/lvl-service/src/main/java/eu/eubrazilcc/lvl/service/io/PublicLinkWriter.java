@@ -57,7 +57,7 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Function;
 
-import eu.eubrazilcc.lvl.core.PublicLink;
+import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSet;
@@ -78,7 +78,7 @@ public final class PublicLinkWriter {
 	public static final String GZIP = "gzip";
 	public static final String NONE = "none";
 
-	public static String writePublicLink(final PublicLink publicLink, final File outputDir) {		
+	public static String writePublicLink(final PublicLinkOLD publicLink, final File outputDir) {		
 		checkArgument(publicLink != null, "Uninitialized public link");
 		checkArgument(publicLink.getTarget() != null, "Uninitialized target");
 		checkArgument(publicLink.getTarget().getIds() != null && !publicLink.getTarget().getIds().isEmpty(), "Uninitialized or invalid id");
@@ -94,7 +94,7 @@ public final class PublicLinkWriter {
 		return path;
 	}
 
-	private static String sequence2publicLink(final PublicLink publicLink, final File outputDir) {
+	private static String sequence2publicLink(final PublicLinkOLD publicLink, final File outputDir) {
 		final String filter = isNotBlank(publicLink.getTarget().getFilter()) ? publicLink.getTarget().getFilter().trim().toLowerCase() : EXPORT_DEFAULT;
 		String path = null;
 		if (EXPORT_DEFAULT.equals(filter) || EXPORT_FASTA.equals(filter)) {
@@ -190,7 +190,7 @@ public final class PublicLinkWriter {
 		return compression2;
 	}
 
-	public static void unsetPublicLink(final PublicLink publicLink, final File baseDir) {
+	public static void unsetPublicLink(final PublicLinkOLD publicLink, final File baseDir) {
 		unsetPublicLink(new File(baseDir, publicLink.getPath()));		
 	}
 
