@@ -37,8 +37,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 
 /**
- * Stores geospatial locations in GeoJSON format. Only a subset of the GeoJSON is supported in this
- * version.
+ * Stores geospatial locations in GeoJSON format. Only a subset of the GeoJSON is supported in this version.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://geojson.org/">GeoJSON -- JSON Geometry and Feature Description</a>
  */

@@ -83,10 +83,11 @@ public class DatasetResource {
 	public static final String RESOURCE_NAME = LVL_NAME + " Dataset Resource";	
 
 	@GET
+	@Path("{namespace: " + US_ASCII_PRINTABLE_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public Datasets getDatasets(final @QueryParam("page") @DefaultValue("0") int page,
-			final @QueryParam("per_page") @DefaultValue("100") int per_page,
-			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+	public Datasets getDatasets(final @PathParam("namespace") String namespace, final @QueryParam("page") @DefaultValue("0") int page,
+			final @QueryParam("per_page") @DefaultValue("100") int per_page, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final OAuth2SecurityManager securityManager = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("datasets:files:" + OWNERID_EL_TEMPLATE + ":*:view");
 		final String ownerid = securityManager.getPrincipal();
@@ -125,11 +126,6 @@ public class DatasetResource {
 	@Consumes(APPLICATION_JSON)
 	public Response createDataset(final Dataset dataset, final @Context UriInfo uriInfo, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		
-		// TODO
-		LOGGER.info("\n\nDATASET=" + dataset + "\n");
-		// TODO
-		
 		String namespace2 = null, filename2 = null;
 		if (dataset == null || isBlank(namespace2 = trimToNull(dataset.getNamespace())) 
 				|| isBlank(filename2 = trimToNull(dataset.getFilename()))) {

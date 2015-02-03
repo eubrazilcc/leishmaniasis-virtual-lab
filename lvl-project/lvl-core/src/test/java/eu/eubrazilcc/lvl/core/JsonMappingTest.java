@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
+import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
@@ -46,6 +47,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
@@ -108,7 +110,36 @@ public class JsonMappingTest {
 					.build();
 			assertThat("reference is not null", reference, notNullValue());
 
-			final PublicLink publicLink = PublicLink.builder()
+			final Target target = Target.builder()
+					.type("sequence")
+					.collection(SANDFLY_COLLECTION)
+					.id("gb:JP540074")
+					.filter("export_fasta")
+					.compression("gzip").build();
+			assertThat("target is not null", target, notNullValue());
+			final DatasetMetadata metadata = DatasetMetadata.builder()
+					.description("Optional description")
+					.editor("ownerid")
+					.isLastestVersion("my_fasta_sequences.zip")
+					.publicLink("publicLink")
+					.tags(newHashSet("tag1", "tag2", "tag3"))
+					.target(target)
+					.build();
+			assertThat("dataset metadata is not null", metadata, notNullValue());
+			final Dataset dataset = Dataset.builder()
+					.aliases(newArrayList("alias1", "alias2"))
+					.chunkSize(20l)
+					.contentType("application/gzip")
+					.filename("my_fasta_sequences.zip")
+					.id("abcd123")
+					.length(230l)
+					.md5("iour83ytrdh")
+					.metadata(metadata)
+					.uploadDate(new Date())
+					.build();
+			assertThat("dataset is not null", dataset, notNullValue());
+
+			final PublicLinkOLD publicLink = PublicLinkOLD.builder()
 					.created(new Date())
 					.target(Target.builder().type("sanfly").collection("sandfly").ids(newHashSet("gb:JP540074", "gb:JP553239")).filter("export_fasta").compression("gzip").build())
 					.description("Optional description")
@@ -138,6 +169,13 @@ public class JsonMappingTest {
 			// test references with links
 			reference.setLinks(newArrayList(refLink));
 			testReference(reference);
+
+			// test dataset with no links
+			testDataset(dataset);
+
+			// test dataset with links
+			dataset.setLinks(newArrayList(refLink));
+			testDataset(dataset);
 
 			// test public links with no links
 			testPublicLink(publicLink);
@@ -199,7 +237,21 @@ public class JsonMappingTest {
 		assertThat("deserialized reference coincides with expected", reference2, equalTo(reference));
 	}
 
-	private void testPublicLink(final PublicLink publicLink) throws IOException {
+	private void testDataset(final Dataset dataset) throws IOException {
+		// test dataset JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(dataset);
+		assertThat("serialized dataset is not null", payload, notNullValue());
+		assertThat("serialized dataset is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized dataset (JSON): " + payload);
+
+		// test dataset JSON deserialization
+		final Dataset dataset2 = JSON_MAPPER.readValue(payload, Dataset.class);
+		assertThat("deserialized dataset is not null", dataset2, notNullValue());
+		assertThat("deserialized dataset coincides with expected", dataset2, equalTo(dataset));
+	}
+
+	private void testPublicLink(final PublicLinkOLD publicLink) throws IOException {
 		// test public link JSON serialization
 		final String payload = JSON_MAPPER.writeValueAsString(publicLink);
 		assertThat("serialized public link is not null", payload, notNullValue());
@@ -208,7 +260,7 @@ public class JsonMappingTest {
 		System.out.println(" >> Serialized public link (JSON): " + payload);
 
 		// test public link JSON deserialization
-		final PublicLink publicLink2 = JSON_MAPPER.readValue(payload, PublicLink.class);
+		final PublicLinkOLD publicLink2 = JSON_MAPPER.readValue(payload, PublicLinkOLD.class);
 		assertThat("deserialized public link is not null", publicLink2, notNullValue());
 		assertThat("deserialized public link coincides with expected", publicLink2, equalTo(publicLink));		
 	}

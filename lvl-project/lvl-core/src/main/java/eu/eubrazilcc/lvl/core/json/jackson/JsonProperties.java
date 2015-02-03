@@ -20,21 +20,17 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.mongodb.jackson;
-
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.ObjectMapper;
+package eu.eubrazilcc.lvl.core.json.jackson;
 
 /**
- * Binds Java objects to/from MongoDB using the Jackson JSON processor.
+ * Provides basic properties to be used with JSON serializers/deserializers.
  * @author Erik Torres <ertorser@upv.es>
  */
-public final class MongoDBJsonMapper {
+public interface JsonProperties {
 
-	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
-	static {
-		JSON_MAPPER.setSerializationInclusion(Include.NON_NULL);
-		JSON_MAPPER.setSerializationInclusion(Include.NON_DEFAULT);
-	}
-
+	/**
+	 * Property name to include the class name needed to deserialize polymorphic types.
+	 */
+	public static final String JSON_TYPE_PROPERTY = "@type";		
+	
 }

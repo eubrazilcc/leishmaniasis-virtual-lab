@@ -793,11 +793,6 @@ public class ServiceTest {
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (FASTA.GZIP sandfly) response is not null", response, notNullValue());
-			
-			// TODO
-			System.err.println("\n\nHERE: " + response.readEntity(String.class) + "\n");
-			// TODO
-			
 			assertThat("Create dataset (FASTA.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create dataset (FASTA.GZIP sandfly) is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);

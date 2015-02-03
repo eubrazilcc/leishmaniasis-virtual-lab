@@ -88,17 +88,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		</dependency>		
 		<dependency> <!-- Add declarative hyperlinking support -->
     		<groupId>org.glassfish.jersey.ext</groupId>
-    		<artifactId>jersey-declarative-linking</artifactId>
-    		<exclusions> <!-- https://java.net/jira/browse/JERSEY-2650 -->
-    			<exclusion>
-    				<groupId>javax.el</groupId>
-    				<artifactId>javax.el-api</artifactId>
-    			</exclusion>
-    			<exclusion>
-    				<groupId>org.glassfish.web</groupId>
-    				<artifactId>javax.el</artifactId>
-    			</exclusion>
-    		</exclusions>
+    		<artifactId>jersey-declarative-linking</artifactId>    		
 		</dependency>
 		<dependency> <!-- Jersey Test Framework with external container -->
 			<groupId>org.glassfish.jersey.test-framework.providers</groupId>

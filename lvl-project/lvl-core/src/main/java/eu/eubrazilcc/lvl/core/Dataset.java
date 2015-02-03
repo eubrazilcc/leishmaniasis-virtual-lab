@@ -83,6 +83,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 	
 	public Dataset() {
 		super();
+		setNamespace(DATASET_DEFAULT_NS);
 	}
 
 	@Override
@@ -179,6 +180,8 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	public static class DatasetMetadata extends Metadata {
 
+		public static final String DATASET_METADATA_NAME = "DatasetMetadata";
+		
 		private String editor;
 		private Set<String> tags = newHashSet();
 		private String publicLink;		
@@ -209,7 +212,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			return publicLink;
 		}
 
-		public void setPublicLink(final String publicLink) {
+		public void setPublicLink(final @Nullable String publicLink) {
 			this.publicLink = publicLink;
 		}
 

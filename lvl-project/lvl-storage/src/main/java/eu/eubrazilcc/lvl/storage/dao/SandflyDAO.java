@@ -226,7 +226,7 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 	 */
 	public List<Localizable<Point>> getReferenceLocations() {
 		final List<Localizable<Point>> localizables = newArrayList();		
-		// filter sandflys where PubMed Ids is not null
+		// filter sandflies where PubMed Ids is not null
 		final DBObject query = new BasicDBObject(DB_PREFIX + "pmids", new BasicDBObject("$ne", null));
 		final List<BasicDBObject> results = MONGODB_CONN.mapReduce(COLLECTION, emitReferencesFn(), reduceReferencesFn(), query);
 		transformReferenceLocations(localizables, results);

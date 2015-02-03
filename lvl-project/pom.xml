@@ -67,7 +67,9 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<!-- Convenience properties to set library versions -->
-		<jersey.version>2.14</jersey.version> <!-- Check this bug in next version and remove javax.el exclusion from modules: https://java.net/jira/browse/JERSEY-2650 -->
+		<jersey.version>2.15</jersey.version>
+		<javax.el.version>2.2.4</javax.el.version>
+		<javax.el.impl.version>2.2.4</javax.el.impl.version> <!-- Need to include javax.el due to: https://java.net/jira/browse/JERSEY-2650 -->
 		<junit.version>4.11</junit.version> <!-- if you change this, then check Hamcrest version -->
 		<hamcrest.version>1.3</hamcrest.version> <!-- coincides with JUnit dependency -->
 		<mockito.version>1.9.5</mockito.version>

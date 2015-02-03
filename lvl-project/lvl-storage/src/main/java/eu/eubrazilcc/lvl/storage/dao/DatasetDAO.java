@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.core.json.jackson.JsonProperties.JSON_TYPE_PROPERTY;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -87,7 +88,7 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 
 	@Override
 	public Dataset find(final @Nullable String namespace, final String filename) {
-		try {
+		try {			
 			return parseGridFSDBFileOrNull(MONGODB_CONN.readFile(namespace, filename), namespace);
 		} catch (IOException e) {
 			throw new IllegalStateException("Failed to read file", e);
@@ -153,7 +154,7 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 	public void stats(final @Nullable String namespace, final OutputStream os) throws IOException {
 		MONGODB_CONN.statsFiles(os, namespace);
 	}
-	
+
 	public void cleanCache() {
 		persistingCache.invalidateAll();
 	}
@@ -176,6 +177,8 @@ public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
 	}
 
 	private Dataset toDataset(final GridFSDBFile gfsFile, final String namespace) {
+		// add metadata type
+		gfsFile.getMetaData().put(JSON_TYPE_PROPERTY, DatasetMetadata.DATASET_METADATA_NAME);		
 		return Dataset.builder()
 				.id(ObjectId.class.cast(gfsFile.getId()).toString())
 				.length(gfsFile.getLength())

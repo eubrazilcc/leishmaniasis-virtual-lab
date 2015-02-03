@@ -58,7 +58,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 
-import eu.eubrazilcc.lvl.core.PublicLink;
+import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
 import eu.eubrazilcc.lvl.service.WorkflowDataObjects;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
@@ -133,7 +133,7 @@ public class WorkflowDataResource {
 			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
 		}
 		final String path = splitted[0], name = splitted[1];		
-		final PublicLink publicLink = PUBLIC_LINK_DAO.find(path + "/" + name, ownerid);
+		final PublicLinkOLD publicLink = PUBLIC_LINK_DAO.find(path + "/" + name, ownerid);
 		final File inputFile = new File(CONFIG_MANAGER.getSharedDir(), publicLink.getPath());		
 		// upload to e-SC
 		String inputFileId = null;

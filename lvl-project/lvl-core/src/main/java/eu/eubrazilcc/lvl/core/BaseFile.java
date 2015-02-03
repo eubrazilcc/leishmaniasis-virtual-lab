@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static eu.eubrazilcc.lvl.core.json.jackson.JsonProperties.JSON_TYPE_PROPERTY;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 
 import java.io.File;
@@ -31,6 +32,15 @@ import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+
+import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 
 /**
  * Base class from which to extend to create objects stored in the file-system and referred in the application's database.
@@ -40,7 +50,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * @see <a href="http://docs.mongodb.org/manual/reference/gridfs/#gridfs-files-collection">GridFS Reference: The files Collection</a>
  */
 @JsonIgnoreProperties({ "outfile" })
-public class BaseFile {
+public class BaseFile {	
 
 	private String id;
 	private long length;
@@ -182,7 +192,10 @@ public class BaseFile {
 	 * version of a file.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	public static class Metadata extends Versionable {
+	@JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = JSON_TYPE_PROPERTY)
+	@JsonSubTypes({@Type(value = DatasetMetadata.class, name = DatasetMetadata.DATASET_METADATA_NAME)})
+	@JsonInclude(Include.NON_NULL)
+	public static abstract class Metadata extends Versionable {
 
 		@Override
 		public boolean equals(final Object obj) {

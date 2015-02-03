@@ -116,6 +116,18 @@ that you distribute must include a readable copy of the "NOTICE" text file.
     		<artifactId>jersey-declarative-linking</artifactId>
     		<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>javax.el</groupId>
+			<artifactId>javax.el-api</artifactId>
+			<version>${javax.el.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.web</groupId>
+			<artifactId>javax.el</artifactId>
+			<version>${javax.el.impl.version}</version>
+			<scope>provided</scope>
+		</dependency>
 		
 		<!-- Logback and SLF4J logging framework -->
 		<dependency>
