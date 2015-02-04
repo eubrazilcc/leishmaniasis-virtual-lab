@@ -86,6 +86,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
@@ -1013,7 +1014,7 @@ public class ServiceTest {
 					.description("Optional description")
 					.build();
 			dataset = Dataset.builder()
-					.filename("my_sequence.xml")
+					.filename("my_ncbi_sequence.xml")
 					.metadata(datasetMetadata)
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
@@ -1046,7 +1047,7 @@ public class ServiceTest {
 					.description("Optional description")
 					.build();
 			dataset = Dataset.builder()
-					.filename("my_ncbi_sequences.xml")
+					.filename("my_ncbi_sequences.zip")
 					.metadata(datasetMetadata)
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
@@ -1068,7 +1069,7 @@ public class ServiceTest {
 
 			// test file download
 			final URI downloadUri = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS))
-					.path(urlEncodeUtf8(dataset.getFilename())).path("download").getUri();
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml")).path("download").getUri();
 			final org.apache.http.client.fluent.Response response3 = Request.Get(downloadUri)
 					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
 					.addHeader("Accept", APPLICATION_OCTET_STREAM)
@@ -1114,23 +1115,22 @@ public class ServiceTest {
 				}
 			}
 			assertThat("Downloaded file exists", outfile.exists(), equalTo(true));
-			assertThat("Downloaded file is not empty", outfile.length(), greaterThan(0L));
+			assertThat("Downloaded file is not empty", outfile.length(), greaterThan(0L));			
 			final GBSeq sequence = getSequence(outfile);
 			assertThat("XML parsed from downloaded file is not null", sequence, notNullValue());
 			// uncomment for additional output
 			System.out.println(" >> Saved file: " + filename);
 
+			
+			
+			
+			
 
-			// TODO
+
+			
+			
 			// TODO : test share
 			// TODO : test public link operations
-
-
-
-
-
-
-
 
 
 
