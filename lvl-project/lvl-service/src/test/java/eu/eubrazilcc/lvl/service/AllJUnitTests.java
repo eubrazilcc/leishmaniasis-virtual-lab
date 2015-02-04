@@ -37,7 +37,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-// @SuiteClasses({ ResourceIdentifierPatternTest.class,ESCentralTest.class })
+//TODO @SuiteClasses({ ResourceIdentifierPatternTest.class, ESCentralTest.class })
 @SuiteClasses({ ResourceIdentifierPatternTest.class })
 public class AllJUnitTests {
 

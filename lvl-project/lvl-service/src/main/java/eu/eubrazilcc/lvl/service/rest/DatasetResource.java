@@ -74,15 +74,16 @@ import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
- * {@link Dataset} resource.
+ * {@link Dataset} resource. Provides methods for creating, editing, viewing and downloading datasets. Other resources provide additional 
+ * operations, such as sharing a dataset with other users {@link DatasetShareResource}.  
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/datasets")
+@Path("/datasets/objects")
 public class DatasetResource {
 
 	private final static Logger LOGGER = getLogger(DatasetResource.class);
 
-	public static final String RESOURCE_NAME = LVL_NAME + " Dataset Resource";	
+	public static final String RESOURCE_NAME = LVL_NAME + " Dataset Resource";
 
 	@GET
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
@@ -239,7 +240,7 @@ public class DatasetResource {
 				.build();
 	}
 
-	private static String parseParam(final String param) {
+	public static final String parseParam(final String param) {
 		String param2 = null;
 		if (isBlank(param) || isBlank(param2 = urlDecodeUtf8(param))) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
@@ -247,11 +248,11 @@ public class DatasetResource {
 		return param2;
 	}
 
-	private static String ns2permission(final String namespace) {
+	public static final String ns2permission(final String namespace) {
 		return DATASET_DEFAULT_NS.equals(namespace) ? OWNERID_EL_TEMPLATE : namespace;
 	}
 
-	private static String ns2dbnamespace(final String namespace, final String ownerid) {
+	public static final String ns2dbnamespace(final String namespace, final String ownerid) {
 		return DATASET_DEFAULT_NS.equals(namespace) ? ownerid : namespace;
 	}
 

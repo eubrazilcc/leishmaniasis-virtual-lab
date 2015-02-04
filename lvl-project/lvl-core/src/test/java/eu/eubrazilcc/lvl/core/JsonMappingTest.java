@@ -26,6 +26,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
@@ -139,6 +140,15 @@ public class JsonMappingTest {
 					.build();
 			assertThat("dataset is not null", dataset, notNullValue());
 
+			final DatasetShare datasetShare = DatasetShare.builder()
+					.accessType(EDIT_SHARE)
+					.filename("filename")
+					.namespace("namespace")
+					.sharedNow()
+					.subject("user@idp")
+					.build();
+			assertThat("dataset share is not null", datasetShare, notNullValue());
+
 			final PublicLinkOLD publicLink = PublicLinkOLD.builder()
 					.created(new Date())
 					.target(Target.builder().type("sanfly").collection("sandfly").ids(newHashSet("gb:JP540074", "gb:JP553239")).filter("export_fasta").compression("gzip").build())
@@ -176,6 +186,13 @@ public class JsonMappingTest {
 			// test dataset with links
 			dataset.setLinks(newArrayList(refLink));
 			testDataset(dataset);
+
+			// test dataset share with no links
+			testDatasetShare(datasetShare);
+
+			// test dataset share with links
+			datasetShare.setLinks(newArrayList(refLink));
+			testDatasetShare(datasetShare);
 
 			// test public links with no links
 			testPublicLink(publicLink);
@@ -249,6 +266,20 @@ public class JsonMappingTest {
 		final Dataset dataset2 = JSON_MAPPER.readValue(payload, Dataset.class);
 		assertThat("deserialized dataset is not null", dataset2, notNullValue());
 		assertThat("deserialized dataset coincides with expected", dataset2, equalTo(dataset));
+	}
+
+	private void testDatasetShare(final DatasetShare datasetShare) throws IOException {
+		// test dataset share JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(datasetShare);
+		assertThat("serialized dataset share is not null", payload, notNullValue());
+		assertThat("serialized dataset share is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized dataset share (JSON): " + payload);
+
+		// test dataset share JSON deserialization
+		final DatasetShare datasetShare2 = JSON_MAPPER.readValue(payload, DatasetShare.class);
+		assertThat("deserialized dataset share is not null", datasetShare2, notNullValue());
+		assertThat("deserialized dataset share coincides with expected", datasetShare2, equalTo(datasetShare));
 	}
 
 	private void testPublicLink(final PublicLinkOLD publicLink) throws IOException {

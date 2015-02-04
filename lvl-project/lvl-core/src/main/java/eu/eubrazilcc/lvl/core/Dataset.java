@@ -66,7 +66,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 	public static final String DATASET_DEFAULT_NS = "files";
 	
 	@InjectLinks({
-		@InjectLink(value="datasets/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={
+		@InjectLink(value="datasets/objects/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={
 				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
 				@Binding(name="urlSafeFilename", value="${instance.urlSafeFilename}")
 		})
@@ -146,8 +146,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		}
 		final Dataset other = Dataset.class.cast(obj);
 		return  Objects.equals(urlSafeNamespace, other.urlSafeNamespace)
-				&& Objects.equals(urlSafeFilename, other.urlSafeFilename)
-				&& Objects.equals(namespace, other.namespace)
+				&& Objects.equals(urlSafeFilename, other.urlSafeFilename)				
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -157,6 +156,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			return false;
 		}
 		return super.equals((BaseFile)other)
+				&& Objects.equals(namespace, other.namespace)
 				&& Objects.equals(links, other.links);
 	}
 

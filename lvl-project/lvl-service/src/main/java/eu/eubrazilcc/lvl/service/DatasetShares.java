@@ -42,32 +42,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import eu.eubrazilcc.lvl.core.Dataset;
+import eu.eubrazilcc.lvl.core.DatasetShare;
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.service.rest.DatasetResource;
 
 /**
- * Wraps a collection of {@link Dataset}.
+ * Wraps a collection of {@link DatasetShare}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Datasets extends Paginable<Dataset> {
+public class DatasetShares extends Paginable<DatasetShare> {
 
 	@InjectLinks({
-		@InjectLink(resource=DatasetResource.class, method="getDatasets", bindings={
+		@InjectLink(resource=DatasetResource.class, method="getDatasetShares", bindings={
 			@Binding(name="page", value="${instance.page - 1}"),
 			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=DatasetResource.class, method="getDatasets", bindings={
+		@InjectLink(resource=DatasetResource.class, method="getDatasetShares", bindings={
 			@Binding(name="page", value="${0}"),
 			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-		@InjectLink(resource=DatasetResource.class, method="getDatasets", bindings={
+		@InjectLink(resource=DatasetResource.class, method="getDatasetShares", bindings={
 			@Binding(name="page", value="${instance.page + 1}"),
 			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-		@InjectLink(resource=DatasetResource.class, method="getDatasets", bindings={
+		@InjectLink(resource=DatasetResource.class, method="getDatasetShares", bindings={
 			@Binding(name="page", value="${instance.totalPages - 1}"),
 			@Binding(name="per_page", value="${instance.perPage}")
 		}, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}")
@@ -98,33 +98,33 @@ public class Datasets extends Paginable<Dataset> {
 				.toString();
 	}
 
-	public static DatasetsBuilder start() {
-		return new DatasetsBuilder();
+	public static DatasetSharesBuilder start() {
+		return new DatasetSharesBuilder();
 	}
 
-	public static class DatasetsBuilder {
+	public static class DatasetSharesBuilder {
 
-		private final Datasets instance = new Datasets();
+		private final DatasetShares instance = new DatasetShares();
 
-		public DatasetsBuilder page(final int page) {
+		public DatasetSharesBuilder page(final int page) {
 			instance.setPage(page);
 			return this;
 		}
 
-		public DatasetsBuilder perPage(final int perPage) {
+		public DatasetSharesBuilder perPage(final int perPage) {
 			instance.setPerPage(perPage);
 			return this;
 		}
 
-		public DatasetsBuilder datasets(final List<Dataset> datasets) {
-			instance.setElements(datasets);
+		public DatasetSharesBuilder shares(final List<DatasetShare> shares) {
+			instance.setElements(shares);
 			return this;			
 		}
 
-		public Datasets build() {
+		public DatasetShares build() {
 			return instance;
 		}
 
 	}
-	
+
 }
