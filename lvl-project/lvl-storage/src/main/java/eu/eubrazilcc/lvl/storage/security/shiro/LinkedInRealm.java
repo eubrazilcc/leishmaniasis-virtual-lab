@@ -37,14 +37,14 @@ import org.apache.shiro.authc.credential.SimpleCredentialsMatcher;
 public class LinkedInRealm extends BaseAuthorizingRealm {
 
 	public LinkedInRealm() {
-		super(new SimpleCredentialsMatcher());
+		super(new SimpleCredentialsMatcher(), LINKEDIN_IDENTITY_PROVIDER);
 		// add support for token-based authentication
 		setAuthenticationTokenClass(AccessTokenToken.class);
 	}
 
 	@Override
 	protected AuthenticationInfo doGetAuthenticationInfo(final AuthenticationToken token) throws AuthenticationException {
-	
+
 		// TODO
 		return null;
 	}	

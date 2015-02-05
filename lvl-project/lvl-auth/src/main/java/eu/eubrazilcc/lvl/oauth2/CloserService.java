@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.oauth2;
 import static com.google.common.collect.Queues.newArrayDeque;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.findConfigurationFiles;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector.ACTIVEMQ_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 
 import java.io.Closeable;
@@ -53,6 +54,9 @@ public enum CloserService implements CloserServiceIf {
 		// load configuration
 		CONFIG_MANAGER.setup(findConfigurationFiles());
 		CONFIG_MANAGER.preload();
+		// load ActiveMQ connector and register it for closing
+		ACTIVEMQ_CONN.preload();
+		register(ACTIVEMQ_CONN);
 		// load MongoDB connector and register it for closing
 		MONGODB_CONN.preload();
 		register(MONGODB_CONN);

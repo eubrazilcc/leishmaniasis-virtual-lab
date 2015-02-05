@@ -25,12 +25,16 @@ package eu.eubrazilcc.lvl.storage.activemq;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.Sets.newHashSet;
 import static javax.jms.DeliveryMode.NON_PERSISTENT;
 import static javax.jms.Session.AUTO_ACKNOWLEDGE;
+import static org.apache.activemq.ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
+import static com.google.common.collect.FluentIterable.from;
 
 import java.io.IOException;
 import java.net.URL;
@@ -50,11 +54,14 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+
 import eu.eubrazilcc.lvl.core.Closeable2;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 
 /**
  * Message queuing connector for Apache ActiveMQ.
@@ -76,8 +83,14 @@ public enum ActiveMQConnector implements Closeable2 {
 		mutex.lock();
 		try {
 			if (__connFactory == null) {
-				// TODO __connFactory = new ActiveMQConnectionFactory("failover://(tcp://localhost:61616,tcp://lvl.i3m.upv.es:61616)?randomize=true");
-				__connFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
+				final String brokers = Joiner.on(",").skipNulls().join(from(CONFIG_MANAGER.getMessageBrokers()).transform(new Function<String, String>() {
+					@Override
+					public String apply(final String host) {
+						final String host2 = trimToNull(host);
+						return isNotBlank(host2) ? "nio://" + host2 : null;						
+					}					
+				}).filter(notNull()).toList());
+				__connFactory = new ActiveMQConnectionFactory(isNotBlank(brokers) ? "failover://(" + brokers + ")?randomize=true" : DEFAULT_BROKER_URL);				
 			}
 			return __connFactory;
 		} finally {
@@ -163,7 +176,9 @@ public enum ActiveMQConnector implements Closeable2 {
 			producer.setDeliveryMode(NON_PERSISTENT);
 			final TextMessage textMessage = session.createTextMessage(message);
 			producer.send(textMessage);
-		} catch (JMSException e) {
+		} catch (JMSException e) {			
+			LOGGER.error("Failed to send message to topic: " + topicName, e);
+		} finally {
 			if (producer != null) {
 				try {
 					producer.close();
@@ -179,7 +194,6 @@ public enum ActiveMQConnector implements Closeable2 {
 					conn.close();
 				} catch (JMSException ignore) { }
 			}
-			LOGGER.error("Failed to send message to topic: " + topicName, e);
 		}
 	}
 
@@ -208,10 +222,10 @@ public enum ActiveMQConnector implements Closeable2 {
 		try {
 			if (__connFactory != null) {
 				__connFactory = null;
-			}
+			}			
 			final Iterator<TopicSubscriber> it = subscribers.iterator();
 			while (it.hasNext()) {
-				try {
+				try {					
 					it.next().close();
 					it.remove();					
 				} catch (Exception ignore) { }
@@ -283,12 +297,15 @@ public enum ActiveMQConnector implements Closeable2 {
 				return false;
 			}
 			final TopicSubscriber other = TopicSubscriber.class.cast(obj);
-			return Objects.equals(topicName, other.topicName);
+			return Objects.equals(topicName, other.topicName)
+					&& Objects.equals(conn, other.conn)
+					&& Objects.equals(session, other.session)
+					&& Objects.equals(consumer, other.consumer);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(topicName);
+			return Objects.hash(topicName, conn, session, consumer);
 		}
 
 		@Override

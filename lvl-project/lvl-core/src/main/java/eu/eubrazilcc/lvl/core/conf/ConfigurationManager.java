@@ -139,6 +139,10 @@ public enum ConfigurationManager implements Closeable2 {
 	public ImmutableList<String> getDbHosts() {
 		return configuration().getDbHosts();
 	}
+	
+	public ImmutableList<String> getMessageBrokers() {
+		return configuration().getMessageBrokers();
+	}
 
 	public String getSmtpHost() {
 		return configuration().getSmtpHost();
@@ -275,6 +279,8 @@ public enum ConfigurationManager implements Closeable2 {
 							final String dbPassword = getString("database.credentials.password", configuration, foundNameList, null);
 							final ImmutableList<String> dbHosts = getStringList("database.hosts.host", Pattern.compile("^[\\w]+:[\\d]+$"), 
 									configuration, foundNameList, newArrayList("localhost:27017"));
+							final ImmutableList<String> messageBrokers = getStringList("messaging.hosts.host", Pattern.compile("^[\\w]+:[\\d]+$"), 
+									configuration, foundNameList, newArrayList("localhost:61616"));
 							final String smtpHost = getString("smtp.host", configuration, foundNameList, "localhost");
 							final int smtpPort = getInteger("smtp.port", configuration, foundNameList, 25);
 							final String smtpSupportEmail = getString("smtp.support-email", configuration, foundNameList, "support@example.com");
@@ -301,7 +307,7 @@ public enum ConfigurationManager implements Closeable2 {
 									}								
 								}
 							}
-							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dataDir, dbName, dbUsername, dbPassword, dbHosts, 
+							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dataDir, dbName, dbUsername, dbPassword, dbHosts, messageBrokers,
 									smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, publicLocation, wfHostname, 
 									wfSecure, wfPort, wfUsername, wfPasswd, othersMap);
 							LOGGER.info(dont_use.toString());
@@ -406,6 +412,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final Optional<String> dbUsername;
 		private final Optional<String> dbPassword;
 		private final ImmutableList<String> dbHosts;
+		private final ImmutableList<String> messageBrokers;
 		private final String smtpHost;
 		private final int smtpPort;
 		private final String smtpSupportEmail;
@@ -421,6 +428,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final ImmutableMap<String, String> othersMap;
 		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, final File dataDir, 
 				final String dbName, final @Nullable String dbUsername, final @Nullable String dbPassword, final ImmutableList<String> dbHosts,
+				final ImmutableList<String> messageBrokers,
 				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
 				final @Nullable String portalEndpoint, final @Nullable String publicLocation,
 				final @Nullable String wfHostname, final boolean wfSecure, final int wfPort, final @Nullable String wfUsername, final @Nullable String wfPasswd,
@@ -433,6 +441,7 @@ public enum ConfigurationManager implements Closeable2 {
 			this.dbUsername = fromNullable(trimToNull(dbUsername));
 			this.dbPassword = fromNullable(trimToNull(dbPassword));
 			this.dbHosts = dbHosts;
+			this.messageBrokers = messageBrokers;
 			this.smtpHost = smtpHost;
 			this.smtpPort = smtpPort;
 			this.smtpSupportEmail = smtpSupportEmail;
@@ -469,6 +478,9 @@ public enum ConfigurationManager implements Closeable2 {
 		}		
 		public ImmutableList<String> getDbHosts() {
 			return dbHosts;
+		}
+		public ImmutableList<String> getMessageBrokers() {
+			return messageBrokers;
 		}
 		public String getSmtpHost() {
 			return smtpHost;

@@ -20,25 +20,22 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.oauth2.event;
+package eu.eubrazilcc.lvl.storage.activemq;
 
-import eu.eubrazilcc.lvl.core.event.BaseEvent;
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 
 /**
- * Use it to notify interested parties that permissions or roles have changed in the targeted user.
+ * Topic helper.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PermissionsChangedEvent extends BaseEvent {
+public final class TopicHelper {
 
-	private final String ownerId;
-
-	public PermissionsChangedEvent(final String ownerId) {
-		super();
-		this.ownerId = ownerId;
+	public static String permissionChangedTopic(final String realm) {
+		String realm2 = null;
+		checkArgument(isNotBlank(realm2 = trimToNull(realm)), "Uninitialized or invalid realm");
+		return "lvl:security:" + realm2 + ":permissions:changed";	
 	}
-
-	public String getOwnerId() {
-		return ownerId;
-	}	
 	
 }

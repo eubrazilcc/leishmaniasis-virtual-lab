@@ -25,6 +25,8 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector.ACTIVEMQ_CONN;
+import static eu.eubrazilcc.lvl.storage.activemq.TopicHelper.permissionChangedTopic;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner.copyOf;
@@ -167,6 +169,9 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		MONGODB_CONN.update(obj, key(resourceOwner.getOwnerId()), COLLECTION);
 		// restore transient fields
 		store.restore();
+		// notify security manager about the changes
+		ACTIVEMQ_CONN.sendMessage(permissionChangedTopic(resourceOwner.getUser().getProvider()), 
+				resourceOwner.getOwnerId());
 		return null;
 	}
 
@@ -384,7 +389,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		}
 		return exist;		
 	}
-	
+
 	/**
 	 * Simply check whether a resource owner exists in the database using its identifier.
 	 * @param ownerId - identifier of the resource owner

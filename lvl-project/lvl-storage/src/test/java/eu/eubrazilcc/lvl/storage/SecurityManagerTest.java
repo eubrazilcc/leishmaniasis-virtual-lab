@@ -444,8 +444,6 @@ public class SecurityManagerTest {
 					equalTo(true));
 			assertThat("dataset share editing permission is not present", currentUser.isPermitted("datasets:files:" + poormanOwnerid + ":mysequences.xml:view,edit"), 
 					equalTo(false));
-			
-			// TODO
 
 			currentUser.logout();
 			assertThat("user logged out successfully", currentUser.isAuthenticated(), equalTo(false));

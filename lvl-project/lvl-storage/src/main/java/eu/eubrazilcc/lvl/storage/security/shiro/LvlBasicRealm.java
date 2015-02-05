@@ -30,7 +30,6 @@ import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.KEY_DEVIATI
 import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.decodeHex;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import org.apache.shiro.authc.AccountException;
 import org.apache.shiro.authc.AuthenticationException;
@@ -43,30 +42,24 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.authc.pam.UnsupportedTokenException;
-import org.slf4j.Logger;
-
-import com.google.common.eventbus.Subscribe;
 
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
-import eu.eubrazilcc.lvl.storage.oauth2.event.PermissionsChangedEvent;
 
 /**
  * Security realm that relies on LVL users authenticated through username/password.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class LvlBasicRealm extends BaseAuthorizingRealm {
+public class LvlBasicRealm extends BaseAuthorizingRealm {	
 
-	private final static Logger LOGGER = getLogger(LvlBasicRealm.class);
-	
 	private static final CredentialsMatcher CREDENTIAL_MATCHER = new HashedCredentialsMatcher();
 	static {
 		final HashedCredentialsMatcher matcher = HashedCredentialsMatcher.class.cast(CREDENTIAL_MATCHER);
 		matcher.setHashAlgorithmName(HASH_ALGORITHM);
-		matcher.setHashIterations(KEY_DEVIATION_ITERATIONS);
+		matcher.setHashIterations(KEY_DEVIATION_ITERATIONS);		
 	}
 
 	public LvlBasicRealm() {
-		super(CREDENTIAL_MATCHER);
+		super(CREDENTIAL_MATCHER, LVL_IDENTITY_PROVIDER);
 		// add support for username/password authentication
 		setAuthenticationTokenClass(UsernamePasswordToken.class);
 	}
@@ -94,12 +87,6 @@ public class LvlBasicRealm extends BaseAuthorizingRealm {
 		}
 		return new SimpleAuthenticationInfo(ownerid, owner.getUser().getPassword().toCharArray(),
 				decodeHex(owner.getUser().getSalt()), getName());		
-	}
-	
-	@Subscribe
-	public void updateSubjectPermissions(final PermissionsChangedEvent event) {
-		// TODO : clearCachedAuthenticationInfo(principals);
-		LOGGER.trace("Cached authorization info was evicted for account: " + event.getOwnerId());
-	}
+	}	
 
 }

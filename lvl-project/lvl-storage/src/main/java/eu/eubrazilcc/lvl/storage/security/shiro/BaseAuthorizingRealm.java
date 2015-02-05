@@ -24,10 +24,18 @@ package eu.eubrazilcc.lvl.storage.security.shiro;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector.ACTIVEMQ_CONN;
+import static eu.eubrazilcc.lvl.storage.activemq.TopicHelper.permissionChangedTopic;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.getIdentityProvider;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.TextMessage;
 
 import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authz.AuthorizationInfo;
@@ -35,6 +43,8 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.slf4j.Logger;
 
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.security.shiro.cache.GuavaCacheManager;
@@ -50,16 +60,34 @@ import eu.eubrazilcc.lvl.storage.security.shiro.cache.GuavaCacheManager;
  */
 public abstract class BaseAuthorizingRealm extends AuthorizingRealm {
 
+	private static final Logger LOGGER = getLogger(LvlBasicRealm.class);
+
 	private static final CacheManager CACHE_MANAGER = new GuavaCacheManager();
 
 	public static final long CONNECTION_TIMEOUT = 30000l; // 30 seconds
 
 	protected long connectionTimeout;
 
-	public BaseAuthorizingRealm(final CredentialsMatcher credentialsMatcher) {
+	public BaseAuthorizingRealm(final CredentialsMatcher credentialsMatcher, final String identityProvider) {
 		super(CACHE_MANAGER, credentialsMatcher);
 		// enable authentication caching
 		setAuthenticationCachingEnabled(true);
+		// subscribe to changes in users' permissions
+		ACTIVEMQ_CONN.subscribe(permissionChangedTopic(identityProvider), new MessageListener() {
+			@Override
+			public void onMessage(final Message message) {
+				if (message instanceof TextMessage) {
+					final TextMessage textMessage = (TextMessage) message;						
+					try {
+						final String ownerId = textMessage.getText();
+						clearCache(new SimplePrincipalCollection(ownerId, getName()));
+						LOGGER.trace(getName() + " - Cached authorization info was evicted for account: " + ownerId);						
+					} catch (JMSException e) {
+						LOGGER.error(getName() + " - Failed to read message", e);
+					}
+				}
+			}
+		});
 	}
 
 	public long getConnectionTimeout() {

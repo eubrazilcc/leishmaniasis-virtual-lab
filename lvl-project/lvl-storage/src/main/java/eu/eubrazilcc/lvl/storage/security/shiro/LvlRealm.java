@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.security.shiro;
 
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.LVL_IDENTITY_PROVIDER;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 
@@ -49,7 +50,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 public class LvlRealm extends BaseAuthorizingRealm {
 
 	public LvlRealm() {
-		super(new SimpleCredentialsMatcher());
+		super(new SimpleCredentialsMatcher(), LVL_IDENTITY_PROVIDER);
 		// add support for token-based authentication
 		setAuthenticationTokenClass(AccessTokenToken.class);		
 	}

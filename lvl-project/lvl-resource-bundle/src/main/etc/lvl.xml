@@ -79,6 +79,18 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		</hosts> -->
 	
 	</database>
+	
+	<!-- Message broker configuration -->
+	<messaging>
+	
+		<!-- Optional list of message brokers, specified with the format: 
+			'hostname:port'. If undefined, 'localhost:61616' is used -->
+		<!-- <hosts>		
+			<host>localhost:61616</host>
+			<host>lvl.i3m.upv.es:61616</host>
+		</hosts> -->
+	
+	</messaging>
 
 	<!-- Email configuration -->
 	<smtp>
