@@ -43,7 +43,8 @@ import org.junit.runners.Suite.SuiteClasses;
 	LvLQLTest.class, MapReduceTest.class, SecurityManagerTest.class }) */
 // TODO @SuiteClasses({ SandflyCollectionTest.class })
 // TODO @SuiteClasses({ LvLQLTest.class })
-@SuiteClasses({ DatasetCollectionTest.class })
+// TODO TODO @SuiteClasses({ DatasetCollectionTest.class })
+@SuiteClasses({ SecurityManagerTest.class })
 /* TODO @SuiteClasses({ TokenCollectionTest.class, AuthCodeCollectionTest.class, ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, 
 	PendingUserCollectionTest.class, NotificationCollectionTest.class, SecurityManagerTest.class }) */
 public class AllIntegrationTests {

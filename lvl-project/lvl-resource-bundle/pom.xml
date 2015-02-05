@@ -54,6 +54,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency> -->
+		
+		<!-- ActiveMQ Client -->
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-client</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

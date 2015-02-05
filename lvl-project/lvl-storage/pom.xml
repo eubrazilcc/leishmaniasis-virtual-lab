@@ -62,6 +62,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<scope>provided</scope>
 		</dependency>
 		
+		<!-- ActiveMQ Client -->
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-client</artifactId>
+			<scope>provided</scope>
+		</dependency>		
+		
 		<!-- The ANTLR 4 Runtime -->
 		<dependency>
 			<groupId>org.antlr</groupId>

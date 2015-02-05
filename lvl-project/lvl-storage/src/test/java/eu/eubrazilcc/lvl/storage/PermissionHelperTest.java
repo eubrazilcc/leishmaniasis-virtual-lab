@@ -22,12 +22,14 @@
 
 package eu.eubrazilcc.lvl.storage;
 
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.NUMBER_OF_PERMISSIONS_GRANTED_TO_REGULAR_USERS;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.PERMISSIONS_SEPARATOR;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asOAuthString;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionSet;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermissions;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.datasetSharePermission;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -38,6 +40,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
+
+import eu.eubrazilcc.lvl.core.DatasetShare;
 
 /**
  * Tests scope manager.
@@ -54,7 +58,7 @@ public class PermissionHelperTest {
 			assertThat("ownerid is not null", ownerid, notNullValue());
 			assertThat("ownerid is not empty", isNotBlank(ownerid));
 
-			final String permissions = userPermissions(ownerid);
+			String permissions = userPermissions(ownerid);
 			assertThat("permissions are not null", permissions, notNullValue());
 			assertThat("permissions are not empty", isNotBlank(permissions));
 			/* uncomment for additional output */
@@ -80,6 +84,21 @@ public class PermissionHelperTest {
 					equalTo(NUMBER_OF_PERMISSIONS_GRANTED_TO_REGULAR_USERS));
 			/* uncomment for additional output */
 			System.out.println(" >> Permissions string: " + string);
+
+			// test datasets share permission
+			final DatasetShare share = DatasetShare.builder()
+					.namespace("owner@idp1")
+					.filename("filename")
+					.subject("username@idp2")
+					.sharedNow()
+					.accessType(EDIT_SHARE)
+					.build();
+			permissions = datasetSharePermission(share);
+			assertThat("data share permissions are not null", permissions, notNullValue());
+			assertThat("data share permissions are not empty", isNotBlank(permissions));
+			assertThat("data share permissions coincide with expected", permissions, equalTo("datasets:files:owner@idp1:filename:view,edit"));
+			/* uncomment for additional output */
+			System.out.println(" >> Data share permissions: " + permissions);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

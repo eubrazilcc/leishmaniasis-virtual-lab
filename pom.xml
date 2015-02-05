@@ -229,7 +229,15 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>org.mongodb</groupId>
 				<artifactId>mongo-java-driver</artifactId>
 				<version>${mongodb.driver.version}</version>
-			</dependency>			
+			</dependency>
+			
+			<!-- ActiveMQ Client -->
+			
+			<dependency>
+				<groupId>org.apache.activemq</groupId>
+				<artifactId>activemq-client</artifactId>
+				<version>5.10.1</version>
+			</dependency>
 			
 			<!-- Java API for Google Geocoding API v3 -->
 			

@@ -30,6 +30,8 @@ import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Ordering.natural;
 import static com.google.common.collect.Sets.newHashSet;
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.assertValidResourceOwnerId;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -40,7 +42,11 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+
+import eu.eubrazilcc.lvl.core.DatasetShare;
+import eu.eubrazilcc.lvl.core.Shareable.SharedAccess;
 
 /**
  * Helper class to handle access permissions and roles.
@@ -131,6 +137,15 @@ public final class PermissionHelper {
 				"citations:*:*:*:view,edit,create",
 				"tasks:data:maintenance:*:view,edit,create",
 				"notifications:data:*:*:view,edit,create");
+	}
+
+	public static final String datasetSharePermission(final DatasetShare share) {
+		String namespace = null, filename = null;
+		SharedAccess accessType = null;
+		checkArgument(share != null && isNotBlank(namespace = trimToNull(share.getNamespace())) 
+				&& isNotBlank(filename = trimToNull(share.getFilename()))
+				&& (accessType = Optional.of(share.getAccessType()).or(VIEW_SHARE)) != null, "Uninitialized or invalid data share");
+		return "datasets:files:" + namespace + ":" + filename + ":view" + (accessType.equals(EDIT_SHARE) ? ",edit" : "");
 	}
 
 	public static final String asOAuthString(final String... permissions) {

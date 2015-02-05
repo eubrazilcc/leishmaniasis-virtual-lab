@@ -38,7 +38,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
       <div class="row">
         <div class="col-xs-12">
           <h1>Leishmaniasis Virtual Laboratory (LVL) Administration &amp; Development Guide</h1>
-          <p class="lead">Version 0.0.1 - December 2014</p>
+          <p class="lead">Version 0.0.1 - January 2015</p>
           <p>
             <strong>Abstract.</strong> This document is a guide to the administration and configuration of the Leishmaniasis Virtual Laboratory (LVL).
           </p>
@@ -64,6 +64,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                   <li><a href="#installation_requirements">Requirements</a></li>
                   <li><a href="#installation_quick_guide">Quick install guide</a></li>
                   <li><a href="#installation_from_source">Installing from source</a></li>
+                  <li><a href="#installation_virtual_appliances">Deploying EGI virtual appliances</a></li>
                   <li><a href="#installation_troubleshooting">Troubleshooting</a></li>
                 </ul></li>
               <li><a href="#security">Security</a>
@@ -190,32 +191,42 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
             <ul class="list-group">
               <li class="list-group-item">
-                <h4 class="list-group-item-heading">LVL collection</h4>
+                <h4 class="list-group-item-heading"><a id="lvl_lvl-collection"></a>LVL collection</h4>
                 <p class="list-group-item-text">
-                  A database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>. <em>Recommended version:</em> 2.6.5.
+                  A database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>. <em>Recommended version:</em> 2.6.7. Also, a message 
+                  broker based in <a href="http://activemq.apache.org/" target="_blank">Apache ActiveMQ</a> is provided to coordinate the operation among 
+                  the <i>LVL service</i> replicas. <em>Recommended version:</em> 5.6.0.
                 </p>
               </li>
               <li class="list-group-item">
-                <h4 class="list-group-item-heading">LVL identity provider &amp; authorization server</h4>
+                <h4 class="list-group-item-heading"><a id="lvl_lvl-authx"></a>LVL identity provider &amp; authorization server</h4>
                 <p class="list-group-item-text">
                   A Java servlet application that runs in a servlet container. <em>Recommended setup:</em> <a href="http://tomcat.apache.org/" target="_blank">Apache
                     Tomcat</a> 7.0.52.
                 </p>
               </li>
               <li class="list-group-item">
-                <h4 class="list-group-item-heading">LVL service</h4>
+                <h4 class="list-group-item-heading"><a id="lvl_lvl-service"></a>LVL service</h4>
                 <p class="list-group-item-text">
                   A servlet-based REST service. <em>Recommended setup:</em> it can be combined with the <i>LVL identity provider &amp; authorization server</i>
                   in the same servlet container or it can run separately in a different container.
                 </p>
               </li>
               <li class="list-group-item">
-                <h4 class="list-group-item-heading">LVL Web portal</h4>
+                <h4 class="list-group-item-heading"><a id="lvl_lvl-portal"></a>LVL Web portal</h4>
                 <p class="list-group-item-text">
                   A pure-JavaScript application that needs an HTTP server. <em>Recommended setup:</em> <a href="http://nginx.org/" target="_blank">nginx</a>
                   1.4.6. Optionally, you can include <a href="https://github.com/nbs-system/naxsi/wiki" target="_blank">Naxsi</a> with nginx to protect your
                   server against <a href="http://en.wikipedia.org/wiki/Cross-site_scripting" target="_blank">XSS</a> &amp; 
                   <a href="http://en.wikipedia.org/wiki/SQL_injection" target="_blank">SQL injection</a>.
+                </p>                
+              </li>
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading"><a id="lvl_workflow-manager"></a>Workflow manager</h4>
+                <p class="list-group-item-text">
+                  Workflow execution requires a workflow engine that is responsible for interpreting the workflow specification, and for scheduling and
+                  coordinating the different tasks. In EUBrazilCC this component is based on <a href="http://www.esciencecentral.co.uk/" target="_blank">e-Science Central</a>, 
+                  which is a platform for data analysis. <em>Recommended version:</em> 3.1-SNAPSHOT.
                 </p>                
               </li>
             </ul>
@@ -239,16 +250,16 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                   </p>
                 </div>
               </div>
-            </div>            
+            </div>
 
             <p>For example, the following command will install all these required dependencies in Ubuntu:</p>
 
-            <code> $ sudo apt-get install openjdk-7-jre tomcat7 nginx mongodb </code>
+            <code> $ sudo apt-get install openjdk-7-jre tomcat7 nginx mongodb activemq </code>
             <p></p>
 
             <p>Or, including Naxsi:</p>
 
-            <code> $ sudo apt-get install openjdk-7-jre tomcat7 nginx-naxsi mongodb </code>
+            <code> $ sudo apt-get install openjdk-7-jre tomcat7 nginx-naxsi mongodb activemq </code>
             <p></p>
 
             <p>
@@ -300,6 +311,20 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                 href="http://docs.mongodb.org/manual/security/" target="_blank">security mechanism in MongoDB</a>, then you will need to update the LVL
               configuration file: <em>/opt/lvl/etc/lvl.xml</em>.
             </p>
+            
+            <h3>Setup message broker</h3>
+            
+            
+            Configure NIO transport
+            
+            http://activemq.apache.org/configuring-transports.html
+            
+            Available options:
+            
+            http://activemq.apache.org/tcp-transport-reference.html
+            
+            
+            
 
             <h3>Install &amp; configure services</h3>
 
@@ -553,7 +578,56 @@ total 8.0K
 
             <code> $ mvn clean install -pl lvl-service -am -Dmaven.test.skip=true </code>
             <p></p>
-
+            
+            <h2>
+              <a id="installation_virtual_appliances"></a>Deploying EGI virtual appliances
+            </h2>
+            
+            <p>
+              The preferred manner to install the LVL is to use the LVL  virtual appliances stored in the EGI Applications database (<a href="http://appdb.egi.eu/" target="_blank">EGI AppDB</a>).
+              These appliances are pre-configured and tested virtual machine images, ready to run in the EUBrazilCC infrastructure. The following contextualization
+              options are available:
+            </p>
+            
+            <ul class="list-group">
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">LVL App front-end</h4>
+                <p class="list-group-item-text">
+                  Deploys a <i><a href="#lvl_lvl-portal">LVL Web portal</a></i>, providing the LVL user interface and the broker. Requires an IP 
+                  address accessible to your expected users. Normally, only one instance is needed.
+                </p>
+              </li>
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">LVL App service and data store</h4>
+                <p class="list-group-item-text">
+                  Deploys a <i><a href="#lvl_lvl-collection">LVL collection</a></i>, providing additional data storage space. This is combined with 
+                  a <i><a href="#lvl_lvl-service">LVL service</a></i> and a <i><a href="#lvl_lvl-authx">LVL identity provider &amp; authorization server</a></i>,
+                  which increase the LVL capacity to handle concurrent requests. Requires the IP address of your <i><a href="#lvl_lvl-portal">LVL Web portal</a></i>.
+                </p>
+              </li>                        
+            </ul>
+            
+            <p>
+              In addition, the following roles of e-SC are also required:
+            </p>            
+            
+            <ul class="list-group">
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">e-SC service</h4>
+                <p class="list-group-item-text">
+                  Deploys a <i><a href="#lvl_workflow-manager">Workflow manager</a></i>. Requires the IP address of your <i><a href="#lvl_lvl-portal">LVL Web portal</a></i>.
+                  Normally, only one instance is needed.
+                </p>
+              </li>
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">e-SC working node</h4>
+                <p class="list-group-item-text">
+                  Deploys a working node that can be used to execute workflow tasks, increasing the LVL capacity to execute concurrent requests. 
+                  Requires the IP address of your <i><a href="#lvl_workflow-manager">Workflow manager</a></i>.
+                </p>
+              </li>                       
+            </ul>
+            
             <h2>
               <a id="installation_troubleshooting"></a>Troubleshooting
             </h2>
@@ -1247,6 +1321,7 @@ Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:
                     </ul>
                   </li>
                   <li>/shares/{ns}/{id}</li>
+                  <li>/public_links/{ns}/{id}</li>
                 </ul>
               </li>
               <li>/pipelines
@@ -2628,6 +2703,12 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
                 </ul>
               </li>
               <li>Improve the inference of geographic coordinates from DNA sequences imported from GenBank.</li>
+              <li>Improve integration with Apache Shiro: Errors are logged when the LVL application is stopped/undeployed in Tomcat due to an unclean 
+              shutdown of Apache Shiro. These are not critical, but produces large error messages.
+                <ul>
+                  <li>Reference: <a href="http://mail-archives.apache.org/mod_mbox/shiro-user/201210.mbox/%3CCAAtvD4XVNhKt=2m5yJecKOYxr+PJDraMOWqoodakjk1wWxkh-g@mail.gmail.com%3E">Unclean shutdown of Tomcat</a>.</li>
+                </ul>
+              </li>
             </ul>
             
             <p>

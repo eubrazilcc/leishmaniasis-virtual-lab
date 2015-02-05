@@ -90,6 +90,16 @@ public class DatasetShareResource {
 			final DatasetShare datasetShare, final @Context UriInfo uriInfo,  final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 
 
+
+
+		// check that the dataset exists in the database
+		// TODO
+		// assign permissions to the subject
+		// TODO
+		
+
+
+
 		// TODO
 		return null;
 	}

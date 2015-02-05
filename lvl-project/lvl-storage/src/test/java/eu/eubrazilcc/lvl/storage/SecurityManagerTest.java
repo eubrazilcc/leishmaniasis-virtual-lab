@@ -23,14 +23,16 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
-import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.OWNERID_EL_TEMPLATE;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.ADMIN_ROLE;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.USER_ROLE;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.datasetSharePermission;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.defaultPermissions;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermissions;
 import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.generateSecret;
@@ -50,6 +52,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import eu.eubrazilcc.lvl.core.DatasetShare;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
@@ -99,6 +102,8 @@ public class SecurityManagerTest {
 	private static String poormanOwnerid;
 	private static String accessToken;
 
+	private static User meremortalUser;
+
 	@BeforeClass
 	public static void setUp() throws Exception {		
 		// insert users, permissions and roles in the database (passwords can be provided )
@@ -118,14 +123,15 @@ public class SecurityManagerTest {
 		meremortalOwnerid = toResourceOwnerId("meremortal");
 		roles = newArrayList(USER_ROLE);
 		permissions = newArrayList(asPermissionList(userPermissions(meremortalOwnerid)));
-		createResourceOwner(User.builder()
+		meremortalUser = User.builder()
 				.userid("meremortal")
 				.password("password2") // clear-text password is provided, the DAO is responsible for protecting the password before storing it
 				.email("meremortal@example.com")
 				.fullname("Mere Mortal User Fullname")
 				.roles(roles)
 				.permissions(permissions)
-				.build());
+				.build();
+		createResourceOwner(meremortalUser);
 		poormanOwnerid = toResourceOwnerId("poorman");
 		permissions = newArrayList(asPermissionList(defaultPermissions()));
 		createResourceOwner(User.builder()
@@ -416,6 +422,34 @@ public class SecurityManagerTest {
 
 			currentUser.logout();
 
+			// test access to shared dataset
+			currentUser = SimpleSecurityManager.builder().build();
+			assertThat("currently executing user is not null", currentUser, notNullValue());
+			assertThat("currently executing user is not authenticated", currentUser.isAuthenticated(), equalTo(false));
+
+			currentUser.login(accessToken);
+			assertThat("user logged in successfully", currentUser.isAuthenticated(), equalTo(true));
+
+			assertThat("dataset share permission is not present", currentUser.isPermitted("datasets:files:" + poormanOwnerid + ":mysequences.xml:view"), 
+					equalTo(false));
+			meremortalUser.getPermissions().add(datasetSharePermission(DatasetShare.builder()
+					.namespace(poormanOwnerid)
+					.filename("mysequences.xml")
+					.sharedNow()
+					.subject(meremortalOwnerid)
+					.accessType(VIEW_SHARE)
+					.build()));
+			updateResourceOwner(meremortalUser);
+			assertThat("dataset share viewing permission is present", currentUser.isPermitted("datasets:files:" + poormanOwnerid + ":mysequences.xml:view"), 
+					equalTo(true));
+			assertThat("dataset share editing permission is not present", currentUser.isPermitted("datasets:files:" + poormanOwnerid + ":mysequences.xml:view,edit"), 
+					equalTo(false));
+			
+			// TODO
+
+			currentUser.logout();
+			assertThat("user logged out successfully", currentUser.isAuthenticated(), equalTo(false));
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("SecurityManagerTest.test02Permissions() failed: " + e.getMessage());
@@ -423,7 +457,7 @@ public class SecurityManagerTest {
 			System.out.println("SecurityManagerTest.test02Permissions() has finished");
 		}
 	}
-	
+
 	@Test
 	public void test03LinkedIn() {
 		System.out.println("SecurityManagerTest.test03LinkedIn()");
@@ -450,6 +484,17 @@ public class SecurityManagerTest {
 		assertThat("resource owner is not null", owner, notNullValue());		
 		/* uncomment for additional output */
 		System.out.println(" >> Resource owner: " + owner.toString());
+	}
+
+	private static void updateResourceOwner(final User user) {
+		final ResourceOwner update = ResourceOwner.builder()
+				.user(user).build();
+		RESOURCE_OWNER_DAO.useGravatar(false).update(update);
+		final ResourceOwner owner = RESOURCE_OWNER_DAO.useGravatar(false)
+				.find(toResourceOwnerId(user.getProvider(), user.getUserid()));
+		assertThat("resource owner is not null", owner, notNullValue());		
+		/* uncomment for additional output */
+		System.out.println(" >> Resource owner updated: " + owner.toString());
 	}
 
 	private static String createToken(final String ownerid, final Collection<String> scopes) {

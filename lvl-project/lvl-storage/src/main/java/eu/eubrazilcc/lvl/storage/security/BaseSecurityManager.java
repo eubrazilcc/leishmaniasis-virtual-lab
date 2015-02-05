@@ -68,7 +68,7 @@ public abstract class BaseSecurityManager {
 		currentUser.logout();
 		owner = null;
 	}
-
+	
 	public final boolean isAuthenticated() {
 		return currentUser.isAuthenticated();
 	}
