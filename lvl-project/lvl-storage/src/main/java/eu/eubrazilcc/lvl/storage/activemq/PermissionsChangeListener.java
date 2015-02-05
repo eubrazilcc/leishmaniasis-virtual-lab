@@ -20,25 +20,39 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.oauth2.event;
+package eu.eubrazilcc.lvl.storage.activemq;
 
-import eu.eubrazilcc.lvl.core.event.BaseEvent;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.TextMessage;
+
+import org.slf4j.Logger;
 
 /**
- * Use it to notify interested parties that permissions or roles have changed in the targeted user.
+ * Tracks changes in the users' permissions.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PermissionsChangedEvent extends BaseEvent {
+public class PermissionsChangeListener implements MessageListener {
 
-	private final String ownerId;
+	private static final Logger LOGGER = getLogger(PermissionsChangeListener.class);
 
-	public PermissionsChangedEvent(final String ownerId) {
-		super();
-		this.ownerId = ownerId;
+	@Override
+	public void onMessage(final Message message) {
+		try {
+			if (message instanceof TextMessage) {
+				final TextMessage textMessage = (TextMessage) message;
+				
+				// TODO
+				System.out.println("\n\n >> HERE: Received message" + textMessage.getText() + "'\n");
+				// TODO
+				
+			}
+		} catch (final JMSException e2) {
+			LOGGER.error("Failed to read message", e2);
+		}
 	}
 
-	public String getOwnerId() {
-		return ownerId;
-	}	
-	
 }

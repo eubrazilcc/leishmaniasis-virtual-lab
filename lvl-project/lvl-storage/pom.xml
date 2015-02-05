@@ -150,6 +150,36 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	</dependencies>
 	
 	<build>
+		<pluginManagement>
+			<plugins>
+				<!-- Handle Maven plugin lifecycle in Eclipse -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>${m2e.lifecycle-mapping.version}</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.activemq.tooling</groupId>
+										<artifactId>maven-activemq-plugin</artifactId>
+										<versionRange>[${maven-activemq-plugin.version},)</versionRange>
+										<goals>
+											<goal>run</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	
 		<plugins>
 			<!-- Parse ANTLR 4 grammar files *.g4 and transforms them into Java source files -->
 			<plugin>
@@ -202,7 +232,29 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						<include>**/AllIntegrationTests.java</include>
 					</includes>
 				</configuration>
-			</plugin>
+			</plugin>			
+			<plugin>
+				<groupId>org.apache.activemq.tooling</groupId>
+				<artifactId>maven-activemq-plugin</artifactId>
+				<configuration>
+					<!-- <configUri>xbean:file:${project.build.sourceDirectory}/../activemq/activemq.xml</configUri> -->
+					<fork>true</fork>
+					<systemProperties>
+						<property>
+    						<name>org.apache.activemq.default.directory.prefix</name>
+    						<value>${project.build.directory}</value>
+   						</property>
+					</systemProperties>
+				</configuration>
+				<executions>
+					<execution>
+						<id>run</id>
+						<goals>
+							<goal>run</goal>
+						</goals>						
+					</execution>					
+				</executions>
+			</plugin>			
 			<plugin>
 				<groupId>com.github.joelittlejohn.embedmongo</groupId>
 				<artifactId>embedmongo-maven-plugin</artifactId>

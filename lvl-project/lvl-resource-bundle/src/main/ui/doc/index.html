@@ -314,18 +314,49 @@ that you distribute must include a readable copy of the "NOTICE" text file.
             
             <h3>Setup message broker</h3>
             
+            <p>
+              Recommended configuration for Apache ActiveMQ is based on the <a href="http://activemq.apache.org/xml-configuration.html" target="_blank">default configuration</a>.
+              In particular, configure NIO <a href="http://activemq.apache.org/configuring-transports.html" target="_blank">transport </a> with the
+              <a href="http://activemq.apache.org/tcp-transport-reference.html" target="_blank">available options</a>. Additional configuration options 
+              can be applied to protect your message broken from DOS attacks, such as limiting concurrent connections and frame size.
+            </p>
             
-            Configure NIO transport
+            <p>
+              The <code>systemUsage</code> controls the maximum amount of space the broker will use before slowing down <a href="http://activemq.apache.org/producer-flow-control.html" target="_blank">producers</a>.
+              When using ActiveMQ in a small virtual machine (1 core, 2GB RAM, 20GB disk storage) - the following limits could safely be used:
+            </p>
             
-            http://activemq.apache.org/configuring-transports.html
+            <ul>
+              <li>Memory Usage: amount of JVM memory that is available for the broker. <i>Recommended: </i> 128MB.</li>
+              <li>Store Usage: the disk space used by persistent messages (using KahaDB). <i>Recommended: </i> 5GB.</li>
+              <li>Temp Usage: the disk space used by non-persistent message, assuming we are using default KahaDB. ActiveMQ spools non-persistent 
+                  messages to disk in order to prevent broker running out of memory. <i>Recommended: </i> 1GB.</li>
+            </ul>
             
-            Available options:
+            <p>
+              <strong>FIXIT: </strong> Additional configuration parameters can be set in the file <code>/etc/default/activemq</code>. For example, 
+              include the following line to force Apache ActiveMQ to use a thread pool to dispatch messages:
+            </p>
             
-            http://activemq.apache.org/tcp-transport-reference.html
+            <code>ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS -Dorg.apache.activemq.UseDedicatedTaskRunner=false"</code>
+            <p></p>
+            
+            <p>
+              Additional recommendations to achieve vertical and horizontal scaling can be found in the following
+              <a href="http://www.javabeat.net/deploying-activemq-for-large-numbers-of-concurrent-applications/" target="_blank">link</a>.
+              For a general description about the supported topologies and configurations read the Apache ActiveMQ
+              <a href="http://activemq.apache.org/networks-of-brokers.html" target="_blank">online documentation</a>.              
+            </p>
+            
+            <p>
+              Notes to the Ubuntu installation: logs are stored by default in the file: <code>/var/lib/activemq/main/data/activemq.log</code>.
+            </p>
             
             
             
-
+            
+            
+            
             <h3>Install &amp; configure services</h3>
 
             <p>

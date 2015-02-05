@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.mock;
 
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector.ACTIVEMQ_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 
 import java.io.Closeable;
@@ -51,7 +52,10 @@ public enum CloserServiceMock implements CloserServiceIf {
 	@Override
 	public void preload() {		
 		// load default configuration
-		CONFIG_MANAGER.preload();		
+		CONFIG_MANAGER.preload();
+		// load ActiveMQ connector and register it for closing
+		ACTIVEMQ_CONN.preload();
+		register(ACTIVEMQ_CONN);
 		// load MongoDB connector and register it for closing
 		MONGODB_CONN.preload();
 		register(MONGODB_CONN);

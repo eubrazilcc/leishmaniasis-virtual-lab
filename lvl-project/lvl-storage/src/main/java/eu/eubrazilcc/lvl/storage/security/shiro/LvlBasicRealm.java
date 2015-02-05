@@ -45,10 +45,7 @@ import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.authc.pam.UnsupportedTokenException;
 import org.slf4j.Logger;
 
-import com.google.common.eventbus.Subscribe;
-
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
-import eu.eubrazilcc.lvl.storage.oauth2.event.PermissionsChangedEvent;
 
 /**
  * Security realm that relies on LVL users authenticated through username/password.
@@ -96,10 +93,10 @@ public class LvlBasicRealm extends BaseAuthorizingRealm {
 				decodeHex(owner.getUser().getSalt()), getName());		
 	}
 	
-	@Subscribe
+	/* TODO @Subscribe
 	public void updateSubjectPermissions(final PermissionsChangedEvent event) {
 		// TODO : clearCachedAuthenticationInfo(principals);
 		LOGGER.trace("Cached authorization info was evicted for account: " + event.getOwnerId());
-	}
+	} */
 
 }
