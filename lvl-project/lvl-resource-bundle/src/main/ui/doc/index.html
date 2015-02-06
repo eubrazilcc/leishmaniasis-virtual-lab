@@ -28,8 +28,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 <meta charset="UTF-8">
 <title>LVL - Administration &amp; Development Guide</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" media="screen">
-<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootswatch/3.2.0+1/readable/bootstrap.min.css">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" media="screen">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.2/readable/bootstrap.min.css">
 </head>
 <body>
   <div class="container">
@@ -38,7 +38,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
       <div class="row">
         <div class="col-xs-12">
           <h1>Leishmaniasis Virtual Laboratory (LVL) Administration &amp; Development Guide</h1>
-          <p class="lead">Version 0.0.1 - January 2015</p>
+          <p class="lead">Version 0.0.1 - February 2015</p>
           <p>
             <strong>Abstract.</strong> This document is a guide to the administration and configuration of the Leishmaniasis Virtual Laboratory (LVL).
           </p>
@@ -66,7 +66,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                   <li><a href="#installation_from_source">Installing from source</a></li>
                   <li><a href="#installation_virtual_appliances">Deploying EGI virtual appliances</a></li>
                   <li><a href="#installation_troubleshooting">Troubleshooting</a></li>
-                </ul></li>
+                </ul></li>               
+              <li><a href="#configuration">Configuration</a>
+                <ul>
+                  <li><a href="#configuration_common">Common configuration</a></li>
+                  <li><a href="#configuration_service">Configuring the LVL service</a></li>
+                  <li><a href="#configuration_idp_authx">Configuring the LVL IdP &amp; AuthX server</a></li>
+                </ul></li>                
               <li><a href="#security">Security</a>
                 <ul>
                   <li><a href="#security_general">General considerations</a></li>
@@ -315,12 +321,14 @@ that you distribute must include a readable copy of the "NOTICE" text file.
             <h3>Setup message broker</h3>
             
             <p>
-              A message broker is provided with the 
-              
-              https://github.com/eubrazilcc/leishmaniasis-virtual-lab/tree/master/lvl-project/lvl-storage
-              
-              embedded within the LVL 
+              An Apache ActiveMQ installation is embedded within the LVL distribution. Both the <i><a href="#lvl_lvl-service">LVL service</a></i> 
+              and the <i><a href="#lvl_lvl-authx">LVL identity provider &amp; authorization server</a></i> can be configured to start a              
+              message broker with the LVL. This broker uses the transporter <code>nio://localhost:61616</code> by default and only one
+              instance should be started per <code>JVM</code>. The brokers instantiated in this way are interconnected in a network of
+              brokers.
             </p>
+            
+            <h4>Setting and external message broker</h4>
             
             <p>
               Recommended configuration for Apache ActiveMQ is based on the <a href="http://activemq.apache.org/xml-configuration.html" target="_blank">default configuration</a>.
@@ -371,7 +379,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                 <div class="media-body">
                   <h4 class="media-heading">Apache ActiveMQ configuration example</h4>
                   <p>
-                    The example Apache ActiveMQ configuration: <a href="config/activemq.xml.txt" target="_blank" class="alert-link">activemq.xml</a>.
+                    The following configuration file: <a href="config/activemq.xml.txt" target="_blank" class="alert-link">activemq.xml</a>
+                    provides an example for installing an external Apache ActiveMQ service that can be safely used with the LVL.
                   </p>
                 </div>
               </div>
@@ -893,6 +902,156 @@ Connection: keep-alive
 }
 </pre>
 
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="clearfix">
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="page-header">
+            <h1 id="type">
+              <a id="configuration"></a>Configuration
+            </h1>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+
+            <p>
+              The LVL configuration is splitted across the following three files in order to facilitate configuration:
+            </p>
+            
+            <ul class="list-group">
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">Common configuration</h4>
+                <p class="list-group-item-text">
+                  The file <code>lvl.xml</code> contains common configuration directives that are globally available to all the components
+                  of the LVL.
+                </p>
+              </li>
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">LVL service configuration</h4>
+                <p class="list-group-item-text">
+                  The file <code>lvl-service.xml</code> contains configuration directives that are applied only to the LVL service.
+                </p>
+              </li>
+              <li class="list-group-item">
+                <h4 class="list-group-item-heading">LVL IdP &amp; AuthX server configuration</h4>
+                <p class="list-group-item-text">
+                  The file <code>lvl-auth.xml</code> contains common configuration directives that applied only to the LVL identity
+                  provider and authorization server.
+                </p>
+              </li>
+            </ul>
+            
+            <p>
+              The LVL find the available configuration files, searching the different sources in the following order:
+            </p>
+             
+            <ol>
+              <li>Application environment: if the environment variable <code>LVL_HOME</code> is setup, then the files are loaded from
+                  the location specified in the variable;</li>
+              <li>Default location <code>/opt/lvl</code> in the file-system locally available to the application; and finally</li>
+	          <li>If none of the above works, configuration files are returned from the resources available in the Java class path.</li>
+	        </ol>
+            
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+
+            <h2>
+              <a id="configuration_common"></a>Common configuration
+            </h2>
+            
+            <ul>
+              <li>
+                <code>lvl-root</code>: The top of the directory tree under which the service's configuration, supporting libraries 
+                and applications are kept. <span class="label label-default">Default</span> <code>/opt/lvl</code>
+              </li>
+              <li>
+                <code>storage.local-cache</code>: The performance of certain applications may be improved by using a local cache (ensure 
+                that this directory is writable by the user that LVL runs as). Temporary directory is preferable when your application 
+		        uses sensitive data. <span class="label label-default">Default</span> <code>{system temporary directory}/.lvl/cache</code>
+              </li>            
+              <li>
+                <code>database.name</code>: The name of the database where the LVL collections are stored. 
+                <span class="label label-default">Default</span> <code>lvldb</code>
+              </li>            
+              <li>
+                <code>database.credentials</code>: Optional user identity to access the database. <span class="label label-default">Default</span>
+                If undefined, anonymous access is performed.
+              </li>            
+              <li>
+                <code>database.hosts</code>: Optional list of database servers, specified with the format: <code>hostname:port</code>.
+                <span class="label label-default">Default</span> <code>localhost:27017</code>
+              </li>
+              <li>
+                <code>messaging.broker.embedded</code>: Deploy a message broker within the LVL. Otherwise, an external broker should 
+                be provided. <span class="label label-default">Default</span> <code>true</code>
+              </li>
+              <li>
+                <code>messaging.hosts</code>: Optional list of message brokers, specified with the format: <code>hostname:port</code>.
+                <span class="label label-default">Default</span> <code>localhost:61616</code>
+              </li>
+              <li>
+                <code>smtp.host</code>: Optional SMTP host. <span class="label label-default">Default</span> <code>localhost</code>
+              </li>
+              <li>
+                <code>smtp.port</code>: Optional SMTP port. <span class="label label-default">Default</span> <code>25</code>
+              </li>
+              <li>
+                <code>smtp.support-email</code>: Support email address. <span class="label label-warning">No default</span>
+              </li>
+              <li>
+                <code>smtp.noreply-email</code>: Difussion email addres. <span class="label label-warning">No default</span>
+              </li>
+              <li>
+                <code>workflow.endpoint</code>: Endpoint where the workflow manager is listening for incoming requests.
+                <span class="label label-warning">No default</span>
+              </li>
+              <li>
+                <code>workflow.credentials</code>: User identity to access the workflow manager.
+                <span class="label label-warning">No default</span>
+              </li>
+            </ul>
+            
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+
+            <h2>
+              <a id="configuration_service"></a>Configuring the LVL service
+            </h2>
+            
+            <ul>
+              <li>Prefix: <code>rest-service</code></li>
+            </ul>
+            
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+
+            <h2>
+              <a id="configuration_idp_authx"></a>Configuring the LVL IdP &amp; AuthX server
+            </h2>
+            
+            <ul>
+              <li>Prefix: <code>authz-server</code></li>
+            </ul>
+            
           </div>
         </div>
       </div>
@@ -2830,7 +2989,7 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
 
   </div>
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-  <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 </body>
 </html>

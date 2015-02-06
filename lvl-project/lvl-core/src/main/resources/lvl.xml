@@ -25,7 +25,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 <!-- Configure the Leishmaniasis Virtual Laboratory (LVL)            -->
 <!--                                                                 -->
 <!-- Documentation of this file format can be found at:              -->
-<!-- http://xxxxxxxxxxxxxxxxxxxxxxx/configuration                    -->
+<!-- http://lvl.i3m.upv.es/doc//#configuration                       -->
 <!--                                                                 -->
 <!-- Additional configuration files can be loaded from:              -->
 <!-- $LVL_HOME/etc/                                                  -->
