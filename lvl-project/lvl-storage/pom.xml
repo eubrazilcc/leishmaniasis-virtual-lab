@@ -62,12 +62,31 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<scope>provided</scope>
 		</dependency>
 		
-		<!-- ActiveMQ Client -->
+		<!-- Apache ActiveMQ: embedded broker -->
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-client</artifactId>
-			<scope>provided</scope>
-		</dependency>		
+			<artifactId>activemq-all</artifactId>
+		</dependency>				
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jms</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xbean</groupId>
+			<artifactId>xbean-spring</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-pool</groupId>
+			<artifactId>commons-pool</artifactId>
+		</dependency>
 		
 		<!-- The ANTLR 4 Runtime -->
 		<dependency>
@@ -233,11 +252,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 					</includes>
 				</configuration>
 			</plugin>			
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.activemq.tooling</groupId>
 				<artifactId>maven-activemq-plugin</artifactId>
 				<configuration>
-					<!-- <configUri>xbean:file:${project.build.sourceDirectory}/../activemq/activemq.xml</configUri> -->
+					- <configUri>xbean:file:${project.build.sourceDirectory}/../activemq/activemq.xml</configUri> -
 					<fork>true</fork>
 					<systemProperties>
 						<property>
@@ -254,7 +273,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						</goals>						
 					</execution>					
 				</executions>
-			</plugin>			
+			</plugin> -->
 			<plugin>
 				<groupId>com.github.joelittlejohn.embedmongo</groupId>
 				<artifactId>embedmongo-maven-plugin</artifactId>

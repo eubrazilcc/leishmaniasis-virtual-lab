@@ -70,7 +70,7 @@ public class ActiveMQConnectorTest {
 				ACTIVEMQ_CONN.sendMessage("lvl:test", "Hello World " + i + "!");
 				sent++;
 			}
-			Thread.sleep(4000l);
+			Thread.sleep(2000l);
 			assertThat("number of received messages coincides with messages sent", received, equalTo(sent));
 
 			// test unsubscribe

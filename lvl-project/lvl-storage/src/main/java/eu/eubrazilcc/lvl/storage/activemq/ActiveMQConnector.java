@@ -26,17 +26,20 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Sets.newHashSet;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static javax.jms.DeliveryMode.NON_PERSISTENT;
 import static javax.jms.Session.AUTO_ACKNOWLEDGE;
 import static org.apache.activemq.ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
+import static org.apache.activemq.broker.BrokerFactory.createBroker;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
-import static com.google.common.collect.FluentIterable.from;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
@@ -55,13 +58,16 @@ import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.pool.PooledConnectionFactory;
+import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 
 /**
  * Message queuing connector for Apache ActiveMQ.
@@ -73,16 +79,18 @@ public enum ActiveMQConnector implements Closeable2 {
 	ACTIVEMQ_CONN;
 
 	private static final Logger LOGGER = getLogger(ActiveMQConnector.class);
+	
+	public static final int MAX_POOLED_PRODUCERS_CONNECTIONS = 10;
 
 	private Lock mutex = new ReentrantLock();
-	private ActiveMQConnectionFactory __connFactory = null;
+	private BrokerManager __broker = null;
 
 	private Set<TopicSubscriber> subscribers = newHashSet();
 
-	private ActiveMQConnectionFactory connectionFactory() {
+	private BrokerManager broker() {
 		mutex.lock();
 		try {
-			if (__connFactory == null) {
+			if (__broker == null) {
 				final String brokers = Joiner.on(",").skipNulls().join(from(CONFIG_MANAGER.getMessageBrokers()).transform(new Function<String, String>() {
 					@Override
 					public String apply(final String host) {
@@ -90,9 +98,16 @@ public enum ActiveMQConnector implements Closeable2 {
 						return isNotBlank(host2) ? "nio://" + host2 : null;						
 					}					
 				}).filter(notNull()).toList());
-				__connFactory = new ActiveMQConnectionFactory(isNotBlank(brokers) ? "failover://(" + brokers + ")?randomize=true" : DEFAULT_BROKER_URL);				
+				try {
+					__broker = BrokerManager.builder()
+							.broker(CONFIG_MANAGER.isBrokerEmbedded() ? createBroker(new URI("xbean:activemq.xml"), true) : null)
+							.connFactory(new ActiveMQConnectionFactory(isNotBlank(brokers) ? "failover://(" + brokers + ")?randomize=true" : DEFAULT_BROKER_URL))
+							.build();					
+				} catch (Exception e) {
+					throw new IllegalStateException("Failed to create a broker service", e);
+				}
 			}
-			return __connFactory;
+			return __broker;
 		} finally {
 			mutex.unlock();
 		}
@@ -106,7 +121,7 @@ public enum ActiveMQConnector implements Closeable2 {
 		TopicSession session = null;
 		MessageConsumer consumer = null;
 		try {
-			conn = connectionFactory().createTopicConnection();
+			conn = broker().getConsumersConnFactory().createTopicConnection();
 			conn.start();
 			session = conn.createTopicSession(false, AUTO_ACKNOWLEDGE);
 			final Topic topic = session.createTopic(topicName2);
@@ -168,8 +183,9 @@ public enum ActiveMQConnector implements Closeable2 {
 		TopicSession session = null;
 		MessageProducer producer = null;
 		try {
-			conn = connectionFactory().createTopicConnection();
-			conn.start();
+			conn = (TopicConnection)broker().getProducersConnFactory().createConnection();
+			/* conn = broker().getConnFactory().createTopicConnection();
+			conn.start(); */
 			session = conn.createTopicSession(false, AUTO_ACKNOWLEDGE);
 			final Topic topic = session.createTopic(topicName);
 			producer = session.createProducer(topic);
@@ -189,11 +205,11 @@ public enum ActiveMQConnector implements Closeable2 {
 					session.close();
 				} catch (JMSException ignore) { }
 			}
-			if (conn != null) {
+			/* if (conn != null) {
 				try {
 					conn.close();
 				} catch (JMSException ignore) { }
-			}
+			} */
 		}
 	}
 
@@ -220,8 +236,16 @@ public enum ActiveMQConnector implements Closeable2 {
 	public void close() throws IOException {
 		mutex.lock();
 		try {
-			if (__connFactory != null) {
-				__connFactory = null;
+			if (__broker != null) {
+				if (__broker.getBroker().isPresent()) {
+					try {
+						__broker.getBroker().get().stopAllConnectors(new ServiceStopper());
+					} catch (Exception ignore) { }
+				}
+				try {
+					__broker.getProducersConnFactory().stop();
+				} catch (Exception ignore) { }
+				__broker = null;
 			}			
 			final Iterator<TopicSubscriber> it = subscribers.iterator();
 			while (it.hasNext()) {
@@ -238,6 +262,76 @@ public enum ActiveMQConnector implements Closeable2 {
 
 	/* Inner classes */
 
+	/**
+	 * Manages this connector by providing the following artifacts:
+	 * <ul>
+	 * <li>an optional {@link BrokerService message broker}, which is embedded within this application;</li>
+	 * <li>a {@link ActiveMQConnectionFactory consumer connections factory} to create new connections that are closed when the consumer is completed; and</li>
+	 * <li>a {@link PooledConnectionFactory pooled producer connections factory} to create and reuse connections to send messages.</li>
+	 * </ul>
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public static class BrokerManager {
+
+		private final Optional<BrokerService> broker;
+		private final ActiveMQConnectionFactory consumersConnFactory;
+		private final PooledConnectionFactory producersConnFactory;
+
+		public BrokerManager(final BrokerService broker, final ActiveMQConnectionFactory connFactory) {
+			checkNotNull(connFactory);
+			this.broker = Optional.fromNullable(broker);
+			this.consumersConnFactory = connFactory;
+			// configure pooled connection factory
+			this.producersConnFactory = new PooledConnectionFactory();
+			this.producersConnFactory.setConnectionFactory(connFactory);
+			this.producersConnFactory.setMaxConnections(MAX_POOLED_PRODUCERS_CONNECTIONS);
+		}
+
+		public Optional<BrokerService> getBroker() {
+			return broker;
+		}
+
+		public ActiveMQConnectionFactory getConsumersConnFactory() {
+			return consumersConnFactory;
+		}
+
+		public PooledConnectionFactory getProducersConnFactory() {
+			return producersConnFactory;
+		}		
+
+		/* Fluent API */
+
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		public static class Builder {
+
+			private BrokerService broker = null;
+			private ActiveMQConnectionFactory connFactory = null;
+
+			public Builder broker(final BrokerService broker) {
+				this.broker = broker;
+				return this;
+			}
+
+			public Builder connFactory(final ActiveMQConnectionFactory connFactory) {
+				this.connFactory = connFactory;
+				return this;
+			}
+
+			public BrokerManager build() {
+				return new BrokerManager(broker, connFactory);
+			}
+
+		}
+
+	}
+
+	/**
+	 * Stores information about a topic subscriber to allow closing the connection when the consumer is completed.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
 	public static class TopicSubscriber {
 
 		private final String topicName;

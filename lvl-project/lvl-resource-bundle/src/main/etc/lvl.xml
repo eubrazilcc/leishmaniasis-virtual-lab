@@ -83,6 +83,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<!-- Message broker configuration -->
 	<messaging>
 	
+		<!-- Deploy a message broker within the LVL. Otherwise, an external broker should be provided -->
+		<broker>
+			<embedded>true</embedded>
+		</broker>
+	
 		<!-- Optional list of message brokers, specified with the format: 
 			'hostname:port'. If undefined, 'localhost:61616' is used -->
 		<!-- <hosts>		

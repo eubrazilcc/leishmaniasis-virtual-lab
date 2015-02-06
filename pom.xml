@@ -42,6 +42,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
 		<org.apache.shiro.version>1.2.3</org.apache.shiro.version>
 		<mongodb.driver.version>2.12.5</mongodb.driver.version>
+		<activemq.version>5.10.1</activemq.version>
+		<activemq.spring.version>3.2.8.RELEASE</activemq.spring.version>
+		<activemq.xbean-spring.version>3.16</activemq.xbean-spring.version>
+		<activemq.commons-pool.version>1.6</activemq.commons-pool.version>
 		<antlr4.version>4.3</antlr4.version>
 		<e-science-central.version>3.1-SNAPSHOT</e-science-central.version>
 	</properties>
@@ -85,7 +89,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>commons-io</groupId>
 				<artifactId>commons-io</artifactId>
 				<version>2.4</version>
-			</dependency>
+			</dependency>			
 
 			<!-- Apache HttpComponents: HTTP/1.1 compliant HTTP agents -->
 
@@ -231,12 +235,48 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<version>${mongodb.driver.version}</version>
 			</dependency>
 			
-			<!-- ActiveMQ Client -->
+			<!-- Apache ActiveMQ: open source message broker -->
+			
+			<dependency> <!-- All, including broker, pool, KahaDB, Spring integration, etc. -->
+				<groupId>org.apache.activemq</groupId>
+				<artifactId>activemq-all</artifactId>
+				<version>${activemq.version}</version>
+			</dependency>
 			
 			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+				<version>${activemq.spring.version}</version>
+			</dependency>
+		
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-jms</artifactId>
+				<version>${activemq.spring.version}</version>
+			</dependency>
+		
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-tx</artifactId>
+				<version>${activemq.spring.version}</version>
+			</dependency>
+		
+			<dependency>
+				<groupId>org.apache.xbean</groupId>
+				<artifactId>xbean-spring</artifactId>
+				<version>${activemq.xbean-spring.version}</version>
+			</dependency>
+			
+			<dependency> <!-- Object Pooling Library -->
+				<groupId>commons-pool</groupId>
+				<artifactId>commons-pool</artifactId>
+				<version>${activemq.commons-pool.version}</version>
+			</dependency>
+			
+			<dependency> <!-- Client only -->
 				<groupId>org.apache.activemq</groupId>
 				<artifactId>activemq-client</artifactId>
-				<version>5.10.1</version>
+				<version>${activemq.version}</version>
 			</dependency>
 			
 			<!-- Java API for Google Geocoding API v3 -->
