@@ -60,7 +60,6 @@ import javax.jms.TopicSession;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.pool.PooledConnectionFactory;
-import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 
 import com.google.common.base.Function;
@@ -256,11 +255,12 @@ public enum ActiveMQConnector implements Closeable2 {
 				if (__broker.getBroker().isPresent()) {
 					LOGGER.info("Stopping embedded message broker");
 					try {
-						__broker.getBroker().get().stopAllConnectors(new ServiceStopper());
+						__broker.getBroker().get().stop();
+						__broker.getBroker().get().waitUntilStopped();
 					} catch (Exception ignore) { }
 				}				
 				__broker = null;
-			}			
+			}
 		} finally {
 			mutex.unlock();
 			LOGGER.info("ActiveMQ connector shutdown successfully");
