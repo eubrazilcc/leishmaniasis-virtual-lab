@@ -195,7 +195,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                 <p class="list-group-item-text">
                   A database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>. <em>Recommended version:</em> 2.6.7. Also, a message 
                   broker based in <a href="http://activemq.apache.org/" target="_blank">Apache ActiveMQ</a> is provided to coordinate the operation among 
-                  the <i>LVL service</i> replicas. <em>Recommended version:</em> 5.6.0.
+                  the <i>LVL service</i> replicas. <em>Recommended version:</em> 5.6.0 (embedded version 5.10.1).
                 </p>
               </li>
               <li class="list-group-item">
@@ -264,7 +264,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
             <p>
               However, for a better performance, it is recommended to follow the instructions bellow to install and <a href="#database_configuration">configure
-                the database</a> with the latest MongoDB production version.
+              the database</a> with the latest MongoDB production version.
             </p>
 
             <h4>Testing email</h4>
@@ -315,10 +315,19 @@ that you distribute must include a readable copy of the "NOTICE" text file.
             <h3>Setup message broker</h3>
             
             <p>
+              A message broker is provided with the 
+              
+              https://github.com/eubrazilcc/leishmaniasis-virtual-lab/tree/master/lvl-project/lvl-storage
+              
+              embedded within the LVL 
+            </p>
+            
+            <p>
               Recommended configuration for Apache ActiveMQ is based on the <a href="http://activemq.apache.org/xml-configuration.html" target="_blank">default configuration</a>.
-              In particular, configure NIO <a href="http://activemq.apache.org/configuring-transports.html" target="_blank">transport </a> with the
-              <a href="http://activemq.apache.org/tcp-transport-reference.html" target="_blank">available options</a>. Additional configuration options 
-              can be applied to protect your message broken from DOS attacks, such as limiting concurrent connections and frame size.
+              In particular, it is recommended to configure NIO <a href="http://activemq.apache.org/configuring-transports.html" target="_blank">transport </a> 
+              with the <a href="http://activemq.apache.org/tcp-transport-reference.html" target="_blank">available options</a>. Additional 
+              configuration options can be applied to protect your message broken from DOS attacks, such as limiting concurrent connections 
+              and frame size.
             </p>
             
             <p>

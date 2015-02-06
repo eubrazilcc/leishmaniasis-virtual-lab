@@ -79,8 +79,8 @@ public enum ActiveMQConnector implements Closeable2 {
 	ACTIVEMQ_CONN;
 
 	private static final Logger LOGGER = getLogger(ActiveMQConnector.class);
-	
-	public static final int MAX_POOLED_PRODUCERS_CONNECTIONS = 10;
+
+	public static final int MAX_POOLED_PRODUCERS_CONNECTIONS = 4;
 
 	private Lock mutex = new ReentrantLock();
 	private BrokerManager __broker = null;
@@ -91,6 +91,14 @@ public enum ActiveMQConnector implements Closeable2 {
 		mutex.lock();
 		try {
 			if (__broker == null) {
+				BrokerService brokerService = null;
+				if (CONFIG_MANAGER.isBrokerEmbedded()) {
+					try {
+						brokerService = createBroker(new URI("xbean:activemq.xml"), true);
+					} catch (Exception e) {
+						LOGGER.warn("Failed to create broker service", e);
+					}
+				}
 				final String brokers = Joiner.on(",").skipNulls().join(from(CONFIG_MANAGER.getMessageBrokers()).transform(new Function<String, String>() {
 					@Override
 					public String apply(final String host) {
@@ -98,14 +106,10 @@ public enum ActiveMQConnector implements Closeable2 {
 						return isNotBlank(host2) ? "nio://" + host2 : null;						
 					}					
 				}).filter(notNull()).toList());
-				try {
-					__broker = BrokerManager.builder()
-							.broker(CONFIG_MANAGER.isBrokerEmbedded() ? createBroker(new URI("xbean:activemq.xml"), true) : null)
-							.connFactory(new ActiveMQConnectionFactory(isNotBlank(brokers) ? "failover://(" + brokers + ")?randomize=true" : DEFAULT_BROKER_URL))
-							.build();					
-				} catch (Exception e) {
-					throw new IllegalStateException("Failed to create a broker service", e);
-				}
+				__broker = BrokerManager.builder()
+						.broker(brokerService)
+						.connFactory(new ActiveMQConnectionFactory(isNotBlank(brokers) ? "failover://(" + brokers + ")?randomize=true" : DEFAULT_BROKER_URL))
+						.build();					
 			}
 			return __broker;
 		} finally {
@@ -236,17 +240,6 @@ public enum ActiveMQConnector implements Closeable2 {
 	public void close() throws IOException {
 		mutex.lock();
 		try {
-			if (__broker != null) {
-				if (__broker.getBroker().isPresent()) {
-					try {
-						__broker.getBroker().get().stopAllConnectors(new ServiceStopper());
-					} catch (Exception ignore) { }
-				}
-				try {
-					__broker.getProducersConnFactory().stop();
-				} catch (Exception ignore) { }
-				__broker = null;
-			}			
 			final Iterator<TopicSubscriber> it = subscribers.iterator();
 			while (it.hasNext()) {
 				try {					
@@ -254,6 +247,20 @@ public enum ActiveMQConnector implements Closeable2 {
 					it.remove();					
 				} catch (Exception ignore) { }
 			}
+			if (__broker != null) {				
+				try {
+					LOGGER.info("Stopping message broker pooled connections");
+					__broker.getProducersConnFactory().clear();
+					__broker.getProducersConnFactory().stop();
+				} catch (Exception ignore) { }
+				if (__broker.getBroker().isPresent()) {
+					LOGGER.info("Stopping embedded message broker");
+					try {
+						__broker.getBroker().get().stopAllConnectors(new ServiceStopper());
+					} catch (Exception ignore) { }
+				}				
+				__broker = null;
+			}			
 		} finally {
 			mutex.unlock();
 			LOGGER.info("ActiveMQ connector shutdown successfully");

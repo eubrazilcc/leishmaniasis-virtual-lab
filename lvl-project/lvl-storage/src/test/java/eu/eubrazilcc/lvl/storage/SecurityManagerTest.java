@@ -440,6 +440,7 @@ public class SecurityManagerTest {
 					.accessType(VIEW_SHARE)
 					.build()));
 			updateResourceOwner(meremortalUser);
+			Thread.sleep(1000l); // allows notifications to be processed avoiding race conditions
 			assertThat("dataset share viewing permission is present", currentUser.isPermitted("datasets:files:" + poormanOwnerid + ":mysequences.xml:view"), 
 					equalTo(true));
 			assertThat("dataset share editing permission is not present", currentUser.isPermitted("datasets:files:" + poormanOwnerid + ":mysequences.xml:view,edit"), 

@@ -44,7 +44,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		</encoder>
 	</appender>
 
-	<logger name="eu.eubrazilcc.lvl" level="TRACE" />
+	<logger name="eu.eubrazilcc.lvl" level="INFO" />
+	<logger name="org.apache.activemq" level="WARN"/>
+	<logger name="org.apache.activemq.spring" level="WARN"/>
+	<logger name="org.apache.xbean.spring" level="WARN"/>
+	<logger name="org.springframework.beans" level="WARN"/>
 
 	<root level="INFO">
 		<appender-ref ref="FILE" />

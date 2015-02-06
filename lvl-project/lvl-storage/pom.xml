@@ -62,31 +62,23 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<scope>provided</scope>
 		</dependency>
 		
-		<!-- Apache ActiveMQ: embedded broker -->
+		<!-- Apache ActiveMQ: (optional) embedded broker -->		
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-all</artifactId>
-		</dependency>				
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
+			<artifactId>activemq-broker</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-jms</artifactId>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-runtime-config</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-tx</artifactId>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-pool</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.xbean</groupId>
-			<artifactId>xbean-spring</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-pool</groupId>
-			<artifactId>commons-pool</artifactId>
-		</dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-kahadb-store</artifactId>
+		</dependency>		
 		
 		<!-- The ANTLR 4 Runtime -->
 		<dependency>
