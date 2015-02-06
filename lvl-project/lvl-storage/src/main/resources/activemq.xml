@@ -34,7 +34,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
         </property>
     </bean>
     
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.data}">
+    <!-- Deactivate ActiveMQ shutdown hook to avoid errors, the LVL ensures that the close method will be 
+    	called on broker service shutdown -->
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" 
+    	dataDirectory="${activemq.data}" useShutdownHook="false">
 
         <destinationPolicy>
             <policyMap>
