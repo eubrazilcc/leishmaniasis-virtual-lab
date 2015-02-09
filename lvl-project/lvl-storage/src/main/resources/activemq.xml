@@ -84,12 +84,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
             <transportConnector name="nio" uri="nio://0.0.0.0:${activemq.port}?transport.soTimeout=60000&amp;maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
         </transportConnectors>
 
-		<!-- Setup a network of brokers -->
-        <!-- <networkConnector uri="static://(tcp://remotehost:61617)"
-			name="bridge"
-			dynamicOnly="true"
-			prefetchSize="1"
-		</networkConnector> -->
+		<!-- Setup a network of brokers
+		<networkConnectors>
+			<networkConnector uri="static://(tcp://remotehost:61617)"
+				name="bridge" dynamicOnly="true" prefetchSize="1">			
+			</networkConnector>			
+		</networkConnectors> -->
 		
 		<!-- destroy the spring context on shutdown -->
 		<shutdownHooks>
