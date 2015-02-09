@@ -81,7 +81,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
         <!-- Transport connectors -->
         <transportConnectors>
-            <transportConnector name="nio" uri="nio://127.0.0.1:61616?transport.soTimeout=60000&amp;maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="nio" uri="nio://0.0.0.0:${activemq.port}?transport.soTimeout=60000&amp;maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
         </transportConnectors>
 
 		<!-- Setup a network of brokers -->

@@ -29,7 +29,8 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 /**
- * Integration tests. only run <code>FullDatabaseLoadTest.class</code> when you're completely sure that you need it.
+ * Integration tests. <code>FullDatabaseLoadTest.class</code> performs a full-database load and is disabled by default because it consumes a 
+ * lot of system resources and processing time. Activate this test only when you're completely sure that you need to check this feature.
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)

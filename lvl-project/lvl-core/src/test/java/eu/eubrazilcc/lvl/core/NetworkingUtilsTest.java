@@ -23,11 +23,15 @@
 package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.util.NetworkingUtils.getInet4Address;
+import static eu.eubrazilcc.lvl.core.util.NetworkingUtils.isPortAvailable;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
-import org.apache.commons.lang.StringUtils;
+import java.net.ServerSocket;
+
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import org.junit.Test;
 
 /**
@@ -40,9 +44,17 @@ public class NetworkingUtilsTest {
 	public void test() {
 		System.out.println("NetworkingUtilsTest.test()");
 		try {
+			// check IP address discover
 			final String address = getInet4Address();
 			assertThat("host IP address is not null", address, notNullValue());
-			assertThat("Host IP address is not empty", StringUtils.isNotBlank(address));
+			assertThat("Host IP address is not empty", isNotBlank(address));
+			
+			// check port availability
+			final int port = 33435;
+			assertThat("port " + port + " is available", isPortAvailable(port), equalTo(true));
+			try (final ServerSocket socket = new ServerSocket(port)) {
+				assertThat("port " + port + " is unavailable", isPortAvailable(port), equalTo(false));
+			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("NetworkingUtilsTest.test() failed: " + e.getMessage());

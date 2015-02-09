@@ -139,11 +139,11 @@ public enum ConfigurationManager implements Closeable2 {
 	public ImmutableList<String> getDbHosts() {
 		return configuration().getDbHosts();
 	}
-	
+
 	public boolean isBrokerEmbedded() {
 		return configuration().isBrokerEmbedded();
 	}
-	
+
 	public ImmutableList<String> getMessageBrokers() {
 		return configuration().getMessageBrokers();
 	}
@@ -211,7 +211,7 @@ public enum ConfigurationManager implements Closeable2 {
 	public File getSharedDir() {
 		return new File(getDataDir(), "shared");
 	}
-	
+
 	public File getProductsDir() {
 		return new File(getDataDir(), "products");
 	}
@@ -283,7 +283,7 @@ public enum ConfigurationManager implements Closeable2 {
 							final String dbPassword = getString("database.credentials.password", configuration, foundNameList, null);
 							final ImmutableList<String> dbHosts = getStringList("database.hosts.host", Pattern.compile("^[\\w]+:[\\d]+$"), 
 									configuration, foundNameList, newArrayList("localhost:27017"));
-							final boolean brokerEmbedded = getBoolean("broker.embedded", configuration, foundNameList, true);							
+							final boolean brokerEmbedded = getBoolean("broker.embedded", configuration, foundNameList, true);
 							final ImmutableList<String> messageBrokers = getStringList("messaging.hosts.host", Pattern.compile("^[\\w]+:[\\d]+$"), 
 									configuration, foundNameList, newArrayList("localhost:61616"));
 							final String smtpHost = getString("smtp.host", configuration, foundNameList, "localhost");
@@ -312,9 +312,9 @@ public enum ConfigurationManager implements Closeable2 {
 									}								
 								}
 							}
-							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dataDir, dbName, dbUsername, dbPassword, dbHosts, brokerEmbedded,
-									messageBrokers, smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, publicLocation, wfHostname, 
-									wfSecure, wfPort, wfUsername, wfPasswd, othersMap);
+							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dataDir, dbName, dbUsername, dbPassword, dbHosts, 
+									brokerEmbedded, messageBrokers, smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, 
+									publicLocation, wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
 							throw new IllegalStateException("Main configuration not found");
@@ -488,7 +488,7 @@ public enum ConfigurationManager implements Closeable2 {
 		}		
 		public boolean isBrokerEmbedded() {
 			return brokerEmbedded;
-		}
+		}		
 		public ImmutableList<String> getMessageBrokers() {
 			return messageBrokers;
 		}
@@ -545,7 +545,9 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("dbName", dbName)
 					.add("dbUsername", dbUsername.orNull())
 					.add("dbPassword", dbPassword.orNull())
-					.add("dbHosts", dbHosts)					
+					.add("dbHosts", dbHosts)
+					.add("brokerEmbedded", brokerEmbedded)
+					.add("messageBrokers", messageBrokers)
 					.add("smtpHost", smtpHost)
 					.add("smtpPort", smtpPort)
 					.add("smtpSupportEmail", smtpSupportEmail)

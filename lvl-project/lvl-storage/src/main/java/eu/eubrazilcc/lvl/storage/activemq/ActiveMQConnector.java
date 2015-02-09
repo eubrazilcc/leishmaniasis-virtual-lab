@@ -29,6 +29,7 @@ import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.util.NetworkingUtils.isPortAvailable;
 import static javax.jms.DeliveryMode.NON_PERSISTENT;
 import static javax.jms.Session.AUTO_ACKNOWLEDGE;
 import static org.apache.activemq.ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
@@ -44,6 +45,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -80,6 +82,10 @@ public enum ActiveMQConnector implements Closeable2 {
 	private static final Logger LOGGER = getLogger(ActiveMQConnector.class);
 
 	public static final int MAX_POOLED_PRODUCERS_CONNECTIONS = 4;
+	
+	public static final String ACTIVEMQ_PROPERTIES = "activemq.properties";
+	public static final String ACTIVEMQ_PORT_PROPERTY = "activemq.port";
+	public static final String ACTIVEMQ_DEFAULT_PORT = "61616";
 
 	private Lock mutex = new ReentrantLock();
 	private BrokerManager __broker = null;
@@ -93,7 +99,17 @@ public enum ActiveMQConnector implements Closeable2 {
 				BrokerService brokerService = null;
 				if (CONFIG_MANAGER.isBrokerEmbedded()) {
 					try {
-						brokerService = createBroker(new URI("xbean:activemq.xml"), true);
+						// check that only one instance is running per host
+						final ClassLoader resourceLoader = Thread.currentThread().getContextClassLoader();
+						final Properties properties = new Properties();
+						properties.load(resourceLoader.getResourceAsStream(ACTIVEMQ_PROPERTIES));
+						final int port = Integer.parseInt(properties.getProperty(ACTIVEMQ_PORT_PROPERTY, ACTIVEMQ_DEFAULT_PORT));
+						if (isPortAvailable(port)) {
+							brokerService = createBroker(new URI("xbean:activemq.xml"), true);
+							LOGGER.info("New broker service created");	
+						} else {
+							LOGGER.info("Port " + port + " unavailable broker service will not be started");
+						}												
 					} catch (Exception e) {
 						LOGGER.warn("Failed to create broker service", e);
 					}
@@ -109,12 +125,12 @@ public enum ActiveMQConnector implements Closeable2 {
 						.broker(brokerService)
 						.connFactory(new ActiveMQConnectionFactory(isNotBlank(brokers) ? "failover://(" + brokers + ")?randomize=true" : DEFAULT_BROKER_URL))
 						.build();					
-			}
+			}			
 			return __broker;
 		} finally {
 			mutex.unlock();
 		}
-	}
+	}	
 
 	public void subscribe(final String topicName, final MessageListener listener) {
 		String topicName2 = null;
@@ -232,6 +248,11 @@ public enum ActiveMQConnector implements Closeable2 {
 
 	@Override
 	public void preload() {
+
+		// TODO: unnecessary, use it to test
+		broker();
+		// TODO
+
 		LOGGER.info("ActiveMQ connector initialized successfully");
 	}
 

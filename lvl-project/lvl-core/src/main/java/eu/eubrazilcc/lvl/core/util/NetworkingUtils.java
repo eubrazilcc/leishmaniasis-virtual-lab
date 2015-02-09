@@ -22,11 +22,15 @@
 
 package eu.eubrazilcc.lvl.core.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -36,13 +40,24 @@ import java.util.Random;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
+import com.google.common.collect.Range;
+import static com.google.common.collect.Range.closedOpen;
+
 /**
  * Utilities to discover networking configuration.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="https://tools.ietf.org/html/rfc6335">RFC 6335</a>
  */
 public final class NetworkingUtils {
 
-	private final static Logger LOGGER = getLogger(NetworkingUtils.class);
+	private static final Logger LOGGER = getLogger(NetworkingUtils.class);
+	
+	/**
+	 * The usable user port number limits. Set at 1024 <= x < 49151 to avoid returning privileged port numbers.
+	 */	
+	public static final Range<Integer> USER_PORTS = closedOpen(1024, 49151);
+	
+	public static final Range<Integer> USER_PORTS_16_BITS = closedOpen(1024, 65535);
 
 	/**
 	 * Gets the first public IP address of the host. If no public address are found, one of the private
@@ -83,6 +98,16 @@ public final class NetworkingUtils {
 		}
 		return (StringUtils.isNotBlank(inet4Address) ? inet4Address : (!localAddresses.isEmpty() 
 				? localAddresses.get(new Random().nextInt(localAddresses.size())) : "localhost")).trim();
+	}
+
+	public static final boolean isPortAvailable(final int port) throws IllegalArgumentException {
+		checkArgument(USER_PORTS_16_BITS.contains(port), "Invalid start port: " + port);		
+		try (final ServerSocket ss = new ServerSocket(port); final DatagramSocket ds = new DatagramSocket(port)) {
+			ss.setReuseAddress(true);		
+			ds.setReuseAddress(true);
+			return true;
+		} catch (IOException ignore) { }
+		return false;
 	}
 
 }

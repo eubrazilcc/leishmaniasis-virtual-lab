@@ -82,10 +82,14 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	
 	<!-- Message broker configuration -->
 	<messaging>
-	
-		<!-- Deploy a message broker within the LVL. Otherwise, an external broker should be provided -->
+			
+		<!-- Service broker configuration -->
 		<broker>
+			<!-- Deploy a message broker within the LVL. Otherwise, an external broker should be provided -->
 			<embedded>true</embedded>
+			
+			<!-- In case that the embedded broker is used, the broker service is bound in the JNDI -->
+			<bindToJndi>true</bindToJndi>
 		</broker>
 	
 		<!-- Optional list of message brokers, specified with the format: 
