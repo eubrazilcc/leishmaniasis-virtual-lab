@@ -129,7 +129,7 @@ public class MongoDBMap<K extends MongoDBMapKey, V> implements Map<K, V> {
 	@Override
 	public String toString() {
 		return toStringHelper(this)
-				.add("__map", __map)
+				.add("__map", __map != null ? __map.toString() : null)
 				.toString();
 	}
 

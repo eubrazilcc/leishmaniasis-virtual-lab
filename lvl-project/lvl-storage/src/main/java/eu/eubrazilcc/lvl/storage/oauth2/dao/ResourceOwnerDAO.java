@@ -27,11 +27,14 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
 import static eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector.ACTIVEMQ_CONN;
 import static eu.eubrazilcc.lvl.storage.activemq.TopicHelper.permissionChangedTopic;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner.copyOf;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.convertToValidResourceOwnerId;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.ADMIN_ROLE;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asOAuthString;
@@ -47,6 +50,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -66,9 +70,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
-import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
 import eu.eubrazilcc.lvl.core.DatasetShare;
+import eu.eubrazilcc.lvl.core.Shareable.SharedAccess;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
@@ -78,6 +81,7 @@ import eu.eubrazilcc.lvl.storage.gravatar.Gravatar;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
+import eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModification;
 import eu.eubrazilcc.lvl.storage.security.User;
 import eu.eubrazilcc.lvl.storage.transform.UserTransientStore;
 
@@ -453,13 +457,13 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	/**
-	 * Adds permissions to data shares calling the method {@link #addPemissions(String, String...)}.
+	 * Adds permissions to data shares calling the method {@link #addPermissions(String, String...)}.
 	 * @param ownerId - identifier of the resource owner whose permissions will be modified
 	 * @param shares - data shares to which the resource owner will be granted with the defined access
 	 */
-	public void addPemissions(final String ownerId, final DatasetShare... shares) {
+	public void addPermissions(final String ownerId, final DatasetShare... shares) {
 		checkArgument(shares != null && shares.length > 0, "Uninitialized or invalid data shares");
-		addPemissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
+		addPermissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
 			@Override
 			public String apply(final DatasetShare share) {
 				checkState(share.getSubject().equals(ownerId), "Subject does not coincide with owner id");
@@ -469,13 +473,13 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	/**
-	 * Removes permissions from data shares calling the method {@link #removePemissions(String, String...)}.
+	 * Removes permissions from data shares calling the method {@link #removePermissions(String, String...)}.
 	 * @param ownerId - identifier of the resource owner whose permissions will be modified
 	 * @param shares - data shares from which the access of the resource owner will be removed
 	 */
-	public void removePemissions(final String ownerId, final DatasetShare... shares) {
+	public void removePermissions(final String ownerId, final DatasetShare... shares) {
 		checkArgument(shares != null && shares.length > 0, "Uninitialized or invalid data shares");
-		removePemissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
+		removePermissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
 			@Override
 			public String apply(final DatasetShare share) {
 				checkState(share.getSubject().equals(ownerId), "Subject does not coincide with owner id");
@@ -489,7 +493,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 * @param ownerId - identifier of the resource owner whose permissions will be modified
 	 * @param permissions - permissions to be added to the resource owner
 	 */
-	public void addPemissions(final String ownerId, final String... permissions) {
+	public void addPermissions(final String ownerId, final String... permissions) {
 		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
 		checkArgument(permissions != null && permissions.length > 0, "Uninitialized or invalid permissions");
 		final ResourceOwner resourceOwner = find(ownerId);
@@ -507,7 +511,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 * @param ownerId - identifier of the resource owner whose permissions will be modified
 	 * @param permissions - permissions to be removed from the resource owner
 	 */
-	public void removePemissions(final String ownerId, final String... permissions) {
+	public void removePermissions(final String ownerId, final String... permissions) {
 		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
 		checkArgument(permissions != null && permissions.length > 0, "Uninitialized or invalid permissions");
 		final ResourceOwner resourceOwner = find(ownerId);
@@ -519,7 +523,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		}
 		update(resourceOwner);
 	}
-	
+
 	public List<DatasetShare> listDatashares(final String namespace, final String filename, final int start, final int size, 
 			final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		final String namespace2 = trimToNull(namespace), filename2 = trimToNull(filename);
@@ -535,21 +539,53 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		share.setAccessType(VIEW_SHARE);
 		final String ro = datasetSharePermission(share);
 		final BasicDBObject query = new BasicDBObject(PERMISSIONS_KEY, new BasicDBObject("$in", new String[]{ rw, ro }));
-		LOGGER.trace("listDatashares query: " + JSON.serialize(query));		
+		LOGGER.trace("listDatashares query: " + JSON.serialize(query));
 		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, query, count), new Function<BasicDBObject, DatasetShare>() {
 			@Override
 			public DatasetShare apply(final BasicDBObject obj) {
-				final ResourceOwner owner = parseBasicDBObject(obj);
-				
-				
-				// TODO owner.getUser().getPermissionHistory().getHistory().getUnescaped(key)				
-				return DatasetShare.builder()
-						.accessType(VIEW_SHARE) // TODO
-						.filename(filename2)
-						.namespace(namespace2)
-						.build();
+				return parseResourceOwner(parseBasicDBObject(obj), namespace2, filename2, new String[]{ rw, ro });				
 			}
 		});		
+	}
+
+	public DatasetShare findDatashare(final String namespace, final String filename, final String subject) {
+		final String namespace2 = trimToNull(namespace), filename2 = trimToNull(filename), subject2 = convertToValidResourceOwnerId(subject, true);
+		checkArgument(isNotBlank(namespace2), "Uninitialized or invalid namespace");
+		checkArgument(isNotBlank(filename2), "Uninitialized or invalid filename");
+		checkArgument(isNotBlank(subject2), "Uninitialized or invalid subject");
+		// execute the query in the database
+		final DatasetShare share = DatasetShare.builder()
+				.namespace(namespace2)
+				.filename(filename2)
+				.accessType(EDIT_SHARE)
+				.build();
+		final String rw = datasetSharePermission(share);
+		share.setAccessType(VIEW_SHARE);
+		final String ro = datasetSharePermission(share);
+		final BasicDBObject query = new BasicDBObject(PERMISSIONS_KEY, new BasicDBObject("$in", new String[]{ rw, ro })).append(PRIMARY_KEY, subject2);
+		LOGGER.trace("findDatashare query: " + JSON.serialize(query));
+		final ResourceOwner owner = parseBasicDBObjectOrNull(MONGODB_CONN.get(query, COLLECTION));
+		return owner != null ? parseResourceOwner(owner, namespace2, filename2, new String[]{ rw, ro }) : null;
+	}
+
+	private DatasetShare parseResourceOwner(final ResourceOwner owner, final String namespace, final String filename, 
+			final String[] permissions) {
+		PermissionModification history = null;
+		SharedAccess sharedAccess = null;
+		if (owner.getUser().getPermissions().contains(permissions[0])) {
+			sharedAccess = EDIT_SHARE;
+			history = owner.getUser().getPermissionHistory().getHistory().getUnescaped(permissions[0]);					
+		} else {
+			sharedAccess = VIEW_SHARE;
+			history = owner.getUser().getPermissionHistory().getHistory().getUnescaped(permissions[1]);
+		}
+		return DatasetShare.builder()
+				.accessType(sharedAccess)
+				.filename(filename)
+				.namespace(namespace)
+				.sharedDate(history != null && history.getModificationDate() != null ? history.getModificationDate() : new Date())
+				.subject(owner.getOwnerId())
+				.build();
 	}
 
 	/**

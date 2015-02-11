@@ -27,8 +27,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.trimToEmpty;
 
 import java.util.Date;
 import java.util.List;
@@ -66,6 +68,7 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 
 	private String urlSafeNamespace;
 	private String urlSafeFilename;
+	private String urlSafeSubject;
 
 	private String namespace;
 	private String filename;
@@ -104,12 +107,21 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 		this.urlSafeFilename = urlSafeFilename;
 	}
 
+	public String getUrlSafeSubject() {
+		return urlSafeSubject;
+	}
+
+	public void setUrlSafeSubject(final String urlSafeSubject) {
+		this.urlSafeSubject = urlSafeSubject;
+	}
+
 	public String getNamespace() {
 		return namespace;
 	}
 
 	public void setNamespace(final String namespace) {
 		this.namespace = namespace;
+		setUrlSafeNamespace(urlEncodeUtf8(trimToEmpty(namespace)));
 	}
 
 	public String getFilename() {
@@ -118,6 +130,13 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 
 	public void setFilename(final String filename) {
 		this.filename = filename;
+		setUrlSafeFilename(urlEncodeUtf8(trimToEmpty(filename)));
+	}
+
+	@Override
+	public void setSubject(final String subject) {
+		super.setSubject(subject);
+		setUrlSafeSubject(urlEncodeUtf8(trimToEmpty(subject)));
 	}
 
 	@Override
@@ -154,6 +173,7 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 				.add("links", links)
 				.add("urlSafeNamespace", urlSafeNamespace)
 				.add("urlSafeFilename", urlSafeFilename)
+				.add("urlSafeSubject", urlSafeSubject)				
 				.add("namespace", namespace)
 				.add("filename", filename)
 				.toString();

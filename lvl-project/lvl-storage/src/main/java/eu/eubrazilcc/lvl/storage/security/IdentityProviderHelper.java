@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Range.open;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
 
 import java.util.List;
 
@@ -41,7 +42,7 @@ public final class IdentityProviderHelper {
 	public static final String LINKEDIN_IDENTITY_PROVIDER = "linkedin";
 
 	public static final String IDENTITY_SEPARATOR = "@";
-	
+
 	public static final String OWNERID_EL_TEMPLATE = "${user.userid}" + IDENTITY_SEPARATOR + "${user.provider}";
 
 	public static final String defaultIdentityProvider() {
@@ -80,6 +81,29 @@ public final class IdentityProviderHelper {
 		checkArgument(open(0, ownerid2.length()).contains(ownerid2.indexOf(IDENTITY_SEPARATOR)) && !ownerid2.matches(".*\\s+.*"), 
 				"Invalid resource owner Id: " + ownerid);
 		return ownerid2;
+	}
+
+	/**
+	 * Converts user-names to valid resource-owner-identifiers.
+	 * @param subject - user name or owner Id to be inspected
+	 * @param failOnError - when set to true, any attempt to convert and invalid subject will result in an exception
+	 * @return Does nothing when the input is a valid owner Id, otherwise appends the default identity provider to the specified
+	 *         subject in order to create a valid owner Id.
+	 */
+	public static String convertToValidResourceOwnerId(final String subject, final boolean failOnError) {
+		String subject2 = defaultIfEmpty(trimToEmpty(subject), subject);
+		try {
+			assertValidResourceOwnerId(subject2);
+		} catch (Exception ignore) {
+			try {
+				subject2 = toResourceOwnerId(subject2);
+			} catch (Exception e) { 
+				if (failOnError) {
+					throw e;
+				}
+			}
+		}
+		return subject2;
 	}
 
 }

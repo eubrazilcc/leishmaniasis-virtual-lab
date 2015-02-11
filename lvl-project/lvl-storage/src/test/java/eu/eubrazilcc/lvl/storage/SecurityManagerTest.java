@@ -428,7 +428,7 @@ public class SecurityManagerTest {
 
 			assertThat("dataset share permission is not present", currentUser.isPermitted("datasets:files:" + poormanOwnerid + ":mysequences.xml:view"), 
 					equalTo(false));
-			RESOURCE_OWNER_DAO.addPemissions(meremortalOwnerid, DatasetShare.builder()
+			RESOURCE_OWNER_DAO.addPermissions(meremortalOwnerid, DatasetShare.builder()
 					.namespace(poormanOwnerid)
 					.filename("mysequences.xml")
 					.sharedNow()

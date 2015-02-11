@@ -99,7 +99,7 @@ public class DatasetResource {
 				.page(page)
 				.perPage(per_page)
 				.build();
-		// get public links from database
+		// get datasets from database
 		final MutableLong count = new MutableLong(0l);
 		final List<Dataset> datasets = DATASET_DAO.list(ns2dbnamespace(namespace2, ownerid), paginable.getPageFirstEntry(), per_page, null, null, count);
 		paginable.setElements(datasets);
@@ -165,9 +165,9 @@ public class DatasetResource {
 	public void updateDataset(final @PathParam("namespace") String namespace, final @PathParam("filename") String filename, final Dataset update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), filename2 = parseParam(filename);
-		/* if (update == null || !namespace2.equals(update.getNamespace()) || !filename2.equals(update.getFilename())) {
-			throw new WebApplicationException("Parameters do not match", BAD_REQUEST);
-		} */
+		if (update == null) {
+			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
+		}
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":" + filename2 + ":edit")
 				.getPrincipal();
@@ -242,7 +242,7 @@ public class DatasetResource {
 
 	public static final String parseParam(final String param) {
 		String param2 = null;
-		if (isBlank(param) || isBlank(param2 = urlDecodeUtf8(param))) {
+		if (isBlank(param) || isBlank(param2 = trimToNull(urlDecodeUtf8(param)))) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
 		return param2;

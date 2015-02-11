@@ -1121,34 +1121,32 @@ public class ServiceTest {
 			// uncomment for additional output
 			System.out.println(" >> Saved file: " + filename);
 
-
-
-
-
-
-
-
-
 			// test create a dataset share
+			// TODO
+
+			// test listing dataset shares
+			// TODO
+
+			// test getting a dataset share
 			// TODO
 
 			// test viewing a dataset from an account granted (not from the owner account)
 			// TODO
-			
+
 			// test modifying a dataset from an account granted (not from the owner account)
 			// TODO
 
 
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
+
+
+
+
 			// TODO : test public link operations
 
 
