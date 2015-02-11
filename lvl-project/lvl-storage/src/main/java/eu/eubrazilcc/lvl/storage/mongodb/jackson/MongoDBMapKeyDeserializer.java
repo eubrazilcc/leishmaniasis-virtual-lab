@@ -22,39 +22,28 @@
 
 package eu.eubrazilcc.lvl.storage.mongodb.jackson;
 
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey.escapeMapKey;
+
 import java.io.IOException;
 
-import org.bson.types.ObjectId;
-
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.KeyDeserializer;
+
+import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey;
 
 /**
- * Deserialize mongoDB identifiers from JSON to {@link ObjectId} Java class.
+ * Deserialize mongoDB field names from JSON to {@link MongoDBMapKey} Java class.
  * @author Erik Torres <ertorser@upv.es>
  */
-public final class ObjectIdDeserializer extends StdDeserializer<ObjectId> {
-	
-	private static final long serialVersionUID = -8033657526192304797L;
+public class MongoDBMapKeyDeserializer extends KeyDeserializer {	
 
-	protected ObjectIdDeserializer() {
-		super(ObjectId.class);
+	protected MongoDBMapKeyDeserializer() {
 	}
 
 	@Override
-	public ObjectId deserialize(final JsonParser parser, final DeserializationContext context) throws IOException, JsonProcessingException {
-		ObjectId objectId = null;
-		parser.nextToken();
-		while (parser.nextToken() != JsonToken.END_OBJECT) {
-			final String fieldname = parser.getCurrentName();			
-			if ("$oid".equals(fieldname)) {
-				objectId = new ObjectId(parser.getText());
-			}
-		}
-		return objectId;
+	public Object deserializeKey(final String key, final DeserializationContext ctxt) throws IOException, JsonProcessingException {		
+		return escapeMapKey(key);
 	}
 
 }

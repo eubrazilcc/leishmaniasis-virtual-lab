@@ -43,6 +43,7 @@ import javax.ws.rs.core.Link;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
+import eu.eubrazilcc.lvl.core.DatasetShare;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
@@ -121,7 +122,7 @@ public class ResourceOwnerCollectionTest {
 			System.out.println(resourceOwner2.toString());
 
 			RESOURCE_OWNER_DAO.delete(resourceOwner1.getOwnerId());
-			
+
 			// update
 			final String plainPassword = "new_password";
 			updatePassword(hashed, plainPassword);
@@ -160,6 +161,53 @@ public class ResourceOwnerCollectionTest {
 
 			// remove roles
 			RESOURCE_OWNER_DAO.removeRoles(resourceOwner.getOwnerId(), "role2");
+
+
+
+
+
+			
+
+			// test listing unexisting shared datasets
+			List<DatasetShare> shares = RESOURCE_OWNER_DAO.listDatashares("otheruser@lvl", "mysequences.xml", 0, Integer.MAX_VALUE, null, null, null);
+			assertThat("dataset shares is null", shares, notNullValue());
+			assertThat("dataset shares is empty", shares.isEmpty(), equalTo(true));
+
+			// TODO
+			System.err.println("\n\n >> HERE SHARES BEFORE: " + shares + "\n");
+			// TODO
+
+			// share dataset by adding permissions to resource owner
+			RESOURCE_OWNER_DAO.addPemissions(resourceOwner.getOwnerId(), "datasets:files:otheruser@lvl:mysequences.xml:view");
+			resourceOwner2 = RESOURCE_OWNER_DAO.reset().find(resourceOwner.getOwnerId());
+			assertThat("resource owner is not null", resourceOwner2, notNullValue());
+			// uncomment for additional output
+			System.out.println(" >> With permissions to view shared dataset: " + resourceOwner2.toString());
+
+			// test listing shared datasets
+			shares = RESOURCE_OWNER_DAO.listDatashares("otheruser@lvl", "mysequences.xml", 0, Integer.MAX_VALUE, null, null, null);
+			assertThat("dataset shares is not null", shares, notNullValue());
+			assertThat("number of dataset shares coincides with expected", shares.size(), equalTo(1));
+
+			// TODO
+			System.err.println("\n\n >> HERE SHARES DURING: " + shares + "\n");
+			// TODO		
+			
+			// remove permissions and stop sharing
+			RESOURCE_OWNER_DAO.removePemissions(resourceOwner.getOwnerId(), "datasets:files:otheruser@lvl:mysequences.xml:view");
+			shares = RESOURCE_OWNER_DAO.listDatashares("otheruser@lvl", "mysequences.xml", 0, Integer.MAX_VALUE, null, null, null);
+			assertThat("dataset shares is null", shares, notNullValue());
+			assertThat("dataset shares is empty", shares.isEmpty(), equalTo(true));
+
+			// TODO
+			System.err.println("\n\n >> HERE SHARES AFTER: " + shares + "\n");
+			// TODO
+			
+			
+
+
+
+
 
 			// get OAuth scope
 			resourceOwner2 = RESOURCE_OWNER_DAO.find(resourceOwner.getOwnerId());

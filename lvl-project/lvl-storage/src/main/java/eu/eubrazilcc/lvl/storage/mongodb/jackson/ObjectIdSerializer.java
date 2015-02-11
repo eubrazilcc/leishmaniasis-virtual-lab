@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 /**
- * Serialize MongoDB identifiers from {@link ObjectId} Java class to JSON.
+ * Serialize mongoDB identifiers from {@link ObjectId} Java class to JSON.
  * @author Erik Torres <ertorser@upv.es>
  */
 public final class ObjectIdSerializer extends StdSerializer<ObjectId> {

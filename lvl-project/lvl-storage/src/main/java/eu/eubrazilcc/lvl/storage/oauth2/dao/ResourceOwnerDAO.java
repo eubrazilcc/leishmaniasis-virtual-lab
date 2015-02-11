@@ -24,6 +24,8 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector.ACTIVEMQ_CONN;
 import static eu.eubrazilcc.lvl.storage.activemq.TopicHelper.permissionChangedTopic;
@@ -34,14 +36,17 @@ import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.ADMIN_ROLE;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asOAuthString;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.datasetSharePermission;
 import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.hashAndSaltPassword;
 import static eu.eubrazilcc.lvl.storage.transform.UserTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -61,6 +66,9 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
+import eu.eubrazilcc.lvl.core.DatasetShare;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
@@ -88,6 +96,12 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public static final String COLLECTION  = "resource_owners";
 	public static final String PRIMARY_KEY = "resourceOwner.ownerId";
 	public static final String EMAIL_KEY   = "resourceOwner.user.email";
+	/**
+	 * <strong>Note</strong> indexing a field that holds an array value has side effects. To change any field of this class you should check
+	 * the compatibility with this kind of indexes.
+	 * @see <a href="http://docs.mongodb.org/manual/core/index-multikey/">mongoDB Multikey Indexes</a>
+	 */
+	public static final String PERMISSIONS_KEY = "resourceOwner.user.permissions";
 
 	public static final String ADMIN_USER           = "root";
 	public static final String ADMIN_DEFAULT_PASSWD = "changeit";
@@ -96,8 +110,10 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	private boolean useGravatar;
 
 	private ResourceOwnerDAO() {
-		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
-		MONGODB_CONN.createIndex(EMAIL_KEY, COLLECTION);
+		for (final String idx : new String[]{ PRIMARY_KEY, EMAIL_KEY }) {
+			MONGODB_CONN.createIndex(idx, COLLECTION);
+		}
+		MONGODB_CONN.createNonUniqueIndex(PERMISSIONS_KEY, COLLECTION, false);		
 		// reset parameters to their default values
 		reset();
 		// ensure that at least the administrator account exists in the database
@@ -401,8 +417,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	/**
-	 * Adds one or more scopes to the resource owner identified by the provided id.
-	 * @param ownerId - identifier of the resource owner whose scopes will be modified
+	 * Adds one or more roles to the resource owner identified by the provided id.
+	 * @param ownerId - identifier of the resource owner whose roles will be modified
 	 * @param roles - roles to be added to the resource owner
 	 */
 	public void addRoles(final String ownerId, final String... roles) {
@@ -419,13 +435,13 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	/**
-	 * Removes one or more scopes from the resource owner identified by the provided id.
-	 * @param ownerId - identifier of the resource owner whose scopes will be modified
+	 * Removes one or more roles from the resource owner identified by the provided id.
+	 * @param ownerId - identifier of the resource owner whose roles will be modified
 	 * @param roles - roles to be removed from the resource owner
 	 */
 	public void removeRoles(final String ownerId, final String... roles) {
 		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
-		checkArgument(roles != null && roles.length > 0, "Uninitialized or invalid scopes");
+		checkArgument(roles != null && roles.length > 0, "Uninitialized or invalid roles");
 		final ResourceOwner resourceOwner = find(ownerId);
 		checkState(resourceOwner != null, "Resource owner not found");
 		for (final String role : roles) {
@@ -434,6 +450,106 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 			}
 		}
 		update(resourceOwner);
+	}
+
+	/**
+	 * Adds permissions to data shares calling the method {@link #addPemissions(String, String...)}.
+	 * @param ownerId - identifier of the resource owner whose permissions will be modified
+	 * @param shares - data shares to which the resource owner will be granted with the defined access
+	 */
+	public void addPemissions(final String ownerId, final DatasetShare... shares) {
+		checkArgument(shares != null && shares.length > 0, "Uninitialized or invalid data shares");
+		addPemissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
+			@Override
+			public String apply(final DatasetShare share) {
+				checkState(share.getSubject().equals(ownerId), "Subject does not coincide with owner id");
+				return datasetSharePermission(share);
+			}			
+		}).filter(notNull()).toArray(String.class));		
+	}
+
+	/**
+	 * Removes permissions from data shares calling the method {@link #removePemissions(String, String...)}.
+	 * @param ownerId - identifier of the resource owner whose permissions will be modified
+	 * @param shares - data shares from which the access of the resource owner will be removed
+	 */
+	public void removePemissions(final String ownerId, final DatasetShare... shares) {
+		checkArgument(shares != null && shares.length > 0, "Uninitialized or invalid data shares");
+		removePemissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
+			@Override
+			public String apply(final DatasetShare share) {
+				checkState(share.getSubject().equals(ownerId), "Subject does not coincide with owner id");
+				return datasetSharePermission(share);
+			}			
+		}).filter(notNull()).toArray(String.class));
+	}
+
+	/**
+	 * Adds one or more permissions to the resource owner identified by the provided id.
+	 * @param ownerId - identifier of the resource owner whose permissions will be modified
+	 * @param permissions - permissions to be added to the resource owner
+	 */
+	public void addPemissions(final String ownerId, final String... permissions) {
+		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
+		checkArgument(permissions != null && permissions.length > 0, "Uninitialized or invalid permissions");
+		final ResourceOwner resourceOwner = find(ownerId);
+		checkState(resourceOwner != null, "Resource owner not found");
+		for (final String permission : permissions) {
+			if (isNotBlank(permission)) {
+				resourceOwner.getUser().addPemissions(permission);
+			}
+		}
+		update(resourceOwner);
+	}
+
+	/**
+	 * Removes one or more permissions from the resource owner identified by the provided id.
+	 * @param ownerId - identifier of the resource owner whose permissions will be modified
+	 * @param permissions - permissions to be removed from the resource owner
+	 */
+	public void removePemissions(final String ownerId, final String... permissions) {
+		checkArgument(isNotBlank(ownerId), "Uninitialized or invalid resource owner id");
+		checkArgument(permissions != null && permissions.length > 0, "Uninitialized or invalid permissions");
+		final ResourceOwner resourceOwner = find(ownerId);
+		checkState(resourceOwner != null, "Resource owner not found");
+		for (final String permission : permissions) {
+			if (isNotBlank(permission)) {
+				resourceOwner.getUser().removePemissions(permissions);
+			}
+		}
+		update(resourceOwner);
+	}
+	
+	public List<DatasetShare> listDatashares(final String namespace, final String filename, final int start, final int size, 
+			final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, final @Nullable MutableLong count) {
+		final String namespace2 = trimToNull(namespace), filename2 = trimToNull(filename);
+		checkArgument(isNotBlank(namespace2), "Uninitialized or invalid namespace");
+		checkArgument(isNotBlank(filename2), "Uninitialized or invalid filename");
+		// execute the query in the database (unsupported filter)
+		final DatasetShare share = DatasetShare.builder()
+				.namespace(namespace2)
+				.filename(filename2)
+				.accessType(EDIT_SHARE)
+				.build();
+		final String rw = datasetSharePermission(share);
+		share.setAccessType(VIEW_SHARE);
+		final String ro = datasetSharePermission(share);
+		final BasicDBObject query = new BasicDBObject(PERMISSIONS_KEY, new BasicDBObject("$in", new String[]{ rw, ro }));
+		LOGGER.trace("listDatashares query: " + JSON.serialize(query));		
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, query, count), new Function<BasicDBObject, DatasetShare>() {
+			@Override
+			public DatasetShare apply(final BasicDBObject obj) {
+				final ResourceOwner owner = parseBasicDBObject(obj);
+				
+				
+				// TODO owner.getUser().getPermissionHistory().getHistory().getUnescaped(key)				
+				return DatasetShare.builder()
+						.accessType(VIEW_SHARE) // TODO
+						.filename(filename2)
+						.namespace(namespace2)
+						.build();
+			}
+		});		
 	}
 
 	/**

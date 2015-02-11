@@ -24,37 +24,31 @@ package eu.eubrazilcc.lvl.storage.mongodb.jackson;
 
 import java.io.IOException;
 
-import org.bson.types.ObjectId;
-
-import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+
+import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey;
 
 /**
- * Deserialize mongoDB identifiers from JSON to {@link ObjectId} Java class.
+ * Serialize mongoDB field names from {@link MongoDBMapKey} Java class to JSON. <strong>Note</strong> that this class cannot be used to serialize
+ * field values, only field names (for example, as part of a {@link java.util.Map} key).
  * @author Erik Torres <ertorser@upv.es>
  */
-public final class ObjectIdDeserializer extends StdDeserializer<ObjectId> {
-	
-	private static final long serialVersionUID = -8033657526192304797L;
+public class MongoDBMapKeySerializer extends StdSerializer<MongoDBMapKey> {
 
-	protected ObjectIdDeserializer() {
-		super(ObjectId.class);
+	protected MongoDBMapKeySerializer() {
+		super(MongoDBMapKey.class);
 	}
 
 	@Override
-	public ObjectId deserialize(final JsonParser parser, final DeserializationContext context) throws IOException, JsonProcessingException {
-		ObjectId objectId = null;
-		parser.nextToken();
-		while (parser.nextToken() != JsonToken.END_OBJECT) {
-			final String fieldname = parser.getCurrentName();			
-			if ("$oid".equals(fieldname)) {
-				objectId = new ObjectId(parser.getText());
-			}
+	public void serialize(final MongoDBMapKey value, final JsonGenerator jgen, final SerializerProvider provider) throws IOException, JsonProcessingException {
+		if (value == null) {
+			jgen.writeNull();
+		} else {
+			jgen.writeFieldName(value.getKey());
 		}
-		return objectId;
 	}
-
+	
 }

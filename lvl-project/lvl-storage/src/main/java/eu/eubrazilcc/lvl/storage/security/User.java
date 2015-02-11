@@ -27,12 +27,17 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.isEmpty;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey.escapeMapKey;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.defaultIdentityProvider;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModificationType.GRANTED;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModificationType.REMOVED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -44,6 +49,7 @@ import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -51,6 +57,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.eubrazilcc.lvl.core.Linkable;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+import eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModification;
 
 /**
  * Provides user information (profile). Jackson annotations are included to serialize this class to XML and JSON.
@@ -79,6 +86,8 @@ public class User implements Serializable, Linkable<User> {
 	private String fullname;         // (optional) full name
 	private Set<String> roles;       // roles
 	private Set<String> permissions; // permissions
+
+	private PermissionHistory permissionHistory;
 
 	public User() { }
 
@@ -150,6 +159,40 @@ public class User implements Serializable, Linkable<User> {
 	public void setPermissions(final Set<String> permissions) {
 		this.permissions = permissions;
 	}
+	public PermissionHistory getPermissionHistory() {
+		return permissionHistory;
+	}
+	public void setPermissionHistory(final PermissionHistory permissionHistory) {
+		this.permissionHistory = permissionHistory;
+	}
+
+	@JsonIgnore
+	public void addPemissions(final String... permissions) {
+		if (permissions != null) {
+			for (final String permission : permissions) {
+				String permission2 = null;
+				if (isNotBlank(permission2 = trimToNull(permission))) {
+					if (getPermissions().add(permission2)) {
+						getPermissionHistory().getHistory().put(escapeMapKey(permission2), new PermissionModification(new Date(), GRANTED));
+					}
+				}
+			}
+		}
+	}
+
+	@JsonIgnore
+	public void removePemissions(final String... permissions) {
+		if (permissions != null) {
+			for (final String permission : permissions) {
+				String permission2 = null;
+				if (isNotBlank(permission2 = trimToNull(permission))) {
+					if (getPermissions().remove(permission2)) {
+						getPermissionHistory().getHistory().put(escapeMapKey(permission2), new PermissionModification(new Date(), REMOVED));
+					}
+				}
+			}
+		}
+	}
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -174,7 +217,8 @@ public class User implements Serializable, Linkable<User> {
 				&& Objects.equals(email, other.email)
 				&& Objects.equals(fullname, other.fullname)
 				&& Objects.equals(roles, other.roles)
-				&& Objects.equals(permissions, other.permissions);
+				&& Objects.equals(permissions, other.permissions)
+				&& Objects.equals(permissionHistory, other.permissionHistory);
 	}
 
 	/**
@@ -191,7 +235,8 @@ public class User implements Serializable, Linkable<User> {
 				&& Objects.equals(email, other.email)							
 				&& Objects.equals(fullname, other.fullname)
 				&& Objects.equals(roles, other.roles)
-				&& Objects.equals(permissions, other.permissions);
+				&& Objects.equals(permissions, other.permissions)
+				&& Objects.equals(permissionHistory, other.permissionHistory);
 	}
 
 	/**
@@ -225,12 +270,13 @@ public class User implements Serializable, Linkable<User> {
 				&& Objects.equals(email, other.email)										
 				&& Objects.equals(fullname, other.fullname)
 				&& Objects.equals(roles, other.roles)
-				&& Objects.equals(permissions, other.permissions);
+				&& Objects.equals(permissions, other.permissions)
+				&& Objects.equals(permissionHistory, other.permissionHistory);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, pictureUrl, provider, userid, password, salt, email, fullname, roles, permissions);
+		return Objects.hash(links, pictureUrl, provider, userid, password, salt, email, fullname, roles, permissions, permissionHistory);
 	}
 
 	@Override
@@ -246,6 +292,7 @@ public class User implements Serializable, Linkable<User> {
 				.add("fullname", fullname)
 				.add("roles", roles)
 				.add("permissions", permissions)
+				.add("permissionHistory", permissionHistory)
 				.toString();
 	}
 
@@ -253,7 +300,7 @@ public class User implements Serializable, Linkable<User> {
 
 	public static Builder builder() {
 		return new Builder();
-	}	
+	}
 
 	public static class Builder {
 
@@ -263,6 +310,7 @@ public class User implements Serializable, Linkable<User> {
 			instance.setProvider(defaultIdentityProvider());
 			instance.setRoles(new HashSet<String>());
 			instance.setPermissions(new HashSet<String>());
+			instance.setPermissionHistory(new PermissionHistory());
 		}
 
 		public Builder links(final List<Link> links) {
@@ -335,6 +383,12 @@ public class User implements Serializable, Linkable<User> {
 			return this;
 		}
 
+		public Builder permissionHistory(final PermissionHistory permissionHistory) {
+			checkArgument(permissionHistory != null, "Uninitialized permission history");
+			instance.setPermissionHistory(permissionHistory);
+			return this;
+		}
+
 		public User build() {
 			return instance;
 		}
@@ -371,6 +425,9 @@ public class User implements Serializable, Linkable<User> {
 			}
 			if (original.permissions != null && !original.permissions.isEmpty()) {
 				builder.permissions(original.permissions);
+			}
+			if (original.permissionHistory != null) {
+				builder.permissionHistory(original.permissionHistory);
 			}
 			return builder.build();
 		}

@@ -948,7 +948,7 @@ public enum MongoDBConnector implements Closeable2 {
 	public static BasicDBObject objectId(final String id) {
 		checkArgument(isNotBlank(id), "Uninitialized or invalid id");
 		return new BasicDBObject("_id", new ObjectId(id));
-	}
+	}	
 
 	private DBCollection tmpCollection() {
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
