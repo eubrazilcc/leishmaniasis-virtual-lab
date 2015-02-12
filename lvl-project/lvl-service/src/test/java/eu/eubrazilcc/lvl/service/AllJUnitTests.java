@@ -23,7 +23,7 @@
 package eu.eubrazilcc.lvl.service;
 
 import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
-import static eu.eubrazilcc.lvl.service.mock.CloserServiceMock.CLOSER_SERVICE_MOCK;
+import static eu.eubrazilcc.lvl.service.mock.LightCloserServiceMock.LIGHT_CLOSER_SERVICE_MOCK;
 import static org.apache.commons.io.FilenameUtils.concat;
 
 import java.io.File;
@@ -68,13 +68,13 @@ public class AllJUnitTests {
 		// load logging bridges
 		LOG_MANAGER.preload();
 		// system pre-loading
-		CLOSER_SERVICE_MOCK.preload();
+		LIGHT_CLOSER_SERVICE_MOCK.preload();
 	}
 
 	@AfterClass
 	public static void release() {
 		System.out.println("AllJUnitTests.release()");
-		CLOSER_SERVICE_MOCK.close();
+		LIGHT_CLOSER_SERVICE_MOCK.close();
 	}
 
 	public static String TEST_RESOURCES_PATH;

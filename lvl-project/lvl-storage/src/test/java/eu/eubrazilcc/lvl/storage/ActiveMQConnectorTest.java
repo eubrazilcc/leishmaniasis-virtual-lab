@@ -37,7 +37,8 @@ import org.junit.Test;
 import eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector;
 
 /**
- * Test message queuing operations using the {@link ActiveMQConnector ActiveMQ connector}.
+ * Test message queuing operations using the {@link ActiveMQConnector ActiveMQ connector}. To run this test an ActiveMQ server should be available.
+ * Running the test with the integration test will allow using the embedded ActiveMQ server that is deployed with the LVL storage.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class ActiveMQConnectorTest {

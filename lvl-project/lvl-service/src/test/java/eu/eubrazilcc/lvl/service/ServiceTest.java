@@ -108,6 +108,7 @@ import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.Dataset;
 import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
+import eu.eubrazilcc.lvl.core.DatasetShare;
 import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sandfly;
@@ -119,6 +120,7 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.service.rest.CitationResource;
 import eu.eubrazilcc.lvl.service.rest.CitationResource.References;
 import eu.eubrazilcc.lvl.service.rest.DatasetResource;
+import eu.eubrazilcc.lvl.service.rest.DatasetShareResource;
 import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
@@ -333,7 +335,7 @@ public class ServiceTest {
 				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
 			}
 
-			/* TODO
+			/* TODO : uncomment after the development of the new test is completed
 
 			// test create new sandfly
 			path = SandflySequenceResource.class.getAnnotation(Path.class);
@@ -1122,18 +1124,59 @@ public class ServiceTest {
 			System.out.println(" >> Saved file: " + filename);
 
 			// test create a dataset share
+			path = DatasetShareResource.class.getAnnotation(Path.class);
+			DatasetShare share = DatasetShare.builder()
+					.subject(ownerId2)
+					.build();
+			response = target.path(path.value())
+					.path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+					.request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.post(entity(share, APPLICATION_JSON_TYPE));
+			assertThat("Create dataset share response is not null", response, notNullValue());
+			assertThat("Create dataset share response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create dataset share response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create dataset share response entity is not null", payload, notNullValue());
+			assertThat("Create dataset share response entity is empty", isBlank(payload));
+			// uncomment for additional output
+			System.out.println(" >> Create dataset share response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create dataset share response JAX-RS object: " + response);
+			System.out.println(" >> Create dataset share HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			assertThat("Create dataset share location is not null", location, notNullValue());
+			assertThat("Create dataset share path is not empty", isNotBlank(location.getPath()), equalTo(true));
+			location = new URI((String)response.getHeaders().get("Location").get(0));
+			
 			// TODO
-
-			// test listing dataset shares
+			System.err.println("\n\nPATH: " + path.value() + "\n");
+			System.err.println("\n\nHERE: " + location.getPath() + "\n");
 			// TODO
 
 			// test getting a dataset share
+			
+			
+			
+			
 			// TODO
+
+			// test listing dataset shares
+
+
+
+
+			// TODO
+
+
 
 			// test viewing a dataset from an account granted (not from the owner account)
 			// TODO
 
 			// test modifying a dataset from an account granted (not from the owner account)
+			// TODO
+
+			// test removing permissions to data share and accessing (not from the owner account)
 			// TODO
 
 

@@ -155,7 +155,9 @@ public class DatasetShareResource {
 				.build();
 		// assign permissions to the subject
 		RESOURCE_OWNER_DAO.addPermissions(subject2, datasetShare2);
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder()
+		LOGGER.debug("New dataset share created: ns=" + dbns + ", fn=" + filename2 + ", subject=" + subject2);
+		final UriBuilder uriBuilder = uriInfo.getBaseUriBuilder()
+				.path(getClass())
 				.path(datasetShare2.getUrlSafeNamespace())
 				.path(datasetShare2.getUrlSafeFilename())
 				.path(datasetShare2.getUrlSafeSubject());

@@ -40,12 +40,12 @@ import org.junit.runners.Suite.SuiteClasses;
 /* TODO @SuiteClasses({ SandflyCollectionTest.class, LeishmaniaCollectionTest.class, ReferenceCollectionTest.class, TokenCollectionTest.class, 
 	AuthCodeCollectionTest.class, ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class, 
 	NotificationCollectionTest.class, PublicLinkCollectionTest.class, WorkflowRunCollectionTest.class, DatasetCollectionTest.class, 
-	LvLQLTest.class, MapReduceTest.class, SecurityManagerTest.class }) */
+	LvLQLTest.class, MapReduceTest.class, ActiveMQConnectorTest.class, SecurityManagerTest.class }) */
 // TODO @SuiteClasses({ SandflyCollectionTest.class })
 // TODO @SuiteClasses({ LvLQLTest.class })
 // TODO TODO @SuiteClasses({ DatasetCollectionTest.class })
 //TODO @SuiteClasses({ SecurityManagerTest.class })
-@SuiteClasses({ ResourceOwnerCollectionTest.class })
+@SuiteClasses({ ActiveMQConnectorTest.class, ResourceOwnerCollectionTest.class })
 /* TODO @SuiteClasses({ TokenCollectionTest.class, AuthCodeCollectionTest.class, ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, 
 	PendingUserCollectionTest.class, NotificationCollectionTest.class, SecurityManagerTest.class }) */
 public class AllIntegrationTests {
