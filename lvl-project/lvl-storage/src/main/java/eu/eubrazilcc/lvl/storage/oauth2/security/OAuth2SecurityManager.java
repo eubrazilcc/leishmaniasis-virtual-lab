@@ -45,6 +45,7 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -189,10 +190,13 @@ public final class OAuth2SecurityManager extends BaseSecurityManager {
 				.setRealm(resourceName)
 				.setError(INVALID_TOKEN)
 				.buildHeaderMessage();
-		LOGGER.warn("Access from " + clientAddress + " is denied due to: invalid credentials");
-		throw new WebApplicationException(status(UNAUTHORIZED)
+		LOGGER.warn("Access to resource " + resourceName + " from " + clientAddress + " is denied due to: invalid credentials");
+		throw new NotAuthorizedException(status(UNAUTHORIZED)
 				.header(WWW_AUTHENTICATE, oauthResponse.getHeader(WWW_AUTHENTICATE))
 				.build());
+		/* throw new WebApplicationException(status(UNAUTHORIZED)
+				.header(WWW_AUTHENTICATE, oauthResponse.getHeader(WWW_AUTHENTICATE))
+				.build()) ; */
 	}
 
 	public static final String bearerHeader(final String token) {

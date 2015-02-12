@@ -53,6 +53,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
@@ -112,6 +113,7 @@ import eu.eubrazilcc.lvl.core.DatasetShare;
 import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sandfly;
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
 import eu.eubrazilcc.lvl.core.Target;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
@@ -142,10 +144,12 @@ public class ServiceTest {
 
 	private WebTarget target;
 	private static final String TOKEN_ROOT  = "1234567890abcdEFGhiJKlMnOpqrstUVWxyZ";
-	private static final String TOKEN_USER  = "0987654321zYXwvuTSRQPoNmLkjIHgfeDCBA";
-	private static final String TOKEN_USER2 = "zYXwvuTSRQPoNmLkjIHgfeDCBA1234567890";	
+	private static final String TOKEN_USER1 = "0987654321zYXwvuTSRQPoNmLkjIHgfeDCBA";
+	private static final String TOKEN_USER2 = "zYXwvuTSRQPoNmLkjIHgfeDCBA1234567890";
+	private static final String TOKEN_USER3 = "zYXwvuTSRQ567890PoNmLkjIHgfeDCBA1234";
 	private String ownerId1;
 	private String ownerId2;
+	private String ownerId3;
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
@@ -179,6 +183,7 @@ public class ServiceTest {
 		// insert valid users in the database (they are needed for properly authentication/authorization)
 		ownerId1 = toResourceOwnerId("user1");
 		ownerId2 = toResourceOwnerId("user2");
+		ownerId3 = toResourceOwnerId("user3");
 		final User user1 = User.builder()
 				.userid("user1")
 				.password("password1")
@@ -194,11 +199,21 @@ public class ServiceTest {
 				.fullname("User 2")
 				.role(USER_ROLE)
 				.permissions(asPermissionList(userPermissions(ownerId2)))
+				.build(),
+				user3 = User.builder()
+				.userid("user3")
+				.password("password3")
+				.email("user3@example.com")
+				.fullname("User 3")
+				.role(USER_ROLE)
+				.permissions(asPermissionList(userPermissions(ownerId3)))
 				.build();
 		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder()
 				.user(user1).build());
 		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder()
 				.user(user2).build());
+		RESOURCE_OWNER_DAO.insert(ResourceOwner.builder()
+				.user(user3).build());
 		// insert valid tokens in the database
 		TOKEN_DAO.insert(AccessToken.builder()
 				.token(TOKEN_ROOT)
@@ -208,7 +223,7 @@ public class ServiceTest {
 				.scope(asPermissionList(allPermissions()))
 				.build());
 		TOKEN_DAO.insert(AccessToken.builder()
-				.token(TOKEN_USER)
+				.token(TOKEN_USER1)
 				.issuedAt(currentTimeMillis() / 1000l)
 				.expiresIn(604800l)
 				.ownerId(ownerId1)
@@ -220,6 +235,13 @@ public class ServiceTest {
 				.expiresIn(604800l)
 				.ownerId(ownerId2)
 				.scope(user2.getPermissions())
+				.build());
+		TOKEN_DAO.insert(AccessToken.builder()
+				.token(TOKEN_USER3)
+				.issuedAt(currentTimeMillis() / 1000l)
+				.expiresIn(604800l)
+				.ownerId(ownerId3)
+				.scope(user3.getPermissions())
 				.build());
 	}
 
@@ -802,7 +824,7 @@ public class ServiceTest {
 					.metadata(datasetMetadata)
 					.build();			
 			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (FASTA.GZIP sandfly) response is not null", response, notNullValue());
 			assertThat("Create dataset (FASTA.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -843,7 +865,7 @@ public class ServiceTest {
 
 			// test list datasets (from user account)
 			datasets = target.path(path.value()).path(urlEncodeUtf8(ownerId1)).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(Datasets.class);
 			assertThat("Get datasets (user account) result is not null", datasets, notNullValue());
 			assertThat("Get datasets (user account) list is not null", datasets.getElements(), notNullValue());
@@ -855,7 +877,7 @@ public class ServiceTest {
 
 			// test list datasets (from user account using default namespace)
 			datasets = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(Datasets.class);
 			assertThat("Get datasets (user account) result is not null", datasets, notNullValue());
 			assertThat("Get datasets (user account) list is not null", datasets.getElements(), notNullValue());
@@ -872,7 +894,7 @@ public class ServiceTest {
 			Dataset dataset2 = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
 					.path(datasets.getElements().get(0).getUrlSafeFilename())
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(Dataset.class);
 			assertThat("Get dataset result is not null", dataset2, notNullValue());
 			assertThat("Get dataset namespace is not empty", isNotBlank(dataset2.getNamespace()), equalTo(true));
@@ -896,7 +918,7 @@ public class ServiceTest {
 			dataset2 = target.path(path.value()).path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getNamespace(), DATASET_DEFAULT_NS).trim()))
 					.path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getFilename(), DATASET_DEFAULT_NS).trim()))
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(Dataset.class);			
 			assertThat("Get dataset (url encoded) result is not null", dataset2, notNullValue());
 			assertThat("Get dataset (url encoded) Id coincides with expected", dataset2.getId(), equalTo(datasetId));
@@ -908,7 +930,7 @@ public class ServiceTest {
 			response = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
 					.path(datasets.getElements().get(0).getUrlSafeFilename())
 					.request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.put(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Update dataset response is not null", response, notNullValue());
 			assertThat("Update dataset response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
@@ -925,7 +947,7 @@ public class ServiceTest {
 			response = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
 					.path(datasets.getElements().get(0).getUrlSafeFilename())
 					.request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.delete();
 			assertThat("Delete dataset response is not null", response, notNullValue());
 			assertThat("Delete dataset response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
@@ -955,7 +977,7 @@ public class ServiceTest {
 					.metadata(datasetMetadata)
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (NCBI.GZIP sandfly) response is not null", response, notNullValue());
 			assertThat("Create dataset (NCBI.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -987,7 +1009,7 @@ public class ServiceTest {
 					.metadata(datasetMetadata)
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (FASTA sandfly) response is not null", response, notNullValue());
 			assertThat("Create dataset (FASTA sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -1020,7 +1042,7 @@ public class ServiceTest {
 					.metadata(datasetMetadata)
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (NCBI sandfly) response is not null", response, notNullValue());
 			assertThat("Create dataset (NCBI sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -1053,7 +1075,7 @@ public class ServiceTest {
 					.metadata(datasetMetadata)
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));			
 			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is not null", response, notNullValue());
 			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -1075,7 +1097,7 @@ public class ServiceTest {
 			final org.apache.http.client.fluent.Response response3 = Request.Get(downloadUri)
 					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
 					.addHeader("Accept", APPLICATION_OCTET_STREAM)
-					.addHeader(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.addHeader(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.execute();
 			assertThat("Download dataset response is not null", response3, notNullValue());
 			final HttpResponse response4 = response3.returnResponse();
@@ -1123,16 +1145,16 @@ public class ServiceTest {
 			// uncomment for additional output
 			System.out.println(" >> Saved file: " + filename);
 
-			// test create a dataset share
+			// test create a dataset share (user1 grants access to user2)
 			path = DatasetShareResource.class.getAnnotation(Path.class);
-			DatasetShare share = DatasetShare.builder()
+			final DatasetShare share = DatasetShare.builder()
 					.subject(ownerId2)
 					.build();
 			response = target.path(path.value())
 					.path(urlEncodeUtf8(DATASET_DEFAULT_NS))
 					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
 					.request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(share, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset share response is not null", response, notNullValue());
 			assertThat("Create dataset share response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -1147,44 +1169,159 @@ public class ServiceTest {
 			location = new URI((String)response.getHeaders().get("Location").get(0));			
 			assertThat("Create dataset share location is not null", location, notNullValue());
 			assertThat("Create dataset share path is not empty", isNotBlank(location.getPath()), equalTo(true));
-			location = new URI((String)response.getHeaders().get("Location").get(0));
-			
-			// TODO
-			System.err.println("\n\nPATH: " + path.value() + "\n");
-			System.err.println("\n\nHERE: " + location.getPath() + "\n");
-			// TODO
 
-			// test getting a dataset share
-			
-			
-			
-			
-			// TODO
+			// test listing dataset shares (from super-user account)	
+			DatasetShares shares = target.path(path.value())
+					.path(urlEncodeUtf8(ownerId1))
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.get(DatasetShares.class);
+			assertThat("Get dataset shares (root account) result is not null", shares, notNullValue());
+			assertThat("Get dataset shares (root account) list is not null", shares.getElements(), notNullValue());
+			assertThat("Get dataset shares (root account) list is not empty", shares.getElements().isEmpty(), equalTo(false));
+			assertThat("Get dataset shares (root account) items count coincide with list size", shares.getElements().size(), 
+					equalTo(shares.getTotalCount()));
+			// uncomment for additional output			
+			System.out.println(" >> Get dataset shares (root account) result: " + shares.toString());
 
-			// test listing dataset shares
+			// test list dataset shares (from user unauthorized user account)
+			try {
+				shares = target.path(path.value())
+						.path(urlEncodeUtf8(ownerId1))
+						.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+						.request(APPLICATION_JSON)
+						.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER3))
+						.get(DatasetShares.class);
+				fail("list dataset shares from unauthorized user account must produce 401 error");
+			} catch (NotAuthorizedException e) {
+				// uncomment for additional output			
+				System.out.println(" >> List dataset shares (unauthorized user account) produced the expected 401 error");
+			}			
 
+			// test list dataset shares (from owner)
+			shares = target.path(path.value())
+					.path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
+					.get(DatasetShares.class);
+			assertThat("Get dataset shares (owner) result is not null", shares, notNullValue());
+			assertThat("Get dataset shares (owner) list is not null", shares.getElements(), notNullValue());
+			assertThat("Get dataset shares (owner) list is not empty", shares.getElements().isEmpty(), equalTo(false));
+			assertThat("Get dataset shares (owner) items count coincide with list size", shares.getElements().size(), 
+					equalTo(shares.getTotalCount()));
+			// uncomment for additional output			
+			System.out.println(" >> Get dataset shares (owner) result: " + shares.toString());
 
+			// test list datasets (from granted user)
+			shares = target.path(path.value())
+					.path(urlEncodeUtf8(ownerId1))
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER2))
+					.get(DatasetShares.class);
+			assertThat("Get dataset shares (granted user) result is not null", shares, notNullValue());
+			assertThat("Get dataset shares (granted user) list is not null", shares.getElements(), notNullValue());
+			assertThat("Get dataset shares (granted user) list is not empty", shares.getElements().isEmpty(), equalTo(false));
+			assertThat("Get dataset shares (granted user) items count coincide with list size", shares.getElements().size(), 
+					equalTo(shares.getTotalCount()));
+			// uncomment for additional output			
+			System.out.println(" >> Get dataset shares (granted user) result: " + shares.toString());
 
-
-			// TODO
-
-
+			// test getting a dataset share from owner
+			DatasetShare share2 = target.path(path.value())				
+					.path(urlEncodeUtf8(ownerId1))
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+					.path(urlEncodeUtf8(ownerId2))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
+					.get(DatasetShare.class);
+			assertThat("Get dataset share (from owner) result is not null", share2, notNullValue());					
+			assertThat("Get dataset share (from owner) access type is not null", share2.getAccessType(), notNullValue());
+			assertThat("Get dataset share (from owner) access type coincides with expected", share2.getAccessType(), equalTo(VIEW_SHARE));
+			assertThat("Get dataset share (from owner) filename is not empty", isNotBlank(share2.getFilename()), equalTo(true));
+			assertThat("Get dataset share (from owner) filename coincides with expected", share2.getFilename(), equalTo("my_ncbi_sequence.xml"));
+			assertThat("Get dataset share (from owner) namespace is not empty", isNotBlank(share2.getNamespace()), equalTo(true));
+			assertThat("Get dataset share (from owner) namespace coincides with expected", share2.getNamespace(), equalTo(ownerId1));
+			assertThat("Get dataset share (from owner) shared date is not null", share2.getSharedDate(), notNullValue());
+			assertThat("Get dataset share (from owner) subject is not empty", isNotBlank(share2.getSubject()), equalTo(true));
+			assertThat("Get dataset share (from owner) subject coincides with expected", share2.getSubject(), equalTo(ownerId2));			
+			// uncomment for additional output
+			System.out.println(" >> Get dataset share (from owner) result: " + share2.toString());
 
 			// test viewing a dataset from an account granted (not from the owner account)
-			// TODO
+			share2 = target.path(path.value())
+					.path(urlEncodeUtf8(ownerId1))
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+					.path(urlEncodeUtf8(ownerId2))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER2))
+					.get(DatasetShare.class);
+			assertThat("Get dataset share (from granted account) result is not null", share2, notNullValue());					
+			assertThat("Get dataset share (from granted account) access type is not null", share2.getAccessType(), notNullValue());
+			assertThat("Get dataset share (from granted account) access type coincides with expected", share2.getAccessType(), equalTo(VIEW_SHARE));
+			assertThat("Get dataset share (from granted account) filename is not empty", isNotBlank(share2.getFilename()), equalTo(true));
+			assertThat("Get dataset share (from granted account) filename coincides with expected", share2.getFilename(), equalTo("my_ncbi_sequence.xml"));
+			assertThat("Get dataset share (from granted account) namespace is not empty", isNotBlank(share2.getNamespace()), equalTo(true));
+			assertThat("Get dataset share (from granted account) namespace coincides with expected", share2.getNamespace(), equalTo(ownerId1));
+			assertThat("Get dataset share (from granted account) shared date is not null", share2.getSharedDate(), notNullValue());
+			assertThat("Get dataset share (from granted account) subject is not empty", isNotBlank(share2.getSubject()), equalTo(true));
+			assertThat("Get dataset share (from granted account) subject coincides with expected", share2.getSubject(), equalTo(ownerId2));			
+			// uncomment for additional output
+			System.out.println(" >> Get dataset share (from granted account) result: " + share2.toString());
 
-			// test modifying a dataset from an account granted (not from the owner account)
-			// TODO
+			// test viewing a dataset share (from user unauthorized user account)
+			try {
+				share2 = target.path(path.value())
+						.path(urlEncodeUtf8(ownerId1))
+						.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+						.path(urlEncodeUtf8(ownerId2))
+						.request(APPLICATION_JSON)
+						.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER3))
+						.get(DatasetShare.class);				
+				fail("get dataset share from unauthorized user account must produce 401 error");
+			} catch (NotAuthorizedException e) {
+				// uncomment for additional output			
+				System.out.println(" >> Get dataset share (unauthorized user account) produced the expected 401 error");
+			}
 
 			// test removing permissions to data share and accessing (not from the owner account)
-			// TODO
+			try {
+				response = target.path(path.value())
+						.path(urlEncodeUtf8(ownerId1))
+						.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+						.path(urlEncodeUtf8(ownerId2))
+						.request()
+						.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER2))
+						.delete();
+				if (UNAUTHORIZED.getStatusCode() == response.getStatus()) {
+					throw new ExpectedException("No exception was thrown, but status is 401");
+				}
+				fail("delete dataset share from granted user account must produce 401 error, instead got " + response.getStatus());
+			} catch (NotAuthorizedException | ExpectedException e) {
+				// uncomment for additional output			
+				System.out.println(" >> Delete dataset share (granted user account) produced the expected 401 error");
+			}
 
-
-
-
-
-
-
+			// test removing permissions to data share and accessing (from the owner account)
+			response = target.path(path.value())
+					.path(urlEncodeUtf8(ownerId1))
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+					.path(urlEncodeUtf8(ownerId2))
+					.request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
+					.delete();
+			assertThat("Delete dataset share response is not null", response, notNullValue());
+			assertThat("Delete dataset share response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Delete dataset share response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Delete dataset share response entity is not null", payload, notNullValue());
+			assertThat("Delete dataset share response entity is empty", isBlank(payload));
+			// uncomment for additional output			
+			System.out.println(" >> Delete dataset share response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Delete dataset share response JAX-RS object: " + response);
+			System.out.println(" >> Delete dataset share HTTP headers: " + response.getStringHeaders());
 
 
 
@@ -1211,7 +1348,7 @@ public class ServiceTest {
 					.build();
 
 			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
 			assertThat("Create public link (FASTA.GZIP sandfly) response is not null", response, notNullValue());
 			assertThat("Create public link (FASTA.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -1255,7 +1392,7 @@ public class ServiceTest {
 
 			// test list public links (from user account)
 			publicLinks = target.path(path.value()).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(PublicLinks.class);
 			assertThat("Get public links (user account) result is not null", publicLinks, notNullValue());
 			assertThat("Get public links (user account) list is not null", publicLinks.getElements(), notNullValue());
@@ -1269,7 +1406,7 @@ public class ServiceTest {
 			publicLink.setOwner(toResourceOwnerId("user1"));
 			PublicLinkOLD publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(PublicLinkOLD.class);
 			assertThat("Get public link result is not null", publicLink2, notNullValue());
 			assertThat("Get public link creation time is not null", publicLink2.getCreated(), notNullValue());
@@ -1282,7 +1419,7 @@ public class ServiceTest {
 			final String encodedId = encode(publicLinks.getElements().get(0).getUrlSafePath(), UTF_8.name());			
 			publicLink2 = target.path(path.value()).path(encodedId)
 					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(PublicLinkOLD.class);
 			assertThat("Get public link (url encoded Id) result is not null", publicLink2, notNullValue());
 			assertThat("Get public link (url encoded Id) creation time is not null", publicLink2.getCreated(), notNullValue());
@@ -1296,7 +1433,7 @@ public class ServiceTest {
 			publicLink.setDescription("Different description");
 			response = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
 					.request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.put(entity(publicLink, APPLICATION_JSON_TYPE));
 			assertThat("Update public link response is not null", response, notNullValue());
 			assertThat("Update public link response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
@@ -1312,7 +1449,7 @@ public class ServiceTest {
 			// test delete public link
 			response = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
 					.request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.delete();
 			assertThat("Delete public link response is not null", response, notNullValue());
 			assertThat("Delete public link response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
@@ -1332,7 +1469,7 @@ public class ServiceTest {
 					.build();
 
 			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
 			assertThat("Create public link (NCBI.GZIP sandfly) response is not null", response, notNullValue());
 			assertThat("Create public link (NCBI.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -1354,7 +1491,7 @@ public class ServiceTest {
 					.build();
 
 			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
 			assertThat("Create public link (FASTA sandfly) response is not null", response, notNullValue());
 			assertThat("Create public link (FASTA sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -1376,7 +1513,7 @@ public class ServiceTest {
 					.build();
 
 			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
 			assertThat("Create public link (NCBI sandfly) response is not null", response, notNullValue());
 			assertThat("Create public link (NCBI sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -1398,7 +1535,7 @@ public class ServiceTest {
 					.build();
 
 			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER))
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(publicLink, APPLICATION_JSON_TYPE));
 			assertThat("Create public link (NCBI.GZIP sandflies bulk) response is not null", response, notNullValue());
 			assertThat("Create public link (NCBI.GZIP sandflies bulk) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
@@ -1584,4 +1721,14 @@ public class ServiceTest {
 		System.out.println(" >> Get WADL response body: " + payload);
 	}
 
+	public static class ExpectedException extends RuntimeException {
+		
+		private static final long serialVersionUID = -1985898389956760475L;
+
+		public ExpectedException(final String message) {
+			super(message);
+		}
+		
+	}
+	
 }
