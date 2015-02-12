@@ -62,7 +62,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.cache.FileSystemPersistingCache;
  * {@link Dataset} DAO.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum DatasetDAO implements FileBaseDAO<String, Dataset> {
+public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 
 	DATASET_DAO;
 

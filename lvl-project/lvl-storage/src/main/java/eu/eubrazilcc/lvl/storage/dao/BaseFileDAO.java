@@ -51,7 +51,7 @@ import eu.eubrazilcc.lvl.core.Sorting;
  * @param <K> - the type of keys used in the database to identify the files
  * @param <E> - the type of files in this DAO
  */
-public interface FileBaseDAO<K, E extends BaseFile> {
+public interface BaseFileDAO<K, E extends BaseFile> {
 
 	/**
 	 * Inserts a new file (or version) in the database.
