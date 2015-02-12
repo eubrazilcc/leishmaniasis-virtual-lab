@@ -31,6 +31,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -197,24 +199,48 @@ public class BaseFile {
 	@JsonInclude(Include.NON_NULL)
 	public static abstract class Metadata extends Versionable {
 
+		private String openAccessLink;
+		private Date openAccessDate;
+		
+		public @Nullable String getOpenAccessLink() {
+			return openAccessLink;
+		}
+
+		public void setOpenAccessLink(final @Nullable String openAccessLink) {
+			this.openAccessLink = openAccessLink;
+			setOpenAccessDate(new Date());
+		}
+
+		public @Nullable Date getOpenAccessDate() {
+			return openAccessDate;
+		}
+
+		public void setOpenAccessDate(final @Nullable Date openAccessDate) {
+			this.openAccessDate = openAccessDate;
+		}
+
 		@Override
 		public boolean equals(final Object obj) {
 			if (obj == null || !(obj instanceof Metadata)) {
 				return false;
 			}
 			final Metadata other = Metadata.class.cast(obj);
-			return super.equals((Versionable)other);
+			return super.equals((Versionable)other)
+					&& Objects.equals(openAccessLink, other.openAccessLink)
+					&& Objects.equals(openAccessDate, other.openAccessDate);
 		}
 
 		@Override
 		public int hashCode() {
-			return super.hashCode();
+			return super.hashCode() + Objects.hash(openAccessLink, openAccessDate);
 		}
 
 		@Override
 		public String toString() {
 			return toStringHelper(this)
 					.add("Versionable", super.toString())
+					.add("openAccessLink", openAccessLink)
+					.add("openAccessDate", openAccessDate)
 					.toString();
 		}
 

@@ -41,6 +41,10 @@ public class Versionable {
 	 */
 	private String isLastestVersion = null;
 
+	/**
+	 * Returns {@code true} only in the latest version of an object. Otherwise, returns {@code false}.
+	 * @return {@code true} only in the latest version of an object. Otherwise, returns {@code false}.
+	 */
 	public @Nullable String getIsLastestVersion() {
 		return isLastestVersion;
 	}

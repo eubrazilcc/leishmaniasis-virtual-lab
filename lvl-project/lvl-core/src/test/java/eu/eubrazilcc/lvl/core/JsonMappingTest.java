@@ -122,7 +122,7 @@ public class JsonMappingTest {
 					.description("Optional description")
 					.editor("ownerid")
 					.isLastestVersion("my_fasta_sequences.zip")
-					.publicLink("publicLink")
+					.openAccessLink("publicLink")
 					.tags(newHashSet("tag1", "tag2", "tag3"))
 					.target(target)
 					.build();

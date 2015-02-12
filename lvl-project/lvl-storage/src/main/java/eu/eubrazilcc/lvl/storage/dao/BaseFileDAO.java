@@ -66,6 +66,21 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	WriteResult<E> insert(@Nullable String namespace, @Nullable String filename, File srcFile, @Nullable Metadata metadata);	
 	
 	/**
+	 * Updates the metadata of an existing element in the database. The following metadata elements cannot be updated and their 
+	 * user-provided values will be silently ignored by this method:
+	 * <ul>
+	 * <li>{@link Metadata#getIsLastestVersion() Version}</li>
+	 * </ul> 
+	 * @param namespace - (optional) name space of the file to be updated in the database. When nothing specified, the default 
+	 *                    namespace is used
+	 * @param filename - filename of the file to be updated in the database
+	 * @param update - new version of the metadata to be updated in the database
+	 * @return a copy of the element updated in the database. When the metadata associated to the element is stored in the database 
+	 *         unmodified, this method can return {@code null}.
+	 */
+	@Nullable E updateMetadata(@Nullable String namespace, String filename, @Nullable Metadata update);
+	
+	/**
 	 * Removes a file (and all its versions) from the database.
 	 * @param namespace - (optional) name space of the file to be removed from the database. When nothing specified, the default 
 	 *                    namespace is used

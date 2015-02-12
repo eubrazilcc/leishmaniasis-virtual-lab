@@ -184,7 +184,6 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		
 		private String editor;
 		private Set<String> tags = newHashSet();
-		private String publicLink;		
 		private String description;
 		private Target target;		
 
@@ -206,14 +205,6 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			} else {
 				this.tags = newHashSet();
 			}
-		}
-
-		public @Nullable String getPublicLink() {
-			return publicLink;
-		}
-
-		public void setPublicLink(final @Nullable String publicLink) {
-			this.publicLink = publicLink;
 		}
 
 		public @Nullable String getDescription() {
@@ -240,15 +231,14 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			final DatasetMetadata other = DatasetMetadata.class.cast(obj);
 			return super.equals((Metadata)other)
 					&& Objects.equals(editor, other.editor)
-					&& Objects.equals(tags, other.tags)
-					&& Objects.equals(publicLink, other.publicLink)
+					&& Objects.equals(tags, other.tags)					
 					&& Objects.equals(description, other.description)
 					&& Objects.equals(target, other.target);
 		}
 
 		@Override
 		public int hashCode() {
-			return super.hashCode() + Objects.hash(editor, tags, publicLink, description, target);
+			return super.hashCode() + Objects.hash(editor, tags, description, target);
 		}
 
 		@Override
@@ -256,8 +246,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			return toStringHelper(this)
 					.add("Metadata", super.toString())
 					.add("editor", editor)
-					.add("tags", tags)
-					.add("publicLink", publicLink)
+					.add("tags", tags)					
 					.add("description", description)
 					.add("target", target)
 					.toString();
@@ -288,8 +277,13 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 				return this;
 			}
 
-			public Builder publicLink(final String publicLink) {
-				instance.setPublicLink(trimToNull(publicLink));
+			public Builder openAccessLink(final String openAccessLink) {
+				instance.setOpenAccessLink(trimToNull(openAccessLink));
+				return this;
+			}
+			
+			public Builder openAccessDate(final Date openAccessDate) {
+				instance.setOpenAccessDate(openAccessDate);
 				return this;
 			}
 

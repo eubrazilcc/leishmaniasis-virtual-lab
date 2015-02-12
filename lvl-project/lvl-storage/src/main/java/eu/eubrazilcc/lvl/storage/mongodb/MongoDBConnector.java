@@ -727,6 +727,33 @@ public enum MongoDBConnector implements Closeable2 {
 		}
 	}
 
+	public void updateMetadata(final @Nullable String namespace, final String filename, final @Nullable DBObject metadata) {
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
+		final String namespace2 = trimToEmpty(namespace);
+		final String filename2 = filename.trim();
+		final DBObject metadata2 = metadata != null ? metadata : new BasicDBObject();
+		metadata2.put(IS_LATEST_VERSION_ATTR, filename2);
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();			
+			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
+			try {
+				final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
+				checkState(latestUploadedVersion != null, "File not found");
+				latestUploadedVersion.setMetaData(metadata2);								
+				latestUploadedVersion.save();
+			} catch (IllegalStateException ise) {
+				throw ise;
+			} catch (Exception ignore) {
+				LOGGER.error("Failed to update latest metadata version in namespace=" + gfsNs.getBucketName() 
+						+ ", filename=" + filename);
+			}
+		} finally {
+			db.requestDone();
+		}
+	}
+
 	/**
 	 * Reads a file object from the current database. The file is identified by the original filename stored in the database and the 
 	 * name space under the file was stored. When several versions exist of the same file, the latest version will be retrieved.

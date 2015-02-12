@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.storage.dao;
 
+import static org.apache.commons.lang.RandomStringUtils.random;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.core.json.jackson.JsonProperties.JSON_TYPE_PROPERTY;
@@ -74,7 +75,13 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 	public WriteResult<Dataset> insert(final @Nullable String namespace, final @Nullable String filename, final File file, final @Nullable Metadata metadata) {
 		final String id = MONGODB_CONN.saveFile(namespace, getFilename(filename, file), file, fromMetadata(metadata));
 		return new WriteResult.Builder<Dataset>().id(id).build();
-	}	
+	}
+	
+	@Override
+	public @Nullable Dataset updateMetadata(final @Nullable String namespace, final String filename, final @Nullable Metadata update) {
+		MONGODB_CONN.updateMetadata(namespace, filename, fromMetadata(update));
+		return null;
+	}
 
 	@Override
 	public void delete(final @Nullable String namespace, final String filename) {
@@ -157,6 +164,14 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 
 	public void cleanCache() {
 		persistingCache.invalidateAll();
+	}
+	
+	public String createOpenAccessLink() {
+		final String secret = random(32, "abcdefghijklmnopqrstuvwxyz0123456789");
+		
+		
+		// TODO		
+		return null;
 	}
 
 	private Dataset parseGridFSDBFileOrNull(final GridFSDBFile gfsFile, final String namespace) throws IOException {

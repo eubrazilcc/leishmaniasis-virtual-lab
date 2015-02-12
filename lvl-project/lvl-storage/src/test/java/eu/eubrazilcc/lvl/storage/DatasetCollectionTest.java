@@ -138,7 +138,7 @@ public class DatasetCollectionTest {
 			write(textFile1, "The second version of the text file is larger than the previous one", UTF_8.name());
 			assertThat("test Text file exists", textFile1.exists(), equalTo(true));
 			assertThat("test Text file is not empty", textFile1.length() > 0l, equalTo(true));
-			metadata.setPublicLink("public_link");
+			metadata.setOpenAccessLink("public_link");
 			metadata.setDescription("New version of text file 1");
 			DATASET_DAO.insert("namespace", null, textFile1, metadata);
 
@@ -182,10 +182,10 @@ public class DatasetCollectionTest {
 				dataset = datasets.get(i);
 				metadata = (DatasetMetadata)dataset.getMetadata();				
 				if (textFile1.getName().equals(dataset.getFilename()) && "New version of text file 1".equals(metadata.getDescription()) 
-						&& "public_link".equals(metadata.getPublicLink())) {
+						&& "public_link".equals(metadata.getOpenAccessLink()) && metadata.getOpenAccessDate() != null) {
 					found1 = true;
 				} else if (textFile1.getName().equals(dataset.getFilename()) && "Optional description".equals(metadata.getDescription())
-						&& metadata.getPublicLink() == null) {
+						&& metadata.getOpenAccessLink() == null) {
 					found2 = true;
 				} else {
 					throw new Exception("Unexpected dataset found: " + dataset);
@@ -221,7 +221,7 @@ public class DatasetCollectionTest {
 			assertThat("datasets size coincides with expected", datasets.size(), equalTo(2));
 
 			metadata.setIsLastestVersion(textFile1.getName());
-			metadata.setPublicLink("public_link");
+			metadata.setOpenAccessLink("public_link");
 			metadata.setDescription("New version of text file 1");
 			dataset = DATASET_DAO.find("namespace", textFile1.getName());			
 			assertThat("text dataset is not null", dataset, notNullValue());
