@@ -45,7 +45,7 @@ import org.junit.runners.Suite.SuiteClasses;
 // TODO @SuiteClasses({ LvLQLTest.class })
 // TODO TODO @SuiteClasses({ DatasetCollectionTest.class })
 //TODO @SuiteClasses({ SecurityManagerTest.class })
-@SuiteClasses({ ActiveMQConnectorTest.class, ResourceOwnerCollectionTest.class })
+@SuiteClasses({ ActiveMQConnectorTest.class, ResourceOwnerCollectionTest.class, DatasetCollectionTest.class })
 /* TODO @SuiteClasses({ TokenCollectionTest.class, AuthCodeCollectionTest.class, ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, 
 	PendingUserCollectionTest.class, NotificationCollectionTest.class, SecurityManagerTest.class }) */
 public class AllIntegrationTests {

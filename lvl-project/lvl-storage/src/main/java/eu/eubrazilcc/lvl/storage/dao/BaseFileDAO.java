@@ -70,6 +70,8 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 * user-provided values will be silently ignored by this method:
 	 * <ul>
 	 * <li>{@link Metadata#getIsLastestVersion() Version}</li>
+	 * <li>{@link Metadata#getOpenAccessLink() Open Access Link}</li>
+	 * <li>{@link Metadata#getOpenAccessDate() Open Access Date}</li>
 	 * </ul> 
 	 * @param namespace - (optional) name space of the file to be updated in the database. When nothing specified, the default 
 	 *                    namespace is used
@@ -79,6 +81,27 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 *         unmodified, this method can return {@code null}.
 	 */
 	@Nullable E updateMetadata(@Nullable String namespace, String filename, @Nullable Metadata update);
+	
+	/**
+	 * Creates a secret token that can be used to access the file from an anonymous account (no need to authenticate with the
+	 * application to access the file). When several versions of the file exists in the database, the link will be created in the
+	 * latest version. <strong>Note</strong> that when a previous version is restored the open access link to that version will be
+	 * restored too.
+	 * @param namespace - (optional) name space of the file to which the open access link will be created. When nothing specified, 
+	 *                    the default namespace is used
+	 * @param filename - filename of the file to which the open access link will be created
+	 * @return the secret token created in the database that allows anonymous clients to access the file.
+	 */
+	String createOpenAccessLink(@Nullable String namespace, String filename);
+	
+	/**
+	 * Removes a previously existing open access link. When several versions of the file exists in the database, the link will be 
+	 * removed from all versions.
+	 * @param namespace - (optional) name space of the file from which the open access link will be removed. When nothing 
+	 *                    specified, the default namespace is used
+	 * @param filename - filename of the file from which the open access link will be removed
+	 */
+	void removeOpenAccessLink(@Nullable String namespace, String filename);	
 	
 	/**
 	 * Removes a file (and all its versions) from the database.
@@ -136,6 +159,21 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 */
 	List<E> listVersions(@Nullable String namespace, String filename, int start, int size, @Nullable Sorting sorting, @Nullable MutableLong count);
 
+	/**
+	 * Returns a view of the files in the database that contains the specified range and have an open access link associated to the
+	 * file. An optional filter can be specified to filter the database response. However, if the filter is invalid, an empty list 
+	 * will be returned to the caller. Optionally, the number of files found in the database is returned to the caller. Versions are 
+	 * not included, only the latest uploaded file is returned.
+	 * @param namespace - (optional) name space to be searched in the database. When nothing specified, the default namespace is used
+	 * @param start - starting index
+	 * @param size - maximum number of files returned
+	 * @param filter - (optional) the expression to be used to filter the collection
+	 * @param sorting - (optional) sorting order
+	 * @param count - (optional) is updated with the number of files in the database
+	 * @return a view of the files in the database that contains the specified range and have an open access link associated to the file.
+	 */
+	List<E> listOpenAccess(@Nullable String namespace, int start, int size, @Nullable Sorting sorting, @Nullable MutableLong count);
+	
 	/**
 	 * Checks whether or not the specified file exists in the database, returning <tt>true</tt> only when the file exists in the 
 	 * specified namespace.

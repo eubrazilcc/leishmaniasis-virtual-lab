@@ -38,6 +38,7 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static java.lang.Integer.parseInt;
+import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
@@ -50,6 +51,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -117,7 +119,11 @@ public enum MongoDBConnector implements Closeable2 {
 
 	public static final String METADATA_ATTR = "metadata";
 	public static final String IS_LATEST_VERSION_ATTR = "isLastestVersion";
+	public static final String OPEN_ACCESS_LINK_ATTR = "openAccessLink";
+	public static final String OPEN_ACCESS_DATE_ATTR = "openAccessDate";
 	public static final String FILE_VERSION_PROP = METADATA_ATTR + "." + IS_LATEST_VERSION_ATTR;
+	public static final String FILE_OPEN_ACCESS_LINK_PROP = METADATA_ATTR + "." + OPEN_ACCESS_LINK_ATTR;
+	public static final String FILE_OPEN_ACCESS_DATE_PROP = METADATA_ATTR + "." + OPEN_ACCESS_DATE_ATTR;
 
 	private Lock mutex = new ReentrantLock();
 	private MongoClient __client = null;	
@@ -170,7 +176,11 @@ public enum MongoDBConnector implements Closeable2 {
 							+ metadataType.getCanonicalName());
 					checkNotNull(Versionable.class.getDeclaredField(IS_LATEST_VERSION_ATTR), 
 							"Version property (" + IS_LATEST_VERSION_ATTR + ") not found in versionable: "
-									+ Versionable.class.getCanonicalName());
+									+ Versionable.class.getCanonicalName());					
+					checkNotNull(metadataType.getDeclaredField(OPEN_ACCESS_LINK_ATTR), 
+							"Open access link property (" + OPEN_ACCESS_LINK_ATTR + ") not found in metadata: " + metadataType.getCanonicalName());					
+					checkNotNull(metadataType.getDeclaredField(OPEN_ACCESS_DATE_ATTR), 
+							"Open access date property (" + OPEN_ACCESS_DATE_ATTR + ") not found in metadata: " + metadataType.getCanonicalName());					
 				} catch (Exception e) {
 					throw new IllegalStateException("Object versioning needs a compatible version of the LVL core library, but none is available", e);
 				}
@@ -659,6 +669,8 @@ public enum MongoDBConnector implements Closeable2 {
 			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
 			// enforce isolation property: each namespace has its own bucket (encompassing 2 collections: files and chunks) and indexes in the database
 			createSparseIndexWithUniqueConstraint(FILE_VERSION_PROP, gfsNs.getBucketName() + "." + GRIDFS_FILES_COLLECTION, false);
+			// index open access links
+			createNonUniqueIndex(FILE_OPEN_ACCESS_LINK_PROP, gfsNs.getBucketName() + "." + GRIDFS_FILES_COLLECTION, false);
 			try {				
 				// insert new file/version in the database
 				final GridFSInputFile gfsFile = gfsNs.createFile(file);
@@ -745,10 +757,79 @@ public enum MongoDBConnector implements Closeable2 {
 				latestUploadedVersion.save();
 			} catch (IllegalStateException ise) {
 				throw ise;
-			} catch (Exception ignore) {
+			} catch (Exception e) {
 				LOGGER.error("Failed to update latest metadata version in namespace=" + gfsNs.getBucketName() 
-						+ ", filename=" + filename);
+						+ ", filename=" + filename, e);
 			}
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	public String createOpenAccessLink(final @Nullable String namespace, final String filename) {
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
+		final String namespace2 = trimToEmpty(namespace);
+		final String filename2 = filename.trim();
+		final String secret = random(32, "abcdefghijklmnopqrstuvwxyz0123456789");
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();			
+			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
+			try {
+				final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
+				checkState(latestUploadedVersion != null, "File not found");
+				if (latestUploadedVersion.getMetaData() == null) {
+					latestUploadedVersion.setMetaData(new BasicDBObject());
+				}
+				latestUploadedVersion.getMetaData().put(OPEN_ACCESS_LINK_ATTR, secret);
+				latestUploadedVersion.getMetaData().put(OPEN_ACCESS_DATE_ATTR, JSON.parse(JSON_MAPPER.writeValueAsString(new Date())));
+				latestUploadedVersion.save();
+			} catch (IllegalStateException ise) {
+				throw ise;
+			} catch (Exception e) {
+				LOGGER.error("Failed to create open access link in latest file version in namespace=" + gfsNs.getBucketName() 
+						+ ", filename=" + filename, e);
+			}
+		} finally {
+			db.requestDone();
+		}
+		return secret;
+	}
+
+	public void removeOpenAccessLink(final @Nullable String namespace, final String filename) {
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
+		final String namespace2 = trimToEmpty(namespace);
+		final String filename2 = filename.trim();
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();			
+			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);			
+			final List<GridFSDBFile> files = gfsNs.find(new BasicDBObject("filename", filename2).append(FILE_OPEN_ACCESS_LINK_PROP, 
+					new BasicDBObject("$exists", true)), new BasicDBObject("uploadDate", -1));
+			for (final GridFSDBFile file : files) {
+				if (file.getMetaData() != null) {
+					file.getMetaData().removeField(OPEN_ACCESS_LINK_ATTR);
+					file.getMetaData().removeField(OPEN_ACCESS_DATE_ATTR);
+					file.save();
+				}
+			}
+			/* ideally we want to use a cursor here, but the save() operation fails
+			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject("filename", filename2).append(FILE_OPEN_ACCESS_LINK_PROP, 
+					new BasicDBObject("$exists", true)));
+			try {
+				while (cursor.hasNext()) {
+					final GridFSDBFile file = (GridFSDBFile) cursor.next();
+					if (file.getMetaData() != null) {
+						file.getMetaData().removeField(OPEN_ACCESS_LINK_ATTR);
+						file.getMetaData().removeField(OPEN_ACCESS_DATE_ATTR); // this fails
+						file.save();
+					}
+				}
+			} finally {
+				cursor.close();
+			} */
 		} finally {
 			db.requestDone();
 		}
@@ -812,6 +893,33 @@ public enum MongoDBConnector implements Closeable2 {
 			db.requestEnsureConnection();
 			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
 			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)), sortCriteria);
+			cursor.skip(start).limit(size);
+			try {
+				while (cursor.hasNext()) {
+					list.add((GridFSDBFile) cursor.next());
+				}
+			} finally {
+				cursor.close();
+			}
+			if (count != null) {				
+				count.setValue(cursor.count());
+			}
+			return list;			
+		} finally {
+			db.requestDone();
+		}
+	}
+
+	public List<GridFSDBFile> listFileOpenAccess(final @Nullable String namespace, final DBObject sortCriteria, final int start, final int size, 
+			final @Nullable MutableLong count) {
+		final List<GridFSDBFile> list = newArrayList();
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {			
+			db.requestEnsureConnection();
+			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)).append(
+					FILE_OPEN_ACCESS_LINK_PROP, new BasicDBObject("$exists", true)), sortCriteria);
 			cursor.skip(start).limit(size);
 			try {
 				while (cursor.hasNext()) {

@@ -1323,12 +1323,20 @@ public class ServiceTest {
 			System.out.println(" >> Delete dataset share response JAX-RS object: " + response);
 			System.out.println(" >> Delete dataset share HTTP headers: " + response.getStringHeaders());
 
+			// test create open access link
+			// TODO
 
+			// test get open access link (from user unauthorized user account) 
+			// TODO
 
+			// test download from open access link
+			// TODO
 
+			// test remove open access link
+			// TODO
 
-			// TODO : test public link operations
-
+			// test get open access link (from owner account) 
+			// TODO
 
 
 
@@ -1722,13 +1730,13 @@ public class ServiceTest {
 	}
 
 	public static class ExpectedException extends RuntimeException {
-		
+
 		private static final long serialVersionUID = -1985898389956760475L;
 
 		public ExpectedException(final String message) {
 			super(message);
 		}
-		
+
 	}
-	
+
 }

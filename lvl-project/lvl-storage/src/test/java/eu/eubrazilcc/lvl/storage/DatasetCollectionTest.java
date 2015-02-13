@@ -122,7 +122,7 @@ public class DatasetCollectionTest {
 			assertThat("binary file exists", dataset.getOutfile().exists(), equalTo(true));
 			assertThat("binary file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
 			checkDataset(dataset, gzipFile1, "namespace", null, DatasetMetadata.builder().isLastestVersion(gzipFile1.getName()).build());
-			final File uncompressedFile = new File(TEST_OUTPUT_DIR, "uncompressed_" + textFile1.getName());
+			File uncompressedFile = new File(TEST_OUTPUT_DIR, "uncompressed_" + textFile1.getName());
 			gunzip(dataset.getOutfile().getCanonicalPath(), uncompressedFile.getCanonicalPath());
 			checkFile(textFile1, uncompressedFile);
 			/* Uncomment for additional output */
@@ -153,8 +153,68 @@ public class DatasetCollectionTest {
 			/* Uncomment for additional output */
 			System.out.println(dataset.toString());
 
+			// update metadata
+			metadata.setDescription("New version of the new version of text file 1");
+			DATASET_DAO.updateMetadata("namespace", textFile1.getName(), metadata);
+
+			// find the latest version after updating the metadata
+			dataset = DATASET_DAO.find("namespace", textFile1.getName());			
+			assertThat("text dataset is not null", dataset, notNullValue());
+			assertThat("text file is not null", dataset.getOutfile(), notNullValue());
+			assertThat("text file exists", dataset.getOutfile().exists(), equalTo(true));
+			assertThat("text file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
+			checkDataset(dataset, textFile1, "namespace", null, metadata);
+			checkFile(textFile1, dataset.getOutfile());
+			/* Uncomment for additional output */
+			System.out.println(dataset.toString());			
+
+			// create open access link
+			final String secret = DATASET_DAO.createOpenAccessLink("namespace", gzipFile1.getName());
+			assertThat("secret is not null", secret, notNullValue());
+			assertThat("secret is not empty", isNotBlank(secret), equalTo(true));
+			/* Uncomment for additional output */
+			System.out.println("Secret to access file anonymously: " + secret);
+
+			// verify that the access link was created
+			dataset = DATASET_DAO.find("namespace", gzipFile1.getName());			
+			assertThat("binary dataset is not null", dataset, notNullValue());
+			assertThat("binary file is not null", dataset.getOutfile(), notNullValue());
+			assertThat("binary file exists", dataset.getOutfile().exists(), equalTo(true));
+			assertThat("binary file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
+			checkDataset(dataset, gzipFile1, "namespace", null, DatasetMetadata.builder()
+					.isLastestVersion(gzipFile1.getName())
+					.openAccessLink(secret)
+					.openAccessDate(((DatasetMetadata)dataset.getMetadata()).getOpenAccessDate())
+					.build());
+			/* Uncomment for additional output */
+			System.out.println(dataset.toString());						
+
+			// remove open access link
+			DATASET_DAO.removeOpenAccessLink("namespace", gzipFile1.getName());					
+
+			// verify that the access link was removed
+			dataset = DATASET_DAO.find("namespace", gzipFile1.getName());			
+			assertThat("binary dataset is not null", dataset, notNullValue());
+			assertThat("binary file is not null", dataset.getOutfile(), notNullValue());
+			assertThat("binary file exists", dataset.getOutfile().exists(), equalTo(true));
+			assertThat("binary file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
+			checkDataset(dataset, gzipFile1, "namespace", null, DatasetMetadata.builder()
+					.isLastestVersion(gzipFile1.getName())
+					.build());
+			/* Uncomment for additional output */
+			System.out.println(dataset.toString());
+
+			// list files with open access links
+			List<Dataset> datasets = DATASET_DAO.listOpenAccess("namespace", 0, Integer.MAX_VALUE, null, null);
+			assertThat("datasets is not null", datasets, notNullValue());
+			assertThat("datasets is not empty", datasets.isEmpty(), equalTo(false));
+			assertThat("datasets size coincides with expected", datasets.size(), equalTo(1));
+			assertThat("datasets contentt coincides with expected", datasets.get(0).getFilename(), equalTo("file1.txt"));
+			/* Uncomment for additional output */
+			System.out.println(datasets.toString());
+
 			// list all files ignoring previous versions
-			List<Dataset> datasets = DATASET_DAO.findAll("namespace");
+			datasets = DATASET_DAO.findAll("namespace");
 			assertThat("datasets is not null", datasets, notNullValue());
 			assertThat("datasets is not empty", datasets.isEmpty(), equalTo(false));
 			assertThat("datasets size coincides with expected", datasets.size(), equalTo(2));
@@ -222,12 +282,13 @@ public class DatasetCollectionTest {
 
 			metadata.setIsLastestVersion(textFile1.getName());
 			metadata.setOpenAccessLink("public_link");
-			metadata.setDescription("New version of text file 1");
+			metadata.setDescription("New version of the new version of text file 1");
 			dataset = DATASET_DAO.find("namespace", textFile1.getName());			
 			assertThat("text dataset is not null", dataset, notNullValue());
 			assertThat("text file is not null", dataset.getOutfile(), notNullValue());
 			assertThat("text file exists", dataset.getOutfile().exists(), equalTo(true));
 			assertThat("text file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
+			metadata.setOpenAccessDate(dataset.getMetadata().getOpenAccessDate());
 			checkDataset(dataset, textFile1, "namespace", null, metadata);
 			checkFile(textFile1, dataset.getOutfile());
 			/* Uncomment for additional output */

@@ -22,7 +22,6 @@
 
 package eu.eubrazilcc.lvl.storage.dao;
 
-import static org.apache.commons.lang.RandomStringUtils.random;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.core.json.jackson.JsonProperties.JSON_TYPE_PROPERTY;
@@ -76,11 +75,21 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 		final String id = MONGODB_CONN.saveFile(namespace, getFilename(filename, file), file, fromMetadata(metadata));
 		return new WriteResult.Builder<Dataset>().id(id).build();
 	}
-	
+
 	@Override
 	public @Nullable Dataset updateMetadata(final @Nullable String namespace, final String filename, final @Nullable Metadata update) {
 		MONGODB_CONN.updateMetadata(namespace, filename, fromMetadata(update));
 		return null;
+	}
+
+	@Override
+	public String createOpenAccessLink(final @Nullable String namespace, final String filename) {
+		return MONGODB_CONN.createOpenAccessLink(namespace, filename);
+	}
+
+	@Override
+	public void removeOpenAccessLink(final @Nullable String namespace, final String filename) {
+		MONGODB_CONN.removeOpenAccessLink(namespace, filename);
 	}
 
 	@Override
@@ -143,6 +152,26 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 	}
 
 	@Override
+	public List<Dataset> listOpenAccess(final @Nullable String namespace, final int start, final int size, final @Nullable Sorting sorting, 
+			final @Nullable MutableLong count) {
+		// parse the sorting information or return an empty list if the sort is invalid
+		BasicDBObject sort = null;
+		try {
+			sort = sortCriteria(sorting, namespace);
+		} catch (InvalidSortParseException e) {
+			LOGGER.warn("Discarding operation after an invalid sort was found: " + e.getMessage());
+			return newArrayList();
+		}
+		// execute the query in the database using the user to filter the results in case that a valid one is provided
+		return transform(MONGODB_CONN.listFileOpenAccess(namespace, sort, start, size, count), new Function<GridFSDBFile, Dataset>() {
+			@Override
+			public Dataset apply(final GridFSDBFile gfsFile) {
+				return toDataset(gfsFile, namespace);
+			}
+		});
+	}
+
+	@Override
 	public boolean fileExists(final @Nullable String namespace, final String filename) {
 		return MONGODB_CONN.fileExists(namespace, filename);
 	}
@@ -164,15 +193,7 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 
 	public void cleanCache() {
 		persistingCache.invalidateAll();
-	}
-	
-	public String createOpenAccessLink() {
-		final String secret = random(32, "abcdefghijklmnopqrstuvwxyz0123456789");
-		
-		
-		// TODO		
-		return null;
-	}
+	}	
 
 	private Dataset parseGridFSDBFileOrNull(final GridFSDBFile gfsFile, final String namespace) throws IOException {
 		Dataset dataset = null;
