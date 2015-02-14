@@ -130,6 +130,14 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 *         if the database contains no entry for the filename.
 	 */
 	E find(@Nullable String namespace, String filename);
+	
+	/**
+	 * Gets a file from the database using the open access link.
+	 * @param secret - the open access link
+	 * @return the file to which the specified open access link is associated in the database, or {@code null} if the database 
+	 *         contains no entry for the secret.
+	 */
+	@Nullable E findOpenAccess(String secret);
 
 	/**
 	 * Returns a view of the files in the database that contains the specified range. The files are sorted by the key in ascending 

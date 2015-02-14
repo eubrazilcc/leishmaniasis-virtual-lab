@@ -55,6 +55,7 @@ import eu.eubrazilcc.lvl.core.Dataset;
 import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
+import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.GridFSDBFileWrapper;
 import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedFile;
 import eu.eubrazilcc.lvl.storage.mongodb.cache.FileSystemPersistingCache;
 
@@ -104,11 +105,25 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 
 	@Override
 	public Dataset find(final @Nullable String namespace, final String filename) {
-		try {			
+		try {
 			return parseGridFSDBFileOrNull(MONGODB_CONN.readFile(namespace, filename), namespace);
 		} catch (IOException e) {
 			throw new IllegalStateException("Failed to read file", e);
 		}		
+	}
+
+	@Override
+	public @Nullable Dataset findOpenAccess(final String secret) {
+		Dataset dataset = null;
+		try {
+			final GridFSDBFileWrapper fileWrapper = MONGODB_CONN.readOpenAccessFile(secret);
+			if (fileWrapper != null) {
+				dataset = parseGridFSDBFileOrNull(fileWrapper.getFile(), fileWrapper.getNamespace());
+			}
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to read file using open access link", e);
+		}
+		return dataset;
 	}
 
 	@Override

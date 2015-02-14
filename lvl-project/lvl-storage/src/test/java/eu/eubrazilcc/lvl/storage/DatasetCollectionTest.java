@@ -187,7 +187,21 @@ public class DatasetCollectionTest {
 					.openAccessDate(((DatasetMetadata)dataset.getMetadata()).getOpenAccessDate())
 					.build());
 			/* Uncomment for additional output */
-			System.out.println(dataset.toString());						
+			System.out.println(dataset.toString());
+			
+			// read file from open access link
+			dataset = DATASET_DAO.findOpenAccess(secret);
+			assertThat("binary dataset is not null", dataset, notNullValue());
+			assertThat("binary file is not null", dataset.getOutfile(), notNullValue());
+			assertThat("binary file exists", dataset.getOutfile().exists(), equalTo(true));
+			assertThat("binary file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
+			checkDataset(dataset, gzipFile1, "namespace", null, DatasetMetadata.builder()
+					.isLastestVersion(gzipFile1.getName())
+					.openAccessLink(secret)
+					.openAccessDate(((DatasetMetadata)dataset.getMetadata()).getOpenAccessDate())
+					.build());
+			/* Uncomment for additional output */
+			System.out.println(" >> File from open access link: " + dataset.toString());
 
 			// remove open access link
 			DATASET_DAO.removeOpenAccessLink("namespace", gzipFile1.getName());					

@@ -75,7 +75,8 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
  * {@link Dataset} resource. Provides methods for creating, editing, viewing and downloading datasets. Other resources provide additional 
- * operations, such as sharing a dataset with other users {@link DatasetShareResource}.  
+ * operations, such as sharing a dataset with other users {@link DatasetShareResource} and handling open access links 
+ * {@link DatasetOpenAccessResource}.
  * @author Erik Torres <ertorser@upv.es>
  */
 @Path("/datasets/objects")

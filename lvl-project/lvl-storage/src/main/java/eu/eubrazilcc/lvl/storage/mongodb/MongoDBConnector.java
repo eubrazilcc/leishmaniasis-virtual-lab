@@ -52,7 +52,9 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -855,6 +857,40 @@ public enum MongoDBConnector implements Closeable2 {
 		}
 	}
 
+	public GridFSDBFileWrapper readOpenAccessFile(final String secret) {
+		checkArgument(isNotBlank(secret), "Uninitialized or invalid secret");
+		final String secret2 = secret.trim();
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		db.requestStart();
+		try {
+			db.requestEnsureConnection();
+			GridFSDBFileWrapper fileWrapper = null;
+			final Set<String> collections = db.getCollectionNames();
+			final Iterator<String> it = collections.iterator();
+			while (it.hasNext() && fileWrapper == null) {
+				final String collection = it.next();
+				if (collection.endsWith("." + GRIDFS_FILES_COLLECTION)) {
+					final String[] tokens = Splitter.on('.')
+							.omitEmptyStrings()
+							.trimResults()
+							.splitToList(collection)
+							.toArray(new String[2]);
+					if (tokens.length >= 2) {
+						final String namespace = tokens[tokens.length - 2];
+						final GridFS gfsNs = new GridFS(db, namespace);
+						final GridFSDBFile file = gfsNs.findOne(new BasicDBObject(FILE_OPEN_ACCESS_LINK_PROP, secret2));
+						if (file != null) {
+							fileWrapper = new GridFSDBFileWrapper(namespace, file);
+						}
+					}
+				}
+			}
+			return fileWrapper;
+		} finally {
+			db.requestDone();
+		}
+	}
+
 	/**
 	 * Checks whether or not the specified file exists in the database, returning <tt>true</tt> only when the file exists in the 
 	 * specified namespace.
@@ -1088,6 +1124,23 @@ public enum MongoDBConnector implements Closeable2 {
 	private DBCollection tmpCollection() {
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		return db.getCollection(TMP_COLLECTION_PREFIX + randomAlphanumeric(12));
+	}
+
+	/* Inner classes */
+
+	public static class GridFSDBFileWrapper {
+		private final String namespace;
+		private final GridFSDBFile file;
+		public GridFSDBFileWrapper(final String namespace, final GridFSDBFile file) {
+			this.namespace = namespace;
+			this.file = file;
+		}
+		public String getNamespace() {
+			return namespace;
+		}
+		public GridFSDBFile getFile() {
+			return file;
+		}		
 	}
 
 }

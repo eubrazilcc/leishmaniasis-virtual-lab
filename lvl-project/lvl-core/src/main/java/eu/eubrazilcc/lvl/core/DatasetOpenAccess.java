@@ -24,7 +24,6 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
@@ -50,11 +49,13 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Provides information about a shared dataset */
-public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
+ * Provides information about a dataset open access link.
+ * @author Erik Torres <ertorser@upv.es>
+ */
+public class DatasetOpenAccess implements Linkable<DatasetOpenAccess> {
 
 	@InjectLinks({
-		@InjectLink(value="datasets/shares/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={
+		@InjectLink(value="datasets/open_access/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={
 				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
 				@Binding(name="urlSafeFilename", value="${instance.urlSafeFilename}")
 		})
@@ -70,8 +71,10 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 
 	private String namespace;
 	private String filename;
+	private String openAccessLink;
+	private Date openAccessDate;
 
-	public DatasetShare() {
+	public DatasetOpenAccess() {
 		super();
 	}
 
@@ -131,37 +134,48 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 		setUrlSafeFilename(urlEncodeUtf8(trimToEmpty(filename)));
 	}
 
-	@Override
-	public void setSubject(final String subject) {
-		super.setSubject(subject);
-		setUrlSafeSubject(urlEncodeUtf8(trimToEmpty(subject)));
+	public String getOpenAccessLink() {
+		return openAccessLink;
+	}
+
+	public void setOpenAccessLink(final String openAccessLink) {
+		this.openAccessLink = openAccessLink;
+	}
+
+	public Date getOpenAccessDate() {
+		return openAccessDate;
+	}
+
+	public void setOpenAccessDate(final Date openAccessDate) {
+		this.openAccessDate = openAccessDate;
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof DatasetShare)) {
+		if (obj == null || !(obj instanceof DatasetOpenAccess)) {
 			return false;
 		}
-		final DatasetShare other = DatasetShare.class.cast(obj);
+		final DatasetOpenAccess other = DatasetOpenAccess.class.cast(obj);
 		return  Objects.equals(urlSafeNamespace, other.urlSafeNamespace)
 				&& Objects.equals(urlSafeFilename, other.urlSafeFilename)				
 				&& equalsIgnoringVolatile(other);
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final DatasetShare other) {
+	public boolean equalsIgnoringVolatile(final DatasetOpenAccess other) {
 		if (other == null) {
 			return false;
 		}
-		return super.equals((Shareable)other)
-				&& Objects.equals(namespace, other.namespace)
+		return Objects.equals(namespace, other.namespace)
 				&& Objects.equals(filename, other.filename)
+				&& Objects.equals(openAccessLink, other.openAccessLink)
+				&& Objects.equals(openAccessDate, other.openAccessDate)
 				&& Objects.equals(links, other.links);
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, urlSafeNamespace, urlSafeFilename, namespace, filename);
+		return super.hashCode() + Objects.hash(links, urlSafeNamespace, urlSafeFilename, namespace, filename, openAccessLink, openAccessDate);
 	}
 
 	@Override
@@ -174,6 +188,8 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 				.add("urlSafeSubject", urlSafeSubject)				
 				.add("namespace", namespace)
 				.add("filename", filename)
+				.add("openAccessLink", openAccessLink)
+				.add("openAccessDate", openAccessDate)
 				.toString();
 	}
 
@@ -185,7 +201,7 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 
 	public static class Builder {
 
-		private final DatasetShare instance = new DatasetShare();
+		private final DatasetOpenAccess instance = new DatasetOpenAccess();
 
 		public Builder links(final List<Link> links) {
 			instance.setLinks(links);
@@ -202,34 +218,19 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 			checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 			instance.setFilename(filename.trim());
 			return this;
-		}
+		}		
 
-		/* Inherited from Shareable */
-
-		public Builder subject(final String subject) {
-			checkArgument(isNotBlank(subject), "Uninitialized or invalid subject");
-			instance.setSubject(subject.trim());
+		public Builder openAccessLink(final String openAccessLink) {
+			instance.setOpenAccessLink(openAccessLink);
 			return this;
 		}
 
-		public Builder sharedDate(final Date sharedDate) {
-			checkNotNull(sharedDate, "Uninitialized shared date");
-			instance.setSharedDate(sharedDate);
+		public Builder openAccessDate(final Date openAccessDate) {
+			instance.setOpenAccessDate(openAccessDate);
 			return this;
 		}
 
-		public Builder sharedNow() {
-			instance.setSharedDate(new Date());
-			return this;
-		}
-
-		public Builder accessType(final SharedAccess accessType) {
-			checkNotNull(accessType, "Uninitialized access type");
-			instance.setAccessType(accessType);
-			return this;
-		}
-
-		public DatasetShare build() {
+		public DatasetOpenAccess build() {
 			return instance;
 		}
 
