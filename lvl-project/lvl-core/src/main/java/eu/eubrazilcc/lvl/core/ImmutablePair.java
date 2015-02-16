@@ -79,6 +79,7 @@ Comparable<ImmutablePair<L, R>> {
 
 	@Override
 	public int compareTo(final ImmutablePair<L, R> other) {
+		if (this == other) return 0;
 		return ComparisonChain.start()				
 				.compare(left, other.left)
 				.compare(right, other.right)

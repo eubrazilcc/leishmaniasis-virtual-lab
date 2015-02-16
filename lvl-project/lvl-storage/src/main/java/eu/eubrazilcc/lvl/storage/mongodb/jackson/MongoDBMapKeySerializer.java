@@ -38,7 +38,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey;
  */
 public class MongoDBMapKeySerializer extends StdSerializer<MongoDBMapKey> {
 
-	protected MongoDBMapKeySerializer() {
+	public MongoDBMapKeySerializer() {
 		super(MongoDBMapKey.class);
 	}
 

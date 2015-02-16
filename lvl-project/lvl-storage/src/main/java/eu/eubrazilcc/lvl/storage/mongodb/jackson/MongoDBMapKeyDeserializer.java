@@ -38,7 +38,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey;
  */
 public class MongoDBMapKeyDeserializer extends KeyDeserializer {	
 
-	protected MongoDBMapKeyDeserializer() {
+	public MongoDBMapKeyDeserializer() {
 	}
 
 	@Override

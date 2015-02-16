@@ -25,7 +25,6 @@ package eu.eubrazilcc.lvl.storage;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey.escapeFieldName;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey.escapeMapKey;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey.unescapeFieldName;
-import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -36,14 +35,33 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMap;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBMapKeyDeserializer;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBMapKeySerializer;
 
 /**
  * Tests {@link MongoDBMap} maps.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class MongoDBMapTest {
+
+	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+	static {
+		// apply general configuration
+		JSON_MAPPER.setSerializationInclusion(Include.NON_NULL);
+		JSON_MAPPER.setSerializationInclusion(Include.NON_DEFAULT);
+		// register external serializers/deserializers		
+		final SimpleModule simpleModule = new SimpleModule("LvLModule", new Version(1, 0, 0, null, "eu.eubrazilcc.lvl", "lvl-storage"));
+		simpleModule.addKeySerializer(MongoDBMapKey.class, new MongoDBMapKeySerializer());
+		simpleModule.addKeyDeserializer(MongoDBMapKey.class, new MongoDBMapKeyDeserializer());
+		JSON_MAPPER.registerModule(simpleModule);
+	}
 
 	@Test
 	public void test() {

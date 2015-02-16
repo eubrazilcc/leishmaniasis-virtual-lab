@@ -28,7 +28,6 @@ import static com.google.common.collect.Iterables.isEmpty;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey.escapeMapKey;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.LVL_IDENTITY_PROVIDER;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.defaultIdentityProvider;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
@@ -196,7 +195,11 @@ public class User implements Serializable, Linkable<User> {
 				String permission2 = null;
 				if (isNotBlank(permission2 = trimToNull(permission))) {
 					if (getPermissions().add(permission2)) {
-						getPermissionHistory().getHistory().put(escapeMapKey(permission2), new PermissionModification(new Date(), GRANTED));
+						getPermissionHistory().getHistory().add(PermissionModification.builder()
+								.permission(permission2)
+								.modificationDate(new Date())
+								.modificationType(GRANTED)
+								.build());
 					}
 				}
 			}
@@ -210,7 +213,11 @@ public class User implements Serializable, Linkable<User> {
 				String permission2 = null;
 				if (isNotBlank(permission2 = trimToNull(permission))) {
 					if (getPermissions().remove(permission2)) {
-						getPermissionHistory().getHistory().put(escapeMapKey(permission2), new PermissionModification(new Date(), REMOVED));
+						getPermissionHistory().getHistory().add(PermissionModification.builder()
+								.permission(permission2)
+								.modificationDate(new Date())
+								.modificationType(REMOVED)
+								.build());						
 					}
 				}
 			}

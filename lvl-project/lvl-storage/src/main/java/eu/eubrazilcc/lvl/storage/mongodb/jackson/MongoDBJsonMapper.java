@@ -23,11 +23,7 @@
 package eu.eubrazilcc.lvl.storage.mongodb.jackson;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey;
 
 /**
  * Binds Java objects to/from MongoDB using the Jackson JSON processor.
@@ -39,12 +35,7 @@ public final class MongoDBJsonMapper {
 	static {
 		// apply general configuration
 		JSON_MAPPER.setSerializationInclusion(Include.NON_NULL);
-		JSON_MAPPER.setSerializationInclusion(Include.NON_DEFAULT);
-		// register external serializers/deserializers
-		final SimpleModule simpleModule = new SimpleModule("LvLModule", new Version(1, 0, 0, null, "eu.eubrazilcc.lvl", "lvl-storage"));
-		simpleModule.addKeySerializer(MongoDBMapKey.class, new MongoDBMapKeySerializer());
-		simpleModule.addKeyDeserializer(MongoDBMapKey.class, new MongoDBMapKeyDeserializer());
-		JSON_MAPPER.registerModule(simpleModule);
+		JSON_MAPPER.setSerializationInclusion(Include.NON_DEFAULT);		
 	}
 
 }

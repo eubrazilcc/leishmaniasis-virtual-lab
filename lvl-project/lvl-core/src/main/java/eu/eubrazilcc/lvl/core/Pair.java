@@ -68,6 +68,7 @@ public class Pair<K extends Comparable<K>, V extends Comparable<V>> implements M
 
 	@Override
 	public int compareTo(final Pair<K, V> other) {
+		if (this == other) return 0;
 		return ComparisonChain.start()				
 				.compare(key, other.key)
 				.compare(value, other.value)

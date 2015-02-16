@@ -40,6 +40,7 @@ import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asOAuthString;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.datasetSharePermission;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.latestModification;
 import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.hashAndSaltPassword;
 import static eu.eubrazilcc.lvl.storage.transform.UserTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -88,7 +89,9 @@ import eu.eubrazilcc.lvl.storage.transform.UserTransientStore;
 /**
  * {@link ResourceOwner} DAO. This class detects any attempt to insert a new resource owner in the database with an unprotected password and 
  * automatically creates a salt and hashes the password before inserting the element in the database. Any element an empty salt will be considered
- * insecure and therefore the password will be protected. 
+ * insecure and therefore the password will be protected. <strong>Note</strong> that permission history is excluded by default when resource 
+ * owners are listed. Only when the {@link #find(String)} method is used to retrieve the details of a given user, the permission history is
+ * included.
  * @author Erik Torres <ertorser@upv.es>
  */
 public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
@@ -142,7 +145,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public ResourceOwnerDAO useGravatar(final boolean useGravatar) {
 		this.useGravatar = useGravatar;
 		return this;
-	}
+	}	
 
 	public ResourceOwnerDAO reset() {
 		this.useGravatar = false;
@@ -208,7 +211,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	@Override
 	public ResourceOwner find(final String ownerId) {
 		final BasicDBObject obj = MONGODB_CONN.get(key(ownerId), COLLECTION);		
-		return parseBasicDBObjectOrNull(obj);
+		return parseBasicDBObjectOrNull(obj, false);
 	}
 
 	@Override
@@ -218,7 +221,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, ResourceOwner>() {
 			@Override
 			public ResourceOwner apply(final BasicDBObject obj) {
-				return parseBasicDBObject(obj);
+				return parseBasicDBObject(obj, true);
 			}
 		});		
 	}
@@ -255,29 +258,32 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		return new BasicDBObject(PRIMARY_KEY, 1);
 	}	
 
-	private ResourceOwner parseBasicDBObject(final BasicDBObject obj) {
+	private ResourceOwner parseBasicDBObject(final BasicDBObject obj, final boolean excludeHistory) {
 		final ResourceOwner owner = map(obj).getResourceOwner();
 		addGravatar(owner);
+		excludeHistory(owner, excludeHistory);
 		return owner;
 	}
 
-	private ResourceOwner parseBasicDBObjectOrNull(final BasicDBObject obj) {
+	private ResourceOwner parseBasicDBObjectOrNull(final BasicDBObject obj, final boolean excludeHistory) {
 		ResourceOwner owner = null;
 		if (obj != null) {
 			final ResourceOwnerEntity entity = map(obj);
 			if (entity != null) {
 				owner = entity.getResourceOwner();
 				addGravatar(owner);
+				excludeHistory(owner, excludeHistory);
 			}
 		}
 		return owner;
 	}
 
 	@SuppressWarnings("unused")
-	private ResourceOwner parseObject(final Object obj) {
+	private ResourceOwner parseObject(final Object obj, final boolean excludeHistory) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
 		final ResourceOwner owner = map((BasicDBObject) obj2.get("obj")).getResourceOwner();
 		addGravatar(owner);
+		excludeHistory(owner, excludeHistory);
 		return owner;
 	}
 
@@ -289,6 +295,12 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 			if (url != null) {
 				owner.getUser().setPictureUrl(url.toString());
 			}
+		}
+	}
+	
+	private void excludeHistory(final ResourceOwner owner, final boolean excludeHistory) {
+		if (excludeHistory) {
+			owner.getUser().getPermissionHistory().getHistory().clear();
 		}
 	}
 
@@ -325,7 +337,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 */
 	public ResourceOwner findByEmail(final String email) {
 		final BasicDBObject obj = MONGODB_CONN.get(emailKey(email), COLLECTION);		
-		return parseBasicDBObjectOrNull(obj);
+		return parseBasicDBObjectOrNull(obj, false);
 	}
 
 	/**
@@ -543,7 +555,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, query, count), new Function<BasicDBObject, DatasetShare>() {
 			@Override
 			public DatasetShare apply(final BasicDBObject obj) {
-				return parseResourceOwner(parseBasicDBObject(obj), namespace2, filename2, new String[]{ rw, ro });				
+				return parseResourceOwner(parseBasicDBObject(obj, true), namespace2, filename2, new String[]{ rw, ro });				
 			}
 		});		
 	}
@@ -564,20 +576,20 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		final String ro = datasetSharePermission(share);
 		final BasicDBObject query = new BasicDBObject(PERMISSIONS_KEY, new BasicDBObject("$in", new String[]{ rw, ro })).append(PRIMARY_KEY, subject2);
 		LOGGER.trace("findDatashare query: " + JSON.serialize(query));
-		final ResourceOwner owner = parseBasicDBObjectOrNull(MONGODB_CONN.get(query, COLLECTION));
+		final ResourceOwner owner = parseBasicDBObjectOrNull(MONGODB_CONN.get(query, COLLECTION), true);
 		return owner != null ? parseResourceOwner(owner, namespace2, filename2, new String[]{ rw, ro }) : null;
 	}
 
 	private DatasetShare parseResourceOwner(final ResourceOwner owner, final String namespace, final String filename, 
 			final String[] permissions) {
 		PermissionModification history = null;
-		SharedAccess sharedAccess = null;
+		SharedAccess sharedAccess = null;		
 		if (owner.getUser().getPermissions().contains(permissions[0])) {
 			sharedAccess = EDIT_SHARE;
-			history = owner.getUser().getPermissionHistory().getHistory().getUnescaped(permissions[0]);					
+			history = latestModification(owner.getUser().getPermissionHistory().getHistory(), permissions[0]);					
 		} else {
 			sharedAccess = VIEW_SHARE;
-			history = owner.getUser().getPermissionHistory().getHistory().getUnescaped(permissions[1]);
+			history = latestModification(owner.getUser().getPermissionHistory().getHistory(), permissions[1]);
 		}
 		return DatasetShare.builder()
 				.accessType(sharedAccess)

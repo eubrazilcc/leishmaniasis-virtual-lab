@@ -69,6 +69,7 @@ public class WorkflowStatus implements Comparable<WorkflowStatus> {
 
 	@Override
 	public int compareTo(final WorkflowStatus other) {
+		if (this == other) return 0;
 		return start()
 				.compare(this.completeness, other.completeness)
 				.result();

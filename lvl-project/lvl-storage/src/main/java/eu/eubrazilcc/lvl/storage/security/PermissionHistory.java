@@ -23,12 +23,22 @@
 package eu.eubrazilcc.lvl.storage.security;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Ordering.from;
+import static java.util.Collections.checkedSet;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMap;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey;
+import javax.annotation.Nullable;
+
+import com.google.common.collect.ComparisonChain;
 
 /**
  * Tracks permission changes.
@@ -36,15 +46,16 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey;
  */
 public class PermissionHistory {
 
-	private MongoDBMap<MongoDBMapKey, PermissionModification> history = new MongoDBMap<>();
+	private Set<PermissionModification> history = checkedSet(new HashSet<PermissionModification>(), PermissionModification.class);
 
-	public MongoDBMap<MongoDBMapKey, PermissionModification> getHistory() {
+	public Set<PermissionModification> getHistory() {
 		return history;
 	}
 
-	public void setHistory(final MongoDBMap<MongoDBMapKey, PermissionModification> history) {		
-		this.history = history != null ? new MongoDBMap<MongoDBMapKey, PermissionModification>(history) : new MongoDBMap<MongoDBMapKey, PermissionModification>();
-	}
+	public void setHistory(final Set<PermissionModification> history) {		
+		this.history = checkedSet(history != null ? new HashSet<PermissionModification>(history) 
+				: new HashSet<PermissionModification>(), PermissionModification.class);
+	}	
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -67,7 +78,32 @@ public class PermissionHistory {
 				.toString();
 	}
 
-	/* Inner classes */	
+	public static @Nullable PermissionModification latestModification(final Set<PermissionModification> history, final String permission) {
+		String permission2 = null;
+		checkArgument(history != null, "Uninitialized or invalid history");
+		checkArgument(isNotBlank(permission2 = trimToNull(permission)), "Uninitialized or invalid permission");
+		final List<PermissionModification> sortedList = from(new Comparator<PermissionModification>() {
+			@Override
+			public int compare(final PermissionModification pm1, final PermissionModification pm2) {
+				if (pm1 == pm2) return 0;
+				return ComparisonChain.start()
+						.compare(pm1.getModificationDate(), pm2.getModificationDate())
+						.compare(pm1.getPermission(), pm2.getPermission())
+						.compare(pm1.getModificationType(), pm2.getModificationType())
+						.result();
+			}
+		}).reverse().sortedCopy(history);
+		PermissionModification latestModification = null;
+		for (int i = 0; i < sortedList.size() && latestModification == null; i++) {
+			final PermissionModification item = sortedList.get(i);
+			if (permission2.equals(item.getPermission())) {
+				latestModification = item;
+			}
+		}
+		return latestModification;
+	}
+
+	/* Inner classes */
 
 	/**
 	 * Holds details about permission modification.
@@ -75,17 +111,19 @@ public class PermissionHistory {
 	 */
 	public static class PermissionModification {
 
+		private String permission;
 		private Date modificationDate;
 		private PermissionModificationType modificationType;
 
 		public PermissionModification() {
 		}
 
-		public PermissionModification(final Date modificationDate, final PermissionModificationType modificationType) {
-			this.modificationDate = modificationDate;
-			this.modificationType = modificationType;
+		public String getPermission() {
+			return permission;
 		}
-
+		public void setPermission(final String permission) {
+			this.permission = permission;
+		}
 		public Date getModificationDate() {
 			return modificationDate;
 		}
@@ -105,21 +143,54 @@ public class PermissionHistory {
 				return false;
 			}
 			final PermissionModification other = PermissionModification.class.cast(obj);
-			return Objects.equals(modificationDate, other.modificationDate)
+			return Objects.equals(permission, other.permission)
+					&& Objects.equals(modificationDate, other.modificationDate)
 					&& Objects.equals(modificationType, other.modificationType);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(modificationDate, modificationType);
+			return Objects.hash(permission, modificationDate, modificationType);
 		}
 
 		@Override
 		public String toString() {
-			return toStringHelper(this)
+			return toStringHelper(this)					
+					.add("permission", permission)
 					.add("modificationDate", modificationDate)
 					.add("modificationType", modificationType)
 					.toString();
+		}
+
+		/* Fluent API */
+
+		public static Builder builder() {
+			return new Builder();
+		}	
+
+		public static class Builder {
+
+			private final PermissionModification instance = new PermissionModification();
+
+			public Builder permission(final String permission) {
+				instance.setPermission(permission);				
+				return this;
+			}
+
+			public Builder modificationDate(final Date modificationDate) {
+				instance.setModificationDate(modificationDate);				
+				return this;
+			}
+
+			public Builder modificationType(final PermissionModificationType modificationType) {
+				instance.setModificationType(modificationType);				
+				return this;
+			}
+
+			public PermissionModification build() {
+				return instance;
+			}
+
 		}
 
 	}
