@@ -2806,34 +2806,38 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
               <a id="examples_oauth2_access_to_protected_resource"></a>Access to protected resource:
             </h3>
 
-            <code> $ curl -v --header "Authorization: Bearer k94LAp+oPa7bMNVCut84II7VTR+vEpf6MW+GaQHK72U="
-              http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/users/root </code>
+            <code> $ curl -H "Authorization: Bearer k94LAp+oPa7bMNVCut84II7VTR+vEpf6MW+GaQHK72U="
+              http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/users/root@lvl </code>
             <p></p>
 
-            <pre>
-* About to connect() to lvl.i3m.upv.es port 80 (#0)
-*   Trying 158.42.105.62... connected
-&gt; GET /lvl-auth/oauth2/v1/users/root HTTP/1.1
-&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
-&gt; Host: lvl.i3m.upv.es
-&gt; Accept: */*
-&gt; Authorization: Bearer k94LAp+oPa7bMNVCut84II7VTR+vEpf6MW+GaQHK72U=
-&gt; 
-&lt; HTTP/1.1 200 OK
-&lt; Server: nginx/1.1.19
-&lt; Date: Tue, 15 Apr 2014 16:17:08 GMT
-&lt; Content-Type: application/json
-&lt; Content-Length: 267
-&lt; Connection: keep-alive
-&lt; Access-Control-Allow-Origin: *
-&lt; Access-Control-Allow-Headers: origin, content-type, accept, authorization
-&lt; Access-Control-Allow-Credentials: true
-&lt; Access-Control-Allow-Methods: GET PUT DELETE POST HEAD OPTIONS
-&lt; Access-Control-Max-Age: 604800
-&lt; 
-* Connection #0 to host lvl.i3m.upv.es left intact
-* Closing connection #0
-{"email":"***","fullname":"LVL root user","link":"&lt;http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/root&gt;; rel=\"self\"; type=\"application/json\"","password":"***","scopes":["users/*,a","sequences,a","pipelines,a","my_sequences/*,a","pending_sequences,a"],"username":"root"}
+<pre>
+{
+    "email": "***",
+    "fullname": "LVL root user",
+    "links": [
+        {
+            "href": "/lvl-auth/oauth2/v1/users/root",
+            "params": {
+                "rel": "self",
+                "type": "application/json"
+            }
+        }
+    ],
+    "password": "***",
+    "permissionHistory": {
+        "history": {}
+    },
+    "permissions": [
+        "*"
+    ],
+    "pictureUrl": "https://secure.gravatar.com/avatar/04edfc0ef6c6cf6d6b88fbc69f9f9071?s=80&amp;d=mm",
+    "provider": "lvl",
+    "roles": [
+        "admin"
+    ],
+    "salt": "***",
+    "userid": "root"
+
 </pre>
 
             <h2>

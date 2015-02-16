@@ -23,7 +23,7 @@
 package eu.eubrazilcc.lvl.oauth2;
 
 import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
-import static eu.eubrazilcc.lvl.oauth2.mock.CloserServiceMock.CLOSER_SERVICE_MOCK;
+import static eu.eubrazilcc.lvl.oauth2.mock.LightCloserServiceMock.LIGHT_CLOSER_SERVICE_MOCK;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -45,12 +45,12 @@ public class AllJUnitTests {
 		// load logging bridges
 		LOG_MANAGER.preload();
 		// system pre-loading
-		CLOSER_SERVICE_MOCK.preload();
+		LIGHT_CLOSER_SERVICE_MOCK.preload();
 	}
 
 	@AfterClass
 	public static void release() {
-		CLOSER_SERVICE_MOCK.close();
+		LIGHT_CLOSER_SERVICE_MOCK.close();
 	}
 
 	public static String TEST_RESOURCES_PATH;

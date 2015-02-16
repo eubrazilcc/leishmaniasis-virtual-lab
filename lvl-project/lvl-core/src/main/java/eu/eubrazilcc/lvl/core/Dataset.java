@@ -46,6 +46,7 @@ import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -76,7 +77,9 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
 	
+	@JsonIgnore
 	private String urlSafeNamespace;
+	@JsonIgnore
 	private String urlSafeFilename;	
 
 	private String namespace;

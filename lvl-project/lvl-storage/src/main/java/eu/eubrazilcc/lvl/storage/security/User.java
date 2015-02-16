@@ -27,11 +27,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.isEmpty;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBMapKey.escapeMapKey;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.LVL_IDENTITY_PROVIDER;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.defaultIdentityProvider;
+import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModificationType.GRANTED;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModificationType.REMOVED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 
@@ -69,12 +73,17 @@ public class User implements Serializable, Linkable<User> {
 	private static final long serialVersionUID = -8320525767063830149L;	
 
 	@InjectLinks({
-		@InjectLink(value="users/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.userid}")})
+		@InjectLink(value="users/{urlSafeOwnerId}", rel=SELF, type=APPLICATION_JSON, bindings={
+				@Binding(name="urlSafeOwnerId", value="${instance.urlSafeOwnerId}")
+		})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links;        // HATEOAS links
+
+	@JsonIgnore
+	private String urlSafeOwnerId;   // identity
 
 	private String pictureUrl;       // URL to user's picture
 
@@ -89,7 +98,9 @@ public class User implements Serializable, Linkable<User> {
 
 	private PermissionHistory permissionHistory;
 
-	public User() { }
+	public User() {
+		setProvider(LVL_IDENTITY_PROVIDER);
+	}
 
 	@Override
 	public List<Link> getLinks() {
@@ -105,6 +116,14 @@ public class User implements Serializable, Linkable<User> {
 		}
 	}
 
+	public String getUrlSafeOwnerId() {
+		return urlSafeOwnerId;
+	}
+
+	public void setUrlSafeOwnerId(final String urlSafeOwnerId) {
+		this.urlSafeOwnerId = urlSafeOwnerId;
+	}
+
 	public String getPictureUrl() {
 		return pictureUrl;
 	}
@@ -116,13 +135,17 @@ public class User implements Serializable, Linkable<User> {
 	}
 	public void setProvider(final String provider) {
 		this.provider = provider;
+		setUrlSafeOwnerId(urlEncodeUtf8(toResourceOwnerId(defaultIfBlank(this.provider, LVL_IDENTITY_PROVIDER).trim(), 
+				defaultIfBlank(this.userid, "userid").trim())));
 	}
 	public String getUserid() {
 		return userid;
 	}
 	public void setUserid(final String userid) {
 		this.userid = userid;
-	}	
+		setUrlSafeOwnerId(urlEncodeUtf8(toResourceOwnerId(defaultIfBlank(this.provider, LVL_IDENTITY_PROVIDER).trim(), 
+				defaultIfBlank(this.userid, "userid").trim())));
+	}
 	public String getPassword() {
 		return password;
 	}

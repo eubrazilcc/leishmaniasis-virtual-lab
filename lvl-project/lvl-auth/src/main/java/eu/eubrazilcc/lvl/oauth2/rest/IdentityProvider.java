@@ -121,7 +121,12 @@ public class IdentityProvider {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createUser(final User user, final @Context UriInfo uriInfo,
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {		
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		
+		// TODO
+		System.err.println("n\n >> HERE: " + user + "\n");
+		// TODO
+		
 		if (user == null || isBlank(user.getUserid())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
