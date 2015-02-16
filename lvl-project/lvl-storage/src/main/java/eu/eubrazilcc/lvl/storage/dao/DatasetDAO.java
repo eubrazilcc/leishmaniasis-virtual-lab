@@ -148,7 +148,7 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 
 	@Override
 	public List<Dataset> listVersions(final @Nullable String namespace, final String filename, final int start, final int size, 
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
+			final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		// parse the sorting information or return an empty list if the sort is invalid
 		BasicDBObject sort = null;
 		try {
@@ -167,8 +167,8 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 	}
 
 	@Override
-	public List<Dataset> listOpenAccess(final @Nullable String namespace, final int start, final int size, final @Nullable Sorting sorting, 
-			final @Nullable MutableLong count) {
+	public List<Dataset> listOpenAccess(final @Nullable String namespace, final int start, final int size, final ImmutableMap<String, String> filter, 
+			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		// parse the sorting information or return an empty list if the sort is invalid
 		BasicDBObject sort = null;
 		try {

@@ -24,7 +24,6 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.parsePublicLinkId;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static eu.eubrazilcc.lvl.storage.dao.WorkflowRunDAO.WORKFLOW_RUN_DAO;
 import static java.net.URLDecoder.decode;
@@ -168,10 +167,10 @@ public class WorkflowRunResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:*:" + id.trim() + ":edit");
-		final String[] splitted = parsePublicLinkId(id);
+		/* TODO final String[] splitted = parsePublicLinkId(id);
 		if (splitted == null || splitted.length != 2) {
 			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
-		}
+		} */
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id);
 		if (run == null) {

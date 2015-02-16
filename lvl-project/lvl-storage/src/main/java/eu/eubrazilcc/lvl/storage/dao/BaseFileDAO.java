@@ -161,11 +161,13 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 * @param filename - filename whose associate versions are to be returned
 	 * @param start - starting index
 	 * @param size - maximum number of files returned
+	 * @param filter - (optional) the expression to be used to filter the collection
 	 * @param sorting - (optional) sorting order
 	 * @param count - (optional) is updated with the number of files in the database
 	 * @return
 	 */
-	List<E> listVersions(@Nullable String namespace, String filename, int start, int size, @Nullable Sorting sorting, @Nullable MutableLong count);
+	List<E> listVersions(@Nullable String namespace, String filename, int start, int size, @Nullable ImmutableMap<String, String> filter,
+			@Nullable Sorting sorting, @Nullable MutableLong count);
 
 	/**
 	 * Returns a view of the files in the database that contains the specified range and have an open access link associated to the
@@ -180,7 +182,8 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 * @param count - (optional) is updated with the number of files in the database
 	 * @return a view of the files in the database that contains the specified range and have an open access link associated to the file.
 	 */
-	List<E> listOpenAccess(@Nullable String namespace, int start, int size, @Nullable Sorting sorting, @Nullable MutableLong count);
+	List<E> listOpenAccess(@Nullable String namespace, int start, int size, @Nullable ImmutableMap<String, String> filter, 
+			@Nullable Sorting sorting, @Nullable MutableLong count);
 	
 	/**
 	 * Checks whether or not the specified file exists in the database, returning <tt>true</tt> only when the file exists in the 

@@ -24,8 +24,6 @@ package eu.eubrazilcc.lvl.core.util;
 
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
-import static com.google.common.collect.Iterables.getFirst;
-import static com.google.common.collect.Iterables.getLast;
 import static eu.eubrazilcc.lvl.core.DataSource.toShortNotation;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
@@ -159,29 +157,6 @@ public final class NamingUtils {
 			decoded = decode(str, UTF_8.name());
 		} catch (UnsupportedEncodingException ignore) { }
 		return decoded;
-	}
-
-	public static String encodePublicLinkPath(final String path) {
-		return path != null ? path.replaceAll("/", ID_FRAGMENT_SEPARATOR_STRING) : path;
-	}
-
-	public static String decodePublicLinkPath(final String path) {
-		return path != null ? path.replaceAll(ID_FRAGMENT_SEPARATOR_STRING, "/") : path;
-	}	
-
-	public static String[] parsePublicLinkId(final String id) {
-		final String[] arr = new String[2];
-		try {
-			final String decoded = decode(id, UTF_8.name());
-			final Iterable<String> splitted = Splitter.on(ID_FRAGMENT_SEPARATOR)
-					.trimResults()
-					.omitEmptyStrings()
-					.limit(2)
-					.split(decoded);
-			arr[0] = getFirst(splitted, null);
-			arr[1] = getLast(splitted, null);
-		} catch (UnsupportedEncodingException ignore) { }
-		return arr;
 	}
 
 }

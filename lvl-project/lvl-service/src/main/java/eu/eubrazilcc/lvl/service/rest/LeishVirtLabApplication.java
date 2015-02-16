@@ -74,6 +74,7 @@ public class LeishVirtLabApplication extends Application {
 		instances.add(new DatasetResource());
 		instances.add(new DatasetShareResource());
 		instances.add(new DatasetOpenAccessResource());
+		instances.add(new PublicResource());
 		instances.add(new NotificationResource());
 		// add additional JAX-RS providers
 		classes.add(JacksonFeature.class);

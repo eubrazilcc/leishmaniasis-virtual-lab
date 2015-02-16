@@ -237,6 +237,7 @@ public class DatasetResource {
 				}
 			}
 		};
+		LOGGER.trace("Downloading dataset: ns=" + dataset.getNamespace() + ", fn=" + dataset.getFilename());
 		return Response.ok(stream, isNotBlank(dataset.getContentType()) ? dataset.getContentType(): APPLICATION_OCTET_STREAM)
 				.header("content-disposition", "attachment; filename = " + dataset.getFilename())
 				.build();

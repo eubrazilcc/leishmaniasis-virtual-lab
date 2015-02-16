@@ -70,8 +70,6 @@ public class JsonMappingTest {
 					.rel(SELF).type(APPLICATION_JSON).build();
 			final Link refLink = Link.fromUri(UriBuilder.fromUri("http://localhost/paper").path("ADGJ87950").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
-			final Link publicLinkLink = Link.fromUri(UriBuilder.fromUri("http://localhost/public_link").path("fjihknqswre1dvqp/353470160.fasta.gz").build())
-					.rel(SELF).type(APPLICATION_JSON).build();
 
 			final Point point = Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build();
 
@@ -149,13 +147,6 @@ public class JsonMappingTest {
 					.build();
 			assertThat("dataset share is not null", datasetShare, notNullValue());
 
-			final PublicLinkOLD publicLink = PublicLinkOLD.builder()
-					.created(new Date())
-					.target(Target.builder().type("sanfly").collection("sandfly").ids(newHashSet("gb:JP540074", "gb:JP553239")).filter("export_fasta").compression("gzip").build())
-					.description("Optional description")
-					.build();
-			assertThat("public link is not null", publicLink, notNullValue());
-
 			final GBSeq gbSeq = GBSEQ_XMLB.typeFromFile(getGBSeqXMLFiles().iterator().next());
 			assertThat("GenBank sequence is not null", gbSeq, notNullValue());			
 
@@ -193,13 +184,6 @@ public class JsonMappingTest {
 			// test dataset share with links
 			datasetShare.setLinks(newArrayList(refLink));
 			testDatasetShare(datasetShare);
-
-			// test public links with no links
-			testPublicLink(publicLink);
-
-			// test public links with links
-			publicLink.setLinks(newArrayList(publicLinkLink));			
-			testPublicLink(publicLink);
 
 			// test GenBank sequence
 			testGenBankSequence(gbSeq);
@@ -280,20 +264,6 @@ public class JsonMappingTest {
 		final DatasetShare datasetShare2 = JSON_MAPPER.readValue(payload, DatasetShare.class);
 		assertThat("deserialized dataset share is not null", datasetShare2, notNullValue());
 		assertThat("deserialized dataset share coincides with expected", datasetShare2, equalTo(datasetShare));
-	}
-
-	private void testPublicLink(final PublicLinkOLD publicLink) throws IOException {
-		// test public link JSON serialization
-		final String payload = JSON_MAPPER.writeValueAsString(publicLink);
-		assertThat("serialized public link is not null", payload, notNullValue());
-		assertThat("serialized public link is not empty", isNotBlank(payload), equalTo(true));
-		/* uncomment for additional output */
-		System.out.println(" >> Serialized public link (JSON): " + payload);
-
-		// test public link JSON deserialization
-		final PublicLinkOLD publicLink2 = JSON_MAPPER.readValue(payload, PublicLinkOLD.class);
-		assertThat("deserialized public link is not null", publicLink2, notNullValue());
-		assertThat("deserialized public link coincides with expected", publicLink2, equalTo(publicLink));		
 	}
 
 	private void testGenBankSequence(final GBSeq gbSeq) throws IOException {

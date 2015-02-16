@@ -219,7 +219,7 @@ public class DatasetCollectionTest {
 			System.out.println(dataset.toString());
 
 			// list files with open access links
-			List<Dataset> datasets = DATASET_DAO.listOpenAccess("namespace", 0, Integer.MAX_VALUE, null, null);
+			List<Dataset> datasets = DATASET_DAO.listOpenAccess("namespace", 0, Integer.MAX_VALUE, null, null, null);
 			assertThat("datasets is not null", datasets, notNullValue());
 			assertThat("datasets is not empty", datasets.isEmpty(), equalTo(false));
 			assertThat("datasets size coincides with expected", datasets.size(), equalTo(1));
@@ -246,7 +246,7 @@ public class DatasetCollectionTest {
 			}
 
 			// list all the available versions of a given file
-			datasets = DATASET_DAO.listVersions("namespace", textFile1.getName(), 0, Integer.MAX_VALUE, 
+			datasets = DATASET_DAO.listVersions("namespace", textFile1.getName(), 0, Integer.MAX_VALUE, null,
 					Sorting.builder().field("uploadDate").order(Order.ASC).build(), null);			
 			assertThat("datasets is not null", datasets, notNullValue());
 			assertThat("datasets is not empty", datasets.isEmpty(), equalTo(false));
@@ -273,7 +273,7 @@ public class DatasetCollectionTest {
 			assertThat("test Text file is not empty", textFile2.length() > 0l, equalTo(true));
 			DATASET_DAO.insert("namespace", textFile1.getName(), textFile2, metadata);
 
-			datasets = DATASET_DAO.listVersions("namespace", textFile1.getName(), 0, Integer.MAX_VALUE, null, null);
+			datasets = DATASET_DAO.listVersions("namespace", textFile1.getName(), 0, Integer.MAX_VALUE, null, null, null);
 			assertThat("datasets is not null", datasets, notNullValue());
 			assertThat("datasets is not empty", datasets.isEmpty(), equalTo(false));
 			assertThat("datasets size coincides with expected", datasets.size(), equalTo(3));
@@ -289,7 +289,7 @@ public class DatasetCollectionTest {
 
 			DATASET_DAO.undoLatestVersion("namespace", textFile1.getName());
 
-			datasets = DATASET_DAO.listVersions("namespace", textFile1.getName(), 0, Integer.MAX_VALUE, null, null);
+			datasets = DATASET_DAO.listVersions("namespace", textFile1.getName(), 0, Integer.MAX_VALUE, null, null, null);
 			assertThat("datasets is not null", datasets, notNullValue());
 			assertThat("datasets is not empty", datasets.isEmpty(), equalTo(false));
 			assertThat("datasets size coincides with expected", datasets.size(), equalTo(2));

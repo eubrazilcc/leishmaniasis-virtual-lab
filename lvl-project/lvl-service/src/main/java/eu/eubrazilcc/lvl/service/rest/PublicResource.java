@@ -23,21 +23,34 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
+import static eu.eubrazilcc.lvl.service.rest.DatasetResource.parseParam;
 import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.URL_FRAGMENT_PATTERN;
+import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
+
+import eu.eubrazilcc.lvl.core.Dataset;
 
 /**
  * Public resources.
@@ -49,14 +62,37 @@ public class PublicResource {
 	private final static Logger LOGGER = getLogger(PublicResource.class);
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Public Resource";
-	
+
 	@GET
-	@Path("datasets/{id: " + URL_FRAGMENT_PATTERN + "}")
+	@Path("datasets/{secret: " + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_OCTET_STREAM)
-	public Response downloadDataset(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+	public Response downloadDataset(final @PathParam("secret") String secret, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		// TODO
-		return null;
+		final String secret2 = parseParam(secret);
+		// get from database
+		final Dataset dataset = DATASET_DAO.findOpenAccess(secret2);		
+		if (dataset == null || dataset.getOutfile() == null) {
+			throw new WebApplicationException("Element not found", NOT_FOUND);
+		}
+		// attach file to response
+		final StreamingOutput stream = new StreamingOutput() {
+			@Override
+			public void write(final OutputStream os) throws IOException {
+				try (final FileInputStream is = new FileInputStream(dataset.getOutfile())) {
+					final byte[] buffer = new byte[1024];
+					int noOfBytes = 0;
+					while ((noOfBytes = is.read(buffer)) != -1) {
+						os.write(buffer, 0, noOfBytes);
+					}
+				} catch (Exception e) {
+					throw new WebApplicationException("Failed to write file to output", INTERNAL_SERVER_ERROR);
+				}
+			}
+		};
+		LOGGER.trace("Downloading open access dataset: ns=" + dataset.getNamespace() + ", fn=" + dataset.getFilename());
+		return Response.ok(stream, isNotBlank(dataset.getContentType()) ? dataset.getContentType(): APPLICATION_OCTET_STREAM)
+				.header("content-disposition", "attachment; filename = " + dataset.getFilename())
+				.build();
 	}
-	
+
 }

@@ -120,11 +120,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	
 		<!-- Optional endpoint where the LVL portal is listening for incoming 
 			connections. If undefined, the services will use their own URI -->
-		<!-- <endpoint>https://localhost/</endpoint> -->
-		
-		<!-- Relative path where the objects are accessed without requiring users to authenticate
-			with the LVL site -->
-		<public>lvl-pub</public>
+		<!-- <endpoint>https://localhost/</endpoint> -->		
 	
 	</portal>
 	

@@ -24,9 +24,7 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.parsePublicLinkId;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
-import static eu.eubrazilcc.lvl.storage.dao.PublicLinkDAO.PUBLIC_LINK_DAO;
 import static java.lang.System.getProperty;
 import static java.nio.file.Files.createSymbolicLink;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -58,7 +56,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 
-import eu.eubrazilcc.lvl.core.PublicLinkOLD;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
 import eu.eubrazilcc.lvl.service.WorkflowDataObjects;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
@@ -127,7 +124,7 @@ public class WorkflowDataResource {
 		if (isBlank(dataset.getName())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		// get file from local filesystem
+		/* TODO // get file from local filesystem
 		final String[] splitted = parsePublicLinkId(dataset.getName());
 		if (splitted == null || splitted.length != 2) {
 			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
@@ -152,7 +149,8 @@ public class WorkflowDataResource {
 
 		// TODO : add an entry into the database to control user access, then implement PUT and modify DELETE		
 
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(inputFileId);		
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(inputFileId);	 */
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path((String)null); // TODO
 		return Response.created(uriBuilder.build()).build();
 	}
 

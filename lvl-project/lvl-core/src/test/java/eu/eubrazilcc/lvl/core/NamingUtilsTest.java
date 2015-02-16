@@ -34,8 +34,6 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.splitIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toAsciiSafeName;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toId;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.encodePublicLinkPath;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.decodePublicLinkPath;
 import static org.apache.commons.lang.StringUtils.countMatches;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -193,18 +191,6 @@ public class NamingUtilsTest {
 			}
 			/* uncomment for additional output */
 			System.out.println(" >> split Ids (using long notation): " + idsList);
-
-			// test encoding public link names for use in URLs
-			final String[] publicLinks = { "s6883fmkhwuwhfju/sequences.fasta.gz", "bui6vm4cinxg9so5/sequences.fasta", "b9zqodu6qqlykjdr/sequences.xml" };
-			final String[] publicLinks2 = { "s6883fmkhwuwhfju:sequences.fasta.gz", "bui6vm4cinxg9so5:sequences.fasta", "b9zqodu6qqlykjdr:sequences.xml" };
-			for (int i = 0; i < publicLinks.length; i++) {
-				final String encodedPath = encodePublicLinkPath(publicLinks[i]);
-				assertThat("encode public link path is not null", encodedPath, notNullValue());
-				assertThat("encoded public link path coincides with expected", encodedPath, equalTo(publicLinks2[i]));
-				final String decodedPath = decodePublicLinkPath(encodedPath);
-				assertThat("decoded public link path is not null", decodedPath, notNullValue());
-				assertThat("decoded public link path coincides with original", decodedPath, equalTo(publicLinks[i]));
-			}
 			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

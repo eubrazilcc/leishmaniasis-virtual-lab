@@ -27,17 +27,20 @@ import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.Dataset.DATASET_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
+import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.decodePublicLinkPath;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
+import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
+import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
-import static eu.eubrazilcc.lvl.service.io.PublicLinkWriter.unsetPublicLink;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_QUERY_OAUTH2;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
@@ -45,18 +48,18 @@ import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.USER_ROLE;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermissions;
+import static java.lang.Integer.parseInt;
+import static java.lang.Math.min;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.getProperty;
-import static java.net.URLEncoder.encode;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -78,16 +81,15 @@ import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
@@ -107,13 +109,14 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
+import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Dataset;
 import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
+import eu.eubrazilcc.lvl.core.DatasetOpenAccess;
 import eu.eubrazilcc.lvl.core.DatasetShare;
-import eu.eubrazilcc.lvl.core.PublicLinkOLD;
+import eu.eubrazilcc.lvl.core.Leishmania;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sandfly;
-import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
 import eu.eubrazilcc.lvl.core.Target;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
@@ -121,10 +124,15 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.service.rest.CitationResource;
 import eu.eubrazilcc.lvl.service.rest.CitationResource.References;
+import eu.eubrazilcc.lvl.service.rest.DatasetOpenAccessResource;
 import eu.eubrazilcc.lvl.service.rest.DatasetResource;
 import eu.eubrazilcc.lvl.service.rest.DatasetShareResource;
-import eu.eubrazilcc.lvl.service.rest.PublicLinkResource;
+import eu.eubrazilcc.lvl.service.rest.LeishmaniaSequenceResource;
+import eu.eubrazilcc.lvl.service.rest.PublicResource;
+import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource;
+import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource.Sequences;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
+import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.security.User;
@@ -152,8 +160,6 @@ public class ServiceTest {
 	private String ownerId3;
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
-
-	private static final List<String> PUBLIC_LINKS = newArrayList();
 
 	@Before
 	public void setUp() throws Exception {
@@ -248,12 +254,7 @@ public class ServiceTest {
 	@After
 	public void cleanUp() {
 		// cleanup test file-system environment
-		deleteQuietly(TEST_OUTPUT_DIR);
-		for (final String link : PUBLIC_LINKS) {
-			try {
-				unsetPublicLink(new File(link));
-			} catch (Exception ignore) { }
-		}
+		deleteQuietly(TEST_OUTPUT_DIR);		
 	}
 
 	@Test
@@ -356,8 +357,6 @@ public class ServiceTest {
 				// uncomment for additional output				
 				System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
 			}
-
-			/* TODO : uncomment after the development of the new test is completed
 
 			// test create new sandfly
 			path = SandflySequenceResource.class.getAnnotation(Path.class);
@@ -804,9 +803,8 @@ public class ServiceTest {
 			// uncomment for additional output			
 			System.out.println(" >> Delete leishmania response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Delete leishmania response JAX-RS object: " + response);
-			System.out.println(" >> Delete leishmania HTTP headers: " + response.getStringHeaders()); */
+			System.out.println(" >> Delete leishmania HTTP headers: " + response.getStringHeaders());
 
-			// TODO
 			// test create dataset (GZIP compressed FASTA sandfly)
 			path = DatasetResource.class.getAnnotation(Path.class);
 			Target datasetTarget = Target.builder()
@@ -1092,20 +1090,20 @@ public class ServiceTest {
 			assertThat("Create dataset (NCBI.GZIP sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
 
 			// test file download
-			final URI downloadUri = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+			URI downloadUri = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS))
 					.path(urlEncodeUtf8("my_ncbi_sequence.xml")).path("download").getUri();
-			final org.apache.http.client.fluent.Response response3 = Request.Get(downloadUri)
+			org.apache.http.client.fluent.Response response3 = Request.Get(downloadUri)
 					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
 					.addHeader("Accept", APPLICATION_OCTET_STREAM)
 					.addHeader(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.execute();
 			assertThat("Download dataset response is not null", response3, notNullValue());
-			final HttpResponse response4 = response3.returnResponse();
+			HttpResponse response4 = response3.returnResponse();
 			assertThat("Download dataset HTTP response is not null", response4, notNullValue());
 			assertThat("Download dataset status line is not null", response4.getStatusLine(), notNullValue());
 			assertThat("Download dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
 					equalTo(OK.getStatusCode()));
-			final Header[] headers = response4.getAllHeaders();
+			Header[] headers = response4.getAllHeaders();
 			assertThat("Download dataset headers is not null", headers, notNullValue());
 			assertThat("Download dataset headers is not empty", headers.length, greaterThan(0));
 			String filename = null;
@@ -1125,10 +1123,10 @@ public class ServiceTest {
 				}
 			}
 			assertThat("Download dataset filename is not empty", isNotBlank(filename), equalTo(true));
-			final HttpEntity entity = response4.getEntity();
+			HttpEntity entity = response4.getEntity();
 			assertThat("Download dataset entity is not null", entity, notNullValue());
 			assertThat("Download dataset content length coincides with expected", entity.getContentLength(), greaterThan(0l));
-			final File outfile = new File(TEST_OUTPUT_DIR, filename);
+			File outfile = new File(TEST_OUTPUT_DIR, filename);
 			outfile.createNewFile();
 			try (final InputStream inputStream = entity.getContent();
 					final FileOutputStream outputStream = new FileOutputStream(outfile)) {
@@ -1140,7 +1138,7 @@ public class ServiceTest {
 			}
 			assertThat("Downloaded file exists", outfile.exists(), equalTo(true));
 			assertThat("Downloaded file is not empty", outfile.length(), greaterThan(0L));			
-			final GBSeq sequence = getSequence(outfile);
+			GBSeq sequence = getSequence(outfile);
 			assertThat("XML parsed from downloaded file is not null", sequence, notNullValue());
 			// uncomment for additional output
 			System.out.println(" >> Saved file: " + filename);
@@ -1324,239 +1322,150 @@ public class ServiceTest {
 			System.out.println(" >> Delete dataset share HTTP headers: " + response.getStringHeaders());
 
 			// test create open access link
-			// TODO
-
-			// test get open access link (from user unauthorized user account) 
-			// TODO
-
-			// test download from open access link
-			// TODO
-
-			// test remove open access link
-			// TODO
-
-			// test get open access link (from owner account) 
-			// TODO
-
-
-
-
-
-			if (true) {
-				return;
-			}
-
-			// TODO
-
-			// test create public link (GZIP compressed FASTA sandfly)
-			path = PublicLinkResource.class.getAnnotation(Path.class);
-			PublicLinkOLD publicLink = PublicLinkOLD.builder()
-					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export_fasta").compression("gzip").build())
-					.description("Optional description")
+			path = DatasetOpenAccessResource.class.getAnnotation(Path.class);
+			final DatasetOpenAccess openAccess = DatasetOpenAccess.builder()
+					.filename("my_ncbi_sequence.xml")
+					.namespace(ownerId1)
 					.build();
-
-			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (FASTA.GZIP sandfly) response is not null", response, notNullValue());
-			assertThat("Create public link (FASTA.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (FASTA.GZIP sandfly) is not empty", response.getEntity(), notNullValue());
-			payload = response.readEntity(String.class);
-			assertThat("Create public link (FASTA.GZIP sandfly) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (FASTA.GZIP sandfly) response entity is empty", isBlank(payload));
-			// uncomment for additional output
-			System.out.println(" >> Create public link (FASTA.GZIP sandfly) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (FASTA.GZIP sandfly) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (FASTA.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
-			location = new URI((String)response.getHeaders().get("Location").get(0));
-			final String publicLinkPath = getPathFromLocation(location);
-			publicLink.setPath(publicLinkPath);
-			publicLink.setMime("application/gzip");
-			addPublicLinkForClean(publicLinkPath);
-
-			// test list public links (from super-user account)
-			PublicLinks publicLinks = target.path(path.value()).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.get(PublicLinks.class);
-			assertThat("Get public links (root account) result is not null", publicLinks, notNullValue());
-			assertThat("Get public links (root account) list is not null", publicLinks.getElements(), notNullValue());
-			assertThat("Get public links (root account) list is not empty", publicLinks.getElements().isEmpty(), equalTo(false));
-			assertThat("Get public links (root account) items count coincide with list size", publicLinks.getElements().size(), 
-					equalTo(publicLinks.getTotalCount()));
-			// uncomment for additional output			
-			System.out.println(" >> Get public links (root account) result: " + publicLinks.toString());
-
-			// test list public links (from user unauthorized user account)
-			publicLinks = target.path(path.value()).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER2))
-					.get(PublicLinks.class);
-			assertThat("Get public links (unauthorized user account) result is not null", publicLinks, notNullValue());
-			assertThat("Get public links (unauthorized user account) list is not null", publicLinks.getElements(), notNullValue());
-			assertThat("Get public links (unauthorized user account) list is empty", publicLinks.getElements().isEmpty(), equalTo(true));
-			assertThat("Get public links (unauthorized user account) items count coincide with list size", publicLinks.getElements().size(), 
-					equalTo(publicLinks.getTotalCount()));
-			// uncomment for additional output			
-			System.out.println(" >> Get public links (unauthorized user account) result: " + publicLinks.toString());
-
-			// test list public links (from user account)
-			publicLinks = target.path(path.value()).request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.get(PublicLinks.class);
-			assertThat("Get public links (user account) result is not null", publicLinks, notNullValue());
-			assertThat("Get public links (user account) list is not null", publicLinks.getElements(), notNullValue());
-			assertThat("Get public links (user account) list is not empty", publicLinks.getElements().isEmpty(), equalTo(false));
-			assertThat("Get public links (user account) items count coincide with list size", publicLinks.getElements().size(), 
-					equalTo(publicLinks.getTotalCount()));
-			// uncomment for additional output			
-			System.out.println(" >> Get public links (user account) result: " + publicLinks.toString());
-
-			// test get public link
-			publicLink.setOwner(toResourceOwnerId("user1"));
-			PublicLinkOLD publicLink2 = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
-					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.get(PublicLinkOLD.class);
-			assertThat("Get public link result is not null", publicLink2, notNullValue());
-			assertThat("Get public link creation time is not null", publicLink2.getCreated(), notNullValue());
-			publicLink.setCreated(publicLink2.getCreated());
-			assertThat("Get public link coincides with expected", publicLink2.equalsIgnoringVolatile(publicLink), equalTo(true));
-			// uncomment for additional output
-			System.out.println(" >> Get public link result: " + publicLink2.toString());
-
-			// test get public link using encoded identifier
-			final String encodedId = encode(publicLinks.getElements().get(0).getUrlSafePath(), UTF_8.name());			
-			publicLink2 = target.path(path.value()).path(encodedId)
-					.request(APPLICATION_JSON)
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.get(PublicLinkOLD.class);
-			assertThat("Get public link (url encoded Id) result is not null", publicLink2, notNullValue());
-			assertThat("Get public link (url encoded Id) creation time is not null", publicLink2.getCreated(), notNullValue());
-			publicLink.setCreated(publicLink2.getCreated());
-			assertThat("Get public link (url encoded Id) coincides with expected", publicLink2.equalsIgnoringVolatile(publicLink), equalTo(true));
-			// uncomment for additional output
-			System.out.println(" >> URL encoded Id: " + encodedId);
-			System.out.println(" >> Get public link (url encoded Id) result: " + publicLink2.toString());			
-
-			// test update public link
-			publicLink.setDescription("Different description");
-			response = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
+			response = target.path(path.value())
+					.path(urlEncodeUtf8(DATASET_DEFAULT_NS))
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.put(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Update public link response is not null", response, notNullValue());
-			assertThat("Update public link response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
-			assertThat("Update public link response is not empty", response.getEntity(), notNullValue());
+					.post(entity(openAccess, APPLICATION_JSON_TYPE));
+			assertThat("Create dataset open access link response is not null", response, notNullValue());
+			assertThat("Create dataset open access link response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create dataset open access link response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Update public link response entity is not null", payload, notNullValue());
-			assertThat("Update public link response entity is empty", isBlank(payload));
-			// uncomment for additional output			
-			System.out.println(" >> Update public link response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Update public link response JAX-RS object: " + response);
-			System.out.println(" >> Update public link HTTP headers: " + response.getStringHeaders());
+			assertThat("Create dataset open access link response entity is not null", payload, notNullValue());
+			assertThat("Create dataset open access link response entity is empty", isBlank(payload));
+			// uncomment for additional output
+			System.out.println(" >> Create dataset open access link response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create dataset open access link response JAX-RS object: " + response);
+			System.out.println(" >> Create dataset open access link HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));			
+			assertThat("Create dataset open access link location is not null", location, notNullValue());
+			assertThat("Create dataset open access link path is not empty", isNotBlank(location.getPath()), equalTo(true));					
 
-			// test delete public link
-			response = target.path(path.value()).path(publicLinks.getElements().get(0).getUrlSafePath())
+			// test get open access link (from user unauthorized user account)
+			DatasetOpenAccess openAccess2 = null;
+			try {
+				openAccess2 = target.path(path.value())
+						.path(urlEncodeUtf8(ownerId1))
+						.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+						.request(APPLICATION_JSON)
+						.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER3))
+						.get(DatasetOpenAccess.class);				
+				fail("get dataset open access link from unauthorized user account must produce 401 error");
+			} catch (NotAuthorizedException e) {
+				// uncomment for additional output		
+				System.out.println(" >> Get dataset open access link (unauthorized user account) produced the expected 401 error");
+			}
+
+			// test get open access link (from owner account)
+			openAccess2 = target.path(path.value())				
+					.path(urlEncodeUtf8(ownerId1))
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
+					.get(DatasetOpenAccess.class);
+			assertThat("Get dataset open access link (from owner) result is not null", openAccess2, notNullValue());					
+			assertThat("Get dataset open access link (from owner) filename is not empty", isNotBlank(openAccess2.getFilename()), equalTo(true));
+			assertThat("Get dataset open access link (from owner) filename coincides with expected", openAccess2.getFilename(), equalTo("my_ncbi_sequence.xml"));
+			assertThat("Get dataset open access link (from owner) namespace is not empty", isNotBlank(openAccess2.getNamespace()), equalTo(true));
+			assertThat("Get dataset open access link (from owner) namespace coincides with expected", openAccess2.getNamespace(), equalTo(ownerId1));
+			assertThat("Get dataset open access link (from owner) creation date is not null", openAccess2.getOpenAccessDate(), notNullValue());
+			assertThat("Get dataset open access link (from owner) link is not empty", isNotBlank(openAccess2.getOpenAccessLink()), equalTo(true));	
+			// uncomment for additional output
+			System.out.println(" >> Get dataset open access link (from owner) result: " + openAccess2.toString());			
+
+			// test list open access links (from owner account)
+			DatasetOpenAccesses openAccesses = target.path(path.value())
+					.path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
+					.get(DatasetOpenAccesses.class);
+			assertThat("Get dataset open access links (owner) result is not null", openAccesses, notNullValue());
+			assertThat("Get dataset open access links (owner) list is not null", openAccesses.getElements(), notNullValue());
+			assertThat("Get dataset open access links (owner) list is not empty", openAccesses.getElements().isEmpty(), equalTo(false));
+			assertThat("Get dataset open access links (owner) items count coincide with list size", openAccesses.getElements().size(), 
+					equalTo(openAccesses.getTotalCount()));
+			// uncomment for additional output			
+			System.out.println(" >> Get dataset open access links (owner) result: " + openAccesses.toString());			
+
+			// test download from open access link			
+			downloadUri = target.path(PublicResource.class.getAnnotation(Path.class).value())
+					.path("datasets")
+					.path(urlEncodeUtf8(openAccesses.getElements().get(0).getOpenAccessLink()))
+					.getUri();
+			response3 = Request.Get(downloadUri)
+					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
+					.addHeader("Accept", APPLICATION_OCTET_STREAM)
+					.addHeader(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
+					.execute();
+			assertThat("Download open access dataset response is not null", response3, notNullValue());
+			response4 = response3.returnResponse();
+			assertThat("Download open access dataset HTTP response is not null", response4, notNullValue());
+			assertThat("Download open access dataset status line is not null", response4.getStatusLine(), notNullValue());
+			assertThat("Download open access dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
+					equalTo(OK.getStatusCode()));
+			headers = response4.getAllHeaders();
+			assertThat("Download open access dataset headers is not null", headers, notNullValue());
+			assertThat("Download open access dataset headers is not empty", headers.length, greaterThan(0));
+			filename = null;
+			for (int i = 0; i < headers.length && filename == null; i++) {
+				if ("content-disposition".equalsIgnoreCase(headers[i].getName())) {
+					final HeaderElement[] elements = headers[i].getElements();
+					if (elements != null) {
+						for (int j = 0; j < elements.length && filename == null; j++) {							
+							if ("attachment".equalsIgnoreCase(elements[j].getName())) {
+								final NameValuePair pair = elements[j].getParameterByName("filename");
+								if (pair != null) {
+									filename = pair.getValue();
+								}
+							}
+						}
+					}
+				}
+			}
+			assertThat("Download open access dataset filename is not empty", isNotBlank(filename), equalTo(true));
+			entity = response4.getEntity();
+			assertThat("Download open access dataset entity is not null", entity, notNullValue());
+			assertThat("Download open access dataset content length coincides with expected", entity.getContentLength(), greaterThan(0l));
+			outfile = new File(TEST_OUTPUT_DIR, filename);
+			deleteQuietly(outfile);
+			outfile.createNewFile();
+			try (final InputStream inputStream = entity.getContent();
+					final FileOutputStream outputStream = new FileOutputStream(outfile)) {
+				int read = 0;
+				byte[] bytes = new byte[1024];
+				while ((read = inputStream.read(bytes)) != -1) {
+					outputStream.write(bytes, 0, read);
+				}
+			}
+			assertThat("Downloaded open access file exists", outfile.exists(), equalTo(true));
+			assertThat("Downloaded open access file is not empty", outfile.length(), greaterThan(0L));			
+			sequence = getSequence(outfile);
+			assertThat("XML parsed from downloaded open access file is not null", sequence, notNullValue());
+			// uncomment for additional output
+			System.out.println(" >> Saved open access file: " + filename);
+
+			// test remove open access link
+			response = target.path(path.value())
+					.path(urlEncodeUtf8(ownerId1))
+					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.delete();
-			assertThat("Delete public link response is not null", response, notNullValue());
-			assertThat("Delete public link response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
-			assertThat("Delete public link response is not empty", response.getEntity(), notNullValue());
+			assertThat("Delete dataset open access link response is not null", response, notNullValue());
+			assertThat("Delete dataset open access link response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Delete dataset open access link response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
-			assertThat("Delete public link response entity is not null", payload, notNullValue());
-			assertThat("Delete public link response entity is empty", isBlank(payload));
+			assertThat("Delete dataset open access link response entity is not null", payload, notNullValue());
+			assertThat("Delete dataset open access link response entity is empty", isBlank(payload));
 			// uncomment for additional output			
-			System.out.println(" >> Delete public link response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Delete public link response JAX-RS object: " + response);
-			System.out.println(" >> Delete public link HTTP headers: " + response.getStringHeaders());
-
-			// test create public link (GZIP compressed NCBI sandfly)
-			publicLink = PublicLinkOLD.builder()
-					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export").compression("gzip").build())
-					.description("Optional description")
-					.build();
-
-			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (NCBI.GZIP sandfly) response is not null", response, notNullValue());
-			assertThat("Create public link (NCBI.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (NCBI.GZIP sandfly) response is not empty", response.getEntity(), notNullValue());
-			payload = response.readEntity(String.class);
-			assertThat("Create public link (NCBI.GZIP sandfly) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (NCBI.GZIP sandfly) response entity is empty", isBlank(payload));
-			// uncomment for additional output
-			System.out.println(" >> Create public link (NCBI.GZIP sandfly) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (NCBI.GZIP sandfly) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
-			location = new URI((String)response.getHeaders().get("Location").get(0));			
-			addPublicLinkForClean(getPathFromLocation(location));
-
-			// test create public link (uncompressed FASTA sandfly)
-			publicLink = PublicLinkOLD.builder()
-					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export_fasta").build())
-					.description("Optional description")
-					.build();
-
-			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (FASTA sandfly) response is not null", response, notNullValue());
-			assertThat("Create public link (FASTA sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (FASTA sandfly) response is not empty", response.getEntity(), notNullValue());
-			payload = response.readEntity(String.class);
-			assertThat("Create public link (FASTA sandfly) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (FASTA sandfly) response entity is empty", isBlank(payload));
-			// uncomment for additional output
-			System.out.println(" >> Create public link (FASTA sandfly) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (FASTA sandfly) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (FASTA sandfly) HTTP headers: " + response.getStringHeaders());
-			location = new URI((String)response.getHeaders().get("Location").get(0));			
-			addPublicLinkForClean(getPathFromLocation(location));
-
-			// test create public link (uncompressed NCBI sandfly)
-			publicLink = PublicLinkOLD.builder()
-					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).id("gb:JP540074").filter("export").compression("none").build())
-					.description("Optional description")
-					.build();
-
-			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (NCBI sandfly) response is not null", response, notNullValue());
-			assertThat("Create public link (NCBI sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (NCBI sandfly) response is not empty", response.getEntity(), notNullValue());
-			payload = response.readEntity(String.class);
-			assertThat("Create public link (NCBI sandfly) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (NCBI sandfly) response entity is empty", isBlank(payload));
-			// uncomment for additional output
-			System.out.println(" >> Create public link (NCBI sandfly) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (NCBI sandfly) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (NCBI sandfly) HTTP headers: " + response.getStringHeaders());
-			location = new URI((String)response.getHeaders().get("Location").get(0));			
-			addPublicLinkForClean(getPathFromLocation(location));
-
-			// test create public link (GZIP compressed NCBI bulk of sandflies)
-			publicLink = PublicLinkOLD.builder()
-					.target(Target.builder().type("sequence").collection(SANDFLY_COLLECTION).ids(newHashSet("gb:JP540074", "gb:JP553239")).filter("export").compression("gzip").build())
-					.description("Optional description")
-					.build();
-
-			response = target.path(path.value()).request()
-					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(publicLink, APPLICATION_JSON_TYPE));
-			assertThat("Create public link (NCBI.GZIP sandflies bulk) response is not null", response, notNullValue());
-			assertThat("Create public link (NCBI.GZIP sandflies bulk) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-			assertThat("Create public link (NCBI.GZIP sandflies bulk) response is not empty", response.getEntity(), notNullValue());
-			payload = response.readEntity(String.class);
-			assertThat("Create public link (NCBI.GZIP sandflies bulk) response entity is not null", payload, notNullValue());
-			assertThat("Create public link (NCBI.GZIP sandflies bulk) response entity is empty", isBlank(payload));
-			// uncomment for additional output
-			System.out.println(" >> Create public link (NCBI.GZIP sandflies bulk) response body (JSON), empty is OK: " + payload);
-			System.out.println(" >> Create public link (NCBI.GZIP sandflies bulk) response JAX-RS object: " + response);
-			System.out.println(" >> Create public link (NCBI.GZIP sandfly) HTTP headers: " + response.getStringHeaders());
-			location = new URI((String)response.getHeaders().get("Location").get(0));			
-			addPublicLinkForClean(getPathFromLocation(location));
+			System.out.println(" >> Delete dataset open access link response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Delete dataset open access link response JAX-RS object: " + response);
+			System.out.println(" >> Delete dataset open access link HTTP headers: " + response.getStringHeaders());
 
 			// test create new reference
 			final String pmid = "00000000";
@@ -1707,14 +1616,6 @@ public class ServiceTest {
 		} finally {			
 			System.out.println("ServiceTest.test() has finished");
 		}
-	}
-
-	private static String getPathFromLocation(final URI location) {
-		return decodePublicLinkPath(getName(location.getPath()));
-	}
-
-	private static void addPublicLinkForClean(final String path) {
-		PUBLIC_LINKS.add(new File(CONFIG_MANAGER.getSharedDir(), path).getAbsolutePath());
 	}
 
 	protected static void printWadl(final WebTarget target) {
