@@ -25,21 +25,17 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
-import static org.apache.commons.lang.StringUtils.trimToNull;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
-import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
 
 import org.glassfish.jersey.linking.Binding;
@@ -135,7 +131,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		// update latest version property
 		Metadata metadata2 = getMetadata();		
 		if (metadata2 == null) {
-			metadata2 = DatasetMetadata.builder().build(); 
+			metadata2 = Metadata.builder().build(); 
 		}
 		if (metadata2.getIsLastestVersion() != null) {
 			metadata2.setIsLastestVersion(getFilename());
@@ -177,134 +173,6 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 				.add("urlSafeFilename", urlSafeFilename)
 				.add("namespace", namespace)				
 				.toString();
-	}
-
-	/* Inner classes */
-
-	public static class DatasetMetadata extends Metadata {
-
-		public static final String DATASET_METADATA_NAME = "DatasetMetadata";
-		
-		private String editor;
-		private Set<String> tags = newHashSet();
-		private String description;
-		private Target target;		
-
-		public String getEditor() {
-			return editor;
-		}
-
-		public void setEditor(final String editor) {
-			this.editor = editor;
-		}
-
-		public Set<String> getTags() {
-			return tags;
-		}
-
-		public void setTags(final Set<String> tags) {
-			if (tags != null) {
-				this.tags = newHashSet(tags);
-			} else {
-				this.tags = newHashSet();
-			}
-		}
-
-		public @Nullable String getDescription() {
-			return description;
-		}
-
-		public void setDescription(final @Nullable String description) {
-			this.description = description;
-		}
-
-		public @Nullable Target getTarget() {
-			return target;
-		}
-
-		public void setTarget(final @Nullable Target target) {
-			this.target = target;
-		}
-
-		@Override
-		public boolean equals(final Object obj) {
-			if (obj == null || !(obj instanceof DatasetMetadata)) {
-				return false;
-			}
-			final DatasetMetadata other = DatasetMetadata.class.cast(obj);
-			return super.equals((Metadata)other)
-					&& Objects.equals(editor, other.editor)
-					&& Objects.equals(tags, other.tags)					
-					&& Objects.equals(description, other.description)
-					&& Objects.equals(target, other.target);
-		}
-
-		@Override
-		public int hashCode() {
-			return super.hashCode() + Objects.hash(editor, tags, description, target);
-		}
-
-		@Override
-		public String toString() {
-			return toStringHelper(this)
-					.add("Metadata", super.toString())
-					.add("editor", editor)
-					.add("tags", tags)					
-					.add("description", description)
-					.add("target", target)
-					.toString();
-		}
-
-		/* Fluent API */
-
-		public static Builder builder() {
-			return new Builder();
-		}
-
-		public static class Builder {
-
-			private final DatasetMetadata instance = new DatasetMetadata();
-
-			public Builder isLastestVersion(final String isLastestVersion) {
-				instance.setIsLastestVersion(isLastestVersion);
-				return this;
-			}
-
-			public Builder editor(final String editor) {
-				instance.setEditor(trimToNull(editor));
-				return this;
-			}
-
-			public Builder tags(final Set<String> tags) {
-				instance.setTags(tags);
-				return this;
-			}
-
-			public Builder openAccessLink(final String openAccessLink) {
-				instance.setOpenAccessLink(trimToNull(openAccessLink));
-				return this;
-			}
-			
-			public Builder openAccessDate(final Date openAccessDate) {
-				instance.setOpenAccessDate(openAccessDate);
-				return this;
-			}
-
-			public Builder description(final String description) {
-				instance.setDescription(trimToNull(description));
-				return this;
-			}
-
-			public Builder target(final Target target) {
-				instance.setTarget(target);
-				return this;
-			}
-
-			public DatasetMetadata build() {
-				return instance;
-			}
-
-		}
 	}
 
 	/* Fluent API */

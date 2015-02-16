@@ -111,10 +111,10 @@ import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Dataset;
-import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.core.DatasetOpenAccess;
 import eu.eubrazilcc.lvl.core.DatasetShare;
 import eu.eubrazilcc.lvl.core.Leishmania;
+import eu.eubrazilcc.lvl.core.Metadata;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.Target;
@@ -815,7 +815,7 @@ public class ServiceTest {
 					.id("gb:JP540074")
 					.filter("export_fasta")
 					.compression("gzip").build();
-			DatasetMetadata datasetMetadata = DatasetMetadata.builder()
+			Metadata datasetMetadata = Metadata.builder()
 					.target(datasetTarget)
 					.description("Optional description")
 					.build();
@@ -888,7 +888,7 @@ public class ServiceTest {
 			System.out.println(" >> Get datasets (user account) result: " + datasets.toString());
 
 			// test get dataset
-			datasetMetadata = (DatasetMetadata)dataset.getMetadata();
+			datasetMetadata = dataset.getMetadata();
 			datasetMetadata.setEditor(ownerId1);
 			datasetMetadata.setIsLastestVersion(dataset.getFilename());
 			Dataset dataset2 = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
@@ -926,7 +926,7 @@ public class ServiceTest {
 			System.out.println(" >> Get dataset (url encoded) result: " + dataset2.toString());			
 
 			// test update dataset
-			((DatasetMetadata)dataset.getMetadata()).setDescription("Different description");
+			dataset.getMetadata().setDescription("Different description");
 			response = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
 					.path(datasets.getElements().get(0).getUrlSafeFilename())
 					.request()
@@ -968,7 +968,7 @@ public class ServiceTest {
 					.filter("export")
 					.compression("gzip")
 					.build();
-			datasetMetadata = DatasetMetadata.builder()
+			datasetMetadata = Metadata.builder()
 					.target(datasetTarget)
 					.description("Optional description")
 					.build();
@@ -1000,7 +1000,7 @@ public class ServiceTest {
 					.id("gb:JP540074")
 					.filter("export_fasta")
 					.build();
-			datasetMetadata = DatasetMetadata.builder()
+			datasetMetadata = Metadata.builder()
 					.target(datasetTarget)
 					.description("Optional description")
 					.build();
@@ -1033,7 +1033,7 @@ public class ServiceTest {
 					.filter("export")
 					.compression("none")
 					.build();
-			datasetMetadata = DatasetMetadata.builder()
+			datasetMetadata = Metadata.builder()
 					.target(datasetTarget)
 					.description("Optional description")
 					.build();
@@ -1066,7 +1066,7 @@ public class ServiceTest {
 					.filter("export")
 					.compression("gzip")
 					.build();
-			datasetMetadata = DatasetMetadata.builder()
+			datasetMetadata = Metadata.builder()
 					.target(datasetTarget)
 					.description("Optional description")
 					.build();

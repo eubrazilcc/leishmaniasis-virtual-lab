@@ -123,6 +123,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                       <li><a href="#examples_restful_api_list_sequences">List sequences</a></li>
                       <li><a href="#examples_restful_api_find_nearby_sequences">Find nearby sequences</a></li>
                       <li><a href="#examples_restful_api_import_sequences">Import new sequences into the database</a></li>
+                      <li><a href="#examples_restful_api_export_sequences_to_dataset">Export a set of sequences to a dataset</a></li>
                       <li><a href="#examples_restful_api_export_public_link_to_sequence">Export a public link to a sequence</a></li>
                     </ul></li>
                   <li><a href="#examples_oauth2">OAuth2 examples</a>
@@ -2362,46 +2363,39 @@ Serving HTTP on 0.0.0.0 port 8000 ...
 </pre>
 
             <h3>
-              <a id="examples_restful_api_export_public_link_to_sequence"></a>Export a public link to a sequence:
+              <a id="examples_restful_api_export_sequences_to_dataset"></a>Export a set of sequences to a dataset:
             </h3>
             
-            <p>Access to the LVL is provided through a RESTful API requiring authentication to retrieve and to create/modify the data. This behaviour is 
-              required to support the requirements identified for the LVL in the project EUBrazilCC. However, accessing from a programmatic environment where 
-              users are not available needs an additional mechanism to provide services and applications with anonymous access to the data (read only). The 
-              mechanisn implemented in the LVL works in a similar manner as Dropbox links do. Users are able of creating and exporting public links to 
-              their data, and any user or application have access to the data provided with a public link.</p>
-              
-            <p>In addition to these public links, the RESTful API provides additional filters that allow users to export the sequences stored in the LVL 
-              database to the most common data formats used in bioinformatics (<a href="http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml" target="_blank">FASTA</a> 
-              and <a href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html" target="_blank">NCBI</a> are currently supported). Gzip compression 
-              is optionally available. The following example shows how a new link to an existing sequence can be created using the RESTful API:</p>
+            <p>The RESTful API provides filters that allow users to export the sequences stored in the LVL database to the most common data formats 
+              used in bioinformatics (<a href="http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml" target="_blank">FASTA</a> and 
+              <a href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html" target="_blank">NCBI</a> are currently supported). Gzip compression 
+              is optionally available. The following example shows how an existing sequence (or set of sequences) can be exported to a dataset using 
+              the RESTful API:</p>
               
 <pre>
 {
-    "description": "Public link to FASTA.GZIP sequences",
-    "downloadUri": null,
-    "links": null,
-    "mime": null,
-    "owner": null,
-    "path": null,
-    "target": {
-        "collection": "sandfly",
-        "compression": "gzip",
-        "filter": "export_fasta",
-        "ids": [
-            "gb:JP540074",
-            "gb:JP553239"
-        ],
-        "type": "sequence"
+    "filename": "my_fasta_sequences.zip",
+    "metadata": {
+        "target": {
+            "collection": "sandflies",
+            "compression": "gzip",
+            "filter": "export_fasta",
+            "ids": [
+                "gb:JP540074",
+                "gb:JP553239"
+            ],
+            "type": "sequence"
+        }
     }
 }
-</pre>              
+</pre>
 
-            <p>The only field required in the request is <code>target</code>. In this case, the origin of the public link is of <code>type</code> sequence
-              from the collection of <code>sandfly</code> and two sequence identifiers are passed. A <code>filter</code> is applied to export the 
-              sequences to FASTA and GZIP <code>compression</code> is requested. Other possible values are: <code>filter:export</code> to export the 
-              sequences in the default format (NCBI XML sequence format), and <code>compression:null</code> or <code>compression:none</code> to export 
-              the sequences with no compression.</p>
+           <p>The only fields required in the request are the <code>filename</code>, and the <code>metadata.target</code>. In this case, the dataset
+              is of <code>type</code> sequence and will be created from two sequences stored in the collection of <code>sandfly</code>. The two sequence 
+              identifiers are passed to the method in the field <code>ids</code>. A <code>filter</code> is applied to export the sequences to FASTA and 
+              GZIP <code>compression</code> is requested. Other possible values are: <code>filter:export</code> to export the sequences in the default 
+              format (NCBI XML sequence format), and <code>compression:null</code> or <code>compression:none</code> to export the sequences with no 
+              compression.</p>
             
             <div class="alert alert-info">
               <div class="media">
@@ -2421,79 +2415,40 @@ Serving HTTP on 0.0.0.0 port 8000 ...
               </div>
             </div>
             
-            <p>After submitting the request to the LVL, the server response header will include the standar <code>location</code> field.</p>
+            <p>After submitting the request to the LVL, the server response header will include the standard <code>location</code> field:</p>
             
-            <code>$ curl -i -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' -X POST -H "Content-Type: application/json" -d '{"path":null,"mime":null,"description":"Public link to FASTA.GZIP sequences","owner":null,"target":{"type":"sequence","collection":"sandfly","ids":["gb:JP540074","gb:JP553239"],"filter":"export_fasta","compression":"gzip"},"downloadUri":null,"links":null}' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links</code>
+            <code>$ curl -i -H 'Authorization: Bearer 1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk=' -X POST -H "Content-Type: application/json" -d '{"filename":"my_fasta_sequences.zip","metadata":{"target":{"collection":"sandflies","compression":"gzip","filter":"export_fasta","ids": ["gb:JP540074","gb:JP553239"],"type": "sequence"}}}' http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/files </code>
             <p></p>
-            
+
+            <p>Expected response from the server:</p>
+
 <pre>
 HTTP/1.1 201 Created
 Server: nginx/1.4.6 (Ubuntu)
-Date: Wed, 24 Sep 2014 11:08:17 GMT
+Date: Mon, 16 Feb 2015 14:56:52 GMT
 Content-Length: 0
 Connection: keep-alive
-Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5:sequences.fasta.gz
-</pre>
-
-            <p>Once the public link is created, the expected operations for consulting, updating and removing it are provided in the RESTful API.</p>
-
-            <p>The public link can be retrieved from the LVL using the location. Note that the server response is always in JSON format, regardless the
-              file extension:</p>
-
-            <code>$ curl -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5:sequences.fasta.gz</code>
-            <p></p>
-
-<pre>
-{
-    "description": "Public link to FASTA.GZIP sequences",
-    "downloadUri": "http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz",
-    "links": [
-        {
-            "href": "/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5:sequences.fasta.gz",
-            "params": {
-                "rel": "self",
-                "type": "application/json"
-            }
-        }
-    ],
-    "mime": "application/gzip",
-    "owner": "user1",
-    "path": "bui6vm4cinxg9so5/sequences.fasta.gz",
-    "target": {
-        "collection": "sandfly",
-        "compression": "gzip",
-        "filter": "export_fasta",
-        "ids": [
-            "gb:JP540074",
-            "gb:JP553239"
-        ],
-        "type": "sequence"
-    }
-}
+Set-Cookie: JSESSIONID=99ECA53F9D2F3EC797C6CF35EBE88772; Path=/lvl-service/; HttpOnly
+Set-Cookie: rememberMe=deleteMe; Path=/lvl-service; Max-Age=0; Expires=Sun, 15-Feb-2015 14:56:50 GMT
+Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/my_fasta_sequences.zip
 </pre>
             
-            <p>Additional fields are available in the server response. The <code>downloadUri</code> is especially usefull to download the data from 
-              a storage that is optimized for this purpose:</p>
+            <p>The value of the location field can be used to download the dataset:</p>
             
-            <code>$ wget http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz</code>
+            <code>$ curl -H 'Authorization: Bearer 1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk=' http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/my_fasta_sequences.zip/download > myfile.gz </code>
             <p></p>
 
+            <p>Expected output:</p>
+
 <pre>
---2014-09-24 13:17:21--  http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz
-Resolving lvl.i3m.upv.es (lvl.i3m.upv.es)... 158.42.105.62
-Connecting to lvl.i3m.upv.es (lvl.i3m.upv.es)|158.42.105.62|:80... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 455 [application/octet-stream]
-Saving to: ‘sequences.fasta.gz’
-
-100%[======================================>] 455         --.-K/s   in 0s      
-
-2014-09-24 13:17:21 (35.7 MB/s) - ‘sequences.fasta.gz’ saved [455/455]
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   455  100   455    0     0   1800      0 --:--:-- --:--:-- --:--:--  1805
 </pre>
 
             <p>In this example, the content of the downloaded file is the following:</p>
 
-            <code>$ zmore sequences.fasta.gz</code>
+            <code>$ zmore myfile.gz</code>
             <p></p>
 
 <pre>
@@ -2757,6 +2712,110 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
 &lt;/GBSet&gt;
 </pre>
 
+            <h3>
+              <a id="examples_restful_api_export_public_link_to_sequence"></a>Export a public link to a sequence:
+            </h3>
+            
+            <p>Access to the LVL is provided through a RESTful API requiring authentication to retrieve and to create/modify the data. This behaviour is 
+              required to support the requirements identified for the LVL in the project EUBrazilCC. However, accessing from a programmatic environment where 
+              users are not available needs an additional mechanism to provide services and applications with anonymous access to the data (read only). The 
+              mechanisn implemented in the LVL works in a similar manner as Dropbox links do. Users are able of creating and exporting public links to 
+              their data, and any user or application have access to the data provided with a public link.</p>
+            
+            <code>$ curl -i -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' -X POST -H "Content-Type: application/json" -d '{"path":null,"mime":null,"description":"Public link to FASTA.GZIP sequences","owner":null,"target":{"type":"sequence","collection":"sandfly","ids":["gb:JP540074","gb:JP553239"],"filter":"export_fasta","compression":"gzip"},"downloadUri":null,"links":null}' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links</code>
+            <p></p>
+            
+<pre>
+HTTP/1.1 201 Created
+Server: nginx/1.4.6 (Ubuntu)
+Date: Wed, 24 Sep 2014 11:08:17 GMT
+Content-Length: 0
+Connection: keep-alive
+Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5:sequences.fasta.gz
+</pre>
+
+            <p>Once the public link is created, the expected operations for consulting, updating and removing it are provided in the RESTful API.</p>
+
+            <p>The public link can be retrieved from the LVL using the location. Note that the server response is always in JSON format, regardless the
+              file extension:</p>
+
+            <code>$ curl -H 'Authorization: Bearer a7A1zKUubiomVQdQIuOtdyk8QUHJSpMEl8SE8HrOu0k=' http://lvl.i3m.upv.es/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5:sequences.fasta.gz</code>
+            <p></p>
+
+<pre>
+{
+    "description": "Public link to FASTA.GZIP sequences",
+    "downloadUri": "http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz",
+    "links": [
+        {
+            "href": "/lvl-service/rest/v1/public_links/bui6vm4cinxg9so5:sequences.fasta.gz",
+            "params": {
+                "rel": "self",
+                "type": "application/json"
+            }
+        }
+    ],
+    "mime": "application/gzip",
+    "owner": "user1",
+    "path": "bui6vm4cinxg9so5/sequences.fasta.gz",
+    "target": {
+        "collection": "sandfly",
+        "compression": "gzip",
+        "filter": "export_fasta",
+        "ids": [
+            "gb:JP540074",
+            "gb:JP553239"
+        ],
+        "type": "sequence"
+    }
+}
+</pre>
+            
+            <p>Additional fields are available in the server response. The <code>downloadUri</code> is especially usefull to download the data from 
+              a storage that is optimized for this purpose:</p>
+            
+            <code>$ wget http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz</code>
+            <p></p>
+
+<pre>
+--2014-09-24 13:17:21--  http://lvl.i3m.upv.es/lvl-pub/bui6vm4cinxg9so5/sequences.fasta.gz
+Resolving lvl.i3m.upv.es (lvl.i3m.upv.es)... 158.42.105.62
+Connecting to lvl.i3m.upv.es (lvl.i3m.upv.es)|158.42.105.62|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 455 [application/octet-stream]
+Saving to: ‘sequences.fasta.gz’
+
+100%[======================================>] 455         --.-K/s   in 0s      
+
+2014-09-24 13:17:21 (35.7 MB/s) - ‘sequences.fasta.gz’ saved [455/455]
+</pre>
+
+            <p>In this example, the content of the downloaded file is the following:</p>
+
+            <code>$ zmore sequences.fasta.gz</code>
+            <p></p>
+
+<pre>
+>gb|JP540074.1|JP540074
+AAACACTATTCCAGGAAGCCAGACGCATCAACATAGCTATTATTCAACATATTACATACAATGAATTCCT
+GCCTATACTCCTGGGCAAGGAAGTGATGGAGAAATTTGGACTGGTTCTACAGAAGGAAGGTTATTGGGAT
+GGATATGATGGACACATCAATCCAGCCATCATCGATGCCTTCGCTGCAGCTGCCTTCCGTTTCGGTCATT
+CCCTCCTACCAACAGCCGTTGAACGGTGGTCTAAGGCTCACAAATTTATAGCATCGAAGAGGCTGTCCGA
+TCTTATCAGACGTCCTTATGATTTGTACAGAGCTGGAGTGTTTGATGAGTATTTCATGGGACTGATGAAT
+CAAGTGGCTCAAGCCATGGATGATTCCATCACACAAGAGGTAACAAACCATCTCTTCAAGAAGGAGGGTA
+ATCGCTTTGGCATGGACTTGGTGTCCTTCAATATGCAACGAGGAAGAGAATTCGGTTTGCCCGGATATAT
+GGAGTTCAAGAAGTTCTGCGGATTGCCAACATCACACACGTGGGAGGAAATGTTCGGTTCGATGCCCAAT
+GACACAATTCGACGATACGAGAGTATTTTCCAGCATCCTGCTGACATTGATTTATGGTCTGGTGGAGTTT
+ACAAAAGATCACTGCCTGGCTCGATGCTGGGTCCCACTTTCGCTTGC
+>gb|JP553239.1|JP553239
+AAAATCGCAGGCCGAAATGGGTTTAAAGTACGAACTCTGTGTGGGTCTCAACAGGGGACACAAAACCAGT
+AAAATCAGGAATTTGCGGTATACTGGAGACAAGAAGGTGAAAGGACTCCGCCCTGATCGGCTAAAATGTG
+TTCAGACGAAACACACAAAATTCGTGAGGGATATTGTGCGTGAGGTGGTTGGACATGCTCCCTATGAGAA
+GCGCTGCATGGAATTGCTGAAGGTGTCTAAGGATAAGCGTGCCCTGAAATTCCTGAAACGTCGTCTGGGC
+ACTCACATCCGTGGCAAGAGGAAGCGTGAGGAACTGTCCAACATTCTGACACAAATGCGCAAGGCTCAGG
+CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
+</pre>
+
             <h2>
               <a id="examples_oauth2"></a>OAuth2 examples
             </h2>
@@ -2770,37 +2829,10 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
               <a id="examples_oauth2_get_access_token_password"></a>Get access token for user/password:
             </h3>
 
-            <code> $ curl -v -X POST -d 'client_id=lvl_portal&amp;client_secret=changeit&amp;grant_type=password&amp;username=root&amp;password=changeit'
-              http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/token </code>
+            <code> $ curl -X POST -d 'client_id=lvl_portal&amp;client_secret=changeit&amp;grant_type=password&amp;username=root&amp;password=changeit' http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/token </code>
             <p></p>
 
-            <pre>
-* About to connect() to lvl.i3m.upv.es port 80 (#0)
-*   Trying 158.42.105.62... connected
-&gt; POST /lvl-auth/oauth2/v1/token HTTP/1.1
-&gt; User-Agent: curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3
-&gt; Host: lvl.i3m.upv.es
-&gt; Accept: */*
-&gt; Content-Length: 95
-&gt; Content-Type: application/x-www-form-urlencoded
-&gt; 
-* upload completely sent off: 95out of 95 bytes
-&lt; HTTP/1.1 200 OK
-&lt; Server: nginx/1.1.19
-&lt; Date: Tue, 15 Apr 2014 10:19:36 GMT
-&lt; Content-Type: application/json
-&lt; Content-Length: 164
-&lt; Connection: keep-alive
-&lt; Access-Control-Allow-Origin: *
-&lt; Access-Control-Allow-Headers: origin, content-type, accept, authorization
-&lt; Access-Control-Allow-Credentials: true
-&lt; Access-Control-Allow-Methods: GET PUT DELETE POST HEAD OPTIONS
-&lt; Access-Control-Max-Age: 604800
-&lt; 
-* Connection #0 to host lvl.i3m.upv.es left intact
-* Closing connection #0
-{"scope":"users/*,a sequences,a pipelines,a my_sequences/*,a pending_sequences,a","expires_in":604800,"access_token":"+sSWJ1WLssx00iT6obLw8jxPNlCtvJCN9a17Twwqnuo="}
-</pre>
+            <pre>{"scope":"admin","expires_in":604800,"access_token":"1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk="}</pre>
 
             <h3>
               <a id="examples_oauth2_access_to_protected_resource"></a>Access to protected resource:
@@ -2816,7 +2848,7 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
     "fullname": "LVL root user",
     "links": [
         {
-            "href": "/lvl-auth/oauth2/v1/users/root",
+            "href": "/lvl-auth/oauth2/v1/users/root%2540lvl",
             "params": {
                 "rel": "self",
                 "type": "application/json"
@@ -2824,20 +2856,17 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
         }
     ],
     "password": "***",
-    "permissionHistory": {
-        "history": {}
-    },
+    "permissionHistory": {},
     "permissions": [
         "*"
     ],
-    "pictureUrl": "https://secure.gravatar.com/avatar/04edfc0ef6c6cf6d6b88fbc69f9f9071?s=80&amp;d=mm",
-    "provider": "lvl",
+    "pictureUrl": "https://secure.gravatar.com/avatar/04edfc0ef6c6cf6d6b88fbc69f9f9071?s=80&d=mm",
     "roles": [
         "admin"
     ],
     "salt": "***",
     "userid": "root"
-
+}
 </pre>
 
             <h2>

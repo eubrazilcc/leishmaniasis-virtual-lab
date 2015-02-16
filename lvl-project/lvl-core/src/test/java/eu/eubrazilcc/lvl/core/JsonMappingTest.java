@@ -48,7 +48,6 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
@@ -116,7 +115,7 @@ public class JsonMappingTest {
 					.filter("export_fasta")
 					.compression("gzip").build();
 			assertThat("target is not null", target, notNullValue());
-			final DatasetMetadata metadata = DatasetMetadata.builder()
+			final Metadata metadata = Metadata.builder()
 					.description("Optional description")
 					.editor("ownerid")
 					.isLastestVersion("my_fasta_sequences.zip")

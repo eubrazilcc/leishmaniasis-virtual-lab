@@ -52,7 +52,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.Dataset;
-import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
+import eu.eubrazilcc.lvl.core.Metadata;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.Sorting.Order;
 import eu.eubrazilcc.lvl.core.Target;
@@ -96,7 +96,7 @@ public class DatasetCollectionTest {
 			assertThat("test GZIP file is not empty", gzipFile1.length() > 0l, equalTo(true));
 
 			// insert
-			DatasetMetadata metadata = DatasetMetadata.builder()
+			Metadata metadata = Metadata.builder()
 					.tags(newHashSet("tag1", "tag2", "tag3"))					
 					.description("Optional description")
 					.target(Target.builder().type("sequence").id("JP540074").filter("export_fasta").build())
@@ -121,7 +121,7 @@ public class DatasetCollectionTest {
 			assertThat("binary file is not null", dataset.getOutfile(), notNullValue());
 			assertThat("binary file exists", dataset.getOutfile().exists(), equalTo(true));
 			assertThat("binary file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
-			checkDataset(dataset, gzipFile1, "namespace", null, DatasetMetadata.builder().isLastestVersion(gzipFile1.getName()).build());
+			checkDataset(dataset, gzipFile1, "namespace", null, Metadata.builder().isLastestVersion(gzipFile1.getName()).build());
 			File uncompressedFile = new File(TEST_OUTPUT_DIR, "uncompressed_" + textFile1.getName());
 			gunzip(dataset.getOutfile().getCanonicalPath(), uncompressedFile.getCanonicalPath());
 			checkFile(textFile1, uncompressedFile);
@@ -181,24 +181,24 @@ public class DatasetCollectionTest {
 			assertThat("binary file is not null", dataset.getOutfile(), notNullValue());
 			assertThat("binary file exists", dataset.getOutfile().exists(), equalTo(true));
 			assertThat("binary file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
-			checkDataset(dataset, gzipFile1, "namespace", null, DatasetMetadata.builder()
+			checkDataset(dataset, gzipFile1, "namespace", null, Metadata.builder()
 					.isLastestVersion(gzipFile1.getName())
 					.openAccessLink(secret)
-					.openAccessDate(((DatasetMetadata)dataset.getMetadata()).getOpenAccessDate())
+					.openAccessDate(dataset.getMetadata().getOpenAccessDate())
 					.build());
 			/* Uncomment for additional output */
 			System.out.println(dataset.toString());
-			
+
 			// read file from open access link
 			dataset = DATASET_DAO.findOpenAccess(secret);
 			assertThat("binary dataset is not null", dataset, notNullValue());
 			assertThat("binary file is not null", dataset.getOutfile(), notNullValue());
 			assertThat("binary file exists", dataset.getOutfile().exists(), equalTo(true));
 			assertThat("binary file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
-			checkDataset(dataset, gzipFile1, "namespace", null, DatasetMetadata.builder()
+			checkDataset(dataset, gzipFile1, "namespace", null, Metadata.builder()
 					.isLastestVersion(gzipFile1.getName())
 					.openAccessLink(secret)
-					.openAccessDate(((DatasetMetadata)dataset.getMetadata()).getOpenAccessDate())
+					.openAccessDate(dataset.getMetadata().getOpenAccessDate())
 					.build());
 			/* Uncomment for additional output */
 			System.out.println(" >> File from open access link: " + dataset.toString());
@@ -212,7 +212,7 @@ public class DatasetCollectionTest {
 			assertThat("binary file is not null", dataset.getOutfile(), notNullValue());
 			assertThat("binary file exists", dataset.getOutfile().exists(), equalTo(true));
 			assertThat("binary file is not empty", dataset.getOutfile().length() > 0l, equalTo(true));
-			checkDataset(dataset, gzipFile1, "namespace", null, DatasetMetadata.builder()
+			checkDataset(dataset, gzipFile1, "namespace", null, Metadata.builder()
 					.isLastestVersion(gzipFile1.getName())
 					.build());
 			/* Uncomment for additional output */
@@ -235,7 +235,7 @@ public class DatasetCollectionTest {
 			boolean found1 = false, found2 = false;
 			for (int i = 0; i < datasets.size() && !found1 && ! found2; i++) {
 				dataset = datasets.get(i);
-				metadata = (DatasetMetadata)dataset.getMetadata();				
+				metadata = dataset.getMetadata();				
 				if (textFile1.getName().equals(dataset.getFilename()) && "New version of text file 1".equals(metadata.getDescription())) {
 					found1 = true;
 				} else if (gzipFile1.getName().equals(dataset.getFilename()) && metadata.getIsLastestVersion().equals(dataset.getFilename())) {
@@ -254,7 +254,7 @@ public class DatasetCollectionTest {
 			found1 = false; found2 = false;
 			for (int i = 0; i < datasets.size() && !found1 && ! found2; i++) {
 				dataset = datasets.get(i);
-				metadata = (DatasetMetadata)dataset.getMetadata();				
+				metadata = dataset.getMetadata();				
 				if (textFile1.getName().equals(dataset.getFilename()) && "New version of text file 1".equals(metadata.getDescription()) 
 						&& "public_link".equals(metadata.getOpenAccessLink()) && metadata.getOpenAccessDate() != null) {
 					found1 = true;
@@ -361,12 +361,12 @@ public class DatasetCollectionTest {
 		}
 	}
 
-	private static void checkDataset(final Dataset dataset, final File file, final String namespace, final String filename, final DatasetMetadata metadata) {
+	private static void checkDataset(final Dataset dataset, final File file, final String namespace, final String filename, final Metadata metadata) {
 		assertThat("lenght type coincides with expected", dataset.getLength(), equalTo(file.length()));
 		assertThat("content type coincides with expected", dataset.getContentType(), equalTo(mimeType(file)));
 		assertThat("filename coincides with expected", dataset.getFilename(), equalTo(isNotBlank(filename) ? filename : file.getName()));
 		assertThat("namespace coincides with expected", dataset.getNamespace(), equalTo(namespace));
-		assertThat("metadata coincides with expected", (DatasetMetadata)dataset.getMetadata(), equalTo(metadata));
+		assertThat("metadata coincides with expected", dataset.getMetadata(), equalTo(metadata));
 	}
 
 	private void checkFile(final File originalFile, final File retrievedFile) throws IOException {

@@ -68,7 +68,6 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 
 import eu.eubrazilcc.lvl.core.Dataset;
-import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
 import eu.eubrazilcc.lvl.service.Datasets;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
@@ -149,7 +148,7 @@ public class DatasetResource {
 		final String dbns = ns2dbnamespace(namespace2, ownerid);
 		dataset.setNamespace(dbns);
 		dataset.setFilename(filename2);		
-		((DatasetMetadata)dataset.getMetadata()).setEditor(ownerid);
+		dataset.getMetadata().setEditor(ownerid);
 		// create new entry in the database		
 		final WriteResult<Dataset> result = DATASET_DAO.insert(dbns, filename2, dataset.getOutfile(), 
 				dataset.getMetadata());
@@ -186,7 +185,7 @@ public class DatasetResource {
 		final String dbns = ns2dbnamespace(namespace2, ownerid);
 		update.setNamespace(dbns);
 		update.setFilename(filename2);		
-		((DatasetMetadata)update.getMetadata()).setEditor(ownerid);
+		update.getMetadata().setEditor(ownerid);
 		// (update) insert new version in the database
 		final WriteResult<Dataset> result = DATASET_DAO.insert(dbns, filename2, update.getOutfile(), update.getMetadata());
 		LOGGER.debug("New version created: ns=" + dbns + ", fn=" + filename2 + ", id=" + result.getId());

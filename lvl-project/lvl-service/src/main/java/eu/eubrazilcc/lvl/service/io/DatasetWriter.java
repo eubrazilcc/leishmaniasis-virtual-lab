@@ -59,7 +59,7 @@ import org.slf4j.Logger;
 import com.google.common.base.Function;
 
 import eu.eubrazilcc.lvl.core.Dataset;
-import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
+import eu.eubrazilcc.lvl.core.Metadata;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSet;
@@ -89,8 +89,8 @@ public final class DatasetWriter {
 	public static void writeDataset(final Dataset dataset) {
 		checkArgument(dataset != null, "Uninitialized dataset");
 		checkArgument(dataset.getOutfile() == null, "The dataset already contains an output file");
-		checkArgument(dataset.getMetadata() != null && dataset.getMetadata() instanceof DatasetMetadata, "Uninitialized or invalid metadata");
-		final DatasetMetadata metadata = (DatasetMetadata)dataset.getMetadata();		
+		checkArgument(dataset.getMetadata() != null, "Uninitialized or invalid metadata");
+		final Metadata metadata = dataset.getMetadata();		
 		checkArgument(metadata.getTarget() != null, "Uninitialized target");
 		checkArgument(metadata.getTarget().getIds() != null && !metadata.getTarget().getIds().isEmpty(), "Uninitialized or invalid id");
 		checkArgument(isNotBlank(metadata.getTarget().getType()), "Uninitialized or invalid type");
@@ -106,7 +106,7 @@ public final class DatasetWriter {
 	}
 
 	private static File sequence2dataset(final Dataset dataset) {
-		final DatasetMetadata metadata = (DatasetMetadata)dataset.getMetadata();
+		final Metadata metadata = dataset.getMetadata();
 		final String filter = isNotBlank(metadata.getTarget().getFilter()) ? metadata.getTarget().getFilter().trim().toLowerCase() : EXPORT_DEFAULT;
 		File outfile = null;
 		if (EXPORT_DEFAULT.equals(filter) || EXPORT_FASTA.equals(filter)) {

@@ -34,7 +34,7 @@ import org.apache.commons.lang.mutable.MutableLong;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.BaseFile;
-import eu.eubrazilcc.lvl.core.BaseFile.Metadata;
+import eu.eubrazilcc.lvl.core.Metadata;
 import eu.eubrazilcc.lvl.core.Sorting;
 
 /**
@@ -64,7 +64,7 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 *         information inserted in the database.
 	 */
 	WriteResult<E> insert(@Nullable String namespace, @Nullable String filename, File srcFile, @Nullable Metadata metadata);	
-	
+
 	/**
 	 * Updates the metadata of an existing element in the database. The following metadata elements cannot be updated and their 
 	 * user-provided values will be silently ignored by this method:
@@ -81,7 +81,7 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 *         unmodified, this method can return {@code null}.
 	 */
 	@Nullable E updateMetadata(@Nullable String namespace, String filename, @Nullable Metadata update);
-	
+
 	/**
 	 * Creates a secret token that can be used to access the file from an anonymous account (no need to authenticate with the
 	 * application to access the file). When several versions of the file exists in the database, the link will be created in the
@@ -93,7 +93,7 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 * @return the secret token created in the database that allows anonymous clients to access the file.
 	 */
 	String createOpenAccessLink(@Nullable String namespace, String filename);
-	
+
 	/**
 	 * Removes a previously existing open access link. When several versions of the file exists in the database, the link will be 
 	 * removed from all versions.
@@ -102,7 +102,7 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 * @param filename - filename of the file from which the open access link will be removed
 	 */
 	void removeOpenAccessLink(@Nullable String namespace, String filename);	
-	
+
 	/**
 	 * Removes a file (and all its versions) from the database.
 	 * @param namespace - (optional) name space of the file to be removed from the database. When nothing specified, the default 
@@ -130,7 +130,7 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 *         if the database contains no entry for the filename.
 	 */
 	E find(@Nullable String namespace, String filename);
-	
+
 	/**
 	 * Gets a file from the database using the open access link.
 	 * @param secret - the open access link
@@ -154,7 +154,7 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 */
 	List<E> list(@Nullable String namespace, int start, int size, @Nullable ImmutableMap<String, String> filter, @Nullable Sorting sorting, 
 			@Nullable MutableLong count);
-	
+
 	/**
 	 * Returns a view of the available versions of a file in the specified <tt>namespace</tt>.
 	 * @param namespace - (optional) name space to be searched in the database. When nothing specified, the default namespace is used
@@ -184,7 +184,7 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 */
 	List<E> listOpenAccess(@Nullable String namespace, int start, int size, @Nullable ImmutableMap<String, String> filter, 
 			@Nullable Sorting sorting, @Nullable MutableLong count);
-	
+
 	/**
 	 * Checks whether or not the specified file exists in the database, returning <tt>true</tt> only when the file exists in the 
 	 * specified namespace.
@@ -193,7 +193,7 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 * @return <tt>true</tt> when the file exists in the specified namespace. Otherwise, <tt>false</tt>.
 	 */
 	boolean fileExists(@Nullable String namespace, String filename);
-	
+
 	/**
 	 * Deletes the latest version from the database. When a previous version exists for the file in the specified namespace, the latest
 	 * uploaded version will be the new latest version.
@@ -201,7 +201,7 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 * @param filename - filename whose associate file is to be searched in the database
 	 */
 	void undoLatestVersion(@Nullable String namespace, String filename);
-	
+
 	/**
 	 * Returns the number of files in the database under the specified name space. All the files stored in the database (including versions) 
 	 * will be counted.

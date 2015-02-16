@@ -24,7 +24,6 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
-import static eu.eubrazilcc.lvl.core.json.jackson.JsonProperties.JSON_TYPE_PROPERTY;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -50,9 +49,8 @@ import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.BaseFile.Metadata;
 import eu.eubrazilcc.lvl.core.Dataset;
-import eu.eubrazilcc.lvl.core.Dataset.DatasetMetadata;
+import eu.eubrazilcc.lvl.core.Metadata;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.GridFSDBFileWrapper;
@@ -227,9 +225,7 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 		return dataset;
 	}
 
-	private Dataset toDataset(final GridFSDBFile gfsFile, final String namespace) {
-		// add metadata type
-		gfsFile.getMetaData().put(JSON_TYPE_PROPERTY, DatasetMetadata.DATASET_METADATA_NAME);		
+	private Dataset toDataset(final GridFSDBFile gfsFile, final String namespace) {		
 		return Dataset.builder()
 				.id(ObjectId.class.cast(gfsFile.getId()).toString())
 				.length(gfsFile.getLength())
@@ -256,11 +252,11 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 		return obj;		
 	}
 
-	private DatasetMetadata toMetadata(final DBObject obj) {
-		DatasetMetadata metadata = null;
+	private Metadata toMetadata(final DBObject obj) {
+		Metadata metadata = null;
 		if (obj != null) {
 			try {
-				metadata = JSON_MAPPER.readValue(obj.toString(), DatasetMetadata.class);		
+				metadata = JSON_MAPPER.readValue(obj.toString(), Metadata.class);		
 			} catch (IOException e) {
 				LOGGER.error("Failed to read dataset from DB object", e);
 			}
