@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import com.google.common.base.Function;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
+import eu.eubrazilcc.lvl.oauth2.rest.jackson.MapperProvider;
 
 /**
  * OAuth2 JAX-RS application.
@@ -69,6 +70,7 @@ public class OAuth2Application extends Application {
 		instances.add(new IdentityProvider());
 		instances.add(new UserRegistration());
 		// add additional JAX-RS providers
+		classes.add(MapperProvider.class);
 		classes.add(JacksonFeature.class);
 		classes.add(DeclarativeLinkingFeature.class);
 		LOGGER.info(SERVICE_NAME + " initialized successfully, registered resources: " + objectsClassNames(instances));

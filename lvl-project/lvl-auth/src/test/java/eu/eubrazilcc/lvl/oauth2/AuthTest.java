@@ -95,6 +95,7 @@ import eu.eubrazilcc.lvl.oauth2.rest.OAuth2Registration;
 import eu.eubrazilcc.lvl.oauth2.rest.OAuth2Token;
 import eu.eubrazilcc.lvl.oauth2.rest.OAuth2TokenRevocation;
 import eu.eubrazilcc.lvl.oauth2.rest.UserRegistration;
+import eu.eubrazilcc.lvl.oauth2.rest.jackson.MapperProvider;
 import eu.eubrazilcc.lvl.storage.oauth2.PendingUser;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common;
@@ -130,7 +131,10 @@ public class AuthTest {
 		// setup test file-system environment
 		deleteQuietly(TEST_OUTPUT_DIR);
 		// prepare client
-		final Client client = ClientBuilder.newBuilder().register(JacksonFeature.class).build();
+		final Client client = ClientBuilder.newBuilder()
+				.register(MapperProvider.class)
+				.register(JacksonFeature.class)
+				.build();
 		// configure Web target
 		target = client.target(BASE_URI);
 	}

@@ -44,6 +44,7 @@ import com.google.common.base.Function;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.service.rest.interceptors.GZIPWriterInterceptor;
+import eu.eubrazilcc.lvl.service.rest.jackson.MapperProvider;
 
 /**
  * LVL JAX-RS application.
@@ -77,6 +78,7 @@ public class LeishVirtLabApplication extends Application {
 		instances.add(new PublicResource());
 		instances.add(new NotificationResource());
 		// add additional JAX-RS providers
+		classes.add(MapperProvider.class);
 		classes.add(JacksonFeature.class);
 		classes.add(SseFeature.class);
 		classes.add(DeclarativeLinkingFeature.class);

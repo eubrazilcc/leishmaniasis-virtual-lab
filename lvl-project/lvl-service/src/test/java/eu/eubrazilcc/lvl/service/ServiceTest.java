@@ -132,6 +132,7 @@ import eu.eubrazilcc.lvl.service.rest.PublicResource;
 import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource;
 import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource.Sequences;
 import eu.eubrazilcc.lvl.service.rest.TaskResource;
+import eu.eubrazilcc.lvl.service.rest.jackson.MapperProvider;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
@@ -180,6 +181,7 @@ public class ServiceTest {
 		TEST_OUTPUT_DIR.mkdirs();
 		// prepare client
 		final Client client = ClientBuilder.newBuilder()
+				.register(MapperProvider.class)
 				.register(JacksonFeature.class)
 				.register(SseFeature.class)
 				.build();
