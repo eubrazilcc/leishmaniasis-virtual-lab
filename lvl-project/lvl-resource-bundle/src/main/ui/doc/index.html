@@ -2374,7 +2374,7 @@ Serving HTTP on 0.0.0.0 port 8000 ...
               
 <pre>
 {
-    "filename": "my_fasta_sequences.zip",
+    "filename": "my_fasta_sequences.gz",
     "metadata": {
         "target": {
             "collection": "sandflies",
@@ -2417,7 +2417,7 @@ Serving HTTP on 0.0.0.0 port 8000 ...
             
             <p>After submitting the request to the LVL, the server response header will include the standard <code>location</code> field:</p>
             
-            <code>$ curl -i -H 'Authorization: Bearer 1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk=' -X POST -H "Content-Type: application/json" -d '{"filename":"my_fasta_sequences.zip","metadata":{"target":{"collection":"sandflies","compression":"gzip","filter":"export_fasta","ids": ["gb:JP540074","gb:JP553239"],"type": "sequence"}}}' http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/files </code>
+            <code>$ curl -i -H 'Authorization: Bearer 1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk=' -X POST -H "Content-Type: application/json" -d '{"filename":"my_fasta_sequences.gz","metadata":{"target":{"collection":"sandflies","compression":"gzip","filter":"export_fasta","ids": ["gb:JP540074","gb:JP553239"],"type": "sequence"}}}' http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/files </code>
             <p></p>
 
             <p>Expected response from the server:</p>
@@ -2430,12 +2430,12 @@ Content-Length: 0
 Connection: keep-alive
 Set-Cookie: JSESSIONID=99ECA53F9D2F3EC797C6CF35EBE88772; Path=/lvl-service/; HttpOnly
 Set-Cookie: rememberMe=deleteMe; Path=/lvl-service; Max-Age=0; Expires=Sun, 15-Feb-2015 14:56:50 GMT
-Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/my_fasta_sequences.zip
+Location: http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/my_fasta_sequences.gz
 </pre>
             
             <p>The value of the location field can be used to download the dataset:</p>
             
-            <code>$ curl -H 'Authorization: Bearer 1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk=' http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/my_fasta_sequences.zip/download > myfile.gz </code>
+            <code>$ curl -H 'Authorization: Bearer 1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk=' http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/my_fasta_sequences.gz/download > myfile.gz </code>
             <p></p>
 
             <p>Expected output:</p>
@@ -2472,7 +2472,58 @@ ACTCACATCCGTGGCAAGAGGAAGCGTGAGGAACTGTCCAACATTCTGACACAAATGCGCAAGGCTCAGG
 CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
 </pre>
 
-            <p>Using NCBI format, the output is as follows:</p>
+            <p>The attachment header is included in the server response with the filename. This value can be used to save the file with the default
+               filename:</p>
+
+<pre>
+content-disposition: attachment; filename = my_fasta_sequences.gz
+</pre>
+
+            <p>Additional information about a dataset can be retrieved from the server by removing the last <code>download</code> part of the URL:</p>
+
+            <code>$ curl -H 'Authorization: Bearer 1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk=' http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/my_fasta_sequences.gz </code>
+            <p></p>
+            
+            <p>Useful fields such as the <code>content type</code>, the <code>file length</code>, the <code>MD5 checksum</code> and the 
+               <code>upload date</code> are included in the server response:</p>
+
+<pre>
+{
+    "chunkSize": 261120,
+    "contentType": "application/gzip",
+    "filename": "my_fasta_sequences.gz",
+    "id": "54e207e0e4b0c295e5a349cf",
+    "length": 455,
+    "links": [
+        {
+            "href": "/lvl-service/rest/v1/datasets/objects/root%2540lvl/my_fasta_sequences.gz",
+            "params": {
+                "rel": "self",
+                "type": "application/json"
+            }
+        }
+    ],
+    "md5": "a69e6ae101de36bc1c71764002db6d3d",
+    "metadata": {
+        "editor": "root@lvl",
+        "isLastestVersion": "my_fasta_sequences.gz",
+        "target": {
+            "collection": "sandflies",
+            "compression": "gzip",
+            "filter": "export_fasta",
+            "ids": [
+                "gb:JP540074",
+                "gb:JP553239"
+            ],
+            "type": "sequence"
+        }
+    },
+    "namespace": "root@lvl",
+    "uploadDate": 1424099296998
+}
+</pre>
+
+            <p>Using NCBI format, the example dataset output is as follows:</p>
             
 <pre>
 &lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
