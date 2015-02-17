@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 
 /**
  * Stores a publication reference as a subset of PubMed fields (since publications comes from PubMed) annotated 
@@ -65,6 +66,8 @@ public class Reference implements Linkable<Reference> {
 	private int publicationYear;   // Journal publication year
 	private Set<String> seqids;    // Sequences mentioned in this publication (must include database and accession number)
 
+	private PubmedArticle article; // Original PubMed article
+	
 	public Reference() { }
 
 	@Override
@@ -113,6 +116,14 @@ public class Reference implements Linkable<Reference> {
 		this.seqids = seqids;
 	}
 
+	public PubmedArticle getArticle() {
+		return article;
+	}
+
+	public void setArticle(final PubmedArticle article) {
+		this.article = article;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof Reference)) {
@@ -132,11 +143,12 @@ public class Reference implements Linkable<Reference> {
 				&& Objects.equals(pubmedId, other.pubmedId)
 				&& Objects.equals(publicationYear, other.publicationYear)
 				&& Objects.equals(seqids, other.seqids);
+		// article
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, title, pubmedId);
+		return Objects.hash(links, title, pubmedId); // article
 	}
 
 	@Override
@@ -146,7 +158,8 @@ public class Reference implements Linkable<Reference> {
 				.add("title", title)
 				.add("pubmedId", pubmedId)
 				.add("publicationYear", publicationYear)
-				.add("seqids", seqids)				
+				.add("seqids", seqids)
+				.add("article", "<<original article is not displayed>>")
 				.toString();
 	}
 
@@ -182,6 +195,11 @@ public class Reference implements Linkable<Reference> {
 
 		public Builder seqids(final Set<String> seqids) {
 			instance.setSeqids(seqids);
+			return this;
+		}
+		
+		public Builder article(final PubmedArticle article) {
+			instance.setArticle(article);
 			return this;
 		}
 

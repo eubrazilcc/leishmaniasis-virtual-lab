@@ -115,9 +115,9 @@ public enum ConfigurationManager implements Closeable2 {
 		return configuration().getHtdocsDir();
 	}
 
-	public File getDataDir() {
+	/* TODO public File getDataDir() {
 		return configuration().getDataDir();
-	}
+	} */
 
 	public String getDbName() {
 		return configuration().getDbName();
@@ -171,20 +171,24 @@ public enum ConfigurationManager implements Closeable2 {
 	public String getWfHostname() {
 		return configuration().getWfHostname();
 	}
+	
 	public boolean isWfSecure() {
 		return configuration().isWfSecure();
 	}
+	
 	public int getWfPort() {
 		return configuration().getWfPort();
 	}
+	
 	public String getWfUsername() {
 		return configuration().getWfUsername().or("");
 	}
+	
 	public String getWfPasswd() {
 		return configuration().getWfPasswd().or("");
 	}
 
-	public File getGenBankDir(final Format format) {
+	/* TODO public File getGenBankDir(final Format format) {
 		switch (format) {
 		case GB_SEQ_XML:
 			return new File(getDataDir(), "sequences/genbank/xml");
@@ -210,7 +214,7 @@ public enum ConfigurationManager implements Closeable2 {
 
 	public File getProductsDir() {
 		return new File(getDataDir(), "products");
-	}
+	} */
 
 	@Override
 	public void setup(final @Nullable Collection<URL> urls) {		
@@ -220,12 +224,13 @@ public enum ConfigurationManager implements Closeable2 {
 
 	@Override
 	public void preload() {
+		/* TODO
 		// an initial access is needed due to lazy load, we create the application environment
 		for (final File file : of(getGenBankDir(GB_SEQ_XML), getPubMedDir(PUBMED_XML), getSharedDir(), getProductsDir())) {
 			try {
 				file.mkdirs();
 			} catch (Exception e) { }
-		}		
+		} */
 	}
 
 	@Override

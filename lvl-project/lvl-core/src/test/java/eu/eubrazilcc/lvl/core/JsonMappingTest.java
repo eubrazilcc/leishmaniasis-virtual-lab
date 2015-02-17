@@ -29,7 +29,9 @@ import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLFiles;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
+import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -51,6 +53,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
+import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 
 /**
  * Tests JSON mapping capabilities.
@@ -72,6 +75,12 @@ public class JsonMappingTest {
 
 			final Point point = Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build();
 
+			final GBSeq gbSeq = GBSEQ_XMLB.typeFromFile(getGBSeqXMLFiles().iterator().next());
+			assertThat("GenBank sequence is not null", gbSeq, notNullValue());
+
+			final PubmedArticle article = PUBMED_XMLB.typeFromFile(getPubMedXMLFiles().iterator().next());
+			assertThat("PubMed article is not null", article, notNullValue());
+
 			final Sandfly sandfly = Sandfly.builder()
 					.dataSource(GENBANK)
 					.accession("ABC12345678")
@@ -83,6 +92,7 @@ public class JsonMappingTest {
 					.location(point)
 					.locale(new Locale("es", "ES"))
 					.pmids(newHashSet("1234R", "AV99O0"))
+					.sequence(gbSeq)
 					.build();
 			assertThat("sanfly is not null", sandfly, notNullValue());
 
@@ -105,6 +115,7 @@ public class JsonMappingTest {
 					.title("The best paper in the world!")
 					.publicationYear(1984)
 					.seqids(newHashSet("gb:ABC12345678"))
+					.article(article)
 					.build();
 			assertThat("reference is not null", reference, notNullValue());
 
@@ -146,8 +157,11 @@ public class JsonMappingTest {
 					.build();
 			assertThat("dataset share is not null", datasetShare, notNullValue());
 
-			final GBSeq gbSeq = GBSEQ_XMLB.typeFromFile(getGBSeqXMLFiles().iterator().next());
-			assertThat("GenBank sequence is not null", gbSeq, notNullValue());			
+			// test GenBank sequence
+			testGenBankSequence(gbSeq);
+
+			// test PubMed article
+			testPubMedArticle(article);
 
 			// test sanfly with no links
 			testSandfly(sandfly);
@@ -184,15 +198,40 @@ public class JsonMappingTest {
 			datasetShare.setLinks(newArrayList(refLink));
 			testDatasetShare(datasetShare);
 
-			// test GenBank sequence
-			testGenBankSequence(gbSeq);
-
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("JsonMappingTest.test() failed: " + e.getMessage());
 		} finally {			
 			System.out.println("JsonMappingTest.test() has finished");
 		}
+	}
+
+	private void testGenBankSequence(final GBSeq gbSeq) throws IOException {
+		// test GenBank sequence JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(gbSeq);
+		assertThat("serialized GenBank sequence is not null", payload, notNullValue());
+		assertThat("serialized GenBank sequence is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized GenBank sequence (JSON): " + payload);
+
+		// test GenBank sequence JSON deserialization
+		final GBSeq gbSeq2 = JSON_MAPPER.readValue(payload, GBSeq.class);
+		assertThat("deserialized GenBank sequence is not null", gbSeq2, notNullValue());
+		// assertThat("deserialized GenBank sequence coincides with expected", gbSeq2, equalTo(gbSeq));
+	}
+
+	private void testPubMedArticle(final PubmedArticle article) throws IOException {
+		// test PubMed article JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(article);
+		assertThat("serialized PubMed article is not null", payload, notNullValue());
+		assertThat("serialized PubMed article is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized PubMed article (JSON): " + payload);
+
+		// test PubMed article JSON deserialization
+		final PubmedArticle article2 = JSON_MAPPER.readValue(payload, PubmedArticle.class);
+		assertThat("deserialized PubMed article is not null", article2, notNullValue());
+		// assertThat("deserialized PubMed article coincides with expected", article2, equalTo(article));
 	}
 
 	private void testSandfly(final Sandfly sanfly) throws IOException {
@@ -263,20 +302,6 @@ public class JsonMappingTest {
 		final DatasetShare datasetShare2 = JSON_MAPPER.readValue(payload, DatasetShare.class);
 		assertThat("deserialized dataset share is not null", datasetShare2, notNullValue());
 		assertThat("deserialized dataset share coincides with expected", datasetShare2, equalTo(datasetShare));
-	}
-
-	private void testGenBankSequence(final GBSeq gbSeq) throws IOException {
-		// test GenBank sequence JSON serialization
-		final String payload = JSON_MAPPER.writeValueAsString(gbSeq);
-		assertThat("serialized GenBank sequence is not null", payload, notNullValue());
-		assertThat("serialized GenBank sequence is not empty", isNotBlank(payload), equalTo(true));
-		/* uncomment for additional output */
-		System.out.println(" >> Serialized GenBank sequence (JSON): " + payload);
-
-		// test sanfly JSON deserialization
-		final GBSeq gbSeq2 = JSON_MAPPER.readValue(payload, GBSeq.class);
-		assertThat("deserialized GenBank sequence is not null", gbSeq2, notNullValue());
-		// assertThat("deserialized GenBank sequence coincides with expected", gbSeq2, equalTo(gbSeq));
 	}
 
 }

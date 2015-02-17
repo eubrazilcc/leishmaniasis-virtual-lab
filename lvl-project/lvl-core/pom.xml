@@ -50,6 +50,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	
 	<dependencies>
 		<!-- Apache commons -->
+		<dependency> <!-- needed by auto-generated JAXB binding classes -->
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
@@ -69,7 +73,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
-		</dependency>		
+		</dependency>
 
 		<!-- HTTP client -->
 		<dependency>
@@ -121,7 +125,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>com.google.code.geocoder-java</groupId>
 			<artifactId>geocoder-java</artifactId>
-		</dependency>		
+		</dependency>
 		
 		<!-- Transitively includes Jackson JSON processor from Jersey. Jackson must be 
 			provided in production (e.g. with Jersey) -->
@@ -136,7 +140,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
     		<groupId>org.glassfish.jersey.ext</groupId>
     		<artifactId>jersey-declarative-linking</artifactId>
     		<scope>provided</scope>
-		</dependency>
+		</dependency>		
 
 		<!-- Logback and SLF4J logging framework -->
 		<dependency>
@@ -152,7 +156,105 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	</dependencies>
 
 	<build>
-		<plugins>
+		<plugins>			
+			<!-- Generate sources -->
+			<plugin>
+				<groupId>org.jvnet.jaxb2.maven2</groupId>
+				<artifactId>maven-jaxb2-plugin</artifactId>
+				<version>${maven-jaxb2-plugin.version}</version>
+				<dependencies>					
+					<dependency>
+						<groupId>org.jvnet.jaxb2_commons</groupId>
+						<artifactId>jaxb2-commons-lang</artifactId>
+						<version>${maven-jaxb2-plugin.jaxb2-commons-lang.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>org.jvnet.jaxb2_commons</groupId>
+						<artifactId>jaxb2-fluent-api</artifactId>
+						<version>${maven-jaxb2-plugin.jaxb2-fluent-api.version}</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<id>jaxb2-esearch</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<schemaDirectory>${project.basedir}/src/main/dtd/esearch</schemaDirectory>
+							<!-- <generateDirectory>${project.build.directory}/generated-sources/xjc</generateDirectory> -->
+							<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+							<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.esearch</generatePackage>							
+							<extension>true</extension>
+							<episode>false</episode>
+							<schemaLanguage>DTD</schemaLanguage>
+							<schemaIncludes>
+								<schemaInclude>*.dtd</schemaInclude>
+					    	</schemaIncludes>
+					    	<markGenerated>true</markGenerated>
+					    	<removeOldOutput>false</removeOldOutput>
+					    	<cleanPackageDirectories>true</cleanPackageDirectories>
+					    	<verbose>false</verbose>
+					    	<args>
+					    		<arg>-Xfluent-api</arg>
+					    		<arg>-Xcommons-lang</arg>
+          					</args>
+						</configuration>
+					</execution>					
+					<execution>
+						<id>jaxb2-GBSeq</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<schemaDirectory>${project.basedir}/src/main/dtd/genbank</schemaDirectory>
+							<!-- <generateDirectory>${project.build.directory}/generated-sources/xjc</generateDirectory> -->
+							<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+							<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.gb</generatePackage>
+							<extension>true</extension>							
+							<episode>false</episode>							
+							<schemaLanguage>DTD</schemaLanguage>
+							<schemaIncludes>
+								<schemaInclude>NCBI_GBSeq.dtd</schemaInclude>
+					    	</schemaIncludes>
+					    	<markGenerated>true</markGenerated>
+					    	<removeOldOutput>false</removeOldOutput>
+					    	<cleanPackageDirectories>true</cleanPackageDirectories>
+					    	<verbose>false</verbose>
+					    	<args>
+					    		<arg>-Xfluent-api</arg>
+					    		<arg>-Xcommons-lang</arg>
+          					</args>
+						</configuration>
+					</execution>
+					<execution>
+						<id>jaxb2-pubmed</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<schemaDirectory>${project.basedir}/src/main/dtd/pubmed</schemaDirectory>
+							<!-- <generateDirectory>${project.build.directory}/generated-sources/xjc</generateDirectory> -->
+							<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+							<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.pubmed</generatePackage>
+							<extension>true</extension>							
+							<episode>false</episode>							
+							<schemaLanguage>DTD</schemaLanguage>
+							<schemaIncludes>
+								<schemaInclude>pubmed_100101.dtd</schemaInclude>
+					    	</schemaIncludes>
+					    	<markGenerated>true</markGenerated>
+					    	<removeOldOutput>false</removeOldOutput>
+					    	<cleanPackageDirectories>true</cleanPackageDirectories>
+					    	<verbose>false</verbose>
+					    	<args>
+					    		<arg>-Xfluent-api</arg>
+					    		<arg>-Xcommons-lang</arg>
+          					</args>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>			
 			<!-- Build -->
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>

@@ -14,38 +14,50 @@ conditions of the European Union Public Licence (EUPL), Version 1.1
 EUBrazilCC LVL includes software developed by third parties and provided under 
 an open source license (http://www.opensource.org).
 
-Apache Commons, Apache HttpComponents, Apache Tika and Apache Oltu were not
-modified, were produced by The Apache Software Foundation and licensed under 
-the terms and conditions given in:
+Apache Commons, Apache HttpComponents, Apache Tika, Apache Oltu, Apache Shiro
+and Apache ActiveMQ were not modified, were produced by The Apache Software 
+Foundation and licensed under the terms and conditions given in the Apache 
+License, Version 2.0:
 
 http://www.apache.org/licenses/LICENSE-2.0
 
 Google Guava was not modified, was produced by Google and licensed under the 
-terms and conditions given in:
+terms and conditions given in the Apache License, Version 2.0:
 
 http://www.apache.org/licenses/LICENSE-2.0
 
 MongoDB Java driver and Morphia were not modified, was produced by MongoDB, Inc. 
-and licensed under the terms and conditions given in:
+and licensed under the terms and conditions given in the Apache License, Version 
+2.0:
 
 http://www.apache.org/licenses/LICENSE-2.0
 
 Jackson JSON processor was not modified, was licensed under the terms and 
-conditions given in:
+conditions given in the Apache License, Version 2.0:
 
 http://www.apache.org/licenses/LICENSE-2.0
 
 Joda-Time was not modified, was licensed under the terms and conditions given 
-in:
+in the Apache License, Version 2.0:
 
 http://www.joda.org/joda-time/license.html
 
+ANTLR 4 was not modified, was produced by Terence Parr and others and licensed 
+under the terms and conditions given in The BSD License:
+
+http://www.antlr.org/license.html
+
+e-Science Central was not modified, was produced by the Newcastle University
+and licensed under the terms and conditions given in GPLv2 license:
+
+http://www.gnu.org/licenses/gpl-2.0.html
+
 Logback was not modified, was produced by Quality Open Software and licensed 
-under the terms and conditions given in:
+under the terms and conditions given in the EPL v1.0 and the LGPL 2.1:
 
 http://logback.qos.ch/license.html
 
 SLF4J was not modified, was produced by Quality Open Software and licensed under 
-the terms and conditions given in:
+the terms and conditions given in the MIT license:
 
 http://www.slf4j.org/license.html

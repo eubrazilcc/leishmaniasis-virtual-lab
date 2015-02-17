@@ -52,9 +52,9 @@ import com.mongodb.gridfs.GridFSDBFile;
  * when the cache reference expires.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class FileSystemPersistingCache {
+public class FilePersistingCache {
 
-	private static final Logger LOGGER = getLogger(FileSystemPersistingCache.class);
+	private static final Logger LOGGER = getLogger(FilePersistingCache.class);
 
 	public static final int MAX_CACHED_ELEMENTS = 100;
 	public static final int CACHE_EXPIRATION_SECONDS = 86400; // one day
@@ -68,8 +68,8 @@ public class FileSystemPersistingCache {
 	private final String cacheName;
 	private final File cacheDir;
 
-	public FileSystemPersistingCache() {
-		this.cacheName = FileSystemPersistingCache.class.getSimpleName() + "_" + random(8, true, true);
+	public FilePersistingCache() {
+		this.cacheName = FilePersistingCache.class.getSimpleName() + "_" + random(8, true, true);
 		File localCacheDir;
 		try {
 			localCacheDir = new File(CONFIG_MANAGER.getLocalCacheDir(), this.cacheName);
@@ -78,7 +78,7 @@ public class FileSystemPersistingCache {
 		}
 		this.cacheDir = localCacheDir;
 		if ((this.cacheDir.isDirectory() && this.cacheDir.canWrite()) || this.cacheDir.mkdirs());
-		LOGGER.info("Filesystem persistent cache: " + this.cacheDir.getAbsolutePath());
+		LOGGER.info("File persistent cache: " + this.cacheDir.getAbsolutePath());
 	}
 
 	public CachedFile getIfPresent(final @Nullable String namespace, final String filename) {

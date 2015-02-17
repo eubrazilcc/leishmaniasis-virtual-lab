@@ -23,13 +23,14 @@
 package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
-import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLSetFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLSetFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLFiles;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLSetFiles;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
-import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getGeneNames;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getGenInfoIdentifier;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getGeneNames;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedIds;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getPubMedReferences;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.inferCountry;
@@ -120,7 +121,7 @@ public class NCBIXmlBindingTest {
 					System.out.println(" >> Version    : " + seq.getGBSeqAccessionVersion());
 					System.out.println(" >> Organism   : " + seq.getGBSeqOrganism());
 					System.out.println(" >> Length     : " + seq.getGBSeqLength());
-					
+
 					final Set<String> gene = getGeneNames(seq);
 					if (gene != null) {
 						/* Uncomment for additional output */
@@ -173,7 +174,7 @@ public class NCBIXmlBindingTest {
 					/* Uncomment for additional output */
 					System.out.println(" >> Gene names : " + gene);
 				}
-				
+
 				final List<Reference> references = getPubMedReferences(seq);
 				assertThat("References is not null", references, notNullValue());
 				assertThat("References is not empty", references.isEmpty(), equalTo(false));
@@ -198,9 +199,9 @@ public class NCBIXmlBindingTest {
 			}
 
 			// test parsing PubMed XML records
-			files = getPubMedXMLFiles();
+			files = getPubMedXMLSetFiles();
 			for (final File file : files) {
-				System.out.println(" >> PubMed article XML file: " + file.getCanonicalPath());
+				System.out.println(" >> PubMed article set XML file: " + file.getCanonicalPath());
 				final PubmedArticleSet articleSet = PUBMED_XMLB.typeFromFile(file);
 				assertThat("PubMed XML set is not null", articleSet, notNullValue());
 				assertThat("PubMed XML articles is not null", articleSet.getPubmedArticle(), notNullValue());
@@ -232,6 +233,38 @@ public class NCBIXmlBindingTest {
 					/* Uncomment for additional output */
 					System.out.println(" >> Reference  : " + reference.toString());
 				}
+			}
+
+			// test parsing GenBank isolated articles
+			files = getPubMedXMLFiles();
+			for (final File file : files) {
+				System.out.println(" >> PubMed article XML file: " + file.getCanonicalPath());
+				final PubmedArticle article = PUBMED_XMLB.typeFromFile(file);				
+				assertThat("PubMed XML article MEDLINE citation is not null", article.getMedlineCitation(), notNullValue());
+				assertThat("PubMed XML article is not null", article.getMedlineCitation().getArticle(), notNullValue());
+				assertThat("PubMed XML article title is not empty", isNotBlank(article.getMedlineCitation().getArticle().getArticleTitle()));					
+				assertThat("PubMed XML article PMID is not null", article.getMedlineCitation().getPMID(), notNullValue());
+				assertThat("PubMed XML article PMID is not empty", isNotBlank(article.getMedlineCitation().getPMID().getvalue()));					
+				assertThat("PubMed XML article journal is not null", article.getMedlineCitation().getArticle().getJournal(), notNullValue());
+				assertThat("PubMed XML article journal issue is not null", article.getMedlineCitation().getArticle().getJournal()
+						.getJournalIssue(), notNullValue());
+				assertThat("PubMed XML article journal publication date is not null", article.getMedlineCitation().getArticle().getJournal()
+						.getJournalIssue().getPubDate(), notNullValue());
+				assertThat("PubMed XML article journal publication year is not null", article.getMedlineCitation().getArticle().getJournal()
+						.getJournalIssue().getPubDate().getYearOrMonthOrDayOrSeasonOrMedlineDate(), notNullValue());					
+				assertThat("PubMed XML article journal publication year is not empty", article.getMedlineCitation().getArticle().getJournal()
+						.getJournalIssue().getPubDate().getYearOrMonthOrDayOrSeasonOrMedlineDate().isEmpty(), equalTo(false));
+				/* Uncomment for additional output */
+				System.out.println(" >> Title : " + article.getMedlineCitation().getArticle().getArticleTitle());
+				System.out.println(" >> PMID  : " + article.getMedlineCitation().getPMID().getvalue());
+
+				final Reference reference = parseArticle(article);
+				assertThat("Reference is not null", reference, notNullValue());
+				assertThat("Reference title is not empty", isNotBlank(reference.getTitle()));
+				assertThat("Reference PMID is not empty", isNotBlank(reference.getPubmedId()));
+				assertThat("Reference publication year coincides with expected", reference.getPublicationYear() > 1900, equalTo(true));
+				/* Uncomment for additional output */
+				System.out.println(" >> Reference  : " + reference.toString());
 			}
 
 		} catch (Exception e) {

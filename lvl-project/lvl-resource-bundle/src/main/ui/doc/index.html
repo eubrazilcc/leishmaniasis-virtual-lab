@@ -1378,6 +1378,11 @@ Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:
             <p></p>
 
             <p>JAXB Binding Compiler (xjc) can be used to generate the Java binding classes (output directory should exist before calling xjc):</p>
+            
+            <!-- TODO -->
+            <!-- -Xfluent-api -Xcommons-lang -->
+            <!-- https://java.net/projects/maven-jaxb2-plugin/pages/Home -->
+            <!-- https://java.net/projects/jaxb2-commons/pages/Home -->
 
             <code>
               $ xjc -dtd -d output -p eu.eubrazilcc.lvl.core.xml.ncbi.gb -mark-generated NCBI_Entity.mod.dtd <br /> $ xjc -dtd -d output -p

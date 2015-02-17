@@ -55,7 +55,7 @@ import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.GridFSDBFileWrapper;
 import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedFile;
-import eu.eubrazilcc.lvl.storage.mongodb.cache.FileSystemPersistingCache;
+import eu.eubrazilcc.lvl.storage.mongodb.cache.FilePersistingCache;
 
 /**
  * {@link Dataset} DAO.
@@ -67,7 +67,7 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 
 	private final static Logger LOGGER = getLogger(DatasetDAO.class);
 
-	private final FileSystemPersistingCache persistingCache = new FileSystemPersistingCache();	
+	private final FilePersistingCache persistingCache = new FilePersistingCache();	
 
 	@Override
 	public WriteResult<Dataset> insert(final @Nullable String namespace, final @Nullable String filename, final File file, final @Nullable Metadata metadata) {

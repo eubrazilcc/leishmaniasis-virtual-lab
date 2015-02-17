@@ -36,6 +36,7 @@ import javax.ws.rs.core.Link;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 
 /**
  * Stores a nucleotide sequence as a subset of GenBank fields (since most sequences comes from GenBank) 
@@ -71,6 +72,8 @@ public class Sequence implements Localizable<Point> {
 	private Point location;        // Geospatial location
 	private Locale locale;         // Represents country with standards
 	private Set<String> pmids;     // References mentioning this sequence in PubMed
+
+	private GBSeq sequence;        // Original GenBank sequence
 
 	public Sequence() { }	
 
@@ -180,6 +183,14 @@ public class Sequence implements Localizable<Point> {
 
 	public void setPmids(final Set<String> pmids) {
 		this.pmids = pmids;
+	}	
+
+	public GBSeq getSequence() {
+		return sequence;
+	}
+
+	public void setSequence(final GBSeq sequence) {
+		this.sequence = sequence;
 	}
 
 	@JsonIgnore
@@ -207,12 +218,13 @@ public class Sequence implements Localizable<Point> {
 				&& Objects.equals(location, other.location)
 				&& Objects.equals(locale, other.locale)
 				&& Objects.equals(pmids, other.pmids);
+		// sequence
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hash(id, dataSource, definition, accession, version, gi, organism, length, gene,
-				countryFeature, location, locale, pmids);
+				countryFeature, location, locale, pmids); // sequence
 	}	
 
 	@Override
@@ -231,6 +243,7 @@ public class Sequence implements Localizable<Point> {
 				.add("location", location)
 				.add("locale", locale)
 				.add("pmids", pmids)
+				.add("sequence", "<<original sequence is not displayed>>")
 				.toString();
 	}
 
@@ -309,6 +322,11 @@ public class Sequence implements Localizable<Point> {
 
 		public Builder<T> pmids(final Set<String> pmids) {
 			instance.setPmids(pmids);
+			return this;
+		}
+		
+		public Builder<T> sequence(final GBSeq sequence) {
+			instance.setSequence(sequence);
 			return this;
 		}
 

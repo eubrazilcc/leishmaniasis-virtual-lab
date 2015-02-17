@@ -138,6 +138,7 @@ public class PubMedXmlBinder extends XmlBinder {
 				.title(article.getMedlineCitation().getArticle().getArticleTitle())
 				.pubmedId(article.getMedlineCitation().getPMID().getvalue())
 				.publicationYear(getYear(article))
+				.article(article)
 				.build();
 	}
 

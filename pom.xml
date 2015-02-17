@@ -41,7 +41,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<org.apache.httpcomponents.version>4.3.5</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
 		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
 		<org.apache.shiro.version>1.2.3</org.apache.shiro.version>
-		<mongodb.driver.version>2.12.5</mongodb.driver.version>
+		<mongodb.driver.version>2.13.0</mongodb.driver.version>
 		<activemq.version>5.10.1</activemq.version>
 		<antlr4.version>4.3</antlr4.version>
 		<e-science-central.version>3.1-SNAPSHOT</e-science-central.version>
@@ -86,7 +86,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>commons-io</groupId>
 				<artifactId>commons-io</artifactId>
 				<version>2.4</version>
-			</dependency>			
+			</dependency>
+			
+			<dependency> <!-- Utility classes for the classes that are considered to be Java standards -->
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>3.3.2</version>
+			</dependency>
 
 			<!-- Apache HttpComponents: HTTP/1.1 compliant HTTP agents -->
 

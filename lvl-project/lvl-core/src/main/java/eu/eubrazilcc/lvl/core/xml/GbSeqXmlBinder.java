@@ -301,6 +301,7 @@ public final class GbSeqXmlBinder extends XmlBinder {
 				.location(isNotBlank(countryFeature) ? geocode(countryFeature).orNull() : null)
 				.locale(isNotBlank(countryFeature) ? countryFeatureToLocale(countryFeature) : null)
 				.pmids(getPubMedIds(gbSeq))
+				.sequence(gbSeq)
 				.build();
 	}
 

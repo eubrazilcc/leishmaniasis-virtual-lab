@@ -50,12 +50,12 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
  */
 public class GbSeqXmlHelper {
 
-	/**
+	/** TODO
 	 * Opens the source file that corresponds to the specified sequence.
 	 * @param sequence - the sequence for which the file source file will be opened
 	 * @param format - the format to use to open the source file
 	 * @return the source file that corresponds to the specified sequence.
-	 */
+	 *
 	public static File openGenBankFile(final Sequence sequence, final Format format) {
 		checkArgument(sequence != null, "Uninitialized sequence");
 		checkArgument(format != null, "Uninitialized format");
@@ -68,7 +68,7 @@ public class GbSeqXmlHelper {
 			throw new IllegalArgumentException("Unsupported format: " + format.toString());
 		}
 		return file;
-	}
+	} */
 
 	/**
 	 * Converts the specified file, which is expected to contain a valid sequence in GenBank Sequence XML format, to FASTA and

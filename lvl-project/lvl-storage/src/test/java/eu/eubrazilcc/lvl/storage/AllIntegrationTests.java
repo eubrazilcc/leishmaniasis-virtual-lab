@@ -39,15 +39,15 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith(Suite.class)
 /* TODO @SuiteClasses({ SandflyCollectionTest.class, LeishmaniaCollectionTest.class, ReferenceCollectionTest.class, TokenCollectionTest.class, 
 	AuthCodeCollectionTest.class, ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class, 
-	NotificationCollectionTest.class, PublicLinkCollectionTest.class, WorkflowRunCollectionTest.class, DatasetCollectionTest.class, 
-	LvLQLTest.class, MapReduceTest.class, ActiveMQConnectorTest.class, SecurityManagerTest.class }) */
-// TODO @SuiteClasses({ SandflyCollectionTest.class })
+	NotificationCollectionTest.class, WorkflowRunCollectionTest.class, DatasetCollectionTest.class, LvLQLTest.class, MapReduceTest.class, 
+	ActiveMQConnectorTest.class, SecurityManagerTest.class }) */
+@SuiteClasses({ LeishmaniaCollectionTest.class, ReferenceCollectionTest.class, TokenCollectionTest.class, 
+	AuthCodeCollectionTest.class, ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class, 
+	NotificationCollectionTest.class, WorkflowRunCollectionTest.class, DatasetCollectionTest.class, LvLQLTest.class, MapReduceTest.class, 
+	ActiveMQConnectorTest.class, SecurityManagerTest.class })
+/* TODO @SuiteClasses({ LeishmaniaCollectionTest.class }) */
 // TODO @SuiteClasses({ LvLQLTest.class })
-// TODO TODO @SuiteClasses({ DatasetCollectionTest.class })
-//TODO @SuiteClasses({ SecurityManagerTest.class })
-@SuiteClasses({ ActiveMQConnectorTest.class, ResourceOwnerCollectionTest.class, DatasetCollectionTest.class })
-/* TODO @SuiteClasses({ TokenCollectionTest.class, AuthCodeCollectionTest.class, ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, 
-	PendingUserCollectionTest.class, NotificationCollectionTest.class, SecurityManagerTest.class }) */
+// TODO @SuiteClasses({ ActiveMQConnectorTest.class, ResourceOwnerCollectionTest.class, DatasetCollectionTest.class })
 public class AllIntegrationTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";
