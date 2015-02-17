@@ -25,8 +25,6 @@ package eu.eubrazilcc.lvl.core.entrez;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.of;
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.io.FastaWriter.writeFasta;
 import static eu.eubrazilcc.lvl.core.io.FileCompressor.gzip;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
@@ -40,8 +38,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 
-import eu.eubrazilcc.lvl.core.Sequence;
-import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 
 /**
@@ -49,26 +45,6 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
  * @author Erik Torres <ertorser@upv.es>
  */
 public class GbSeqXmlHelper {
-
-	/** TODO
-	 * Opens the source file that corresponds to the specified sequence.
-	 * @param sequence - the sequence for which the file source file will be opened
-	 * @param format - the format to use to open the source file
-	 * @return the source file that corresponds to the specified sequence.
-	 *
-	public static File openGenBankFile(final Sequence sequence, final Format format) {
-		checkArgument(sequence != null, "Uninitialized sequence");
-		checkArgument(format != null, "Uninitialized format");
-		File file = null;
-		switch (format) {
-		case GB_SEQ_XML:
-			file = new File(CONFIG_MANAGER.getGenBankDir(GB_SEQ_XML), Integer.toString(sequence.getGi()) + ".xml");
-			break;
-		default:
-			throw new IllegalArgumentException("Unsupported format: " + format.toString());
-		}
-		return file;
-	} */
 
 	/**
 	 * Converts the specified file, which is expected to contain a valid sequence in GenBank Sequence XML format, to FASTA and

@@ -33,8 +33,6 @@ import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newTreeMap;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.parseURL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.FileUtils.getTempDirectoryPath;
@@ -71,7 +69,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
-import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 
 /**
  * Manages configuration.
@@ -114,10 +111,6 @@ public enum ConfigurationManager implements Closeable2 {
 	public File getHtdocsDir() {
 		return configuration().getHtdocsDir();
 	}
-
-	/* TODO public File getDataDir() {
-		return configuration().getDataDir();
-	} */
 
 	public String getDbName() {
 		return configuration().getDbName();
@@ -171,50 +164,22 @@ public enum ConfigurationManager implements Closeable2 {
 	public String getWfHostname() {
 		return configuration().getWfHostname();
 	}
-	
+
 	public boolean isWfSecure() {
 		return configuration().isWfSecure();
 	}
-	
+
 	public int getWfPort() {
 		return configuration().getWfPort();
 	}
-	
+
 	public String getWfUsername() {
 		return configuration().getWfUsername().or("");
 	}
-	
+
 	public String getWfPasswd() {
 		return configuration().getWfPasswd().or("");
 	}
-
-	/* TODO public File getGenBankDir(final Format format) {
-		switch (format) {
-		case GB_SEQ_XML:
-			return new File(getDataDir(), "sequences/genbank/xml");
-		case FLAT_FILE:
-			return new File(getDataDir(), "sequences/genbank/text");
-		default:
-			throw new IllegalArgumentException("Unsupported GenBank format: " + format);
-		}
-	}
-
-	public File getPubMedDir(final Format format) {
-		switch (format) {
-		case PUBMED_XML:
-			return new File(getDataDir(), "papers/pubmed/xml");				
-		default:
-			throw new IllegalArgumentException("Unsupported PubMed format: " + format);
-		}
-	}
-
-	public File getSharedDir() {
-		return new File(getDataDir(), "shared");
-	}
-
-	public File getProductsDir() {
-		return new File(getDataDir(), "products");
-	} */
 
 	@Override
 	public void setup(final @Nullable Collection<URL> urls) {		
@@ -224,13 +189,7 @@ public enum ConfigurationManager implements Closeable2 {
 
 	@Override
 	public void preload() {
-		/* TODO
-		// an initial access is needed due to lazy load, we create the application environment
-		for (final File file : of(getGenBankDir(GB_SEQ_XML), getPubMedDir(PUBMED_XML), getSharedDir(), getProductsDir())) {
-			try {
-				file.mkdirs();
-			} catch (Exception e) { }
-		} */
+		// an initial access is needed due to lazy load, we create the application environment		
 	}
 
 	@Override
@@ -278,7 +237,6 @@ public enum ConfigurationManager implements Closeable2 {
 							final File rootDir = getFile("lvl-root", configuration, foundNameList, true, null);
 							final File localCacheDir = getFile("storage.local-cache", configuration, foundNameList, true, null);
 							final File htdocsDir = getFile("storage.htdocs", configuration, foundNameList, false, null);
-							final File dataDir = getFile("storage.data", configuration, foundNameList, true, null);
 							final String dbName = getString("database.name", configuration, foundNameList, "lvldb");
 							final String dbUsername = getString("database.credentials.username", configuration, foundNameList, null);
 							final String dbPassword = getString("database.credentials.password", configuration, foundNameList, null);
@@ -312,7 +270,7 @@ public enum ConfigurationManager implements Closeable2 {
 									}								
 								}
 							}
-							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dataDir, dbName, dbUsername, dbPassword, dbHosts, 
+							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dbName, dbUsername, dbPassword, dbHosts, 
 									brokerEmbedded, messageBrokers, smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, 
 									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, othersMap);
 							LOGGER.info(dont_use.toString());
@@ -412,7 +370,6 @@ public enum ConfigurationManager implements Closeable2 {
 		private final File rootDir;
 		private final File localCacheDir;
 		private final File htdocsDir;
-		private final File dataDir;
 		private final String dbName;
 		private final Optional<String> dbUsername;
 		private final Optional<String> dbPassword;
@@ -431,7 +388,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final Optional<String> wfPasswd;		
 		// other configurations
 		private final ImmutableMap<String, String> othersMap;
-		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, final File dataDir, 
+		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, 
 				final String dbName, final @Nullable String dbUsername, final @Nullable String dbPassword, final ImmutableList<String> dbHosts,
 				final boolean brokerEmbedded, final ImmutableList<String> messageBrokers,
 				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
@@ -441,7 +398,6 @@ public enum ConfigurationManager implements Closeable2 {
 			this.rootDir = checkNotNull(rootDir, "Uninitialized root directory");
 			this.localCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
 			this.htdocsDir = checkNotNull(htdocsDir, "Uninitialized hyper-text documents directory");
-			this.dataDir = checkNotNull(dataDir, "Uninitialized data directory");
 			this.dbName = dbName;
 			this.dbUsername = fromNullable(trimToNull(dbUsername));
 			this.dbPassword = fromNullable(trimToNull(dbPassword));
@@ -469,9 +425,6 @@ public enum ConfigurationManager implements Closeable2 {
 		public File getHtdocsDir() {
 			return htdocsDir;
 		}		
-		public File getDataDir() {
-			return dataDir;
-		}
 		public String getDbName() {
 			return dbName;
 		}
@@ -536,7 +489,6 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("rootDir", rootDir)
 					.add("localCacheDir", localCacheDir)
 					.add("htdocsDir", htdocsDir)
-					.add("dataDir", dataDir)
 					.add("dbName", dbName)
 					.add("dbUsername", dbUsername.orNull())
 					.add("dbPassword", dbPassword.orNull())

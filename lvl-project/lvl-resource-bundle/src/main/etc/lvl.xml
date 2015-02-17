@@ -51,10 +51,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<local-cache>$TMP/.lvl/cache</local-cache>
 		
 		<!-- The base directory where the static HTTP resources are located -->
-		<htdocs>${lvl-root}/htdocs</htdocs>
-		
-		<!-- The base directory where the LVL data is stored -->
-		<data>${lvl-root}/data</data>
+		<htdocs>${lvl-root}/htdocs</htdocs>		
 
 	</storage>
 
