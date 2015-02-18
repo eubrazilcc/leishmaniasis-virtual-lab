@@ -25,15 +25,12 @@ package eu.eubrazilcc.lvl.service.rest;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
-import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.CITATION_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
@@ -42,8 +39,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,11 +93,11 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
  * @see {@link Reference} class
  */
 @Path("/citations")
-public class CitationResource {
+public final class CitationResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Citation Resource";
 
-	private final static Logger LOGGER = getLogger(CitationResource.class);
+	protected final static Logger LOGGER = getLogger(CitationResource.class);
 
 	@GET
 	@Produces(APPLICATION_JSON)
@@ -232,22 +227,12 @@ public class CitationResource {
 		final Reference reference = REFERENCE_DAO.find(id);
 		if (reference == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
-		}
-		// get from file-system
-		final File file = new File(CONFIG_MANAGER.getPubMedDir(PUBMED_XML), reference.getPubmedId() + ".xml");
-		if (!file.canRead()) {
-			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
-		}
-		PubmedArticle pmArticle = null;
-		try {
-			pmArticle = PUBMED_XMLB.typeFromFile(file);
-		} catch (IOException e) {
-			LOGGER.error("Failed to load PubMed citation from file", e);
-		}
-		if (pmArticle == null) {
+		}		
+		final PubmedArticle article = reference.getArticle();		
+		if (article == null) {
 			throw new WebApplicationException("Unable to complete the operation", Response.Status.INTERNAL_SERVER_ERROR);
 		}
-		return pmArticle;
+		return article;
 	}
 
 	@GET

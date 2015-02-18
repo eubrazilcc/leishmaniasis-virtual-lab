@@ -38,8 +38,9 @@ import com.google.common.cache.Cache;
 import eu.eubrazilcc.lvl.core.Sequence;
 
 /**
- * Stores sequences as files in a temporary directory, which is used as a caching system. A file is 
- * deleted when the cache reference expires.
+ * Stores sequences as files in a temporary directory, which is used as a caching system. A file is deleted when the cache 
+ * reference expires. This class uses the {@link Sequence#getId() sequence Id} as the cache key and the 
+ * {@link Sequence#getVersion() sequence version} as the versionable field.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class SequencePersistingCache extends VersionablePersistingCache<Sequence> {
@@ -62,7 +63,7 @@ public class SequencePersistingCache extends VersionablePersistingCache<Sequence
 	@Override
 	public CachedVersionable put(final String id, final Sequence obj) throws IOException {
 		String key = null;
-		checkArgument(isNotBlank(key = toKey(id)) && obj != null && isNotBlank(obj.getVersion()),
+		checkArgument(isNotBlank(key = toKey(id)) && obj != null && isNotBlank(obj.getId()),
 				"Uninitialized or invalid sequence");		
 		File outfile = null;
 		try {

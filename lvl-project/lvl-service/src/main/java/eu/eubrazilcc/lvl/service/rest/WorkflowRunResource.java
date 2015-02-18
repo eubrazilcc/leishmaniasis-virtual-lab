@@ -76,11 +76,11 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
  * @author Erik Torres <ertorser@upv.es>
  */
 @Path("/pipeline_runs")
-public class WorkflowRunResource {
+public final class WorkflowRunResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Runs Resource";
 
-	private final static Logger LOGGER = getLogger(WorkflowRunResource.class);
+	protected final static Logger LOGGER = getLogger(WorkflowRunResource.class);
 
 	@GET
 	@Produces(APPLICATION_JSON)
@@ -125,9 +125,9 @@ public class WorkflowRunResource {
 			final WorkflowStatus status = ESCENTRAL_CONN.getStatus(run.getInvocationId());
 			// retrieve products
 			if (status != null && status.isCompleted()) {
-				final ImmutableList<WorkflowProduct> products = ESCENTRAL_CONN.saveProducts(run.getInvocationId(), 
+				/* TODO final ImmutableList<WorkflowProduct> products = ESCENTRAL_CONN.saveProducts(run.getInvocationId(), 
 						new File(CONFIG_MANAGER.getProductsDir(), run.getId()));
-				run.setProducts(products);
+				run.setProducts(products); */
 			}
 			// update the entry in the database
 			run.setStatus(status);
@@ -195,7 +195,7 @@ public class WorkflowRunResource {
 		}		
 		// delete
 		WORKFLOW_RUN_DAO.delete(id);
-		deleteQuietly(new File(CONFIG_MANAGER.getProductsDir(), run.getId()));		
+		/* TODO deleteQuietly(new File(CONFIG_MANAGER.getProductsDir(), run.getId())); */		
 		// cancel the execution in the remote workflow service
 		try {
 			ESCENTRAL_CONN.cancelExecution(run.getInvocationId());
@@ -224,7 +224,7 @@ public class WorkflowRunResource {
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
-		final File workflowRunBaseDir = new File(CONFIG_MANAGER.getProductsDir(), run.getId());
+		final File workflowRunBaseDir = null; /* TODO new File(CONFIG_MANAGER.getProductsDir(), run.getId()); */
 		String content = null;
 		try {			
 			final File file = new File(workflowRunBaseDir, decode(new String(decodeBase64(path)), UTF_8.name()));

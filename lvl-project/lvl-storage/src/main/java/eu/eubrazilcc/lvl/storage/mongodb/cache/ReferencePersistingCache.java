@@ -38,8 +38,9 @@ import com.google.common.cache.Cache;
 import eu.eubrazilcc.lvl.core.Reference;
 
 /**
- * Stores references as files in a temporary directory, which is used as a caching system. A file is 
- * deleted when the cache reference expires.
+ * Stores references as files in a temporary directory, which is used as a caching system. A file is deleted when the cache 
+ * reference expires. This class uses the {@link Reference#getPubmedId() PubMed Id} both as the cache key and the versionable
+ * field (citations are no versionable objects. See {@link SequencePersistingCache} for a real versionable example).
  * @author Erik Torres <ertorser@upv.es>
  */
 public class ReferencePersistingCache extends VersionablePersistingCache<Reference> {

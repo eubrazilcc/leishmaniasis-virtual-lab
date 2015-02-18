@@ -182,7 +182,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						</goals>
 						<configuration>
 							<schemaDirectory>${project.basedir}/src/main/dtd/esearch</schemaDirectory>
-							<!-- <generateDirectory>${project.build.directory}/generated-sources/xjc</generateDirectory> -->
 							<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
 							<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.esearch</generatePackage>							
 							<extension>true</extension>
@@ -191,8 +190,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 							<schemaIncludes>
 								<schemaInclude>*.dtd</schemaInclude>
 					    	</schemaIncludes>
-					    	<markGenerated>true</markGenerated>
-					    	<removeOldOutput>false</removeOldOutput>
+					    	<!-- <markGenerated>true</markGenerated> -->
+					    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
 					    	<cleanPackageDirectories>true</cleanPackageDirectories>
 					    	<verbose>false</verbose>
 					    	<args>
@@ -208,7 +207,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						</goals>
 						<configuration>
 							<schemaDirectory>${project.basedir}/src/main/dtd/genbank</schemaDirectory>
-							<!-- <generateDirectory>${project.build.directory}/generated-sources/xjc</generateDirectory> -->
 							<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
 							<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.gb</generatePackage>
 							<extension>true</extension>							
@@ -217,8 +215,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 							<schemaIncludes>
 								<schemaInclude>NCBI_GBSeq.dtd</schemaInclude>
 					    	</schemaIncludes>
-					    	<markGenerated>true</markGenerated>
-					    	<removeOldOutput>false</removeOldOutput>
+					    	<!-- <markGenerated>true</markGenerated> -->
+					    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
 					    	<cleanPackageDirectories>true</cleanPackageDirectories>
 					    	<verbose>false</verbose>
 					    	<args>
@@ -234,7 +232,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						</goals>
 						<configuration>
 							<schemaDirectory>${project.basedir}/src/main/dtd/pubmed</schemaDirectory>
-							<!-- <generateDirectory>${project.build.directory}/generated-sources/xjc</generateDirectory> -->
 							<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
 							<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.pubmed</generatePackage>
 							<extension>true</extension>							
@@ -243,8 +240,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 							<schemaIncludes>
 								<schemaInclude>pubmed_100101.dtd</schemaInclude>
 					    	</schemaIncludes>
-					    	<markGenerated>true</markGenerated>
-					    	<removeOldOutput>false</removeOldOutput>
+					    	<!-- <markGenerated>true</markGenerated> -->
+					    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
 					    	<cleanPackageDirectories>true</cleanPackageDirectories>
 					    	<verbose>false</verbose>
 					    	<args>

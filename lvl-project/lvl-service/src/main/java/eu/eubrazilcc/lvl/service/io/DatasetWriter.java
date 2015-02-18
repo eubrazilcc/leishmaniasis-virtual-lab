@@ -28,12 +28,12 @@ import static com.google.common.collect.FluentIterable.from;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
-import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.openGenBankFile;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.toFasta;
 import static eu.eubrazilcc.lvl.core.io.FileCompressor.gzip;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
+import static eu.eubrazilcc.lvl.service.io.NcbiObjectWriter.openGenBankFile;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAOHelper.fromString;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.Files.delete;
@@ -117,7 +117,7 @@ public final class DatasetWriter {
 					final SequenceDAO<? extends Sequence> dao = fromString(metadata.getTarget().getCollection());
 					final Sequence sequence = dao.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
 					checkState(sequence != null, "Sequence not found: " + id);
-					return openGenBankFile(sequence, GB_SEQ_XML);					
+					return openGenBankFile(sequence, GB_SEQ_XML);
 				}
 			}).toList();
 			try {

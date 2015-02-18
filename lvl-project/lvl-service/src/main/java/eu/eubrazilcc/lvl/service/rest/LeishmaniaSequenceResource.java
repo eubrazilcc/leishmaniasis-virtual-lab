@@ -25,8 +25,6 @@ package eu.eubrazilcc.lvl.service.rest;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
@@ -34,7 +32,6 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
-import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearbyLeishmania;
 import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.SEQUENCE_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
@@ -42,8 +39,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -105,11 +100,11 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
  * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.3">RFC3986 - Uniform Resource Identifier (URI): Generic Syntax; Section 3.3 - Path</a>
  */
 @Path("/sequences/leishmania")
-public class LeishmaniaSequenceResource {
+public final class LeishmaniaSequenceResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence (leishmania) Resource";
-	
-	private final static Logger LOGGER = getLogger(LeishmaniaSequenceResource.class);
+
+	protected final static Logger LOGGER = getLogger(LeishmaniaSequenceResource.class);
 
 	@GET
 	@Produces(APPLICATION_JSON)
@@ -248,18 +243,8 @@ public class LeishmaniaSequenceResource {
 		final Sequence sequence = LEISHMANIA_DAO.find(sequenceKey);
 		if (sequence == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
-		}
-		// get from file-system
-		final File file = new File(CONFIG_MANAGER.getGenBankDir(GB_SEQ_XML), sequence.getGi() + ".xml");
-		if (!file.canRead()) {
-			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
-		}
-		GBSeq gbSeq = null;
-		try {
-			gbSeq = GBSEQ_XMLB.typeFromFile(file);
-		} catch (IOException e) {
-			LOGGER.error("Failed to load GenBank sequence from file", e);
-		}
+		}		
+		final GBSeq gbSeq = sequence.getSequence();		
 		if (gbSeq == null) {
 			throw new WebApplicationException("Unable to complete the operation", Response.Status.INTERNAL_SERVER_ERROR);
 		}
