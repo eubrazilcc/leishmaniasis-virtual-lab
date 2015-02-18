@@ -1756,6 +1756,25 @@ public class Sequence {
               <li><code>text</code> Full-text search that finds the especified string anywhere within the fields data source, definition, accession,
                 organism and country of the sequences stored in the LVL database.</li>
             </ul>
+            
+            <div class="alert alert-warning">
+              <div class="media">
+                <div class="pull-left">
+                  <h1>
+                    <span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
+                  </h1>
+                </div>
+                <div class="media-body">
+                  <h4 class="media-heading">Original sequence is not returned in a query</h4>
+                  <p>
+                    By default, the LVL RESTful API will limit the fields to return in a query. Original sequence is deliberately excluded from the 
+                    default server response to reduce document sizes on large fetches, which should decrease memory consumption as well as bandwidth, 
+                    making sequence retrieval faster. To return all fields in the matching sequences, include the additional query parameter 
+                    <code>no_projection</code>. However, the preferred method to retrieve original sequences is to use the fetch method.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <h4>Example:</h4>
 
@@ -1792,6 +1811,25 @@ public class Sequence {
             <p>
               <em>TODO</em>
             </p>
+            
+            <div class="alert alert-warning">
+              <div class="media">
+                <div class="pull-left">
+                  <h1>
+                    <span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
+                  </h1>
+                </div>
+                <div class="media-body">
+                  <h4 class="media-heading">Original article citation is not returned in a query</h4>
+                  <p>
+                    By default, the LVL RESTful API will limit the fields to return in a query. Original article citation is deliberately excluded 
+                    from the default server response to reduce document sizes on large fetches, which should decrease memory consumption as well 
+                    as bandwidth, making citation retrieval faster. To return all fields in the matching citations, include the additional query 
+                    parameter <code>no_projection</code>. However, the preferred method to retrieve original citations is to use the fetch method.
+                  </p>
+                </div>
+              </div>
+            </div>
 
           </div>
         </div>
