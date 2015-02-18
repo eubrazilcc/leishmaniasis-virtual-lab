@@ -190,7 +190,7 @@ public class LeishmaniaCollectionTest {
 			leishmanias = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				leishmanias = LEISHMANIA_DAO.list(start, size, null, null, count);
+				leishmanias = LEISHMANIA_DAO.list(start, size, null, null, null, count);
 				if (leishmanias.size() != 0) {
 					System.out.println("Paging: first item " + start + ", showing " + leishmanias.size() + " of " + count.getValue() + " items");
 				}
@@ -199,43 +199,43 @@ public class LeishmaniaCollectionTest {
 
 			// filter: keyword matching search			
 			ImmutableMap<String, String> filter = of("source", GENBANK);
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), equalTo(numItems));			
 
 			// filter: keyword matching search
 			filter = of("accession", Integer.toString(random.nextInt(numItems)));
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), equalTo(1));
 
 			// filter: keyword matching search
 			filter = of("locale", Locale.ENGLISH.toString());
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), equalTo(numItems / 2));
 
 			// filter: combined keyword matching search
 			filter = of("source", GENBANK, "accession", Integer.toString(random.nextInt(numItems)));
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), equalTo(1));
 
 			// filter: full-text search
 			filter = of("text", "an example");
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), equalTo(numItems));
 
 			// filter: combined full-text search with keyword matching search
 			filter = of("source", GENBANK, "locale", Locale.ENGLISH.toString(), "text", "example");
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), equalTo(numItems / 2));
 
 			// invalid filter
 			filter = of("filter_name", "filter_content");
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), equalTo(0));
 
@@ -244,7 +244,7 @@ public class LeishmaniaCollectionTest {
 					.field("accession")
 					.order(Order.ASC)
 					.build();
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
 			assertThat("sorted leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of sorted leishmania coincides with expected", leishmanias.size(), equalTo(numItems));
 			String last = "-1";
@@ -258,7 +258,7 @@ public class LeishmaniaCollectionTest {
 					.field("countryFeature")
 					.order(Order.DESC)
 					.build();
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
 			assertThat("sorted leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of sorted leishmania coincides with expected", leishmanias.size(), equalTo(numItems));
 			last = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
@@ -272,9 +272,12 @@ public class LeishmaniaCollectionTest {
 					.field("sort_name")
 					.order(Order.DESC)
 					.build();
-			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
 			assertThat("sorted leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of sorted leishmania coincides with expected", leishmanias.size(), equalTo(0));
+			
+			// projection
+			// TODO
 
 			// clean-up and display database statistics
 			for (final String id2 : ids) {			

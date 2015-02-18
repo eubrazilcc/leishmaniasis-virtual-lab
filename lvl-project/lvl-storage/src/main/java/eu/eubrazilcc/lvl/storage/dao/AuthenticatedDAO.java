@@ -67,11 +67,13 @@ public interface AuthenticatedDAO<K, E> extends BaseDAO<K, E> {
 	 * @param size - maximum number of elements returned
 	 * @param filter - (optional) the expression to be used to filter the collection
 	 * @param sorting - (optional) sorting order
+	 * @param projection - (optional) specifies the fields to return. To return all fields in the matching document, omit this parameter
 	 * @param count - (optional) is updated with the number of elements in the database
 	 * @param user - caller identity
 	 * @return a view of the elements in the database that contains the specified range
 	 */
-	List<E> list(int start, int size, @Nullable ImmutableMap<String, String> filter, @Nullable Sorting sorting, @Nullable MutableLong count, String user);
+	List<E> list(int start, int size, @Nullable ImmutableMap<String, String> filter, @Nullable Sorting sorting, 
+			@Nullable ImmutableMap<String, Boolean> projection, @Nullable MutableLong count, String user);
 
 	/**
 	 * Returns the elements in the database that are within the specified distance (in meters) from the center point specified (using WGS84) and 

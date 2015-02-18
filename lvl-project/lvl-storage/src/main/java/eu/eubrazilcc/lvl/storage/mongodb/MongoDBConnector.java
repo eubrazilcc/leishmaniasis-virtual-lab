@@ -260,18 +260,12 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			dbcol.createIndex(new BasicDBObject(toMap(fields, new Function<String, Integer>() {
-				@Override
-				public Integer apply(final String field) {
-					return descending ? -1 : 1;
-				}				
-			})), new BasicDBObject(unique ? ImmutableMap.of("unique", true, "background", true) : ImmutableMap.of("background", true)));
-		} finally {
-			db.requestDone();
-		}
+		dbcol.createIndex(new BasicDBObject(toMap(fields, new Function<String, Integer>() {
+			@Override
+			public Integer apply(final String field) {
+				return descending ? -1 : 1;
+			}				
+		})), new BasicDBObject(unique ? ImmutableMap.of("unique", true, "background", true) : ImmutableMap.of("background", true)));
 	}
 
 	/**
@@ -284,13 +278,7 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			dbcol.createIndex(new BasicDBObject(field, "2dsphere"), new BasicDBObject("background", true));
-		} finally {
-			db.requestDone();
-		}
+		dbcol.createIndex(new BasicDBObject(field, "2dsphere"), new BasicDBObject("background", true));
 	}
 
 	/**
@@ -303,18 +291,12 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			dbcol.createIndex(new BasicDBObject(toMap(fields, new Function<String, String>() {
-				@Override
-				public String apply(final String field) {
-					return "text";
-				}
-			})), new BasicDBObject("default_language", "english").append("name", collection + ".text_idx"));
-		} finally {
-			db.requestDone();
-		}
+		dbcol.createIndex(new BasicDBObject(toMap(fields, new Function<String, String>() {
+			@Override
+			public String apply(final String field) {
+				return "text";
+			}
+		})), new BasicDBObject("default_language", "english").append("name", collection + ".text_idx"));
 	}
 
 	/**
@@ -331,14 +313,8 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");		
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			dbcol.createIndex(new BasicDBObject(field, descending ? -1 : 1),
-					new BasicDBObject(ImmutableMap.of("unique", true, "background", true, "sparse", true)));				
-		} finally {
-			db.requestDone();
-		}
+		dbcol.createIndex(new BasicDBObject(field, descending ? -1 : 1),
+				new BasicDBObject(ImmutableMap.of("unique", true, "background", true, "sparse", true)));				
 	}
 
 	/**
@@ -352,18 +328,12 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
 		try {
-			db.requestEnsureConnection();
-			try {
-				dbcol.insert(obj);
-			} catch (DuplicateKeyException dke) {
-				throw new MongoDBDuplicateKeyException(dke.getMessage());
-			}
-			return ObjectId.class.cast(obj.get("_id")).toString();
-		} finally {
-			db.requestDone();
+			dbcol.insert(obj);
+		} catch (DuplicateKeyException dke) {
+			throw new MongoDBDuplicateKeyException(dke.getMessage());
 		}
+		return ObjectId.class.cast(obj.get("_id")).toString();
 	}
 
 	/**
@@ -377,55 +347,43 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			return (BasicDBObject) dbcol.findOne(query);			
-		} finally {
-			db.requestDone();
-		}
+		return (BasicDBObject) dbcol.findOne(query);			
 	}
 
 	/**
-	 * Returns a view of the objects in the collection that contains the specified
-	 * range. The objects are sorted by the key in ascending order. Optionally,
-	 * the number of objects found in the collection is returned to the caller.
+	 * Returns a view of the objects in the collection that contains the specified range. The objects are sorted by the key in ascending order. 
+	 * Optionally, the number of objects found in the collection is returned to the caller. Also, the returned fields can be filtered.
 	 * @param sortCriteria - objects in the collection are sorted with this criteria
 	 * @param collection - collection where the objects are searched
 	 * @param start - starting index
 	 * @param size - maximum number of objects returned
 	 * @param query - the expression to be used to query the collection
+	 * @param projection - (optional) Specifies the fields to return using projection operators. To return all fields in the matching document, 
+	 *                     omit this parameter
 	 * @param count - (optional) is updated with the number of objects in the database
 	 * @return a view of the objects in the collection that contains the specified range
 	 */
-	public List<BasicDBObject> list(final DBObject sortCriteria, final String collection, 
-			final int start, final int size, final @Nullable DBObject query,
-			final @Nullable MutableLong count) {
+	public List<BasicDBObject> list(final DBObject sortCriteria, final String collection, final int start, final int size, 
+			final @Nullable DBObject query, final @Nullable DBObject projection, final @Nullable MutableLong count) {
 		checkArgument(sortCriteria != null, "Uninitialized sort criteria");
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final List<BasicDBObject> list = newArrayList();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
+		final DBCursor cursor = query != null ? dbcol.find(query) : dbcol.find(); // TODO : projection
+		cursor.sort(sortCriteria);
+		cursor.skip(start).limit(size);
 		try {
-			db.requestEnsureConnection();
-			final DBCursor cursor = query != null ? dbcol.find(query) : dbcol.find();
-			cursor.sort(sortCriteria);
-			cursor.skip(start).limit(size);
-			try {
-				while (cursor.hasNext()) {
-					list.add((BasicDBObject) cursor.next());
-				}
-			} finally {
-				cursor.close();
+			while (cursor.hasNext()) {
+				list.add((BasicDBObject) cursor.next());
 			}
-			if (count != null) {				
-				count.setValue(cursor.count());
-			}
-			return list;
 		} finally {
-			db.requestDone();
-		}	
+			cursor.close();
+		}
+		if (count != null) {				
+			count.setValue(cursor.count());
+		}
+		return list;
 	}
 
 	/**
@@ -437,13 +395,7 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			return dbcol.getCount();
-		} finally {
-			db.requestDone();
-		}
+		return dbcol.getCount();
 	}
 
 	/**
@@ -462,22 +414,16 @@ public enum MongoDBConnector implements Closeable2 {
 			final double maxDistance) {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			final BasicDBObject query = new BasicDBObject("geoNear", collection)
-			.append("near", new BasicDBObject("type", "Point").append("coordinates", new double[]{ longitude, latitude }))
-			.append("maxDistance", maxDistance)
-			.append("spherical", true)			
-			.append("uniqueDocs", true)
-			.append("num", Integer.MAX_VALUE);
-			LOGGER.trace("geoNear query: " + JSON.serialize(query));
-			final CommandResult cmdResult = db.command(query);
-			checkState(cmdResult.ok(), "geoNear search failed");			
-			return (BasicDBList) cmdResult.get("results");
-		} finally {
-			db.requestDone();
-		}
+		final BasicDBObject query = new BasicDBObject("geoNear", collection)
+		.append("near", new BasicDBObject("type", "Point").append("coordinates", new double[]{ longitude, latitude }))
+		.append("maxDistance", maxDistance)
+		.append("spherical", true)			
+		.append("uniqueDocs", true)
+		.append("num", Integer.MAX_VALUE);
+		LOGGER.trace("geoNear query: " + JSON.serialize(query));
+		final CommandResult cmdResult = db.command(query);
+		checkState(cmdResult.ok(), "geoNear search failed");			
+		return (BasicDBList) cmdResult.get("results");
 	}
 
 	public List<BasicDBObject> geoWithin(final String locationField, final String collection, final Polygon polygon) {
@@ -487,9 +433,7 @@ public enum MongoDBConnector implements Closeable2 {
 		final List<BasicDBObject> list = newArrayList();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
 		try {
-			db.requestEnsureConnection();
 			final BasicDBObject query = new BasicDBObject(locationField, new BasicDBObject("$geoWithin", 
 					new BasicDBObject("$geometry", (DBObject) parse(JSON_MAPPER.writeValueAsString(polygon)))));
 			LOGGER.trace("geoWithin query: " + JSON.serialize(query));
@@ -504,8 +448,6 @@ public enum MongoDBConnector implements Closeable2 {
 			return list;
 		} catch (JsonProcessingException e) {
 			throw new IllegalStateException("Failed to parse request parameters", e);			
-		} finally {
-			db.requestDone();
 		}
 	}
 
@@ -550,9 +492,7 @@ public enum MongoDBConnector implements Closeable2 {
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		final DBCollection tmpCol = tmpCollection();		
-		db.requestStart();
 		try {
-			db.requestEnsureConnection();
 			final MapReduceCommand command = new MapReduceCommand(dbcol, mapFn, reduceFn, tmpCol.getName(), REDUCE, query);
 			final MapReduceOutput output = dbcol.mapReduce(command);
 			final Iterable<DBObject> results = output.results();
@@ -562,7 +502,6 @@ public enum MongoDBConnector implements Closeable2 {
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to execute map-reduce operation", e);			
 		} finally {
-			db.requestDone();
 			try {
 				tmpCol.drop();
 			} catch (Exception mdbe) {
@@ -583,15 +522,9 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			final BasicDBObject current = (BasicDBObject) dbcol.findOne(query);
-			checkState(current != null, "Object not found");
-			dbcol.save(BasicDBObjectBuilder.start(obj.toMap()).append("_id", current.get("_id")).get());
-		} finally {
-			db.requestDone();
-		}
+		final BasicDBObject current = (BasicDBObject) dbcol.findOne(query);
+		checkState(current != null, "Object not found");
+		dbcol.save(BasicDBObjectBuilder.start(obj.toMap()).append("_id", current.get("_id")).get());
 	}
 
 	/**
@@ -604,13 +537,7 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			dbcol.remove(query);
-		} finally {
-			db.requestDone();
-		}
+		dbcol.remove(query);
 	}
 
 	/**
@@ -624,18 +551,15 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		db.requestStart();
 		try {
-			os.write((" >> Collection: " + collection + "\n").getBytes());
-			db.requestEnsureConnection();			
+			os.write((" >> Collection: " + collection + "\n").getBytes());		
 			final List<DBObject> indexes = dbcol.getIndexInfo();
 			os.write("   >> Indexes\n".getBytes());
 			for (final DBObject idx : indexes) {
 				os.write(("        " + idx.toString() + "\n").getBytes());
 			}
 			os.write(("   >> Items count: " + dbcol.getCount() + "\n").getBytes());
-		} finally {			
-			db.requestDone();
+		} finally {
 			os.flush();
 		}	
 	}
@@ -665,38 +589,32 @@ public enum MongoDBConnector implements Closeable2 {
 			metadata.removeField(IS_LATEST_VERSION_ATTR);
 		}
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();			
-			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
-			// enforce isolation property: each namespace has its own bucket (encompassing 2 collections: files and chunks) and indexes in the database
-			createSparseIndexWithUniqueConstraint(FILE_VERSION_PROP, gfsNs.getBucketName() + "." + GRIDFS_FILES_COLLECTION, false);
-			// index open access links
-			createNonUniqueIndex(FILE_OPEN_ACCESS_LINK_PROP, gfsNs.getBucketName() + "." + GRIDFS_FILES_COLLECTION, false);
-			try {				
-				// insert new file/version in the database
-				final GridFSInputFile gfsFile = gfsNs.createFile(file);
-				gfsFile.setFilename(filename2);
-				gfsFile.setContentType(mimeType(file));				
-				gfsFile.setMetaData(metadata);
-				gfsFile.save();
-				objectId = ObjectId.class.cast(gfsFile.getId()).toString();
-				// unset the latest version in the database
-				final GridFSDBFile latestVersion = getLatestVersion(gfsNs, filename2);
-				if (latestVersion != null && latestVersion.getMetaData() != null) {
-					latestVersion.getMetaData().removeField(IS_LATEST_VERSION_ATTR);
-					latestVersion.save();
-				}
-			} catch (DuplicateKeyException dke) {
-				throw new MongoDBDuplicateKeyException(dke.getMessage());
-			} catch (IOException ioe) {
-				throw new IllegalStateException("Failed to save file", ioe);				
-			} finally {
-				// enforce versioning property by always restoring the latest version in the database
-				restoreLatestVersion(gfsNs, filename2);				
+		final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
+		// enforce isolation property: each namespace has its own bucket (encompassing 2 collections: files and chunks) and indexes in the database
+		createSparseIndexWithUniqueConstraint(FILE_VERSION_PROP, gfsNs.getBucketName() + "." + GRIDFS_FILES_COLLECTION, false);
+		// index open access links
+		createNonUniqueIndex(FILE_OPEN_ACCESS_LINK_PROP, gfsNs.getBucketName() + "." + GRIDFS_FILES_COLLECTION, false);
+		try {				
+			// insert new file/version in the database
+			final GridFSInputFile gfsFile = gfsNs.createFile(file);
+			gfsFile.setFilename(filename2);
+			gfsFile.setContentType(mimeType(file));				
+			gfsFile.setMetaData(metadata);
+			gfsFile.save();
+			objectId = ObjectId.class.cast(gfsFile.getId()).toString();
+			// unset the latest version in the database
+			final GridFSDBFile latestVersion = getLatestVersion(gfsNs, filename2);
+			if (latestVersion != null && latestVersion.getMetaData() != null) {
+				latestVersion.getMetaData().removeField(IS_LATEST_VERSION_ATTR);
+				latestVersion.save();
 			}
+		} catch (DuplicateKeyException dke) {
+			throw new MongoDBDuplicateKeyException(dke.getMessage());
+		} catch (IOException ioe) {
+			throw new IllegalStateException("Failed to save file", ioe);				
 		} finally {
-			db.requestDone();
+			// enforce versioning property by always restoring the latest version in the database
+			restoreLatestVersion(gfsNs, filename2);				
 		}
 		return objectId;
 	}
@@ -748,23 +666,17 @@ public enum MongoDBConnector implements Closeable2 {
 		final DBObject metadata2 = metadata != null ? metadata : new BasicDBObject();
 		metadata2.put(IS_LATEST_VERSION_ATTR, filename2);
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
+		final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
 		try {
-			db.requestEnsureConnection();			
-			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
-			try {
-				final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
-				checkState(latestUploadedVersion != null, "File not found");
-				latestUploadedVersion.setMetaData(metadata2);								
-				latestUploadedVersion.save();
-			} catch (IllegalStateException ise) {
-				throw ise;
-			} catch (Exception e) {
-				LOGGER.error("Failed to update latest metadata version in namespace=" + gfsNs.getBucketName() 
-						+ ", filename=" + filename, e);
-			}
-		} finally {
-			db.requestDone();
+			final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
+			checkState(latestUploadedVersion != null, "File not found");
+			latestUploadedVersion.setMetaData(metadata2);								
+			latestUploadedVersion.save();
+		} catch (IllegalStateException ise) {
+			throw ise;
+		} catch (Exception e) {
+			LOGGER.error("Failed to update latest metadata version in namespace=" + gfsNs.getBucketName() 
+					+ ", filename=" + filename, e);
 		}
 	}
 
@@ -774,27 +686,21 @@ public enum MongoDBConnector implements Closeable2 {
 		final String filename2 = filename.trim();
 		final String secret = random(32, "abcdefghijklmnopqrstuvwxyz0123456789");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
+		final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
 		try {
-			db.requestEnsureConnection();			
-			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
-			try {
-				final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
-				checkState(latestUploadedVersion != null, "File not found");
-				if (latestUploadedVersion.getMetaData() == null) {
-					latestUploadedVersion.setMetaData(new BasicDBObject());
-				}
-				latestUploadedVersion.getMetaData().put(OPEN_ACCESS_LINK_ATTR, secret);
-				latestUploadedVersion.getMetaData().put(OPEN_ACCESS_DATE_ATTR, JSON.parse(JSON_MAPPER.writeValueAsString(new Date())));
-				latestUploadedVersion.save();
-			} catch (IllegalStateException ise) {
-				throw ise;
-			} catch (Exception e) {
-				LOGGER.error("Failed to create open access link in latest file version in namespace=" + gfsNs.getBucketName() 
-						+ ", filename=" + filename, e);
+			final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
+			checkState(latestUploadedVersion != null, "File not found");
+			if (latestUploadedVersion.getMetaData() == null) {
+				latestUploadedVersion.setMetaData(new BasicDBObject());
 			}
-		} finally {
-			db.requestDone();
+			latestUploadedVersion.getMetaData().put(OPEN_ACCESS_LINK_ATTR, secret);
+			latestUploadedVersion.getMetaData().put(OPEN_ACCESS_DATE_ATTR, JSON.parse(JSON_MAPPER.writeValueAsString(new Date())));
+			latestUploadedVersion.save();
+		} catch (IllegalStateException ise) {
+			throw ise;
+		} catch (Exception e) {
+			LOGGER.error("Failed to create open access link in latest file version in namespace=" + gfsNs.getBucketName() 
+					+ ", filename=" + filename, e);
 		}
 		return secret;
 	}
@@ -804,20 +710,17 @@ public enum MongoDBConnector implements Closeable2 {
 		final String namespace2 = trimToEmpty(namespace);
 		final String filename2 = filename.trim();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();			
-			final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);			
-			final List<GridFSDBFile> files = gfsNs.find(new BasicDBObject("filename", filename2).append(FILE_OPEN_ACCESS_LINK_PROP, 
-					new BasicDBObject("$exists", true)), new BasicDBObject("uploadDate", -1));
-			for (final GridFSDBFile file : files) {
-				if (file.getMetaData() != null) {
-					file.getMetaData().removeField(OPEN_ACCESS_LINK_ATTR);
-					file.getMetaData().removeField(OPEN_ACCESS_DATE_ATTR);
-					file.save();
-				}
+		final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);			
+		final List<GridFSDBFile> files = gfsNs.find(new BasicDBObject("filename", filename2).append(FILE_OPEN_ACCESS_LINK_PROP, 
+				new BasicDBObject("$exists", true)), new BasicDBObject("uploadDate", -1));
+		for (final GridFSDBFile file : files) {
+			if (file.getMetaData() != null) {
+				file.getMetaData().removeField(OPEN_ACCESS_LINK_ATTR);
+				file.getMetaData().removeField(OPEN_ACCESS_DATE_ATTR);
+				file.save();
 			}
-			/* ideally we want to use a cursor here, but the save() operation fails
+		}
+		/* ideally we want to use a cursor here, but the save() operation fails
 			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject("filename", filename2).append(FILE_OPEN_ACCESS_LINK_PROP, 
 					new BasicDBObject("$exists", true)));
 			try {
@@ -832,9 +735,6 @@ public enum MongoDBConnector implements Closeable2 {
 			} finally {
 				cursor.close();
 			} */
-		} finally {
-			db.requestDone();
-		}
 	}
 
 	/**
@@ -847,48 +747,36 @@ public enum MongoDBConnector implements Closeable2 {
 	public GridFSDBFile readFile(final @Nullable String namespace, final String filename) {
 		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
-			return getLatestVersion(gfsNs, filename);
-		} finally {
-			db.requestDone();
-		}
+		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
+		return getLatestVersion(gfsNs, filename);
 	}
 
 	public GridFSDBFileWrapper readOpenAccessFile(final String secret) {
 		checkArgument(isNotBlank(secret), "Uninitialized or invalid secret");
 		final String secret2 = secret.trim();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			GridFSDBFileWrapper fileWrapper = null;
-			final Set<String> collections = db.getCollectionNames();
-			final Iterator<String> it = collections.iterator();
-			while (it.hasNext() && fileWrapper == null) {
-				final String collection = it.next();
-				if (collection.endsWith("." + GRIDFS_FILES_COLLECTION)) {
-					final String[] tokens = Splitter.on('.')
-							.omitEmptyStrings()
-							.trimResults()
-							.splitToList(collection)
-							.toArray(new String[2]);
-					if (tokens.length >= 2) {
-						final String namespace = tokens[tokens.length - 2];
-						final GridFS gfsNs = new GridFS(db, namespace);
-						final GridFSDBFile file = gfsNs.findOne(new BasicDBObject(FILE_OPEN_ACCESS_LINK_PROP, secret2));
-						if (file != null) {
-							fileWrapper = new GridFSDBFileWrapper(namespace, file);
-						}
+		GridFSDBFileWrapper fileWrapper = null;
+		final Set<String> collections = db.getCollectionNames();
+		final Iterator<String> it = collections.iterator();
+		while (it.hasNext() && fileWrapper == null) {
+			final String collection = it.next();
+			if (collection.endsWith("." + GRIDFS_FILES_COLLECTION)) {
+				final String[] tokens = Splitter.on('.')
+						.omitEmptyStrings()
+						.trimResults()
+						.splitToList(collection)
+						.toArray(new String[2]);
+				if (tokens.length >= 2) {
+					final String namespace = tokens[tokens.length - 2];
+					final GridFS gfsNs = new GridFS(db, namespace);
+					final GridFSDBFile file = gfsNs.findOne(new BasicDBObject(FILE_OPEN_ACCESS_LINK_PROP, secret2));
+					if (file != null) {
+						fileWrapper = new GridFSDBFileWrapper(namespace, file);
 					}
 				}
 			}
-			return fileWrapper;
-		} finally {
-			db.requestDone();
 		}
+		return fileWrapper;		
 	}
 
 	/**
@@ -901,14 +789,8 @@ public enum MongoDBConnector implements Closeable2 {
 	public boolean fileExists(final @Nullable String namespace, final String filename) {
 		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			return gfsNs.findOne(filename.trim()) != null;
-		} finally {
-			db.requestDone();
-		}
+		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+		return gfsNs.findOne(filename.trim()) != null;
 	}
 
 	/**
@@ -924,53 +806,41 @@ public enum MongoDBConnector implements Closeable2 {
 			final @Nullable MutableLong count) {
 		final List<GridFSDBFile> list = newArrayList();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
-		try {			
-			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)), sortCriteria);
-			cursor.skip(start).limit(size);
-			try {
-				while (cursor.hasNext()) {
-					list.add((GridFSDBFile) cursor.next());
-				}
-			} finally {
-				cursor.close();
+		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+		final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)), sortCriteria);
+		cursor.skip(start).limit(size);
+		try {
+			while (cursor.hasNext()) {
+				list.add((GridFSDBFile) cursor.next());
 			}
-			if (count != null) {				
-				count.setValue(cursor.count());
-			}
-			return list;			
 		} finally {
-			db.requestDone();
+			cursor.close();
 		}
+		if (count != null) {				
+			count.setValue(cursor.count());
+		}
+		return list;			
 	}
 
 	public List<GridFSDBFile> listFileOpenAccess(final @Nullable String namespace, final DBObject sortCriteria, final int start, final int size, 
 			final @Nullable MutableLong count) {
 		final List<GridFSDBFile> list = newArrayList();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
-		try {			
-			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)).append(
-					FILE_OPEN_ACCESS_LINK_PROP, new BasicDBObject("$exists", true)), sortCriteria);
-			cursor.skip(start).limit(size);
-			try {
-				while (cursor.hasNext()) {
-					list.add((GridFSDBFile) cursor.next());
-				}
-			} finally {
-				cursor.close();
+		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+		final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)).append(
+				FILE_OPEN_ACCESS_LINK_PROP, new BasicDBObject("$exists", true)), sortCriteria);
+		cursor.skip(start).limit(size);
+		try {
+			while (cursor.hasNext()) {
+				list.add((GridFSDBFile) cursor.next());
 			}
-			if (count != null) {				
-				count.setValue(cursor.count());
-			}
-			return list;			
 		} finally {
-			db.requestDone();
+			cursor.close();
 		}
+		if (count != null) {				
+			count.setValue(cursor.count());
+		}
+		return list;
 	}
 
 	/**
@@ -988,26 +858,20 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 		final List<GridFSDBFile> list = newArrayList();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
+		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
+		final DBCursor cursor = gfsNs.getFileList(new BasicDBObject("filename", filename.trim()), sortCriteria);
+		cursor.skip(start).limit(size);
 		try {
-			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
-			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject("filename", filename.trim()), sortCriteria);
-			cursor.skip(start).limit(size);
-			try {
-				while (cursor.hasNext()) {
-					list.add((GridFSDBFile) cursor.next());
-				}
-			} finally {
-				cursor.close();
+			while (cursor.hasNext()) {
+				list.add((GridFSDBFile) cursor.next());
 			}
-			if (count != null) {				
-				count.setValue(cursor.count());
-			}
-			return list;			
 		} finally {
-			db.requestDone();
+			cursor.close();
 		}
+		if (count != null) {				
+			count.setValue(cursor.count());
+		}
+		return list;		
 	}
 
 	/**
@@ -1018,14 +882,8 @@ public enum MongoDBConnector implements Closeable2 {
 	public void removeFile(final @Nullable String namespace, final String filename) {
 		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
-		try {
-			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			gfsNs.remove(filename);
-		} finally {
-			db.requestDone();
-		}
+		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
+		gfsNs.remove(filename);
 	}
 
 	/**
@@ -1038,19 +896,13 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
 		final String filename2 = filename.trim();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		db.requestStart();
+		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
 		try {
-			db.requestEnsureConnection();
-			final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-			try {
-				// remove latest version from the database				
-				gfsNs.remove(new BasicDBObject(FILE_VERSION_PROP, filename2));
-			} finally {
-				// enforce versioning property by always restoring the latest version in the database
-				restoreLatestVersion(gfsNs, filename2);
-			}
+			// remove latest version from the database				
+			gfsNs.remove(new BasicDBObject(FILE_VERSION_PROP, filename2));
 		} finally {
-			db.requestDone();
+			// enforce versioning property by always restoring the latest version in the database
+			restoreLatestVersion(gfsNs, filename2);
 		}
 	}
 

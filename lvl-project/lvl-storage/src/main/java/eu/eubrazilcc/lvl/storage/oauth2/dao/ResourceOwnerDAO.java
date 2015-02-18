@@ -124,7 +124,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		// reset parameters to their default values
 		reset();
 		// ensure that at least the administrator account exists in the database
-		final List<ResourceOwner> owners = list(0, 1, null, null, null);
+		final List<ResourceOwner> owners = list(0, 1, null, null, null, null);
 		if (owners == null || owners.isEmpty()) {
 			final ResourceOwner admin = ResourceOwner.builder()
 					.user(User.builder()
@@ -205,7 +205,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 
 	@Override
 	public List<ResourceOwner> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null, null);
 	}
 
 	@Override
@@ -215,10 +215,10 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	}
 
 	@Override
-	public List<ResourceOwner> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
+	public List<ResourceOwner> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, ResourceOwner>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, null, count), new Function<BasicDBObject, ResourceOwner>() { // TODO
 			@Override
 			public ResourceOwner apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj, true);
@@ -552,7 +552,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		final String ro = datasetSharePermission(share);
 		final BasicDBObject query = new BasicDBObject(PERMISSIONS_KEY, new BasicDBObject("$in", new String[]{ rw, ro }));
 		LOGGER.trace("listDatashares query: " + JSON.serialize(query));
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, query, count), new Function<BasicDBObject, DatasetShare>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, query, null, count), new Function<BasicDBObject, DatasetShare>() {
 			@Override
 			public DatasetShare apply(final BasicDBObject obj) {
 				return parseResourceOwner(parseBasicDBObject(obj, true), namespace2, filename2, new String[]{ rw, ro });				

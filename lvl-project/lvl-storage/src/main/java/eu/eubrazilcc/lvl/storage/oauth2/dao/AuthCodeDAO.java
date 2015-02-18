@@ -112,7 +112,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 
 	@Override
 	public List<AuthCode> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null, null);
 	}
 
 	@Override
@@ -122,10 +122,10 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	}
 
 	@Override
-	public List<AuthCode> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {		
+	public List<AuthCode> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter,  final @Nullable Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {		
 		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, AuthCode>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, null, count), new Function<BasicDBObject, AuthCode>() { // TODO
 			@Override
 			public AuthCode apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);

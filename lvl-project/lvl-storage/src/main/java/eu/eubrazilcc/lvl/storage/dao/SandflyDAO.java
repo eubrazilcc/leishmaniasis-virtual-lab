@@ -144,7 +144,7 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 
 	@Override
 	public List<Sandfly> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null, null);
 	}
 
 	@Override
@@ -154,8 +154,8 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 	}
 
 	@Override
-	public List<Sandfly> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
+	public List<Sandfly> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
 		try {
@@ -173,7 +173,7 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 			return newArrayList();
 		}
 		// execute the query in the database
-		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, count), new Function<BasicDBObject, Sandfly>() {
+		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, null, count), new Function<BasicDBObject, Sandfly>() { // TODO
 			@Override
 			public Sandfly apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);

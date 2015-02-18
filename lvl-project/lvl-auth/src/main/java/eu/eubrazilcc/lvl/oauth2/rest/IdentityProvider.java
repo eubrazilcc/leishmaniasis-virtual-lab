@@ -87,7 +87,7 @@ public class IdentityProvider {
 		// get users from database
 		final MutableLong count = new MutableLong(0l);
 		final List<ResourceOwner> owners = RESOURCE_OWNER_DAO.useGravatar(true)
-				.list(paginable.getPageFirstEntry(), per_page, null, null, count);
+				.list(paginable.getPageFirstEntry(), per_page, null, null, null, count);
 		paginable.setElements(from(owners).transform(UserAnonymizer.start(plain ? NONE : HARD))
 				.filter(notNull()).toList());
 		// set total count and return to the caller

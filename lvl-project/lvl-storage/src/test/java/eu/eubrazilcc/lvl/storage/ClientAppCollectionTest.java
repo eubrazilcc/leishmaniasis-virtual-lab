@@ -109,7 +109,7 @@ public class ClientAppCollectionTest {
 			List<ClientApp> clientApps = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				clientApps = CLIENT_APP_DAO.list(start, size, null, null, count);
+				clientApps = CLIENT_APP_DAO.list(start, size, null, null, null, count);
 				if (clientApps.size() != 0) {
 					System.out.println("Paging: first item " + start + ", showing " + clientApps.size() + " of " + count.getValue() + " items");
 				}

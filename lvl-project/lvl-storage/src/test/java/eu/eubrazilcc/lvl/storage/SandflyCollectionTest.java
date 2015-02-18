@@ -194,7 +194,7 @@ public class SandflyCollectionTest {
 			sandflies = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				sandflies = SANDFLY_DAO.list(start, size, null, null, count);
+				sandflies = SANDFLY_DAO.list(start, size, null, null, null, count);
 				if (sandflies.size() != 0) {
 					System.out.println("Paging: first item " + start + ", showing " + sandflies.size() + " of " + count.getValue() + " items");
 				}
@@ -203,70 +203,70 @@ public class SandflyCollectionTest {
 
 			// filter: keyword matching search			
 			ImmutableMap<String, String> filter = of("source", GENBANK);
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems));			
 
 			// filter: keyword matching search
 			filter = of("accession", Integer.toString(random.nextInt(numItems)));
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(1));
 
 			// filter: keyword matching search
 			filter = of("locale", Locale.ENGLISH.toString());
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems / 2));
 
 			// filter: combined keyword matching search
 			filter = of("source", GENBANK, "accession", Integer.toString(random.nextInt(numItems)));
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(1));
 
 			// filter: full-text search
 			filter = of("text", "an example");
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems));
 
 			// filter: combined full-text search with keyword matching search
 			filter = of("source", GENBANK, "locale", Locale.ENGLISH.toString(), "text", "example");
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems / 2));
 
 			// invalid filter
 			filter = of("filter_name", "filter_content");
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(0));
 
 			// filter with numeric comparison operator (valid lengths: 100-111)
 			filter = of("length", Integer.toString(initialLength));
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(1));
 
 			filter = of("length", ">" + initialLength);
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems - 1));
-			
+
 			filter = of("length", "<=" + initialLength + numItems);
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems));
-			
+
 			// filter using a duplicated field
 			filter = of("organism", "papatasi", "organism", "lutzomyia");
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems));
-			
-			
-			
+
+
+
 			// TODO : db.sandflies.find({"$or":[{"sandfly.accession":"AB288341"}, {"sandfly.accession":"AB174770"}]}).count()
 
 			// sorting by accession in ascending order
@@ -274,7 +274,7 @@ public class SandflyCollectionTest {
 					.field("accession")
 					.order(Order.ASC)
 					.build();
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
 			assertThat("sorted sandfly is not null", sandflies, notNullValue());
 			assertThat("number of sorted sandfly coincides with expected", sandflies.size(), equalTo(numItems));
 			String last = "-1";
@@ -288,7 +288,7 @@ public class SandflyCollectionTest {
 					.field("countryFeature")
 					.order(Order.DESC)
 					.build();
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
 			assertThat("sorted sandfly is not null", sandflies, notNullValue());
 			assertThat("number of sorted sandfly coincides with expected", sandflies.size(), equalTo(numItems));
 			last = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
@@ -302,9 +302,12 @@ public class SandflyCollectionTest {
 					.field("sort_name")
 					.order(Order.DESC)
 					.build();
-			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, null, sorting, null);
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
 			assertThat("sorted sandfly is not null", sandflies, notNullValue());
 			assertThat("number of sorted sandfly coincides with expected", sandflies.size(), equalTo(0));
+
+			// projection
+			// TODO
 
 			// clean-up and display database statistics
 			for (final String id2 : ids) {			

@@ -116,7 +116,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 
 	@Override
 	public List<AccessToken> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null, null);
 	}
 
 	@Override
@@ -126,10 +126,10 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	}
 
 	@Override
-	public List<AccessToken> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter,
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
+	public List<AccessToken> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, AccessToken>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, null, count), new Function<BasicDBObject, AccessToken>() { // TODO
 			@Override
 			public AccessToken apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
@@ -205,7 +205,7 @@ public enum TokenDAO implements BaseDAO<String, AccessToken> {
 	}
 
 	public List<AccessToken> listByOwnerId(final String ownerId) {
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, 0, Integer.MAX_VALUE, ownerKey(ownerId), null), new Function<BasicDBObject, AccessToken>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, 0, Integer.MAX_VALUE, ownerKey(ownerId), null, null), new Function<BasicDBObject, AccessToken>() {
 			@Override
 			public AccessToken apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);

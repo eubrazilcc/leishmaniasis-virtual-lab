@@ -131,7 +131,7 @@ public enum WorkflowRunDAO implements AuthenticatedDAO<String, WorkflowRun> {
 
 	@Override
 	public List<WorkflowRun> findAll(final String user) {
-		return list(0, Integer.MAX_VALUE, null, null, null, user);
+		return list(0, Integer.MAX_VALUE, null, null, null, null, user);
 	}
 
 	@Override
@@ -146,16 +146,16 @@ public enum WorkflowRunDAO implements AuthenticatedDAO<String, WorkflowRun> {
 	}
 
 	@Override
-	public List<WorkflowRun> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
-		return list(start, size, filter, sorting, count, null);
+	public List<WorkflowRun> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
+		return list(start, size, filter, sorting, projection, count, null);
 	}	
 
 	@Override
-	public List<WorkflowRun> list(final int start, final int size, final ImmutableMap<String, String> filter, 
-			final Sorting sorting, final MutableLong count, final String user) {
+	public List<WorkflowRun> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String user) {
 		// execute the query in the database using the user to filter the results in case that a valid one is provided
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, isNotBlank(user) ? submitterKey(user) : null, count), 
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, isNotBlank(user) ? submitterKey(user) : null, null, count), // TODO 
 				new Function<BasicDBObject, WorkflowRun>() {
 			@Override
 			public WorkflowRun apply(final BasicDBObject obj) {

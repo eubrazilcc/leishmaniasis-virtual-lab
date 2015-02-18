@@ -91,7 +91,7 @@ public class NotificationResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Notification> notifications = NOTIFICATION_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, count);
+		final List<Notification> notifications = NOTIFICATION_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count);
 		paginable.setElements(notifications);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();

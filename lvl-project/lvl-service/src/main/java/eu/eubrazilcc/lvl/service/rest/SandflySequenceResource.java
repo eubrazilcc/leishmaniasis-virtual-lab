@@ -126,7 +126,7 @@ public final class SandflySequenceResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Sandfly> sequences = SANDFLY_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, count);
+		final List<Sandfly> sequences = SANDFLY_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count); // TODO
 		paginable.setElements(sequences);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();

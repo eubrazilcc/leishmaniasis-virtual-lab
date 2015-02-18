@@ -100,7 +100,7 @@ public class WorkflowRunCollectionTest {
 			runs = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				runs = WORKFLOW_RUN_DAO.list(start, size, null, null, count);
+				runs = WORKFLOW_RUN_DAO.list(start, size, null, null, null, count);
 				if (runs.size() != 0) {
 					System.out.println("Paging: first item " + start + ", showing " + runs.size() + " of " + count.getValue() + " items");
 				}

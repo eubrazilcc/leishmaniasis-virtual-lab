@@ -96,7 +96,7 @@ public final class WorkflowRunResource {
 				.build();
 		// get public links from database
 		final MutableLong count = new MutableLong(0l);
-		final List<WorkflowRun> publicLinks = WORKFLOW_RUN_DAO.list(paginable.getPageFirstEntry(), per_page, null, null, count, ownerid);
+		final List<WorkflowRun> publicLinks = WORKFLOW_RUN_DAO.list(paginable.getPageFirstEntry(), per_page, null, null, null, count, ownerid);
 		paginable.setElements(publicLinks);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();

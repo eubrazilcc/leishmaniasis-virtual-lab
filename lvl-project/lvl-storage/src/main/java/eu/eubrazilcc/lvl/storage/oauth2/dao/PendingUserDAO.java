@@ -133,7 +133,7 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 
 	@Override
 	public List<PendingUser> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null, null);
 	}
 
 	@Override
@@ -143,10 +143,10 @@ public enum PendingUserDAO implements BaseDAO<String, PendingUser> {
 	}
 
 	@Override
-	public List<PendingUser> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
+	public List<PendingUser> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, PendingUser>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, null, count), new Function<BasicDBObject, PendingUser>() { // TODO
 			@Override
 			public PendingUser apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);

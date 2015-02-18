@@ -81,7 +81,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	private ClientAppDAO() {		
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		// ensure that at least the LVL application exists in the database
-		final List<ClientApp> clientApps = list(0, 1, null, null, null);
+		final List<ClientApp> clientApps = list(0, 1, null, null, null, null);
 		if (clientApps == null || clientApps.isEmpty()) {
 			insert(ClientApp.builder()
 					.name(LVL_PORTAL_NAME)
@@ -131,7 +131,7 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 
 	@Override
 	public List<ClientApp> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null, null);
 	}
 
 	@Override
@@ -141,10 +141,10 @@ public enum ClientAppDAO implements BaseDAO<String, ClientApp> {
 	}
 
 	@Override
-	public List<ClientApp> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
+	public List<ClientApp> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, count), new Function<BasicDBObject, ClientApp>() {
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, null, count), new Function<BasicDBObject, ClientApp>() { // TODO
 			@Override
 			public ClientApp apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);

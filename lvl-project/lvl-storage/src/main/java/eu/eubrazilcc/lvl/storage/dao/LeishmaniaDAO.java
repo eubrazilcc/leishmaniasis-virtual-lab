@@ -145,7 +145,7 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 
 	@Override
 	public List<Leishmania> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null, null);
+		return list(0, Integer.MAX_VALUE, null, null, null, null);
 	}
 
 	@Override
@@ -155,8 +155,8 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 	}
 
 	@Override
-	public List<Leishmania> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
-			final @Nullable Sorting sorting, final @Nullable MutableLong count) {
+	public List<Leishmania> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
 		try {
@@ -174,7 +174,7 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 			return newArrayList();
 		}
 		// execute the query in the database
-		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, count), new Function<BasicDBObject, Leishmania>() {
+		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, null, count), new Function<BasicDBObject, Leishmania>() { // TODO
 			@Override
 			public Leishmania apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);

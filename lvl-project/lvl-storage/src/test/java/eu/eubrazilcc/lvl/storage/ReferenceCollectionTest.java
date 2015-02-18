@@ -81,6 +81,12 @@ public class ReferenceCollectionTest {
 			assertThat("reference is not null", reference2, notNullValue());
 			assertThat("reference coincides with original", reference2, equalTo(reference));
 			System.out.println(reference2.toString());
+			
+			// list
+			// TODO
+			
+			// list with projection
+			// TODO
 
 			// update
 			reference.setTitle("The second best paper in the world");
@@ -112,7 +118,7 @@ public class ReferenceCollectionTest {
 			List<Reference> references = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				references = REFERENCE_DAO.list(start, size, null, null, count);
+				references = REFERENCE_DAO.list(start, size, null, null, null, count);
 				if (references.size() != 0) {
 					System.out.println("Paging: first item " + start + ", showing " + references.size() + " of " + count.getValue() + " items");
 				}
