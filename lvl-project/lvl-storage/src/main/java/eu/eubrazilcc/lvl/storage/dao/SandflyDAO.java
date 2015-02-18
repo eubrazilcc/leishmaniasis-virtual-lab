@@ -31,6 +31,7 @@ import static com.mongodb.util.JSON.parse;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore.startStore;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
@@ -91,6 +92,8 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 	public static final String GI_KEY            = DB_PREFIX + "gi";
 	public static final String LENGTH_KEY        = DB_PREFIX + "length";
 	public static final String GEOLOCATION_KEY   = DB_PREFIX + "location";
+
+	public static final String ORIGINAL_SEQUENCE_KEY = DB_PREFIX + "sequence";
 
 	private SandflyDAO() {
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
@@ -173,7 +176,7 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 			return newArrayList();
 		}
 		// execute the query in the database
-		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, null, count), new Function<BasicDBObject, Sandfly>() { // TODO
+		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, Sandfly>() {
 			@Override
 			public Sandfly apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);
@@ -372,11 +375,11 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 				query = parseFilter(entry.getKey(), entry.getValue(), query);
 			}
 		}
-		
+
 		// TODO
 		System.err.println("\n\n >> QUERY: " + (query != null ? query.toString() : "NULL") + "\n");
 		// TODO
-		
+
 		return query;
 	}
 

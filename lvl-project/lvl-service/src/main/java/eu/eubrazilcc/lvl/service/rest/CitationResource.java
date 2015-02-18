@@ -33,6 +33,7 @@ import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.CITATION_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.ORIGINAL_ARTICLE_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -88,7 +89,10 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
- * Citations resource.
+ * Citations resource. Original article is deliberately excluded from the 
+ * {@link #getReferences(int, int, String, String, String, UriInfo, HttpServletRequest, HttpHeaders) listing method}
+ * response to reduce document sizes on large fetches, which should decrease memory consumption as well as bandwidth,
+ * making document retrieval faster.
  * @author Erik Torres <ertorser@upv.es>
  * @see {@link Reference} class
  */
@@ -119,7 +123,8 @@ public final class CitationResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Reference> references = REFERENCE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count); // TODO
+		final List<Reference> references = REFERENCE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
+				ImmutableMap.of(ORIGINAL_ARTICLE_KEY, false), count);
 		paginable.setElements(references);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();

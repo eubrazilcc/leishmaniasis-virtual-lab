@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.storage.oauth2.dao;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.transform.SameTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -125,7 +126,7 @@ public enum AuthCodeDAO implements BaseDAO<String, AuthCode> {
 	public List<AuthCode> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter,  final @Nullable Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {		
 		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, null, count), new Function<BasicDBObject, AuthCode>() { // TODO
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, toProjection(projection), count), new Function<BasicDBObject, AuthCode>() {
 			@Override
 			public AuthCode apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);

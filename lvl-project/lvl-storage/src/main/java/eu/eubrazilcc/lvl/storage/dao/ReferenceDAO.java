@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.transform.SameTransientStore.startStore;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -72,6 +73,8 @@ public enum ReferenceDAO implements BaseDAO<String, Reference> {
 	public static final String DB_PREFIX       = "reference.";
 	public static final String PRIMARY_KEY     = DB_PREFIX + "pubmedId";
 	public static final String GEOLOCATION_KEY = DB_PREFIX + "location";
+	
+	public static final String ORIGINAL_ARTICLE_KEY = DB_PREFIX + "article";
 
 	private ReferenceDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
@@ -139,7 +142,7 @@ public enum ReferenceDAO implements BaseDAO<String, Reference> {
 	public List<Reference> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, 
 			final @Nullable Sorting sorting, final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {		
 		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, null, count), new Function<BasicDBObject, Reference>() { // TODO
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, toProjection(projection), count), new Function<BasicDBObject, Reference>() {
 			@Override
 			public Reference apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);

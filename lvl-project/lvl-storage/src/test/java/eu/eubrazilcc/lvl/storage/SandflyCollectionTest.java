@@ -27,10 +27,13 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.ORIGINAL_SEQUENCE_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -51,6 +54,7 @@ import eu.eubrazilcc.lvl.core.Sorting.Order;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
+import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 
 /**
  * Tests sequence collection in the database.
@@ -62,6 +66,14 @@ public class SandflyCollectionTest {
 	public void test() {
 		System.out.println("SandflyCollectionTest.test()");
 		try {
+			// create sequence			
+			final GBSeq sequence = GBSEQ_XML_FACTORY.createGBSeq()
+					.withGBSeqPrimaryAccession("ABC12345678")
+					.withGBSeqAccessionVersion("3.0")
+					.withGBSeqOtherSeqids(GBSEQ_XML_FACTORY.createGBSeqOtherSeqids().withGBSeqid(GBSEQ_XML_FACTORY.createGBSeqid().withvalue(Integer.toString(Integer.MAX_VALUE))))
+					.withGBSeqOrganism("organism")					
+					.withGBSeqLength("850");
+
 			// insert
 			final Sandfly sandfly = Sandfly.builder()
 					.dataSource(GENBANK)
@@ -75,6 +87,7 @@ public class SandflyCollectionTest {
 					.countryFeature("Spain: Murcia")
 					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build())
 					.locale(new Locale("es", "ES"))
+					.sequence(sequence)
 					.build();
 			final SequenceKey sandflyKey = SequenceKey.builder()
 					.dataSource(sandfly.getDataSource())
@@ -86,6 +99,7 @@ public class SandflyCollectionTest {
 			Sandfly sandfly2 = SANDFLY_DAO.find(sandflyKey);
 			assertThat("sandfly is not null", sandfly2, notNullValue());
 			assertThat("sandfly coincides with original", sandfly2, equalTo(sandfly));
+			assertThat("sandfly contains original sequence", sandfly2.getSequence(), notNullValue());
 			System.out.println(sandfly2.toString());
 
 			// find by GenBank GenInfo Identifier
@@ -106,6 +120,11 @@ public class SandflyCollectionTest {
 			}
 
 			// insert element with hard link
+			final GBSeq sequence1 = GBSEQ_XML_FACTORY.createGBSeq()
+					.withGBSeqPrimaryAccession("EFHJ90864")
+					.withGBSeqAccessionVersion("3.0")
+					.withGBSeqOtherSeqids(GBSEQ_XML_FACTORY.createGBSeqOtherSeqids().withGBSeqid(GBSEQ_XML_FACTORY.createGBSeqid().withvalue(Integer.toString(Integer.MAX_VALUE - 1))))
+					.withGBSeqOrganism("organism");
 			final Sandfly sandfly1 = Sandfly.builder()
 					.links(newArrayList(Link.fromUri("http://example.com/sandfly/gb:EFHJ90864").rel(SELF).type(APPLICATION_JSON).build()))
 					.dataSource(GENBANK)
@@ -118,6 +137,7 @@ public class SandflyCollectionTest {
 					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build())
 					.locale(new Locale("es", "ES"))
 					.pmids(newHashSet("1234R", "AV99O0"))
+					.sequence(sequence1)
 					.build();
 			final SequenceKey sandflyKey1 = SequenceKey.builder()
 					.dataSource(sandfly1.getDataSource())
@@ -174,6 +194,12 @@ public class SandflyCollectionTest {
 			final List<String> ids = newArrayList();
 			final int numItems = 11, initialLength = 100;
 			for (int i = 0; i < numItems; i++) {
+				final GBSeq sequence3 = GBSEQ_XML_FACTORY.createGBSeq()
+						.withGBSeqPrimaryAccession(Integer.toString(i))
+						.withGBSeqAccessionVersion("3.0")
+						.withGBSeqOtherSeqids(GBSEQ_XML_FACTORY.createGBSeqOtherSeqids().withGBSeqid(GBSEQ_XML_FACTORY.createGBSeqid().withvalue(Integer.toString(i))))
+						.withGBSeqOrganism(i < numItems/2 ? "papatasi" : "lutzomyia")					
+						.withGBSeqLength(Integer.toString(initialLength + i));
 				final Sandfly sandfly3 = Sandfly.builder()
 						.dataSource(GENBANK)
 						.accession(Integer.toString(i))
@@ -183,6 +209,7 @@ public class SandflyCollectionTest {
 						.length(initialLength + i)
 						.countryFeature(countries[random.nextInt(countries.length)])
 						.locale(i%2 != 0 ? Locale.ENGLISH : Locale.FRANCE)
+						.sequence(sequence3)
 						.build();
 				ids.add(sandfly3.getAccession());
 				SANDFLY_DAO.insert(sandfly3);
@@ -307,7 +334,10 @@ public class SandflyCollectionTest {
 			assertThat("number of sorted sandfly coincides with expected", sandflies.size(), equalTo(0));
 
 			// projection
-			// TODO
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, null, null, ImmutableMap.of(ORIGINAL_SEQUENCE_KEY, false), null);
+			assertThat("projected sandfly is not null", sandflies, notNullValue());
+			assertThat("number of projected sandfly coincides with expected", sandflies.size(), equalTo(numItems));
+			assertThat("sequence was filtered from database response", sandflies.get((new Random()).nextInt(numItems)).getSequence(), nullValue());
 
 			// clean-up and display database statistics
 			for (final String id2 : ids) {			

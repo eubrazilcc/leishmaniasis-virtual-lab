@@ -34,6 +34,7 @@ import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearbySandfly;
 import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.SEQUENCE_ID_PATTERN;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.ORIGINAL_SEQUENCE_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -94,7 +95,10 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
  * <li>https://localhost/webapp/sequences/GenBank:U49845</li>
  * <li>https://localhost/webapp/sequences/gb:U49845</li>
  * </ul>
- * Identifiers that don't follow this convention will be rejected by this server with an HTTP Error 400 (Bad request).
+ * Identifiers that don't follow this convention will be rejected by this server with an HTTP Error 400 (Bad request). Original sequence is deliberately 
+ * excluded from the {@link #getSequences(int, int, String, String, String, UriInfo, HttpServletRequest, HttpHeaders) listing method}
+ * response to reduce document sizes on large fetches, which should decrease memory consumption as well as bandwidth,
+ * making document retrieval faster.
  * @author Erik Torres <ertorser@upv.es>
  * @see {@link Sandfly} class
  * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.3">RFC3986 - Uniform Resource Identifier (URI): Generic Syntax; Section 3.3 - Path</a>
@@ -126,7 +130,8 @@ public final class SandflySequenceResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Sandfly> sequences = SANDFLY_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count); // TODO
+		final List<Sandfly> sequences = SANDFLY_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
+				ImmutableMap.of(ORIGINAL_SEQUENCE_KEY, false), count);
 		paginable.setElements(sequences);
 		// set total count and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();

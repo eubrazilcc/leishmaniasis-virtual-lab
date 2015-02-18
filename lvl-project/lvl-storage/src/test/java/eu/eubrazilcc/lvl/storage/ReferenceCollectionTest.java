@@ -24,10 +24,13 @@ package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
+import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XML_FACTORY;
+import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.ORIGINAL_ARTICLE_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -36,7 +39,10 @@ import java.util.List;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableMap;
+
 import eu.eubrazilcc.lvl.core.Reference;
+import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 
 /**
@@ -49,12 +55,19 @@ public class ReferenceCollectionTest {
 	public void test() {
 		System.out.println("ReferenceCollectionTest.test()");
 		try {
+			// create article citation
+			final PubmedArticle article = PUBMED_XML_FACTORY.createPubmedArticle()
+					.withMedlineCitation(PUBMED_XML_FACTORY.createMedlineCitation()
+							.withArticle(PUBMED_XML_FACTORY.createArticle().withArticleTitle("The best paper in the world")))
+							.withMedlineCitation(PUBMED_XML_FACTORY.createMedlineCitation().withPMID(PUBMED_XML_FACTORY.createPMID().withvalue("ABCD1234")));
+
 			// insert
 			final Reference reference = Reference.builder()
 					.title("The best paper in the world")
 					.pubmedId("ABCD1234")
 					.publicationYear(1984)
 					.seqids(newHashSet("gb:ABC12345678"))
+					.article(article)
 					.build();			
 			WriteResult<Reference> writeResult = REFERENCE_DAO.insert(reference);
 			assertThat("insert write result is not null", writeResult, notNullValue());
@@ -80,13 +93,14 @@ public class ReferenceCollectionTest {
 			Reference reference2 = REFERENCE_DAO.find(reference.getPubmedId());
 			assertThat("reference is not null", reference2, notNullValue());
 			assertThat("reference coincides with original", reference2, equalTo(reference));
+			assertThat("reference contains original sequence", reference2.getArticle(), notNullValue());
 			System.out.println(reference2.toString());
-			
-			// list
-			// TODO
-			
+
 			// list with projection
-			// TODO
+			List<Reference> references = REFERENCE_DAO.list(0, Integer.MAX_VALUE, null, null, ImmutableMap.of(ORIGINAL_ARTICLE_KEY, false), null);
+			assertThat("projected references is not null", references, notNullValue());
+			assertThat("number of projected references coincides with expected", references.size(), equalTo(1));
+			assertThat("article was filtered from database response", references.get(0).getArticle(), nullValue());
 
 			// update
 			reference.setTitle("The second best paper in the world");
@@ -106,16 +120,21 @@ public class ReferenceCollectionTest {
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {
+				final PubmedArticle article3 = PUBMED_XML_FACTORY.createPubmedArticle()
+						.withMedlineCitation(PUBMED_XML_FACTORY.createMedlineCitation()
+								.withArticle(PUBMED_XML_FACTORY.createArticle().withArticleTitle("Paper number " + i)))
+								.withMedlineCitation(PUBMED_XML_FACTORY.createMedlineCitation().withPMID(PUBMED_XML_FACTORY.createPMID().withvalue(Integer.toString(i))));
 				final Reference reference3 = Reference.builder()
 						.title("Paper number " + i)
 						.pubmedId(Integer.toString(i))
+						.article(article3)
 						.build();
 				ids.add(reference3.getPubmedId());
 				REFERENCE_DAO.insert(reference3);
 			}
 			final int size = 3;
 			int start = 0;
-			List<Reference> references = null;
+			references = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
 				references = REFERENCE_DAO.list(start, size, null, null, null, count);

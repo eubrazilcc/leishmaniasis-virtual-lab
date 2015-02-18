@@ -369,8 +369,9 @@ public enum MongoDBConnector implements Closeable2 {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final List<BasicDBObject> list = newArrayList();
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final DBCollection dbcol = db.getCollection(collection);
-		final DBCursor cursor = query != null ? dbcol.find(query) : dbcol.find(); // TODO : projection
+		final DBCollection dbcol = db.getCollection(collection);		
+		final DBCursor cursor = dbcol.find(query != null ? query : new BasicDBObject(),
+				projection != null ? projection : new BasicDBObject());
 		cursor.sort(sortCriteria);
 		cursor.skip(start).limit(size);
 		try {

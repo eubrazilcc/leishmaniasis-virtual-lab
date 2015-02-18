@@ -32,6 +32,7 @@ import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
 import static eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector.ACTIVEMQ_CONN;
 import static eu.eubrazilcc.lvl.storage.activemq.TopicHelper.permissionChangedTopic;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner.copyOf;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.convertToValidResourceOwnerId;
@@ -218,7 +219,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	public List<ResourceOwner> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		// execute the query in the database (unsupported filter)
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, null, count), new Function<BasicDBObject, ResourceOwner>() { // TODO
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, null, toProjection(projection), count), new Function<BasicDBObject, ResourceOwner>() {
 			@Override
 			public ResourceOwner apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj, true);
@@ -297,7 +298,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 			}
 		}
 	}
-	
+
 	private void excludeHistory(final ResourceOwner owner, final boolean excludeHistory) {
 		if (excludeHistory) {
 			owner.getUser().getPermissionHistory().getHistory().clear();

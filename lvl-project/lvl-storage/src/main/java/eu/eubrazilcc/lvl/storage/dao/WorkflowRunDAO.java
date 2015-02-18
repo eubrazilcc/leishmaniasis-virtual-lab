@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.transform.SameTransientStore.startStore;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -155,7 +156,7 @@ public enum WorkflowRunDAO implements AuthenticatedDAO<String, WorkflowRun> {
 	public List<WorkflowRun> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String user) {
 		// execute the query in the database using the user to filter the results in case that a valid one is provided
-		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, isNotBlank(user) ? submitterKey(user) : null, null, count), // TODO 
+		return transform(MONGODB_CONN.list(sortCriteria(), COLLECTION, start, size, isNotBlank(user) ? submitterKey(user) : null, toProjection(projection), count), 
 				new Function<BasicDBObject, WorkflowRun>() {
 			@Override
 			public WorkflowRun apply(final BasicDBObject obj) {

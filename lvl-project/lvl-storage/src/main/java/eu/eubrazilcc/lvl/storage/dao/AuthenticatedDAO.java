@@ -67,7 +67,8 @@ public interface AuthenticatedDAO<K, E> extends BaseDAO<K, E> {
 	 * @param size - maximum number of elements returned
 	 * @param filter - (optional) the expression to be used to filter the collection
 	 * @param sorting - (optional) sorting order
-	 * @param projection - (optional) specifies the fields to return. To return all fields in the matching document, omit this parameter
+	 * @param projection - (optional) specifies the fields to return. Set the field name to <tt>true</tt> to include the field, <tt>false</tt>
+	 *                     to exclude the field. To return all fields in the matching document, omit this parameter
 	 * @param count - (optional) is updated with the number of elements in the database
 	 * @param user - caller identity
 	 * @return a view of the elements in the database that contains the specified range
