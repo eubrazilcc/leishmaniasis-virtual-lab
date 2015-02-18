@@ -63,7 +63,7 @@ public class SequencePersistingCache extends VersionablePersistingCache<Sequence
 	@Override
 	public CachedVersionable put(final String id, final Sequence obj) throws IOException {
 		String key = null;
-		checkArgument(isNotBlank(key = toKey(id)) && obj != null && isNotBlank(obj.getId()),
+		checkArgument(isNotBlank(key = toKey(id)) && obj != null && isNotBlank(obj.getId()) && isNotBlank(obj.getVersion()) && obj.getSequence() != null,
 				"Uninitialized or invalid sequence");		
 		File outfile = null;
 		try {
@@ -76,7 +76,7 @@ public class SequencePersistingCache extends VersionablePersistingCache<Sequence
 					.cachedFilename(outfile.getCanonicalPath())
 					.version(obj.getVersion().trim())
 					.build();
-			GBSEQ_XMLB.typeToFile(obj, outfile);			
+			GBSEQ_XMLB.typeToFile(obj.getSequence(), outfile);			
 			CACHE.put(key, cached);
 			return cached;
 		} catch (Exception e) {

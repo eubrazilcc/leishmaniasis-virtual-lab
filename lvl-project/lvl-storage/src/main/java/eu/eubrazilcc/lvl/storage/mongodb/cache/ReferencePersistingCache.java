@@ -63,7 +63,7 @@ public class ReferencePersistingCache extends VersionablePersistingCache<Referen
 	@Override
 	public CachedVersionable put(final String id, final Reference obj) throws IOException {
 		String key = null;
-		checkArgument(isNotBlank(key = toKey(id)) && obj != null && isNotBlank(obj.getPubmedId()),
+		checkArgument(isNotBlank(key = toKey(id)) && obj != null && isNotBlank(obj.getPubmedId()) && obj.getArticle() != null,
 				"Uninitialized or invalid reference");		
 		File outfile = null;
 		try {
@@ -76,7 +76,7 @@ public class ReferencePersistingCache extends VersionablePersistingCache<Referen
 					.cachedFilename(outfile.getCanonicalPath())
 					.version(obj.getPubmedId().trim())
 					.build();
-			PUBMED_XMLB.typeToFile(obj, outfile);			
+			PUBMED_XMLB.typeToFile(obj.getArticle(), outfile);			
 			CACHE.put(key, cached);
 			return cached;
 		} catch (Exception e) {

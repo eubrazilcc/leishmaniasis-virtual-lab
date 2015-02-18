@@ -37,7 +37,6 @@ import static com.google.common.util.concurrent.ListenableFutureTask.create;
 import static eu.eubrazilcc.lvl.core.DataSource.PUBMED;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_FETCHED;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_LISTED;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
@@ -47,9 +46,7 @@ import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.parseArticle;
 import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
 import static eu.eubrazilcc.lvl.storage.dao.ReferenceDAO.REFERENCE_DAO;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.DATA_CURATOR_ROLE;
-import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -207,21 +204,17 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 					// fetch sequence files
 					final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_pub_task_");
 					efetch(ids2, 0, MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
-					// copy publication files to their final location and import them to the database
-					final Path seqPath = CONFIG_MANAGER.getPubMedDir(format).toPath();
+					// import publication files to the database
 					for (final String id : ids2) {
 						setStatus("Importing PubMed publications into local collection");
 						final Path source = tmpDir2.resolve(id + "." + extension);
 						try {
-							// copy publication to storage						
-							final Path target = seqPath.resolve(source.getFileName());
-							copy(source, target, REPLACE_EXISTING);
-							LOGGER.info("New PubMed file stored: " + target.toString());
 							// insert publication in the database
-							final PubmedArticle pmArticle = PUBMED_XMLB.typeFromFile(target.toFile());
+							final PubmedArticle pmArticle = PUBMED_XMLB.typeFromFile(source.toFile());
 							final Reference reference = parseArticle(pmArticle);
 							REFERENCE_DAO.insert(reference, true);
-							efetchCount++;							
+							efetchCount++;
+							LOGGER.info("New PubMed file stored: " + source.toString());
 							// update progress
 							int fetchedCount = fetched.incrementAndGet();
 							setProgress(100.0d * fetchedCount / pending.get());							
