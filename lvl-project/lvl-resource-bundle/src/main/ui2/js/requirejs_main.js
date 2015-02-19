@@ -12,7 +12,7 @@ requirejs.config({
 		/* Boostrap front-end framework */
 		'bootstrap' : [ '//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min', 'vendor/cached/bootstrap.min' ],
 		'bootstrapvalidator' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min', // 0.5.4: commercial license
-				'vendor/cached/bootstrapValidator.min' ],
+		'vendor/cached/bootstrapValidator.min' ],
 		/* Backbone + Marionette MVC framework */
 		'underscore' : [ '//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min', 'vendor/cached/underscore-min' ], // 1.7.0: incompatible '_.extend'
 		'backbone' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min', 'vendor/cached/backbone-min' ],
@@ -20,8 +20,17 @@ requirejs.config({
 		/* Useful backbone plug-ins */
 		'routefilter' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.routefilter/0.2.0/backbone.routefilter.min', 'vendor/cached/backbone.routefilter.min' ],
 		'backbone.picky' : 'vendor/provided/backbone.picky.min',
+		'backbone.paginator' : 'vendor/provided/backbone.paginator.min',
+		'backbone.oauth2' : 'plugins/backbone.oauth2',
+		/* Data grid based on Backbone */
+		'backgrid' : [ '//cdnjs.cloudflare.com/ajax/libs/backgrid.js/0.3.5/backgrid.min', 'vendor/cached/backgrid.min' ],
+		'backgrid-paginator' : 'vendor/provided/backgrid-paginator.min',
+		'backgrid-select-all' : 'vendor/provided/backgrid-select-all.min',
+		'backgrid-filter' : 'vendor/provided/backgrid-filter.min',
 		/* Moment.js */
 		'moment' : [ '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment.min', 'vendor/cached/moment.min' ],
+		/* Pace */
+        'pace' : [ '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min', 'vendor/cached/pace.min' ],
 		/* qTip2 */
 		'imagesloaded' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.1.8/imagesloaded.pkgd.min', 'imagesloaded.pkgd.min' ],
 		'qtip' : [ '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ], // 2.2.1: map is unavailable
@@ -49,6 +58,25 @@ requirejs.config({
 		},
 		'backbone.picky' : {
 			deps : [ 'backbone' ]
+		},
+		'backbone.paginator' : {
+			deps : [ 'backbone' ]
+		},
+		'backbone.oauth2' : {
+			deps : [ 'backbone' ]
+		},
+		'backgrid' : {
+			deps : [ 'backbone' ],
+			exports : 'Backgrid'
+		},
+		'backgrid-paginator' : {
+			deps : [ 'backgrid', 'backbone.paginator' ]
+		},
+		'backgrid-select-all' : {
+			deps : [ 'backgrid' ]
+		},
+		'backgrid-filter' : {
+			deps : [ 'backgrid' ]
 		},
 		'marionette' : {
 			deps : [ 'backbone' ],

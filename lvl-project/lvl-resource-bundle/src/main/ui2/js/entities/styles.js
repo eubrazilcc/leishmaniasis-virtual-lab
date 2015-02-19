@@ -82,7 +82,8 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 			Entities.paceStyles = new Entities.StyleCollection([ {
 				id : 'pace',
 				// cdnjs.cloudflare.com/ajax/libs/pace/0.5.5/themes/pace-theme-flash.css
-				url : '/css/pace-theme-flash.css' + bust
+				// url : '/css/pace-theme-flash.css' + bust
+				url : '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/themes/black/pace-theme-center-simple.css' + bust
 			} ]);
 		};
 
