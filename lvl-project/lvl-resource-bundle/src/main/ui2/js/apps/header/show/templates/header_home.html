@@ -1,0 +1,27 @@
+<!-- Top navigation bar -->
+<nav class="navbar navbar-default navbar-fixed-top">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/#home">L<span class="text-danger">ei</span>sh VirtLab</a>
+		</div>
+		<div class="collapse navbar-collapse" id="navbar-collapse-1">
+			<ul class="nav navbar-nav navbar-right">
+			    <li class="active"><a href="/#<%= sessionLink() %>"><%= sessionText() %></a></li>				
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Resources <span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu">
+						<% _.each(items, function(item){ %>
+              			<li><a href="<%= item.href %>" target="_blank"><i class="fa <%= item.icon %> fa-fw"></i> <%= item.text %></a></li>
+              			<% }); %>
+					</ul>
+				</li>
+			</ul>			
+		</div>
+	</div>
+</nav>

@@ -1,0 +1,17 @@
+<div class="row">
+	<div class="col-xs-12">
+		<ul class="list-inline text-center">
+			<li><small><a href="#">view all</a></small></li>
+			<li>&middot;</li>
+			<li><small><a href="#">clear all</a></small></li>
+		</ul>
+		<% if (notifications) { %>
+		<dl>
+		 <% _.each(notifications, function(item){ %>
+			<dt><%= item.date %></dt>
+			<dd><%= item.message %></dd>
+		</dl>
+		<% }); %>
+		<% } %>
+	</div>
+</div>

@@ -1,0 +1,4 @@
+<ul class="list-unstyled">
+  <% _.each(items, function(item){ %>
+  <li><a href="<%= item.href %>" target="_blank"><i class="fa <%= item.icon %> fa-fw"></i> <%= item.text %></a></li> <% }); %>
+</ul>
