@@ -105,13 +105,13 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				id : 9,
 				href : 'http://www.eubrazilcloudconnect.eu/',
 				icon : 'fa-cloud',
-				text : 'EU-Brazil Cloud Connect',
+				text : 'EUBrazilCC',
 				isFirst : 'external'
 			}, {
 				id : 10,
 				href : '/doc/',
 				icon : 'fa-book',
-				text : 'Server documentation'
+				text : 'Documentation'
 			} ]);
 		};
 

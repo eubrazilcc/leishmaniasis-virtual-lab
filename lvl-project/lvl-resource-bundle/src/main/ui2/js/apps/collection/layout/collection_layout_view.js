@@ -18,9 +18,7 @@ define([ 'app', 'apps/config/marionette/regions/fadein', 'tpl!apps/collection/la
 		View.TabList = Marionette.CompositeView.extend({
 			template : TabListTpl,
 			childView : View.TabLink,
-			appendHtml : function(collectionView, childView) {
-				collectionView.$('ul').append(childView.el);
-			}
+			childViewContainer : 'ul'			
 		});
 		View.Layout = Marionette.LayoutView.extend({
 			template : LayoutTpl,

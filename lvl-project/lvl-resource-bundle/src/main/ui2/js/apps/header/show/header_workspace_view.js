@@ -25,9 +25,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 		View.Navigation = Marionette.CompositeView.extend({
 			template : NavigationTpl,
 			childView : View.NavigationLink,
-			appendHtml : function(collectionView, childView) {
-				collectionView.$('ul').append(childView.el);
-			},
+			childViewContainer : 'ul',
 			collectionEvents : {
 				'reset' : 'render'
 			},

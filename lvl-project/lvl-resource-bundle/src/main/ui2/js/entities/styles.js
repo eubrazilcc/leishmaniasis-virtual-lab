@@ -89,7 +89,7 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 		var iniQtipStyles = function() {
 			Entities.qtipStyles = new Entities.StyleCollection([ {
 				id : 'qtip',
-				url : '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.1/jquery.qtip.min.css' + bust
+				url : '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.min.css' + bust
 			} ]);
 		};
 
