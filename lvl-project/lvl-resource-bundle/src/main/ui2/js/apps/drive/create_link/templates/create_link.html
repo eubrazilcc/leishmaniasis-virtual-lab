@@ -1,0 +1,25 @@
+<div class="modal-dialog">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">
+				<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+			</button>
+			<h4 class="modal-title" id="myModalLabel">Create public link to dataset</h4>
+		</div>
+		<div class="modal-body">
+            <fieldset>
+	            <legend>A public link will be created to the dataset:</legend>
+	            <form role="form">
+	            	<div class="form-group">
+	            		<p class="lead"><%= getDataset() %></p>
+	            	</div>	            	
+				</form>
+				</fieldset>
+			<a id="alert" href=""></a>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			<button type="button" class="btn btn-primary" id="create-link-btn">Create</button>
+		</div>
+	</div>
+</div>

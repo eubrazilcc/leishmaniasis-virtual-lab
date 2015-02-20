@@ -15,15 +15,15 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/dataset', 'app
 					})
 				});
 				view.on('dataset:link:create', function(filename) {
-					require([ 'entities/link', 'apps/drive/links/create_view' ], function(LinkModel, EditView) {
-						var links = new LinkModel.LinkAllCollection({
-							oauth2_token : config.authorizationToken()
-						});
-						var dialogView = new EditView.Content({
-							collection : links,
+					require([ 'entities/link', 'apps/drive/create_link/create_view' ], function(LinkModel, EditView) {
+						var linkModel = new LinkModel.Link({
 							'filename' : filename
-						});						
-						Lvl.dialogRegion.show(dialogView);
+						});
+						linkModel.oauth2_token = config.authorizationToken();
+						var dialogView = new EditView.Content({
+							model : linkModel
+						});
+						Lvl.dialogRegion.show(dialogView);						
 					});
 				});				
 				Lvl.mainRegion.currentView.tabContent.show(view);

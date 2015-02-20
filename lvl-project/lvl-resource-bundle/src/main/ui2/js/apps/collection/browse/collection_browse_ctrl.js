@@ -17,7 +17,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/sequence', 'ap
 				view.on('sequences:view:sequence', function(accession) {
 					require([ 'apps/collection/sequence_viewer/collection_sequence_viewer', 'entities/gb_sequence' ], function(SequenceView, GbSequenceModel) {
 						var gbSequenceModel = new GbSequenceModel.GbSequence({
-							'GBSeq_primary-accession' : accession
+							'gbSeqPrimaryAccession' : accession
 						});
 						gbSequenceModel.oauth2_token = config.authorizationToken();
 						var dialogView = new SequenceView.Content({

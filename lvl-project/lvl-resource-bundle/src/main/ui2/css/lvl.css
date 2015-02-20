@@ -73,6 +73,35 @@
 	padding: 0px !important;
 }
 
+.lvl-dna-sequence {
+	font: bold 12px 'Courier New', Courier, monospace;
+	text-transform: uppercase;
+	line-height: 1.5em;
+	letter-spacing: 2px;
+	white-space: pre;
+	width: 98%;
+}
+
+.lvl-dna-a {
+	color: rgb(80, 80, 255);
+}
+
+.lvl-dna-g {
+	color: rgb(0, 192, 0);
+}
+
+.lvl-dna-t {
+	color: rgb(230, 230, 0);
+}
+
+.lvl-dna-c {
+	color: rgb(224, 0, 0);
+}
+
+.lvl-dna-u {
+	color: rgb(204, 153, 0);
+}
+
 #lvl-qtip-growl-container {
 	position: fixed;
 	top: 110px;
