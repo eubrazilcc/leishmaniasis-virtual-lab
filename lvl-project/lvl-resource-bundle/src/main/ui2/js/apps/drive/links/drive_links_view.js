@@ -5,7 +5,7 @@
 define([ 'app', 'marionette', 'tpl!apps/drive/links/templates/drive_links', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
 		'pace', 'moment', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, Marionette, LinksTpl,
 		Style, Configuration, pace, moment) {
-	Lvl.module('DriveApp.Datasets.View', function(View, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('DriveApp.Links.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
 		var columns = [
@@ -230,5 +230,5 @@ define([ 'app', 'marionette', 'tpl!apps/drive/links/templates/drive_links', 'app
 			}
 		});
 	});
-	return Lvl.DriveApp.Datasets.View;
+	return Lvl.DriveApp.Links.View;
 });

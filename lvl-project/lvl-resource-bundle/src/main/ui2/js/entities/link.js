@@ -10,11 +10,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 			urlRoot : config.get('service', '') + '/datasets/open_access/files/',
 			idAttribute : 'filename',
 			defaults : {
-				description : '',
-				downloadUri : '',
-				mime : '',
-				path : '',
-				target : {}
+				openAccessLink : '',
+				openAccessDate : ''
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);

@@ -1,14 +1,14 @@
 /**
- * RequireJS module that defines the routes of the sub-application: social.
+ * RequireJS module that defines the routes of the sub-application: enm.
  */
 
 define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], function(Lvl, Configuration) {
-	Lvl.module('Routers.SocialApp', function(SocialAppRouter, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('Routers.EnmApp', function(EnmAppRouter, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
 		var Router = Backbone.Router.extend({
 			routes : {
-				'social' : 'showSocial'
+				'enm' : 'showEnm'
 			},
 			before : function() {
 				if (!config.isAuthenticated()) {
@@ -18,15 +18,15 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 					});
 					return false;
 				}
-				require([ 'apps/social/social_app' ], function() {
-					Lvl.execute('set:active:header', 'workspace', 'social');
+				require([ 'apps/enm/enm_app' ], function() {
+					Lvl.execute('set:active:header', 'workspace', 'enm');
 					Lvl.execute('set:active:footer', 'workspace');
-					Lvl.startSubApp('SocialApp');
+					Lvl.startSubApp('EnmApp');
 				});
 				return true;
 			},
-			showSocial : function() {
-				Lvl.execute('show:social');
+			showEnm : function() {
+				Lvl.execute('show:enm');
 			}
 		});
 

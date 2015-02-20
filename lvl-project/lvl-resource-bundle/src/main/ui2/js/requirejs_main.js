@@ -30,6 +30,8 @@ requirejs.config({
 		'backgrid-filter' : 'vendor/provided/backgrid-filter.min',
 		/* OpenLayers */
         'openlayers' : [ '//cdnjs.cloudflare.com/ajax/libs/ol3/3.2.1/ol.min', 'vendor/cached/ol.min' ],
+        /* Filesize.js */
+        'filesize' : [ '//cdn.filesizejs.com/filesize.min', 'vendor/cached/filesize.min' ],
         /* Chance.js */
         'chance' : 'vendor/provided/chance.min',
 		/* Moment.js */
@@ -95,7 +97,7 @@ requirejs.config({
 		},
 		'chance' : {
 			exports : 'Chance'
-		},		
+		},
 		'moment' : {
 			deps : [ 'jquery' ]
 		},
