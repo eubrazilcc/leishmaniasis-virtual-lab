@@ -58,6 +58,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<directory>${project.basedir}/src/main/ui</directory>
 			<outputDirectory>htdocs</outputDirectory>
 		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/src/main/doc</directory>
+			<outputDirectory>htdocs/doc</outputDirectory>
+		</fileSet>
 	</fileSets>
 	<dependencySets>
 		<dependencySet>

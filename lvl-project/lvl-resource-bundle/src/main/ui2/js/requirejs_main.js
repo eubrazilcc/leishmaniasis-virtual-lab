@@ -19,6 +19,7 @@ requirejs.config({
 		'marionette' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.marionette/2.3.2/backbone.marionette.min', 'vendor/cached/backbone.marionette.min' ],
 		/* Useful backbone plug-ins */
 		'routefilter' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.routefilter/0.2.0/backbone.routefilter.min', 'vendor/cached/backbone.routefilter.min' ],
+		'backbone.syphon' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.syphon/0.4.1/backbone.syphon.min', 'vendor/cached/backbone.syphon.min' ],
 		'backbone.picky' : 'vendor/provided/backbone.picky.min',
 		'backbone.paginator' : 'vendor/provided/backbone.paginator.min',
 		'backbone.oauth2' : 'plugins/backbone.oauth2',
@@ -27,6 +28,10 @@ requirejs.config({
 		'backgrid-paginator' : 'vendor/provided/backgrid-paginator.min',
 		'backgrid-select-all' : 'vendor/provided/backgrid-select-all.min',
 		'backgrid-filter' : 'vendor/provided/backgrid-filter.min',
+		/* OpenLayers */
+        'openlayers' : [ '//cdnjs.cloudflare.com/ajax/libs/ol3/3.2.1/ol.min', 'vendor/cached/ol.min' ],
+        /* Chance.js */
+        'chance' : 'vendor/provided/chance.min',
 		/* Moment.js */
 		'moment' : [ '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment.min', 'vendor/cached/moment.min' ],
 		/* Pace */
@@ -56,6 +61,9 @@ requirejs.config({
 		'routefilter' : {
 			deps : [ 'backbone' ]
 		},
+		'backbone.syphon' : {
+			deps : [ 'backbone' ]
+		},
 		'backbone.picky' : {
 			deps : [ 'backbone' ]
 		},
@@ -82,6 +90,12 @@ requirejs.config({
 			deps : [ 'backbone' ],
 			exports : 'Marionette'
 		},
+		'openlayers' : {
+			deps : [ 'jquery' ]
+		},
+		'chance' : {
+			exports : 'Chance'
+		},		
 		'moment' : {
 			deps : [ 'jquery' ]
 		},

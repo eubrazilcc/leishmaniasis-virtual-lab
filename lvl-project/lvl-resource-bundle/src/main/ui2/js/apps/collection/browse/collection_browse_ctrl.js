@@ -27,12 +27,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/sequence', 'ap
 					});
 				});
 				view.on('sequences:file:export', function(selectedModels) {
-
-					// TODO
-
-				});
-				view.on('sequences:link:create', function(selectedModels) {
-					require([ 'apps/collection/link/link_view' ], function(EditView) {
+					require([ 'apps/collection/export/export_view' ], function(EditView) {
 						var sequences = selectedModels.filter(function(element) {
 							return element !== undefined && element !== null;
 						});

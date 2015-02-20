@@ -67,7 +67,7 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 		var iniOpenLayersStyles = function() {
 			Entities.openLayersStyles = new Entities.StyleCollection([ {
 				id : 'ol',
-				url : '/css/ol.css' + bust
+				url : '//cdnjs.cloudflare.com/ajax/libs/ol3/3.2.1/ol.min.css' + bust
 			} ]);
 		};
 
@@ -81,8 +81,6 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 		var iniPaceStyles = function() {
 			Entities.paceStyles = new Entities.StyleCollection([ {
 				id : 'pace',
-				// cdnjs.cloudflare.com/ajax/libs/pace/0.5.5/themes/pace-theme-flash.css
-				// url : '/css/pace-theme-flash.css' + bust
 				url : '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/themes/black/pace-theme-center-simple.css' + bust
 			} ]);
 		};

@@ -57,7 +57,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 			model : Entities.Sequence,
 			mode : 'server',
 			// url : 'sequences.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/sandflies',
+			url : config.get('service', '') + '/sequences/sandflies', // TODO '/sandflies',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

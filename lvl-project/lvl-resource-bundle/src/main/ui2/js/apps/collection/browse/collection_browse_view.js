@@ -138,7 +138,6 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 			},
 			events : {
 				'click a#export-btn' : 'exportFile',
-				'click a#link-btn' : 'createLink',
 				'click a#uncheck-btn' : 'deselectAll',
 				'click a[data-seq_id]' : 'showSequenceRecord'
 			},
@@ -152,18 +151,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 						createGrowl('No sequences selected', 'Select at least one sequence to be exported', false);
 					});
 				}
-			},
-			createLink : function(e) {
-				e.preventDefault();
-				var selectedModels = this.grid.getSelectedModels();
-				if (selectedModels && selectedModels.length > 0) {
-					this.trigger('sequences:link:create', selectedModels);
-				} else {
-					require([ 'common/growl' ], function(createGrowl) {
-						createGrowl('No sequences selected', 'Select at least one sequence to be linked', false);
-					});
-				}
-			},
+			},			
 			deselectAll : function(e) {
 				e.preventDefault();
 				this.grid.clearSelectedModels();

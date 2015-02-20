@@ -1,7 +1,11 @@
 @CHARSET "UTF-8";
 
 .lvl-main-container {
-	padding-top: 52px;
+	padding-top: 68px;
+}
+
+.lvl-login-body {
+	background-color: #0c84e4;
 }
 
 .lvl-jumbo {
@@ -38,4 +42,91 @@
 	margin-top: 23px;
 	padding-top: 10px;
 	padding-bottom: 10px;
+}
+
+.lvl-nav-tabs-wrapper {
+	width: 100% !important;
+	padding: 0%;
+	margin: 0%;
+}
+
+.lvl-nav-tabs {
+	position: fixed;
+	z-index: +1;
+	width: inherit;
+	/* background: -webkit-linear-gradient(#f9f9f9, white); For Safari 5.1 to 6.0
+	background: -o-linear-gradient(#f9f9f9, white); For Opera 11.1 to 12.0
+	background: -moz-linear-gradient(#f9f9f9, white); For Firefox 3.6 to 15
+	background: linear-gradient(#f9f9f9, white); Standard syntax */
+	background-color: white;
+}
+
+.lvl-tab-content {
+	position: relative;
+	top: 118px;
+	z-index: 0;
+	padding-bottom: 100px;
+}
+
+.lvl-filter-container {
+	margin: 0px 0px 12px 0px !important;
+	padding: 0px !important;
+}
+
+#lvl-qtip-growl-container {
+	position: fixed;
+	top: 110px;
+	right: 10px;
+	z-index: +1002 !important;
+}
+
+#lvl-qtip-growl-container .qtip {
+	position: static;
+	min-height: 0;
+	overflow: hidden;
+	margin: 0 0 5px 0;
+}
+
+/* Override Backgrid.js styles */
+.backgrid-container {
+	position: relative;
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	/* height: 465px; */
+	height: auto !important;
+	padding: 0;
+	overflow: auto;
+	border: 0;
+}
+
+.backgrid-paginator ul>li>a, .backgrid-paginator ul>li>span {
+	float: left;
+	width: 45px !important;
+	height: 30px;
+	padding: 0;
+	line-height: 30px;
+	text-decoration: none;
+}
+
+@media all and (max-width: 768px) and (min-width: 0px) {
+	.backgrid-filter input[type="search"] {
+		width: 106px !important;
+	}
+}
+
+/* OpenLayers */
+.lvl-map {
+	height: 400px;
+	width: 100%;
+	background: url(../img/textured_paper.jpg) repeat;
+}
+
+.lvl-map-menu {
+	top: 4.643em;
+	left: .5em
+}
+
+.lvl-map-menu button {
+	line-height: 1.4em
 }
