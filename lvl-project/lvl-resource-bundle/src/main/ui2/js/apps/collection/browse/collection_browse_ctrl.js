@@ -6,12 +6,11 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/sequence', 'ap
 		SequenceModel, View) {
 	Lvl.module('CollectionApp.Browse', function(Browse, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Browse.Controller = {
 			showSection : function() {
 				var view = new View.Content({
 					collection : new SequenceModel.SequencePageableCollection({
-						oauth2_token : config.authorizationToken()
+						oauth2_token : new Configuration().authorizationToken()
 					})
 				});
 				view.on('sequences:view:sequence', function(accession) {
@@ -19,7 +18,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/sequence', 'ap
 						var gbSequenceModel = new GbSequenceModel.GbSequence({
 							'gbSeqPrimaryAccession' : accession
 						});
-						gbSequenceModel.oauth2_token = config.authorizationToken();
+						gbSequenceModel.oauth2_token = new Configuration().authorizationToken();
 						var dialogView = new SequenceView.Content({
 							model : gbSequenceModel
 						});

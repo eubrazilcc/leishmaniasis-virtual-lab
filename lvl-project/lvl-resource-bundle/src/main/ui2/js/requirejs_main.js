@@ -93,7 +93,8 @@ requirejs.config({
 			exports : 'Marionette'
 		},
 		'openlayers' : {
-			deps : [ 'jquery' ]
+			deps : [ 'jquery' ],
+			exports : 'ol'
 		},
 		'chance' : {
 			exports : 'Chance'

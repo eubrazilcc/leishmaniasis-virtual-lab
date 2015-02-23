@@ -151,11 +151,15 @@
 	background: url(../img/textured_paper.jpg) repeat;
 }
 
-.lvl-map-menu {
-	top: 4.643em;
-	left: .5em
+.ol-scale-line {
+	left: 42px !important;	
 }
 
-.lvl-map-menu button {
-	line-height: 1.4em
+.lvl-restore-map {
+	top: 65px;
+	left: .5em;
+}
+
+.ol-touch .lvl-restore-map {
+	top: 80px;
 }

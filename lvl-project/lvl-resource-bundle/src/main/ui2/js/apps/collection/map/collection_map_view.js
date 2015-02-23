@@ -2,8 +2,8 @@
  * RequireJS module that defines the view: collection->map.
  */
 
-define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
-		'openlayers', 'jquery.toolbar' ], function(Lvl, MapTpl, Style, Configuration) {
+define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration' ], function(
+		Lvl, MapTpl, Style, Configuration) {
 	Lvl.module('CollectionApp.Map.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var config = new Configuration();
 		var center = {
@@ -31,21 +31,12 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 				require([ 'entities/styles' ], function() {
 					var styleLoader = new Style();
 					styleLoader.loadCss(Lvl.request('styles:openlayers:entities').toJSON());
-					styleLoader.loadCss(Lvl.request('styles:jquery.toolbar:entities').toJSON());
 				});
 			},
 			onRender : function() {
 				var self = this;
-				// detect full-screen change mode and hide menu
-				$(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange', function() {
-					if (document.webkitCurrentFullScreenElement || document.mozFullScreenElement || document.fullscreenElement) {
-						$('#map-menu-button').hide();
-					} else {
-						$('#map-menu-button').show();
-					}
-				});
-				// find user location, load the map and resize it to fit the
-				// screen area
+				// TODO : detect full-screen change mode (see commented code below)?				
+				// find user location, load the map and resize it to fit the screen area
 				var userLocation = config.session.get('user.location');
 				if (userLocation) {
 					center = userLocation.center;
@@ -73,15 +64,10 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 			onDestroy : function() {
 				// unsubscribe from events
 				$(window).off('resize', this.resize);
-				$(document).off('webkitfullscreenchange mozfullscreenchange fullscreenchange');
-				$('#map-return-home').off('click');
-				$('#map-my-location').off('click');
-				$('#map-switch').off('click');
-				$('#map-export').off('click');
+				// TODO : more events? (see commented code below)
 			},
 			loadMap : function() {
-				require([ 'openlayers' ], function() {
-
+				require([ 'openlayers' ], function(ol) {
 					var createTextStyle = function(text) {
 						return new ol.style.Text({
 							font : '12px Lato, Helvetica, Arial, sans-serif',
@@ -121,7 +107,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 					var vectorLayer = new ol.layer.Vector({
 						source : new ol.source.GeoJSON({
 							projection : 'EPSG:3857',
-							url : config.get('service', '') + '/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&'
+							url : config.get('service', '') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&'
 									+ config.authorizationQuery()
 						}),
 						style : function(feature, resolution) {
@@ -137,7 +123,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 						source : new ol.source.GeoJSON({
 							extractStyles : false,
 							projection : 'EPSG:3857',
-							url : config.get('service', '') + '/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&'
+							url : config.get('service', '') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&'
 									+ config.authorizationQuery()
 						}),
 						radius : 5
@@ -155,24 +141,62 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 					});
 
 					var tonerRaster = new ol.layer.Tile({
+						preload : Infinity,
 						source : new ol.source.Stamen({
-							preload : Infinity,
 							layer : 'toner'
 						})
 					});
+
+					// custom control to restore initial map view
+					var RestoreMapControl = function(opt_options) {
+						var options = opt_options || {};
+
+						var button = document.createElement('button');
+						button.innerHTML = '<i class="fa fa-home"></i>';
+						button.title = "Restore";
+
+						var this_ = this;
+						var handleRestore = function(e) {
+							var map_center = ol.proj.transform([ center.lon, center.lat ], 'EPSG:4326', 'EPSG:3857');
+							$.when(this_.getMap().getView().setCenter(map_center)).done(function() {
+								this_.getMap().getView().setZoom(zoom);
+							});
+						}
+
+						button.addEventListener('click', handleRestore, false);
+						button.addEventListener('touchstart', handleRestore, false);
+
+						var element = document.createElement('div');
+						element.className = 'lvl-restore-map ol-unselectable ol-control';
+						element.appendChild(button);
+
+						ol.control.Control.call(this, {
+							element : element,
+							target : options.target
+						});
+					};
+					ol.inherits(RestoreMapControl, ol.control.Control);
 
 					// setup map
 					this.map = new ol.Map({
 						controls : ol.control.defaults({
 							attribution : false
-						}).extend([ new ol.control.FullScreen(), new ol.control.ScaleLine({
+						}).extend([ new ol.control.ScaleLine({
 							units : 'metric'
-						}) ]),
+						}), new ol.control.OverviewMap({
+							layers : [ new ol.layer.Tile({
+								source : new ol.source.OSM({
+									'url' : '//{a-c}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png'
+								})
+							}) ],
+							collapsed : true
+						}), new RestoreMapControl() ]),
+						interactions : ol.interaction.defaults().extend([ new ol.interaction.DragRotateAndZoom() ]),
 						layers : [ tonerRaster, heatmapLayer ],
 						// TODO layers : [ osmRaster, vectorLayer ],
-						/* fastest renderer */
+						// fastest renderer
 						renderer : 'canvas',
-						/* div HTML element with id='map-container' */
+						// div HTML element with id='map-container'
 						target : 'map-container',
 						view : new ol.View({
 							'center' : ol.proj.transform([ center.lon, center.lat ], 'EPSG:4326', 'EPSG:3857'),
@@ -180,90 +204,13 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 						}),
 						ol3Logo : false
 					});
-					// add custom control to show map menu
-					var MapToolbar = function(opt_options) {
-						var options = opt_options || {};
 
-						var button = document.createElement('button');
-						button.className = 'ol-has-tooltip';
-						button.setAttribute('type', 'button');
-						button.setAttribute('id', 'map-menu-button');
-						button.innerHTML = '<span role="tooltip">Tools</span><i class="fa fa-cog"></i>';
-
-						var this_ = this;
-						var showToolbar = function(e) {
-							e.preventDefault();
-							$('#map-menu-button').blur();
-						}
-
-						button.addEventListener('click', showToolbar, false);
-						button.addEventListener('touchstart', showToolbar, false);
-
-						var element = document.createElement('div');
-						element.className = 'lvl-map-menu ol-unselectable ol-control';
-						element.appendChild(button);
-
-						ol.control.Control.call(this, {
-							element : element,
-							target : options.target
-						});
-
-						var this_ = this;
-
-						// add event to return map home
-						$('#map-return-home').on('click', function(e) {
-							e.preventDefault();
-							var map_center = ol.proj.transform([ center.lon, center.lat ], 'EPSG:4326', 'EPSG:3857');
-							$.when(this_.getMap().getView().setCenter(map_center)).done(function() {
-								this_.getMap().getView().setZoom(zoom);
-							});
-							$('#dummy').trigger('click');
-						});
-
-						// add event to track user position
-						$('#map-my-location').on('click', function(e) {
-							e.preventDefault();
-							// TODO
-							$('#dummy').trigger('click');
-						});
-
-						// add event to change the type of map displayed
-						$('#map-switch').on('click', function(e) {
-							e.preventDefault();
-
-							require([ 'common/views' ], function(CommonViews) {
-								var loadingView = new CommonViews.Loading();
-								Lvl.fullpageRegion.show(loadingView);
-							});
-
-							setTimeout(function() {
-								Lvl.fullpageRegion.destroy();
-							}, 3000);
-
-							// TODO
-							$('#dummy').trigger('click');
-						});
-
-						// add event to export map as a PNG file
-						$('#map-export').on('click', function(e) {
-							e.preventDefault();
-							// TODO
-							$('#dummy').trigger('click');
-						});
-					};
-					ol.inherits(MapToolbar, ol.control.Control);
-					this.map.addControl(new MapToolbar());
-					$('#map-menu-button').toolbar({
-						content : '#map-menu-options',
-						position : 'right',
-						hideOnClick : true
-					});
 					// add popup
 					var createSeqLinks = function(name) {
 						var text = '';
 						var seqs = name.split(',');
 						for (i = 0; i < seqs.length; i++) {
-							text += '<a href="#" data-seq_id="' + seqs[i] + '">' + seqs[i] + '</a> '; // TODO
+							text += '<a href="#" data-seq_id="' + seqs[i] + '">' + seqs[i] + '</a> ';
 						}
 						return text;
 					}
@@ -306,6 +253,8 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 							mapElem.style.cursor = '';
 						}
 					});
+
+					// TODO
 				});
 			},
 			resize : function() {

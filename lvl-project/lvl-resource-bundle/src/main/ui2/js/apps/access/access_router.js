@@ -10,7 +10,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				'login(/:target)(/:reason)' : 'showLogin',
 				'authorization/:service' : 'showAuthorization',
 				'register' : 'showRegistration',
-				'account/validation' : 'validateAccount',
+				'account/validation(/:email)' : 'validateAccount',
 				'logout' : 'logout'
 			},
 			before : function() {
@@ -31,8 +31,8 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 			showRegistration : function() {
 				Lvl.execute('show:registration');
 			},
-			validateAccount : function() {
-				Lvl.execute('show:account:validation');
+			validateAccount : function(email) {
+				Lvl.execute('show:account:validation', email);
 			},
 			logout : function() {
 				require([ 'apps/config/marionette/configuration' ], function(Configuration) {

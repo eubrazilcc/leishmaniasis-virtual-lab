@@ -71,13 +71,6 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 			} ]);
 		};
 
-		var iniJQueryToolbarStyles = function() {
-			Entities.jQueryToolbarStyles = new Entities.StyleCollection([ {
-				id : 'jquery.toolbar',
-				url : '/css/jquery.toolbars.css' + bust
-			} ]);
-		};
-
 		var iniPaceStyles = function() {
 			Entities.paceStyles = new Entities.StyleCollection([ {
 				id : 'pace',
@@ -117,12 +110,6 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 				}
 				return Entities.openLayersStyles;
 			},
-			getJQueryToolbarStyles : function() {
-				if (Entities.jQueryToolbarStyles === undefined) {
-					iniJQueryToolbarStyles();
-				}
-				return Entities.jQueryToolbarStyles;
-			},
 			getPaceStyles : function() {
 				if (Entities.paceStyles === undefined) {
 					iniPaceStyles();
@@ -151,10 +138,6 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 
 		Lvl.reqres.setHandler('styles:openlayers:entities', function() {
 			return API.getOpenLayersStyles();
-		});
-
-		Lvl.reqres.setHandler('styles:jquery.toolbar:entities', function() {
-			return API.getJQueryToolbarStyles();
 		});
 
 		Lvl.reqres.setHandler('styles:pace:entities', function() {
