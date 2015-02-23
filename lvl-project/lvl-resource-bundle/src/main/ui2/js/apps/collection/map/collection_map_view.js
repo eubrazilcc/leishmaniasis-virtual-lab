@@ -34,8 +34,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 				});
 			},
 			onRender : function() {
-				var self = this;
-				// TODO : detect full-screen change mode (see commented code below)?				
+				var self = this;			
 				// find user location, load the map and resize it to fit the screen area
 				var userLocation = config.session.get('user.location');
 				if (userLocation) {
@@ -116,7 +115,8 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 								styleCache[text] = createFeatureStyle(feature.getGeometry().getType(), text, resolution);
 							}
 							return styleCache[text];
-						}
+						},
+						visible : false
 					});
 
 					var heatmapLayer = new ol.layer.Heatmap({
@@ -137,7 +137,8 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 
 					var osmRaster = new ol.layer.Tile({
 						preload : Infinity,
-						source : new ol.source.OSM()
+						source : new ol.source.OSM(),
+						visible : false
 					});
 
 					var tonerRaster = new ol.layer.Tile({
@@ -145,7 +146,7 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 						source : new ol.source.Stamen({
 							layer : 'toner'
 						})
-					});
+					});					
 
 					// custom control to restore initial map view
 					var RestoreMapControl = function(opt_options) {
@@ -192,8 +193,9 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 							collapsed : true
 						}), new RestoreMapControl() ]),
 						interactions : ol.interaction.defaults().extend([ new ol.interaction.DragRotateAndZoom() ]),
-						layers : [ tonerRaster, heatmapLayer ],
-						// TODO layers : [ osmRaster, vectorLayer ],
+						layers : [ new ol.layer.Group({
+							layers : [ osmRaster, vectorLayer, tonerRaster, heatmapLayer ]
+						}) ],
 						// fastest renderer
 						renderer : 'canvas',
 						// div HTML element with id='map-container'
@@ -204,7 +206,11 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 						}),
 						ol3Logo : false
 					});
-
+					new ol.dom.Input($('#opts_map_types_heatmap')[0]).bindTo('checked', tonerRaster, 'visible');
+					new ol.dom.Input($('#opts_map_types_heatmap')[0]).bindTo('checked', heatmapLayer, 'visible');
+					new ol.dom.Input($('#opts_map_types_vectormap')[0]).bindTo('checked', osmRaster, 'visible');
+					new ol.dom.Input($('#opts_map_types_vectormap')[0]).bindTo('checked', vectorLayer, 'visible');
+					
 					// add popup
 					var createSeqLinks = function(name) {
 						var text = '';
@@ -253,14 +259,12 @@ define([ 'app', 'tpl!apps/collection/map/templates/collection_map', 'apps/config
 							mapElem.style.cursor = '';
 						}
 					});
-
-					// TODO
 				});
 			},
 			resize : function() {
 				require([ 'openlayers' ], function() {
 					var windowHeight = $(window).height();
-					var offset = $('#section-tab-content').offset().top + $('#tab-content-top-separator').height();
+					var offset = $('#section-tab-content').offset().top + $('#map-toolbar').height();
 					$('#map-container').height(windowHeight - offset);
 					this.map.updateSize();
 				});
