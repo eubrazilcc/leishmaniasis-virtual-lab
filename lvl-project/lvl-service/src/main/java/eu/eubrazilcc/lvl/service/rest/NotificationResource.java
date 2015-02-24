@@ -107,7 +107,7 @@ public class NotificationResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:*:" + id.trim() + ":view");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:public:" + id.trim() + ":view");
 		// get from database
 		final Notification notification = NOTIFICATION_DAO.find(id);
 		if (notification == null) {

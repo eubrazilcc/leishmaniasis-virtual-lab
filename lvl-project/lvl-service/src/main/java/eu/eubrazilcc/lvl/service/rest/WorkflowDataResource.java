@@ -99,7 +99,7 @@ public class WorkflowDataResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("datasets:*:*:" + id.trim() + ":view");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("datasets:*:public:" + id.trim() + ":view");
 		// get workflow data objects from e-SC		
 		final List<WorkflowDataObject> dataObjects = ESCENTRAL_CONN.listFiles();
 		WorkflowDataObject dataObject = null;

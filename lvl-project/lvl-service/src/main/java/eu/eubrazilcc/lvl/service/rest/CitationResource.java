@@ -140,7 +140,7 @@ public final class CitationResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:*:" + id.trim() + ":view");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:public:" + id.trim() + ":view");
 		// get from database
 		final Reference reference = REFERENCE_DAO.find(id);
 		if (reference == null) {
@@ -227,7 +227,7 @@ public final class CitationResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:*:" + id.trim() + ":view");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:public:" + id.trim() + ":view");
 		// get from database
 		final Reference reference = REFERENCE_DAO.find(id);
 		if (reference == null) {
@@ -248,7 +248,7 @@ public final class CitationResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:*:" + id.trim() + ":view");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:*:public:" + id.trim() + ":view");
 		// TODO
 		return null;
 	}

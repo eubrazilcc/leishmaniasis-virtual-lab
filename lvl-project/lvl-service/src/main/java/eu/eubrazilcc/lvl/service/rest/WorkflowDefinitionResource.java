@@ -83,7 +83,7 @@ public class WorkflowDefinitionResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:definitions:*:" + id.trim() + ":view");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:definitions:public:" + id.trim() + ":view");
 		// get workflows from e-SC		
 		final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
 		WorkflowDefinition workflow = null;

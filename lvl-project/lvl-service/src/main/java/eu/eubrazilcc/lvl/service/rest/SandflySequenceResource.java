@@ -148,7 +148,7 @@ public final class SandflySequenceResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:*:" + sequenceKey.toId() + ":view");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:public:" + sequenceKey.toId() + ":view");
 		// get from database
 		final Sandfly sequence = SANDFLY_DAO.find(sequenceKey);
 		if (sequence == null) {
@@ -243,7 +243,7 @@ public final class SandflySequenceResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:*:" + sequenceKey.toId() + ":edit");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:public:" + sequenceKey.toId() + ":view");
 		// get from database
 		final Sequence sequence = SANDFLY_DAO.find(sequenceKey);
 		if (sequence == null) {

@@ -113,7 +113,7 @@ public final class WorkflowRunResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("pipelines:runs:*:" + id.trim() + ":view")
+				.requiresPermissions("pipelines:runs:public:" + id.trim() + ":view")
 				.getPrincipal();
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, ownerid);
@@ -217,7 +217,7 @@ public final class WorkflowRunResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("pipelines:runs:*:" + id.trim() + ":view")
+				.requiresPermissions("pipelines:runs:public:" + id.trim() + ":view")
 				.getPrincipal();
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, ownerid);
