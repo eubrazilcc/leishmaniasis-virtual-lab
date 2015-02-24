@@ -33,6 +33,9 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<!-- Configure authentication with LinkedIn OAuth 2.0 provider -->
 		<linkedin>
 		
+			<!-- LinkedIn consumer API key -->
+			<!-- <api-key>123</api-key> -->
+		
 			<!-- LinkedIn consumer secret key (do not include this in any public repository) -->
 			<!-- <secret-key>123</secret-key> -->
 		

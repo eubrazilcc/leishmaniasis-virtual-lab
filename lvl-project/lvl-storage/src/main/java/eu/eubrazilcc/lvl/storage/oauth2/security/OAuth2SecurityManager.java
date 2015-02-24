@@ -39,6 +39,7 @@ import static org.apache.oltu.oauth2.common.error.OAuthError.ResourceResponse.IN
 import static org.apache.oltu.oauth2.common.message.types.ParameterStyle.HEADER;
 import static org.apache.oltu.oauth2.common.message.types.ParameterStyle.QUERY;
 import static org.apache.shiro.SecurityUtils.getSubject;
+import static org.apache.shiro.SecurityUtils.setSecurityManager;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Collection;
@@ -58,6 +59,9 @@ import org.apache.oltu.oauth2.common.utils.OAuthUtils;
 import org.apache.oltu.oauth2.rs.request.OAuthAccessResourceRequest;
 import org.apache.oltu.oauth2.rs.response.OAuthRSResponse;
 import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.config.IniSecurityManagerFactory;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.util.Factory;
 import org.slf4j.Logger;
 
 import eu.eubrazilcc.lvl.core.servlet.OAuth2RequestWrapper;
@@ -71,13 +75,23 @@ public final class OAuth2SecurityManager extends BaseSecurityManager {
 
 	private static final Logger LOGGER = getLogger(OAuth2SecurityManager.class);
 
+	private static boolean initiated = false;
+
 	private final String resourceName;
 	private final String clientAddress;
 
-	public OAuth2SecurityManager(final String resourceName, final String clientAddress) {
+	private OAuth2SecurityManager(final String resourceName, final String clientAddress) {
 		super(getSubject());
 		this.resourceName = resourceName;
 		this.clientAddress = clientAddress;
+	}
+
+	private static void init() {
+		// prepare Shiro security manager (including the Shiro Web extensions will do this automatically in a Servlet environment)
+		final Factory<SecurityManager> factory = new IniSecurityManagerFactory("classpath:lvl-shiro.ini");
+		final SecurityManager securityManager = factory.getInstance();
+		setSecurityManager(securityManager);
+		initiated = true;
 	}
 
 	public static final OAuth2SecurityManager login(final HttpServletRequest request, 
@@ -86,7 +100,7 @@ public final class OAuth2SecurityManager extends BaseSecurityManager {
 			final String resourceName) {		
 		try {
 			final String clientAddress = getClientAddress(request);
-			final OAuth2SecurityManager instance = new OAuth2SecurityManager(resourceName, clientAddress);
+			final OAuth2SecurityManager instance = OAuth2SecurityManager.builder().build(resourceName, clientAddress);
 			try {
 				instance.login(getOAuth2AccessToken(request, form, headers, resourceName));
 			} catch (AuthenticationException ae) {
@@ -142,7 +156,7 @@ public final class OAuth2SecurityManager extends BaseSecurityManager {
 					.header("WWW-Authenticate", "Bearer realm='" + resourceName + "', error='invalid-token'")
 					.build());
 		}
-	}
+	}	
 
 	private static final String getOAuth2AccessToken(final HttpServletRequest request, 
 			final @Nullable MultivaluedMap<String, String> form,
@@ -209,6 +223,25 @@ public final class OAuth2SecurityManager extends BaseSecurityManager {
 		final MultivaluedMap<String, String> map = new MultivaluedHashMap<String, String>();
 		map.put(HEADER_AUTHORIZATION, newArrayList(bearerHeader(token)));
 		return map;
+	}
+
+	/* Fluent API */
+
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public static class Builder {
+
+		public OAuth2SecurityManager build(final String resourceName, final String clientAddress) {
+			synchronized (OAuth2SecurityManager.class) {
+				if (!initiated) {
+					init();
+				}
+			}
+			return new OAuth2SecurityManager(resourceName, clientAddress);
+		}
+
 	}	
 
 }

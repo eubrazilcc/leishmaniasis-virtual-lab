@@ -69,6 +69,7 @@ public class OAuth2Application extends Application {
 		instances.add(new OAuth2TokenRevocation());
 		instances.add(new IdentityProvider());
 		instances.add(new UserRegistration());
+		instances.add(new LinkedinAuthz());
 		// add additional JAX-RS providers
 		classes.add(MapperProvider.class);
 		classes.add(JacksonFeature.class);

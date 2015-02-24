@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.LinkedInStateDAO.LINKEDIN_STATE_DAO;
 import static java.lang.System.currentTimeMillis;
@@ -105,8 +106,8 @@ public class LinkedinAuthz {
 					.add("grant_type", "authorization_code")
 					.add("code", code)
 					.add("redirect_uri", "http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/linkedin/callback") // TODO
-					.add("client_id", "771s7duqp3m4zc") // TODO
-					.add("client_secret", "dxH15L7ksHn4MHMk") // TODO
+					.add("client_id", CONFIG_MANAGER.getLinkedInAPIKey())
+					.add("client_secret", CONFIG_MANAGER.getLinkedInSecretKey())
 					.build();
 			final String response = Request.Post("https://www.linkedin.com/uas/oauth2/accessToken")
 					.addHeader("Accept", "application/json")
@@ -163,6 +164,10 @@ public class LinkedinAuthz {
   <message>Invalid access token.</message>
 </error>		
 		*/
+		
+		/*
+		access_token=AQVGutR88BQv-Qyi1ZK-U3xnyBnp_6yCQdyPaJBMnnpbWwDO8Z5itZL9VYUE4eRgVEdGXi1oy8LO6GDXn3tdH2LYrDmmVM50kCAFfMPmJr0H0-j_X4_Z7hOsDH2RwARiRcLxVzcH8NcrxKG-BQIUVt3ltcYn8ytnLZc3aHfaTGOcAsX6AMA, expires_in=5183999
+		 */
 		
 		return Response.ok().build();
 	}

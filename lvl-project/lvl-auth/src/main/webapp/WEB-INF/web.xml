@@ -25,15 +25,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
 	<listener>
 		<listener-class>eu.eubrazilcc.lvl.core.servlet.ContextListener</listener-class>
-	</listener>	
-	<!-- Initialize Shiro -->
-	<listener>
-    	<listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
-	</listener>
-	<context-param>
-		<param-name>shiroConfigLocations</param-name>
-		<param-value>classpath:lvl-shiro.ini</param-value>
-	</context-param>
+	</listener>		
 	<!-- Servlet 3.0 deployment style of JAX-RS applications using web.xml -->	
 	<servlet>
 		<servlet-name>eu.eubrazilcc.lvl.oauth2.rest.OAuth2Application</servlet-name>	
@@ -42,20 +34,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<servlet-mapping>
 		<servlet-name>eu.eubrazilcc.lvl.oauth2.rest.OAuth2Application</servlet-name>
 		<url-pattern>/oauth2/v1/*</url-pattern>
-	</servlet-mapping>
-	<!-- Add authentication/authorization support with Apache Shiro -->
-	<filter>
-    	<filter-name>ShiroFilter</filter-name>
-    	<filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
-	</filter>
-	<filter-mapping>
-    	<filter-name>ShiroFilter</filter-name>
-    	<url-pattern>/*</url-pattern>
-    	<dispatcher>REQUEST</dispatcher> 
-    	<dispatcher>FORWARD</dispatcher> 
-    	<dispatcher>INCLUDE</dispatcher> 
-    	<dispatcher>ERROR</dispatcher>
-	</filter-mapping>
+	</servlet-mapping>	
 	<!-- Add CORS support to the application -->
 	<filter>
 		<filter-name>CorsFilter</filter-name>

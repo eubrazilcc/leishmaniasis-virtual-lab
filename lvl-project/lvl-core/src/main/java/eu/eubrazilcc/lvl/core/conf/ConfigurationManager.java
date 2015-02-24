@@ -181,6 +181,10 @@ public enum ConfigurationManager implements Closeable2 {
 		return configuration().getWfPasswd().or("");
 	}
 	
+	public String getLinkedInAPIKey() {
+		return configuration().getLinkedInAPIKey().or("");
+	}
+	
 	public String getLinkedInSecretKey() {
 		return configuration().getLinkedInSecretKey().or("");
 	}
@@ -261,6 +265,7 @@ public enum ConfigurationManager implements Closeable2 {
 							final String wfPasswd = getString("workflow.credentials.password", configuration, foundNameList, null);
 							// get secondary property will return null if the requested property is missing
 							configuration.setThrowExceptionOnMissing(false);
+							final String linkedInAPIKey = getString("authz-server.linkedin.api-key", configuration, foundNameList, null); 
 							final String linkedInSecretKey = getString("authz-server.linkedin.secret-key", configuration, foundNameList, null);
 							// nothing yet
 							// get other (free-format) properties
@@ -277,7 +282,7 @@ public enum ConfigurationManager implements Closeable2 {
 							}
 							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dbName, dbUsername, dbPassword, dbHosts, 
 									brokerEmbedded, messageBrokers, smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, 
-									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, linkedInSecretKey, othersMap);
+									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, linkedInAPIKey, linkedInSecretKey, othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
 							throw new IllegalStateException("Main configuration not found");
@@ -391,6 +396,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final int wfPort;							
 		private final Optional<String> wfUsername;
 		private final Optional<String> wfPasswd;
+		private final Optional<String> linkedInAPIKey;
 		private final Optional<String> linkedInSecretKey;
 		// other configurations
 		private final ImmutableMap<String, String> othersMap;
@@ -400,7 +406,7 @@ public enum ConfigurationManager implements Closeable2 {
 				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
 				final @Nullable String portalEndpoint,
 				final @Nullable String wfHostname, final boolean wfSecure, final int wfPort, final @Nullable String wfUsername, final @Nullable String wfPasswd,
-				final @Nullable String linkedInSecretKey,
+				final @Nullable String linkedInAPIKey, final @Nullable String linkedInSecretKey,
 				final @Nullable Map<String, String> othersMap) {
 			this.rootDir = checkNotNull(rootDir, "Uninitialized root directory");
 			this.localCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
@@ -421,6 +427,7 @@ public enum ConfigurationManager implements Closeable2 {
 			this.wfPort = wfPort;
 			this.wfUsername = fromNullable(trimToNull(wfUsername));
 			this.wfPasswd = fromNullable(trimToNull(wfPasswd));
+			this.linkedInAPIKey = fromNullable(trimToNull(linkedInAPIKey));
 			this.linkedInSecretKey = fromNullable(trimToNull(linkedInSecretKey));
 			this.othersMap = new ImmutableMap.Builder<String, String>().putAll(othersMap).build();			
 		}
@@ -481,6 +488,9 @@ public enum ConfigurationManager implements Closeable2 {
 		public Optional<String> getWfPasswd() {
 			return wfPasswd;
 		}		
+		public Optional<String> getLinkedInAPIKey() {
+			return linkedInAPIKey;
+		}
 		public Optional<String> getLinkedInSecretKey() {
 			return linkedInSecretKey;
 		}
@@ -516,6 +526,7 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("wfPort", wfPort)
 					.add("wfUsername", wfUsername.orNull())
 					.add("wfPasswd", wfPasswd.orNull())
+					.add("linkedInAPIKey", linkedInAPIKey.orNull())
 					.add("linkedInSecretKey", linkedInSecretKey.orNull())
 					.add("customProperties", customPropertiesToString())
 					.toString();
