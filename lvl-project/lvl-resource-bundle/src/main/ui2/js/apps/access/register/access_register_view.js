@@ -52,7 +52,7 @@ define([ 'app', 'tpl!apps/access/register/templates/register', 'apps/config/mari
 						replace : true
 					});
 				}).fail(function() {
-									
+					$('#alertBox').removeClass('hidden');				
 				});				
 			},
 			onBeforeRender : function() {

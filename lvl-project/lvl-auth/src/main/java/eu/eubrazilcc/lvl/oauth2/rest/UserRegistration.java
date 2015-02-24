@@ -22,20 +22,22 @@
 
 package eu.eubrazilcc.lvl.oauth2.rest;
 
+import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.getValidationField;
 import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.getValidationType;
 import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.validationResponse;
 import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getPortalEndpoint;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.oauth2.mail.EmailSender.EMAIL_SENDER;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.USER_ROLE;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionSet;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermissions;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 
 import java.net.URI;
 
@@ -111,7 +113,8 @@ public class UserRegistration {
 		if (RESOURCE_OWNER_DAO.find(ownerid) != null || RESOURCE_OWNER_DAO.findByEmail(user.getEmail()) != null) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		// set the correct permissions that the new user must have
+		// set the correct roles and permissions that the new user must have
+		user.setRoles(newHashSet(USER_ROLE));
 		user.setPermissions(asPermissionSet(userPermissions(ownerid)));
 		// create pending user in the database
 		final PendingUser pendingUser = PendingUser.builder()
