@@ -1,10 +1,10 @@
 <div class="container lvl-main-container">
   <div class="row">
-    <div class="col-md-offset-2 col-md-8 col-xs-12">
+    <div class="col-md-offset-3 col-md-6 col-xs-12">
       <div class="well">
         <form id="validationForm" autocomplete="off" action="" role="form">
           <fieldset>
-            <legend>Registration successful</legend>
+            <legend class="text-center">Registration successful</legend>
             <div class="form-group">
               <p>
                 Thank you for registering at <a class="lvl-login" href="/#home" >L<span class="text-danger">ei</span>sh VirtLab</a>. 
@@ -15,16 +15,16 @@
               </p>
             </div>
             <div class="form-group">
-              <label class="login-field-icon fui-mail" for="email"></label>
-              <input type="email" class="form-control login-field" value="<%= accountEmail() %>" placeholder="Enter email" id="email" required />
+              <label for="email"></label>
+              <input type="email" class="form-control" value="<%= accountEmail() %>" placeholder="Enter email" name="email" id="email" required />
               <span class="help-block">The email address that you provided during registration.</span>
             </div>
             <div class="form-group">
-              <label class="login-field-icon fui-lock" for="code"></label>
-              <input type="text" class="form-control login-field" value="" placeholder="Enter activation code" id="code" required autofocus />
+              <label for="code"></label>
+              <input type="text" class="form-control" value="<%= validationCode() %>" placeholder="Enter activation code" name="code" id="code" required autofocus />
               <span class="help-block">The 6-12 characters code that has been sent to you by email.</span>
             </div>
-            <button type="submit" class="btn btn-primary">Activate</button>            
+            <button type="submit" class="btn btn-lg btn-primary" id="submit_validation_btn">Activate</button>            
           </fieldset>
         </form>
       </div>

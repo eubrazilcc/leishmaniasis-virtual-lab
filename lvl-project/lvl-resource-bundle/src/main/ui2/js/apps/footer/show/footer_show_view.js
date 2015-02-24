@@ -6,7 +6,19 @@ define([ 'marionette', 'tpl!apps/footer/show/templates/footer' ], function(Mario
 	return {
 		Footer : Marionette.ItemView.extend({
 			id : 'default',
-			template : FooterTpl
+			template : FooterTpl,
+			events : {
+				'click a#privacy_policy_btn' : 'showPrivacyPolicy',
+				'click a#terms_and_conditions_btn' : 'showTermsAndConditions'
+			},
+			showPrivacyPolicy : function(e) {
+				e.preventDefault();
+				this.trigger('access:view:privacy_policy');
+			},
+			showTermsAndConditions : function(e) {
+				e.preventDefault();
+				this.trigger('access:view:terms_and_conditions');
+			}
 		})
 	};
 });

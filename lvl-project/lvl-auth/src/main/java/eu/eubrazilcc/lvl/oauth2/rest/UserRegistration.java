@@ -35,6 +35,7 @@ import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermission
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 
 import java.net.URI;
 
@@ -190,10 +191,10 @@ public class UserRegistration {
 	private static final String emailActivationMessage(final String username, final String email, final String activationCode, final URI portalUri) {
 		return "Dear " + username + ",\n\n"
 				+ "Thank you for registering at Leishmaniasis Virtual Laboratory. Please, validate your email address in " 
-				+ portalUri.toString() + "/#/user/validate" + " "
+				+ portalUri.toString() + "/#account/validation" + " "
 				+ "using the following code:\n\n" + activationCode + "\n\n"
 				+ "You may also validate your email address by clicking on this link or copying and pasting it in your browser:\n\n"
-				+ portalUri.toString() + "/#/user/validate/" + email + "/" + activationCode + "\n\n"
+				+ portalUri.toString() + "/#account/validation/" + urlEncodeUtf8(email) + "/" + activationCode + "\n\n"
 				+ "After validating your email address, you can log in the portal directly using email and password used for account registration.\n\n"
 				+ "Leish VirtLab team";
 

@@ -6,10 +6,11 @@ define([ 'app', 'apps/access/account-validation/account-validation_view' ], func
 	Lvl.module('AccessApp.AccountValidation', function(AccountValidation, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		AccountValidation.Controller = {
-			validate : function(email) {
+			validate : function(email, code) {
 				var view = new View.Content({
 					model : new Backbone.Model({
-						'email' : email
+						'email' : email,
+						'code' : code
 					})
 				});
 				Lvl.mainRegion.show(view);

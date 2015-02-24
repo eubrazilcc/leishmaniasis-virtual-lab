@@ -9,6 +9,9 @@ define([ 'marionette', 'tpl!apps/access/account-validation/templates/account-val
 			templateHelpers : {
 				accountEmail : function() {
 					return this.email ? decodeURIComponent(this.email) : '';
+				},
+				validationCode : function() {
+					return this.code ? decodeURIComponent(this.code) : '';
 				}
 			},
 			onBeforeRender : function() {

@@ -30,9 +30,9 @@ define([ 'app' ], function(Lvl) {
 			});
 		});
 
-		Lvl.commands.setHandler('show:account:validation', function(email) {
+		Lvl.commands.setHandler('show:account:validation', function(email, code) {
 			require([ 'apps/access/account-validation/account-validation_ctrl' ], function(AccountController) {
-				AccountController.validate(email);
+				AccountController.validate(email, code);
 			});
 		});
 	});

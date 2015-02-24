@@ -3,11 +3,58 @@
  */
 
 define([ 'app', 'tpl!apps/access/register/templates/register', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
-		'bootstrapvalidator' ], function(Lvl, RegisterTpl, Style, Configuration) {
+		'bootstrapvalidator', 'backbone.syphon' ], function(Lvl, RegisterTpl, Style, Configuration) {
 	Lvl.module('AccessApp.Register.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var lvlAuth = new Configuration().get('auth', '');
 		View.Content = Marionette.ItemView.extend({
 			template : RegisterTpl,
+			events : {
+				'click a#privacy_policy_btn' : 'showPrivacyPolicy',
+				'click a#terms_and_conditions_btn' : 'showTermsAndConditions',
+				'click button#sign_up_btn' : 'signUp'
+			},
+			showPrivacyPolicy : function(e) {
+				e.preventDefault();
+				this.trigger('access:view:privacy_policy');
+			},
+			showTermsAndConditions : function(e) {
+				e.preventDefault();
+				this.trigger('access:view:terms_and_conditions');
+			},
+			signUp : function(e) {
+				e.preventDefault();
+				$('#sign_up_btn').attr('disabled', 'disabled');
+				// show loading view
+				require([ 'common/views' ], function(CommonViews) {
+					var loadingView = new CommonViews.Loading();
+					Lvl.fullpageRegion.show(loadingView);
+				});
+				var formData = Backbone.Syphon.serialize(this);
+				var requestData = {
+					'userid' : formData.username,
+					'email' : formData.email,
+					'password' : formData.password,
+					'fullname' : formData.firstname + ' ' + formData.lastname
+				};
+				// submit request to LVL server
+				var self = this;							
+				var jqxhr = $.ajax({
+					type : 'POST',
+					contentType : 'application/json',
+					crossDomain : true,
+					url : lvlAuth + '/pending_users',
+					data : JSON.stringify(requestData)
+				}).always(function() {
+					Lvl.fullpageRegion.destroy();
+				}).done(function(data, textStatus, request) {
+					Lvl.navigate('account/validation/' + encodeURIComponent(formData.email), {
+						trigger : true,
+						replace : true
+					});
+				}).fail(function() {
+									
+				});				
+			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {
 					new Style().loadCss(Lvl.request('styles:form-validation:entities').toJSON());
@@ -56,12 +103,38 @@ define([ 'app', 'tpl!apps/access/register/templates/register', 'apps/config/mari
 								}
 							}
 						},
+						'firstname' : {
+							verbose : false,
+							validators : {
+								notEmpty : {
+									message : 'The name is required and cannot be empty'
+								},								
+								stringLength : {
+									min : 1,
+									max : 128,
+									message : 'The name must be more than 1 and less than 128 characters long'
+								}
+							}
+						},
+						'lastname' : {
+							verbose : false,
+							validators : {
+								notEmpty : {
+									message : 'The lastname is required and cannot be empty'
+								},								
+								stringLength : {
+									min : 1,
+									max : 128,
+									message : 'The lastname must be more than 1 and less than 128 characters long'
+								}
+							}
+						},
 						'email' : {
 							verbose : false,
 							validators : {
 								notEmpty : {
 									message : 'The email is required and cannot be empty'
-								},
+								},								
 								emailAddress : {
 									message : 'The input is not a valid email address'
 								},
@@ -85,7 +158,7 @@ define([ 'app', 'tpl!apps/access/register/templates/register', 'apps/config/mari
 								different : {
 									field : 'username',
 									message : 'The password cannot be same as username'
-								},
+								},								
 								stringLength : {
 									min : 6,
 									max : 32,

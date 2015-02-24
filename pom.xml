@@ -38,6 +38,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<lvl.version>${project.version}</lvl.version>
 		<logback.version>1.1.2</logback.version>
 		<slf4j.version>1.7.7</slf4j.version>
+		<javamail.version>1.5.2</javamail.version>
 		<org.apache.httpcomponents.version>4.3.5</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
 		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
 		<org.apache.shiro.version>1.2.3</org.apache.shiro.version>
@@ -216,10 +217,22 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			
 			<!-- JavaMail API: a framework to build mail and messaging applications -->
 			
-			<dependency>
+			<dependency> <!--  JavaMail API definitions only, suitable for compiling against -->
 				<groupId>javax.mail</groupId>
 				<artifactId>javax.mail-api</artifactId>
-				<version>1.5.2</version>
+				<version>${javamail.version}</version>
+			</dependency>
+			
+			<dependency> <!-- JavaMail reference implementation with no protocol providers -->
+				<groupId>com.sun.mail</groupId>
+				<artifactId>javax.mail</artifactId>
+				<version>${javamail.version}</version>
+			</dependency>
+						
+			<dependency> <!-- The SMTP protocol provider -->
+				<groupId>com.sun.mail</groupId>
+				<artifactId>smtp</artifactId>
+				<version>${javamail.version}</version>
 			</dependency>
 
 			<!-- Joda Time: Date and time library to replace JDK date handling -->
