@@ -78,7 +78,7 @@ public class UserRegistration {
 	public static final long CONFIRMATION_CODE_EXPIRATION_SECONDS = 86400l; // 1 day	
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " User Registration";
-
+	
 	@GET
 	@Path("{email}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -179,7 +179,7 @@ public class UserRegistration {
 				.entity(validationResponse(isAvailable))
 				.type(MediaType.APPLICATION_JSON)
 				.build();
-	}
+	}	
 
 	private static final void sendActivation(final URI baseUri, final PendingUser pendingUser) {
 		EMAIL_SENDER.sendTextEmail(pendingUser.getUser().getEmail(), emailActivationSubject(), 

@@ -33,7 +33,7 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearbyLeishmania;
-import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.SEQUENCE_ID_PATTERN;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.SEQUENCE_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.ORIGINAL_SEQUENCE_KEY;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;

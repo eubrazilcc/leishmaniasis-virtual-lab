@@ -42,7 +42,7 @@ import org.junit.runners.Suite.SuiteClasses;
  */
 @RunWith(Suite.class)
 @SuiteClasses({ SequenceKeyTest.class, PermissionElBuilderTest.class, PermissionHelperTest.class, PermissionHistoryTest.class, CryptProviderTest.class, 
-	MongoDBMapTest.class, MongoDBComparisonTest.class, GravatarTest.class })
+	MongoDBMapTest.class, MongoDBComparisonTest.class, ResourceIdentifierPatternTest.class, GravatarTest.class })
 public class AllJUnitTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

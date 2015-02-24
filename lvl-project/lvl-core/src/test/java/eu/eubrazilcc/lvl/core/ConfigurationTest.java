@@ -20,31 +20,35 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service;
+package eu.eubrazilcc.lvl.core;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.io.File;
+
+import org.junit.Test;
 
 /**
- * Integration tests. <code>FullDatabaseLoadTest.class</code> performs a full-database load and is disabled by default because it consumes a 
- * lot of system resources and processing time. Activate this test only when you're completely sure that you need to check this feature.
+ * Tests configuration.
  * @author Erik Torres <ertorser@upv.es>
  */
-@RunWith(Suite.class)
-@SuiteClasses({ ServiceTest.class, FullDatabaseLoadTest.class })
-public class AllIntegrationTests {
+public class ConfigurationTest {
 
-	@BeforeClass
-	public static void setup() {
-		System.out.println("AllIntegrationTests.setup()");		
-	}
-
-	@AfterClass
-	public static void release() {
-		System.out.println("AllIntegrationTests.release()");
+	@Test
+	public void test() {
+		System.out.println("ConfigurationTest.test()");
+		try {
+			final File rootDir = CONFIG_MANAGER.getRootDir();
+			assertThat("root directory is not null", rootDir, notNullValue());			
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			fail("ConfigurationTest.test() failed: " + e.getMessage());
+		} finally {			
+			System.out.println("ConfigurationTest.test() has finished");
+		}
 	}
 
 }

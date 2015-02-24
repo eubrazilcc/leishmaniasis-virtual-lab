@@ -8,7 +8,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 		var Router = Backbone.Router.extend({
 			routes : {
 				'login(/:target)(/:reason)' : 'showLogin',
-				'authorization/:service' : 'showAuthorization',
+				'auth/:service' : 'showAuthorization',
 				'register' : 'showRegistration',
 				'account/validation(/:email)(/:code)' : 'validateAccount',
 				'logout' : 'logout'

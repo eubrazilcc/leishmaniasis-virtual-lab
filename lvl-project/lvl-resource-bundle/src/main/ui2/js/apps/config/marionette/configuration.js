@@ -11,6 +11,7 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 	Marionette.Controller.Configuration = Marionette.Controller.extend({
 		initialize : function(options) {
 			this.endpoint = 'http://lvl.i3m.upv.es';
+			this.linkedin_api_key = '771s7duqp3m4zc';
 			this.config = [ {
 				id : 'bust',
 				value : bust
@@ -126,6 +127,10 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 		authorizationQuery : function() {
 			var token = this.authorizationToken();
 			return (token !== null ? 'access_token=' + encodeURIComponent(token) : null);
+		},
+		linkedInAuthEndpoint : function(state) {
+			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.linkedin_api_key + '&redirect_uri='
+					+ encodeURIComponent(this.endpoint + '/auth/linkedin/callback') + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
 		}
 	});
 	return Marionette.Controller.Configuration;

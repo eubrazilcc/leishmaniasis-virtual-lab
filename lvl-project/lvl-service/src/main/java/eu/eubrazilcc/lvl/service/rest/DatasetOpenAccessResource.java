@@ -29,7 +29,7 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.service.rest.DatasetResource.ns2dbnamespace;
 import static eu.eubrazilcc.lvl.service.rest.DatasetResource.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.DatasetResource.parseParam;
-import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.URL_FRAGMENT_PATTERN;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;

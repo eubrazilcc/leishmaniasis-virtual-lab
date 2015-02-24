@@ -45,6 +45,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -56,7 +57,7 @@ import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 import eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector;
 
 /**
- * Tests {@link ESCentralConnector}.
+ * Tests {@link ESCentralConnector}. <strong>Be sure that you really need to execute this test!</strong>
  * @author Erik Torres <ertorser@upv.es>
  */
 public class ESCentralTest {
@@ -83,6 +84,7 @@ public class ESCentralTest {
 		}
 	}
 
+	@Ignore
 	@Test
 	public void test() {
 		System.out.println("ESCentralTest.test()");

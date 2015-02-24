@@ -28,7 +28,7 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.service.rest.DatasetResource.ns2dbnamespace;
 import static eu.eubrazilcc.lvl.service.rest.DatasetResource.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.DatasetResource.parseParam;
-import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.URL_FRAGMENT_PATTERN;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.convertToValidResourceOwnerId;

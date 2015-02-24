@@ -30,7 +30,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<!-- Identity provider and authorization server configuration -->
 	<authz-server>	
 		
-		<!-- Nothing yet -->
+		<!-- Configure authentication with LinkedIn OAuth 2.0 provider -->
+		<linkedin>
+		
+			<!-- LinkedIn consumer secret key (do not include this in any public repository) -->
+			<!-- <secret-key>123</secret-key> -->
+		
+		</linkedin>
 
 	</authz-server>	
 

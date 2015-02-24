@@ -43,6 +43,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -96,6 +97,7 @@ public class FullDatabaseLoadTest {
 		CLOSER_SERVICE.close();
 	}
 
+	@Ignore
 	@Test
 	public void test() {
 		System.out.println("FullDatabaseLoadTest.test()");

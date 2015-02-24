@@ -20,12 +20,13 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.service;
+package eu.eubrazilcc.lvl.storage;
 
-import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.CITATION_ID_PATTERN;
-import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.SEQUENCE_ID_PATTERN;
-import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.URL_FRAGMENT_PATTERN;
-import static eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern.US_ASCII_PRINTABLE_PATTERN;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.CITATION_ID_PATTERN;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.EMAIL_PATTERN;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.SEQUENCE_ID_PATTERN;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
@@ -35,11 +36,10 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.service.rest.ResourceIdentifierPattern;
-
 /**
  * Tests {@link ResourceIdentifierPattern}.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="http://www.mkyong.com/regular-expressions/how-to-validate-email-address-with-regular-expression/">Validating email addresses</a>
  */
 public class ResourceIdentifierPatternTest {
 
@@ -66,6 +66,11 @@ public class ResourceIdentifierPatternTest {
 			input = new String[]{ "1234" };
 			result = new boolean[]{ true };
 			doTest(input, result, CITATION_ID_PATTERN);
+			
+			// test email pattern
+			input = new String[]{ "mkyong-100@yahoo.com", "mkyong@.com.my", "mkyong123@gmail.a" };
+			result = new boolean[]{ true, false, false };
+			doTest(input, result, EMAIL_PATTERN);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -74,7 +79,7 @@ public class ResourceIdentifierPatternTest {
 			System.out.println("ResourceIdentifierPatternTest.test() has finished");
 		}
 	}
-	
+
 	private void doTest(final String[] input, final boolean[] result, final String patternStr) {
 		final Pattern pattern = Pattern.compile(patternStr);
 		for (int i = 0; i < input.length; i++) {
