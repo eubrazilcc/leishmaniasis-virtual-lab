@@ -104,9 +104,9 @@ public class LinkedinAuthz {
 			final List<NameValuePair> form = form()
 					.add("grant_type", "authorization_code")
 					.add("code", code)
-					.add("redirect_uri", "")
-					.add("client_id", "")
-					.add("client_secret", "")
+					.add("redirect_uri", "http://lvl.i3m.upv.es/lvl-auth/oauth2/v1/linkedin/callback") // TODO
+					.add("client_id", "771s7duqp3m4zc") // TODO
+					.add("client_secret", "dxH15L7ksHn4MHMk") // TODO
 					.build();
 			final String response = Request.Post("https://www.linkedin.com/uas/oauth2/accessToken")
 					.addHeader("Accept", "application/json")
@@ -128,6 +128,42 @@ public class LinkedinAuthz {
 
 		// TODO http://lvl.i3m.upv.es/auth/linkedin/callback?code=AQQ02yxDKNeICp3N3k60nlbiMwJBRE8w6cI_BX9fSnAiSjax9H5frRQRD-D8c_u4HmhZS0DgvoLEkayho46LrIveDsTWV4jrxFZkl8-gFwgvDdZbmjw&state=k5ovHo2F
 
+		
+		/*
+		$ curl -H 'Authorization: Bearer AQVGutR88BQv-Qyi1ZK-U3xnyBnp_6yCQdyPaJBMnnpbWwDO8Z5itZL9VYUE4eRgVEdGXi1oy8LO6GDXn3tdH2LYrDmmVM50kCAFfMPmJr0H0-j_X4_Z7hOsDH2RwARiRcLxVzcH8NcrxKG-BQIUVt3ltcYn8ytnLZc3aHfaTGOcAsX6AMA' https://www.linkedin.com/v1/people/~
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<person>
+  <id>-pTE7eaWAl</id>
+  <first-name>Erik</first-name>
+  <last-name>Torres Serrano</last-name>
+  <headline>Researcher at Institute of Instrumentation for Molecular Imaging (I3M)</headline>
+  <site-standard-profile-request>
+    <url>https://www.linkedin.com/profile/view?id=86908844&amp;authType=name&amp;authToken=ifuY&amp;trk=api*a3611313*s3682043*</url>
+  </site-standard-profile-request>
+</person
+		*/
+		
+		/*
+		$ curl -H 'Authorization: Bearer AQVGutR88BQv-Qyi1ZK-U3xnyBnp_6yCQdyPaJBMnnpbWwDO8Z5itZL9VYUE4eRgVEdGXi1oy8LO6GDXn3tdH2LYrDmmVM50kCAFfMPmJr0H0-j_X4_Z7hOsDH2RwARiRcLxVzcH8NcrxKG-BQIUVt3ltcYn8ytnLZc3aHfaTGOcAsX6AMA' https://www.linkedin.com/v1/people/~?format=json
+{
+  "firstName": "Erik",
+  "headline": "Researcher at Institute of Instrumentation for Molecular Imaging (I3M)",
+  "id": "-pTE7eaWAl",
+  "lastName": "Torres Serrano",
+  "siteStandardProfileRequest": {"url": "https://www.linkedin.com/profile/view?id=86908844&authType=name&authToken=ifuY&trk=api*a3611313*s3682043*"}
+		*/
+		
+		/*		
+		<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<error>
+  <status>401</status>
+  <timestamp>1424794394250</timestamp>
+  <request-id>5LFR2CG8A5</request-id>
+  <error-code>0</error-code>
+  <message>Invalid access token.</message>
+</error>		
+		*/
+		
 		return Response.ok().build();
 	}
 

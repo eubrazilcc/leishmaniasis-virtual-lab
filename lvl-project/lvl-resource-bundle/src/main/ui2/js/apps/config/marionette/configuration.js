@@ -130,7 +130,7 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 		},
 		linkedInAuthEndpoint : function(state) {
 			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.linkedin_api_key + '&redirect_uri='
-					+ encodeURIComponent(this.endpoint + '/auth/linkedin/callback') + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
+					+ encodeURIComponent(this.get('auth') + '/linkedin/callback') + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
 		}
 	});
 	return Marionette.Controller.Configuration;

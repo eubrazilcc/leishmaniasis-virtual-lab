@@ -34,10 +34,20 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 					length : 16,
 					pool : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 				});
-				
-				// TODO
-				
-				window.location.replace(config.linkedInAuthEndpoint(challenge));
+				// register state with LVL server
+				var jqxhr = $.ajax({
+					type : 'POST',
+					contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
+					crossDomain : true,
+					url : config.get('auth') + '/linkedin/state',
+					data : {
+						'state' : challenge
+					}
+				}).done(function(data, textStatus, request) {
+					window.location.replace(config.linkedInAuthEndpoint(challenge));
+				}).fail(function() {
+					$('#alertBox').removeClass('hidden');
+				});
 			},
 			onBeforeRender : function() {
 				$('body').addClass('lvl-login-body');
