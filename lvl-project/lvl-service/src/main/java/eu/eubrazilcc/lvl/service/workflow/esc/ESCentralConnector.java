@@ -51,7 +51,7 @@ import com.connexience.api.model.EscDocumentVersion;
 import com.connexience.api.model.EscFolder;
 import com.connexience.api.model.EscWorkflow;
 import com.connexience.api.model.EscWorkflowInvocation;
-import com.connexience.api.model.EscWorkflowParameterList;
+import com.connexience.api.model.json.JSONObject;
 import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
@@ -135,18 +135,19 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 	}
 
-	public WorkflowParameters getParameters(final String workflowId) {
+	public WorkflowParameters getParameters(final String workflowId, final @Nullable String versionId) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		try {
 			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);
 			checkState(escWorkflow != null, "Workflow not found");
 			final WorkflowParameters.Builder builder = WorkflowParameters.builder();			
-			final Map<String, String> map = workflowClient().listCallableWorkflowParameters(workflowId);
+			final Map<String, String> map = (versionId == null) ? workflowClient().listCallableWorkflowParameters(workflowId) :
+                                                                            workflowClient().listCallableWorkflowParameters(workflowId, versionId);
 			for (final Map.Entry<String, String> entry : map.entrySet()) {
 
-				// TODO : get default values
-
-				builder.parameter(entry.getKey(), entry.getValue(), "DEFAULT VALUE");
+				// "block" is not used yet
+				// "value" is the Java data type returned by e-SC. Should it be a default value?
+				builder.parameter("block", entry.getKey(), entry.getValue());
 			}
 			return builder.build();
 		} catch (Exception e) {
@@ -154,24 +155,32 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 	}
 
-	public String executeWorkflow(final String workflowId, final @Nullable WorkflowParameters parameters) {
+	public WorkflowParameters getParameters(final String workflowId) {
+                return getParameters(workflowId, null);
+        }
+        
+	public String executeWorkflow(final String workflowId, final @Nullable String versionId, final @Nullable WorkflowParameters parameters) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
-		final EscWorkflowParameterList parametersList = new EscWorkflowParameterList();
+		JSONObject params = new JSONObject();
 		if (parameters != null) {
 			for (final Map.Entry<String, List<Pair<String, String>>> entry : parameters.getParameters().entrySet()) {
 				for (final Pair<String, String> pair : entry.getValue()) {
-					parametersList.addParameter(entry.getKey(), pair.getKey(), pair.getValue());				
+					params.put(pair.getKey(), pair.getValue());				
 				}
 			}
 		}
 		try {
-			final EscWorkflowInvocation invocation = workflowClient().executeWorkflowWithParameters(workflowId, parametersList);
+			final EscWorkflowInvocation invocation = (versionId == null) ? workflowClient().executeCallableWorkflow(workflowId, versionId, params.toString()):
+			                                                               workflowClient().executeCallableWorkflow(workflowId, versionId, params.toString());
 			return invocation.getId();
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to execute the workflow", e);
 		}
 	}
 
+	public String executeWorkflow(final String workflowId, final @Nullable WorkflowParameters parameters) {
+		return executeWorkflow(workflowId, null, parameters);
+	}
 	public void cancelExecution(final String invocationId) {
 		checkArgument(isNotBlank(invocationId), "Uninitialized or invalid invocation identifier");
 		try {
@@ -241,22 +250,16 @@ public enum ESCentralConnector implements Closeable2 {
 		checkArgument(isNotBlank(invocationId), "Uninitialized or invalid invocation identifier");
 		final ImmutableList.Builder<WorkflowProduct> builder = new ImmutableList.Builder<WorkflowProduct>();
 		try {
-			final EscFolder[] folders = storageClient().listChildFolders(invocationId);			
-			for (final EscFolder folder : folders) {
-				final EscDocument[] docs = storageClient().folderDocuments(folder.getId());
-				final File outputDir2 = new File(outputDir, folder.getName());
-				if (!outputDir2.canWrite() && !outputDir2.mkdirs()) {
-					throw new IllegalStateException("Failed to write on output directory");
-				}
-				for (final EscDocument doc : docs) {
-					final File outputFile = new File(outputDir2, doc.getName());									
-					storageClient().download(doc, outputFile);
-					builder.add(WorkflowProduct.builder()
-							.path(concat(folder.getName(), doc.getName()))
-							.build());
-					LOGGER.trace("Workflow '" + invocationId + "' product saved '" + doc.getId() + "' to local file " + outputFile.getCanonicalPath());
-				}
+			final EscDocument[] docs = storageClient().folderDocuments(invocationId);
+			for (final EscDocument doc : docs) {
+				final File outputFile = new File(outputDir, doc.getName());									
+				storageClient().download(doc, outputFile);
+				builder.add(WorkflowProduct.builder()
+						.path(doc.getName())
+						.build());
+				LOGGER.trace("Workflow '" + invocationId + "' product saved '" + doc.getId() + "' to local file " + outputFile.getCanonicalPath());	
 			}
+			
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to retrieve workflow products", e);
 		}

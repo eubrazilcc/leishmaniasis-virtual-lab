@@ -89,30 +89,6 @@ public class ESCentralTest {
 	public void test() {
 		System.out.println("ESCentralTest.test()");
 		try {			
-			// test file uploading to e-SC
-			final Collection<File> files = getFastaFiles();
-			assertThat("FASTA files is not null", files, notNullValue());
-			assertThat("FASTA files is not empty", !files.isEmpty(), equalTo(true));
-
-			final List<File> fileList = newArrayList(files);
-			shuffle(fileList);
-			final File fastaFile = fileList.get(0);
-			System.out.println(" >> FASTA file: " + fastaFile.getCanonicalPath());
-
-			final String inputFileId = ESCENTRAL_CONN.uploadFile(fastaFile);
-			assertThat("input file Id is not null", inputFileId, notNullValue());
-			assertThat("input file Id is not empty", isNotBlank(inputFileId), equalTo(true));
-			ESC_DOCUMENTS.add(inputFileId);
-			/* uncomment for additional output */
-			System.out.println(" >> e-SC document Id: " + inputFileId);
-
-			// test listing available files in e-SC
-			final ImmutableList<WorkflowDataObject> remoteFiles = ESCENTRAL_CONN.listFiles();
-			assertThat("remote files is not null", remoteFiles, notNullValue());
-			assertThat("remote files is not empty", !remoteFiles.isEmpty(), equalTo(true));
-			/* uncomment for additional output */
-			System.out.println(" >> Available remote files: " + remoteFiles);
-
 			// test listing available workflows from e-SC
 			final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
 			assertThat("workflows list is not null", workflows, notNullValue());
@@ -120,31 +96,34 @@ public class ESCentralTest {
 			/* uncomment for additional output */
 			System.out.println(" >> Available workflows: " + collectionToString(workflows));			
 
+			String workflowId = "workflows-eubcc-nj_pipeline-1.0";
+			String versionId = "902"; // null for last version
+
 			// test get workflow definition from e-SC
-			final WorkflowDefinition workflow = ESCENTRAL_CONN.getWorkflow("677");
+			final WorkflowDefinition workflow = ESCENTRAL_CONN.getWorkflow(workflowId);
 			assertThat("workflow definition is not null", workflow, notNullValue());
 			/* uncomment for additional output */
 			System.out.println(" >> Workflow definition: " + workflow.toString());
 
 			// test get workflow parameters from e-SC
-			final WorkflowParameters parameters = ESCENTRAL_CONN.getParameters(workflow.getId());
+			final WorkflowParameters parameters = ESCENTRAL_CONN.getParameters(workflowId, versionId);
 			assertThat("workflow parameters are not null", parameters, notNullValue());
 			assertThat("workflow parameters list is not null", parameters.getParameters(), notNullValue());
 			assertThat("workflow parameters list is not empty", !parameters.getParameters().isEmpty(), equalTo(true));
 			/* uncomment for additional output */
-			System.out.println(" >> Workflow parameters: " + parameters.toString());			
+			System.out.println(" >> Workflow parameters: " + parameters.toString());  		      
 
-			// modify the default parameters for execution
 			final WorkflowParameters parameters2 = WorkflowParameters.builder()
-					.parameter("input_file", "Source", inputFileId)
-					.parameter("seqboot", "Number of replicates", "5")
-					.parameter("seqboot", "Random number seed", "13457")
-					.parameter("dnapars", "Number of data sets", "5")
-					.parameter("dnapars", "Outgroup root", "10")	
-					.build();
+					.parameter("block_11", "SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/L.chagasi1.fasta/download")
+					.parameter("block_11", "HTTPGet-RequestHeaders", "Authorization: Bearer 1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk=")
+					// this parameter must be a e-SC document
+					// .parameter("block_0", "ReferenceData-FileId", "hsp70_LVL.fasta")
+					.parameter("block_1", "Align", "1")
+					.parameter("block_8", "No. of Bootstrap Replications", "20")
+ 					.build();
 
 			// test submitting a workflow to e-SC
-			final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflow.getId(), parameters2);
+			final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflowId, versionId, parameters2);
 			assertThat("workflow invocation Id is not null", invocationId, notNullValue());
 			assertThat("workflow invocation Id is not empty", isNotBlank(invocationId));
 			/* uncomment for additional output */
@@ -168,6 +147,7 @@ public class ESCentralTest {
 			assertThat("workflow execution is successful", !status.hasFailed(), equalTo(true));
 
 			// test retrieving products from e-SC
+			TEST_OUTPUT_DIR.mkdirs(); // force directory creation (maybe deleted by previous tests?)
 			ESCENTRAL_CONN.saveProducts(invocationId, TEST_OUTPUT_DIR);
 			final Collection<File> outputFiles = listFiles(TEST_OUTPUT_DIR, null, true);
 			assertThat("product files is not null", outputFiles, notNullValue());

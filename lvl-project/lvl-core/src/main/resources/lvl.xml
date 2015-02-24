@@ -123,15 +123,15 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	
 		<!-- Endpoint where the workflow manager is listening for incoming requests -->
 		<endpoint>
-			<hostname>158.42.105.23</hostname>		
+			<hostname>eubrazilcc-esc.i3m.upv.es</hostname>		
 			<port>443</port>		
 			<secure>true</secure>		
 		</endpoint>
 		
 		<!-- User identity to access the workflow manager -->
 		<credentials>		
-			<username>lvl-user</username>			
-			<password>nopass</password>		
+			<username>lvl-portal</username>			
+			<password>eubccLVL</password>		
 		</credentials>
 	
 	</workflow>
