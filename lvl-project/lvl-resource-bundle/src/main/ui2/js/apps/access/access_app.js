@@ -24,9 +24,9 @@ define([ 'app' ], function(Lvl) {
 			});
 		});
 		
-		Lvl.commands.setHandler('show:authz:callback', function(provider, section) {
+		Lvl.commands.setHandler('show:authz:callback', function(provider, section, email, access_token) {
 			require([ 'apps/access/authz-callback/authz_callback_ctrl' ], function(AuthzCallbackController) {
-				AuthzCallbackController.authorize(provider, section);
+				AuthzCallbackController.authorize(provider, section, email, access_token);
 			});
 		});
 

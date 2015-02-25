@@ -8,7 +8,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 		var Router = Backbone.Router.extend({
 			routes : {
 				'login(/:target)(/:reason)' : 'showLogin',
-				'auth/:provider/:section' : 'authorizationCallback',
+				'auth/:provider/:section?email=:email&access_token=:access_token' : 'authorizationCallback',
 				'register' : 'showRegistration',
 				'account/validation(/:email)(/:code)' : 'validateAccount',
 				'logout' : 'logout'
@@ -23,8 +23,8 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 			showLogin : function(target, reason) {
 				Lvl.execute('show:login', target, reason);
 			},
-			authorizationCallback : function(provider, section) {				
-				Lvl.execute('show:authz:callback', provider, section);
+			authorizationCallback : function(provider, section, email, access_token) {				
+				Lvl.execute('show:authz:callback', provider, section, email, access_token);
 			},
 			showRegistration : function() {
 				Lvl.execute('show:registration');

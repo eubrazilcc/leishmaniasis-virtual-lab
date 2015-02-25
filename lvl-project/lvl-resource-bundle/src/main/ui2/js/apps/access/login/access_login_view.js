@@ -45,7 +45,7 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 					data : {
 						'state' : challenge,
 						'redirect_uri' : config.redirectUri(),
-						'callback' : config.get('endpoint') + '/auth/linkedin/' + target
+						'callback' : config.get('endpoint') + '/#auth/linkedin/' + target
 					}
 				}).done(function(data, textStatus, request) {
 					window.location.replace(config.linkedInAuthEndpoint(challenge));
@@ -118,7 +118,7 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 					});
 					jqxhr.done(function(data) {
 						if (data['access_token'] !== undefined) {
-							config.saveSession($('input[name=login-email]').val(), data['access_token'], $('input[name=login-remember]').is(":checked"));
+							config.saveSession($('input[name=login-email]').val(), data['access_token'], 'lvl', $('input[name=login-remember]').is(":checked"));
 							Lvl.navigate(decodeURIComponent(target), {
 								trigger : true
 							});

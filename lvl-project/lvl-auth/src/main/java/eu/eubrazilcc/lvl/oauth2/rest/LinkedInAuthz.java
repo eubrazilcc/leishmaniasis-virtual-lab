@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.oauth2.rest;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.LinkedInStateDAO.LINKEDIN_STATE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
@@ -85,7 +86,7 @@ import eu.eubrazilcc.lvl.storage.security.User;
  * @author Erik Torres <ertorser@upv.es>
  */
 @Path("/linkedin")
-public class LinkedinAuthz {
+public class LinkedInAuthz {
 
 	/**
 	 * The lifetime in seconds of the state.
@@ -94,7 +95,7 @@ public class LinkedinAuthz {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " LinkedIn AuthZ Resource";
 
-	protected final static Logger LOGGER = getLogger(LinkedinAuthz.class);
+	protected final static Logger LOGGER = getLogger(LinkedInAuthz.class);
 
 	@POST
 	@Path("state")
@@ -148,7 +149,7 @@ public class LinkedinAuthz {
 			checkState(isNotBlank(accessToken), "Uninitialized or invalid access token: " + accessToken);
 			checkState(expiresIn > 0l, "Uninitialized or invalid expiresIn: " + expiresIn);
 			// retrieve user profile data
-			URIBuilder uriBuilder = new URIBuilder("https://api.linkedin.com/v1/people/~:(id,formatted-name,email-address)");
+			final URIBuilder uriBuilder = new URIBuilder("https://api.linkedin.com/v1/people/~:(id,formatted-name,email-address)");
 			uriBuilder.addParameter("format", "json");
 			response = Request.Get(uriBuilder.build())
 					.addHeader("Authorization", "Bearer " + accessToken)
@@ -194,9 +195,7 @@ public class LinkedinAuthz {
 					.build();
 			TOKEN_DAO.insert(accessToken2);
 			// redirect to default portal endpoint
-			uriBuilder = new URIBuilder(callbackRef.get());
-			uriBuilder.addParameter("access_token", accessToken);
-			callback_uri = uriBuilder.build();
+			callback_uri = new URI(callbackRef.get() + "?email=" + urlEncodeUtf8(emailAddress) + "&access_token=" + urlEncodeUtf8(accessToken));			
 		} catch (Exception e) {
 			String errorCode = null, message = null, status = null;
 			if (e instanceof IllegalStateException && map != null) {

@@ -98,10 +98,12 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 			}
 			return session;
 		},
-		saveSession : function(email, token, permanent) {
+		saveSession : function(email, token, provider, permanent) {
+			var provider2 = provider || 'lvl';
 			var session = {
 				'email' : email,
-				'token' : token
+				'token' : token,
+				'provider' : provider2
 			};
 			this.session.set('user.session', session);
 			if (permanent === true) {
