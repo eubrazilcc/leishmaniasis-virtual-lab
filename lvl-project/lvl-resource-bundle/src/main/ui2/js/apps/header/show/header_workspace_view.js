@@ -39,6 +39,23 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 		});
 		View.Header = Marionette.LayoutView.extend({
 			template : WorkspaceHeaderTpl,
+			templateHelpers : {
+				username : function() {
+					$.ajax({
+						type : 'GET',
+						url : config.get('auth') + '/users/' + config.session.get('user.session').email + "?use_email=true",
+						headers : config.authorizationHeader(),
+						dataType : 'json'
+					}).done(function(data, textStatus, request) {
+						if (data.firstname) {
+							$('#username').html(function(idx, oldhtml) {
+								return oldhtml.replace(/Noname/, data.firstname);
+							});
+						}
+					});
+					return 'Noname';
+				}
+			},
 			regions : {
 				navigation : '#section-navigation'
 			},

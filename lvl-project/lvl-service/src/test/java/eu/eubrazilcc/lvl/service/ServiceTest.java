@@ -196,7 +196,8 @@ public class ServiceTest {
 				.userid("user1")
 				.password("password1")
 				.email("user1@example.com")
-				.fullname("User 1")
+				.firstname("User 1")
+				.lastname("LVL User")
 				.role(USER_ROLE)
 				.permissions(asPermissionList(userPermissions(ownerId1)))
 				.build(),
@@ -204,7 +205,8 @@ public class ServiceTest {
 				.userid("user2")
 				.password("password2")
 				.email("user2@example.com")
-				.fullname("User 2")
+				.firstname("User 2")
+				.lastname("LVL User")
 				.role(USER_ROLE)
 				.permissions(asPermissionList(userPermissions(ownerId2)))
 				.build(),
@@ -212,7 +214,8 @@ public class ServiceTest {
 				.userid("user3")
 				.password("password3")
 				.email("user3@example.com")
-				.fullname("User 3")
+				.firstname("User 3")
+				.lastname("LVL User")
 				.role(USER_ROLE)
 				.permissions(asPermissionList(userPermissions(ownerId3)))
 				.build();

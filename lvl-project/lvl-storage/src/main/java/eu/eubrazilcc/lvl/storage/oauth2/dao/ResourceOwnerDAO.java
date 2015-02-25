@@ -132,7 +132,8 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 							.userid(ADMIN_USER)
 							.password(ADMIN_DEFAULT_PASSWD)
 							.email(ADMIN_DEFAULT_EMAIL)
-							.fullname("LVL root user")
+							.firstname("Root")
+							.lastname("LVL User")
 							.role(ADMIN_ROLE)
 							.permissions(asPermissionList(allPermissions()))
 							.build()).build();

@@ -157,7 +157,8 @@ public class AuthTest {
 							.userid("test_username")
 							.password("test_password")
 							.email("username@example.com")
-							.fullname("Fullname")
+							.firstname("Firstname")
+							.lastname("Lastname")
 							.role("user")
 							.permissions(asPermissionList(permissions))
 							.build()).build();			
@@ -314,7 +315,8 @@ public class AuthTest {
 					.userid("username2")
 					.password("password2")
 					.email("username2@example.com")
-					.fullname("Fullname2")
+					.firstname("Firstname2")
+					.lastname("Lastname2")
 					.role("user")
 					.permissions(asPermissionList(userPermissions(toResourceOwnerId("username2"))))
 					.build();

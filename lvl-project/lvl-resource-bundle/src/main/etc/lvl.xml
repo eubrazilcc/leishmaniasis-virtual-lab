@@ -92,6 +92,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<host>localhost:61616</host>
 			<host>lvl.i3m.upv.es:61616</host>
 		</hosts> -->
+		
+		<!-- Use this endpoint to register new service instances -->
+		<!-- <registration>
+			<endpoint>http://lvl.i3m.upv.es/lvl-service/rest/v1/broker</endpoint>			
+		</registration> -->
 	
 	</messaging>
 

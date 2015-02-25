@@ -91,7 +91,8 @@ public class User implements Serializable, Linkable<User> {
 	private String password;         // password
 	private String salt;             // salt to defend the password against dictionary attacks
 	private String email;            // email address
-	private String fullname;         // (optional) full name
+	private String firstname;        // (optional) first name
+	private String lastname;         // (optional) last name
 	private Set<String> roles;       // roles
 	private Set<String> permissions; // permissions
 
@@ -162,12 +163,18 @@ public class User implements Serializable, Linkable<User> {
 	}
 	public void setEmail(final String email) {
 		this.email = email;
+	}	
+	public String getFirstname() {
+		return firstname;
 	}
-	public String getFullname() {
-		return fullname;
+	public void setFirstname(final String firstname) {
+		this.firstname = firstname;
 	}
-	public void setFullname(final String fullname) {
-		this.fullname = fullname;
+	public String getLastname() {
+		return lastname;
+	}
+	public void setLastname(final String lastname) {
+		this.lastname = lastname;
 	}
 	public Set<String> getRoles() {
 		return roles;
@@ -186,6 +193,13 @@ public class User implements Serializable, Linkable<User> {
 	}
 	public void setPermissionHistory(final PermissionHistory permissionHistory) {
 		this.permissionHistory = permissionHistory;
+	}
+
+	@JsonIgnore
+	public String getFormattedName() {
+		final String firstname2 = trimToNull(firstname);
+		final String lastname2 = trimToNull(lastname);
+		return (firstname2 != null ? firstname2 : "") + (firstname2 != null && lastname2 != null ? " " : "") + (lastname2 != null ? lastname2 : "");
 	}
 
 	@JsonIgnore
@@ -245,7 +259,8 @@ public class User implements Serializable, Linkable<User> {
 				&& Objects.equals(password, other.password)
 				&& Objects.equals(salt, other.salt)
 				&& Objects.equals(email, other.email)
-				&& Objects.equals(fullname, other.fullname)
+				&& Objects.equals(firstname, other.firstname)
+				&& Objects.equals(lastname, other.lastname)
 				&& Objects.equals(roles, other.roles)
 				&& Objects.equals(permissions, other.permissions)
 				&& Objects.equals(permissionHistory, other.permissionHistory);
@@ -263,7 +278,8 @@ public class User implements Serializable, Linkable<User> {
 		return Objects.equals(provider, other.provider)
 				&& Objects.equals(userid, other.userid)
 				&& Objects.equals(email, other.email)							
-				&& Objects.equals(fullname, other.fullname)
+				&& Objects.equals(firstname, other.firstname)
+				&& Objects.equals(lastname, other.lastname)
 				&& Objects.equals(roles, other.roles)
 				&& Objects.equals(permissions, other.permissions)
 				&& Objects.equals(permissionHistory, other.permissionHistory);
@@ -298,7 +314,8 @@ public class User implements Serializable, Linkable<User> {
 		return Objects.equals(provider, other.provider)
 				&& Objects.equals(userid, other.userid)
 				&& Objects.equals(email, other.email)										
-				&& Objects.equals(fullname, other.fullname)
+				&& Objects.equals(firstname, other.firstname)
+				&& Objects.equals(lastname, other.lastname)
 				&& Objects.equals(roles, other.roles)
 				&& Objects.equals(permissions, other.permissions)
 				&& Objects.equals(permissionHistory, other.permissionHistory);
@@ -306,7 +323,7 @@ public class User implements Serializable, Linkable<User> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, pictureUrl, provider, userid, password, salt, email, fullname, roles, permissions, permissionHistory);
+		return Objects.hash(links, pictureUrl, provider, userid, password, salt, email, firstname, lastname, roles, permissions, permissionHistory);
 	}
 
 	@Override
@@ -319,7 +336,8 @@ public class User implements Serializable, Linkable<User> {
 				.add("password", password)
 				.add("salt", salt)
 				.add("email", email)
-				.add("fullname", fullname)
+				.add("firstname", firstname)
+				.add("lastname", lastname)
 				.add("roles", roles)
 				.add("permissions", permissions)
 				.add("permissionHistory", permissionHistory)
@@ -383,9 +401,15 @@ public class User implements Serializable, Linkable<User> {
 			return this;
 		}
 
-		public Builder fullname(final String fullname) {
-			checkArgument(isNotBlank(fullname), "Uninitialized or invalid fullname");
-			instance.setFullname(fullname.trim());
+		public Builder firstname(final String firstname) {
+			checkArgument(isNotBlank(firstname), "Uninitialized or invalid firstname");
+			instance.setFirstname(firstname.trim());
+			return this;
+		}
+
+		public Builder lastname(final String lastname) {
+			checkArgument(isNotBlank(lastname), "Uninitialized or invalid lastname");
+			instance.setLastname(lastname.trim());
 			return this;
 		}
 
@@ -438,13 +462,12 @@ public class User implements Serializable, Linkable<User> {
 					.provider(original.provider)
 					.userid(original.userid)
 					.password(original.password)
-					.email(original.email)
-					.fullname(original.fullname);
+					.email(original.email);
 			if (original.getLinks() != null) {
 				final List<Link> linksCopy = newArrayList();
 				for (final Link link : original.getLinks()) {
 					linksCopy.add(Link.fromLink(link).build());					
-				}				
+				}
 				builder.links(linksCopy);
 			}
 			if (isNotBlank(original.salt)) {
@@ -458,6 +481,12 @@ public class User implements Serializable, Linkable<User> {
 			}
 			if (original.permissionHistory != null) {
 				builder.permissionHistory(original.permissionHistory);
+			}
+			if (isNotBlank(original.firstname)) {
+				builder.firstname(original.firstname);
+			}
+			if (isNotBlank(original.lastname)) {
+				builder.lastname(original.lastname);
 			}
 			return builder.build();
 		}

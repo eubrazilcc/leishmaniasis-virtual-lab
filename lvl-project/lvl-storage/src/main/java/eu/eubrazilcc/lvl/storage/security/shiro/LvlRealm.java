@@ -85,6 +85,6 @@ public class LvlRealm extends BaseAuthorizingRealm {
 			throw new UnknownAccountException("No account found for user [" + ownerid + "]");
 		}
 		return new SimpleAuthenticationInfo(ownerid, secret, getName());
-	}	
+	}
 
 }

@@ -51,7 +51,8 @@ public class PermissionElBuilderTest {
 					.userid("uname1")
 					.password("123456xyz")
 					.email("email@example.org")
-					.fullname("Name Middlename Lastname")
+					.firstname("Name Middlename")
+					.lastname("Lastname")
 					.build();
 			assertThat("user is not null", user, notNullValue());			
 

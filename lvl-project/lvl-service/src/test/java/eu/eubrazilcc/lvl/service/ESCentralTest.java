@@ -24,10 +24,8 @@ package eu.eubrazilcc.lvl.service;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
-import static eu.eubrazilcc.lvl.service.util.TestUtils.getFastaFiles;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static java.lang.System.getProperty;
-import static java.util.Collections.shuffle;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.io.FilenameUtils.concat;
@@ -48,9 +46,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
-import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
@@ -84,7 +79,7 @@ public class ESCentralTest {
 		}
 	}
 
-	@Ignore
+	@Ignore // TODO 
 	@Test
 	public void test() {
 		System.out.println("ESCentralTest.test()");
@@ -114,13 +109,14 @@ public class ESCentralTest {
 			System.out.println(" >> Workflow parameters: " + parameters.toString());  		      
 
 			final WorkflowParameters parameters2 = WorkflowParameters.builder()
-					.parameter("block_11", "SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/L.chagasi1.fasta/download")
-					.parameter("block_11", "HTTPGet-RequestHeaders", "Authorization: Bearer 1d3nmCChWIcXIrXQUkyhTQucy55df5gcJTG6UE/WzBk=")
+					// TODO .parameter("block_11", "SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/L.chagasi1.fasta/download")
+					.parameter("block_11", "SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/hsp70.fasta/download")
+					.parameter("block_11", "HTTPGet-RequestHeaders", "Authorization: Bearer 5nCukjgc7lo6CxoPKHdaa7WfSMQbbA+SnL6jOpAdTFw=")
 					// this parameter must be a e-SC document
 					// .parameter("block_0", "ReferenceData-FileId", "hsp70_LVL.fasta")
 					.parameter("block_1", "Align", "1")
 					.parameter("block_8", "No. of Bootstrap Replications", "20")
- 					.build();
+					.build();
 
 			// test submitting a workflow to e-SC
 			final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflowId, versionId, parameters2);

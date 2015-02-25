@@ -67,7 +67,8 @@ public class PendingUserCollectionTest {
 							.userid("username")
 							.password("password")
 							.email("username@example.com")
-							.fullname("Fullname")
+							.firstname("Firstname")
+							.lastname("Lastname")
 							.roles(roles)
 							.build()).build();
 			WriteResult<PendingUser> result = PENDING_USER_DAO.insert(pendingUser);
@@ -101,7 +102,8 @@ public class PendingUserCollectionTest {
 							.userid("username1")
 							.password("password1")
 							.email("username1@example.com")
-							.fullname("Fullname 1")
+							.firstname("Firstname 1")
+							.lastname("Lastname 1")
 							.roles(roles)
 							.build()).build();			
 
@@ -116,7 +118,7 @@ public class PendingUserCollectionTest {
 			System.out.println(pendingUser2.toString());
 
 			PENDING_USER_DAO.delete(pendingUser1.getPendingUserId());
-			
+
 			// update
 			updatePassword(hashed, "new_password");
 			PENDING_USER_DAO.update(hashed);
@@ -170,7 +172,8 @@ public class PendingUserCollectionTest {
 								.userid(Integer.toString(i))
 								.password("password")
 								.email("username" + i + "@example.com")
-								.fullname("Fullname")
+								.firstname("Firstname")
+								.lastname("Lastname")
 								.roles(roles)
 								.build()).build();								
 				ids.add(pendingUser4.getPendingUserId());

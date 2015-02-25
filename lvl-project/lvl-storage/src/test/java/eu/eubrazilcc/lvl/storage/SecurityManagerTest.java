@@ -113,7 +113,8 @@ public class SecurityManagerTest {
 				.password(hashed[1])
 				.salt(hashed[0]) // hashed password and salt are provided
 				.email("adminuser@example.com")
-				.fullname("Admin User Fullname")
+				.firstname("Admin")
+				.lastname("LVL User")
 				.roles(roles)
 				.permissions(permissions)
 				.build());
@@ -124,7 +125,8 @@ public class SecurityManagerTest {
 				.userid("meremortal")
 				.password("password2") // clear-text password is provided, the DAO is responsible for protecting the password before storing it
 				.email("meremortal@example.com")
-				.fullname("Mere Mortal User Fullname")
+				.firstname("Mere Mortal")
+				.lastname("LVL User")
 				.roles(roles)
 				.permissions(permissions)
 				.build());
@@ -134,7 +136,8 @@ public class SecurityManagerTest {
 				.userid("poorman")
 				.password("password3") // clear-text password is provided, the DAO is responsible for protecting the password before storing it
 				.email("poorman@example.com")
-				.fullname("Poor man User Fullname")
+				.firstname("Poor Man")
+				.lastname("LVL User")
 				.permissions(permissions)
 				.build());
 		// insert access tokens in the database

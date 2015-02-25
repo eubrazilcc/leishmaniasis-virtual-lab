@@ -78,7 +78,11 @@ public class IdentityProvider {
 			final @QueryParam("per_page") @DefaultValue("10") int per_page, 
 			final @QueryParam("plain") @DefaultValue("false") boolean plain, 
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:*:*:*:view");
+		if (plain) {
+			OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:*:*:*:view");
+		} else {
+			OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:active:profile:*:view");
+		}		
 		final Users paginable = Users.start()
 				.page(page)
 				.perPage(per_page)
@@ -113,7 +117,7 @@ public class IdentityProvider {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// check authorization
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:*:*:" + id + ":view");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:active:profile:" + id + ":view");
 		// get from database		
 		return UserAnonymizer.start(plain ? NONE : HARD).apply(owner);
 	}
@@ -140,7 +144,7 @@ public class IdentityProvider {
 		if (isBlank(id) || update == null || !id.equals(toResourceOwnerId(update))) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:*:*:" + id + ":edit");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("users:active:profile:" + id + ":edit");
 		// get from database
 		final ResourceOwner current = RESOURCE_OWNER_DAO.find(id);
 		if (current == null) {

@@ -67,7 +67,8 @@ public class ResourceOwnerCollectionTest {
 							.userid("username")
 							.password("password")
 							.email("username@example.com")
-							.fullname("Fullname")
+							.firstname("firstname")
+							.lastname("lastname")
 							.roles(roles)
 							.permissions(permissions)
 							.build()).build();
@@ -108,7 +109,8 @@ public class ResourceOwnerCollectionTest {
 							.userid("username1")
 							.password("password1")
 							.email("username1@example.com")
-							.fullname("Fullname 1")
+							.firstname("Firstname 1")
+							.lastname("Lastname 1")
 							.roles(roles)
 							.permissions(permissions)
 							.build()).build();
@@ -194,7 +196,7 @@ public class ResourceOwnerCollectionTest {
 
 			// test modifying a share
 			// not available
-			
+
 			// remove all permissions and stop sharing
 			RESOURCE_OWNER_DAO.removePermissions(resourceOwner.getOwnerId(), "datasets:files:otheruser@lvl:mysequences.xml:view",
 					"datasets:files:otheruser@lvl:mysequences.xml:view,edit");
@@ -237,7 +239,8 @@ public class ResourceOwnerCollectionTest {
 								.userid(Integer.toString(i))
 								.password("password")
 								.email("username" + i + "@example.com")
-								.fullname("Fullname")
+								.firstname("Firstname")
+								.lastname("Lastname")
 								.roles(roles)
 								.permissions(permissions)
 								.build()).build();								

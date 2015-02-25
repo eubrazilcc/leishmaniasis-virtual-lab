@@ -149,7 +149,7 @@ public class LinkedInAuthz {
 			checkState(isNotBlank(accessToken), "Uninitialized or invalid access token: " + accessToken);
 			checkState(expiresIn > 0l, "Uninitialized or invalid expiresIn: " + expiresIn);
 			// retrieve user profile data
-			final URIBuilder uriBuilder = new URIBuilder("https://api.linkedin.com/v1/people/~:(id,formatted-name,email-address)");
+			final URIBuilder uriBuilder = new URIBuilder("https://api.linkedin.com/v1/people/~:(id,first-name,last-name,email-address)");
 			uriBuilder.addParameter("format", "json");
 			response = Request.Get(uriBuilder.build())
 					.addHeader("Authorization", "Bearer " + accessToken)
@@ -159,10 +159,12 @@ public class LinkedInAuthz {
 			map = JSON_MAPPER.readValue(response, new TypeReference<HashMap<String,String>>() {});
 			final String userId = map.get("id");
 			final String emailAddress = map.get("emailAddress");
-			final String formattedName = map.get("formattedName");
+			final String firstname = map.get("firstName");
+			final String lastname = map.get("lastName");
 			checkState(isNotBlank(userId), "Uninitialized or invalid user id: " + userId);
 			checkState(isNotBlank(emailAddress), "Uninitialized or invalid email address: " + emailAddress);
-			checkState(isNotBlank(formattedName), "Uninitialized or invalid formatted name: " + formattedName);
+			checkState(isNotBlank(firstname), "Uninitialized or invalid firstname: " + firstname);
+			checkState(isNotBlank(lastname), "Uninitialized or invalid lastname: " + lastname);
 			// register or update user in the database
 			final String ownerid = toResourceOwnerId(LINKEDIN_IDENTITY_PROVIDER, userId);
 			ResourceOwner owner = RESOURCE_OWNER_DAO.find(ownerid);
@@ -172,7 +174,8 @@ public class LinkedInAuthz {
 						.provider(LINKEDIN_IDENTITY_PROVIDER)
 						.email(emailAddress)
 						.password("password")
-						.fullname(formattedName)
+						.firstname(firstname)
+						.lastname(lastname)
 						.roles(newHashSet(USER_ROLE))
 						.permissions(asPermissionSet(userPermissions(ownerid)))
 						.build();
@@ -182,7 +185,8 @@ public class LinkedInAuthz {
 				RESOURCE_OWNER_DAO.insert(owner);
 			} else {
 				owner.getUser().setEmail(emailAddress);
-				owner.getUser().setFullname(formattedName);
+				owner.getUser().setFirstname(firstname);
+				owner.getUser().setLastname(lastname);
 				RESOURCE_OWNER_DAO.update(owner);
 			}
 			// register access token in the database

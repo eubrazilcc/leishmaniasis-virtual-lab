@@ -22,12 +22,26 @@
 
 package eu.eubrazilcc.lvl.storage.security.shiro;
 
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.TokenDAO.TOKEN_DAO;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.LINKEDIN_IDENTITY_PROVIDER;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.shiro.authc.AccountException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.CredentialsException;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.credential.SimpleCredentialsMatcher;
+import org.apache.shiro.authc.pam.UnsupportedTokenException;
+
+import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 
 /**
  * Security realm that relies on LinkedIn users authenticated through access tokens.
@@ -44,9 +58,34 @@ public class LinkedInRealm extends BaseAuthorizingRealm {
 
 	@Override
 	protected AuthenticationInfo doGetAuthenticationInfo(final AuthenticationToken token) throws AuthenticationException {
-
-		// TODO
-		return null;
-	}	
+		// validate token
+		if (token == null) {
+			throw new CredentialsException("Uninitialized token");
+		}
+		if (!(token instanceof AccessTokenToken)) {
+			throw new UnsupportedTokenException("Unsuported token type: " + token.getClass().getCanonicalName());
+		}
+		// get access token
+		final AccessTokenToken accessToken = (AccessTokenToken) token;
+		final String secret = trimToNull(accessToken.getToken());
+		if (isEmpty(secret)) {
+			throw new AccountException("Empty tokens are not allowed in this realm");
+		}
+		// find token in the LVL OAuth2 database
+		String ownerid = null;
+		final AtomicReference<String> ownerIdRef = new AtomicReference<String>();
+		if (TOKEN_DAO.isValid(secret, ownerIdRef)) {				
+			ownerid = ownerIdRef.get();
+		}
+		if (isEmpty(ownerid)) {
+			throw new IncorrectCredentialsException("Incorrect credentials found");
+		}
+		// find resource owner in the LVL IdP database		
+		final ResourceOwner owner = RESOURCE_OWNER_DAO.useGravatar(false).find(ownerid);
+		if (owner == null || owner.getUser() == null) {
+			throw new UnknownAccountException("No account found for user [" + ownerid + "]");
+		}
+		return new SimpleAuthenticationInfo(ownerid, secret, getName());
+	}
 
 }
