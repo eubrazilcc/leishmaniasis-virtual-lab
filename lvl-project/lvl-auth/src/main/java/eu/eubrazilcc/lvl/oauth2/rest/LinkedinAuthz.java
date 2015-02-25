@@ -102,11 +102,13 @@ public class LinkedinAuthz {
 	public Response saveState(final @Context UriInfo uriInfo, final MultivaluedMap<String, String> form) {
 		final String secret = parseForm(form, "state");
 		final String redirect_uri = parseForm(form, "redirect_uri");
+		final String callback = parseForm(form, "callback");
 		final LinkedInState state = LinkedInState.builder()
 				.state(secret)
 				.issuedAt(currentTimeMillis() / 1000l)
 				.expiresIn(STATE_EXPIRATION_SECONDS)
 				.redirectUri(redirect_uri)
+				.callback(callback)
 				.build();
 		LINKEDIN_STATE_DAO.insert(state);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(secret);
@@ -118,11 +120,11 @@ public class LinkedinAuthz {
 	public Response authorize(final @Context HttpServletRequest request) {
 		final String code = parseQuery(request, "code");
 		final String state = parseQuery(request, "state");
-		final AtomicReference<String> redirectUriRef = new AtomicReference<String>();
-		if (!LINKEDIN_STATE_DAO.isValid(state, redirectUriRef)) {
+		final AtomicReference<String> redirectUriRef = new AtomicReference<String>(), callbackRef = new AtomicReference<String>();		
+		if (!LINKEDIN_STATE_DAO.isValid(state, redirectUriRef, callbackRef)) {
 			throw new NotAuthorizedException(status(UNAUTHORIZED).build());
 		}
-		URI redirect_uri2 = null;
+		URI callback_uri = null;
 		Map<String, String> map = null;
 		try {
 			final List<NameValuePair> form = form()
@@ -146,8 +148,8 @@ public class LinkedinAuthz {
 			checkState(isNotBlank(accessToken), "Uninitialized or invalid access token: " + accessToken);
 			checkState(expiresIn > 0l, "Uninitialized or invalid expiresIn: " + expiresIn);
 			// retrieve user profile data
-			final URIBuilder uriBuilder = new URIBuilder("https://api.linkedin.com/v1/people/~:(id,formatted-name,email-address)");
-			uriBuilder.addParameter("format", "json");			
+			URIBuilder uriBuilder = new URIBuilder("https://api.linkedin.com/v1/people/~:(id,formatted-name,email-address)");
+			uriBuilder.addParameter("format", "json");
 			response = Request.Get(uriBuilder.build())
 					.addHeader("Authorization", "Bearer " + accessToken)
 					.execute()
@@ -192,7 +194,9 @@ public class LinkedinAuthz {
 					.build();
 			TOKEN_DAO.insert(accessToken2);
 			// redirect to default portal endpoint
-			redirect_uri2 = new URI(CONFIG_MANAGER.getPortalEndpoint());
+			uriBuilder = new URIBuilder(callbackRef.get());
+			uriBuilder.addParameter("access_token", accessToken);
+			callback_uri = uriBuilder.build();
 		} catch (Exception e) {
 			String errorCode = null, message = null, status = null;
 			if (e instanceof IllegalStateException && map != null) {
@@ -208,7 +212,7 @@ public class LinkedinAuthz {
 		} finally {
 			LINKEDIN_STATE_DAO.delete(state);
 		}
-		return Response.seeOther(redirect_uri2).build();
+		return Response.seeOther(callback_uri).build();
 	}
 
 	private static String parseForm(final MultivaluedMap<String, String> form, final String field) {

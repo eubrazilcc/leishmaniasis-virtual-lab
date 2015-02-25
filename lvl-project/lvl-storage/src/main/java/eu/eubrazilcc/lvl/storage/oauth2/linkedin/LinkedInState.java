@@ -39,6 +39,7 @@ public class LinkedInState {
 	private long expiresIn;
 	private long issuedAt;
 	private String redirectUri;
+	private String callback;
 
 	public String getState() {
 		return state;
@@ -63,8 +64,14 @@ public class LinkedInState {
 	}
 	public void setRedirectUri(final String redirectUri) {
 		this.redirectUri = redirectUri;
+	}	
+	public String getCallback() {
+		return callback;
 	}
-
+	public void setCallback(final String callback) {
+		this.callback = callback;
+	}
+	
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof LinkedInState)) {
@@ -74,12 +81,13 @@ public class LinkedInState {
 		return Objects.equals(state, other.state)				
 				&& Objects.equals(expiresIn, other.expiresIn)
 				&& Objects.equals(issuedAt, other.issuedAt)
-				&& Objects.equals(redirectUri, other.redirectUri);
+				&& Objects.equals(redirectUri, other.redirectUri)
+				&& Objects.equals(callback, other.callback);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(state, expiresIn, issuedAt);
+		return Objects.hash(state, expiresIn, issuedAt, redirectUri, callback);
 	}
 
 	@Override
@@ -89,6 +97,7 @@ public class LinkedInState {
 				.add("expiresIn", expiresIn)
 				.add("issuedAt", issuedAt)
 				.add("redirectUri", redirectUri)
+				.add("callback", callback)
 				.toString();
 	}
 
@@ -122,6 +131,12 @@ public class LinkedInState {
 		public Builder redirectUri(final String redirectUri) {
 			checkArgument(isNotBlank(redirectUri), "Uninitialized or invalid redirect URI");
 			instance.setRedirectUri(redirectUri);
+			return this;
+		}
+		
+		public Builder callback(final String callback) {
+			checkArgument(isNotBlank(callback), "Uninitialized or invalid callback");
+			instance.setCallback(callback);
 			return this;
 		}
 

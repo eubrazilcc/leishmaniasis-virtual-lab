@@ -29,12 +29,14 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 			},
 			signupLinkedin : function(e) {
 				e.preventDefault();
+				var self = this;
 				$('#signup_linkedin_btn').attr('disabled', 'disabled');
 				var challenge = new Chance().string({
 					length : 16,
 					pool : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 				});
 				// register state with LVL server
+				var target = self.model.get('target') || 'home';
 				var jqxhr = $.ajax({
 					type : 'POST',
 					contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -42,7 +44,8 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 					url : config.get('auth') + '/linkedin/state',
 					data : {
 						'state' : challenge,
-						'redirect_uri' : config.redirectUri()
+						'redirect_uri' : config.redirectUri(),
+						'callback' : config.get('endpoint') + '/auth/linkedin/' + target
 					}
 				}).done(function(data, textStatus, request) {
 					window.location.replace(config.linkedInAuthEndpoint(challenge));

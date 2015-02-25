@@ -55,7 +55,8 @@ public class LinkedInStateCollectionTest {
 					.state("1234567890abcdEFGhiJKlMnOpqrstUVWxyZ")
 					.issuedAt(issuedAt)
 					.expiresIn(23l)
-					.redirectUri("http://localhost/callback")
+					.redirectUri("http://localhost/redirect")
+					.callback("http://localhost/callback")
 					.build();
 			LINKEDIN_STATE_DAO.insert(state);
 
@@ -84,11 +85,15 @@ public class LinkedInStateCollectionTest {
 
 			// check validity
 			final AtomicReference<String> redirectUriRef = new AtomicReference<String>();
-			boolean validity = LINKEDIN_STATE_DAO.isValid(state.getState(), redirectUriRef);
+			final AtomicReference<String> callbackRef = new AtomicReference<String>();
+			boolean validity = LINKEDIN_STATE_DAO.isValid(state.getState(), redirectUriRef, callbackRef);
 			assertThat("linkedin state is valid", validity, equalTo(true));
 			assertThat("linkedin redirect URI is not null", redirectUriRef.get(), notNullValue());
 			assertThat("linkedin redirect URI coincides with expected", redirectUriRef.get(), 
-					equalTo("http://localhost/callback"));			
+					equalTo("http://localhost/redirect"));
+			assertThat("linkedin callback URI is not null", callbackRef.get(), notNullValue());
+			assertThat("linkedin callback URI coincides with expected", callbackRef.get(), 
+					equalTo("http://localhost/callback"));
 
 			// remove
 			LINKEDIN_STATE_DAO.delete(state.getState());

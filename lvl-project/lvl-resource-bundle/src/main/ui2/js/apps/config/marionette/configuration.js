@@ -11,7 +11,6 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 	Marionette.Controller.Configuration = Marionette.Controller.extend({
 		initialize : function(options) {
 			this.endpoint = 'http://lvl.i3m.upv.es';
-			this.linkedin_api_key = '771s7duqp3m4zc';
 			this.config = [ {
 				id : 'bust',
 				value : bust
@@ -30,6 +29,9 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 					'client_id' : 'lvl_portal',
 					'client_secret' : 'changeit'
 				}
+			}, {
+				id : 'linkedin_api_key',
+				value : '771s7duqp3m4zc'
 			} ];
 		},
 		get : function(id, _def) {
@@ -132,7 +134,7 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 			return this.get('auth') + '/linkedin/callback';
 		},
 		linkedInAuthEndpoint : function(state) {
-			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.linkedin_api_key + '&redirect_uri='
+			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.get('linkedin_api_key') + '&redirect_uri='
 					+ encodeURIComponent(this.redirectUri()) + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
 		}
 	});

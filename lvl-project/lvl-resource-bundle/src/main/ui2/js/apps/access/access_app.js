@@ -23,6 +23,12 @@ define([ 'app' ], function(Lvl) {
 				LoginController.login(target, reason);
 			});
 		});
+		
+		Lvl.commands.setHandler('show:authz:callback', function(provider, section) {
+			require([ 'apps/access/authz-callback/authz_callback_ctrl' ], function(AuthzCallbackController) {
+				AuthzCallbackController.authorize(provider, section);
+			});
+		});
 
 		Lvl.commands.setHandler('show:registration', function() {
 			require([ 'apps/access/register/access_register_ctrl' ], function(RegisterController) {

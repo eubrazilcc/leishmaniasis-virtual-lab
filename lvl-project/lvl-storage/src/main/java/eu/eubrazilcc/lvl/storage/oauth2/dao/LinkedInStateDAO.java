@@ -219,16 +219,22 @@ public enum LinkedInStateDAO implements BaseDAO<String, LinkedInState> {
 	 * Checks whether or not the specified secret (state) was previously stored and is currently valid (not expired).
 	 * @param secret - the secret associated to the state
 	 * @param redirectUriRef - if set and the state is valid, then the redirect URI is returned to the caller
+	 * @param callbackRef - if set and the state is valid, then the callback URI is returned to the caller
 	 * @return {@code true} only if the provided secret (state) is found in the storage and is currently valid (not expired). 
 	 *         Otherwise, returns {@code false}.
 	 */
-	public boolean isValid(final String secret,final @Nullable AtomicReference<String> redirectUriRef) {
+	public boolean isValid(final String secret, final @Nullable AtomicReference<String> redirectUriRef, final @Nullable AtomicReference<String> callbackRef) {
 		checkArgument(isNotBlank(secret), "Uninitialized or invalid state");
 		final LinkedInState state = find(secret);
 		final boolean isValid = (state != null && state.getState() != null && secret.equals(state.getState())
 				&& (state.getIssuedAt() + state.getExpiresIn()) > (currentTimeMillis() / 1000l));
-		if (isValid && redirectUriRef != null) {
-			redirectUriRef.set(state.getRedirectUri());		
+		if (isValid) {
+			if (redirectUriRef != null) {
+				redirectUriRef.set(state.getRedirectUri());
+			}
+			if (callbackRef != null) {
+				callbackRef.set(state.getCallback());
+			}
 		}
 		return isValid;
 	}
