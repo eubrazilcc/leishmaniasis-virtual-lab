@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -217,14 +218,19 @@ public enum LinkedInStateDAO implements BaseDAO<String, LinkedInState> {
 	/**
 	 * Checks whether or not the specified secret (state) was previously stored and is currently valid (not expired).
 	 * @param secret - the secret associated to the state
+	 * @param redirectUriRef - if set and the state is valid, then the redirect URI is returned to the caller
 	 * @return {@code true} only if the provided secret (state) is found in the storage and is currently valid (not expired). 
 	 *         Otherwise, returns {@code false}.
 	 */
-	public boolean isValid(final String secret) {
+	public boolean isValid(final String secret,final @Nullable AtomicReference<String> redirectUriRef) {
 		checkArgument(isNotBlank(secret), "Uninitialized or invalid state");
 		final LinkedInState state = find(secret);
-		return (state != null && state.getState() != null && secret.equals(state.getState())
+		final boolean isValid = (state != null && state.getState() != null && secret.equals(state.getState())
 				&& (state.getIssuedAt() + state.getExpiresIn()) > (currentTimeMillis() / 1000l));
+		if (isValid && redirectUriRef != null) {
+			redirectUriRef.set(state.getRedirectUri());		
+		}
+		return isValid;
 	}
 
 	/**

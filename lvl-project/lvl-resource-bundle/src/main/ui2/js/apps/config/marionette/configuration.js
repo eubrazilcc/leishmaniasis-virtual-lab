@@ -128,9 +128,12 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 			var token = this.authorizationToken();
 			return (token !== null ? 'access_token=' + encodeURIComponent(token) : null);
 		},
+		redirectUri : function() {
+			return this.get('auth') + '/linkedin/callback';
+		},
 		linkedInAuthEndpoint : function(state) {
 			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.linkedin_api_key + '&redirect_uri='
-					+ encodeURIComponent(this.get('auth') + '/linkedin/callback') + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
+					+ encodeURIComponent(this.redirectUri()) + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
 		}
 	});
 	return Marionette.Controller.Configuration;

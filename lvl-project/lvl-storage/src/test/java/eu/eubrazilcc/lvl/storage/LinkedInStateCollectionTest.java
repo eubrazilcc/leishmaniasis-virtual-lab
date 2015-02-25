@@ -32,6 +32,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.Test;
@@ -54,6 +55,7 @@ public class LinkedInStateCollectionTest {
 					.state("1234567890abcdEFGhiJKlMnOpqrstUVWxyZ")
 					.issuedAt(issuedAt)
 					.expiresIn(23l)
+					.redirectUri("http://localhost/callback")
 					.build();
 			LINKEDIN_STATE_DAO.insert(state);
 
@@ -80,9 +82,13 @@ public class LinkedInStateCollectionTest {
 			assertThat("number of linkedin states coincides with expected", states.size(), equalTo(1));
 			assertThat("linkedin states coincide with original", states.get(0), equalTo(state));			
 
-			// check validity			
-			boolean validity = LINKEDIN_STATE_DAO.isValid(state.getState());
+			// check validity
+			final AtomicReference<String> redirectUriRef = new AtomicReference<String>();
+			boolean validity = LINKEDIN_STATE_DAO.isValid(state.getState(), redirectUriRef);
 			assertThat("linkedin state is valid", validity, equalTo(true));
+			assertThat("linkedin redirect URI is not null", redirectUriRef.get(), notNullValue());
+			assertThat("linkedin redirect URI coincides with expected", redirectUriRef.get(), 
+					equalTo("http://localhost/callback"));			
 
 			// remove
 			LINKEDIN_STATE_DAO.delete(state.getState());

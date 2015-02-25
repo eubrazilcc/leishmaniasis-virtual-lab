@@ -41,7 +41,8 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 					crossDomain : true,
 					url : config.get('auth') + '/linkedin/state',
 					data : {
-						'state' : challenge
+						'state' : challenge,
+						'redirect_uri' : config.redirectUri()
 					}
 				}).done(function(data, textStatus, request) {
 					window.location.replace(config.linkedInAuthEndpoint(challenge));

@@ -38,6 +38,7 @@ public class LinkedInState {
 	private String state;
 	private long expiresIn;
 	private long issuedAt;
+	private String redirectUri;
 
 	public String getState() {
 		return state;
@@ -57,6 +58,12 @@ public class LinkedInState {
 	public void setIssuedAt(final long issuedAt) {
 		this.issuedAt = issuedAt;
 	}
+	public String getRedirectUri() {
+		return redirectUri;
+	}
+	public void setRedirectUri(final String redirectUri) {
+		this.redirectUri = redirectUri;
+	}
 
 	@Override
 	public boolean equals(final Object obj) {
@@ -66,7 +73,8 @@ public class LinkedInState {
 		final LinkedInState other = LinkedInState.class.cast(obj);
 		return Objects.equals(state, other.state)				
 				&& Objects.equals(expiresIn, other.expiresIn)
-				&& Objects.equals(issuedAt, other.issuedAt);
+				&& Objects.equals(issuedAt, other.issuedAt)
+				&& Objects.equals(redirectUri, other.redirectUri);
 	}
 
 	@Override
@@ -80,6 +88,7 @@ public class LinkedInState {
 				.add("state", state)				
 				.add("expiresIn", expiresIn)
 				.add("issuedAt", issuedAt)
+				.add("redirectUri", redirectUri)
 				.toString();
 	}
 
@@ -107,6 +116,12 @@ public class LinkedInState {
 		public Builder issuedAt(final long issuedAt) {
 			checkArgument(issuedAt >= 0l, "Invalid issued at");
 			instance.setIssuedAt(issuedAt);
+			return this;
+		}
+
+		public Builder redirectUri(final String redirectUri) {
+			checkArgument(isNotBlank(redirectUri), "Uninitialized or invalid redirect URI");
+			instance.setRedirectUri(redirectUri);
 			return this;
 		}
 
