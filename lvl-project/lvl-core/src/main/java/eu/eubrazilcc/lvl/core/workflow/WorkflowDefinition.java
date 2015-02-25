@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.core.workflow;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
@@ -54,7 +55,7 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 
 	@InjectLinks({
-		@InjectLink(value="pipelines/{id}", rel=SELF, type=APPLICATION_JSON, 
+		@InjectLink(value="pipelines/definitions/{id}", rel=SELF, type=APPLICATION_JSON, 
 				bindings={@Binding(name="id", value="${instance.id}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
@@ -63,8 +64,9 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 	private List<Link> links; // HATEOAS links
 
 	private String id;
+	private int version;
 	private String name;
-	private Optional<String> description;
+	private Optional<String> description = absent();	
 
 	@Override
 	public List<Link> getLinks() {
@@ -85,6 +87,12 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 	}
 	public void setId(final String id) {
 		this.id = id;
+	}	
+	public int getVersion() {
+		return version;
+	}
+	public void setVersion(final int version) {
+		this.version = version;
 	}
 	public String getName() {
 		return name;
@@ -112,13 +120,14 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 	@Override
 	public boolean equalsIgnoringVolatile(final WorkflowDefinition other) {
 		return Objects.equals(id, other.id)
+				&& Objects.equals(version, other.version)
 				&& Objects.equals(name, other.name)
 				&& Objects.equals(description.orNull(), other.description.orNull());
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, id, name, description);
+		return Objects.hash(links, id, version, name, description);
 	}
 
 	@Override
@@ -126,6 +135,7 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 		return toStringHelper(this)
 				.add("links", links)
 				.add("id", id)
+				.add("version", version)
 				.add("name", name)
 				.add("description", description.orNull())
 				.toString();
@@ -143,6 +153,11 @@ public class WorkflowDefinition implements Linkable<WorkflowDefinition> {
 
 		public Builder id(final String id) {
 			instance.setId(id);
+			return this;
+		}
+		
+		public Builder version(final int version) {
+			instance.setVersion(version);
 			return this;
 		}
 

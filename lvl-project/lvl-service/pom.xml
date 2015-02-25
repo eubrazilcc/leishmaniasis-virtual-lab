@@ -188,6 +188,10 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 							<keystoreFile>${keystore.path}</keystoreFile>
 							<keystorePass>${keystore.password}</keystorePass>
 							<fork>true</fork>
+							<systemProperties>
+								<javax.net.ssl.trustStore>${truststore.path}</javax.net.ssl.trustStore>
+								<javax.net.ssl.trustStorePassword>${truststore.password}</javax.net.ssl.trustStorePassword>
+          					</systemProperties>
 						</configuration>
 					</execution>
 					<execution>

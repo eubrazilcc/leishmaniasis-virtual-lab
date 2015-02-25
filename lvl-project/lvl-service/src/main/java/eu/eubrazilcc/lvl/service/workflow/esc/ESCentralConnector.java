@@ -26,7 +26,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.workflow.WorkflowStatus.checkPercent;
-import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -110,6 +109,7 @@ public enum ESCentralConnector implements Closeable2 {
 			for (final EscWorkflow escWorkflow : workflowClient().listAllWorkflows()) {
 				builder.add(WorkflowDefinition.builder()
 						.id(escWorkflow.getId())
+						.version(escWorkflow.getCurrentVersionNumber())
 						.name(escWorkflow.getName())
 						.description(escWorkflow.getDescription())
 						.build());
@@ -142,7 +142,7 @@ public enum ESCentralConnector implements Closeable2 {
 			checkState(escWorkflow != null, "Workflow not found");
 			final WorkflowParameters.Builder builder = WorkflowParameters.builder();			
 			final Map<String, String> map = (versionId == null) ? workflowClient().listCallableWorkflowParameters(workflowId) :
-                                                                            workflowClient().listCallableWorkflowParameters(workflowId, versionId);
+				workflowClient().listCallableWorkflowParameters(workflowId, versionId);
 			for (final Map.Entry<String, String> entry : map.entrySet()) {
 
 				// "block" is not used yet
@@ -156,9 +156,9 @@ public enum ESCentralConnector implements Closeable2 {
 	}
 
 	public WorkflowParameters getParameters(final String workflowId) {
-                return getParameters(workflowId, null);
-        }
-        
+		return getParameters(workflowId, null);
+	}
+
 	public String executeWorkflow(final String workflowId, final @Nullable String versionId, final @Nullable WorkflowParameters parameters) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		JSONObject params = new JSONObject();
@@ -171,7 +171,7 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 		try {
 			final EscWorkflowInvocation invocation = (versionId == null) ? workflowClient().executeCallableWorkflow(workflowId, versionId, params.toString()):
-			                                                               workflowClient().executeCallableWorkflow(workflowId, versionId, params.toString());
+				workflowClient().executeCallableWorkflow(workflowId, versionId, params.toString());
 			return invocation.getId();
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to execute the workflow", e);
@@ -259,7 +259,7 @@ public enum ESCentralConnector implements Closeable2 {
 						.build());
 				LOGGER.trace("Workflow '" + invocationId + "' product saved '" + doc.getId() + "' to local file " + outputFile.getCanonicalPath());	
 			}
-			
+
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to retrieve workflow products", e);
 		}

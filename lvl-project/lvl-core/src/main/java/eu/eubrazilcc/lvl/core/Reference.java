@@ -54,7 +54,7 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 public class Reference implements Linkable<Reference> {
 
 	@InjectLinks({
-		@InjectLink(value="references/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.pubmedId}")})
+		@InjectLink(value="citations/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.pubmedId}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)

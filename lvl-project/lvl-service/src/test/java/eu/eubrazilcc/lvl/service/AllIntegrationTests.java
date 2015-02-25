@@ -34,7 +34,8 @@ import org.junit.runners.Suite.SuiteClasses;
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
-@SuiteClasses({ ServiceTest.class, FullDatabaseLoadTest.class })
+/* TODO @SuiteClasses({ ServiceTest.class, FullDatabaseLoadTest.class, WorkflowTest.class }) */
+@SuiteClasses({ WorkflowTest.class })
 public class AllIntegrationTests {
 
 	@BeforeClass

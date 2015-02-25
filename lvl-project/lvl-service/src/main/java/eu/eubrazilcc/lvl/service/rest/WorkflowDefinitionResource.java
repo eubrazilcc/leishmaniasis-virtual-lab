@@ -65,7 +65,7 @@ public class WorkflowDefinitionResource {
 				.page(page)
 				.perPage(per_page)
 				.build();
-		// get workflows from e-SC		
+		// get workflows from e-SC
 		final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
 		// TODO : implement pagination
 		paginable.setElements(workflows);
