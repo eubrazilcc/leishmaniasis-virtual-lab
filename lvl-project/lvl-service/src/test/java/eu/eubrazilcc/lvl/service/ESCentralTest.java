@@ -79,7 +79,7 @@ public class ESCentralTest {
 		}
 	}
 
-	@Ignore // TODO 
+	@Ignore 
 	@Test
 	public void test() {
 		System.out.println("ESCentralTest.test()");

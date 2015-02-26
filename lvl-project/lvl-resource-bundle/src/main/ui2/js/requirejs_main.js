@@ -40,7 +40,10 @@ requirejs.config({
 		'pace' : [ '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min', 'vendor/cached/pace.min' ],
 		/* qTip2 */
 		'imagesloaded' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.1.8/imagesloaded.pkgd.min', 'vendor/cached/imagesloaded.pkgd.min' ],
-		'qtip' : [ '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ], // 2.2.1: map is unavailable		
+		'qtip' : [ '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ], // 2.2.1: map is unavailable
+		/* jsPhyloSVG */
+		'raphael' : [ '//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min', 'vendor/cached/raphael-min' ],
+		'jsphylosvg' : 'vendor/provided/jsphylosvg-min',
 		/* Add support for underscore templates */
 		'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
 		'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
@@ -107,6 +110,13 @@ requirejs.config({
 		},
 		'qtip' : {
 			deps : [ 'jquery', 'imagesloaded' ]
+		},
+		'raphael' : {
+			exports : 'Raphael'
+		},
+		'jsphylosvg' : {
+			deps : [ 'raphael' ],
+			exports : 'Smits'
 		},
 		'tpl' : {
 			deps : [ 'text' ]

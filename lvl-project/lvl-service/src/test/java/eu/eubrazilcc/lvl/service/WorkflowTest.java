@@ -57,6 +57,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -123,6 +124,7 @@ public class WorkflowTest {
 		deleteQuietly(TEST_OUTPUT_DIR);		
 	}
 
+	@Ignore
 	@Test
 	public void test() {
 		System.out.println("WorkflowTest.test()");
@@ -145,11 +147,8 @@ public class WorkflowTest {
 			// uncomment for additional output			
 			System.out.println(" >> Get definitions result: " + definitions.toString());
 			
+			// TODO : complete this test
 			
-
-
-
-			// TODO
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("WorkflowTest.test() failed: " + e.getMessage());
