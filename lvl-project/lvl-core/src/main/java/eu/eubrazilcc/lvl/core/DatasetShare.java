@@ -51,7 +51,9 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Provides information about a shared dataset */
+ * Provides information about a shared dataset.
+ * @author Erik Torres <ertorser@upv.es>
+ */
 public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 
 	@InjectLinks({

@@ -63,7 +63,7 @@ public class LeishVirtLabApplication extends Application {
 		// load logging bridges
 		LOG_MANAGER.preload();
 		// start service
-		LVL_SERVICE.service();		
+		LVL_SERVICE.service();
 		// create LVL resources
 		instances.add(new SandflySequenceResource());
 		instances.add(new LeishmaniaSequenceResource());
@@ -76,6 +76,7 @@ public class LeishVirtLabApplication extends Application {
 		instances.add(new DatasetOpenAccessResource());
 		instances.add(new PublicResource());
 		instances.add(new NotificationResource());
+		instances.add(new LvlInstanceResource());
 		// add additional JAX-RS providers
 		classes.add(MapperProvider.class);
 		classes.add(JacksonFeature.class);

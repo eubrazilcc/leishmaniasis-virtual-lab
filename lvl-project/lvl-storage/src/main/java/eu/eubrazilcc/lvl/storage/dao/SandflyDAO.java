@@ -191,13 +191,13 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 
 	@Override
 	public List<Sandfly> getNear(final Point point, final double maxDistance) {
-		final List<Sandfly> sandflys = newArrayList();
+		final List<Sandfly> sandflies = newArrayList();
 		final BasicDBList list = MONGODB_CONN.geoNear(COLLECTION, point.getCoordinates().getLongitude(), 
 				point.getCoordinates().getLatitude(), maxDistance);
 		for (int i = 0; i < list.size(); i++) {
-			sandflys.add(parseObject(list.get(i)));
+			sandflies.add(parseObject(list.get(i)));
 		}
-		return sandflys;
+		return sandflies;
 	}
 
 	@Override

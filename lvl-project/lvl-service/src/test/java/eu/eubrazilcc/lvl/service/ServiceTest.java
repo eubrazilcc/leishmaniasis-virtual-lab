@@ -114,6 +114,7 @@ import eu.eubrazilcc.lvl.core.Dataset;
 import eu.eubrazilcc.lvl.core.DatasetOpenAccess;
 import eu.eubrazilcc.lvl.core.DatasetShare;
 import eu.eubrazilcc.lvl.core.Leishmania;
+import eu.eubrazilcc.lvl.core.LvlInstance;
 import eu.eubrazilcc.lvl.core.Metadata;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.Sandfly;
@@ -128,6 +129,7 @@ import eu.eubrazilcc.lvl.service.rest.DatasetOpenAccessResource;
 import eu.eubrazilcc.lvl.service.rest.DatasetResource;
 import eu.eubrazilcc.lvl.service.rest.DatasetShareResource;
 import eu.eubrazilcc.lvl.service.rest.LeishmaniaSequenceResource;
+import eu.eubrazilcc.lvl.service.rest.LvlInstanceResource;
 import eu.eubrazilcc.lvl.service.rest.PublicResource;
 import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource;
 import eu.eubrazilcc.lvl.service.rest.SandflySequenceResource.Sequences;
@@ -588,7 +590,7 @@ public class ServiceTest {
 			System.out.println(" >> Get sandfly by accession number result: " + sandfly2.toString());
 
 			// test export sandfly 
-			final GBSeq gbSeq = target.path(path.value())
+			final GBSeq gbSeq = target.path(path.value()) // TODO
 					.path(sequenceKey.toId())
 					.path("export/gb/xml")
 					.request(APPLICATION_JSON)
@@ -1625,6 +1627,134 @@ public class ServiceTest {
 			System.out.println(" >> Delete reference response body (JSON), empty is OK: " + payload);
 			System.out.println(" >> Delete reference response JAX-RS object: " + response);
 			System.out.println(" >> Delete reference HTTP headers: " + response.getStringHeaders());
+
+			// TODO
+			// test create new instance
+			final String instanceId = "00000001";
+			final Date heartbeat = new Date();			
+
+			path = LvlInstanceResource.class.getAnnotation(Path.class);
+			final LvlInstance instance = LvlInstance.builder()
+					.instanceId(instanceId)
+					.roles(newHashSet("shard"))
+					.heartbeat(heartbeat)
+					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.90d, 38.08d).build()).build())					
+					.build();
+			response = target.path(path.value()).request()
+					.post(entity(instance, APPLICATION_JSON_TYPE));			
+			assertThat("Create new instance response is not null", response, notNullValue());
+			assertThat("Create new instance response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Create new instance response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Create new instance response entity is not null", payload, notNullValue());
+			assertThat("Create new instance response entity is empty", isBlank(payload));
+			// uncomment for additional output			
+			System.out.println(" >> Create new instance response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Create new instance response JAX-RS object: " + response);
+			System.out.println(" >> Create new instance HTTP headers: " + response.getStringHeaders());			
+
+			// test get instance by Id (Java object)
+			LvlInstance instance2 = target.path(path.value()).path(instance.getInstanceId())
+					.request(APPLICATION_JSON)
+					.get(LvlInstance.class);
+			assertThat("Get instance by Id result is not null", instance2, notNullValue());
+			assertThat("Get instance by Id coincides with expected", instance2.equalsIgnoringVolatile(instance));
+			// uncomment for additional output
+			System.out.println(" >> Get instance by Id result: " + instance2.toString());
+
+			// test list all instances (JSON encoded)
+			response = target.path(path.value()).request(APPLICATION_JSON)
+					.get();
+			assertThat("Get instances response is not null", response, notNullValue());
+			assertThat("Get instances response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+			assertThat("Get instances response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Get instances response entity is not null", payload, notNullValue());
+			assertThat("Get instances response entity is not empty", isNotBlank(payload));
+			// uncomment for additional output			
+			System.out.println(" >> Get instances response body (JSON): " + payload);
+			System.out.println(" >> Get instances response JAX-RS object: " + response);
+			System.out.println(" >> Get instances HTTP headers: " + response.getStringHeaders());			
+
+			// test list all instances (Java object)
+			LvlInstances instances = target.path(path.value()).request(APPLICATION_JSON)
+					.get(LvlInstances.class);
+			assertThat("Get instances result is not null", instances, notNullValue());
+			assertThat("Get instances list is not null", instances.getElements(), notNullValue());
+			assertThat("Get instances list is not empty", !instances.getElements().isEmpty());
+			assertThat("Get instances items count coincide with list size", instances.getElements().size(), equalTo(instances.getTotalCount()));
+			// uncomment for additional output			
+			System.out.println(" >> Get instances result: " + instances.toString());			
+
+			// test find instances near to a location (JSON encoded)
+			uri = target.path(path.value()).path("nearby").path("-122.90").path("38.08")
+					.queryParam("maxDistance", 1000.0d).getUri();
+			response2 = Request.Get(uri)
+					.addHeader("Accept", "application/json")
+					.execute()
+					.returnContent()
+					.asString();
+			assertThat("Get nearby instances result (plain) is not null", response2, notNullValue());
+			assertThat("Get nearby instances result (plain) is not empty", isNotBlank(response2));
+			// uncomment for additional output
+			System.out.println(" >> Get nearby instances result (plain): " + response2);
+			featCol = JSON_MAPPER.readValue(response2, FeatureCollection.class);
+			assertThat("Get nearby instances result (plain) is not null", featCol, notNullValue());
+			assertThat("Get nearby instances (plain) list is not null", featCol.getFeatures(), notNullValue());
+			assertThat("Get nearby instances (plain) list is not empty", featCol.getFeatures().size() > 0);
+			// uncomment for additional output
+			System.out.println(" >> Get nearby instances result (plain): " + featCol.toString());			
+
+			// test find instances near to a location (Java object)
+			featCol = target.path(path.value()).path("nearby").path("-122.90").path("38.08")
+					.queryParam("maxDistance", 1000.0d)
+					.request(APPLICATION_JSON)
+					.get(FeatureCollection.class);
+			assertThat("Get nearby instances result is not null", featCol, notNullValue());
+			assertThat("Get nearby instances list is not null", featCol.getFeatures(), notNullValue());
+			assertThat("Get nearby instances list is not empty", featCol.getFeatures().size() > 0);
+			// uncomment for additional output			
+			System.out.println(" >> Get nearby instances result: " + featCol.toString());
+
+			// test update instance
+			instance.setRoles(newHashSet("working_node"));
+			response = target.path(path.value()).path(instance.getInstanceId())
+					.request()
+					.put(entity(instance, APPLICATION_JSON_TYPE));
+			assertThat("Update instance response is not null", response, notNullValue());
+			assertThat("Update instance response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Update instance response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Update instance response entity is not null", payload, notNullValue());
+			assertThat("Update instance response entity is empty", isBlank(payload));
+			// uncomment for additional output			
+			System.out.println(" >> Update instance response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Update instance response JAX-RS object: " + response);
+			System.out.println(" >> Update instance HTTP headers: " + response.getStringHeaders());
+
+			// test get instance by Id after update
+			instance2 = target.path(path.value()).path(instance.getInstanceId())
+					.request(APPLICATION_JSON)
+					.get(LvlInstance.class);
+			assertThat("Get instance by Id after update result is not null", instance2, notNullValue());
+			assertThat("Get instance by Id after update coincides with expected", instance2.equalsIgnoringVolatile(instance));
+			// uncomment for additional output
+			System.out.println(" >> Get instance by Id after update result: " + instance2.toString());
+
+			// test delete instance
+			response = target.path(path.value()).path(instance.getInstanceId())
+					.request()
+					.delete();
+			assertThat("Delete instance response is not null", response, notNullValue());
+			assertThat("Delete instance response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
+			assertThat("Delete instance response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Delete instance response entity is not null", payload, notNullValue());
+			assertThat("Delete instance response entity is empty", isBlank(payload));
+			// uncomment for additional output			
+			System.out.println(" >> Delete instance response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Delete instance response JAX-RS object: " + response);
+			System.out.println(" >> Delete instance HTTP headers: " + response.getStringHeaders());
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
