@@ -2,17 +2,24 @@
  * RequireJS module that defines the controller: header->workspace.
  */
 
-define([ 'app', 'apps/header/show/header_workspace_view' ], function(Lvl, View) {
+define([ 'app', 'apps/config/marionette/configuration', 'apps/header/show/header_workspace_view' ], function(Lvl, Configuration, View) {
 	Lvl.module('HeaderApp.Workspace', function(Workspace, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
+		var config = new Configuration();
 		Workspace.Controller = {
 			showHeader : function(navLinks) {
 				var view = new View.Header({
 					navigation : navLinks
 				});
 				view.on('access:user:profile', function(accession) {
-					require([ 'apps/access/profile/profile_viewer' ], function(UserProfileView) {						
-						var dialogView = new UserProfileView.Content();
+					require([ 'apps/access/profile/profile_viewer', 'entities/user' ], function(UserProfileView, UserModel) {
+						var userModel = new UserModel.User({
+							'email' : config.session.get('user.session').email
+						});
+						userModel.oauth2_token = new Configuration().authorizationToken();										
+						var dialogView = new UserProfileView.Content({
+							model : userModel
+						});
 						Lvl.dialogRegion.show(dialogView);
 					});
 				});

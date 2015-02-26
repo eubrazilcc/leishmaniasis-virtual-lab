@@ -587,6 +587,17 @@ public class ServiceTest {
 			// uncomment for additional output
 			System.out.println(" >> Get sandfly by accession number result: " + sandfly2.toString());
 
+			// test export sandfly 
+			final GBSeq gbSeq = target.path(path.value())
+					.path(sequenceKey.toId())
+					.path("export/gb/xml")
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
+					.get(GBSeq.class);
+			assertThat("Export sandfly result is not null", gbSeq, notNullValue());
+			// uncomment for additional output
+			System.out.println(" >> Export sandfly result: " + gbSeq.toString());
+
 			// test update sandfly
 			sandfly.setDefinition("Modified example sandfly");
 			response = target.path(path.value()).path(sequenceKey.toId())

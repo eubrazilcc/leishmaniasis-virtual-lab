@@ -87,7 +87,7 @@ define([ 'app', 'tpl!apps/analysis/runs_item/templates/analysis_runs_item', 'app
 			},
 			terminateTimer : function() {
 				clearInterval(this.timer);
-				console.log('runs_item timer destroy');
+				// console.log('runs_item timer destroy');
 			}
 		});
 	});
