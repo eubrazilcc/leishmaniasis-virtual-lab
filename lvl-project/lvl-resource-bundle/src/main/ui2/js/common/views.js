@@ -7,7 +7,7 @@ define([ 'app', 'tpl!common/templates/loading', 'jquery.spin' ], function(Lvl, L
 	Lvl.module('Common.Views', function(Views, Lvl, Backbone, Marionette, $, _) {
 		Views.Loading = Marionette.ItemView.extend({
 			template : LoadingTpl,
-			/* onShow : function() {
+			onShow : function() {
 				var docHeight = $(document).height();
 				$('body').append("<div id='lvl-loading-overlay'></div>");
 				$('#lvl-loading-overlay').height(docHeight).css({
@@ -53,7 +53,11 @@ define([ 'app', 'tpl!common/templates/loading', 'jquery.spin' ], function(Lvl, L
 						}
 					});
 				});
-			} */
+			},
+			onDestroy : function() {
+				$('#lvl-loading-spinner').remove();
+				$('#lvl-loading-overlay').remove();
+			}
 		});
 	});
 	return Lvl.Common.Views;

@@ -9,6 +9,8 @@ requirejs.config({
 	paths : {
 		/* jQuery JavaScript library */
 		'jquery' : [ '//code.jquery.com/jquery-2.1.3.min', 'vendor/cached/jquery.min' ],
+		'spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min', 'vendor/cached/spin.min' ],
+		'jquery.spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/jquery.spin.min', 'jquery.spin.min' ],
 		/* Boostrap front-end framework */
 		'bootstrap' : [ '//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min', 'vendor/cached/bootstrap.min' ],
 		'bootstrapvalidator' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min', // 0.5.4: commercial license
@@ -49,6 +51,9 @@ requirejs.config({
 		'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
 	},
 	shim : {
+		'jquery.spin' : {
+			deps : [ 'spin', 'jquery' ]
+		},
 		'bootstrap' : {
 			deps : [ 'jquery' ]
 		},

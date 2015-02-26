@@ -43,7 +43,7 @@ define([ 'app', 'tpl!apps/access/account-validation/templates/account-validation
 					url : lvlAuth + '/pending_users/' + encodeURIComponent(formData.email),
 					data : JSON.stringify(requestData)
 				}).always(function() {
-					Lvl.fullpageRegion.destroy();
+					Lvl.fullpageRegion.reset();
 				}).done(function(data, textStatus, request) {
 					Lvl.navigate('login', {
 						trigger : true,
@@ -102,6 +102,7 @@ define([ 'app', 'tpl!apps/access/account-validation/templates/account-validation
 			},
 			onDestroy : function() {
 				$('body').removeClass('lvl-login-body');
+				Lvl.fullpageRegion.reset();
 			}
 		});
 	});

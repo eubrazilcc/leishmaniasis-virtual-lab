@@ -114,7 +114,7 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 							'Content-Type' : 'application/x-www-form-urlencoded'
 						}
 					}).always(function() {
-						Lvl.fullpageRegion.destroy();
+						Lvl.fullpageRegion.reset();
 					});
 					jqxhr.done(function(data) {
 						if (data['access_token'] !== undefined) {
@@ -139,6 +139,7 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 			},
 			onDestroy : function() {
 				$('body').removeClass('lvl-login-body');
+				Lvl.fullpageRegion.reset();
 			}
 		});
 	});
