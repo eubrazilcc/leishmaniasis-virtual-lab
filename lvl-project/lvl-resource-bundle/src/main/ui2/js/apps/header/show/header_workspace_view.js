@@ -56,6 +56,13 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 					return 'Noname';
 				}
 			},
+			events : {
+				'click a#btnProfile' : 'showUserProfile'
+			},
+			showUserProfile : function(e) {
+				e.preventDefault();
+				this.trigger('access:user:profile');
+			},
 			regions : {
 				navigation : '#section-navigation'
 			},

@@ -62,6 +62,7 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 
 	private String id;
 	private String workflowId;
+	private int version;
 	private String invocationId;
 	private WorkflowParameters parameters;
 	private String submitter;
@@ -94,6 +95,12 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 	}
 	public void setWorkflowId(final String workflowId) {
 		this.workflowId = workflowId;
+	}
+	public int getVersion() {
+		return version;
+	}
+	public void setVersion(final int version) {
+		this.version = version;
 	}
 	public String getInvocationId() {
 		return invocationId;
@@ -146,6 +153,7 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 	public boolean equalsIgnoringVolatile(final WorkflowRun other) {
 		return Objects.equals(id, other.id)
 				&& Objects.equals(workflowId, other.workflowId)
+				&& Objects.equals(version, other.version)
 				&& Objects.equals(invocationId, other.invocationId)
 				&& Objects.equals(parameters, other.parameters)
 				&& Objects.equals(submitter, other.submitter)
@@ -156,7 +164,7 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, id, workflowId, invocationId, parameters, submitted, status, products);
+		return Objects.hash(links, id, workflowId, version, invocationId, parameters, submitted, status, products);
 	}
 
 	@Override
@@ -165,6 +173,7 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 				.add("links", links)
 				.add("id", id)
 				.add("workflowId", workflowId)
+				.add("version", version)
 				.add("invocationId", invocationId)
 				.add("parameters", parameters)
 				.add("submitter", submitter)
@@ -191,6 +200,11 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 
 		public Builder workflowId(final String workflowId) {
 			instance.setWorkflowId(workflowId);
+			return this;
+		}
+		
+		public Builder version(final int version) {
+			instance.setVersion(version);
 			return this;
 		}
 

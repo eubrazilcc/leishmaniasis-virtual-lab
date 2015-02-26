@@ -11,6 +11,13 @@ define([ 'app', 'tpl!apps/analysis/pipelines/templates/analysis_pipelines', 'app
 						{
 							name : 'id',
 							label : 'Identifier',
+							editable : false,
+							cell : 'string'
+						},
+						{
+							name : 'version',
+							label : 'Version',
+							editable : false,
 							cell : 'string'
 						},
 						{

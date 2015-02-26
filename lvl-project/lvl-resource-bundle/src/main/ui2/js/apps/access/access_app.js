@@ -40,6 +40,6 @@ define([ 'app' ], function(Lvl) {
 			require([ 'apps/access/account-validation/account-validation_ctrl' ], function(AccountController) {
 				AccountController.validate(email, code);
 			});
-		});
+		});		
 	});
 });

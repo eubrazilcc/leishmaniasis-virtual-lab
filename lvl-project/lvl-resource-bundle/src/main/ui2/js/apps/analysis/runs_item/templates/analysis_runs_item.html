@@ -1,0 +1,58 @@
+<div class="row">
+  <div class="col-xs-12">
+    <div class="row">
+      <div class="col-xs-12">
+        <a class="btn btn-link hidden" id="show-edition-toolbar-btn"><i class="fa fa-chevron-right fa-fw"></i></a>        
+        <div class="btn-group" id="edition-toolbar">
+          <a class="btn btn-link" id="hide-edition-toolbar-btn"><i class="fa fa-chevron-left fa-fw"></i></a>
+          <a href="/#analysis/runs" class="btn btn-link"><i class="fa fa-arrow-circle-o-left fa-fw"></i><span class="hidden-xs"> Return</span></a>
+          <a class="btn btn-link" id="refresh-btn"><i class="fa fa-refresh fa-fw"></i><span class="hidden-xs"> Refresh</span></a>          
+        </div>
+      </div>    
+    </div>
+  </div>
+</div>
+<div class="row" id="item-container">
+  <div class="col-xs-12 col-md-8 col-lg-6">
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <h6>Id:</h6>
+    	<p style="color:#7F8C8D"><%= id %></p>
+    	<h6>Progress:</h6>
+    	<div class="progress">
+	      <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: <% if (status) { %><%= status.completeness %><% } else { %><% print('0') %><% } %>%;">
+		    <% if (status) { %><%= status.completeness %><% } else { %><% print('0') %><% } %>%
+		  </div>
+	    </div>
+    	<h6>Status: <span class="label label-default">
+    	  <% if (status) { %><%= status.status %><% } else { %><% print('Unknown') %><% } %>
+    	  </span>
+    	</h6>    	
+	  </div>
+	</div>
+  </div>
+  <div class="col-xs-12 col-md-8 col-lg-6">
+    <% if (products) { %>
+    <div class="panel-group" id="accordion">
+	  <div class="panel panel-default">
+	    <div class="panel-heading">
+	      <h4 class="panel-title">
+	        <a data-toggle="collapse" data-parent="#accordion" href="#collapseProducts">
+	          Products <i class="fa fa-caret-down fa-fw"></i>
+	        </a>
+	      </h4>
+		</div>
+		<div id="collapseProducts" class="panel-collapse collapse in">
+		  <div class="panel-body">
+		    <ul>
+			  <% _.each(products, function(item){ %>
+			  <li><a href="#" data-open='{"id" : "<%= id %>", "path" : "<%= item.path %>"}'><%= item.path %></a></li>
+              <% }); %>
+            </ul>
+		  </div>
+		</div>
+	  </div>
+	</div>
+	<% } %>
+  </div>
+</div>

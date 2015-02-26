@@ -22,18 +22,25 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.FluentIterable.from;
+import static com.google.common.collect.Sets.newHashSet;
+import static eu.eubrazilcc.lvl.core.Dataset.DATASET_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
+import static eu.eubrazilcc.lvl.service.rest.DatasetResource.ns2dbnamespace;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
+import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.WorkflowRunDAO.WORKFLOW_RUN_DAO;
 import static java.net.URLDecoder.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.createTempDirectory;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.readFileToString;
+import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -63,19 +70,24 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
+import eu.eubrazilcc.lvl.core.Dataset;
+import eu.eubrazilcc.lvl.core.Metadata;
+import eu.eubrazilcc.lvl.core.Target;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowProduct;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowRun;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 import eu.eubrazilcc.lvl.service.WorkflowRuns;
+import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
  * Workflow runs resource.
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/pipeline_runs")
+@Path("/pipelines/runs")
 public final class WorkflowRunResource {
 
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Runs Resource";
@@ -125,9 +137,37 @@ public final class WorkflowRunResource {
 			final WorkflowStatus status = ESCENTRAL_CONN.getStatus(run.getInvocationId());
 			// retrieve products
 			if (status != null && status.isCompleted()) {
-				/* TODO final ImmutableList<WorkflowProduct> products = ESCENTRAL_CONN.saveProducts(run.getInvocationId(), 
-						new File(CONFIG_MANAGER.getProductsDir(), run.getId()));
-				run.setProducts(products); */
+				File tmpDir = null;
+				try {
+					tmpDir = createTempDirectory(WorkflowRunResource.class.getSimpleName()).toFile();
+					final File tmpDir2 = tmpDir;
+					final String dbns = ns2dbnamespace(DATASET_DEFAULT_NS, ownerid);
+					final Metadata metadata = Metadata.builder()
+							.editor(ownerid)
+							.tags(newHashSet("pipeline_product"))
+							.target(Target.builder()
+									.type("pipeline_product")
+									.build()).build();
+					final ImmutableList<WorkflowProduct> products = from(ESCENTRAL_CONN.saveProducts(run.getInvocationId(), tmpDir)).transform(new Function<WorkflowProduct, WorkflowProduct>() {
+						@Override
+						public WorkflowProduct apply(final WorkflowProduct product) {
+							final String dbfname = run.getWorkflowId() + "-" + run.getInvocationId() + "-" + getName(product.getPath());													
+							final Dataset dataset = Dataset.builder()
+									.namespace(dbns)
+									.filename(dbfname)
+									.metadata(metadata)									
+									.build();
+							final WriteResult<Dataset> result = DATASET_DAO.insert(dbns, dbfname, new File(tmpDir2, product.getPath()), dataset.getMetadata());
+							LOGGER.debug("New dataset created: ns=" + dbns + ", fn=" + dbfname + ", id=" + result.getId());
+							return WorkflowProduct.builder().path(dbfname).build();
+						}
+					}).filter(notNull()).toList();
+					run.setProducts(products);
+				} catch (IOException e) {
+					LOGGER.error("Error saving workflow products", e);
+				} finally {
+					deleteQuietly(tmpDir);
+				}				
 			}
 			// update the entry in the database
 			run.setStatus(status);
@@ -145,9 +185,9 @@ public final class WorkflowRunResource {
 				.getPrincipal();
 		if (isBlank(run.getWorkflowId())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}		
+		}
 		// submit
-		final String invocationId = ESCENTRAL_CONN.executeWorkflow(run.getWorkflowId(), run.getParameters());
+		final String invocationId = ESCENTRAL_CONN.executeWorkflow(run.getWorkflowId(), Integer.toString(run.getVersion()), run.getParameters());
 		run.setId(randomUUID().toString());
 		run.setInvocationId(invocationId);
 		run.setSubmitter(ownerid);
@@ -166,11 +206,7 @@ public final class WorkflowRunResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:*:" + id.trim() + ":edit");
-		/* TODO final String[] splitted = parsePublicLinkId(id);
-		if (splitted == null || splitted.length != 2) {
-			throw new WebApplicationException("Invalid parameters", Response.Status.BAD_REQUEST);
-		} */
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:*:" + id.trim() + ":edit");		
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id);
 		if (run == null) {
@@ -187,15 +223,26 @@ public final class WorkflowRunResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:*:" + id.trim() + ":edit");
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("pipelines:runs:*:" + id.trim() + ":edit")
+				.getPrincipal();
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id);
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}		
 		// delete
-		WORKFLOW_RUN_DAO.delete(id);
-		/* TODO deleteQuietly(new File(CONFIG_MANAGER.getProductsDir(), run.getId())); */		
+		try {
+			final String dbns = ns2dbnamespace(DATASET_DEFAULT_NS, ownerid);		
+			final List<WorkflowProduct> products = run.getProducts();
+			if (products != null) {
+				for (final WorkflowProduct product : products) {
+					DATASET_DAO.delete(dbns, product.getPath());
+				}
+			}
+		} finally {
+			WORKFLOW_RUN_DAO.delete(id);
+		}	
 		// cancel the execution in the remote workflow service
 		try {
 			ESCENTRAL_CONN.cancelExecution(run.getInvocationId());
@@ -219,19 +266,25 @@ public final class WorkflowRunResource {
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("pipelines:runs:public:" + id.trim() + ":view")
 				.getPrincipal();
-		// get from database
+		// get run from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, ownerid);
+
+		// TODO
+		System.err.println("\n\n >> RUN: " + run + "\n");
+		// TODO
+
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
-		final File workflowRunBaseDir = null; /* TODO new File(CONFIG_MANAGER.getProductsDir(), run.getId()); */
+		// get dataset from database
 		String content = null;
-		try {			
-			final File file = new File(workflowRunBaseDir, decode(new String(decodeBase64(path)), UTF_8.name()));
-			if (!file.canRead()) {
-				throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+		try {
+			final String dbns = ns2dbnamespace(DATASET_DEFAULT_NS, ownerid);
+			final Dataset dataset = DATASET_DAO.find(dbns, decode(new String(decodeBase64(path)), UTF_8.name()));
+			if (dataset == null || dataset.getOutfile() == null || !dataset.getOutfile().canRead()) {
+				throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);				
 			}
-			content = readFileToString(file);
+			content = readFileToString(dataset.getOutfile());			
 		} catch (WebApplicationException wap) {
 			throw wap;
 		} catch (IOException e) {

@@ -33,7 +33,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -55,7 +54,6 @@ import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
 import eu.eubrazilcc.lvl.core.Pair;
-import eu.eubrazilcc.lvl.core.workflow.WorkflowDataObject;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowProduct;
@@ -161,7 +159,7 @@ public enum ESCentralConnector implements Closeable2 {
 
 	public String executeWorkflow(final String workflowId, final @Nullable String versionId, final @Nullable WorkflowParameters parameters) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
-		JSONObject params = new JSONObject();
+		final JSONObject params = new JSONObject();
 		if (parameters != null) {
 			for (final Map.Entry<String, List<Pair<String, String>>> entry : parameters.getParameters().entrySet()) {
 				for (final Pair<String, String> pair : entry.getValue()) {
@@ -181,6 +179,7 @@ public enum ESCentralConnector implements Closeable2 {
 	public String executeWorkflow(final String workflowId, final @Nullable WorkflowParameters parameters) {
 		return executeWorkflow(workflowId, null, parameters);
 	}
+	
 	public void cancelExecution(final String invocationId) {
 		checkArgument(isNotBlank(invocationId), "Uninitialized or invalid invocation identifier");
 		try {
@@ -216,7 +215,7 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 	}
 
-	public ImmutableList<WorkflowDataObject> listFiles() {
+	/* TODO public ImmutableList<WorkflowDataObject> listFiles() {
 		final ImmutableList.Builder<WorkflowDataObject> builder = new ImmutableList.Builder<WorkflowDataObject>();
 		try {
 			final EscFolder home = storageClient().homeFolder();
@@ -235,7 +234,7 @@ public enum ESCentralConnector implements Closeable2 {
 			throw new IllegalStateException("Failed to list files", e);
 		}
 		return builder.build();
-	}
+	} */
 
 	public void deleteFile(final String documentId) {
 		checkArgument(isNotBlank(documentId), "Uninitialized or invalid document identifier");

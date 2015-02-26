@@ -144,6 +144,8 @@ public class WorkflowTest {
 			assertThat("Get definitions items count coincide with list size", definitions.getElements().size(), equalTo(definitions.getTotalCount()));
 			// uncomment for additional output			
 			System.out.println(" >> Get definitions result: " + definitions.toString());
+			
+			
 
 
 

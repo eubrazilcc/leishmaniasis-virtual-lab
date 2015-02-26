@@ -29,18 +29,18 @@ requirejs.config({
 		'backgrid-select-all' : 'vendor/provided/backgrid-select-all.min',
 		'backgrid-filter' : 'vendor/provided/backgrid-filter.min',
 		/* OpenLayers */
-        'openlayers' : [ '//cdnjs.cloudflare.com/ajax/libs/ol3/3.2.1/ol.min', 'vendor/cached/ol.min' ],
-        /* Filesize.js */
-        'filesize' : [ '//cdn.filesizejs.com/filesize.min', 'vendor/cached/filesize.min' ],
-        /* Chance.js */
-        'chance' : 'vendor/provided/chance.min',
+		'openlayers' : [ '//cdnjs.cloudflare.com/ajax/libs/ol3/3.2.1/ol.min', 'vendor/cached/ol.min' ],
+		/* Filesize.js */
+		'filesize' : [ '//cdn.filesizejs.com/filesize.min', 'vendor/cached/filesize.min' ],
+		/* Chance.js */
+		'chance' : 'vendor/provided/chance.min',
 		/* Moment.js */
 		'moment' : [ '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment.min', 'vendor/cached/moment.min' ],
 		/* Pace */
-        'pace' : [ '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min', 'vendor/cached/pace.min' ],
+		'pace' : [ '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min', 'vendor/cached/pace.min' ],
 		/* qTip2 */
-		'imagesloaded' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.1.8/imagesloaded.pkgd.min', 'imagesloaded.pkgd.min' ],
-		'qtip' : [ '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ], // 2.2.1: map is unavailable
+		'imagesloaded' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.1.8/imagesloaded.pkgd.min', 'vendor/cached/imagesloaded.pkgd.min' ],
+		'qtip' : [ '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ], // 2.2.1: map is unavailable		
 		/* Add support for underscore templates */
 		'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
 		'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
