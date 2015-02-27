@@ -79,7 +79,7 @@ public enum ConfigurationManager implements Closeable2 {
 	CONFIG_MANAGER;
 
 	private final static Logger LOGGER = getLogger(ConfigurationManager.class);
-
+	
 	public static final String MAIN_CONFIG         = "lvl.xml";
 	public static final String REST_SERVICE_CONFIG = "lvl-service.xml";
 	public static final String AUTHZ_SERVER_CONFIG = "lvl-auth.xml";
@@ -87,6 +87,7 @@ public enum ConfigurationManager implements Closeable2 {
 	public static final ImmutableList<String> IGNORE_LIST = of("logback.xml");
 
 	public static final String LVL_NAME = "Leishmaniasis Virtual Laboratory (LVL)";
+	public static final String LVL_DEFAULT_NS = "~";
 
 	private Configuration dont_use = null;
 	private Collection<URL> urls = getDefaultConfiguration();	

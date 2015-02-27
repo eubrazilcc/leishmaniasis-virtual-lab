@@ -36,7 +36,7 @@ define([ 'app', 'tpl!apps/analysis/tree_viewer/templates/analysis_tree_viewer', 
 								type : 'GET',
 								dataType : 'text',
 								crossDomain : true,
-								url : config.get('service', '') + '/pipelines/runs/text_product/' + self.product.id + '/'
+								url : config.get('service', '') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
 										+ btoa(unescape(encodeURIComponent(self.product.path))),
 								headers : config.authorizationHeader()
 							}).done(function(data) {

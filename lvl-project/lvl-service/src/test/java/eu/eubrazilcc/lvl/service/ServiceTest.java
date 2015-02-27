@@ -25,10 +25,10 @@ package eu.eubrazilcc.lvl.service;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
-import static eu.eubrazilcc.lvl.core.Dataset.DATASET_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
@@ -848,7 +848,7 @@ public class ServiceTest {
 					.filename("my_fasta_sequences.zip")
 					.metadata(datasetMetadata)
 					.build();			
-			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (FASTA.GZIP sandfly) response is not null", response, notNullValue());
@@ -901,7 +901,7 @@ public class ServiceTest {
 			System.out.println(" >> Get datasets (user account) result: " + datasets.toString());
 
 			// test list datasets (from user account using default namespace)
-			datasets = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request(APPLICATION_JSON)
+			datasets = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(Datasets.class);
 			assertThat("Get datasets (user account) result is not null", datasets, notNullValue());
@@ -916,6 +916,7 @@ public class ServiceTest {
 			datasetMetadata = dataset.getMetadata();
 			datasetMetadata.setEditor(ownerId1);
 			datasetMetadata.setIsLastestVersion(dataset.getFilename());
+			datasetMetadata.getTags().add("fasta");
 			Dataset dataset2 = target.path(path.value()).path(datasets.getElements().get(0).getUrlSafeNamespace())
 					.path(datasets.getElements().get(0).getUrlSafeFilename())
 					.request(APPLICATION_JSON)
@@ -940,8 +941,8 @@ public class ServiceTest {
 
 			// test get dataset manually encoding the namespace and filename
 			final String datasetId = dataset2.getId();
-			dataset2 = target.path(path.value()).path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getNamespace(), DATASET_DEFAULT_NS).trim()))
-					.path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getFilename(), DATASET_DEFAULT_NS).trim()))
+			dataset2 = target.path(path.value()).path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getNamespace(), LVL_DEFAULT_NS).trim()))
+					.path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getFilename(), LVL_DEFAULT_NS).trim()))
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(Dataset.class);			
@@ -1001,7 +1002,7 @@ public class ServiceTest {
 					.filename("my_ncbi_sequences.zip")
 					.metadata(datasetMetadata)
 					.build();
-			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (NCBI.GZIP sandfly) response is not null", response, notNullValue());
@@ -1033,7 +1034,7 @@ public class ServiceTest {
 					.filename("my_sequence.fasta")
 					.metadata(datasetMetadata)
 					.build();
-			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (FASTA sandfly) response is not null", response, notNullValue());
@@ -1066,7 +1067,7 @@ public class ServiceTest {
 					.filename("my_ncbi_sequence.xml")
 					.metadata(datasetMetadata)
 					.build();
-			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));
 			assertThat("Create dataset (NCBI sandfly) response is not null", response, notNullValue());
@@ -1099,7 +1100,7 @@ public class ServiceTest {
 					.filename("my_ncbi_sequences.zip")
 					.metadata(datasetMetadata)
 					.build();
-			response = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS)).request()
+			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(dataset, APPLICATION_JSON_TYPE));			
 			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is not null", response, notNullValue());
@@ -1117,7 +1118,7 @@ public class ServiceTest {
 			assertThat("Create dataset (NCBI.GZIP sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
 
 			// test file download
-			URI downloadUri = target.path(path.value()).path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+			URI downloadUri = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS))
 					.path(urlEncodeUtf8("my_ncbi_sequence.xml")).path("download").getUri();
 			org.apache.http.client.fluent.Response response3 = Request.Get(downloadUri)
 					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
@@ -1176,7 +1177,7 @@ public class ServiceTest {
 					.subject(ownerId2)
 					.build();
 			response = target.path(path.value())
-					.path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+					.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
@@ -1226,7 +1227,7 @@ public class ServiceTest {
 
 			// test list dataset shares (from owner)
 			shares = target.path(path.value())
-					.path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+					.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
@@ -1355,7 +1356,7 @@ public class ServiceTest {
 					.namespace(ownerId1)
 					.build();
 			response = target.path(path.value())
-					.path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+					.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.post(entity(openAccess, APPLICATION_JSON_TYPE));
@@ -1407,7 +1408,7 @@ public class ServiceTest {
 
 			// test list open access links (from owner account)
 			DatasetOpenAccesses openAccesses = target.path(path.value())
-					.path(urlEncodeUtf8(DATASET_DEFAULT_NS))
+					.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 					.request(APPLICATION_JSON)
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.get(DatasetOpenAccesses.class);

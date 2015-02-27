@@ -41,19 +41,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
-		</dependency>
-		
-		<!-- Morphia: library for mapping Java objects to/from MongoDB
-		<dependency>
-			<groupId>org.mongodb.morphia</groupId>
-			<artifactId>morphia</artifactId>
-		</dependency> -->
-		
-		<!-- Data binding package built on Jackson JSON processor
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-		</dependency> -->		
+		</dependency>				
 	</dependencies>
 
 	<build>

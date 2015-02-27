@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -60,8 +61,6 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
  */
 public class Dataset extends BaseFile implements Linkable<Dataset> {
 
-	public static final String DATASET_DEFAULT_NS = "~";
-	
 	@InjectLinks({
 		@InjectLink(value="datasets/objects/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={
 				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
@@ -72,17 +71,17 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
-	
+
 	@JsonIgnore
 	private String urlSafeNamespace;
 	@JsonIgnore
 	private String urlSafeFilename;	
 
 	private String namespace;
-	
+
 	public Dataset() {
 		super();
-		setNamespace(DATASET_DEFAULT_NS);
+		setNamespace(LVL_DEFAULT_NS);
 	}
 
 	@Override
@@ -121,9 +120,9 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	public void setNamespace(final String namespace) {
 		this.namespace = namespace;
-		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(namespace, DATASET_DEFAULT_NS).trim()));
+		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(namespace, LVL_DEFAULT_NS).trim()));
 	}
-	
+
 	@Override
 	public void setFilename(final String filename) {
 		super.setFilename(filename);

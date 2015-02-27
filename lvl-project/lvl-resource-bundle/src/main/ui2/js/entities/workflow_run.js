@@ -7,7 +7,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		'use strict';
 		var config = new Configuration();
 		Entities.WorkflowRun = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/pipelines/runs/',
+			urlRoot : config.get('service', '') + '/pipelines/runs/~/',
 			defaults : {
 				id : '',
 				workflowId : '',
@@ -58,8 +58,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		Entities.WorkflowRunPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.WorkflowRun,
 			mode : 'server',
-			// url : 'wrokflow_data.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/pipelines/runs',
+			// url : 'workflow_data.json?burst=' + Math.random(),
+			url : config.get('service', '') + '/pipelines/runs/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -86,7 +86,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		});
 		Entities.WorkflowRunAllCollection = Backbone.PageableCollection.extend({
 			model : Entities.WorkflowRun,
-			url : config.get('service', '') + '/pipelines/runs',
+			url : config.get('service', '') + '/pipelines/runs/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

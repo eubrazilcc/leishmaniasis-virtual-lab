@@ -22,14 +22,14 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
-import static eu.eubrazilcc.lvl.core.Dataset.DATASET_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlDecodeUtf8;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.service.io.DatasetWriter.writeDataset;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2dbnamespace;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
-import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.OWNERID_EL_TEMPLATE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -240,22 +240,6 @@ public class DatasetResource {
 		return Response.ok(stream, isNotBlank(dataset.getContentType()) ? dataset.getContentType(): APPLICATION_OCTET_STREAM)
 				.header("content-disposition", "attachment; filename = " + dataset.getFilename())
 				.build();
-	}
-
-	public static final String parseParam(final String param) {
-		String param2 = null;
-		if (isBlank(param) || isBlank(param2 = trimToNull(urlDecodeUtf8(param)))) {
-			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
-		}
-		return param2;
-	}
-
-	public static final String ns2permission(final String namespace) {
-		return DATASET_DEFAULT_NS.equals(namespace) ? OWNERID_EL_TEMPLATE : namespace;
-	}
-
-	public static final String ns2dbnamespace(final String namespace, final String ownerid) {
-		return DATASET_DEFAULT_NS.equals(namespace) ? ownerid : namespace;
 	}
 
 }

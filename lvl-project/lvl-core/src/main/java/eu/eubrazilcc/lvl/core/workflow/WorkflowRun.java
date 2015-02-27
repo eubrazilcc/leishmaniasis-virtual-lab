@@ -24,8 +24,12 @@ package eu.eubrazilcc.lvl.core.workflow;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang.StringUtils.trimToEmpty;
 
 import java.util.Date;
 import java.util.List;
@@ -37,6 +41,7 @@ import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -52,13 +57,22 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 public class WorkflowRun implements Linkable<WorkflowRun> {
 
 	@InjectLinks({
-		@InjectLink(value="pipeline_runs/{id}", rel=SELF, type=APPLICATION_JSON, 
-				bindings={@Binding(name="id", value="${instance.id}")})
+		@InjectLink(value="pipeline_runs/{urlSafeNamespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
+				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
+				@Binding(name="urlSafeId", value="${instance.urlSafeId}")
+		})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
+
+	@JsonIgnore
+	private String urlSafeNamespace;
+	@JsonIgnore
+	private String urlSafeId;
+
+	private String namespace;
 
 	private String id;
 	private String workflowId;
@@ -69,6 +83,11 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 	private Date submitted;
 	private WorkflowStatus status;
 	private List<WorkflowProduct> products;
+
+	public WorkflowRun() {
+		super();
+		setNamespace(LVL_DEFAULT_NS);
+	}
 
 	@Override
 	public List<Link> getLinks() {
@@ -84,11 +103,37 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 		}
 	}
 
+	public String getUrlSafeNamespace() {
+		return urlSafeNamespace;
+	}
+
+	public void setUrlSafeNamespace(final String urlSafeNamespace) {
+		this.urlSafeNamespace = urlSafeNamespace;
+	}	
+
+	public String getUrlSafeId() {
+		return urlSafeId;
+	}
+
+	public void setUrlSafeId(final String urlSafeId) {
+		this.urlSafeId = urlSafeId;
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public void setNamespace(final String namespace) {
+		this.namespace = namespace;
+		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(namespace, LVL_DEFAULT_NS).trim()));
+	}
+
 	public String getId() {
 		return id;
 	}
 	public void setId(final String id) {
 		this.id = id;
+		setUrlSafeId(urlEncodeUtf8(trimToEmpty(id)));		
 	}
 	public String getWorkflowId() {
 		return workflowId;
@@ -145,7 +190,9 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 			return false;
 		}
 		final WorkflowRun other = WorkflowRun.class.cast(obj);
-		return Objects.equals(links, other.links)
+		return Objects.equals(urlSafeNamespace, other.urlSafeNamespace)
+				&& Objects.equals(urlSafeId, other.urlSafeId)
+				&& Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -164,13 +211,15 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, id, workflowId, version, invocationId, parameters, submitted, status, products);
+		return Objects.hash(links, urlSafeNamespace, urlSafeId, id, workflowId, version, invocationId, parameters, submitted, status, products);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("links", links)
+				.add("urlSafeNamespace", urlSafeNamespace)
+				.add("urlSafeId", urlSafeId)
 				.add("id", id)
 				.add("workflowId", workflowId)
 				.add("version", version)
@@ -193,6 +242,11 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 
 		private final WorkflowRun instance = new WorkflowRun();
 
+		public Builder namespace(final String namespace) {
+			instance.setNamespace(trimToEmpty(namespace));
+			return this;
+		}
+
 		public Builder id(final String id) {
 			instance.setId(id);
 			return this;
@@ -202,7 +256,7 @@ public class WorkflowRun implements Linkable<WorkflowRun> {
 			instance.setWorkflowId(workflowId);
 			return this;
 		}
-		
+
 		public Builder version(final int version) {
 			instance.setVersion(version);
 			return this;

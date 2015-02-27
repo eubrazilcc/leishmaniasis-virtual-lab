@@ -23,7 +23,7 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
-import static eu.eubrazilcc.lvl.service.rest.DatasetResource.parseParam;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;

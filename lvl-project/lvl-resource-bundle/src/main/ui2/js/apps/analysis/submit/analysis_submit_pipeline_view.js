@@ -53,7 +53,7 @@ define([ 'app', 'tpl!apps/analysis/submit/templates/analysis_submit_pipeline', '
 					type : 'POST',
 					contentType : 'application/json',
 					crossDomain : true,
-					url : config.get('service', '') + '/pipelines/runs',
+					url : config.get('service', '') + '/pipelines/runs/~',
 					data : JSON.stringify(requestData),
 					headers : config.authorizationHeader()
 				}).done(function() {

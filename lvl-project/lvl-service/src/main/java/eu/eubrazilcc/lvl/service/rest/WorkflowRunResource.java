@@ -25,10 +25,13 @@ package eu.eubrazilcc.lvl.service.rest;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Sets.newHashSet;
-import static eu.eubrazilcc.lvl.core.Dataset.DATASET_DEFAULT_NS;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
-import static eu.eubrazilcc.lvl.service.rest.DatasetResource.ns2dbnamespace;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2dbnamespace;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.WorkflowRunDAO.WORKFLOW_RUN_DAO;
 import static java.net.URLDecoder.decode;
@@ -37,11 +40,13 @@ import static java.nio.file.Files.createTempDirectory;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -95,12 +100,14 @@ public final class WorkflowRunResource {
 	protected final static Logger LOGGER = getLogger(WorkflowRunResource.class);
 
 	@GET
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public WorkflowRuns getWorkflowRuns(final @QueryParam("page") @DefaultValue("0") int page,
+	public WorkflowRuns getWorkflowRuns(final @PathParam("namespace") String namespace, final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace);
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("pipelines:runs:public:*:view")
+				.requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":*:view")
 				.getPrincipal();
 		final WorkflowRuns paginable = WorkflowRuns.start()
 				.page(page)
@@ -117,18 +124,19 @@ public final class WorkflowRunResource {
 	}
 
 	@GET
-	@Path("{id}")
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
 	@Produces(APPLICATION_JSON)
-	public WorkflowRun getWorkflowRun(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+	public WorkflowRun getWorkflowRun(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("pipelines:runs:public:" + id.trim() + ":view")
+				.requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":" + id2 + ":view")
 				.getPrincipal();
 		// get from database
-		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, ownerid);
+		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id2, ownerid);
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -141,7 +149,7 @@ public final class WorkflowRunResource {
 				try {
 					tmpDir = createTempDirectory(WorkflowRunResource.class.getSimpleName()).toFile();
 					final File tmpDir2 = tmpDir;
-					final String dbns = ns2dbnamespace(DATASET_DEFAULT_NS, ownerid);
+					final String dbns = ns2dbnamespace(LVL_DEFAULT_NS, ownerid);
 					final Metadata metadata = Metadata.builder()
 							.editor(ownerid)
 							.tags(newHashSet("pipeline_product"))
@@ -177,17 +185,20 @@ public final class WorkflowRunResource {
 	}
 
 	@POST
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public Response createWorkflowRun(final WorkflowRun run, final @Context UriInfo uriInfo, final @Context HttpServletRequest request, 
-			final @Context HttpHeaders headers) {
+	public Response createWorkflowRun(final @PathParam("namespace") String namespace, final WorkflowRun run, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace);
+		String workflowId2 = null;
+		if (run == null || isBlank(workflowId2 = trimToNull(run.getWorkflowId()))) {
+			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
+		}		
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("pipelines:runs:*:*:create")
-				.getPrincipal();
-		if (isBlank(run.getWorkflowId())) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
+				.requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":*:create")
+				.getPrincipal();		
 		// submit
-		final String invocationId = ESCENTRAL_CONN.executeWorkflow(run.getWorkflowId(), Integer.toString(run.getVersion()), run.getParameters());
+		final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflowId2, Integer.toString(run.getVersion()), run.getParameters());
 		run.setId(randomUUID().toString());
 		run.setInvocationId(invocationId);
 		run.setSubmitter(ownerid);
@@ -199,14 +210,15 @@ public final class WorkflowRunResource {
 	}
 
 	@PUT
-	@Path("{id}")
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
 	@Consumes(APPLICATION_JSON)
-	public void updateWorkflowRun(final @PathParam("id") String id, final WorkflowRun update, 
+	public void updateWorkflowRun(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final WorkflowRun update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
+		if (update == null) {
+			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:*:" + id.trim() + ":edit");		
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":" + id2 + ":edit");		
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id);
 		if (run == null) {
@@ -217,23 +229,21 @@ public final class WorkflowRunResource {
 	}
 
 	@DELETE
-	@Path("{id}")
-	public void deleteWorkflowRun(final @PathParam("id") String id, final @Context HttpServletRequest request, 
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
+	public void deleteWorkflowRun(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("pipelines:runs:*:" + id.trim() + ":edit")
+				.requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":" + id2 + ":edit")
 				.getPrincipal();
 		// get from database
-		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id);
+		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id2);
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}		
 		// delete
 		try {
-			final String dbns = ns2dbnamespace(DATASET_DEFAULT_NS, ownerid);		
+			final String dbns = ns2dbnamespace(LVL_DEFAULT_NS, ownerid);		
 			final List<WorkflowProduct> products = run.getProducts();
 			if (products != null) {
 				for (final WorkflowProduct product : products) {
@@ -241,7 +251,7 @@ public final class WorkflowRunResource {
 				}
 			}
 		} finally {
-			WORKFLOW_RUN_DAO.delete(id);
+			WORKFLOW_RUN_DAO.delete(id2);
 		}	
 		// cancel the execution in the remote workflow service
 		try {
@@ -256,26 +266,24 @@ public final class WorkflowRunResource {
 	 * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_.22Unicode_Problem.22">Base64 encoding and decoding</a>
 	 */
 	@GET
-	@Path("text_product/{id}/{path}")
+	@Path("text_product/{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}/{path}")
 	@Produces(TEXT_PLAIN)
-	public String getTextProduct(final @PathParam("id") String id, final @PathParam("path") String path,
+	public String getTextProduct(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @PathParam("path") String path,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		if (isBlank(id) || isBlank(path)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id), path2 = parseParam(path);
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("pipelines:runs:public:" + id.trim() + ":view")
+				.requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":" + id2 + ":view")
 				.getPrincipal();
 		// get run from database
-		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, ownerid);
+		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id2, ownerid);
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// get dataset from database
 		String content = null;
 		try {
-			final String dbns = ns2dbnamespace(DATASET_DEFAULT_NS, ownerid);
-			final Dataset dataset = DATASET_DAO.find(dbns, decode(new String(decodeBase64(path)), UTF_8.name()));
+			final String dbns = ns2dbnamespace(LVL_DEFAULT_NS, ownerid);
+			final Dataset dataset = DATASET_DAO.find(dbns, decode(new String(decodeBase64(path2)), UTF_8.name()));
 			if (dataset == null || dataset.getOutfile() == null || !dataset.getOutfile().canRead()) {
 				throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);				
 			}

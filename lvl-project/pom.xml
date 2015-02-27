@@ -109,6 +109,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		  <groupId>org.hamcrest</groupId>
 		  <artifactId>hamcrest-library</artifactId>
 		  <version>${hamcrest.version}</version>
+		  <scope>test</scope>
         </dependency>
 
 		<!-- Mockito: a mock objects library for Java -->

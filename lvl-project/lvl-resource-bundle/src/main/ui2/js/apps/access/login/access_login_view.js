@@ -31,6 +31,11 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 				e.preventDefault();
 				var self = this;
 				$('#signup_linkedin_btn').attr('disabled', 'disabled');
+				// show loading view
+				require([ 'common/views' ], function(CommonViews) {
+					var loadingView = new CommonViews.Loading();
+					Lvl.fullpageRegion.show(loadingView);
+				});
 				var challenge = new Chance().string({
 					length : 16,
 					pool : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -51,6 +56,8 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 					window.location.replace(config.linkedInAuthEndpoint(challenge));
 				}).fail(function() {
 					$('#alertBox').removeClass('hidden');
+				}).always(function() {
+					Lvl.fullpageRegion.reset();
 				});
 			},
 			onBeforeRender : function() {
@@ -90,52 +97,55 @@ define([ 'app', 'tpl!apps/access/login/templates/login', 'apps/config/marionette
 				}).on('success.field.bv', function(e, data) {
 					var isValid = data.bv.isValid();
 					data.bv.disableSubmitButtons(!isValid);
-				}).on('success.form.bv', function(e) {
-					e.preventDefault();
-					$('#submit-login-button').blur();
-					// show loading view
-					require([ 'common/views' ], function(CommonViews) {
-						var loadingView = new CommonViews.Loading();
-						Lvl.fullpageRegion.show(loadingView);
-					});
-					// contact the LVL authorization service
-					var jqxhr = $.ajax({
-						type : 'POST',
-						url : config.get('auth') + '/token',
-						data : {
-							'client_id' : config.get('oauth2_app').client_id,
-							'client_secret' : config.get('oauth2_app').client_secret,
-							'grant_type' : 'password',
-							'username' : $('input[name=login-email]').val(),
-							'password' : $('input[name=login-pass]').val(),
-							'use_email' : 'true'
-						},
-						headers : {
-							'Content-Type' : 'application/x-www-form-urlencoded'
-						}
-					}).always(function() {
-						Lvl.fullpageRegion.reset();
-					});
-					jqxhr.done(function(data) {
-						if (data['access_token'] !== undefined) {
-							config.saveSession($('input[name=login-email]').val(), data['access_token'], 'lvl', $('input[name=login-remember]').is(":checked"));
-							Lvl.navigate(decodeURIComponent(target), {
-								trigger : true
+				}).on(
+						'success.form.bv',
+						function(e) {
+							e.preventDefault();
+							$('#submit-login-button').blur();
+							// show loading view
+							require([ 'common/views' ], function(CommonViews) {
+								var loadingView = new CommonViews.Loading();
+								Lvl.fullpageRegion.show(loadingView);
 							});
-						} else {
-							Lvl.navigate('login/' + target + '/invalid_server_response', {
-								trigger : true,
-								replace : true
+							// contact the LVL authorization service
+							var jqxhr = $.ajax({
+								type : 'POST',
+								url : config.get('auth') + '/token',
+								data : {
+									'client_id' : config.get('oauth2_app').client_id,
+									'client_secret' : config.get('oauth2_app').client_secret,
+									'grant_type' : 'password',
+									'username' : $('input[name=login-email]').val(),
+									'password' : $('input[name=login-pass]').val(),
+									'use_email' : 'true'
+								},
+								headers : {
+									'Content-Type' : 'application/x-www-form-urlencoded'
+								}
+							}).always(function() {
+								Lvl.fullpageRegion.reset();
 							});
-						}
-					});
-					jqxhr.fail(function() {
-						Lvl.navigate('login/' + target + '/refused', {
-							trigger : true,
-							replace : true
+							jqxhr.done(function(data) {
+								if (data['access_token'] !== undefined) {
+									config.saveSession($('input[name=login-email]').val(), data['access_token'], 'lvl', $('input[name=login-remember]').is(
+											":checked"));
+									Lvl.navigate(decodeURIComponent(target), {
+										trigger : true
+									});
+								} else {
+									Lvl.navigate('login/' + target + '/invalid_server_response', {
+										trigger : true,
+										replace : true
+									});
+								}
+							});
+							jqxhr.fail(function() {
+								Lvl.navigate('login/' + target + '/refused', {
+									trigger : true,
+									replace : true
+								});
+							});
 						});
-					});
-				});
 			},
 			onDestroy : function() {
 				$('body').removeClass('lvl-login-body');
