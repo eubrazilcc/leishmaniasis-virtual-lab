@@ -48,7 +48,7 @@ define([ 'app', 'tpl!apps/analysis/submit/templates/analysis_submit_pipeline', '
 					'links' : null
 				};
 				// submit request to LVL server
-				$('#submit-btn').attr('disabled', 'disabled');				
+				$('#submit-btn').attr('disabled', 'disabled');
 				var jqxhr = $.ajax({
 					type : 'POST',
 					contentType : 'application/json',
@@ -56,8 +56,15 @@ define([ 'app', 'tpl!apps/analysis/submit/templates/analysis_submit_pipeline', '
 					url : config.get('service', '') + '/pipelines/runs/~',
 					data : JSON.stringify(requestData),
 					headers : config.authorizationHeader()
-				}).done(function() {
+				}).done(function(data, textStatus, request) {
 					self.trigger('destroy');
+					require([ 'common/growl' ], function(createGrowl) {
+						var anchor = $('<a>', {
+							href : request.getResponseHeader('Location')
+						})[0];
+						var id = anchor.pathname.substring(anchor.pathname.lastIndexOf('/') + 1);
+						createGrowl('Pipeline submitted: <a href="/#analysis/runs/' + id + '"><i class="fa fa-arrow-circle-right fa-fw"></i> show</a>', false);
+					});
 				}).fail(function() {
 					self.trigger('destroy');
 					require([ 'qtip' ], function(qtip) {

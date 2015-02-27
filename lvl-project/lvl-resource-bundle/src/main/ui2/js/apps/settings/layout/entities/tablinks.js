@@ -1,9 +1,9 @@
 /**
- * RequireJS module that defines the entity: e-compendium->tab-link.
+ * RequireJS module that defines the entity: settings->tab-link.
  */
 
 define([ 'app', 'backbone.picky' ], function(Lvl) {
-	Lvl.module('ECompendiumApp.Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('SettingsApp.Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		Entities.Navigation = Backbone.Model.extend({
 			defaults : {
 				link : '',
@@ -47,24 +47,14 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 		var iniNavigationLinks = function() {
 			Entities.navigationLinks = new Entities.NavigationECompendium([ {
 				id : 1,
-				link : 'browse',
+				link : 'account',
 				icon : 'fa-table',
-				text : 'Browse'
+				text : 'Account'
 			}, {
 				id : 2,
-				link : 'map',
+				link : 'instances',
 				icon : 'fa-map-marker',
-				text : 'Map'
-			}, {
-				id : 3,
-				link : 'stats',
-				icon : 'fa-bar-chart-o',
-				text : 'Stats'
-			}, {
-				id : 4,
-				link : 'submit',
-				icon : 'fa-cloud-upload',
-				text : 'Submit'
+				text : 'Instances'
 			} ]);
 		};
 
@@ -77,7 +67,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 			}
 		}
 
-		Lvl.reqres.setHandler('e-compendium:navigation:entities', function() {
+		Lvl.reqres.setHandler('settings:navigation:entities', function() {
 			return API.getNavigationEntities();
 		});
 	});

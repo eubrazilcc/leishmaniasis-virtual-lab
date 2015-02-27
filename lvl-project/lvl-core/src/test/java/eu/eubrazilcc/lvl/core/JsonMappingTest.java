@@ -157,6 +157,14 @@ public class JsonMappingTest {
 					.build();
 			assertThat("dataset share is not null", datasetShare, notNullValue());
 
+			final LvlInstance instance = LvlInstance.builder()
+					.instanceId("instanceId")
+					.roles(newHashSet("shard"))
+					.heartbeat(new Date())
+					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(3.7036d, 40.4169d).build()).build())					
+					.build();
+			assertThat("instance is not null", instance, notNullValue());
+
 			// test GenBank sequence
 			testGenBankSequence(gbSeq);
 
@@ -197,6 +205,13 @@ public class JsonMappingTest {
 			// test dataset share with links
 			datasetShare.setLinks(newArrayList(refLink));
 			testDatasetShare(datasetShare);
+
+			// test instance with no links
+			testInstance(instance);
+
+			// test instance with links
+			instance.setLinks(newArrayList(refLink));
+			testInstance(instance);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -302,6 +317,20 @@ public class JsonMappingTest {
 		final DatasetShare datasetShare2 = JSON_MAPPER.readValue(payload, DatasetShare.class);
 		assertThat("deserialized dataset share is not null", datasetShare2, notNullValue());
 		assertThat("deserialized dataset share coincides with expected", datasetShare2, equalTo(datasetShare));
+	}
+
+	private void testInstance(final LvlInstance instance) throws IOException {
+		// test instance JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(instance);
+		assertThat("serialized instance is not null", payload, notNullValue());
+		assertThat("serialized instance is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized instance (JSON): " + payload);
+
+		// test instance JSON deserialization
+		final LvlInstance instance2 = JSON_MAPPER.readValue(payload, LvlInstance.class);
+		assertThat("deserialized instance is not null", instance2, notNullValue());
+		assertThat("deserialized instance coincides with expected", instance2, equalTo(instance));
 	}
 
 }

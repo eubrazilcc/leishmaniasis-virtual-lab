@@ -9,7 +9,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 		var Router = Backbone.Router.extend({
 			routes : {
 				'settings' : 'defaultSettings',
-				'settings/account' : 'accountSettings',
+				'settings/account' : 'accountSettings',				
 				'settings/instances' : 'instancesSettings'
 			},
 			before : function() {
