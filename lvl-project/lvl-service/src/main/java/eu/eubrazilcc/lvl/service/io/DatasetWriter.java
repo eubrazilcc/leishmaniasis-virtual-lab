@@ -128,12 +128,14 @@ public final class DatasetWriter {
 					} else {
 						outfile = writeFastaSequences(files, outputDir, compression);
 					}
+					dataset.getMetadata().getTags().add("fasta");
 				} else {
 					if (files.size() == 1) {
 						outfile = writeGbXmlSequence(files.get(0), outputDir, compression);
 					} else {
 						outfile = writeGbXmlSequences(files, outputDir, compression);
 					}
+					dataset.getMetadata().getTags().add("ncbi_xml");
 				}
 			} catch (IOException e) {
 				throw new IllegalStateException("Failed to copy sequence", e);

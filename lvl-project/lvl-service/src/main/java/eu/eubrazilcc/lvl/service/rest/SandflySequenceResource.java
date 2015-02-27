@@ -248,8 +248,8 @@ public final class SandflySequenceResource {
 		final Sequence sequence = SANDFLY_DAO.find(sequenceKey);
 		if (sequence == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
-		}		
-		final GBSeq gbSeq = sequence.getSequence();		
+		}
+		final GBSeq gbSeq = sequence.getSequence();
 		if (gbSeq == null) {
 			throw new WebApplicationException("Unable to complete the operation", Response.Status.INTERNAL_SERVER_ERROR);
 		}

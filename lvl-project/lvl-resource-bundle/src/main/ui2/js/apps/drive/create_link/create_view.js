@@ -30,7 +30,7 @@ define([ 'app', 'tpl!apps/drive/create_link/templates/create_link', 'apps/config
 					type : 'POST',
 					contentType : 'application/json',
 					crossDomain : true,
-					url : config.get('service', '') + '/datasets/open_access/files',
+					url : config.get('service', '') + '/datasets/open_access/~',
 					data : JSON.stringify(requestData),
 					headers : config.authorizationHeader()
 				}).done(function(data, textStatus, request) {

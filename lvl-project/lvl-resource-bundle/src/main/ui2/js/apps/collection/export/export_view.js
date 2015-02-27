@@ -43,7 +43,7 @@ define([ 'app', 'tpl!apps/collection/export/templates/collection_export_dataset'
 							type : 'POST',
 							contentType : 'application/json',
 							crossDomain : true,
-							url : config.get('service', '') + '/datasets/objects/files',
+							url : config.get('service', '') + '/datasets/objects/~',
 							data : JSON.stringify(requestData),
 							headers : config.authorizationHeader()
 						}).done(

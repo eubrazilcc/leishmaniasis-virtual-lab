@@ -140,7 +140,7 @@ public class LvlInstance implements Localizable<Point>, Linkable<LvlInstance> {
 	public void setLocation(final Point location) {
 		this.location = location;
 	}
-	
+
 	@JsonIgnore
 	@Override
 	public String getTag() {
@@ -153,7 +153,7 @@ public class LvlInstance implements Localizable<Point>, Linkable<LvlInstance> {
 			return false;
 		}
 		final LvlInstance other = LvlInstance.class.cast(obj);
-		return  Objects.equals(urlSafeInstanceId, other.urlSafeInstanceId)				
+		return Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -162,9 +162,9 @@ public class LvlInstance implements Localizable<Point>, Linkable<LvlInstance> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equals(instanceId,other.instanceId)
-				&& Objects.equals(roles, other.roles)
-				&& Objects.equals(links, other.links)
+		return  Objects.equals(urlSafeInstanceId, other.urlSafeInstanceId)
+				&& Objects.equals(instanceId,other.instanceId)
+				&& Objects.equals(roles, other.roles)				
 				&& Objects.equals(heartbeat, other.heartbeat)
 				&& Objects.equals(location, other.location);
 	}

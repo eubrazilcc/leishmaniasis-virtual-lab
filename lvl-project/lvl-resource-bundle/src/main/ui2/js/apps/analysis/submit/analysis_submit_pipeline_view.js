@@ -28,7 +28,7 @@ define([ 'app', 'tpl!apps/analysis/submit/templates/analysis_submit_pipeline', '
 						'parameters' : {
 							'block_11' : [ {
 								'key' : 'SequenceURL',
-								'value' : config.get('service') + '/datasets/objects/files/' + encodeURIComponent(formData.fasta_select) + '/download'
+								'value' : config.get('service') + '/datasets/objects/~/' + encodeURIComponent(formData.fasta_select) + '/download'
 							}, {
 								'key' : 'HTTPGet-RequestHeaders',
 								'value' : 'Authorization: Bearer ' + config.authorizationToken()

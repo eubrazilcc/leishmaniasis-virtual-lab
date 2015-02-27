@@ -7,7 +7,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 		'use strict';
 		var config = new Configuration();
 		Entities.Dataset = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/datasets/objects/files/',
+			urlRoot : config.get('service', '') + '/datasets/objects/~/',
 			idAttribute : 'filename',
 			defaults : {
 				description : '',
@@ -39,8 +39,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 		Entities.DatasetPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Dataset,
 			mode : 'server',
-			// url : 'datasets/objects/files.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/datasets/objects/files',
+			// url : 'datasets.json?burst=' + Math.random(),
+			url : config.get('service', '') + '/datasets/objects/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -67,7 +67,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 		});
 		Entities.DatasetAllCollection = Backbone.PageableCollection.extend({
 			model : Entities.Dataset,
-			url : config.get('service', '') + '/datasets/objects/files',
+			url : config.get('service', '') + '/datasets/objects/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

@@ -7,7 +7,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 		'use strict';
 		var config = new Configuration();
 		Entities.Link = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/datasets/open_access/files/',
+			urlRoot : config.get('service', '') + '/datasets/open_access/~/',
 			idAttribute : 'filename',
 			defaults : {
 				openAccessLink : '',
@@ -36,8 +36,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 		Entities.LinkPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Link,
 			mode : 'server',
-			// url : 'datasets/open_access/files.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/datasets/open_access/files',
+			// url : 'datasets.json?burst=' + Math.random(),
+			url : config.get('service', '') + '/datasets/open_access/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -64,7 +64,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 		});
 		Entities.LinkAllCollection = Backbone.PageableCollection.extend({
 			model : Entities.Link,
-			url : config.get('service', '') + '/datasets/open_access/files',
+			url : config.get('service', '') + '/datasets/open_access/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

@@ -268,11 +268,6 @@ public final class WorkflowRunResource {
 				.getPrincipal();
 		// get run from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id, ownerid);
-
-		// TODO
-		System.err.println("\n\n >> RUN: " + run + "\n");
-		// TODO
-
 		if (run == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}

@@ -16,6 +16,33 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/templates/drive_datasets'
 					cell : 'string'
 				},
 				{
+					name : 'tags',
+					label : 'Tags',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var metadata = this.model.get('metadata');
+							var rawValue = metadata ? metadata[this.column.get('name')] : undefined;
+							if (rawValue !== undefined) {
+								var names = '';
+								for (var i = 0; i < rawValue.length; i++) {
+									var color = 'label-default';
+									if ('pipeline_product' === rawValue[i]) {
+										color = 'label-success';
+									} else if ('fasta' === rawValue[i]) {
+										color = 'label-info';
+									}
+									names += '<span class="label ' + color + '">' + rawValue[i] + '</span> ';
+								}
+								this.$el.append(names.trim());
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},
+				{
 					name : 'length',
 					label : 'Size',
 					editable : false,
@@ -121,7 +148,7 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/templates/drive_datasets'
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="' + config.get('service', '') + '/datasets/objects/files/' + formattedValue + "/download?"
+								this.$el.append('<a href="' + config.get('service', '') + '/datasets/objects/~/' + formattedValue + "/download?"
 										+ config.authorizationQuery()
 										+ '" target="_blank" title="Download" class="text-muted"><i class="fa fa-download fa-fw"></i></a>');
 							}

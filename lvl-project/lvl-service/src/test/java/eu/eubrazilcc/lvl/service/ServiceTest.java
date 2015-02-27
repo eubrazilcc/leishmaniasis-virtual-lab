@@ -36,6 +36,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
+import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
@@ -366,6 +367,13 @@ public class ServiceTest {
 			}
 
 			// test create new sandfly
+			final GBSeq sandflySeq = GBSEQ_XML_FACTORY.createGBSeq()
+					.withGBSeqPrimaryAccession("ABC12345678")
+					.withGBSeqAccessionVersion("3.0")
+					.withGBSeqOtherSeqids(GBSEQ_XML_FACTORY.createGBSeqOtherSeqids().withGBSeqid(GBSEQ_XML_FACTORY.createGBSeqid().withvalue(Integer.toString(Integer.MAX_VALUE))))
+					.withGBSeqOrganism("organism")					
+					.withGBSeqLength("850");
+
 			path = SandflySequenceResource.class.getAnnotation(Path.class);
 			final Sandfly sandfly = Sandfly.builder()
 					.dataSource(DataSource.GENBANK)
@@ -374,6 +382,7 @@ public class ServiceTest {
 					.version("0.0")
 					.organism("Example organism")
 					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(1.2d, 3.4d).build()).build())
+					.sequence(sandflySeq)
 					.build();
 			SequenceKey sequenceKey = SequenceKey.builder()
 					.dataSource(sandfly.getDataSource())
@@ -590,7 +599,7 @@ public class ServiceTest {
 			System.out.println(" >> Get sandfly by accession number result: " + sandfly2.toString());
 
 			// test export sandfly 
-			final GBSeq gbSeq = target.path(path.value()) // TODO
+			final GBSeq gbSeq = target.path(path.value())
 					.path(sequenceKey.toId())
 					.path("export/gb/xml")
 					.request(APPLICATION_JSON)
@@ -1628,7 +1637,6 @@ public class ServiceTest {
 			System.out.println(" >> Delete reference response JAX-RS object: " + response);
 			System.out.println(" >> Delete reference HTTP headers: " + response.getStringHeaders());
 
-			// TODO
 			// test create new instance
 			final String instanceId = "00000001";
 			final Date heartbeat = new Date();			

@@ -60,7 +60,7 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
  */
 public class Dataset extends BaseFile implements Linkable<Dataset> {
 
-	public static final String DATASET_DEFAULT_NS = "files";
+	public static final String DATASET_DEFAULT_NS = "~";
 	
 	@InjectLinks({
 		@InjectLink(value="datasets/objects/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={

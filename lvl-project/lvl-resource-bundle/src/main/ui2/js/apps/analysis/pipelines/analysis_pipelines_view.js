@@ -42,8 +42,12 @@ define([ 'app', 'tpl!apps/analysis/pipelines/templates/analysis_pipelines', 'app
 									var rawValue = this.model.get(this.column.get('name'));
 									var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 									if (formattedValue && typeof formattedValue === 'string') {
-										this.$el.append('<a href="#" data-pipeline="' + formattedValue
-												+ '" title="Run" class="text-muted"><i class="fa fa-play fa-fw"></i></i></a>');
+										if ('workflows-eubcc-nj_pipeline-1.0' === formattedValue) {
+											this.$el.append('<a href="#" data-pipeline="' + formattedValue
+													+ '" title="Run" class="text-muted"><i class="fa fa-play fa-fw"></i></a>');
+										} else {
+											this.$el.append('<span class="text-muted"><i class="fa fa-pause fa-fw"></i></span>');
+										}
 									}
 									this.delegateEvents();
 									return this;
