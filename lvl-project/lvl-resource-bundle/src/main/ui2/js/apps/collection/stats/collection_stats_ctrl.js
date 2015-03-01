@@ -9,7 +9,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/statistic', 'a
 		Stats.Controller = {
 			showSection : function() {
 				var view = new View.Content({
-					collection : new StatsModel.StatisticPageableCollection({
+					model : new StatsModel.Statistic({
 						oauth2_token : new Configuration().authorizationToken()
 					})
 				});

@@ -15,48 +15,75 @@ define([ 'app', 'tpl!apps/collection/stats/templates/collection_stats', 'apps/co
 				});
 			},
 			onRender : function() {
-				var data1 = [ {
-					value : 300,
-					color : "rgba(220,220,220,1)", // "#F7464A",
-					highlight : "#FF5A5E",
-					label : "Red"
-				}, {
-					value : 50,
-					color : "#46BFBD",
-					highlight : "#5AD3D1",
-					label : "Green"
-				}, {
-					value : 100,
-					color : "#FDB45C",
-					highlight : "#FFC870",
-					label : "Yellow"
-				} ];
-				var data2 = [ {
-					value : 300,
-					color : "#F7464A",
-					highlight : "#FF5A5E",
-					label : "Red"
-				}, {
-					value : 50,
-					color : "#46BFBD",
-					highlight : "#5AD3D1",
-					label : "Green"
-				} ];
-				
-				// TODO
-				console.log(this.collection);
-				// TODO
-				
-				var data3 = this.collection.get('sandflies.source')
-				if (data3) {
-					this.drawChart(data3, "lvl-chart3");
+				var bin_colors = [ 'rgba(13, 162, 23, 1)', 'rgba(229, 28, 33, 1)' ];
+				var bin_highlights = [ 'rgba(13, 162, 23, 0.8)', 'rgba(229, 28, 33, 0.8)' ];
+				var colors = [ 'rgba(33, 152, 243, 1)', 'rgba(1, 87, 154, 1)', 'rgba(13, 162, 23, 1)', 'rgba(0, 134, 9, 1)', 'rgba(156, 39, 176, 1)',
+						'rgba(106, 1, 124, 1)', 'rgba(255, 153, 0, 1)', 'rgba(153, 92, 0, 1)', 'rgba(229, 28, 33, 1)', 'rgba(147, 0, 4, 1)',
+						'rgba(193, 191, 191, 1)' ];
+				var highlights = [ 'rgba(33, 152, 243, 0.8)', 'rgba(1, 87, 154, 0.8)', 'rgba(13, 162, 23, 0.8)', 'rgba(0, 134, 9, 0.8)',
+						'rgba(156, 39, 176, 0.8)', '#rgba(106, 1, 124, 0.8)', 'rgba(255, 153, 0, 0.8)', 'rgba(153, 92, 0, 0.8)', 'rgba(229, 28, 33, 0.8)',
+						'rgba(147, 0, 4, 0.8)', 'rgba(193, 191, 191, 0.8)' ];
+				// data sources
+				var data = this.model.get('sandflies.source') || undefined;
+				if (data) {
+					for (var i = 0; i < data.length && colors.length; i++) {
+						data[i].color = colors[i];
+						data[i].highlight = highlights[i];
+					}
+					this.drawChart(data, 'sandflies-sources');
 				}
-				
-				
-				/* this.drawChart(data1, "lvl-chart1");
-				this.drawChart(data2, "lvl-chart2");
-				this.drawChart(data2, "lvl-chart3");
-				this.drawChart(data1, "lvl-chart4"); */
+				data = this.model.get('leishmania.source') || undefined;
+				if (data) {
+					for (var i = 0; i < data.length && colors.length; i++) {
+						data[i].color = colors[i];
+						data[i].highlight = highlights[i];
+					}
+					this.drawChart(data, 'leishmania-sources');
+				}
+				// genes
+				data = this.model.get('sandflies.gene') || undefined;
+				if (data) {
+					for (var i = 0; i < data.length && colors.length; i++) {
+						data[i].color = colors[i];
+						data[i].highlight = highlights[i];
+					}
+					this.drawChart(data, 'sandflies-genes');
+				}
+				data = this.model.get('leishmania.gene') || undefined;
+				if (data) {
+					for (var i = 0; i < data.length && colors.length; i++) {
+						data[i].color = colors[i];
+						data[i].highlight = highlights[i];
+					}
+					this.drawChart(data, 'leishmania-genes');
+				}
+				// geo-referenced
+				data = this.model.get('sandflies.gis') || undefined;
+				if (data) {
+					for (var i = 0; i < data.length; i++) {
+						if ('Yes' === data[i].label) {
+							data[i].color = bin_colors[0];
+							data[i].highlight = bin_highlights[0];
+						} else if ('No' === data[i].label) {
+							data[i].color = bin_colors[1];
+							data[i].highlight = bin_highlights[1];
+						}
+					}
+					this.drawChart(data, 'sandflies-gis');
+				}
+				data = this.model.get('leishmania.gis') || undefined;
+				if (data) {
+					for (var i = 0; i < data.length; i++) {
+						if ('Yes' === data[i].label) {
+							data[i].color = bin_colors[0];
+							data[i].highlight = bin_highlights[0];
+						} else if ('No' === data[i].label) {
+							data[i].color = bin_colors[1];
+							data[i].highlight = bin_highlights[1];
+						}
+					}
+					this.drawChart(data, 'leishmania-gis');
+				}
 			},
 			drawChart : function(data, container) {
 				require([ 'chartjs' ], function(Chart) {
@@ -90,9 +117,9 @@ define([ 'app', 'tpl!apps/collection/stats/templates/collection_stats', 'apps/co
 				});
 			},
 			initialize : function() {
-				this.listenTo(this.collection, 'change', this.render);
+				this.listenTo(this.model, 'change', this.render);
 				var self = this;
-				self.collection.fetch({
+				self.model.fetch({
 					reset : true
 				});
 			}

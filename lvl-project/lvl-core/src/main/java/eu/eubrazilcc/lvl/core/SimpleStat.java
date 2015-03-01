@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.ComparisonChain.start;
 
+import static java.util.Collections.reverse;
 import static java.util.Collections.sort;
 import java.util.List;
 import java.util.Objects;
@@ -90,13 +91,15 @@ public class SimpleStat implements Comparable<SimpleStat> {
 		if (stats != null) {
 			normalized = newArrayList(stats);
 			sort(normalized);
+			reverse(normalized);
+			
 			if (normalized.size() > 10) {
 				int value = 0;
 				for (int i = 10; i < normalized.size(); i++) {
 					value += normalized.get(i).getValue();
 				}
 				normalized.get(10).setValue(value);
-				normalized.get(10).setLabel("Others");
+				normalized.get(10).setLabel("Other");
 				if (normalized.size() > 11) {
 					normalized.subList(11, normalized.size()).clear();
 				}

@@ -28,16 +28,15 @@ import static com.google.common.collect.FluentIterable.from;
 import static eu.eubrazilcc.lvl.core.analysis.LocalizableAnalyzer.toFeatureCollection;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
+import static eu.eubrazilcc.lvl.service.cache.StatisticsCache.leishmaniaStats;
+import static eu.eubrazilcc.lvl.service.cache.StatisticsCache.sandflyStats;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
-import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.LvlInstanceDAO.INSTANCE_DAO;
-import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -204,8 +203,8 @@ public class LvlInstanceResource {
 	@Path("stats/collection")
 	@Produces(APPLICATION_JSON)
 	public Map<String, List<SimpleStat>> getCollectionStatistics() {
-		final Map<String, List<SimpleStat>> stats = new Hashtable<String, List<SimpleStat>>(LEISHMANIA_DAO.collectionStats());
-		stats.putAll(SANDFLY_DAO.collectionStats());
+		final Map<String, List<SimpleStat>> stats = leishmaniaStats();
+		stats.putAll(sandflyStats());
 		return stats;
 	}
 
