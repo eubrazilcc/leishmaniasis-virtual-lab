@@ -145,7 +145,6 @@
 }
 
 /* OpenLayers */
-
 .lvl-map {
 	height: 400px;
 	width: 100%;
@@ -153,7 +152,7 @@
 }
 
 .ol-scale-line {
-	left: 42px !important;	
+	left: 42px !important;
 }
 
 .lvl-restore-map {
@@ -163,4 +162,13 @@
 
 .ol-touch .lvl-restore-map {
 	top: 80px;
+}
+
+/* Chart.js */
+.doughnut-legend {
+	list-style: none;
+	position: absolute;
+	/* right: 8px; */
+	left : 0px;
+	top: 0;
 }

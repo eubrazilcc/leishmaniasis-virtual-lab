@@ -46,6 +46,8 @@ requirejs.config({
 		/* jsPhyloSVG */
 		'raphael' : [ '//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min', 'vendor/cached/raphael-min' ],
 		'jsphylosvg' : 'vendor/provided/jsphylosvg-min',
+		/* Chart.js */
+		'chartjs' : [ '//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.1/Chart.min', 'vendor/cached/Chart.min' ],
 		/* Add support for underscore templates */
 		'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
 		'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
@@ -122,6 +124,9 @@ requirejs.config({
 		'jsphylosvg' : {
 			deps : [ 'raphael' ],
 			exports : 'Smits'
+		},
+		'chartjs'  : {
+			exports : 'Chart'
 		},
 		'tpl' : {
 			deps : [ 'text' ]

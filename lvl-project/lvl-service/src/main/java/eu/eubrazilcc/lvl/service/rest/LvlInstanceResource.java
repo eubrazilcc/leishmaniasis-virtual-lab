@@ -29,13 +29,17 @@ import static eu.eubrazilcc.lvl.core.analysis.LocalizableAnalyzer.toFeatureColle
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
+import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.LvlInstanceDAO.INSTANCE_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -63,6 +67,7 @@ import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.Localizable;
 import eu.eubrazilcc.lvl.core.LvlInstance;
+import eu.eubrazilcc.lvl.core.SimpleStat;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geojson.Crs;
@@ -193,6 +198,15 @@ public class LvlInstanceResource {
 				return instance;
 			}			
 		}).filter(notNull()).toList(), crs, group, heatmap)).or(FeatureCollection.builder().build());		
+	}
+
+	@GET
+	@Path("stats/collection")
+	@Produces(APPLICATION_JSON)
+	public Map<String, List<SimpleStat>> getCollectionStatistics() {
+		final Map<String, List<SimpleStat>> stats = new Hashtable<String, List<SimpleStat>>(LEISHMANIA_DAO.collectionStats());
+		stats.putAll(SANDFLY_DAO.collectionStats());
+		return stats;
 	}
 
 }

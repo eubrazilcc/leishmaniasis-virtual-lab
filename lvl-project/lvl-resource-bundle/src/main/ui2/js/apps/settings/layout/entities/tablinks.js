@@ -48,12 +48,12 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 			Entities.navigationLinks = new Entities.NavigationECompendium([ {
 				id : 1,
 				link : 'account',
-				icon : 'fa-table',
+				icon : 'fa-user',
 				text : 'Account'
 			}, {
 				id : 2,
 				link : 'instances',
-				icon : 'fa-map-marker',
+				icon : 'fa-cloud',
 				text : 'Instances'
 			} ]);
 		};

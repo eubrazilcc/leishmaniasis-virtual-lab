@@ -1,9 +1,8 @@
 /**
- * RequireJS module that defines configuration parameters that are globally
- * available to all the other modules of the application. Note that this module
- * uses the 'requirejs.s.contexts._.config' hack to read values of configuration
- * that could change or disappear in the next versions of RequireJS without
- * warning.
+ * RequireJS module that defines configuration parameters that are globally available 
+ * to all the other modules of the application. Note that this module uses the 
+ * 'requirejs.s.contexts._.config' hack to read values of configuration that could 
+ * change or disappear in the next versions of RequireJS without warning.
  */
 
 define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {

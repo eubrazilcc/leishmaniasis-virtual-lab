@@ -69,6 +69,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -297,6 +298,24 @@ public enum MongoDBConnector implements Closeable2 {
 				return "text";
 			}
 		})), new BasicDBObject("default_language", "english").append("name", collection + ".text_idx"));
+	}
+	
+	/**
+	 * Creates a sparse, non unique, index, if one does not already exist on the specified collection.
+	 * Indexes created with this method are created in the background. <strong>Note:</strong> Do NOT use compound indexes to
+	 * create an sparse index, since the results are unexpected.
+	 * @param field - field that is used to index the elements
+	 * @param collection - collection where the index is created
+	 * @param descending - (optional) sort the elements of the index in descending order
+	 * @see <a href="http://docs.mongodb.org/manual/core/index-sparse/">MongoDB: Sparse Indexes</a>
+	 */
+	public void createSparseIndex(final String field, final String collection, final boolean descending) {
+		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");		
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		final DBCollection dbcol = db.getCollection(collection);
+		dbcol.createIndex(new BasicDBObject(field, descending ? -1 : 1),
+				new BasicDBObject(ImmutableMap.of("background", true, "sparse", true)));				
 	}
 
 	/**
@@ -539,6 +558,83 @@ public enum MongoDBConnector implements Closeable2 {
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
 		dbcol.remove(query);
+	}
+
+	/* Pipelines and advanced statistics */
+
+	/**
+	 * db.sandflies.aggregate([ 
+	 *     { $project : { "sandfly.dataSource" : 1 } }, 
+	 *     { $group : { 
+	 *         _id : { "sandfly.dataSource" : "$sandfly.dataSource" }, 
+	 *             number : { $sum : 1 } 
+	 *         }
+	 *     }, 
+	 *     { $sort : { "_id.sandfly.dataSource" : 1 } }
+	 * ])<br>
+	 * { "_id" : { "sandfly.dataSource" : "GenBank" }, "number" : 34179 }<br>
+	 */
+	public Iterable<DBObject> dataSourceStats(final String collection, final String dbPrefix) {
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
+		checkArgument(isNotBlank(dbPrefix), "Uninitialized or invalid db prefix");
+		final List<DBObject> pipeline = newArrayList();
+		final DBObject project = new BasicDBObject("$project", new BasicDBObject(dbPrefix + "dataSource", 1));
+		final DBObject group = new BasicDBObject("$group", new BasicDBObject("_id", new BasicDBObject(dbPrefix + "dataSource", "$" + dbPrefix + "dataSource"))
+		.append("number", new BasicDBObject("$sum", 1)));
+		final DBObject sort = new BasicDBObject("$sort", new BasicDBObject("_id." + dbPrefix + "dataSource", 1));
+		pipeline.add(project);
+		pipeline.add(group);
+		pipeline.add(sort);
+		return execPipeline(pipeline, collection).results();
+	}
+
+	/**
+	 * db.sandflies.aggregate([ { $project : { "sandfly.gene" : 1 } }, { $unwind : "$sandfly.gene" }, { $group : { _id : { "sandfly.gene" : "$sandfly.gene" }, number : { $sum : 1 } } }, { $sort : { "_id.sandfly.gene" : 1 } }])<br>
+	 * { "_id" : { "sandfly.gene" : "cyt b" }, "number" : 12 }<br>
+	 * ...<br>
+	 */
+	public Iterable<DBObject> geneStats(final String collection, final String dbPrefix) {
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
+		checkArgument(isNotBlank(dbPrefix), "Uninitialized or invalid db prefix");
+		final List<DBObject> pipeline = newArrayList();
+		final DBObject project = new BasicDBObject("$project", new BasicDBObject(dbPrefix + "gene", 1));
+		final DBObject unwind = new BasicDBObject("$unwind", "$" + dbPrefix + "gene");
+		final DBObject group = new BasicDBObject("$group", new BasicDBObject("_id", new BasicDBObject(dbPrefix + "gene", "$" + dbPrefix + "gene"))
+		.append("number", new BasicDBObject("$sum", 1)));
+		final DBObject sort = new BasicDBObject("$sort", new BasicDBObject("_id." + dbPrefix + "gene", 1));
+		pipeline.add(project);
+		pipeline.add(unwind);
+		pipeline.add(group);
+		pipeline.add(sort);
+		return execPipeline(pipeline, collection).results();
+	}
+
+	/**
+	 * db.sandflies.find({ "sandfly.location" : { $exists: true }}, { "sandfly.sequence" : 0 }).count()<br>
+	 * 6330<br>
+	 */
+	public int countGeoreferred(final String collection, final String dbPrefix, final @Nullable DBObject projection) {
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
+		checkArgument(isNotBlank(dbPrefix), "Uninitialized or invalid db prefix");		
+		int count = 0;
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		final DBCollection dbcol = db.getCollection(collection);
+		final DBObject query = new BasicDBObject(dbPrefix + "location", new BasicDBObject("$exists", true));
+		final DBCursor cursor = dbcol.find(query, projection != null ? projection : new BasicDBObject());
+		try {
+			count = cursor.count();
+		} finally {
+			cursor.close();
+		}
+		return count;
+	}
+
+	private AggregationOutput execPipeline(final List<DBObject> pipeline, final String collection) {
+		checkArgument(pipeline != null, "Uninitialized pipeline");
+		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		final DBCollection dbcol = db.getCollection(collection);
+		return dbcol.aggregate(pipeline);
 	}
 
 	/**

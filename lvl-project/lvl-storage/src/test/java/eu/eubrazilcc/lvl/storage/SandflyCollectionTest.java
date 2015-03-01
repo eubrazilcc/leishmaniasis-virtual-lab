@@ -39,7 +39,9 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import javax.ws.rs.core.Link;
 
@@ -49,6 +51,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.Sandfly;
+import eu.eubrazilcc.lvl.core.SimpleStat;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.Sorting.Order;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
@@ -200,6 +203,25 @@ public class SandflyCollectionTest {
 						.withGBSeqOtherSeqids(GBSEQ_XML_FACTORY.createGBSeqOtherSeqids().withGBSeqid(GBSEQ_XML_FACTORY.createGBSeqid().withvalue(Integer.toString(i))))
 						.withGBSeqOrganism(i < numItems/2 ? "papatasi" : "lutzomyia")					
 						.withGBSeqLength(Integer.toString(initialLength + i));
+				final Set<String> gene = newHashSet();
+				switch (i) {
+				case 0:
+					gene.add("abc");
+					gene.add("def");
+					break;
+				case 1:
+					gene.add("def");
+					break;
+				case 2:
+					gene.add("abc");
+					break;
+				case 3:
+					gene.add("abc");
+					break;
+				default:
+					break;
+				}
+				final Point location = i%2 == 0 ? Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build() : null;
 				final Sandfly sandfly3 = Sandfly.builder()
 						.dataSource(GENBANK)
 						.accession(Integer.toString(i))
@@ -209,6 +231,8 @@ public class SandflyCollectionTest {
 						.length(initialLength + i)
 						.countryFeature(countries[random.nextInt(countries.length)])
 						.locale(i%2 != 0 ? Locale.ENGLISH : Locale.FRANCE)
+						.location(location)
+						.gene(gene)
 						.sequence(sequence3)
 						.build();
 				ids.add(sandfly3.getAccession());
@@ -227,6 +251,17 @@ public class SandflyCollectionTest {
 				}
 				start += sandflies.size();
 			} while (!sandflies.isEmpty());
+
+			// collection statistics
+			final Map<String, List<SimpleStat>> stats = SANDFLY_DAO.collectionStats();
+			assertThat("sandflies collection stats is not null", stats, notNullValue());
+			// uncomment for additional output
+			for (final Map.Entry<String, List<SimpleStat>> entry : stats.entrySet()) {
+				System.err.println(" >> Field: " + entry.getKey());
+				for (final SimpleStat stat : entry.getValue()) {
+					System.err.println("   >> " + stat);
+				}				
+			}
 
 			// filter: keyword matching search			
 			ImmutableMap<String, String> filter = of("source", GENBANK);

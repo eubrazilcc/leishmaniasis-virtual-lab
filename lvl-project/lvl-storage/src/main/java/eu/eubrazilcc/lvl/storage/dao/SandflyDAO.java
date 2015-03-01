@@ -28,6 +28,7 @@ import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
+import static eu.eubrazilcc.lvl.core.SimpleStat.normalizeStats;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
@@ -41,7 +42,9 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
@@ -64,6 +67,7 @@ import com.mongodb.DBObject;
 
 import eu.eubrazilcc.lvl.core.Localizable;
 import eu.eubrazilcc.lvl.core.Sandfly;
+import eu.eubrazilcc.lvl.core.SimpleStat;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
@@ -108,6 +112,8 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 				DB_PREFIX + "organism",
 				DB_PREFIX + "countryFeature"), 
 				COLLECTION);
+		MONGODB_CONN.createNonUniqueIndex(PRIMARY_KEY_PART1, COLLECTION, false);
+		MONGODB_CONN.createSparseIndex(GEOLOCATION_KEY, COLLECTION, false);
 	}
 
 	@Override
@@ -313,6 +319,45 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 				});
 			}
 		}
+	}
+
+	public Map<String, List<SimpleStat>> collectionStats() {
+		final Map<String, List<SimpleStat>> stats = new Hashtable<String, List<SimpleStat>>();
+		// count sequences per source
+		final List<SimpleStat> srcStats = newArrayList();		
+		Iterable<DBObject> results = MONGODB_CONN.dataSourceStats(COLLECTION, DB_PREFIX);		
+		for (final DBObject result : results) {
+			srcStats.add(SimpleStat.builder()
+					.label((String)((DBObject)result.get("_id")).get(DB_PREFIX + "dataSource"))
+					.value((Integer)result.get("number"))
+					.build());
+		}
+		stats.put(COLLECTION + ".source", normalizeStats(srcStats));
+		// total number of sequences
+		final long totalCount = MONGODB_CONN.count(COLLECTION);
+		// count georeferred sequences
+		final List<SimpleStat> gisStats = newArrayList();		
+		final int georefCount = MONGODB_CONN.countGeoreferred(COLLECTION, DB_PREFIX, new BasicDBObject(DB_PREFIX + "sequence", 0));
+		gisStats.add(SimpleStat.builder()
+				.label("Yes")
+				.value(georefCount)
+				.build());
+		gisStats.add(SimpleStat.builder()
+				.label("No")
+				.value((int)totalCount - georefCount)
+				.build());
+		stats.put(COLLECTION + ".gis", normalizeStats(gisStats));
+		// count sequences per gene
+		final List<SimpleStat> geneStats = newArrayList();		
+		results = MONGODB_CONN.geneStats(COLLECTION, DB_PREFIX);		
+		for (final DBObject result : results) {
+			geneStats.add(SimpleStat.builder()
+					.label((String)((DBObject)result.get("_id")).get(DB_PREFIX + "gene"))
+					.value((Integer)result.get("number"))
+					.build());
+		}
+		stats.put(COLLECTION + ".gene", normalizeStats(geneStats));
+		return stats;
 	}
 
 	private BasicDBObject key(final SequenceKey key) {
