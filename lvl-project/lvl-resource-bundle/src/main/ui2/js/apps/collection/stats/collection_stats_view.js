@@ -17,12 +17,12 @@ define([ 'app', 'tpl!apps/collection/stats/templates/collection_stats', 'apps/co
 			onRender : function() {
 				var bin_colors = [ 'rgba(13, 162, 23, 1)', 'rgba(229, 28, 33, 1)' ];
 				var bin_highlights = [ 'rgba(13, 162, 23, 0.8)', 'rgba(229, 28, 33, 0.8)' ];
-				var colors = [ 'rgba(33, 152, 243, 1)', 'rgba(1, 87, 154, 1)', 'rgba(13, 162, 23, 1)', 'rgba(0, 134, 9, 1)', 'rgba(156, 39, 176, 1)',
-						'rgba(106, 1, 124, 1)', 'rgba(255, 153, 0, 1)', 'rgba(153, 92, 0, 1)', 'rgba(229, 28, 33, 1)', 'rgba(147, 0, 4, 1)',
+				var colors = [ 'rgba(1, 87, 154, 1)', 'rgba(33, 152, 243, 1)', 'rgba(0, 134, 9, 1)', 'rgba(13, 162, 23, 1)', 'rgba(106, 1, 124, 1)',
+						'rgba(156, 39, 176, 1)', 'rgba(153, 92, 0, 1)', 'rgba(255, 153, 0, 1)', 'rgba(147, 0, 4, 1)', 'rgba(229, 28, 33, 1)',
 						'rgba(193, 191, 191, 1)' ];
-				var highlights = [ 'rgba(33, 152, 243, 0.8)', 'rgba(1, 87, 154, 0.8)', 'rgba(13, 162, 23, 0.8)', 'rgba(0, 134, 9, 0.8)',
-						'rgba(156, 39, 176, 0.8)', '#rgba(106, 1, 124, 0.8)', 'rgba(255, 153, 0, 0.8)', 'rgba(153, 92, 0, 0.8)', 'rgba(229, 28, 33, 0.8)',
-						'rgba(147, 0, 4, 0.8)', 'rgba(193, 191, 191, 0.8)' ];
+				var highlights = [ 'rgba(1, 87, 154, 0.8)', 'rgba(33, 152, 243, 0.8)', 'rgba(0, 134, 9, 0.8)', 'rgba(13, 162, 23, 0.8)',
+						'rgba(106, 1, 124, 0.8)', 'rgba(156, 39, 176, 0.8)', 'rgba(153, 92, 0, 0.8)', 'rgba(255, 153, 0, 0.8)', 'rgba(147, 0, 4, 0.8)',
+						'rgba(229, 28, 33, 0.8)', 'rgba(193, 191, 191, 0.8)' ];
 				// data sources
 				var data = this.model.get('sandflies.source') || undefined;
 				if (data) {
