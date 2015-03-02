@@ -6,7 +6,7 @@ define([ 'app', 'apps/collection/layout/collection_layout_view' ], function(Lvl,
 	Lvl.module('CollectionApp.Layout', function(Layout, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Layout.Controller = {
-			showLayout : function(section) {
+			showLayout : function(section, id) {
 				require([ 'apps/collection/' + section + '/collection_' + section + '_ctrl', 'apps/collection/layout/entities/tablinks' ], function(
 						SectionController) {
 					var tabLinks = Lvl.request('collection:navigation:entities');
@@ -19,7 +19,7 @@ define([ 'app', 'apps/collection/layout/collection_layout_view' ], function(Lvl,
 						navigation : tabLinks
 					});
 					Lvl.mainRegion.show(view);
-					return SectionController.showSection();
+					return SectionController.showSection(id);
 				});
 			}
 		}

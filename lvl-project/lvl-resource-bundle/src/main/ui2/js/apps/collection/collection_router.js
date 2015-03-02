@@ -9,7 +9,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 		var Router = Backbone.Router.extend({
 			routes : {
 				'collection' : 'defaultCollection',
-				'collection/browse' : 'browseCollection',
+				'collection/browse' : 'browseCollectionDefault',
+				'collection/browse/:id' : 'browseCollection',
 				'collection/map' : 'mapCollection',
 				'collection/stats' : 'statsCollection',
 				'collection/submit' : 'submitCollection'
@@ -36,8 +37,16 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 					replace : true
 				});
 			},
-			browseCollection : function() {
-				Lvl.execute('collection:set:active', 'browse');
+			browseCollectionDefault : function() {
+				var self = this;
+				Lvl.navigate('collection/browse/sandflies', {
+					trigger : true,
+					replace : true
+				});
+			},
+			browseCollection : function(id) {
+				var id2 = id || 'sandflies';
+				Lvl.execute('collection:set:active', 'browse', id2);
 			},
 			mapCollection : function() {
 				Lvl.execute('collection:set:active', 'map');

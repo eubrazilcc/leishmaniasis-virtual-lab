@@ -7,15 +7,22 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/sequence', 'ap
 	Lvl.module('CollectionApp.Browse', function(Browse, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Browse.Controller = {
-			showSection : function() {
+			showSection : function(id) {
+				var collectionId = id || 'sandflies';
 				var view = new View.Content({
+					templateHelpers : {
+						isSanflies : 'sandflies' === collectionId,
+						isLeishmania : 'leishmania' === collectionId
+					},
 					collection : new SequenceModel.SequencePageableCollection({
-						oauth2_token : new Configuration().authorizationToken()
+						oauth2_token : new Configuration().authorizationToken(),
+						data_source : collectionId
 					})
 				});
-				view.on('sequences:view:sequence', function(accession) {
+				view.on('sequences:view:sequence', function(collectionId, accession) {
 					require([ 'apps/collection/sequence_viewer/collection_sequence_viewer', 'entities/gb_sequence' ], function(SequenceView, GbSequenceModel) {
 						var gbSequenceModel = new GbSequenceModel.GbSequence({
+							'dataSource' : collectionId,
 							'gbSeqPrimaryAccession' : accession
 						});
 						gbSequenceModel.oauth2_token = new Configuration().authorizationToken();
@@ -25,13 +32,14 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/sequence', 'ap
 						Lvl.dialogRegion.show(dialogView);
 					});
 				});
-				view.on('sequences:file:export', function(selectedModels) {
-					require([ 'apps/collection/export/export_view' ], function(EditView) {
+				view.on('sequences:file:export', function(collectionId, selectedModels) {
+					require([ 'apps/collection/export/export_view' ], function(EditView) {						
 						var sequences = selectedModels.filter(function(element) {
 							return element !== undefined && element !== null;
 						});
 						var dialogView = new EditView.Content({
-							collection : new SequenceModel.SequenceCollection(sequences)
+							collection : new SequenceModel.SequenceCollection(sequences),
+							data_source : collectionId
 						});
 						Lvl.dialogRegion.show(dialogView);
 					});

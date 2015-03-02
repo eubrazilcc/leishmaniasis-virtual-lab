@@ -7,16 +7,17 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky' ], func
 		'use strict';
 		var config = new Configuration();
 		Entities.GbSequence = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/sequences/sandflies/',
+			urlRoot : config.get('service', '') + '/sequences/',
 			url : function() {
-				return this.urlRoot + this.id + '/export/gb/xml';
+				return this.urlRoot + this.get('dataSource') + '/' + this.id + '/export/gb/xml';
 			},
 			idAttribute : 'gbSeqPrimaryAccession',
 			defaults : {
 				'gbSeqLocus' : '',
-				'gbSeqPrimaryAccession' : ''
+				'gbSeqPrimaryAccession' : '',
+				'dataSource' : 'sandflies'
 			},
-			initialize : function() {
+			initialize : function(options) {
 				var selectable = new Backbone.Picky.Selectable(this);
 				_.extend(this, selectable);
 			},

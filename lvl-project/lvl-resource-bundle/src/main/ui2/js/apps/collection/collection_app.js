@@ -20,12 +20,12 @@ define([ 'app' ], function(Lvl) {
 		CollectionApp.currentSection = null;
 
 		/* Commands and events */
-		Lvl.commands.setHandler('collection:set:active', function(section) {
+		Lvl.commands.setHandler('collection:set:active', function(section, id) {
 			section = section || 'default';
 			if (CollectionApp.currentSection !== section) {
 				if (section === 'browse' || section === 'map' || section === 'stats' || section === 'submit') {
 					require([ 'apps/collection/layout/collection_layout_ctrl' ], function(LayoutController) {
-						CollectionApp.currentSection = LayoutController.showLayout(section);
+						CollectionApp.currentSection = LayoutController.showLayout(section, id);
 					});
 				} else {
 					Lvl.mainRegion.currentView.reset();

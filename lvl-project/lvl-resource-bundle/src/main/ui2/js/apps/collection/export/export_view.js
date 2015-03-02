@@ -9,9 +9,6 @@ define([ 'app', 'tpl!apps/collection/export/templates/collection_export_dataset'
 				var config = new Configuration();
 				View.Content = Marionette.ItemView.extend({
 					template : ExportDatasetTpl,
-					events : {
-						'click button#export-btn' : 'exportDataset'
-					},
 					templateHelpers : {
 						defaultFilename : function() {
 							return 'sequences-' + new Chance().string({
@@ -19,6 +16,12 @@ define([ 'app', 'tpl!apps/collection/export/templates/collection_export_dataset'
 								pool : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 							});
 						}
+					},
+					initialize : function(options) {
+						this.data_source = options.data_source || 'sandflies';
+					},
+					events : {
+						'click button#export-btn' : 'exportDataset'
 					},
 					exportDataset : function(e) {
 						e.preventDefault();
@@ -28,7 +31,7 @@ define([ 'app', 'tpl!apps/collection/export/templates/collection_export_dataset'
 							'metadata' : {
 								'description' : formData.description_input,
 								'target' : {
-									'collection' : 'sandflies',
+									'collection' : this.data_source,
 									'compression' : formData.compression_select,
 									'filter' : formData.filter_select,
 									'ids' : _.pluck(this.collection.toJSON(), 'id'),

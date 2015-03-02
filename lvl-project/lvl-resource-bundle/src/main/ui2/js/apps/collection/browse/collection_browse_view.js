@@ -111,8 +111,9 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				} ];
 		View.Content = Marionette.ItemView.extend({
 			id : 'browse',
-			template : BrowseTpl,
+			template : BrowseTpl,			
 			initialize : function() {
+				this.data_source = this.collection.data_source || 'sandflies';
 				this.listenTo(this.collection, 'request', this.displaySpinner);
 				this.listenTo(this.collection, 'sync error', this.removeSpinner);
 				this.grid = new Backgrid.Grid({
@@ -145,13 +146,13 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				e.preventDefault();
 				var selectedModels = this.grid.getSelectedModels();
 				if (selectedModels && selectedModels.length > 0) {
-					this.trigger('sequences:file:export', selectedModels);
+					this.trigger('sequences:file:export', this.collection.data_source, selectedModels);
 				} else {
 					require([ 'common/growl' ], function(createGrowl) {
 						createGrowl('No sequences selected', 'Select at least one sequence to be exported', false);
 					});
 				}
-			},			
+			},
 			deselectAll : function(e) {
 				e.preventDefault();
 				this.grid.clearSelectedModels();
@@ -161,7 +162,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				var self = this;
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-seq_id') : target.attr('data-seq_id');
-				this.trigger('sequences:view:sequence', itemId);
+				this.trigger('sequences:view:sequence', self.collection.data_source, itemId);
 			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {

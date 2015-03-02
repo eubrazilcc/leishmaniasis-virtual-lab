@@ -28,6 +28,8 @@ define([ 'app', 'tpl!apps/settings/instances/templates/settings_instances', 'app
 								color = 'label-primary';
 							} else if ('shard' === rawValue[i]) {
 								color = 'label-info';
+							} else if ('auth' === rawValue[i]) {
+								color = 'label-warning';
 							}
 							names += '<span class="label ' + color + '">' + rawValue[i] + '</span> ';
 						}
