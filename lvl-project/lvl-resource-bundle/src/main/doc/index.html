@@ -1337,6 +1337,20 @@ Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:
               <em>TODO</em>
             </p>
             
+            <h3>Covert Redirect Vulnerability</h3>
+            
+            <p>Serious vulnerabilities have been described in the past for the OAuth 2.0 protocol. The following measures are deployed with
+               the LVL to mitigate those vulnerabilities:</p>
+               
+            <ul>
+              <li>LVL full redirect URI is registered in LinkedIn as described in RFC 6819 
+                  <a href="https://tools.ietf.org/html/rfc6819#section-5.2.3.5" target="_blank">Section 5.2.3.5</a>.</li>
+              <li>A state parameter is included in the client request to reduce the risk of CSRF attacks.</li>
+              <li>OAuth 2.0 token revocation is supported through <a href="https://tools.ietf.org/html/rfc7009" target="_blank">RFC 7009</a>.</li>
+              <li><span class="label label-warning">Warning</span> HTTPS is not yet available since there are a few technical details
+                  that must be resolved before HTTPS can be offered to LVL users. </li>
+            </ul>
+            
             <h3>Resources</h3>
 
             <ul>
