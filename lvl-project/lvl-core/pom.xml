@@ -156,6 +156,36 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<!-- Do not generate XML binding classes from Eclipse to prevent version system to update the versionof the library -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>${m2e.lifecycle-mapping.version}</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.jvnet.jaxb2.maven2</groupId>
+										<artifactId>maven-jaxb2-plugin</artifactId>
+										<versionRange>[${maven-jaxb2-plugin.version},)</versionRange>
+										<goals>
+											<goal>generate</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	
 		<plugins>			
 			<!-- Generate sources -->
 			<plugin>
@@ -190,7 +220,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 							<schemaIncludes>
 								<schemaInclude>*.dtd</schemaInclude>
 					    	</schemaIncludes>
-					    	<!-- <markGenerated>true</markGenerated> -->
+					    	<markGenerated>true</markGenerated>
 					    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
 					    	<cleanPackageDirectories>true</cleanPackageDirectories>
 					    	<verbose>false</verbose>
@@ -215,7 +245,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 							<schemaIncludes>
 								<schemaInclude>NCBI_GBSeq.dtd</schemaInclude>
 					    	</schemaIncludes>
-					    	<!-- <markGenerated>true</markGenerated> -->
+					    	<markGenerated>true</markGenerated>
 					    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
 					    	<cleanPackageDirectories>true</cleanPackageDirectories>
 					    	<verbose>false</verbose>
@@ -240,7 +270,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 							<schemaIncludes>
 								<schemaInclude>pubmed_100101.dtd</schemaInclude>
 					    	</schemaIncludes>
-					    	<!-- <markGenerated>true</markGenerated> -->
+					    	<markGenerated>true</markGenerated>
 					    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
 					    	<cleanPackageDirectories>true</cleanPackageDirectories>
 					    	<verbose>false</verbose>
