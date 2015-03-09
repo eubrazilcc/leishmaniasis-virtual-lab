@@ -44,6 +44,20 @@
 	padding-bottom: 10px;
 }
 
+.lvl-footer-logos {
+	margin-top: 20px;
+	margin-bottom: 20px;
+	max-width: 100%;
+	width: auto;
+	height: 80px;
+}
+
+@media ( max-width : 767px) {
+	.lvl-footer-logos {
+		height: 60px;
+	}
+}
+
 .lvl-nav-tabs-wrapper {
 	width: 100% !important;
 	padding: 0%;
@@ -169,6 +183,6 @@
 	list-style: none;
 	position: absolute;
 	/* right: 8px; */
-	left : -22px;
+	left: -22px;
 	top: 0;
 }
