@@ -213,9 +213,39 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/templates/drive_datasets'
 			},
 			createLink : function(e) {
 				e.preventDefault();
+				var self = this;
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-dataset') : target.getAttribute('data-dataset');
-				this.trigger('dataset:link:create', itemId);
+				require([ 'common/confirm', 'entities/link' ], function(confirmDialog, LinkModel) {
+					confirmDialog('Confirm public link creation', 'Create a public link to the dataset: ' + itemId + '?', function() {
+						var newLink = new LinkModel.LinkCreate();
+						newLink.oauth2_token = config.authorizationToken();
+						newLink.save({
+							'filename' : itemId
+						}, {
+							success : function(model, resp, options) {
+								require([ 'common/growl' ], function(createGrowl) {
+									var anchor = $('<a>', {
+										href : options.xhr.getResponseHeader('Location')
+									})[0];
+									var filename = anchor.pathname.substring(anchor.pathname.lastIndexOf('/') + 1);
+									createGrowl('New link created', filename
+											+ ' <a href="/#drive/links"><i class="fa fa-arrow-circle-right fa-fw"></i> links</a>', false);
+								});
+							},
+							error : function(model, resp, options) {
+								require([ 'common/alert' ], function(alertDialog) {
+									alertDialog('Error', 'Failed to create link.');
+								});
+							}
+						});
+						self.collection.add([ newLink ]);
+					}, {
+						icon : 'fa-info-circle',
+						icon_color : 'text-info',
+						btn_text : 'Create'
+					});
+				});
 			},
 			removeDataset : function(e) {
 				e.preventDefault();
@@ -224,54 +254,21 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/templates/drive_datasets'
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.attr('data-remove');
 				var item = this.collection.get(itemId);
 				item.oauth2_token = config.authorizationToken();
-				this.collection.remove(item);
-				item.destroy({
-					success : function(e) {
-					},
-					error : function(e) {
-						require([ 'qtip' ], function(qtip) {
-							var message = $('<p />', {
-								text : 'The dataset cannot be removed.'
-							}), ok = $('<button />', {
-								text : 'Close',
-								'class' : 'full'
-							});
-							$('#alert').qtip({
-								content : {
-									text : message.add(ok),
-									title : {
-										text : 'Error',
-										button : true
-									}
-								},
-								position : {
-									my : 'center',
-									at : 'center',
-									target : $(window)
-								},
-								show : {
-									ready : true,
-									modal : {
-										on : true,
-										blur : false
-									}
-								},
-								hide : false,
-								style : 'qtip-bootstrap dialogue',
-								events : {
-									render : function(event, api) {
-										$('button', api.elements.content).click(function() {
-											api.hide();
-										});
-									},
-									hide : function(event, api) {
-										self.grid.insertRow([ item ]);
-										api.destroy();
-									}
-								}
-							});
+				require([ 'common/confirm' ], function(confirmDialog) {
+					confirmDialog('Confirm deletion', 'This action will delete the selected dataset. Are you sure?', function() {
+						self.collection.remove(item);
+						item.destroy({
+							success : function(e) {
+							},
+							error : function(e) {
+								require([ 'common/alert' ], function(alertDialog) {
+									alertDialog('Error', 'The dataset cannot be removed.');
+								});
+							}
 						});
-					}
+					}, {
+						btn_text : 'Delete'
+					});
 				});
 			},
 			onBeforeRender : function() {
@@ -285,6 +282,7 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/templates/drive_datasets'
 				// don't remove the styles in order to enable them to be
 				// reused
 				pace.stop();
+				this.stopListening();
 			},
 			onRender : function() {
 				var self = this;

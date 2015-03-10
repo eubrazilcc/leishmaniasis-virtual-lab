@@ -49,12 +49,12 @@
 	margin-bottom: 20px;
 	max-width: 100%;
 	width: auto;
-	height: 80px;
+	height: 60px;
 }
 
 @media ( max-width : 767px) {
 	.lvl-footer-logos {
-		height: 60px;
+		height: 54px;
 	}
 }
 
@@ -118,7 +118,7 @@
 
 #lvl-qtip-growl-container {
 	position: fixed;
-	top: 110px;
+	top: 112px;
 	right: 10px;
 	z-index: +1002 !important;
 }

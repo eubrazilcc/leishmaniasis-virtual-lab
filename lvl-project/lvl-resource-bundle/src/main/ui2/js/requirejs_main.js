@@ -125,7 +125,7 @@ requirejs.config({
 			deps : [ 'raphael' ],
 			exports : 'Smits'
 		},
-		'chartjs'  : {
+		'chartjs' : {
 			exports : 'Chart'
 		},
 		'tpl' : {
@@ -134,7 +134,7 @@ requirejs.config({
 	},
 	callback : function() {
 		require([ 'jquery' ], function() {
-			// tell jQuery to watch for any 401 or 403 errors and handle them
+			// tell jQuery to watch for any 401, 403 or 404 errors and handle them
 			// appropriately
 			$.ajaxSetup({
 				statusCode : {
@@ -143,6 +143,9 @@ requirejs.config({
 					},
 					403 : function() {
 						window.location.replace('#denied');
+					},
+					404 : function() {
+						window.location.replace('#not-found');
 					}
 				}
 			});

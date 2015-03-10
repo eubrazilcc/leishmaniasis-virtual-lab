@@ -116,54 +116,21 @@ define([ 'app', 'marionette', 'tpl!apps/drive/links/templates/drive_links', 'app
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove') : target.attr('data-remove');
 				var item = this.collection.get(itemId);
 				item.oauth2_token = config.authorizationToken();
-				this.collection.remove(item);
-				item.destroy({
-					success : function(e) {
-					},
-					error : function(e) {
-						require([ 'qtip' ], function(qtip) {
-							var message = $('<p />', {
-								text : 'The public link cannot be removed.'
-							}), ok = $('<button />', {
-								text : 'Close',
-								'class' : 'full'
-							});
-							$('#alert').qtip({
-								content : {
-									text : message.add(ok),
-									title : {
-										text : 'Error',
-										button : true
-									}
-								},
-								position : {
-									my : 'center',
-									at : 'center',
-									target : $(window)
-								},
-								show : {
-									ready : true,
-									modal : {
-										on : true,
-										blur : false
-									}
-								},
-								hide : false,
-								style : 'qtip-bootstrap dialogue',
-								events : {
-									render : function(event, api) {
-										$('button', api.elements.content).click(function() {
-											api.hide();
-										});
-									},
-									hide : function(event, api) {
-										self.grid.insertRow([ item ]);
-										api.destroy();
-									}
-								}
-							});
+				require([ 'common/confirm' ], function(confirmDialog) {
+					confirmDialog('Confirm deletion', 'This action will delete the selected public link. Are you sure?', function() {
+						self.collection.remove(item);
+						item.destroy({
+							success : function(e) {
+							},
+							error : function(e) {
+								require([ 'common/alert' ], function(alertDialog) {
+									alertDialog('Error', 'The public link cannot be removed.');
+								});
+							}
 						});
-					}
+					}, {
+						btn_text : 'Delete'
+					});
 				});
 			},
 			onBeforeRender : function() {
@@ -177,6 +144,7 @@ define([ 'app', 'marionette', 'tpl!apps/drive/links/templates/drive_links', 'app
 				// don't remove the styles in order to enable them to be
 				// reused
 				pace.stop();
+				this.stopListening();
 			},
 			onRender : function() {
 				var self = this;

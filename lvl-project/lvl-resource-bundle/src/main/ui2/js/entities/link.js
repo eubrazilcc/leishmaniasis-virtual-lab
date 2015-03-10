@@ -32,6 +32,9 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 					return errors;
 				}
 			}
+		});		
+		Entities.LinkCreate = Backbone.Model.extend({
+			urlRoot : config.get('service', '') + '/datasets/open_access/~/'
 		});
 		Entities.LinkPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Link,
