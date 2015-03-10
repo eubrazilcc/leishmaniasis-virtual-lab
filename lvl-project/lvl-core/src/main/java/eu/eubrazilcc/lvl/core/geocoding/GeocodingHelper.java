@@ -60,6 +60,8 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
  * @author Erik Torres <ertorser@upv.es>
  */
 public final class GeocodingHelper {
+	
+	// TODO : what's the point for refreshing this cache?
 
 	private static final Logger LOGGER = getLogger(GeocodingHelper.class);
 

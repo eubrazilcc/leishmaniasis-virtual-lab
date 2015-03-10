@@ -127,6 +127,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<artifactId>geocoder-java</artifactId>
 		</dependency>
 		
+		<!-- Google URL Shortener API Client Library -->			
+		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-urlshortener</artifactId>
+		</dependency>
+		
 		<!-- Transitively includes Jackson JSON processor from Jersey. Jackson must be 
 			provided in production (e.g. with Jersey) -->
 		<dependency>

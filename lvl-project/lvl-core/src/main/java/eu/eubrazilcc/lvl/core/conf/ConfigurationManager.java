@@ -79,7 +79,7 @@ public enum ConfigurationManager implements Closeable2 {
 	CONFIG_MANAGER;
 
 	private final static Logger LOGGER = getLogger(ConfigurationManager.class);
-	
+
 	public static final String MAIN_CONFIG         = "lvl.xml";
 	public static final String REST_SERVICE_CONFIG = "lvl-service.xml";
 	public static final String AUTHZ_SERVER_CONFIG = "lvl-auth.xml";
@@ -181,13 +181,17 @@ public enum ConfigurationManager implements Closeable2 {
 	public String getWfPasswd() {
 		return configuration().getWfPasswd().or("");
 	}
-	
+
 	public String getLinkedInAPIKey() {
 		return configuration().getLinkedInAPIKey().or("");
 	}
-	
+
 	public String getLinkedInSecretKey() {
 		return configuration().getLinkedInSecretKey().or("");
+	}
+
+	public String getGoogleAPIKey() {
+		return configuration().getGoogleAPIKey().or("");
 	}
 
 	@Override
@@ -268,7 +272,7 @@ public enum ConfigurationManager implements Closeable2 {
 							configuration.setThrowExceptionOnMissing(false);
 							final String linkedInAPIKey = getString("authz-server.linkedin.api-key", configuration, foundNameList, null); 
 							final String linkedInSecretKey = getString("authz-server.linkedin.secret-key", configuration, foundNameList, null);
-							// nothing yet
+							final String googleAPIKey = getString("rest-service.google.api-key", configuration, foundNameList, null);
 							// get other (free-format) properties
 							final Iterator<String> keyIterator = configuration.getKeys();
 							final Map<String, String> othersMap = new Hashtable<String, String>();
@@ -283,7 +287,7 @@ public enum ConfigurationManager implements Closeable2 {
 							}
 							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dbName, dbUsername, dbPassword, dbHosts, 
 									brokerEmbedded, messageBrokers, smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, 
-									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, linkedInAPIKey, linkedInSecretKey, othersMap);
+									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, linkedInAPIKey, linkedInSecretKey, googleAPIKey, othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
 							throw new IllegalStateException("Main configuration not found");
@@ -399,6 +403,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final Optional<String> wfPasswd;
 		private final Optional<String> linkedInAPIKey;
 		private final Optional<String> linkedInSecretKey;
+		private final Optional<String> googleAPIKey;
 		// other configurations
 		private final ImmutableMap<String, String> othersMap;
 		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, 
@@ -408,6 +413,7 @@ public enum ConfigurationManager implements Closeable2 {
 				final @Nullable String portalEndpoint,
 				final @Nullable String wfHostname, final boolean wfSecure, final int wfPort, final @Nullable String wfUsername, final @Nullable String wfPasswd,
 				final @Nullable String linkedInAPIKey, final @Nullable String linkedInSecretKey,
+				final @Nullable String googleAPIKey,
 				final @Nullable Map<String, String> othersMap) {
 			this.rootDir = checkNotNull(rootDir, "Uninitialized root directory");
 			this.localCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
@@ -430,6 +436,7 @@ public enum ConfigurationManager implements Closeable2 {
 			this.wfPasswd = fromNullable(trimToNull(wfPasswd));
 			this.linkedInAPIKey = fromNullable(trimToNull(linkedInAPIKey));
 			this.linkedInSecretKey = fromNullable(trimToNull(linkedInSecretKey));
+			this.googleAPIKey = fromNullable(trimToNull(googleAPIKey));
 			this.othersMap = new ImmutableMap.Builder<String, String>().putAll(othersMap).build();			
 		}
 		public File getRootDir() {
@@ -494,6 +501,9 @@ public enum ConfigurationManager implements Closeable2 {
 		}
 		public Optional<String> getLinkedInSecretKey() {
 			return linkedInSecretKey;
+		}		
+		public Optional<String> getGoogleAPIKey() {
+			return googleAPIKey;
 		}
 		public ImmutableMap<String, String> getOthersMap() {
 			return othersMap;
@@ -529,6 +539,7 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("wfPasswd", wfPasswd.orNull())
 					.add("linkedInAPIKey", linkedInAPIKey.orNull())
 					.add("linkedInSecretKey", linkedInSecretKey.orNull())
+					.add("googleAPIKey", googleAPIKey.orNull())
 					.add("customProperties", customPropertiesToString())
 					.toString();
 		}

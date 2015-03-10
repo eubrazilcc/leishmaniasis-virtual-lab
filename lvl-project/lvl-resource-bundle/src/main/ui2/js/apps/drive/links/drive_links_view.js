@@ -57,6 +57,26 @@ define([ 'app', 'marionette', 'tpl!apps/drive/links/templates/drive_links', 'app
 					})
 				},
 				{
+					name : 'openAccessLink',
+					label : '',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'string') {
+								this.$el.append('<a href="#" title="Shortened URL" class="text-muted"><i class="fa fa-compress fa-fw"></i></a>');
+								
+								/* TODO this.$el.append('<a href="' + config.get('service', '') + '/public/datasets/' + formattedValue
+										+ '" target="_blank" title="Download" class="text-muted"><i class="fa fa-download fa-fw"></i></a>'); */
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},				
+				{
 					name : 'filename',
 					label : '',
 					editable : false,

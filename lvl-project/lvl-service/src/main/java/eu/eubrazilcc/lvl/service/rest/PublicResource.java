@@ -27,6 +27,7 @@ import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -93,6 +94,14 @@ public class PublicResource {
 		return Response.ok(stream, isNotBlank(dataset.getContentType()) ? dataset.getContentType(): APPLICATION_OCTET_STREAM)
 				.header("content-disposition", "attachment; filename = " + dataset.getFilename())
 				.build();
+	}
+	
+	@GET
+	@Path("datasets/{secret: " + URL_FRAGMENT_PATTERN + "}/shortened_url")
+	@Produces(TEXT_PLAIN)
+	public String shortenedUrl() {
+		// TODO
+		return null;
 	}
 
 }

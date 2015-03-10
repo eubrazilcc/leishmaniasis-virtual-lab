@@ -13,7 +13,8 @@ define([ 'app', 'tpl!apps/header/show/templates/header_home', 'apps/config/mario
 					return config.isAuthenticated() ? 'logout' : 'login';
 				},
 				sessionText : function() {
-					return config.isAuthenticated() ? 'Sign out' : 'Sign in';
+					return config.isAuthenticated() ? '<span class="text-danger"><i class="fa fa-sign-out"></i></span> Sign out'
+							: '<span class="text-success"><i class="fa fa-sign-in"></i></span> Sign in';
 				}
 			}
 		});

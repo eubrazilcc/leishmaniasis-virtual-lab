@@ -59,7 +59,7 @@ public class StatisticsCache {
 	private static final Logger LOGGER = getLogger(StatisticsCache.class);
 
 	public static final int MAX_CACHED_ELEMENTS = 2;
-	public static final int CACHE_EXPIRATION_SECONDS = 180; // three hour	
+	public static final int CACHE_EXPIRATION_SECONDS = 180; // three hour
 
 	private static final LoadingCache<String, Optional<Map<String, List<SimpleStat>>>> CACHE = newBuilder()
 			.maximumSize(MAX_CACHED_ELEMENTS)
