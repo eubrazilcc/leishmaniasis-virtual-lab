@@ -23,9 +23,11 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
+import static eu.eubrazilcc.lvl.storage.urlshortener.UrlShortener.shortenUrl;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
@@ -37,16 +39,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
@@ -67,7 +68,7 @@ public class PublicResource {
 	@GET
 	@Path("datasets/{secret: " + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_OCTET_STREAM)
-	public Response downloadDataset(final @PathParam("secret") String secret, final @Context UriInfo uriInfo) {
+	public Response downloadDataset(final @PathParam("secret") String secret) {
 		final String secret2 = parseParam(secret);
 		// get from database
 		final Dataset dataset = DATASET_DAO.findOpenAccess(secret2);		
@@ -94,16 +95,30 @@ public class PublicResource {
 				.header("content-disposition", "attachment; filename = " + dataset.getFilename())
 				.build();
 	}
-	
+
 	@GET
 	@Path("datasets/{secret: " + URL_FRAGMENT_PATTERN + "}/shortened_url")
 	@Produces(TEXT_PLAIN)
 	public String shortenedUrl(final @PathParam("secret") String secret, final @Context UriInfo uriInfo) {
 		final String secret2 = parseParam(secret);
-		
+		// get from database
+		final Dataset dataset = DATASET_DAO.findOpenAccess(secret2);		
+		if (dataset == null || dataset.getOutfile() == null) {
+			throw new WebApplicationException("Element not found", NOT_FOUND);
+		}
+		// shorten URL		
+		final UriBuilder uriBuilder = uriInfo.getBaseUriBuilder()
+				.path(getClass())
+				.path("datasets")
+				.path(urlEncodeUtf8(secret));
 		
 		// TODO
-		return null;
+		final String uri = uriBuilder.build().toString();
+		final String shortened = shortenUrl(uri);
+		System.err.println("\n\n >> URL: " + uri + ", SHORTENED: " + shortened + "\n");
+		// TODO
+		
+		return shortened;
 	}
 
 }

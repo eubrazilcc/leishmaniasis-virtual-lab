@@ -51,8 +51,9 @@ public enum CloserServiceMock implements CloserServiceIf {
 
 	@Override
 	public void preload() {		
-		// load default configuration
+		// load default configuration and register it for closing
 		CONFIG_MANAGER.preload();
+		register(CONFIG_MANAGER);
 		// load ActiveMQ connector and register it for closing
 		ACTIVEMQ_CONN.preload();
 		register(ACTIVEMQ_CONN);

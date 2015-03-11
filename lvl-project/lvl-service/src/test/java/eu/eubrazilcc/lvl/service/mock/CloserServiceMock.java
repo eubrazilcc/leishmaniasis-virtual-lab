@@ -58,7 +58,7 @@ public enum CloserServiceMock implements CloserServiceIf {
 
 	@Override
 	public void preload() {
-		// load test configuration
+		// load test configuration and register it for closing
 		final ImmutableList.Builder<URL> builder = new ImmutableList.Builder<URL>();
 		final ImmutableList<URL> defaultUrls = getDefaultConfiguration();
 		for (final URL url : defaultUrls) {
@@ -70,6 +70,7 @@ public enum CloserServiceMock implements CloserServiceIf {
 		}
 		CONFIG_MANAGER.setup(builder.build());
 		CONFIG_MANAGER.preload();
+		register(CONFIG_MANAGER);
 		// load ActiveMQ connector and register it for closing
 		ACTIVEMQ_CONN.preload();
 		register(ACTIVEMQ_CONN);

@@ -49,8 +49,9 @@ public enum LightCloserServiceMock implements CloserServiceIf {
 
 	@Override
 	public void preload() {		
-		// load default configuration
-		CONFIG_MANAGER.preload();		
+		// load default configuration and register it for closing
+		CONFIG_MANAGER.preload();
+		register(CONFIG_MANAGER);
 		// load MongoDB connector and register it for closing
 		MONGODB_CONN.preload();
 		register(MONGODB_CONN);

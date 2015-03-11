@@ -50,10 +50,10 @@ public enum CloserServiceMock implements CloserServiceIf {
 
 	@Override
 	public void preload() {		
-		// load default configuration
+		// load default configuration and register it for closing
 		CONFIG_MANAGER.preload();
-		// register task runner for clean up (initialization will be performed as part of the 
-		// concurrency tests)
+		register(CONFIG_MANAGER);
+		// register task runner for clean up (initialization will be performed as part of the concurrency tests)
 		register(TASK_RUNNER);
 		register(TASK_SCHEDULER);
 	}

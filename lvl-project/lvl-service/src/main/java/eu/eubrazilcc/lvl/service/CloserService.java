@@ -55,9 +55,10 @@ public enum CloserService implements CloserServiceIf {
 
 	@Override
 	public void preload() {		
-		// load configuration
+		// load configuration and register it for closing
 		CONFIG_MANAGER.setup(findConfigurationFiles());
 		CONFIG_MANAGER.preload();
+		register(CONFIG_MANAGER);
 		// load ActiveMQ connector and register it for closing
 		ACTIVEMQ_CONN.preload();
 		register(ACTIVEMQ_CONN);

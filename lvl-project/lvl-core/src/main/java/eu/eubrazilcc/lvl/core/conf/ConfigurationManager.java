@@ -35,9 +35,11 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newTreeMap;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.parseURL;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.getTempDirectoryPath;
 import static org.apache.commons.io.FileUtils.getUserDirectoryPath;
 import static org.apache.commons.io.FilenameUtils.getName;
+import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -109,6 +111,10 @@ public enum ConfigurationManager implements Closeable2 {
 		return localCacheDir;
 	}
 
+	public String getInstanceId() {
+		return configuration().getInstanceId();
+	}
+	
 	public File getHtdocsDir() {
 		return configuration().getHtdocsDir();
 	}
@@ -206,7 +212,9 @@ public enum ConfigurationManager implements Closeable2 {
 	}
 
 	@Override
-	public void close() throws IOException { }
+	public void close() throws IOException {
+		deleteQuietly(getLocalCacheDir());
+	}
 
 	// auxiliary methods
 
@@ -381,7 +389,8 @@ public enum ConfigurationManager implements Closeable2 {
 	/* Inner classes */
 
 	public static class Configuration {
-		// common configuration
+		private final String instanceId = random(8, true, true);
+		// common configuration		
 		private final File rootDir;
 		private final File localCacheDir;
 		private final File htdocsDir;
@@ -401,9 +410,11 @@ public enum ConfigurationManager implements Closeable2 {
 		private final int wfPort;							
 		private final Optional<String> wfUsername;
 		private final Optional<String> wfPasswd;
+		// authorization server configuration
 		private final Optional<String> linkedInAPIKey;
 		private final Optional<String> linkedInSecretKey;
-		private final Optional<String> googleAPIKey;
+		// RESTful API configuration
+		private final Optional<String> googleAPIKey;		
 		// other configurations
 		private final ImmutableMap<String, String> othersMap;
 		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, 
@@ -416,7 +427,8 @@ public enum ConfigurationManager implements Closeable2 {
 				final @Nullable String googleAPIKey,
 				final @Nullable Map<String, String> othersMap) {
 			this.rootDir = checkNotNull(rootDir, "Uninitialized root directory");
-			this.localCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
+			final File baseLocalCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
+			this.localCacheDir = new File(baseLocalCacheDir, instanceId);			
 			this.htdocsDir = checkNotNull(htdocsDir, "Uninitialized hyper-text documents directory");
 			this.dbName = dbName;
 			this.dbUsername = fromNullable(trimToNull(dbUsername));
@@ -438,6 +450,9 @@ public enum ConfigurationManager implements Closeable2 {
 			this.linkedInSecretKey = fromNullable(trimToNull(linkedInSecretKey));
 			this.googleAPIKey = fromNullable(trimToNull(googleAPIKey));
 			this.othersMap = new ImmutableMap.Builder<String, String>().putAll(othersMap).build();			
+		}
+		public String getInstanceId() {
+			return instanceId;
 		}
 		public File getRootDir() {
 			return rootDir;
@@ -518,6 +533,7 @@ public enum ConfigurationManager implements Closeable2 {
 		@Override
 		public String toString() {
 			return toStringHelper(this)
+					.add("instanceId", instanceId)
 					.add("rootDir", rootDir)
 					.add("localCacheDir", localCacheDir)
 					.add("htdocsDir", htdocsDir)

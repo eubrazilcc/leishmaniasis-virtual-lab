@@ -42,7 +42,7 @@ public class UrlShortenerTest {
 	public void test() {
 		System.out.println("UrlShortenerTest.test()");
 		try {
-			final String[] urls = { "https://www.google.com" };
+			final String[] urls = { "https://www.google.com", "https://localhost" };
 
 			// test shorten URL
 			for (final String url : urls) {

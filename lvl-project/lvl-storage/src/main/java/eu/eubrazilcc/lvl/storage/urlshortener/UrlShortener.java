@@ -91,6 +91,11 @@ public class UrlShortener {
 	private static final String loadShortenedUrl(final String url) throws IOException {
 		String url2 = null, shortenedUrl = null;
 		checkArgument(isNotBlank(url2 = trimToNull(url)), "Uninitialized or invalid url");
+		
+		
+		
+		// TODO
+		
 		final String response = Request.Post(URL_SHORTENER + (isNotBlank(CONFIG_MANAGER.getGoogleAPIKey()) ? "key=" + urlEncodeUtf8(CONFIG_MANAGER.getGoogleAPIKey()) : ""))
 				.addHeader("Accept", "application/json")
 				.addHeader("Content-type", "application/json")

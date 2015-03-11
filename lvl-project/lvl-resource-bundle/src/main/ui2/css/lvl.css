@@ -45,11 +45,10 @@
 }
 
 .lvl-footer-logos {
-	margin-top: 20px;
-	margin-bottom: 20px;
+	margin: 20px 14px 20px;
 	max-width: 100%;
 	width: auto;
-	height: 60px;
+	height: 64px;
 }
 
 @media ( max-width : 767px) {

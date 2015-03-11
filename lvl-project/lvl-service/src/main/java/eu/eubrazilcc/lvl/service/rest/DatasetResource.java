@@ -152,7 +152,7 @@ public class DatasetResource {
 		// create new entry in the database		
 		final WriteResult<Dataset> result = DATASET_DAO.insert(dbns, filename2, dataset.getOutfile(), 
 				dataset.getMetadata());
-		LOGGER.debug("New dataset created: ns=" + dbns + ", fn=" + filename2 + ", id=" + result.getId());
+		LOGGER.trace("New dataset created: ns=" + dbns + ", fn=" + filename2 + ", id=" + result.getId());
 		final UriBuilder uriBuilder = uriInfo.getBaseUriBuilder()
 				.path(getClass())
 				.path(urlEncodeUtf8(dbns))

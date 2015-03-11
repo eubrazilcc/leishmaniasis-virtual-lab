@@ -55,10 +55,11 @@ import static java.lang.System.currentTimeMillis;
 import static java.lang.System.getProperty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.OK;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
@@ -285,7 +286,7 @@ public class ServiceTest {
 			response = target.path(path.value())					
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.post(entity(task, APPLICATION_JSON_TYPE));
+					.post(entity(task, APPLICATION_JSON));
 			assertThat("Create import sandflies task response is not null", response, notNullValue());
 			assertThat("Create import sandflies task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create import sandflies task response is not empty", response.getEntity(), notNullValue());
@@ -334,7 +335,7 @@ public class ServiceTest {
 					.build();
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.post(entity(task, APPLICATION_JSON_TYPE));
+					.post(entity(task, APPLICATION_JSON));
 			assertThat("Create import sandflies task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create import sandflies task response is not empty", response.getEntity(), notNullValue());
 			payload = response.readEntity(String.class);
@@ -390,7 +391,7 @@ public class ServiceTest {
 					.build();			
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.post(entity(sandfly, APPLICATION_JSON_TYPE));			
+					.post(entity(sandfly, APPLICATION_JSON));			
 			assertThat("Create new sandfly response is not null", response, notNullValue());
 			assertThat("Create new sandfly response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create new sandfly response is not empty", response.getEntity(), notNullValue());
@@ -614,7 +615,7 @@ public class ServiceTest {
 			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.put(entity(sandfly, APPLICATION_JSON_TYPE));
+					.put(entity(sandfly, APPLICATION_JSON));
 			assertThat("Update sandfly response is not null", response, notNullValue());
 			assertThat("Update sandfly response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Update sandfly response is not empty", response.getEntity(), notNullValue());
@@ -721,7 +722,7 @@ public class ServiceTest {
 					.build();			
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.post(entity(leishmania, APPLICATION_JSON_TYPE));			
+					.post(entity(leishmania, APPLICATION_JSON));			
 			assertThat("Create new leishmania response is not null", response, notNullValue());
 			assertThat("Create new leishmania response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create new leishmania response is not empty", response.getEntity(), notNullValue());
@@ -774,7 +775,7 @@ public class ServiceTest {
 			response = target.path(path.value()).path(sequenceKey.toId())
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.put(entity(leishmania, APPLICATION_JSON_TYPE));
+					.put(entity(leishmania, APPLICATION_JSON));
 			assertThat("Update leishmania response is not null", response, notNullValue());
 			assertThat("Update leishmania response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Update leishmania response is not empty", response.getEntity(), notNullValue());
@@ -850,7 +851,7 @@ public class ServiceTest {
 					.build();			
 			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(dataset, APPLICATION_JSON_TYPE));
+					.post(entity(dataset, APPLICATION_JSON));
 			assertThat("Create dataset (FASTA.GZIP sandfly) response is not null", response, notNullValue());
 			assertThat("Create dataset (FASTA.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create dataset (FASTA.GZIP sandfly) is not empty", response.getEntity(), notNullValue());
@@ -957,7 +958,7 @@ public class ServiceTest {
 					.path(datasets.getElements().get(0).getUrlSafeFilename())
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.put(entity(dataset, APPLICATION_JSON_TYPE));
+					.put(entity(dataset, APPLICATION_JSON));
 			assertThat("Update dataset response is not null", response, notNullValue());
 			assertThat("Update dataset response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Update dataset response is not empty", response.getEntity(), notNullValue());
@@ -1004,7 +1005,7 @@ public class ServiceTest {
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(dataset, APPLICATION_JSON_TYPE));
+					.post(entity(dataset, APPLICATION_JSON));
 			assertThat("Create dataset (NCBI.GZIP sandfly) response is not null", response, notNullValue());
 			assertThat("Create dataset (NCBI.GZIP sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create dataset (NCBI.GZIP sandfly) response is not empty", response.getEntity(), notNullValue());
@@ -1036,7 +1037,7 @@ public class ServiceTest {
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(dataset, APPLICATION_JSON_TYPE));
+					.post(entity(dataset, APPLICATION_JSON));
 			assertThat("Create dataset (FASTA sandfly) response is not null", response, notNullValue());
 			assertThat("Create dataset (FASTA sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create dataset (FASTA sandfly) response is not empty", response.getEntity(), notNullValue());
@@ -1069,7 +1070,7 @@ public class ServiceTest {
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(dataset, APPLICATION_JSON_TYPE));
+					.post(entity(dataset, APPLICATION_JSON));
 			assertThat("Create dataset (NCBI sandfly) response is not null", response, notNullValue());
 			assertThat("Create dataset (NCBI sandfly) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create dataset (NCBI sandfly) response is not empty", response.getEntity(), notNullValue());
@@ -1102,7 +1103,7 @@ public class ServiceTest {
 					.build();
 			response = target.path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(dataset, APPLICATION_JSON_TYPE));			
+					.post(entity(dataset, APPLICATION_JSON));			
 			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is not null", response, notNullValue());
 			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create dataset (NCBI.GZIP sandflies bulk) response is not empty", response.getEntity(), notNullValue());
@@ -1181,7 +1182,7 @@ public class ServiceTest {
 					.path(urlEncodeUtf8("my_ncbi_sequence.xml"))
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(share, APPLICATION_JSON_TYPE));
+					.post(entity(share, APPLICATION_JSON));
 			assertThat("Create dataset share response is not null", response, notNullValue());
 			assertThat("Create dataset share response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create dataset share response is not empty", response.getEntity(), notNullValue());
@@ -1359,7 +1360,7 @@ public class ServiceTest {
 					.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
-					.post(entity(openAccess, APPLICATION_JSON_TYPE));
+					.post(entity(openAccess, APPLICATION_JSON));
 			assertThat("Create dataset open access link response is not null", response, notNullValue());
 			assertThat("Create dataset open access link response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create dataset open access link response is not empty", response.getEntity(), notNullValue());
@@ -1428,7 +1429,6 @@ public class ServiceTest {
 			response3 = Request.Get(downloadUri)
 					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
 					.addHeader("Accept", APPLICATION_OCTET_STREAM)
-					.addHeader(HEADER_AUTHORIZATION, bearerHeader(TOKEN_USER1))
 					.execute();
 			assertThat("Download open access dataset response is not null", response3, notNullValue());
 			response4 = response3.returnResponse();
@@ -1477,6 +1477,50 @@ public class ServiceTest {
 			// uncomment for additional output
 			System.out.println(" >> Saved open access file: " + filename);
 
+			// test shorten URL with valid public resource
+			URI endpointUri = target.path(PublicResource.class.getAnnotation(Path.class).value())
+					.path("datasets")
+					.path(urlEncodeUtf8(openAccesses.getElements().get(0).getOpenAccessLink()))
+					.path("shortened_url")
+					.getUri();
+			response3 = Request.Get(endpointUri)
+					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
+					.addHeader("Accept", TEXT_PLAIN)
+					.execute();
+			assertThat("Shorten open access dataset response is not null", response3, notNullValue());
+			response4 = response3.returnResponse();
+			assertThat("Shorten open access dataset HTTP response is not null", response4, notNullValue());
+			assertThat("Shorten open access dataset status line is not null", response4.getStatusLine(), notNullValue());
+			assertThat("Shorten open access dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
+					equalTo(OK.getStatusCode()));
+			entity = response4.getEntity();
+			assertThat("Shorten open access dataset response is not empty", entity, notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Shorten open access dataset response entity is not null", payload, notNullValue());
+			assertThat("Shorten open access dataset response entity is empty", isNotBlank(payload));
+			// uncomment for additional output
+			System.out.println(" >> Shortened URL: " + payload);
+
+			// test shorten URL with invalid public resource (should fail with status 404)
+			endpointUri = target.path(PublicResource.class.getAnnotation(Path.class).value())
+					.path("datasets")
+					.path("this_is_an_invalid_secret")
+					.path("shortened_url")
+					.getUri();
+			response3 = Request.Get(endpointUri)
+					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
+					.addHeader("Accept", TEXT_PLAIN)
+					.execute();
+			assertThat("Shorten open access dataset response is not null", response3, notNullValue());
+			response4 = response3.returnResponse();
+			assertThat("Shorten open access dataset HTTP response is not null", response4, notNullValue());
+			assertThat("Shorten open access dataset status line is not null", response4.getStatusLine(), notNullValue());
+			assertThat("Shorten open access dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
+					equalTo(NOT_FOUND.getStatusCode()));
+			
+
+			// TODO
+
 			// test remove open access link
 			response = target.path(path.value())
 					.path(urlEncodeUtf8(ownerId1))
@@ -1515,7 +1559,7 @@ public class ServiceTest {
 					.build();					
 			response = target.path(path.value()).request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.post(entity(reference, APPLICATION_JSON_TYPE));			
+					.post(entity(reference, APPLICATION_JSON));			
 			assertThat("Create new reference response is not null", response, notNullValue());
 			assertThat("Create new reference response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create new reference response is not empty", response.getEntity(), notNullValue());
@@ -1600,7 +1644,7 @@ public class ServiceTest {
 			response = target.path(path.value()).path(reference.getPubmedId())
 					.request()
 					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
-					.put(entity(reference, APPLICATION_JSON_TYPE));
+					.put(entity(reference, APPLICATION_JSON));
 			assertThat("Update reference response is not null", response, notNullValue());
 			assertThat("Update reference response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Update reference response is not empty", response.getEntity(), notNullValue());
@@ -1650,7 +1694,7 @@ public class ServiceTest {
 					.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.90d, 38.08d).build()).build())					
 					.build();
 			response = target.path(path.value()).request()
-					.post(entity(instance, APPLICATION_JSON_TYPE));			
+					.post(entity(instance, APPLICATION_JSON));			
 			assertThat("Create new instance response is not null", response, notNullValue());
 			assertThat("Create new instance response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 			assertThat("Create new instance response is not empty", response.getEntity(), notNullValue());
@@ -1729,7 +1773,7 @@ public class ServiceTest {
 			instance.setRoles(newHashSet("working_node"));
 			response = target.path(path.value()).path(instance.getInstanceId())
 					.request()
-					.put(entity(instance, APPLICATION_JSON_TYPE));
+					.put(entity(instance, APPLICATION_JSON));
 			assertThat("Update instance response is not null", response, notNullValue());
 			assertThat("Update instance response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 			assertThat("Update instance response is not empty", response.getEntity(), notNullValue());
@@ -1769,7 +1813,7 @@ public class ServiceTest {
 			response = target.path(path.value())
 					.path("stats/collection")
 					.request()
-					.accept(APPLICATION_JSON_TYPE)
+					.accept(APPLICATION_JSON)
 					.get();
 			assertThat("Get collection stats is not null", response, notNullValue());
 			assertThat("Get collection stats is OK", response.getStatus(), equalTo(OK.getStatusCode()));
