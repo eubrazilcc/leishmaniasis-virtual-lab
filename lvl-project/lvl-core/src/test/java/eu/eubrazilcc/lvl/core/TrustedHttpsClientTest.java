@@ -27,7 +27,7 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
-import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
+import static org.hamcrest.number.OrderingComparison.lessThan;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -57,13 +57,13 @@ public class TrustedHttpsClientTest {
 						assertThat("HTTP response is not null", response, notNullValue());
 						assertThat("Status line is not null", response.getStatusLine(), notNullValue());
 						assertThat("Status coincides with expected", response.getStatusLine().getStatusCode(), 
-								allOf(greaterThanOrEqualTo(200), lessThanOrEqualTo(300)));						
+								allOf(greaterThanOrEqualTo(200), lessThan(300)));
 						final HttpEntity entity = response.getEntity();
 						assertThat("Entity is not null", entity, notNullValue());
 						return entity != null ? EntityUtils.toString(entity) : null;	                    
 					}
 				};
-				final String payload = httpClient.executeGet("https://www.google.es", responseHandler);
+				final String payload = httpClient.executeGet("https://www.google.es", null, responseHandler);
 				assertThat("Content is not null", payload, notNullValue());
 				assertThat("Content not is empty", isNotBlank(payload));
 				/* uncomment for additional output

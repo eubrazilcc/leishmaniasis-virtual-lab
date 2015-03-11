@@ -41,7 +41,9 @@ import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocket;
@@ -50,6 +52,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -78,21 +81,33 @@ public final class TrustedHttpsClient implements AutoCloseable {
 		trustStoreDir = createTrustStoreDir();
 	}
 
-	public <T> T executeGet(final String url, final ResponseHandler<T> responseHandler) throws ClientProtocolException, IOException {
+	public <T> T executeGet(final String url, final @Nullable Map<String, String> headers, final ResponseHandler<T> responseHandler) throws ClientProtocolException, IOException {
 		String url2 = null;
 		checkArgument(isNotBlank(url2 = trimToNull(url)), "Uninitialized or invalid URL");
 		try (final CloseableHttpClient httpClient = createHttpClient(trustStoreDir, password, url2)) {			
 			final HttpGet request = new HttpGet(url2);
+			if (headers != null) {
+				for (final Map.Entry<String, String> header : headers.entrySet()) {
+					request.addHeader(header.getKey(), header.getValue());
+				}
+			}
 			LOGGER.trace("Executing request: " + request.getRequestLine());
 			return httpClient.execute(request, responseHandler);
 		}
 	}
 
-	public <T> T executePost(final String url, final ResponseHandler<T> responseHandler) throws ClientProtocolException, IOException {
+	public <T> T executePost(final String url, final @Nullable Map<String, String> headers, final HttpEntity entity, final ResponseHandler<T> responseHandler) 
+			throws ClientProtocolException, IOException {
 		String url2 = null;
 		checkArgument(isNotBlank(url2 = trimToNull(url)), "Uninitialized or invalid URL");
 		try (final CloseableHttpClient httpClient = createHttpClient(trustStoreDir, password, url2)) {			
-			final HttpPost request = new HttpPost(url2);
+			final HttpPost request = new HttpPost(url2);			
+			request.setEntity(entity);
+			if (headers != null) {
+				for (final Map.Entry<String, String> header : headers.entrySet()) {
+					request.addHeader(header.getKey(), header.getValue());
+				}
+			}
 			LOGGER.trace("Executing request: " + request.getRequestLine());
 			return httpClient.execute(request, responseHandler);
 		}

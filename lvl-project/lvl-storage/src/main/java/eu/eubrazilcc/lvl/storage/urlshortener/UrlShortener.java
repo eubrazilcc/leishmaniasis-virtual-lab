@@ -37,17 +37,25 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.http.client.fluent.Request;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
+
+import eu.eubrazilcc.lvl.core.http.TrustedHttpsClient;
 
 /**
  * Converts long URLs into short ones using the Google URL Shortener API.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="https://developers.google.com/url-shortener/v1/getting_started">URL Shortener API - Getting Started</a>
  */
 public class UrlShortener {
 
@@ -88,25 +96,30 @@ public class UrlShortener {
 		return normlizedUrl;
 	}
 
-	private static final String loadShortenedUrl(final String url) throws IOException {
+	private static final String loadShortenedUrl(final String url) throws Exception {
 		String url2 = null, shortenedUrl = null;
 		checkArgument(isNotBlank(url2 = trimToNull(url)), "Uninitialized or invalid url");
-		
-		
-		
-		// TODO
-		
-		final String response = Request.Post(URL_SHORTENER + (isNotBlank(CONFIG_MANAGER.getGoogleAPIKey()) ? "key=" + urlEncodeUtf8(CONFIG_MANAGER.getGoogleAPIKey()) : ""))
-				.addHeader("Accept", "application/json")
-				.addHeader("Content-type", "application/json")
-				.body(new StringEntity("{ \"longUrl\" : \"" + url2 + "\" }"))
-				.execute()
-				.returnContent()
-				.asString();
-		final Map<String, String> map = JSON_MAPPER.readValue(response, new TypeReference<HashMap<String,String>>() {});
-		checkState(map != null, "Server response is invalid");
-		shortenedUrl = map.get("id");
-		checkState(isNotBlank(shortenedUrl), "No shortened URL found in server response");
+		try (final TrustedHttpsClient httpClient = new TrustedHttpsClient()) {
+			final ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
+				public String handleResponse(final HttpResponse response) throws ClientProtocolException, IOException {
+					final int status = response.getStatusLine().getStatusCode();
+					if (status >= 200 && status < 300) {
+						final HttpEntity entity = response.getEntity();
+						return entity != null ? EntityUtils.toString(entity) : null;
+					} else {
+						throw new ClientProtocolException("Unexpected response status: " + status);
+					}					                    
+				}
+			};
+			final String response = httpClient.executePost(URL_SHORTENER + (isNotBlank(CONFIG_MANAGER.getGoogleAPIKey()) ? "key=" + urlEncodeUtf8(CONFIG_MANAGER.getGoogleAPIKey()) : ""), 					
+					ImmutableMap.of("Accept", "application/json", "Content-type", "application/json"),
+					new StringEntity("{ \"longUrl\" : \"" + url2 + "\" }"),
+					responseHandler);
+			final Map<String, String> map = JSON_MAPPER.readValue(response, new TypeReference<HashMap<String,String>>() {});
+			checkState(map != null, "Server response is invalid");
+			shortenedUrl = map.get("id");
+			checkState(isNotBlank(shortenedUrl), "No shortened URL found in server response");
+		}
 		return shortenedUrl;
 	}
 
