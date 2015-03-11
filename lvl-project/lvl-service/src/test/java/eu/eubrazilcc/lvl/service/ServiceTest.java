@@ -1483,19 +1483,12 @@ public class ServiceTest {
 					.path(urlEncodeUtf8(openAccesses.getElements().get(0).getOpenAccessLink()))
 					.path("shortened_url")
 					.getUri();
-			response3 = Request.Get(endpointUri)
+			payload = Request.Get(endpointUri)
 					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
 					.addHeader("Accept", TEXT_PLAIN)
-					.execute();
-			assertThat("Shorten open access dataset response is not null", response3, notNullValue());
-			response4 = response3.returnResponse();
-			assertThat("Shorten open access dataset HTTP response is not null", response4, notNullValue());
-			assertThat("Shorten open access dataset status line is not null", response4.getStatusLine(), notNullValue());
-			assertThat("Shorten open access dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
-					equalTo(OK.getStatusCode()));
-			entity = response4.getEntity();
-			assertThat("Shorten open access dataset response is not empty", entity, notNullValue());
-			payload = response.readEntity(String.class);
+					.execute()
+					.returnContent()
+					.asString();
 			assertThat("Shorten open access dataset response entity is not null", payload, notNullValue());
 			assertThat("Shorten open access dataset response entity is empty", isNotBlank(payload));
 			// uncomment for additional output
@@ -1517,9 +1510,6 @@ public class ServiceTest {
 			assertThat("Shorten open access dataset status line is not null", response4.getStatusLine(), notNullValue());
 			assertThat("Shorten open access dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
 					equalTo(NOT_FOUND.getStatusCode()));
-			
-
-			// TODO
 
 			// test remove open access link
 			response = target.path(path.value())

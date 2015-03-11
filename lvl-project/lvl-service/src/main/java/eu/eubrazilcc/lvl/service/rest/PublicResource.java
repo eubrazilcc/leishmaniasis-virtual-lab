@@ -110,15 +110,8 @@ public class PublicResource {
 		final UriBuilder uriBuilder = uriInfo.getBaseUriBuilder()
 				.path(getClass())
 				.path("datasets")
-				.path(urlEncodeUtf8(secret));
-		
-		// TODO
-		final String uri = uriBuilder.build().toString();
-		final String shortened = shortenUrl(uri);
-		System.err.println("\n\n >> URL: " + uri + ", SHORTENED: " + shortened + "\n");
-		// TODO
-		
-		return shortened;
+				.path(urlEncodeUtf8(secret));		
+		return shortenUrl(uriBuilder.build().toString());
 	}
 
 }
