@@ -67,8 +67,7 @@ public class PublicResource {
 	@GET
 	@Path("datasets/{secret: " + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_OCTET_STREAM)
-	public Response downloadDataset(final @PathParam("secret") String secret, final @Context UriInfo uriInfo, 
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+	public Response downloadDataset(final @PathParam("secret") String secret, final @Context UriInfo uriInfo) {
 		final String secret2 = parseParam(secret);
 		// get from database
 		final Dataset dataset = DATASET_DAO.findOpenAccess(secret2);		
@@ -99,7 +98,10 @@ public class PublicResource {
 	@GET
 	@Path("datasets/{secret: " + URL_FRAGMENT_PATTERN + "}/shortened_url")
 	@Produces(TEXT_PLAIN)
-	public String shortenedUrl() {
+	public String shortenedUrl(final @PathParam("secret") String secret, final @Context UriInfo uriInfo) {
+		final String secret2 = parseParam(secret);
+		
+		
 		// TODO
 		return null;
 	}

@@ -32,7 +32,6 @@ import static com.google.common.collect.Iterables.getFirst;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static java.lang.Thread.sleep;
 import static java.util.Locale.ENGLISH;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -61,12 +60,9 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
  */
 public final class GeocodingHelper {
 	
-	// TODO : what's the point for refreshing this cache?
-
 	private static final Logger LOGGER = getLogger(GeocodingHelper.class);
 
 	public static final int MAX_CACHED_ELEMENTS = 1000;
-	public static final int CACHE_EXPIRATION_SECONDS = 86400; // one day
 	public static final char COUNTRY_SEPARATOR = ':';	
 
 	public static final int OVER_QUERY_LIMIT_MIN_DELAY = 800;
@@ -74,7 +70,6 @@ public final class GeocodingHelper {
 
 	private static final LoadingCache<String, Optional<Point>> CACHE = newBuilder()
 			.maximumSize(MAX_CACHED_ELEMENTS)
-			.refreshAfterWrite(CACHE_EXPIRATION_SECONDS, SECONDS)
 			.build(new CacheLoader<String, Optional<Point>>() {
 				@Override
 				public Optional<Point> load(final String key) throws ExecutionException {

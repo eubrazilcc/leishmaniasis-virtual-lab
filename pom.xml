@@ -291,14 +291,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<version>0.16</version>
 			</dependency>
 			
-			<!-- Google URL Shortener API Client Library -->
-			
-			<dependency>
-				<groupId>com.google.apis</groupId>
-				<artifactId>google-api-services-urlshortener</artifactId>
-				<version>v1-rev39-1.19.1</version>
-			</dependency>
-			
 			<!-- The ANTLR 4 Runtime -->
 			
 			<dependency>
