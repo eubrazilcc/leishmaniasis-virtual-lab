@@ -10,8 +10,9 @@
 			</button>
 			<a class="navbar-brand" href="/#home">L<span class="text-danger">ei</span>sh VirtLab</a>
 		</div>
-		<div class="collapse navbar-collapse" id="navbar-collapse-1">
+		<div class="collapse navbar-collapse" id="navbar-collapse-1">			
 			<ul class="nav navbar-nav navbar-right">
+				<li><a href="#" id="btnSearch"><i class="fa fa-search fa-fw"></i></a></li>
 				<li><a href="#" id="btnAlerts"><i class="fa fa-bell fa-fw"></i> Alerts <span class="badge">0</span></a></li>
 				<li class="dropdown">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" id="username"><i class="fa fa-user fa-fw"></i> <%= username() %> <span class="caret"></span></a>
@@ -26,6 +27,15 @@
 				<div class="form-group">
           			<div id="section-navigation"></div>
         		</div>
+				<div class="form-group">
+					<div class="input-group">
+						<span class="input-group-addon"><a href="#" class="text-muted"><i class="fa fa-close fa-fw"></i></a></span>
+						<input type="text" class="form-control" placeholder="Search">
+						<span class="input-group-btn">
+							<button class="btn btn-default" type="button"><i class="fa fa-search fa-fw"></i></button>
+						</span>						
+					</div>
+				</div>
 			</form>			
 		</div>
 	</div>

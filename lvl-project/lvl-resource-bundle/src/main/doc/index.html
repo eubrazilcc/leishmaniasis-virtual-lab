@@ -1443,15 +1443,15 @@ Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:
                utilities for the Java language. Also, a fluent API is available. These features are further described in the website of the 
                <a href="https://java.net/projects/jaxb2-commons/pages/Home" target="_blank">JAXB 2.x Commons project</a>.</p>
             
+            <p>To generate the XML binding classes run the following Maven command:</p>
             
+            <code>
+              $ mvn clean generate-sources -pl lvl-core -P generate
+            </code>
+            <p></p>
             
-            
-            <!-- TODO -->
-            <!-- -Xfluent-api -Xcommons-lang -->
-            <!--  -->
-            <!--  -->
-
-            
+            <p>This profile will run with the JAXB2 Maven Plugin with the parameters: <code>-Xfluent-api</code> and <code>-Xcommons-lang</code>, as mentioned
+            	above.</p>
             
           </div>
         </div>

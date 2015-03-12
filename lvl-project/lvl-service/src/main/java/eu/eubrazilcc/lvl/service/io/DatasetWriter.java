@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.service.io;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.FluentIterable.from;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
@@ -120,8 +121,10 @@ public final class DatasetWriter {
 					return openGenBankFile(sequence, GB_SEQ_XML);
 				}
 			}).toList();
-			try {
-				final File outputDir = createTempDirectory("dataset-").toFile();
+			try {				
+				final File baseOutputDir = new File(CONFIG_MANAGER.getLocalCacheDir(), DatasetWriter.class.getSimpleName());
+				baseOutputDir.mkdirs();				
+				final File outputDir = createTempDirectory(baseOutputDir.toPath(), "dataset-").toFile();
 				if (EXPORT_FASTA.equals(filter)) {
 					if (files.size() == 1) {
 						outfile = writeFastaSequence(files.get(0), outputDir, compression);						
