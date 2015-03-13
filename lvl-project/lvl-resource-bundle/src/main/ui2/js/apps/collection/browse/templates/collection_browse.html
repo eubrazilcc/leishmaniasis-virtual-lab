@@ -1,33 +1,19 @@
 <div class="row">
-  <div class="col-xs-6">
-    <div class="row">
-      <div class="col-xs-12">
-        <a class="btn btn-link hidden" id="show-edition-toolbar-btn"><i class="fa fa-chevron-right fa-fw"></i></a>
-        <div class="btn-toolbar" role="toolbar" id="edition-toolbar">
-        	<div class="btn-group">
-          		<a class="btn btn-link" id="hide-edition-toolbar-btn"><i class="fa fa-chevron-left fa-fw"></i></a>
-          		<a class="btn btn-link" id="uncheck-btn"><i class="fa fa-square-o fa-fw"></i><span class="hidden-xs"> Deselect</span></a>          
-          		<a class="btn btn-link" id="export-btn"><i class="fa fa-download fa-fw"></i><span class="hidden-xs"> Export</span></a>
-        	</div>
-        	<div class="btn-group">
-          		<a class="btn btn-link dropdown-toggle" id="switch-btn" data-toggle="dropdown">
-          			<span class="visible-xs-inline"><i class="fa fa-bug fa-fw"></i></span><span class="hidden-xs">Collection</span> <i class="fa fa-caret-down fa-fw"></i>
-          		</a>
-          		<ul class="dropdown-menu" role="menu">
-          			<li<% if (isSanflies) { %> class="disabled" <% } %>><a href="#collection/browse/sandflies"><i class="fa fa-check fa-fw"></i> Sandflies</a></li>
-          			<li<% if (isLeishmania) { %> class="disabled" <% } %>><a href="#collection/browse/leishmania"><i class="fa fa-check fa-fw"></i> <i>Leishmania</i></a></li>
-          		</ul>
-        	</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-xs-6">
-    <div id="grid-filter-toolbar"></div>
-    <div id="lvl-qtip-growl-container"></div>
+  <div class="col-xs-offset-6 col-xs-6">
+    <div id="grid-filter-toolbar" class="hidden"></div>
   </div>
 </div>
+
 <div class="row">
+
+  <div class="col-xs-12 lvl-search-terms-container"> <!-- TODO -->
+    <span class="label label-success">source : genbank <a href="#" class="text-muted lvl-btn-close"><i class="fa fa-close fa-fw"></i></a></span>
+    <span class="label label-success">gene : coi <a href="#" class="text-muted lvl-btn-close"><i class="fa fa-close fa-fw"></i></a></span>
+    <span class="label label-success">length > 200 <a href="#" class="text-muted lvl-btn-close"><i class="fa fa-close fa-fw"></i></a></span>
+    <span class="label label-warning">location : 122,90 <a href="#" class="text-muted lvl-btn-close"><i class="fa fa-close fa-fw"></i></a></span>
+    <span class="label label-danger">clear all <a href="#" class="text-muted lvl-btn-close"><i class="fa fa-close fa-fw"></i></a></span>
+  </div>
+
   <div class="col-xs-12">
     <div id="grid-container" class="backgrid-container"></div>
   </div>

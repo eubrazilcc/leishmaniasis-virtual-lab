@@ -67,10 +67,6 @@
 	position: fixed;
 	z-index: +1;
 	width: inherit;
-	/* background: -webkit-linear-gradient(#f9f9f9, white); For Safari 5.1 to 6.0
-	background: -o-linear-gradient(#f9f9f9, white); For Opera 11.1 to 12.0
-	background: -moz-linear-gradient(#f9f9f9, white); For Firefox 3.6 to 15
-	background: linear-gradient(#f9f9f9, white); Standard syntax */
 	background-color: white;
 }
 
@@ -81,9 +77,8 @@
 	padding-bottom: 100px;
 }
 
-.lvl-filter-container {
-	margin: 0px 0px 12px 0px !important;
-	padding: 0px !important;
+.lvl-search-terms-container {
+	padding-bottom: 10px;
 }
 
 .lvl-dna-sequence {
@@ -117,7 +112,7 @@
 
 #lvl-qtip-growl-container {
 	position: fixed;
-	top: 112px;
+	top: 116px;
 	right: 10px;
 	z-index: +1002 !important;
 }
@@ -127,6 +122,45 @@
 	min-height: 0;
 	overflow: hidden;
 	margin: 0 0 5px 0;
+}
+
+#lvl-search-box {
+	opacity: 1;
+	position: fixed;
+	top: 67px;
+	left: 0;
+	background-color: #f9f9f9;
+	width: 100%;
+	height: auto;
+	z-index: 999
+}
+
+a.lvl-btn-close:hover, a.lvl-btn-close:focus {
+	border-radius: 1.5em;
+	color: #f9f9f9;
+	background-color: #e51c23;
+}
+
+#lvl-floating-menu-toggle {
+	position: fixed;
+	top: 76px;
+	right: 5px;
+	z-index: 997;
+	height: auto;
+	width: auto;
+	padding: 0px;
+	marging: 0px;
+}
+
+#lvl-floating-menu {
+	position: fixed;
+	top: 75px;
+	right: 4px;
+	z-index: 998;
+	height: auto;
+	width: auto;
+	padding: 0px;
+	marging: 0px;
 }
 
 /* Override Backgrid.js styles */
@@ -181,7 +215,6 @@
 .doughnut-legend {
 	list-style: none;
 	position: absolute;
-	/* right: 8px; */
 	left: -22px;
 	top: 0;
 }

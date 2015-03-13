@@ -2,9 +2,9 @@
  * RequireJS module that defines the view: collection->browse.
  */
 
-define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/config/marionette/styles/style', 'entities/sequence', 'pace',
-		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl,
-		Style, SequenceModel, pace, mapCn) {
+define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!apps/collection/browse/templates/toolbar_browse',
+		'apps/config/marionette/styles/style', 'entities/sequence', 'pace', 'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator',
+		'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, ToolbarTpl, Style, SequenceModel, pace, mapCn) {
 	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
@@ -82,7 +82,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 								var countryName = mapCn[code2];
 								if (countryName) {
 									this.$el.append('<a href="/#collection/map/country/' + code2.toLowerCase() + '"><img src="img/blank.gif" class="flag flag-'
-											+ code2.toLowerCase() + '" alt="' + countryName + '" /> ' + countryName + '</a>');
+											+ code2.toLowerCase() + '" alt="' + countryName + '" /><span class="hidden-xs"> ' + countryName + '</span></a>');
 								}
 							}
 							this.delegateEvents();
@@ -111,7 +111,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				} ];
 		View.Content = Marionette.ItemView.extend({
 			id : 'browse',
-			template : BrowseTpl,			
+			template : BrowseTpl,
 			initialize : function() {
 				this.data_source = this.collection.data_source || 'sandflies';
 				this.listenTo(this.collection, 'request', this.displaySpinner);
@@ -125,6 +125,22 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 					collection : this.collection,
 					emptyText : 'No sequences found'
 				});
+				// setup search				
+				Lvl.vent.on('search:form:submitted', this.searchSequences);
+				// setup menu
+				$('#lvl-floating-menu-toggle').show(0);
+				$('#lvl-floating-menu').hide(0);
+				$('#lvl-floating-menu').empty();
+				$('#lvl-floating-menu').append(ToolbarTpl({
+					isSanflies : 'sandflies' === this.data_source,
+					isLeishmania : 'leishmania' === this.data_source
+				}));
+				$('a#export-btn').on('click', {
+					view : this
+				}, this.exportFile);
+				$('a#uncheck-btn').on('click', {
+					grid : this.grid
+				}, this.deselectAll);
 			},
 			displaySpinner : function() {
 				pace.restart();
@@ -138,16 +154,16 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				}, '500', 'swing');
 			},
 			events : {
-				'click a#export-btn' : 'exportFile',
-				'click a#uncheck-btn' : 'deselectAll',
 				'click a[data-seq_id]' : 'showSequenceRecord'
 			},
-			exportFile : function(e) {
+			exportFile : function(e, data) {
 				e.preventDefault();
-				var selectedModels = this.grid.getSelectedModels();
+				var selectedModels = e.data.view.grid.getSelectedModels();
 				if (selectedModels && selectedModels.length > 0) {
-					this.trigger('sequences:file:export', this.collection.data_source, selectedModels);
+					$('#lvl-floating-menu').hide('fast');
+					e.data.view.trigger('sequences:file:export', e.data.view.collection.data_source, selectedModels);
 				} else {
+					$('#lvl-floating-menu').hide('0');
 					require([ 'common/growl' ], function(createGrowl) {
 						createGrowl('No sequences selected', 'Select at least one sequence to be exported', false);
 					});
@@ -155,7 +171,23 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 			},
 			deselectAll : function(e) {
 				e.preventDefault();
-				this.grid.clearSelectedModels();
+				$('#lvl-floating-menu').hide('fast');
+				e.data.grid.clearSelectedModels();
+			},
+			searchSequences : function(search) {
+				
+				// TODO
+				console.log('SUBMITTED IN COLLECTION: ' + search);
+				// TODO
+
+				/*
+                $('#form-id :input:enabled:visible:first')
+                <form class="backgrid-filter form-search">
+                  <span class="search">&nbsp;</span><input type="search" placeholder="filter citations" name="q">
+                  <a class="clear" data-backgrid-action="clear" href="#" style="display: none;">×</a>
+                </form>
+				*/
+				
 			},
 			showSequenceRecord : function(e) {
 				e.preventDefault();
@@ -175,6 +207,17 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 			onDestroy : function() {
 				// don't remove the styles in order to enable them to be reused
 				pace.stop();
+				// remove all event handlers
+				
+				// TODO : unbind from trigger
+				
+				$('#lvl-search-form').unbind();
+				$('a#export-btn').unbind();
+				$('a#uncheck-btn').unbind();
+				// clean menu
+				$('#lvl-floating-menu').hide(0);
+				$('#lvl-floating-menu-toggle').hide(0);
+				$('#lvl-floating-menu').empty();
 			},
 			onRender : function() {
 				var self = this;
@@ -205,20 +248,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'apps/
 				var filterToolbar = this.$('#grid-filter-toolbar');
 				filterToolbar.append(filter.render().el);
 
-				$(filter.el).addClass('pull-right lvl-filter-container');
-
-				this.$('#hide-edition-toolbar-btn').click(function(event) {
-					event.preventDefault();
-					$('#edition-toolbar').hide();
-					$('#show-edition-toolbar-btn').removeClass('hidden');
-					$('#show-edition-toolbar-btn').show();
-				});
-
-				this.$('#show-edition-toolbar-btn').click(function(event) {
-					event.preventDefault();
-					$('#show-edition-toolbar-btn').hide();
-					$('#edition-toolbar').show();
-				});
+				$(filter.el).addClass('hidden');
 
 				this.grid.clearSelectedModels();
 

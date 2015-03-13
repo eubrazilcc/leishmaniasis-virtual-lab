@@ -24,6 +24,8 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
 	Lvl.getCurrentRoute = function() {
 		return Backbone.history.fragment
 	};
+	
+	Lvl.vent = new Backbone.Wreqr.EventAggregator();
 
 	Lvl.startSubApp = function(appName, args) {
 		var currentApp = appName ? Lvl.module(appName) : null;

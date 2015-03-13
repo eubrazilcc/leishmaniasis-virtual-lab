@@ -10,10 +10,6 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/sequence', 'ap
 			showSection : function(id) {
 				var collectionId = id || 'sandflies';
 				var view = new View.Content({
-					templateHelpers : {
-						isSanflies : 'sandflies' === collectionId,
-						isLeishmania : 'leishmania' === collectionId
-					},
 					collection : new SequenceModel.SequencePageableCollection({
 						oauth2_token : new Configuration().authorizationToken(),
 						data_source : collectionId

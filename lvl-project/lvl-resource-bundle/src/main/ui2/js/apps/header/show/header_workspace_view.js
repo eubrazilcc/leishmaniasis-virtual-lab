@@ -8,6 +8,22 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 		Style, Configuration, moment) {
 	Lvl.module('HeaderApp.Workspace.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var config = new Configuration();
+		function openSearchForm() {
+			var searchBox = $('#lvl-search-box');
+			if (!searchBox.is(':visible')) {
+				searchBox.show('fast', function() {
+					$('#lvl-search-form-input').focus();
+				});
+			}
+		}
+		function closeSearchForm(duration) {
+			var searchBox = $('#lvl-search-box');
+			if (searchBox.is(':visible')) {
+				if (duration === undefined)
+					duration = 'fast';
+				searchBox.hide(duration);
+			}
+		}
 		View.id = 'workspace';
 		View.NavigationLink = Marionette.ItemView.extend({
 			tagName : 'li',
@@ -57,17 +73,51 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				}
 			},
 			events : {
-				'click a#btnProfile' : 'showUserProfile'
+				'click a#btnSearchToggle' : 'toggleSearchForm',
+				'click a#btnProfile' : 'showUserProfile',
+				'click a#lvl-search-form-collapse-btn' : 'collapseSearchForm',
+				'submit form#lvl-search-form' : 'submitSearchForm'
+			},
+			toggleSearchForm : function(e) {
+				e.preventDefault();
+				if ($('#lvl-search-box').is(':visible')) {
+					closeSearchForm();
+				} else {
+					openSearchForm();
+				}
+			},
+			collapseSearchForm : function(e) {
+				e.preventDefault();
+				closeSearchForm();
+			},
+			handleEscKeyUpEvent : function(e) {
+				if (e.which == 27 && $('#lvl-search-box').is(':visible')) {
+					closeSearchForm();
+				}
 			},
 			showUserProfile : function(e) {
 				e.preventDefault();
 				this.trigger('access:user:profile');
+			},
+			submitSearchForm : function(e) {
+				e.preventDefault();
+				var searchInput = this.$('#lvl-search-form-input');
+				Lvl.vent.trigger('search:form:submitted', searchInput.val());
+				searchInput.val('');
+				closeSearchForm();
 			},
 			regions : {
 				navigation : '#section-navigation'
 			},
 			initialize : function(options) {
 				this.navLinks = options.navigation;
+				// subscribe to events
+				$(document).on('keyup', this.handleEscKeyUpEvent);
+			},
+			onDestroy : function() {
+				closeSearchForm(0);
+				// unsubscribe from events
+				$(document).off('keyup', this.handleEscKeyUpEvent);
 			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {
@@ -112,10 +162,6 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 										'notifications' : notifications
 									};
 								}
-								/*
-								 * console.log('DEBUG_NOTIF: ' +
-								 * NotificationsTpl(tplData));
-								 */
 								return NotificationsTpl(tplData);
 							}, function(xhr, status, error) {
 								api.set('content.text', status + ': ' + error);

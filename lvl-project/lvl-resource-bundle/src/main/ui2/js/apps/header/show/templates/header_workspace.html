@@ -11,8 +11,7 @@
 			<a class="navbar-brand" href="/#home">L<span class="text-danger">ei</span>sh VirtLab</a>
 		</div>
 		<div class="collapse navbar-collapse" id="navbar-collapse-1">			
-			<ul class="nav navbar-nav navbar-right">
-				<li><a href="#" id="btnSearch"><i class="fa fa-search fa-fw"></i></a></li>
+			<ul class="nav navbar-nav navbar-right">					
 				<li><a href="#" id="btnAlerts"><i class="fa fa-bell fa-fw"></i> Alerts <span class="badge">0</span></a></li>
 				<li class="dropdown">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" id="username"><i class="fa fa-user fa-fw"></i> <%= username() %> <span class="caret"></span></a>
@@ -21,22 +20,45 @@
 						<li class="divider"></li>
 						<li><a href="/#logout" id="btnSignOut"><i class="fa fa-sign-out fa-fw"></i> Sign out</a></li>
 					</ul>
-				</li>				
+				</li>
+				<li class="hidden-xs">
+					<a href="#" id="btnSearchToggle"><i class="fa fa-search fa-fw"></i></a>
+				</li>
 			</ul>
 			<form class="navbar-form navbar-left" role="form-navigation">
+				<div class="form-group visible-xs">
+					<div class="input-group">
+						<input type="text" class="form-control" placeholder="Search for items" autocomplete="off" autofocus="autofocus">
+						<span class="input-group-btn">
+							<button class="btn btn-default" type="button">
+								<i class="fa fa-search fa-fw"></i>
+							</button>
+						</span>
+					</div>
+				</div>
 				<div class="form-group">
           			<div id="section-navigation"></div>
         		</div>
-				<div class="form-group">
-					<div class="input-group">
-						<span class="input-group-addon"><a href="#" class="text-muted"><i class="fa fa-close fa-fw"></i></a></span>
-						<input type="text" class="form-control" placeholder="Search">
-						<span class="input-group-btn">
-							<button class="btn btn-default" type="button"><i class="fa fa-search fa-fw"></i></button>
-						</span>						
-					</div>
-				</div>
 			</form>			
 		</div>
 	</div>
 </nav>
+
+<div id="lvl-search-box" class="hidden-xs" style="display: none;">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-xs-12">
+				<form id="lvl-search-form" role="form-search">
+					<fieldset>
+						<div class="form-group">
+							<div class="input-group">
+								<input id="lvl-search-form-input" type="text" class="form-control" placeholder="Search for items and hit enter" autocomplete="off">
+								<span class="input-group-addon"><a href="#" class="text-muted lvl-btn-close" id="lvl-search-form-collapse-btn"><i class="fa fa-close fa-fw"></i></a></span>
+							</div>
+						</div>
+					</fieldset>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.Runtime.getRuntime;
 import static java.util.Collections.synchronizedMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -45,8 +46,7 @@ public class ShutdownHook {
 	private final Thread hook;
 
 	// preserves insertion order of entries
-	private final Map<String, AbstractIdleService> services = synchronizedMap(
-			new LinkedHashMap<String, AbstractIdleService>());
+	private final Map<String, AbstractIdleService> services = synchronizedMap(new LinkedHashMap<String, AbstractIdleService>());
 
 	/**
 	 * Creates an instance of this class and registers it with the JVM.
@@ -63,7 +63,7 @@ public class ShutdownHook {
 				}
 			}
 		};
-		Runtime.getRuntime().addShutdownHook(hook);
+		getRuntime().addShutdownHook(hook);
 	}
 
 	/**
@@ -81,7 +81,7 @@ public class ShutdownHook {
 	 */
 	public void cancel() {
 		try {
-			Runtime.getRuntime().removeShutdownHook(hook);
+			getRuntime().removeShutdownHook(hook);
 			LOGGER.info("Shutdown hook dettached");
 		} catch (Exception ignore) { }
 	}	

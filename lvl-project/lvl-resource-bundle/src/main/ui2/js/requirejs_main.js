@@ -16,9 +16,9 @@ requirejs.config({
 		'bootstrapvalidator' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min', // 0.5.4: commercial license
 		'vendor/cached/bootstrapValidator.min' ],
 		/* Backbone + Marionette MVC framework */
-		'underscore' : [ '//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min', 'vendor/cached/underscore-min' ], // 1.7.0: incompatible '_.extend'
+		'underscore' : [ '//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min', 'vendor/cached/underscore-min' ],
 		'backbone' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min', 'vendor/cached/backbone-min' ],
-		'marionette' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.marionette/2.3.2/backbone.marionette.min', 'vendor/cached/backbone.marionette.min' ],
+		'marionette' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.marionette/2.4.1/backbone.marionette.min', 'vendor/cached/backbone.marionette.min' ],
 		/* Useful backbone plug-ins */
 		'routefilter' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.routefilter/0.2.0/backbone.routefilter.min', 'vendor/cached/backbone.routefilter.min' ],
 		'backbone.syphon' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.syphon/0.4.1/backbone.syphon.min', 'vendor/cached/backbone.syphon.min' ],
