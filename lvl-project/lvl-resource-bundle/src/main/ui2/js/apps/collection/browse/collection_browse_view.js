@@ -125,7 +125,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					collection : this.collection,
 					emptyText : 'No sequences found'
 				});
-				// setup search				
+				// setup search
 				Lvl.vent.on('search:form:submitted', this.searchSequences);
 				// setup menu
 				$('#lvl-floating-menu-toggle').show(0);
@@ -175,19 +175,16 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				e.data.grid.clearSelectedModels();
 			},
 			searchSequences : function(search) {
-				
-				// TODO
-				console.log('SUBMITTED IN COLLECTION: ' + search);
-				// TODO
-
+				var backgridFilter = $('form.backgrid-filter:first');
+				backgridFilter.find('input:first').val(search);
+				backgridFilter.submit();
 				/*
-                $('#form-id :input:enabled:visible:first')
-                <form class="backgrid-filter form-search">
-                  <span class="search">&nbsp;</span><input type="search" placeholder="filter citations" name="q">
-                  <a class="clear" data-backgrid-action="clear" href="#" style="display: none;">×</a>
-                </form>
-				*/
-				
+				 * <form class="backgrid-filter form-search"> <span
+				 * class="search">&nbsp;</span><input type="search"
+				 * placeholder="filter citations" name="q"> <a class="clear"
+				 * data-backgrid-action="clear" href="#" style="display:
+				 * none;">×</a> </form>
+				 */
 			},
 			showSequenceRecord : function(e) {
 				e.preventDefault();
@@ -208,9 +205,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				// don't remove the styles in order to enable them to be reused
 				pace.stop();
 				// remove all event handlers
-				
-				// TODO : unbind from trigger
-				
+				Lvl.vent.off('search:form:submitted');
 				$('#lvl-search-form').unbind();
 				$('a#export-btn').unbind();
 				$('a#uncheck-btn').unbind();
