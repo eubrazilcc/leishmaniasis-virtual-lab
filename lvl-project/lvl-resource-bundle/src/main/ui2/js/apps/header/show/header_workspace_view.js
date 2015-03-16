@@ -85,7 +85,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				} else {
 					openSearchForm();
 				}
-			},
+			},			
 			collapseSearchForm : function(e) {
 				e.preventDefault();
 				closeSearchForm();
@@ -104,7 +104,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				var searchInput = this.$('#lvl-search-form-input');
 				Lvl.vent.trigger('search:form:submitted', searchInput.val());
 				searchInput.val('');
-				closeSearchForm();
+				closeSearchForm(0);
 			},
 			regions : {
 				navigation : '#section-navigation'

@@ -178,6 +178,9 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
 				backgridFilter.submit();
+				
+				// TODO : clear
+				
 				/*
 				 * <form class="backgrid-filter form-search"> <span
 				 * class="search">&nbsp;</span><input type="search"

@@ -143,7 +143,7 @@ a.lvl-btn-close:hover, a.lvl-btn-close:focus {
 
 #lvl-floating-menu-toggle {
 	position: fixed;
-	top: 76px;
+	top: 75px;
 	right: 5px;
 	z-index: 997;
 	height: auto;
@@ -154,13 +154,21 @@ a.lvl-btn-close:hover, a.lvl-btn-close:focus {
 
 #lvl-floating-menu {
 	position: fixed;
-	top: 75px;
+	top: 74px;
 	right: 4px;
 	z-index: 998;
 	height: auto;
 	width: auto;
 	padding: 0px;
 	marging: 0px;
+}
+
+.lvl-toggle-menu-icon {
+	-webkit-transform: scale(3.0, 1.8);
+	-moz-transform: scale(3.0, 1.8);
+	-ms-transform: scale(3.0, 1.8);
+	-o-transform: scale(3.0, 1.8);
+	transform: scale(3.0, 1.8);
 }
 
 /* Override Backgrid.js styles */
