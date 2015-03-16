@@ -46,13 +46,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public abstract class Paginable<T> {
 
 	public final static int PER_PAGE_MIN = 1;	
-	
+
 	private int page; // query parameters
 	private int perPage = PER_PAGE_MIN;	
 	private String sort;
 	private String order;
 	private String query;
 
+	private List<FormattedQueryParam> formattedQuery = newArrayList(); // formatted query parameters
 	private int pageFirstEntry; // first entry of the current page
 	private int totalPages; // total number of pages
 	private int totalCount; // total number of elements
@@ -108,6 +109,18 @@ public abstract class Paginable<T> {
 		this.query = query;
 	}
 
+	public List<FormattedQueryParam> getFormattedQuery() {
+		return formattedQuery;
+	}
+
+	public void setFormattedQuery(final List<FormattedQueryParam> formattedQuery) {
+		if (formattedQuery != null) {
+			this.formattedQuery = newArrayList(formattedQuery);
+		} else {
+			this.formattedQuery.clear();
+		}
+	}
+
 	public int getPageFirstEntry() {
 		return pageFirstEntry;
 	}
@@ -141,7 +154,7 @@ public abstract class Paginable<T> {
 		if (elements != null) {
 			this.elements = newArrayList(elements);
 		} else {
-			this.elements = null;
+			this.elements.clear();
 		}
 	}
 
@@ -154,6 +167,7 @@ public abstract class Paginable<T> {
 				.add("sort", sort)
 				.add("order", order)
 				.add("query", query)
+				.add("formattedQuery", collectionToString(formattedQuery))
 				.add("pageFirstEntry", pageFirstEntry)
 				.add("totalPages", totalPages)
 				.add("totalCount", totalCount)

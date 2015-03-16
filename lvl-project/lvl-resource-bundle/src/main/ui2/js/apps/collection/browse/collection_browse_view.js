@@ -3,8 +3,9 @@
  */
 
 define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!apps/collection/browse/templates/toolbar_browse',
-		'apps/config/marionette/styles/style', 'entities/sequence', 'pace', 'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator',
-		'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, ToolbarTpl, Style, SequenceModel, pace, mapCn) {
+		'tpl!apps/collection/browse/templates/search_term', 'apps/config/marionette/styles/style', 'entities/sequence', 'pace', 'common/country_names',
+		'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, ToolbarTpl, SearchTermTpl,
+		Style, SequenceModel, pace, mapCn) {
 	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
@@ -151,9 +152,38 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				$('#grid-container').fadeTo('fast', 1);
 				$('html,body').animate({
 					scrollTop : 0
-				}, '500', 'swing');
+				}, '500', 'swing', function() {
+					// reset search terms
+					var searchCont = $('#lvl-search-terms-container');
+					searchCont.empty();
+					// setup search terms from server response
+
+					// TODO
+
+					searchCont.append(SearchTermTpl({
+						sterm_id : 'sterm_0',
+						sterm_text : 'source : genbank',
+						sterm_icon : 'label-success'
+					}));
+					searchCont.append(SearchTermTpl({
+						sterm_id : 'sterm_1',
+						sterm_text : 'other field',
+						sterm_icon : 'label-warning'
+					}));
+					searchCont.append(SearchTermTpl({
+						sterm_id : 'sterm_-1',
+						sterm_text : 'clear all',
+						sterm_icon : 'label-danger'
+					}));
+
+					$('#lvl-search-terms').show('fast');
+
+					// TODO
+
+				});
 			},
 			events : {
+				'click a[data-search-term]' : 'resetSearchTerms',
 				'click a[data-seq_id]' : 'showSequenceRecord'
 			},
 			exportFile : function(e, data) {
@@ -178,16 +208,21 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
 				backgridFilter.submit();
-				
-				// TODO : clear
-				
-				/*
-				 * <form class="backgrid-filter form-search"> <span
-				 * class="search">&nbsp;</span><input type="search"
-				 * placeholder="filter citations" name="q"> <a class="clear"
-				 * data-backgrid-action="clear" href="#" style="display:
-				 * none;">×</a> </form>
-				 */
+			},
+			resetSearchTerms : function(e) {
+				e.preventDefault();
+				var target = $(e.target);
+				var search = '';
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-search-term') : target.attr('data-search-term');
+				if (itemId !== 'sterm_-1') {
+					var searchCont = $('#lvl-search-terms-container');
+					searchCont.find('a[data-search-term!="sterm_-1"]').each(function(i) {
+						if ($(this).attr('data-search-term') !== itemId) {
+							search += $(this).parent().text() + ' ';
+						}
+					});
+				}
+				this.searchSequences(search);
 			},
 			showSequenceRecord : function(e) {
 				e.preventDefault();

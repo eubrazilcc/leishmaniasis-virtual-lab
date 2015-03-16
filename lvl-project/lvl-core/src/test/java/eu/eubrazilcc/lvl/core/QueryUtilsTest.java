@@ -22,12 +22,18 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.mapToString;
+import static eu.eubrazilcc.lvl.core.util.QueryUtils.formattedQuery;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.fail;
+
+import java.util.List;
 
 import org.junit.Test;
 
@@ -51,7 +57,7 @@ public class QueryUtilsTest {
 			assertThat("filter is not null", filter, notNullValue());
 			assertThat("number of search terms coincides with expected", filter.size(), equalTo(1));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
-			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));
+			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));			
 			/* uncomment for additional output */
 			System.out.println(" >> QUERY -->" + query + "<--");
 			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
@@ -156,19 +162,22 @@ public class QueryUtilsTest {
 			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// complex, combined full-text and keyword matching search (using a sloppy spacing format)
-			query = " keyword1:value1   full-text   search term   keyword2:value2  ";
+			query = " keyword1:value1   full-text   search term   countryfeature:value2  ";
 			filter = parseQuery(query);
 			assertThat("filter is not null", filter, notNullValue());
 			assertThat("number of search terms coincides with expected", filter.size(), equalTo(3));
 			assertThat("keyword search term 1 is not null", filter.get("keyword1"), notNullValue());
 			assertThat("keyword search term 1 coincides with expected", filter.get("keyword1"), equalTo("value1"));
-			assertThat("keyword search term 2 is not null", filter.get("keyword2"), notNullValue());
-			assertThat("keyword search term 2 coincides with expected", filter.get("keyword2"), equalTo("value2"));
+			assertThat("keyword search term 2 is not null", filter.get("countryfeature"), notNullValue());
+			assertThat("keyword search term 2 coincides with expected", filter.get("countryfeature"), equalTo("value2"));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));
+			List<FormattedQueryParam> formatted = formattedQuery(filter, Sequence.class);
+			assertThat("formatted query is not empty", formatted, allOf(notNullValue(), hasSize(3)));
 			/* uncomment for additional output */
 			System.out.println(" >> QUERY -->" + query + "<--");
 			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			System.out.println(" >> FORMATTED QUERY: " + collectionToString(formatted));
 
 			// invalid placement
 			query = "keyword : value";

@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
+import static eu.eubrazilcc.lvl.core.util.QueryUtils.formattedQuery;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.CITATION_ID_PATTERN;
@@ -73,6 +74,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
+import eu.eubrazilcc.lvl.core.FormattedQueryParam;
 import eu.eubrazilcc.lvl.core.Localizable;
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.Reference;
@@ -126,9 +128,11 @@ public final class CitationResource {
 		final List<Reference> references = REFERENCE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
 				ImmutableMap.of(ORIGINAL_ARTICLE_KEY, false), count);
 		paginable.setElements(references);
-		// set total count and return to the caller
+		// set additional and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
 		paginable.setTotalCount(totalEntries);
+		final List<FormattedQueryParam> formattedQuery = formattedQuery(filter, Reference.class);
+		paginable.setFormattedQuery(formattedQuery);
 		return paginable;
 	}
 
@@ -345,6 +349,11 @@ public final class CitationResource {
 
 			public ReferencesBuilder query(final String query) {
 				instance.setQuery(query);
+				return this;
+			}
+
+			public ReferencesBuilder formattedQuery(final List<FormattedQueryParam> formattedQuery) {
+				instance.setFormattedQuery(formattedQuery);
 				return this;
 			}
 

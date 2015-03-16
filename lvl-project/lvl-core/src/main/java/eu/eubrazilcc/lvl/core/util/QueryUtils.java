@@ -24,16 +24,24 @@ package eu.eubrazilcc.lvl.core.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.transformEntries;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.normalizeSpace;
 import static org.apache.commons.lang.StringUtils.remove;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps.EntryTransformer;
+
+import eu.eubrazilcc.lvl.core.FormattedQueryParam;
 
 /**
  * Utility class to help with query parameters parsing.
@@ -45,6 +53,8 @@ public final class QueryUtils {
 	private static final String KEYWORD_SEPARATOR = ":";
 	private static final String QUOTES = "\"";
 	private static final Pattern KEYWORD_PATTERN = Pattern.compile("[^\\s^\"]+:[^\\s^\"]+|[^\\s^\"]+:\"\\w+[\\s|\\w]*\"");
+
+	private static final String TEXT_FIELD = "text";
 
 	public static ImmutableMap<String, String> parseQuery(final String query) {
 		return parseQuery(query, false);
@@ -62,10 +72,37 @@ public final class QueryUtils {
 			}
 			fullText = deduplicate ? normalize(fullText) : normalizeSpace(fullText);
 			if (isNotBlank(fullText)) {
-				builder.put("text", remove(fullText, QUOTES));
+				builder.put(TEXT_FIELD, remove(fullText, QUOTES));
 			}
 		}
 		return builder.build();
+	}
+
+	public static List<FormattedQueryParam> formattedQuery(final ImmutableMap<String, String> params, final Class<?> target) {
+		checkArgument(params != null, "Uninitialized parameters");
+		checkArgument(target != null, "Uninitialized target class");
+		final Field[] fields = target.getDeclaredFields();
+		final Function<String, Boolean> fieldValidator = new Function<String, Boolean>() {
+			@Override
+			public Boolean apply(final String name) {
+				for (final Field field : fields) {
+					if (field.getName().equalsIgnoreCase(name)) {
+						return true;
+					}
+				}
+				return false;
+			}
+		};
+		return newArrayList(transformEntries(params, new EntryTransformer<String, String, FormattedQueryParam>() {
+			@Override
+			public FormattedQueryParam transformEntry(final String key, final String value) {
+				final boolean isField = !TEXT_FIELD.equals(key);
+				return FormattedQueryParam.builder()
+						.term((isField ? key + ":" : "") + value)
+						.validity(isField ? fieldValidator.apply(key) : true)
+						.build();
+			}
+		}).values());
 	}
 
 	private static String[] extractKeyword(final String str) {

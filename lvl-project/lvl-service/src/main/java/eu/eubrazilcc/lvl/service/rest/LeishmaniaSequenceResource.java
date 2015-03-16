@@ -30,6 +30,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
+import static eu.eubrazilcc.lvl.core.util.QueryUtils.formattedQuery;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearbyLeishmania;
@@ -72,6 +73,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
+import eu.eubrazilcc.lvl.core.FormattedQueryParam;
 import eu.eubrazilcc.lvl.core.Leishmania;
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.Sequence;
@@ -133,9 +135,11 @@ public final class LeishmaniaSequenceResource {
 		final List<Leishmania> sequences = LEISHMANIA_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
 				ImmutableMap.of(ORIGINAL_SEQUENCE_KEY, false), count);
 		paginable.setElements(sequences);
-		// set total count and return to the caller
+		// set additional output and return to the caller
 		final int totalEntries = ((Long)count.getValue()).intValue();
-		paginable.setTotalCount(totalEntries);		
+		paginable.setTotalCount(totalEntries);
+		final List<FormattedQueryParam> formattedQuery = formattedQuery(filter, Sequence.class);
+		paginable.setFormattedQuery(formattedQuery);
 		return paginable;
 	}
 
@@ -359,6 +363,11 @@ public final class LeishmaniaSequenceResource {
 
 			public SequencesBuilder query(final String query) {
 				instance.setQuery(query);
+				return this;
+			}
+
+			public SequencesBuilder formattedQuery(final List<FormattedQueryParam> formattedQuery) {
+				instance.setFormattedQuery(formattedQuery);
 				return this;
 			}
 
