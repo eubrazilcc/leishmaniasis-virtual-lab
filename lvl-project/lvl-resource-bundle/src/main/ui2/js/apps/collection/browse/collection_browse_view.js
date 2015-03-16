@@ -149,6 +149,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 			},
 			removeSpinner : function() {
 				pace.stop();
+				var self = this;
 				$('#grid-container').fadeTo('fast', 1);
 				$('html,body').animate({
 					scrollTop : 0
@@ -157,29 +158,22 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					var searchCont = $('#lvl-search-terms-container');
 					searchCont.empty();
 					// setup search terms from server response
-
-					// TODO
-
-					searchCont.append(SearchTermTpl({
-						sterm_id : 'sterm_0',
-						sterm_text : 'source : genbank',
-						sterm_icon : 'label-success'
-					}));
-					searchCont.append(SearchTermTpl({
-						sterm_id : 'sterm_1',
-						sterm_text : 'other field',
-						sterm_icon : 'label-warning'
-					}));
-					searchCont.append(SearchTermTpl({
-						sterm_id : 'sterm_-1',
-						sterm_text : 'clear all',
-						sterm_icon : 'label-danger'
-					}));
-
+					if (self.collection.formattedQuery && self.collection.formattedQuery.length > 0) {
+						var i = 0;
+						_.each(self.collection.formattedQuery, function(item) {
+							searchCont.append(SearchTermTpl({
+								sterm_id : 'sterm_' + (i++),
+								sterm_text : item['term'],
+								sterm_icon : Boolean(item['validity']) ? 'label-success' : 'label-warning'
+							}));
+						});
+						searchCont.append(SearchTermTpl({
+							sterm_id : 'sterm_-1',
+							sterm_text : 'clear all',
+							sterm_icon : 'label-danger'
+						}));
+					}
 					$('#lvl-search-terms').show('fast');
-
-					// TODO
-
 				});
 			},
 			events : {

@@ -569,6 +569,28 @@ public class ServiceTest {
 			assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(4));
 			// uncomment for additional output			
 			System.out.println(" >> Search sandflies result: " + sandflies.toString());
+			
+			// test get sandflies applying a full-text search combined with a keyword matching filter (JSON encoded)
+			response = target.path(path.value())
+					.queryParam("per_page", perPage)
+					.queryParam("q", "source:GenBank Phlebotomus")
+					.request(APPLICATION_JSON)
+					.header(HEADER_AUTHORIZATION, bearerHeader(TOKEN_ROOT))
+					.get();
+			assertThat("Search sandflies (JSON encoded) response is not null", response, notNullValue());
+			assertThat("Search sandflies (JSON encoded) response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+			assertThat("Search sandflies (JSON encoded) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Search sandflies (JSON encoded) response entity is not null", payload, notNullValue());
+			assertThat("Search sandflies (JSON encoded) response entity is not empty", isNotBlank(payload));			
+			sandflies = JSON_MAPPER.readValue(payload, Sequences.class);			
+			assertThat("Search sandflies (JSON encoded) result is not null", sandflies, notNullValue());
+			assertThat("Search sandflies (JSON encoded) list is not null", sandflies.getElements(), notNullValue());
+			assertThat("Search sandflies (JSON encoded) list is not empty", !sandflies.getElements().isEmpty());
+			assertThat("Search sandflies (JSON encoded) items count coincide with page size", sandflies.getElements().size(), 
+					equalTo(min(perPage, sandflies.getTotalCount())));
+			// uncomment for additional output			
+			System.out.println(" >> Search sandflies response body (JSON): " + payload);
 
 			// test get sandflies sorted by accession number
 			sandflies = target.path(path.value())

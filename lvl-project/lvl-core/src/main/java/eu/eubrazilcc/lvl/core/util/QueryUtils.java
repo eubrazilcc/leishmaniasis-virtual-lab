@@ -53,8 +53,8 @@ public final class QueryUtils {
 	private static final String KEYWORD_SEPARATOR = ":";
 	private static final String QUOTES = "\"";
 	private static final Pattern KEYWORD_PATTERN = Pattern.compile("[^\\s^\"]+:[^\\s^\"]+|[^\\s^\"]+:\"\\w+[\\s|\\w]*\"");
-
 	private static final String TEXT_FIELD = "text";
+	private static final Pattern CONTAINS_SPACE_PATTERN = Pattern.compile(".*\\s.*");
 
 	public static ImmutableMap<String, String> parseQuery(final String query) {
 		return parseQuery(query, false);
@@ -98,7 +98,7 @@ public final class QueryUtils {
 			public FormattedQueryParam transformEntry(final String key, final String value) {
 				final boolean isField = !TEXT_FIELD.equals(key);
 				return FormattedQueryParam.builder()
-						.term((isField ? key + ":" : "") + value)
+						.term((isField ? escape(key) + KEYWORD_SEPARATOR : "") + escape(value))
 						.validity(isField ? fieldValidator.apply(key) : true)
 						.build();
 			}
@@ -126,6 +126,11 @@ public final class QueryUtils {
 	private static String normalize(final String str) {
 		checkArgument(str != null, "Invalid input string");
 		return new LinkedHashSet<String>(Arrays.asList(normalizeSpace(str).split(" "))).toString().replaceAll("(^\\[|\\]$)", "").replace(", ", " ");
+	}
+	
+	private static String escape(final String str) {
+		final Matcher matcher = CONTAINS_SPACE_PATTERN.matcher(str);
+		return matcher.matches() ? QUOTES + str + QUOTES : str;
 	}
 
 }

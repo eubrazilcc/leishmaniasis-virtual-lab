@@ -77,6 +77,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				order : 'order'
 			},
 			parseState : function(resp, queryParams, state, options) {
+				// set additional properties before returning to caller
+				this.formattedQuery = resp.formattedQuery;
 				return {
 					totalRecords : resp.totalCount
 				};
