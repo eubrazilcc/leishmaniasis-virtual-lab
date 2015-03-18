@@ -76,6 +76,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				'click a#btnSearchToggle' : 'toggleSearchForm',
 				'click a#btnProfile' : 'showUserProfile',
 				'click a#lvl-search-form-collapse-btn' : 'collapseSearchForm',
+				'click button#lvl-search-form-submit-btn-xs' : 'submitSearchFormXs',
 				'submit form#lvl-search-form' : 'submitSearchForm'
 			},
 			toggleSearchForm : function(e) {
@@ -98,7 +99,15 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 			showUserProfile : function(e) {
 				e.preventDefault();
 				this.trigger('access:user:profile');
-			},
+			},					
+			submitSearchFormXs : function(e) {
+				e.preventDefault();				
+				var searchInputXs = this.$('#lvl-search-form-input-xs');
+				var searchInput = this.$('#lvl-search-form-input');
+				searchInput.val(searchInputXs.val());
+				this.$('#lvl-search-form').submit();
+				searchInputXs.val('');
+			},			
 			submitSearchForm : function(e) {
 				e.preventDefault();
 				var searchInput = this.$('#lvl-search-form-input');

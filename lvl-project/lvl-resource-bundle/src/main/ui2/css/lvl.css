@@ -29,6 +29,17 @@
 	background-color: #f9f9f9;
 }
 
+.lvl-centered-nav {
+	width: 100%;
+	text-align: center;
+}
+
+.lvl-centered-nav>li {
+	float: none;
+	display: inline-block;
+}
+
+}
 .lvl-tiles-top {
 	margin-top: 23px;
 }
