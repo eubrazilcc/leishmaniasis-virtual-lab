@@ -178,6 +178,15 @@ a.lvl-btn-close:hover, a.lvl-btn-close:focus {
 	transform: scale(3.0, 1.8);
 }
 
+input.lvl-add-term-input {
+	/* considering placeholder "add term" and font width 0.5em */
+	width: 4.1em !important;
+}
+
+input.lvl-add-term-input:focus {
+	width: auto !important;
+}
+
 /* Override Backgrid.js styles */
 .backgrid-container {
 	position: relative;

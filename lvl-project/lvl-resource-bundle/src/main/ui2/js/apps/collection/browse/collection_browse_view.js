@@ -160,7 +160,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 							searchCont.empty();
 							// setup search terms from server response
 							if (self.collection.formattedQuery && self.collection.formattedQuery.length > 0) {
-								var i = 0;
+								var i = 1;
 								_.each(self.collection.formattedQuery, function(item) {
 									searchCont.append(SearchTermTpl({
 										sterm_id : 'sterm_' + (i++),
@@ -172,14 +172,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 									sterm_id : 'sterm_-1',
 									sterm_text : 'clear all',
 									sterm_icon : 'label-danger'
-								}));
-								
-								// TODO
-								searchCont.append(AddSearchTermTpl({
-									
-								}));
-								// TODO
-								
+								}));								
+								searchCont.append(AddSearchTermTpl({}));
 								$('#lvl-search-terms').show('fast');
 							} else {
 								$('#lvl-search-terms').hide('fast');
@@ -188,6 +182,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					},
 					events : {
 						'click a[data-search-term]' : 'resetSearchTerms',
+						'submit form#lvl-add-search-term-form' : 'addSearchTerm',
 						'click a[data-seq_id]' : 'showSequenceRecord'
 					},
 					exportFile : function(e, data) {
@@ -227,6 +222,26 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 							});
 						}
 						this.searchSequences(search);
+					},
+					addSearchTerm : function(e) {
+						e.preventDefault();
+						var newTermInput = this.$('#lvl-add-search-term-input'), newTerm = newTermInput.val().trim();						
+						if (newTerm.length > 0) {
+							this.$('li#lvl-add-search-term-container').hide();							
+							var searchCont = this.$('#lvl-search-terms-container');
+							searchCont.append(SearchTermTpl({
+								sterm_id : 'sterm_0',
+								sterm_text : newTerm,
+								sterm_icon : 'label-default'
+							}));							
+							var search = '';
+							searchCont.find('a[data-search-term!="sterm_-1"]').each(function(i) {
+								search += $(this).parent().text() + ' ';
+							});
+							this.searchSequences(search);							
+						} else {
+							newTermInput.val('');
+						}
 					},
 					showSequenceRecord : function(e) {
 						e.preventDefault();
