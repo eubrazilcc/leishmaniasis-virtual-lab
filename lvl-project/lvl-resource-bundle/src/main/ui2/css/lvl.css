@@ -117,21 +117,21 @@
 	color: rgb(204, 153, 0);
 }
 
-#lvl-qtip-growl-container {
+div#lvl-qtip-growl-container {
 	position: fixed;
 	top: 116px;
 	right: 10px;
 	z-index: +1002 !important;
 }
 
-#lvl-qtip-growl-container .qtip {
+div#lvl-qtip-growl-container .qtip {
 	position: static;
 	min-height: 0;
 	overflow: hidden;
 	margin: 0 0 5px 0;
 }
 
-#lvl-search-box {
+div#lvl-search-box {
 	opacity: 1;
 	position: fixed;
 	top: 67px;
@@ -139,16 +139,43 @@
 	background-color: #f9f9f9;
 	width: 100%;
 	height: auto;
-	z-index: 999
+	z-index: 999;
 }
 
 a.lvl-btn-close:hover, a.lvl-btn-close:focus {
 	border-radius: 1.5em;
-	color: #f9f9f9;
-	background-color: #e51c23;
+	color: #e51c23;
+	background-color: #f9f9f9;
 }
 
-#lvl-floating-menu-toggle {
+div#lvl-save-items {
+	color: #ffffff;
+	background-color: #666666;
+	opacity: 0.8;
+	position: fixed;
+	top: 65px;
+	right: 0px;
+	width: auto;
+	min-height: 100%;
+	height: 100%;
+	z-index: 999;
+	display: -webkit-flex;
+	-webkit-align-items: center;
+	display: flex;
+	align-items: center;
+}
+
+div#lvl-save-items-target {
+	white-space: nowrap;
+	margin: 2px;
+}
+
+div#lvl-save-items-target.over {
+	background-color: #bbbbbb;
+	outline: 2px dashed #ffffff;
+}
+
+div#lvl-floating-menu-toggle {
 	position: fixed;
 	top: 75px;
 	right: 5px;
@@ -159,7 +186,7 @@ a.lvl-btn-close:hover, a.lvl-btn-close:focus {
 	marging: 0px;
 }
 
-#lvl-floating-menu {
+div#lvl-floating-menu {
 	position: fixed;
 	top: 74px;
 	right: 4px;
@@ -170,7 +197,7 @@ a.lvl-btn-close:hover, a.lvl-btn-close:focus {
 	marging: 0px;
 }
 
-.lvl-toggle-menu-icon {
+div.lvl-toggle-menu-icon {
 	-webkit-transform: scale(3.0, 1.8);
 	-moz-transform: scale(3.0, 1.8);
 	-ms-transform: scale(3.0, 1.8);
@@ -185,6 +212,35 @@ input.lvl-add-term-input {
 
 input.lvl-add-term-input:focus {
 	width: auto !important;
+}
+
+*[draggable=true] {
+	cursor: move;
+	/* prevent the text contents of draggable elements from being selectable */
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+	/* make elements draggable in old WebKit */
+	-khtml-user-drag: element;
+	-webkit-user-drag: element;
+}
+
+.lvl-savable {
+	color: #bbbbbb;
+}
+
+.lvl-savable:focus, .lvl-savable:hover {
+	color: #666666;
+}
+
+.lvl-savable:hover:after {
+	content: attr(data-msg);
+	position: absolute;
+	white-space: nowrap;
+	left: 1.5em;
+	font-size: 13px;
+	background-color: #ffffff;
 }
 
 /* Override Backgrid.js styles */

@@ -77,7 +77,11 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				'click a#btnProfile' : 'showUserProfile',
 				'click a#lvl-search-form-collapse-btn' : 'collapseSearchForm',
 				'click button#lvl-search-form-submit-btn-xs' : 'submitSearchFormXs',
-				'submit form#lvl-search-form' : 'submitSearchForm'
+				'submit form#lvl-search-form' : 'submitSearchForm',
+				'dragover div#lvl-save-items-target' : 'saveItemsDragOverHandler',
+				'dragenter div#lvl-save-items-target' : 'saveItemsDragEnterHandler',
+				'dragleave div#lvl-save-items-target' : 'saveItemsDragLeaveHandler',
+				'drop div#lvl-save-items-target' : 'saveItemsDropHandler'
 			},
 			toggleSearchForm : function(e) {
 				e.preventDefault();
@@ -115,19 +119,59 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				searchInput.val('');
 				closeSearchForm(0);
 			},
+			saveItemsDragOverHandler : function(e) {
+				e.preventDefault();
+				e.originalEvent.dataTransfer.dropEffect = 'copy';
+				$('div#lvl-save-items-target').addClass('over');
+				return false;
+			},
+			saveItemsDragEnterHandler : function(e) {
+				$('div#lvl-save-items-target').addClass('over');
+			},
+			saveItemsDragLeaveHandler : function(e) {
+				$('div#lvl-save-items-target').removeClass('over');
+			},
+			saveItemsDropHandler : function(e) {
+				e.preventDefault();
+				var srcId = e.originalEvent.dataTransfer.getData('srcId');
+				var srcElem = $('i[data-savable-id="' + srcId + '"]');
+				
+				
+				
+				
+				// TODO
+				console.log('DROP: ' + srcElem.prop('tagName'));
+				// TODO
+				
+				
+				srcElem.remove();
+				this.hideMySavedItems();
+			},
+			showMySavedItems : function() {
+				$('div#lvl-save-items').show('fast');
+			},
+			hideMySavedItems : function() {
+				$('div#lvl-save-items-target').removeClass('over');
+				$('div#lvl-save-items').hide('fast');
+			},
 			regions : {
 				navigation : '#section-navigation'
 			},
 			initialize : function(options) {
 				this.navLinks = options.navigation;
+				// setup items saving
+				Lvl.vent.on('editable:items:dragstart', this.showMySavedItems);
+				Lvl.vent.on('editable:items:dragend', this.hideMySavedItems);
 				// subscribe to events
 				$(document).on('keyup', this.handleEscKeyUpEvent);
 			},
 			onDestroy : function() {
-				closeSearchForm(0);
-				// unsubscribe from events
+				closeSearchForm(0);				
+				// remove all event handlers
+				Lvl.vent.off('editable:items:dragstart');
+				Lvl.vent.off('editable:items:dragend');
 				$(document).off('keyup', this.handleEscKeyUpEvent);
-			},
+			},			
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {
 					var stylesLoader = new Style();
@@ -139,7 +183,6 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 					model : options.navLinks.selected || options.navLinks.at(0),
 					collection : options.navLinks
 				}));
-
 				this.$('#btnAlerts').click(function(event) {
 					event.preventDefault();
 				}).qtip({
