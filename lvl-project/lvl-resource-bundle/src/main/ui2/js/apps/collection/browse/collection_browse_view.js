@@ -186,8 +186,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 			events : {
 				'click a[data-search-term]' : 'resetSearchTerms',
 				'submit form#lvl-add-search-term-form' : 'addSearchTerm',
-				'dragstart i.lvl-savable' : 'handleDragStart',
-				'dragend i.lvl-savable' : 'handleDragEnd',
+				'dragstart div.lvl-savable' : 'handleDragStart',
+				'dragend div.lvl-savable' : 'handleDragEnd',
 				'click a[data-seq_id]' : 'showSequenceRecord'
 			},
 			exportFile : function(e, data) {

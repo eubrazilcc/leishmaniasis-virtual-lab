@@ -226,21 +226,42 @@ input.lvl-add-term-input:focus {
 	-webkit-user-drag: element;
 }
 
-.lvl-savable {
+div.lvl-savable {
 	color: #bbbbbb;
 }
 
-.lvl-savable:focus, .lvl-savable:hover {
+div.lvl-savable:focus, div.lvl-savable:hover {
 	color: #666666;
 }
 
-.lvl-savable:hover:after {
-	content: attr(data-msg);
-	position: absolute;
-	white-space: nowrap;
-	left: 1.5em;
-	font-size: 13px;
-	background-color: #ffffff;
+@-webkit-keyframes lvl-fade-in {
+	0% { opacity: 0; }
+	20% { opacity: 0; }
+	40% { opacity: 0.3; }
+	60% { opacity: 0.5; }
+	80% { opacity: 0.9; }
+	100% { opacity: 1; }
+}
+
+@keyframes lvl-fade-in {
+	0% { opacity: 0; }
+	20% { opacity: 0; }
+	40% { opacity: 0.3; }
+	60% { opacity: 0.5; }
+	80% { opacity: 0.9; }
+	100% { opacity: 1; }
+}
+
+span.lvl-savable-msg {
+    display: none;
+}
+
+div.lvl-savable:hover > span.lvl-savable-msg {
+    display: inline;
+	-webkit-animation-name: lvl-fade-in;
+	-webkit-animation-duration: 0.5s;
+	animation-name: lvl-fade-in;
+	animation-duration: 0.5s;
 }
 
 /* Override Backgrid.js styles */

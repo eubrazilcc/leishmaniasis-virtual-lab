@@ -134,7 +134,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 			saveItemsDropHandler : function(e) {
 				e.preventDefault();
 				var srcId = e.originalEvent.dataTransfer.getData('srcId');
-				var srcElem = $('i[data-savable-id="' + srcId + '"]');
+				var srcElem = $('div[data-savable-id="' + srcId + '"]');
 				
 				
 				
