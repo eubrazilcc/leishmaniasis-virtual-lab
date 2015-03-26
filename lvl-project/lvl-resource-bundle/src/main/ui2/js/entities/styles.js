@@ -91,6 +91,13 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 				url : '//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css' + bust
 			} ]);
 		};
+		
+		var iniHopscotchStyles = function() {
+			Entities.hopscotchStyles = new Entities.StyleCollection([ {
+				id : 'hopscotch',
+				url : '//cdnjs.cloudflare.com/ajax/libs/hopscotch/0.2.3/css/hopscotch.min.css' + bust
+			} ]);
+		};
 
 		var API = {
 			getFlagsSpriteStyles : function() {
@@ -134,6 +141,12 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 					iniChartistStyles();
 				}
 				return Entities.chartistStyles;
+			},
+			getHopscotchStyles : function() {
+				if (Entities.hopscotchStyles === undefined) {
+					iniHopscotchStyles();
+				}
+				return Entities.hopscotchStyles;
 			}
 		}
 
@@ -163,6 +176,10 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 		
 		Lvl.reqres.setHandler('styles:chartist:entities', function() {
 			return API.getChartistStyles();
+		});
+		
+		Lvl.reqres.setHandler('styles:hopscotch:entities', function() {
+			return API.getHopscotchStyles();
 		});
 
 		return;

@@ -111,7 +111,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				id : 10,
 				href : '/doc/',
 				icon : 'fa-book',
-				text : 'Documentation'
+				text : 'API Documentation'
 			} ]);
 		};
 

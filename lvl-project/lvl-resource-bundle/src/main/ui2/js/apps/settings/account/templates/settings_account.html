@@ -43,6 +43,29 @@
 							placeholder="Lastname" value="<%= lastname %>">
 					</div>
 				</div>
+
+
+
+				<div class="form-group">
+					<label for="inputInstitution" class="col-lg-3 control-label">Institution</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputInstitution"
+							placeholder="Institution" value="<%= institution %>" />
+					</div> 
+				</div>
+				<div class="form-group">
+					<label for="inputInstitutionType" class="col-lg-3 control-label">Institution Type</label>
+					<div class="col-lg-9">
+						<select class="form-control" id="inputInstitutionType">
+							<option value="research" <%= researchSelected %>>Research</option>
+							<option value="academia" <%= academiaSelected %>>Academia</option>
+							<option value="industry" <%= industrySelected %>>Industry</option>
+						</select>
+					</div>
+				</div>
+
+
+
 				<div class="form-group">
 					<div class="col-lg-9 col-lg-offset-3">
 						<button type="submit" class="btn btn-primary" disabled="disabled">Update</button>

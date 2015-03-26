@@ -58,7 +58,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
         <div class="col-xs-12">
           <div class="bs-component">
             <ul>
-              <li><a href="#about">About this guide</a></li>
+              <li><a href="#about">About this guide</a>
+                <ul>
+                  <li><a href="#about_versioning">Software versioning</a></li>
+                  <li><a href="#about_licenses">Licenses</a></li>
+                  <li><a href="#about_support">Support</a></li>
+                </ul></li>
               <li><a href="#installation">Installation</a>
                 <ul>
                   <li><a href="#installation_requirements">Requirements</a></li>
@@ -167,6 +172,70 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               for legibility.
             </p>
 
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+            <h2>
+              <a id="about_versioning"></a>Software versioning
+            </h2>
+
+            <p>The LVL will have frequent releases with incremental version number. Versions will be named following the standard GNU version numbering scheme: 
+              <code>major</code>.<code>minor</code>.<code>revision</code>, which is explained <a href="http://semver.org/" target="_blank">here</a> with 
+              slightly different nomenclature. In summary:
+            </p>
+            
+            <ol>
+              <li><code>major</code> version than makes incompatible API changes,</li>
+              <li><code>minor</code> version that adds functionality in a backwards-compatible manner, and</li>
+              <li><code>revision</code> version that makes backwards-compatible bug fixes.</li>            
+            </ol>
+            
+            <p>Version 0.1.0 is the first release openly available and supported in the EUBrazilCC infrastructure.</p>
+            
+            <p>Version 1.0.0 is the first stable release, expected after the 100% of the functional requirements are fulfilled (planned in June 2015).</p>
+            
+            <p><a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/CHANGELOG.md" target="_blank">Release notes </a> are available
+              in the source code repository of the LVL project.</p>
+            
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+            <h2>
+              <a id="about_licenses"></a>Licenses
+            </h2>
+
+            <p>The LVL source code, binary distribution and virtual machine images are provided under the terms of the EUPL license. The
+              text of the <a href="https://joinup.ec.europa.eu/software/page/eupl/licence-eupl" target="_blank">EUPL license</a> is 
+              available in PDF file format in the 22 official languages of the EU.</p>
+              
+            <p>A <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-resource-bundle/EUPL_LICENCE-1.1.TXT" target="_blank">readable version</a>
+              of the license extracted from the original English version and formatted to align within 80 columns is provided with the
+              LVL distribution.</p>
+              
+            <p>The EUPL license is <a href="https://joinup.ec.europa.eu/software/page/eupl/eupl-compatible-open-source-licences" target="_blank">compatible</a>
+              with most commonly used open-source licenses, such as Apache, MIT and LGPL, always depending on the use of the licensed 
+              software. The following <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-resource-bundle/NOTICE.TXT" target="_blank">copyright notice</a>
+              is distributed with the LVL, to specify the use of external software in the LVL.</p>
+            
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="bs-component">
+            <h2>
+              <a id="about_support"></a>Support
+            </h2>
+
+            <p>Support is provided in the project EUBrazilCC: new releases and features are announced in the UC1 mailing list 
+              <code>uc1@eubrazilcc.eu</code>.</p>
+            
           </div>
         </div>
       </div>
@@ -2993,7 +3062,7 @@ CCCATGCCAAGTAAAATTTTTCCAGGAGGAATAAAGATGATT
     "permissions": [
         "*"
     ],
-    "pictureUrl": "https://secure.gravatar.com/avatar/04edfc0ef6c6cf6d6b88fbc69f9f9071?s=80&d=mm",
+    "pictureUrl": "https://secure.gravatar.com/avatar/04edfc0ef6c6cf6d6b88fbc69f9f9071?s=80&amp;d=mm",
     "roles": [
         "admin"
     ],

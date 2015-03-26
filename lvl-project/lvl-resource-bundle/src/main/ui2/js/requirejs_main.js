@@ -47,7 +47,9 @@ requirejs.config({
 		'raphael' : [ '//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min', 'vendor/cached/raphael-min' ],
 		'jsphylosvg' : 'vendor/provided/jsphylosvg-min',
 		/* Chart.js */
-		'chartjs' : [ '//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.1/Chart.min', 'vendor/cached/Chart.min' ],
+		'chartjs' : [ '//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.1/Chart.min', 'vendor/cached/Chart.min' ],		
+		/* Hopscotch */
+		'hopscotch' : [ '//cdnjs.cloudflare.com/ajax/libs/hopscotch/0.2.3/js/hopscotch.min', 'vendor/cached/hopscotch.min' ],		
 		/* Add support for underscore templates */
 		'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
 		'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
@@ -127,6 +129,9 @@ requirejs.config({
 		},
 		'chartjs' : {
 			exports : 'Chart'
+		},
+		'hopscotch' : {
+			exports : 'hopscotch'
 		},
 		'tpl' : {
 			deps : [ 'text' ]

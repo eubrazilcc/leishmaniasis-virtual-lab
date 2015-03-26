@@ -143,6 +143,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				$('a#uncheck-btn').on('click', {
 					grid : this.grid
 				}, this.deselectAll);
+				$('button#lvl-feature-tour-btn').on('click', this.startTour);
 			},
 			displaySpinner : function() {
 				pace.restart();
@@ -158,7 +159,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					// reset search terms
 					var searchCont = $('#lvl-search-terms-container');
 					searchCont.empty();
-					// setup search terms from server response
+					// setup search terms from
+					// server response
 					if (self.collection.formattedQuery && self.collection.formattedQuery.length > 0) {
 						var i = 1;
 						_.each(self.collection.formattedQuery, function(item) {
@@ -249,12 +251,18 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					newTermInput.val('');
 				}
 			},
-			handleDragStart : function(e) {				
+			handleDragStart : function(e) {
 				e.originalEvent.dataTransfer.setData('srcId', $(e.target).attr('data-savable-id'));
 				Lvl.vent.trigger('editable:items:dragstart');
 			},
-			handleDragEnd : function(e) {	
+			handleDragEnd : function(e) {
 				Lvl.vent.trigger('editable:items:dragend');
+			},
+			startTour : function(e) {
+				e.preventDefault();
+				require([ 'apps/collection/browse/tours/collection_tour' ], function(tour) {
+					tour();
+				});
 			},
 			showSequenceRecord : function(e) {
 				e.preventDefault();
@@ -272,17 +280,24 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				});
 			},
 			onDestroy : function() {
-				// don't remove the styles in order to enable them to be reused
+				// don't remove the styles in
+				// order to enable them to be
+				// reused
 				pace.stop();
 				// remove all event handlers
 				Lvl.vent.off('search:form:submitted');
 				$('#lvl-search-form').unbind();
 				$('a#export-btn').unbind();
 				$('a#uncheck-btn').unbind();
+				$('button#lvl-feature-tour-btn').unbind();
 				// clean menu
 				$('#lvl-floating-menu').hide(0);
 				$('#lvl-floating-menu-toggle').hide(0);
 				$('#lvl-floating-menu').empty();
+				// clean tour
+				require([ 'hopscotch' ], function(hopscotch) {
+					hopscotch.endTour();
+				});
 			},
 			onRender : function() {
 				var self = this;

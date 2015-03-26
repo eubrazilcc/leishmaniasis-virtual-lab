@@ -54,18 +54,22 @@ public abstract class XmlBinder {
 
 	private final static Logger LOGGER = getLogger(XmlBinder.class);
 
-	protected JAXBContext context;
-	protected JAXBIntrospector introspector;
+	protected final JAXBContext context;
+	protected final JAXBIntrospector introspector;
 
 	public XmlBinder(final Class<?>[] supportedClasses) {
+		JAXBContext context2 = null;
+		JAXBIntrospector introspector2 = null;
 		try {
 			// context
-			context = newInstance(supportedClasses, new HashMap<String, Object>());
+			context2 = newInstance(supportedClasses, new HashMap<String, Object>());
 			// introspector
-			introspector = context.createJAXBIntrospector();
+			introspector2 = context2.createJAXBIntrospector();
 		} catch (Exception e) {
 			LOGGER.error("Failed to configure XML binding", e);
 		}
+		context = context2;
+		introspector = introspector2;
 	}
 
 	protected abstract <T> JAXBElement<T> createType(final T obj);
