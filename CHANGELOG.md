@@ -1,6 +1,6 @@
 # Change Log
 
-## v0.0.1 (not released yet)
+## v0.0.1 (Mar 17, 2015)
 
 * First release
 * Provide basic functionalities:
