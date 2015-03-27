@@ -1532,7 +1532,8 @@ public class ServiceTest {
 			assertThat("Shorten open access dataset HTTP response is not null", response4, notNullValue());
 			assertThat("Shorten open access dataset status line is not null", response4.getStatusLine(), notNullValue());
 			assertThat("Shorten open access dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
-					equalTo(NOT_FOUND.getStatusCode())); */
+					equalTo(NOT_FOUND.getStatusCode()));			
+			TODO */
 
 			// test remove open access link
 			response = target.path(path.value())
