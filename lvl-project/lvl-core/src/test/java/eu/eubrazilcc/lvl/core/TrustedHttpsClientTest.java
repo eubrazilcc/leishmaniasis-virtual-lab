@@ -39,7 +39,7 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.core.http.TrustedHttpsClient;
+import eu.eubrazilcc.lvl.core.http.client.TrustedHttpsClient;
 
 /**
  * Tests HTTP clients provided by the class {@link TrustedHttpsClient}.

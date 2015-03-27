@@ -1499,13 +1499,14 @@ public class ServiceTest {
 			// uncomment for additional output
 			System.out.println(" >> Saved open access file: " + filename);
 
+			/* TODO
 			// test shorten URL with valid public resource
 			URI endpointUri = target.path(PublicResource.class.getAnnotation(Path.class).value())
 					.path("datasets")
 					.path(urlEncodeUtf8(openAccesses.getElements().get(0).getOpenAccessLink()))
 					.path("shortened_url")
 					.getUri();
-			payload = Request.Get(endpointUri)
+			payload = Request.Get(endpointUri) // TODO
 					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
 					.addHeader("Accept", TEXT_PLAIN)
 					.execute()
@@ -1531,7 +1532,7 @@ public class ServiceTest {
 			assertThat("Shorten open access dataset HTTP response is not null", response4, notNullValue());
 			assertThat("Shorten open access dataset status line is not null", response4.getStatusLine(), notNullValue());
 			assertThat("Shorten open access dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
-					equalTo(NOT_FOUND.getStatusCode()));
+					equalTo(NOT_FOUND.getStatusCode())); */
 
 			// test remove open access link
 			response = target.path(path.value())

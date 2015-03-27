@@ -23,9 +23,6 @@
 package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.listNucleotides;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.saveNucleotides;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.savePublications;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.FLAT_FILE;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
@@ -78,16 +75,18 @@ public class EntrezTest {
 	@Test
 	public void test() {
 		System.out.println("EntrezTest.test()");
-		try {
+		try (final EntrezHelper entrez = EntrezHelper.create()) {
+			assertThat("Entrez helper is not null", entrez, notNullValue());
+
 			// test list Ids
-			final Set<String> ids = listNucleotides(SMALL_QUERY);
+			final Set<String> ids = entrez.listNucleotides(SMALL_QUERY);
 			assertThat("ids is not null", ids, notNullValue());
 			assertThat("ids is not empty", !ids.isEmpty());
 			int count = ids.size();
 
 			// test save sequences in flat file format
 			File outputDir = new File(TEST_OUTPUT_DIR, "gb-flat");
-			saveNucleotides(ids, outputDir, FLAT_FILE);
+			entrez.saveNucleotides(ids, outputDir, FLAT_FILE);
 			Collection<File> files = listFiles(outputDir, new String[] { "gb" }, false);
 			assertThat("GenBank flat files is not null", files, notNullValue());
 			assertThat("GenBank flat files is not empty", !files.isEmpty());
@@ -95,7 +94,7 @@ public class EntrezTest {
 
 			// test save sequences in GenBank XML format
 			outputDir = new File(TEST_OUTPUT_DIR, "gb-xml");
-			saveNucleotides(ids, outputDir, GB_SEQ_XML);
+			entrez.saveNucleotides(ids, outputDir, GB_SEQ_XML);
 			files = listFiles(outputDir, new String[] { "xml" }, false);
 			assertThat("GenBank XML files is not null", files, notNullValue());
 			assertThat("GenBank XML files is not empty", !files.isEmpty());
@@ -110,7 +109,7 @@ public class EntrezTest {
 			count = pmids.size();
 
 			outputDir = new File(TEST_OUTPUT_DIR, "pubmed-xml");
-			savePublications(pmids, outputDir, PUBMED_XML);
+			entrez.savePublications(pmids, outputDir, PUBMED_XML);
 			files = listFiles(outputDir, new String[] { "xml" }, false);
 			assertThat("PubMed XML files is not null", files, notNullValue());
 			assertThat("PubMed XML files is not empty", !files.isEmpty());

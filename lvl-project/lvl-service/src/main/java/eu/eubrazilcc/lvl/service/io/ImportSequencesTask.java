@@ -38,8 +38,6 @@ import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_FETCHED;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_LISTED;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.NUCLEOTIDE_DB;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.esearch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getCount;
 import static eu.eubrazilcc.lvl.core.xml.ESearchXmlBinder.getIds;
@@ -76,6 +74,7 @@ import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
+import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 import eu.eubrazilcc.lvl.core.xml.ncbi.esearch.ESearchResult;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
@@ -109,7 +108,7 @@ public class ImportSequencesTask<T extends Sequence> extends CancellableTask<Int
 
 	private final String query;
 	private final Sequence.Builder<T> builder;
-	private final SequenceDAO<T> dao;
+	private final SequenceDAO<T> dao;	
 
 	public ImportSequencesTask(final String query, final Sequence.Builder<T> builder, final SequenceDAO<T> dao) {
 		this.query = query;
@@ -138,14 +137,14 @@ public class ImportSequencesTask<T extends Sequence> extends CancellableTask<Int
 		return new Callable<Integer>() {
 			@Override
 			public Integer call() throws Exception {
-				LOGGER.info("Importing new sequences from: " + DATABASES);
+				LOGGER.info("Importing new sequences from: " + DATABASES);				
 				int count = 0;
 				final File tmpDir = createTmpDir();
-				try {
+				try (final EntrezHelper entrez = EntrezHelper.create()) {
 					final List<ListenableFuture<Integer>> subTasks = newArrayList();
 					for (final String db : DATABASES) {
 						if (GENBANK.equals(db)) {
-							subTasks.addAll(importGenBankSubTasks(tmpDir));
+							subTasks.addAll(importGenBankSubTasks(entrez, tmpDir));
 						} else {
 							throw new IllegalArgumentException("Unsupported database: " + db);
 						}
@@ -196,20 +195,20 @@ public class ImportSequencesTask<T extends Sequence> extends CancellableTask<Int
 		};
 	}
 
-	private List<ListenableFuture<Integer>> importGenBankSubTasks(final File tmpDir) {
+	private List<ListenableFuture<Integer>> importGenBankSubTasks(final EntrezHelper entrez, final File tmpDir) {
 		final List<ListenableFuture<Integer>> subTasks = newArrayList();
 		int esearchCount = -1, retstart = 0, count = 0, retries = 0;
 		final int retmax = MAX_RECORDS_LISTED;
 		do {
 			setStatus("Searching GenBank for sequence identifiers");
 			try {
-				final ESearchResult result = esearch(NUCLEOTIDE_DB, query, retstart, retmax);
+				final ESearchResult result = entrez.esearch(NUCLEOTIDE_DB, query, retstart, retmax);
 				if (esearchCount < 0) {
 					esearchCount = getCount(result);
 				}
 				final List<String> ids = getIds(result);
 				count = ids.size();
-				subTasks.add(TASK_RUNNER.submit(importGenBankSubTask(ids, tmpDir, GB_SEQ_XML, "xml")));
+				subTasks.add(TASK_RUNNER.submit(importGenBankSubTask(ids, entrez, tmpDir, GB_SEQ_XML, "xml")));
 				LOGGER.trace("Listing Ids (start=" + retstart + ", max=" + retmax + ") produced " + count + " new records. Query: " + query);
 				retstart += count;
 			} catch (Exception e) {
@@ -221,7 +220,8 @@ public class ImportSequencesTask<T extends Sequence> extends CancellableTask<Int
 		return subTasks;
 	}
 
-	private Callable<Integer> importGenBankSubTask(final List<String> ids, final File tmpDir, final Format format, final String extension) {
+	private Callable<Integer> importGenBankSubTask(final List<String> ids, final EntrezHelper entrez, final File tmpDir, final Format format, 
+			final String extension) {
 		return new Callable<Integer>() {
 			private int efetchCount = 0;
 			@Override			
@@ -250,7 +250,7 @@ public class ImportSequencesTask<T extends Sequence> extends CancellableTask<Int
 					setProgress(100.0d * fetched.get() / pendingCount);
 					// fetch sequence files
 					final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_seq_task_");
-					efetch(ids2, 0, MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
+					entrez.efetch(ids2, 0, MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
 					// import sequence files to the database
 					for (final String id : ids2) {
 						setStatus("Importing GenBank sequences into local collection");

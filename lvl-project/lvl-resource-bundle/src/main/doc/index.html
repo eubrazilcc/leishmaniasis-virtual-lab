@@ -973,6 +973,47 @@ Connection: keep-alive
 }
 </pre>
 
+            <h3>Transparent Huge Pages (THP) Settings</h3>
+
+            <p>Transparent Huge Pages (THP) are known to reduce the performance of MongoDB:</p>
+
+            <pre>
+$ mongo
+MongoDB shell version: 3.0.1
+connecting to: test
+Server has startup warnings: 
+2015-03-26T16:50:45.029+0100 I CONTROL  [initandlisten] 
+2015-03-26T16:50:45.029+0100 I CONTROL  [initandlisten] ** WARNING: /sys/kernel/mm/transparent_hugepage/enabled is 'always'.
+2015-03-26T16:50:45.029+0100 I CONTROL  [initandlisten] **        We suggest setting it to 'never'
+2015-03-26T16:50:45.029+0100 I CONTROL  [initandlisten] 
+2015-03-26T16:50:45.029+0100 I CONTROL  [initandlisten] ** WARNING: /sys/kernel/mm/transparent_hugepage/defrag is 'always'.
+2015-03-26T16:50:45.029+0100 I CONTROL  [initandlisten] **        We suggest setting it to 'never'
+2015-03-26T16:50:45.029+0100 I CONTROL  [initandlisten]
+            </pre>
+
+            <p>
+              In Ubuntu, THP can be disabled by modifying the boot-time configuration. This setup is in <em>/etc/default/grub</em>:
+            </p>
+            
+            <code>
+              GRUB_CMDLINE_LINUX_DEFAULT="splash quiet transparent_hugepage=never"
+            </code>
+            <p></p>
+            
+            <p>Update grub to apply the change:</p>
+            
+            <code>
+              $ sudo update-grub2
+            </code>
+            <p></p>
+
+            <p>Restart your server to apply the change.</p>
+            
+            <p>Depending  on your configuration you may need to disable THP in <em>/etc/rc.local</em> and restart you MongoDB server manually after
+              reboot.</p>
+            
+            <p>Additional info in the <a href="http://docs.mongodb.org/manual/reference/transparent-huge-pages/" target="_blank">MongoDB manual</a>.</p>
+
           </div>
         </div>
       </div>

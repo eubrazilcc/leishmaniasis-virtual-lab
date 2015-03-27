@@ -50,7 +50,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 
-import eu.eubrazilcc.lvl.core.http.TrustedHttpsClient;
+import eu.eubrazilcc.lvl.core.http.client.TrustedHttpsClient;
 
 /**
  * Converts long URLs into short ones using the Google URL Shortener API.
@@ -111,7 +111,7 @@ public class UrlShortener {
 					}					                    
 				}
 			};
-			final String response = httpClient.executePost(URL_SHORTENER + (isNotBlank(CONFIG_MANAGER.getGoogleAPIKey()) ? "key=" + urlEncodeUtf8(CONFIG_MANAGER.getGoogleAPIKey()) : ""), 					
+			final String response = httpClient.executePost(URL_SHORTENER + (isNotBlank(CONFIG_MANAGER.getGoogleAPIKey()) ? "?key=" + urlEncodeUtf8(CONFIG_MANAGER.getGoogleAPIKey()) : ""), 					
 					ImmutableMap.of("Accept", "application/json", "Content-type", "application/json"),
 					new StringEntity("{ \"longUrl\" : \"" + url2 + "\" }"),
 					responseHandler);

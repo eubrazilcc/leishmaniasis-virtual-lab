@@ -22,15 +22,36 @@
 
 package eu.eubrazilcc.lvl.storage;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.DEFAULT_LOCATION;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.storage.urlshortener.UrlShortener.shortenUrl;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static java.io.File.separator;
+import static org.apache.commons.io.FileUtils.toURLs;
+import static org.apache.commons.io.FilenameUtils.concat;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.ListIterator;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.storage.urlshortener.UrlShortener;
+import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule;
+import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.ConditionalIgnore;
+import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.IgnoreCondition;
 
 /**
  * Tests URL shortener {@link UrlShortener}.
@@ -38,7 +59,37 @@ import eu.eubrazilcc.lvl.storage.urlshortener.UrlShortener;
  */
 public class UrlShortenerTest {
 
+	private static boolean hasToClean = false;
+
+	@Rule
+	public ConditionalIgnoreRule rule = new ConditionalIgnoreRule();
+
+	@BeforeClass
+	public static void setUp() throws IOException {
+		final File file = new File(concat(DEFAULT_LOCATION, "etc" + separator + "test" + separator + REST_SERVICE_CONFIG));
+		if (file.canRead()) {
+			final List<URL> urls = newArrayList(getDefaultConfiguration());
+			for (final ListIterator<URL> it = urls.listIterator(); it.hasNext();) {
+				final URL url = it.next();
+				if (url.getPath().endsWith(REST_SERVICE_CONFIG)) {
+					it.remove();
+					it.add(toURLs(new File[]{ file })[0]);
+				}
+			}
+			CONFIG_MANAGER.setup(urls);
+			hasToClean = true;
+		}		
+	}
+
+	@AfterClass
+	public static void cleanUp() throws IOException {
+		if (hasToClean) {
+			CONFIG_MANAGER.setup(null);
+		}
+	}
+
 	@Test
+	@ConditionalIgnore(condition=GoogleAPIkeyIsDefined.class)
 	public void test() {
 		System.out.println("UrlShortenerTest.test()");
 		try {
@@ -57,6 +108,17 @@ public class UrlShortenerTest {
 			fail("UrlShortenerTest.test() failed: " + e.getMessage());
 		} finally {			
 			System.out.println("UrlShortenerTest.test() has finished");
+		}
+	}
+
+	/**
+	 * Checks whether a Google API key is available in the configuration.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public class GoogleAPIkeyIsDefined implements IgnoreCondition {
+		@Override
+		public boolean isSatisfied() {		
+			return isBlank(CONFIG_MANAGER.getGoogleAPIKey());
 		}
 	}
 

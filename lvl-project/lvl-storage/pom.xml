@@ -54,6 +54,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>eu.eubrazilcc.lvl</groupId>
 			<artifactId>lvl-core</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>eu.eubrazilcc.lvl</groupId>
+			<artifactId>lvl-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		
 		<!-- MongoDB Java driver -->
 		<dependency>

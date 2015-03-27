@@ -67,30 +67,30 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<!-- Convenience properties to set library versions -->
-		<jersey.version>2.15</jersey.version>
-		<javax.el.version>2.2.4</javax.el.version>
-		<javax.el.impl.version>2.2.4</javax.el.impl.version> <!-- Need to include javax.el due to: https://java.net/jira/browse/JERSEY-2650 -->
-		<junit.version>4.11</junit.version> <!-- if you change this, then check Hamcrest version -->
+		<jersey.version>2.17</jersey.version>
+		<javax.el.version>2.2.4</javax.el.version> <!-- Despite 2.2.5 is available, Jersey Declarative Linking still uses 2.2.4 -->
+		<javax.el.impl.version>2.2.4</javax.el.impl.version> <!-- Despite 2.2.6 is available, Jersey Declarative Linking still uses 2.2.4 --> <!-- Need to include javax.el due to: https://java.net/jira/browse/JERSEY-2650 -->
+		<junit.version>4.12</junit.version> <!-- if you change this, then check Hamcrest version -->
 		<hamcrest.version>1.3</hamcrest.version> <!-- coincides with JUnit dependency -->
-		<mockito.version>1.9.5</mockito.version>
+		<mockito.version>1.10.19</mockito.version>
 
 		<!-- Convenience properties to set Maven plugins versions -->
-		<buildnumber-maven-plugin.version>1.2</buildnumber-maven-plugin.version>
-		<exec-maven-plugin.version>1.3.2</exec-maven-plugin.version>
+		<buildnumber-maven-plugin.version>1.3</buildnumber-maven-plugin.version>
+		<exec-maven-plugin.version>1.4.0</exec-maven-plugin.version>
 		<m2e.lifecycle-mapping.version>1.0.0</m2e.lifecycle-mapping.version>
-		<maven-activemq-plugin.version>5.6.0</maven-activemq-plugin.version>
-		<maven-assembly-plugin.version>2.4</maven-assembly-plugin.version>
-		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>		
-		<maven-jar-plugin.version>2.4</maven-jar-plugin.version>
+		<maven-activemq-plugin.version>5.7.0</maven-activemq-plugin.version>
+		<maven-assembly-plugin.version>2.5.3</maven-assembly-plugin.version>
+		<maven-compiler-plugin.version>3.2</maven-compiler-plugin.version>		
+		<maven-jar-plugin.version>2.6</maven-jar-plugin.version>
 		<maven-jaxb2-plugin.version>0.12.3</maven-jaxb2-plugin.version>
 		<maven-jaxb2-plugin.jaxb2-commons-lang.version>2.4</maven-jaxb2-plugin.jaxb2-commons-lang.version>
 		<maven-jaxb2-plugin.jaxb2-fluent-api.version>3.0</maven-jaxb2-plugin.jaxb2-fluent-api.version>
-		<maven-failsafe-plugin.version>2.17</maven-failsafe-plugin.version>
-		<maven-surefire-plugin.version>2.17</maven-surefire-plugin.version>
-		<maven-war-plugin.version>2.4</maven-war-plugin.version>
+		<maven-failsafe-plugin.version>2.18.1</maven-failsafe-plugin.version>
+		<maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
+		<maven-war-plugin.version>2.6</maven-war-plugin.version>
 		<tomcat7-maven-plugin.version>2.2</tomcat7-maven-plugin.version>
 		<embedmongo-maven-plugin.version>0.1.12</embedmongo-maven-plugin.version>
-		<embedmongo-maven-plugin.mongodb.version>2.6.8</embedmongo-maven-plugin.mongodb.version>
+		<embedmongo-maven-plugin.mongodb.version>3.0.1</embedmongo-maven-plugin.mongodb.version>
 		<embedmongo-maven-plugin.download.path>http://lvl.i3m.upv.es/filestorage/mongodb/</embedmongo-maven-plugin.download.path>
 	</properties>
 
@@ -251,11 +251,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	</build>
 
 	<modules>
+		<module>lvl-test</module>
 		<module>lvl-core</module>
 		<module>lvl-storage</module>
 		<module>lvl-auth</module>
 		<module>lvl-service</module>
-		<module>lvl-resource-bundle</module>    	    
-  </modules>
+		<module>lvl-resource-bundle</module>		
+	</modules>
 
 </project>

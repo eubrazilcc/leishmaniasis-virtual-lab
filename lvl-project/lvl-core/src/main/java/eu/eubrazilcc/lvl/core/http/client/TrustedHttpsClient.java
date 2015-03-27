@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core.http;
+package eu.eubrazilcc.lvl.core.http.client;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
@@ -30,7 +30,6 @@ import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToNull;
-import static org.apache.http.conn.ssl.SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -57,11 +56,12 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 
 /**
@@ -160,7 +160,7 @@ public final class TrustedHttpsClient implements AutoCloseable {
 					sslContext,
 					new String[] { "SSLv2Hello", "TLSv1", "TLSv1.1", "TLSv1.2" },
 					null,
-					BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+					new DefaultHostnameVerifier());
 			httpClient = HttpClients.custom()
 					.setSSLSocketFactory(sslsf)
 					.build();

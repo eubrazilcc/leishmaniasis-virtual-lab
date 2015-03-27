@@ -39,7 +39,6 @@ import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_FETCHED;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.MAX_RECORDS_LISTED;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.efetch;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.PUBMED_XML;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.parseArticle;
@@ -67,6 +66,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.Reference;
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
+import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.service.io.filter.RecordFilter;
@@ -116,11 +116,11 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 				LOGGER.info("Importing new publications from: " + DATABASES);
 				int count = 0;
 				final File tmpDir = createTmpDir();
-				try {
+				try (final EntrezHelper entrez = EntrezHelper.create()) {
 					final List<ListenableFuture<Integer>> subTasks = newArrayList();
 					for (final String db : DATABASES) {
 						if (PUBMED.equals(db)) {
-							subTasks.addAll(importPubMedSubTasks(tmpDir));
+							subTasks.addAll(importPubMedSubTasks(entrez, tmpDir));
 						} else {
 							throw new IllegalArgumentException("Unsupported database: " + db);
 						}
@@ -163,18 +163,18 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 		};
 	}
 
-	private List<ListenableFuture<Integer>> importPubMedSubTasks(final File tmpDir) {
+	private List<ListenableFuture<Integer>> importPubMedSubTasks(final EntrezHelper entrez, final File tmpDir) {
 		final List<ListenableFuture<Integer>> subTasks = newArrayList();
 		final Set<String> deduplicated = newHashSet(pmids);
 		final Iterable<List<String>> subsets = partition(deduplicated, MAX_RECORDS_LISTED);
 		for (final List<String> subset : subsets) {
-			subTasks.add(TASK_RUNNER.submit(importPubMedSubTask(subset, tmpDir, PUBMED_XML, "xml")));
+			subTasks.add(TASK_RUNNER.submit(importPubMedSubTask(subset, entrez, tmpDir, PUBMED_XML, "xml")));
 			LOGGER.trace("Partition produced " + subset.size() + " new records");
 		}
 		return subTasks;
 	}
 
-	private Callable<Integer> importPubMedSubTask(final List<String> ids, final File tmpDir, final Format format, final String extension) {
+	private Callable<Integer> importPubMedSubTask(final List<String> ids, final EntrezHelper entrez, final File tmpDir, final Format format, final String extension) {
 		return new Callable<Integer>() {
 			private int efetchCount = 0;
 			@Override			
@@ -203,7 +203,7 @@ public class ImportPublicationsTask extends CancellableTask<Integer> {
 					setProgress(100.0d * fetched.get() / pendingCount);
 					// fetch sequence files
 					final Path tmpDir2 = createTempDirectory(tmpDir.toPath(), "fetch_pub_task_");
-					efetch(ids2, 0, MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
+					entrez.efetch(ids2, 0, MAX_RECORDS_FETCHED, tmpDir2.toFile(), format);
 					// import publication files to the database
 					for (final String id : ids2) {
 						setStatus("Importing PubMed publications into local collection");
