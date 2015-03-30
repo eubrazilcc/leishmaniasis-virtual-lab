@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context> <!-- path="/lvl-service" -->
+	<Environment name="LVL_HOME" value="/opt/lvl/test" type="java.lang.String" override="false"/>
+</Context>

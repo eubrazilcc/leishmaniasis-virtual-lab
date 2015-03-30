@@ -35,6 +35,9 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+
 import org.slf4j.Logger;
 
 import com.google.common.base.Function;
@@ -58,6 +61,7 @@ public final class ConfigurationFinder {
 	 * Finds available configuration files, searching the different sources in the following order:
 	 * <ol>
 	 *   <li>Application environment;</li>
+	 *   <li>JNDI context;</li>
 	 *   <li>Default location in the file-system locally available to the application; and finally</li>
 	 *   <li>If none of the above works, configuration files are returned from the resources available 
 	 *       in the application class path.</li>
@@ -75,7 +79,23 @@ public final class ConfigurationFinder {
 			} else {
 				LOGGER.trace("Environment variable '" + ENV_HOME_VAR + "' was not found");
 			}
-		} catch (Exception ignore) { }
+		} catch (Exception ignore) { }		
+		// try to read from JNDI context
+		if (configFiles == null) {
+			try {
+				final Context initCtx = new InitialContext();
+				final Context envCtx = (Context)initCtx.lookup("java:comp/env");
+				final String location = (String)envCtx.lookup(ENV_HOME_VAR) + "/etc";
+				if (isNotBlank(location) && testConfigurationFiles(location, CONFIGURATION_FILENAMES)) {
+					configFiles = convertPathListToFiles(location, CONFIGURATION_FILENAMES);
+					LOGGER.trace("JNDI context variable '" + DEFAULT_LOCATION + "' found. Configuration files: " + filesToString(configFiles));
+				} else {
+					LOGGER.trace("JNDI context variable '" + DEFAULT_LOCATION + "' was not found");
+				}				
+			} catch (Exception e) {
+				LOGGER.trace("Failed to search for configuration files in JNDI context variable: '" + ENV_HOME_VAR +"'", e);
+			}			
+		}
 		// try to retrieve configuration files from the default location
 		if (configFiles == null) {
 			try {

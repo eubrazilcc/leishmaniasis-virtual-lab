@@ -27,6 +27,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.VIEW_SHARE;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.DEFAULT_LOCATION;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
@@ -49,6 +50,7 @@ import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.USER_ROLE;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.allPermissions;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.asPermissionList;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.userPermissions;
+import static java.io.File.separator;
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.min;
 import static java.lang.System.currentTimeMillis;
@@ -63,13 +65,14 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.OK;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.io.FileUtils.toURLs;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.io.FilenameUtils.getName;
-import static org.apache.commons.lang.RandomStringUtils.random;
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.RandomStringUtils.random;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -83,6 +86,8 @@ import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.ListIterator;
 
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Path;
@@ -109,7 +114,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.DataSource;
 import eu.eubrazilcc.lvl.core.Dataset;
@@ -169,16 +173,18 @@ public class ServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		// load test configuration
-		final ImmutableList.Builder<URL> builder = new ImmutableList.Builder<URL>();
-		final ImmutableList<URL> defaultUrls = getDefaultConfiguration();
-		for (final URL url : defaultUrls) {
-			if (!url.toString().endsWith(REST_SERVICE_CONFIG)) {
-				builder.add(url);
-			} else {
-				builder.add(this.getClass().getResource("/config/lvl-service.xml"));
+		final File file = new File(concat(DEFAULT_LOCATION, "test" + separator + "etc" + separator + REST_SERVICE_CONFIG));
+		if (file.canRead()) {
+			final List<URL> urls = newArrayList(getDefaultConfiguration());
+			for (final ListIterator<URL> it = urls.listIterator(); it.hasNext();) {
+				final URL url = it.next();
+				if (url.getPath().endsWith(REST_SERVICE_CONFIG)) {
+					it.remove();
+					it.add(toURLs(new File[]{ file })[0]);
+				}
 			}
+			CONFIG_MANAGER.setup(urls);
 		}
-		CONFIG_MANAGER.setup(builder.build());
 		CONFIG_MANAGER.preload();
 		// setup test file-system environment
 		deleteQuietly(TEST_OUTPUT_DIR);		
@@ -569,7 +575,7 @@ public class ServiceTest {
 			assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(4));
 			// uncomment for additional output			
 			System.out.println(" >> Search sandflies result: " + sandflies.toString());
-			
+
 			// test get sandflies applying a full-text search combined with a keyword matching filter (JSON encoded)
 			response = target.path(path.value())
 					.queryParam("per_page", perPage)
@@ -1499,41 +1505,44 @@ public class ServiceTest {
 			// uncomment for additional output
 			System.out.println(" >> Saved open access file: " + filename);
 
-			/* TODO
-			// test shorten URL with valid public resource
-			URI endpointUri = target.path(PublicResource.class.getAnnotation(Path.class).value())
-					.path("datasets")
-					.path(urlEncodeUtf8(openAccesses.getElements().get(0).getOpenAccessLink()))
-					.path("shortened_url")
-					.getUri();
-			payload = Request.Get(endpointUri) // TODO
-					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
-					.addHeader("Accept", TEXT_PLAIN)
-					.execute()
-					.returnContent()
-					.asString();
-			assertThat("Shorten open access dataset response entity is not null", payload, notNullValue());
-			assertThat("Shorten open access dataset response entity is empty", isNotBlank(payload));
-			// uncomment for additional output
-			System.out.println(" >> Shortened URL: " + payload);
+			// URL shortening tests (depends on the availability of the Google API key)
+			if (isNotBlank(CONFIG_MANAGER.getGoogleAPIKey())) {
+				// test shorten URL with valid public resource
+				URI endpointUri = target.path(PublicResource.class.getAnnotation(Path.class).value())
+						.path("datasets")
+						.path(urlEncodeUtf8(openAccesses.getElements().get(0).getOpenAccessLink()))
+						.path("shortened_url")
+						.getUri();
+				payload = Request.Get(endpointUri)
+						.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
+						.addHeader("Accept", TEXT_PLAIN)
+						.execute()
+						.returnContent()
+						.asString();
+				assertThat("Shorten open access dataset response entity is not null", payload, notNullValue());
+				assertThat("Shorten open access dataset response entity is empty", isNotBlank(payload));
+				// uncomment for additional output
+				System.out.println(" >> Shortened URL: " + payload);
 
-			// test shorten URL with invalid public resource (should fail with status 404)
-			endpointUri = target.path(PublicResource.class.getAnnotation(Path.class).value())
-					.path("datasets")
-					.path("this_is_an_invalid_secret")
-					.path("shortened_url")
-					.getUri();
-			response3 = Request.Get(endpointUri)
-					.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
-					.addHeader("Accept", TEXT_PLAIN)
-					.execute();
-			assertThat("Shorten open access dataset response is not null", response3, notNullValue());
-			response4 = response3.returnResponse();
-			assertThat("Shorten open access dataset HTTP response is not null", response4, notNullValue());
-			assertThat("Shorten open access dataset status line is not null", response4.getStatusLine(), notNullValue());
-			assertThat("Shorten open access dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
-					equalTo(NOT_FOUND.getStatusCode()));			
-			TODO */
+				// test shorten URL with invalid public resource (should fail with status 404)
+				endpointUri = target.path(PublicResource.class.getAnnotation(Path.class).value())
+						.path("datasets")
+						.path("this_is_an_invalid_secret")
+						.path("shortened_url")
+						.getUri();
+				response3 = Request.Get(endpointUri)
+						.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
+						.addHeader("Accept", TEXT_PLAIN)
+						.execute();
+				assertThat("Shorten open access dataset response is not null", response3, notNullValue());
+				response4 = response3.returnResponse();
+				assertThat("Shorten open access dataset HTTP response is not null", response4, notNullValue());
+				assertThat("Shorten open access dataset status line is not null", response4.getStatusLine(), notNullValue());
+				assertThat("Shorten open access dataset status coincides with expected", response4.getStatusLine().getStatusCode(),
+						equalTo(NOT_FOUND.getStatusCode()));
+			} else {
+				System.err.println("\n\n >> Skipping URL shortening test since Google API key is not available in the test system\n");
+			}
 
 			// test remove open access link
 			response = target.path(path.value())

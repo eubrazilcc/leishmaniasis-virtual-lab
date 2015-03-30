@@ -188,6 +188,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 			events : {
 				'click a[data-search-term]' : 'resetSearchTerms',
 				'submit form#lvl-add-search-term-form' : 'addSearchTerm',
+				'click div.lvl-savable' : 'handleDragStart',
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
 				'click a[data-seq_id]' : 'showSequenceRecord'

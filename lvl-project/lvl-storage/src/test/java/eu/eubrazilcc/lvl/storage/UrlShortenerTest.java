@@ -66,7 +66,7 @@ public class UrlShortenerTest {
 
 	@BeforeClass
 	public static void setUp() throws IOException {
-		final File file = new File(concat(DEFAULT_LOCATION, "etc" + separator + "test" + separator + REST_SERVICE_CONFIG));
+		final File file = new File(concat(DEFAULT_LOCATION, "test" + separator + "etc" + separator + REST_SERVICE_CONFIG));
 		if (file.canRead()) {
 			final List<URL> urls = newArrayList(getDefaultConfiguration());
 			for (final ListIterator<URL> it = urls.listIterator(); it.hasNext();) {

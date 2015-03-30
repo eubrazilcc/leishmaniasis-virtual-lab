@@ -65,6 +65,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>eu.eubrazilcc.lvl</groupId>
 			<artifactId>lvl-storage</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>eu.eubrazilcc.lvl</groupId>
+			<artifactId>lvl-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		
 		<!-- Java Servlet API 3.0 -->
 		<dependency>
@@ -187,6 +192,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 							<httpsPort>8443</httpsPort>
 							<keystoreFile>${keystore.path}</keystoreFile>
 							<keystorePass>${keystore.password}</keystorePass>
+							<additionalConfigFilesDir>${project.basedir}/src/test/resources/config/tomcat</additionalConfigFilesDir>
 							<fork>true</fork>
 							<systemProperties>
 								<javax.net.ssl.trustStore>${truststore.path}</javax.net.ssl.trustStore>

@@ -59,7 +59,7 @@ public class LeishVirtLabApplication extends Application {
 	final Set<Class<?>> classes = newHashSet();
 	final Set<Object> instances = newHashSet();
 
-	public LeishVirtLabApplication() {
+	public LeishVirtLabApplication() {		
 		// load logging bridges
 		LOG_MANAGER.preload();
 		// start service

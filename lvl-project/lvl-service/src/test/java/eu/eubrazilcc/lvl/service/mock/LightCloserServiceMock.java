@@ -27,16 +27,12 @@ import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 
 import java.io.Closeable;
-import java.net.URL;
 import java.util.Deque;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Monitor;
 
 import eu.eubrazilcc.lvl.core.CloserServiceIf;
@@ -57,17 +53,7 @@ public enum LightCloserServiceMock implements CloserServiceIf {
 
 	@Override
 	public void preload() {
-		// load test configuration and register it for closing
-		final ImmutableList.Builder<URL> builder = new ImmutableList.Builder<URL>();
-		final ImmutableList<URL> defaultUrls = getDefaultConfiguration();
-		for (final URL url : defaultUrls) {
-			if (!url.toString().endsWith(REST_SERVICE_CONFIG)) {
-				builder.add(url);
-			} else {
-				builder.add(this.getClass().getResource("/config/lvl-service.xml"));
-			}
-		}
-		CONFIG_MANAGER.setup(builder.build());
+		// load test configuration and register it for closing		
 		CONFIG_MANAGER.preload();
 		register(CONFIG_MANAGER);
 		// load MongoDB connector and register it for closing
