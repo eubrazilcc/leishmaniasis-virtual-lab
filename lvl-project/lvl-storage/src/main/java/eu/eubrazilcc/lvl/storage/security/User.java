@@ -525,6 +525,12 @@ public class User implements Serializable, Linkable<User> {
 			if (isNotBlank(original.lastname)) {
 				builder.lastname(original.lastname);
 			}
+			if (isNotBlank(original.industry)) {
+				builder.industry(original.industry);
+			}
+			if (original.positions != null && !original.positions.isEmpty()) {
+				builder.positions(original.positions);
+			}
 			return builder.build();
 		}
 		return copy;

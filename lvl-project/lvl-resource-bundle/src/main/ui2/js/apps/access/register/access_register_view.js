@@ -35,7 +35,9 @@ define([ 'app', 'tpl!apps/access/register/templates/register', 'apps/config/mari
 					'email' : formData.email,
 					'password' : formData.password,
 					'firstname' : formData.firstname,
-					'lastname' : formData.lastname
+					'lastname' : formData.lastname,
+					'industry' : formData.institution_type,
+					'positions' : [ formData.institution ]
 				};
 				// submit request to LVL server
 				var self = this;							

@@ -16,15 +16,9 @@ define([ 'marionette', 'tpl!apps/settings/account/templates/settings_account' ],
 					firstname : this.model.get('firstname'),
 					lastname : this.model.get('lastname'),
 					pictureUrl : this.model.get('pictureUrl'),
-					roles : (this.model.get('roles') || [ 'user' ]).join(', '),
-					
-					// TODO
-					institution : '123',
-					researchSelected : 'selected',
-					academiaSelected : '',
-					industrySelected : ''
-					// TODO
-					
+					roles : (this.model.get('roles') || [ 'user' ]).join(', '),					
+					positions : (this.model.get('positions') || [ '' ]).join('; '),
+					industry : this.model.get('industry') || ''					
 				}
 			},
 			initialize : function() {

@@ -369,12 +369,7 @@ public class AuthTest {
 					.request(MediaType.APPLICATION_JSON)
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(User.class);
-			assertThat("Get user by username result is not null", user2, notNullValue());
-			
-			// TODO
-			System.err.println("\n\n >> USER1: " + user + "\n >> USER2" + user2 + "\n");
-			// TODO
-			
+			assertThat("Get user by username result is not null", user2, notNullValue());			
 			assertThat("Get user by username coincides with expected", user2.equalsToUnprotectedIgnoringVolatile(user), equalTo(true));
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by username result: " + user2.toString());
