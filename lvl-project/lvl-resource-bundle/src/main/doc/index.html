@@ -694,8 +694,17 @@ total 8.0K
                 <p class="list-group-item-text">Database deployment in MongoDB 2.6.x, and Web service deployment in Apache Tomcat 7.</p>
               </li>
             </ul>
+            
+            <h3>Configuring tests</h3>
+            
+            <p>Unit and integration tests can be enabled/disabled. Several resource consuming tests are disabled by default. For example, this is the case
+              of the <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-service/src/test/java/eu/eubrazilcc/lvl/service/ESCentralTest.java" target="_blank">e-Science Central (e-SC) test</a>, 
+              which runs a complete pipeline to check the integration with e-SC. To enable the e-SC test, create the following file in your local filesystem:</p>
+            
+            <code>/opt/lvl/test/tests-enabled/e-sc.test</code>
+            <p></p>
 
-            <h3>Skipping JUnit tests</h3>
+            <h3>Disabling all JUnit tests</h3>
 
             <p>
               To skip running the tests for the entire project or for a particular project, set the <em>maven.test.skip</em> property to <em>true</em> in the

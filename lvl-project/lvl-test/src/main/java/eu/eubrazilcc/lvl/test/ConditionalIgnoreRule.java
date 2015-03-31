@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.test;
 
+import static java.io.File.separator;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -40,6 +42,9 @@ import org.junit.runners.model.Statement;
  */
 public class ConditionalIgnoreRule implements MethodRule {
 
+	public static final String TEST_CONFIG_ROOT = "test";
+	public static final String TEST_CONFIG_DIR = TEST_CONFIG_ROOT + separator + "tests-enabled";	
+	
 	public interface IgnoreCondition {
 		boolean isSatisfied();
 	}

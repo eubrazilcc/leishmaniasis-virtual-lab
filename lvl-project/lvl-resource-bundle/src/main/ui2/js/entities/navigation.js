@@ -89,7 +89,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 			Entities.settingsLinks = new Entities.NavigationCollection([ {
 				id : 8,
 				href : '/#my-saved-items',
-				icon : 'fa-shopping-cart',
+				icon : 'fa-archive',
 				text : 'My Saved Items',
 				isFirst : 'settings'
 			}, {
@@ -100,20 +100,73 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 			} ]);
 		};
 
-		var iniExternalLinks = function() {
+		var iniExternalLinks = function() { // TODO : remove
 			Entities.externalLinks = new Entities.NavigationCollection([ {
-				id : 9,
+				id : 10,
 				href : 'http://www.eubrazilcloudconnect.eu/',
 				icon : 'fa-cloud',
 				text : 'EUBrazilCC',
 				isFirst : 'external'
 			}, {
-				id : 10,
+				id : 11,
 				href : '/doc/',
 				icon : 'fa-book',
 				text : 'API Documentation'
 			} ]);
 		};
+		
+		var iniSupportLinks = function() {
+			Entities.supportLinks = new Entities.NavigationCollection([ {
+				id : 10,
+				href : '/#support/screencasts',
+				icon : 'fa-video-camera',
+				text : 'Screencasts',
+				isFirst : 'documentation'
+			}, {
+				id : 11,
+				href : '/#support/presentations',
+				icon : 'fa-desktop',
+				text : 'Presentations'
+			}, {
+				id : 12,
+				href : '/#support/publications',
+				icon : 'fa-file-text-o',
+				text : 'Publications'
+			}, {
+				id : 13,
+				href : '/#support/mailing-list',
+				icon : 'fa-envelope-o',
+				text : 'Mailing list',
+				isFirst : 'support'
+			} ]);
+		};
+		
+		var iniSoftwareLinks = function() {
+			Entities.softwareLinks = new Entities.NavigationCollection([ {
+				id : 14,
+				href : '/#software/releases',
+				icon : 'fa-bullhorn',
+				text : 'Releases',
+				isFirst : 'software'
+			}, {
+				id : 15,
+				href : '/#software/marketplace',
+				icon : 'fa-shopping-cart',
+				text : 'Marketplace'
+			}, {
+				id : 16,
+				href : '/#software/development',
+				icon : 'fa-github-alt',
+				text : 'Development',
+				isFirst : 'development'
+			}, {
+				id : 17,
+				href : '/doc/',
+				icon : 'fa-book',
+				text : 'API Documentation',
+				isExternal : true
+			} ]);
+		};		
 
 		var API = {
 			getNavigationEntities : function() {
@@ -133,6 +186,18 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 					iniExternalLinks();
 				}
 				return Entities.externalLinks;
+			},
+			getSupportEntities : function() {
+				if (Entities.supportLinks === undefined) {
+					iniSupportLinks();
+				}
+				return Entities.supportLinks;
+			},
+			getSoftwareEntities : function() {
+				if (Entities.softwareLinks === undefined) {
+					iniSoftwareLinks();
+				}
+				return Entities.softwareLinks;
 			},
 			getNavigationSettingEntities : function() {
 				if (Entities.navigationLinks === undefined) {
@@ -155,6 +220,14 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		Lvl.reqres.setHandler('navigation:external:entities', function() {
 			return API.getExternalEntities();
+		});
+		
+		Lvl.reqres.setHandler('navigation:support:entities', function() {
+			return API.getSupportEntities();
+		});
+		
+		Lvl.reqres.setHandler('navigation:software:entities', function() {
+			return API.getSoftwareEntities();
 		});
 
 		Lvl.reqres.setHandler('navigation:links+settings:entities', function() {

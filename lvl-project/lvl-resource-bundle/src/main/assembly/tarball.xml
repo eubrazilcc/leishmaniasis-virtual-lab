@@ -32,7 +32,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<fileSets>
 		<fileSet>
 			<directory>${project.basedir}</directory>
-			<outputDirectory>/</outputDirectory>
+			<outputDirectory />
 			<includes>
 				<include>README*.TXT</include>
 				<include>*LICENSE*.TXT</include>

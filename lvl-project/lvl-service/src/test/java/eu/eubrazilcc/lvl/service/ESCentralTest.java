@@ -23,8 +23,11 @@
 package eu.eubrazilcc.lvl.service;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.DEFAULT_LOCATION;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
+import static eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.TEST_CONFIG_DIR;
+import static java.io.File.separator;
 import static java.lang.System.getProperty;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
@@ -43,13 +46,16 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 import eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector;
+import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule;
+import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.ConditionalIgnore;
+import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.IgnoreCondition;
 
 /**
  * Tests {@link ESCentralConnector}. <strong>Be sure that you really need to execute this test!</strong>
@@ -61,6 +67,9 @@ public class ESCentralTest {
 			ESCentralTest.class.getSimpleName() + "_" + random(8, true, true)));
 
 	private static final List<String> ESC_DOCUMENTS = newArrayList();
+
+	@Rule
+	public ConditionalIgnoreRule rule = new ConditionalIgnoreRule();
 
 	@Before
 	public void setUp() {
@@ -79,8 +88,8 @@ public class ESCentralTest {
 		}
 	}
 
-	@Ignore 
 	@Test
+	@ConditionalIgnore(condition=EnableESCentralTestIsFound.class)
 	public void test() {
 		System.out.println("ESCentralTest.test()");
 		try {			
@@ -158,6 +167,18 @@ public class ESCentralTest {
 			fail("ESCentralTest.test() failed: " + e.getMessage());
 		} finally {			
 			System.out.println("ESCentralTest.test() has finished");
+		}
+	}
+
+	/**
+	 * Checks whether a flag file is available in the local filesystem.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public class EnableESCentralTestIsFound implements IgnoreCondition {
+		@Override
+		public boolean isSatisfied() {
+			final File file = new File(concat(DEFAULT_LOCATION, TEST_CONFIG_DIR + separator + "e-sc.test"));
+			return !file.canRead();
 		}
 	}
 

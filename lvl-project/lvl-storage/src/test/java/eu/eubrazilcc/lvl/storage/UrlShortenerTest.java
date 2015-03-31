@@ -28,6 +28,7 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.REST_SERVICE_CONFIG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.getDefaultConfiguration;
 import static eu.eubrazilcc.lvl.storage.urlshortener.UrlShortener.shortenUrl;
+import static eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.TEST_CONFIG_ROOT;
 import static java.io.File.separator;
 import static org.apache.commons.io.FileUtils.toURLs;
 import static org.apache.commons.io.FilenameUtils.concat;
@@ -66,7 +67,7 @@ public class UrlShortenerTest {
 
 	@BeforeClass
 	public static void setUp() throws IOException {
-		final File file = new File(concat(DEFAULT_LOCATION, "test" + separator + "etc" + separator + REST_SERVICE_CONFIG));
+		final File file = new File(concat(DEFAULT_LOCATION, TEST_CONFIG_ROOT + separator + "etc" + separator + REST_SERVICE_CONFIG));
 		if (file.canRead()) {
 			final List<URL> urls = newArrayList(getDefaultConfiguration());
 			for (final ListIterator<URL> it = urls.listIterator(); it.hasNext();) {

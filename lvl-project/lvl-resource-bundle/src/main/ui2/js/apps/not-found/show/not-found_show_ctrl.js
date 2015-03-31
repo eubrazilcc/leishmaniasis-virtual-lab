@@ -11,7 +11,8 @@ define([ 'app', 'apps/not-found/show/not-found_show_view' ], function(Lvl, View)
 					var view = new View.Content({
 						navigation : Lvl.request('navigation:links:entities'),
 						settings : Lvl.request('navigation:settings:entities'),
-						external : Lvl.request('navigation:external:entities')
+						support : Lvl.request('navigation:support:entities'),
+						software : Lvl.request('navigation:software:entities')
 					});
 					Lvl.mainRegion.show(view);
 				});

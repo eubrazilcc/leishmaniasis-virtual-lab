@@ -2,26 +2,30 @@
  * RequireJS module that defines the view: not-found->show.
  */
 
-define([ 'app', 'tpl!apps/not-found/show/templates/not-found', 'tpl!apps/not-found/show/templates/not-found_nav',
-		'tpl!apps/not-found/show/templates/not-found_extlink' ], function(Lvl, NotFoundTpl, NavigationTpl, ExternalTpl) {
+define([ 'app', 'tpl!apps/not-found/show/templates/not-found', 'tpl!apps/not-found/show/templates/not-found_nav' ], function(Lvl, NotFoundTpl, NavigationTpl) {
 	Lvl.module('NotFoundApp.Show.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		View.Navigation = Marionette.ItemView.extend({
 			template : NavigationTpl
 		});
-		View.External = Marionette.ItemView.extend({
-			template : ExternalTpl
+		View.Support = Marionette.ItemView.extend({
+			template : NavigationTpl
+		});
+		View.Software = Marionette.ItemView.extend({
+			template : NavigationTpl
 		});
 		View.Content = Marionette.LayoutView.extend({
 			template : NotFoundTpl,
 			regions : {
 				navigation : '#section-navigation',
 				settings : '#section-settings',
-				external : '#section-external'
+				support : '#section-support',
+				software : '#section-software'
 			},
 			initialize : function(options) {
 				this.navLinks = options.navigation;
 				this.settingsLinks = options.settings;
-				this.externalLinks = options.external;
+				this.supportLinks = options.support;
+				this.softwareLinks = options.software;
 			},
 			onRender : function(options) {
 				this.navigation.show(new View.Navigation({
@@ -30,8 +34,11 @@ define([ 'app', 'tpl!apps/not-found/show/templates/not-found', 'tpl!apps/not-fou
 				this.settings.show(new View.Navigation({
 					collection : options.settingsLinks
 				}));
-				this.external.show(new View.External({
-					collection : options.externalLinks
+				this.support.show(new View.Support({
+					collection : options.supportLinks
+				}));
+				this.software.show(new View.Software({
+					collection : options.softwareLinks
 				}));
 			}
 		});
