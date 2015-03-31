@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
+import static eu.eubrazilcc.lvl.oauth2.rest.jackson.LinkedInMapper.createLinkedInMapper;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.LinkedInStateDAO.LINKEDIN_STATE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
@@ -76,6 +77,7 @@ import org.slf4j.Logger;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
+import eu.eubrazilcc.lvl.oauth2.rest.jackson.LinkedInMapper;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.linkedin.LinkedInState;
@@ -149,22 +151,16 @@ public class LinkedInAuthz {
 			checkState(isNotBlank(accessToken), "Uninitialized or invalid access token: " + accessToken);
 			checkState(expiresIn > 0l, "Uninitialized or invalid expiresIn: " + expiresIn);
 			// retrieve user profile data
-			final URIBuilder uriBuilder = new URIBuilder("https://api.linkedin.com/v1/people/~:(id,first-name,last-name,email-address)");
+			final URIBuilder uriBuilder = new URIBuilder("https://api.linkedin.com/v1/people/~:(id,first-name,last-name,industry,positions,email-address)");
 			uriBuilder.addParameter("format", "json");
 			response = Request.Get(uriBuilder.build())
 					.addHeader("Authorization", "Bearer " + accessToken)
 					.execute()
 					.returnContent()
 					.asString();
-			map = JSON_MAPPER.readValue(response, new TypeReference<HashMap<String,String>>() {});
-			final String userId = map.get("id");
-			final String emailAddress = map.get("emailAddress");
-			final String firstname = map.get("firstName");
-			final String lastname = map.get("lastName");
-			checkState(isNotBlank(userId), "Uninitialized or invalid user id: " + userId);
-			checkState(isNotBlank(emailAddress), "Uninitialized or invalid email address: " + emailAddress);
-			checkState(isNotBlank(firstname), "Uninitialized or invalid firstname: " + firstname);
-			checkState(isNotBlank(lastname), "Uninitialized or invalid lastname: " + lastname);
+			final LinkedInMapper linkedInMapper = createLinkedInMapper().readObject(response);
+			final String userId = linkedInMapper.getUserId();
+			final String emailAddress = linkedInMapper.getEmailAddress();
 			// register or update user in the database
 			final String ownerid = toResourceOwnerId(LINKEDIN_IDENTITY_PROVIDER, userId);
 			ResourceOwner owner = RESOURCE_OWNER_DAO.find(ownerid);
@@ -174,8 +170,10 @@ public class LinkedInAuthz {
 						.provider(LINKEDIN_IDENTITY_PROVIDER)
 						.email(emailAddress)
 						.password("password")
-						.firstname(firstname)
-						.lastname(lastname)
+						.firstname(linkedInMapper.getFirstName())
+						.lastname(linkedInMapper.getLastName())
+						.industry(linkedInMapper.getIndustry().orNull())
+						.positions(linkedInMapper.getPositions().orNull())
 						.roles(newHashSet(USER_ROLE))
 						.permissions(asPermissionSet(userPermissions(ownerid)))
 						.build();
@@ -185,8 +183,10 @@ public class LinkedInAuthz {
 				RESOURCE_OWNER_DAO.insert(owner);
 			} else {
 				owner.getUser().setEmail(emailAddress);
-				owner.getUser().setFirstname(firstname);
-				owner.getUser().setLastname(lastname);
+				owner.getUser().setFirstname(linkedInMapper.getFirstName());
+				owner.getUser().setLastname(linkedInMapper.getLastName());
+				owner.getUser().setIndustry(linkedInMapper.getIndustry().orNull());
+				owner.getUser().setPositions(linkedInMapper.getPositions().orNull());
 				RESOURCE_OWNER_DAO.update(owner);
 			}
 			// register access token in the database

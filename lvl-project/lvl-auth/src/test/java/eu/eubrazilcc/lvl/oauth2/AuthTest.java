@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.oauth2;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.json.client.FormValidationHelper.readValid;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
@@ -319,6 +320,8 @@ public class AuthTest {
 					.lastname("Lastname2")
 					.role("user")
 					.permissions(asPermissionList(userPermissions(toResourceOwnerId("username2"))))
+					.industry("Research")
+					.positions(newArrayList("positions"))
 					.build();
 			System.out.println(" >> IdP resource server: " + target.path(path.value()).getUri().toString());
 			response3 = target.path(path.value()).request()
@@ -367,6 +370,11 @@ public class AuthTest {
 					.header(OAuth2Common.HEADER_AUTHORIZATION, bearerHeader(accessToken))
 					.get(User.class);
 			assertThat("Get user by username result is not null", user2, notNullValue());
+			
+			// TODO
+			System.err.println("\n\n >> USER1: " + user + "\n >> USER2" + user2 + "\n");
+			// TODO
+			
 			assertThat("Get user by username coincides with expected", user2.equalsToUnprotectedIgnoringVolatile(user), equalTo(true));
 			/* uncomment for additional output */
 			System.out.println("     >> Get user by username result: " + user2.toString());

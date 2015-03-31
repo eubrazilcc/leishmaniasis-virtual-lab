@@ -24,6 +24,11 @@ package eu.eubrazilcc.lvl.oauth2;
 
 import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
 import static eu.eubrazilcc.lvl.oauth2.mock.LightCloserServiceMock.LIGHT_CLOSER_SERVICE_MOCK;
+import static org.apache.commons.io.FilenameUtils.concat;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -36,12 +41,33 @@ import org.junit.runners.Suite.SuiteClasses;
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
-@SuiteClasses({ })
+@SuiteClasses({ LinkedInJsonTest.class })
 public class AllJUnitTests {
+
+	public static final String ANCHOR_FILENAME = "m2anchor";
 
 	@BeforeClass
 	public static void setup() {
-		System.out.println("AllJUnitTests.setup()");		
+		System.out.println("AllJUnitTests.setup()");
+		final URL anchorURL = AllJUnitTests.class.getClassLoader().getResource(ANCHOR_FILENAME);
+		File anchorFile = null;
+		try {
+			anchorFile = new File(anchorURL.toURI());
+		} catch (Exception e) {
+			anchorFile = new File(System.getProperty("user.dir"));
+		}
+		TEST_RESOURCES_PATH = concat(anchorFile.getParent(), "files");
+		final File resDir = new File(TEST_RESOURCES_PATH);
+		if (resDir != null && resDir.isDirectory() && resDir.canRead()) {
+			try {
+				TEST_RESOURCES_PATH = resDir.getCanonicalPath();
+			} catch (IOException e) {
+				// nothing to do
+			}
+		} else {
+			throw new IllegalStateException("Invalid test resources pathname: " + TEST_RESOURCES_PATH);
+		}
+		System.out.println("Test resources pathname: " + TEST_RESOURCES_PATH);
 		// load logging bridges
 		LOG_MANAGER.preload();
 		// system pre-loading
@@ -53,6 +79,6 @@ public class AllJUnitTests {
 		LIGHT_CLOSER_SERVICE_MOCK.close();
 	}
 
-	public static String TEST_RESOURCES_PATH;
+	public static String TEST_RESOURCES_PATH;	
 
 }

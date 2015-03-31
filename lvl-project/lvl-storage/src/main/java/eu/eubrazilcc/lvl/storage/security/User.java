@@ -34,9 +34,9 @@ import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResour
 import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModificationType.GRANTED;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModificationType.REMOVED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.trimToNull;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
 
 import org.glassfish.jersey.linking.Binding;
@@ -95,6 +96,9 @@ public class User implements Serializable, Linkable<User> {
 	private String lastname;         // (optional) last name
 	private Set<String> roles;       // roles
 	private Set<String> permissions; // permissions
+
+	private String industry;         // (optional) the industry the user belongs to
+	private Set<String> positions;   // (optional) the user's current position(s)
 
 	private PermissionHistory permissionHistory;
 
@@ -187,6 +191,18 @@ public class User implements Serializable, Linkable<User> {
 	}
 	public void setPermissions(final Set<String> permissions) {
 		this.permissions = permissions;
+	}	
+	public String getIndustry() {
+		return industry;
+	}
+	public void setIndustry(final String industry) {
+		this.industry = industry;
+	}
+	public Set<String> getPositions() {
+		return positions;
+	}
+	public void setPositions(final Set<String> positions) {
+		this.positions = positions;
 	}
 	public PermissionHistory getPermissionHistory() {
 		return permissionHistory;
@@ -263,6 +279,8 @@ public class User implements Serializable, Linkable<User> {
 				&& Objects.equals(lastname, other.lastname)
 				&& Objects.equals(roles, other.roles)
 				&& Objects.equals(permissions, other.permissions)
+				&& Objects.equals(industry, other.industry)
+				&& Objects.equals(positions, other.positions)
 				&& Objects.equals(permissionHistory, other.permissionHistory);
 	}
 
@@ -282,6 +300,8 @@ public class User implements Serializable, Linkable<User> {
 				&& Objects.equals(lastname, other.lastname)
 				&& Objects.equals(roles, other.roles)
 				&& Objects.equals(permissions, other.permissions)
+				&& Objects.equals(industry, other.industry)
+				&& Objects.equals(positions, other.positions)
 				&& Objects.equals(permissionHistory, other.permissionHistory);
 	}
 
@@ -318,6 +338,8 @@ public class User implements Serializable, Linkable<User> {
 				&& Objects.equals(lastname, other.lastname)
 				&& Objects.equals(roles, other.roles)
 				&& Objects.equals(permissions, other.permissions)
+				&& Objects.equals(industry, other.industry)
+				&& Objects.equals(positions, other.positions)
 				&& Objects.equals(permissionHistory, other.permissionHistory);
 	}
 
@@ -340,6 +362,8 @@ public class User implements Serializable, Linkable<User> {
 				.add("lastname", lastname)
 				.add("roles", roles)
 				.add("permissions", permissions)
+				.add("industry", industry)
+				.add("positions", positions)
 				.add("permissionHistory", permissionHistory)
 				.toString();
 	}
@@ -358,6 +382,7 @@ public class User implements Serializable, Linkable<User> {
 			instance.setProvider(defaultIdentityProvider());
 			instance.setRoles(new HashSet<String>());
 			instance.setPermissions(new HashSet<String>());
+			instance.setPositions(new HashSet<String>());
 			instance.setPermissionHistory(new PermissionHistory());
 		}
 
@@ -434,6 +459,18 @@ public class User implements Serializable, Linkable<User> {
 		public Builder permissions(final Collection<String> permissions) {
 			checkArgument(permissions != null && !isEmpty(permissions), "Uninitialized permissions");
 			instance.getPermissions().addAll(permissions);
+			return this;
+		}
+
+		public Builder industry(final @Nullable String industry) {
+			instance.setIndustry(trimToNull(industry));
+			return this;
+		}
+
+		public Builder positions(final @Nullable Collection<String> positions) {
+			if (positions != null && !isEmpty(positions)) {
+				instance.getPositions().addAll(positions);
+			}
 			return this;
 		}
 
