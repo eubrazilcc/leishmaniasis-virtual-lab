@@ -18,12 +18,14 @@ define([ 'app', 'tpl!apps/not-found/show/templates/not-found', 'tpl!apps/not-fou
 			regions : {
 				navigation : '#section-navigation',
 				settings : '#section-settings',
+				documentation : '#section-documentation',
 				support : '#section-support',
 				software : '#section-software'
 			},
 			initialize : function(options) {
 				this.navLinks = options.navigation;
 				this.settingsLinks = options.settings;
+				this.documentationLinks = options.documentation;
 				this.supportLinks = options.support;
 				this.softwareLinks = options.software;
 			},
@@ -33,6 +35,9 @@ define([ 'app', 'tpl!apps/not-found/show/templates/not-found', 'tpl!apps/not-fou
 				}));
 				this.settings.show(new View.Navigation({
 					collection : options.settingsLinks
+				}));
+				this.documentation.show(new View.Navigation({
+					collection : options.documentationLinks
 				}));
 				this.support.show(new View.Support({
 					collection : options.supportLinks

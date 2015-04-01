@@ -1,5 +1,5 @@
 <ul class="list-unstyled">
   <% _.each(items, function(item){ %>
-  <li><a href="<%= item.href %>" <%= typeof(item.isExternal)!== 'undefined' ?  'target="_blank"' : '' %>><i class="fa <%= item.icon %> fa-fw"></i> <%= item.text %></a><%= typeof(item.isExternal)!== 'undefined' ? ' <i class="fa fa-external-link fa-fw text-primary"></i>' : '' %></li>
+  <li><a href="<%= item.href %>" <%= typeof(item.isExternal)!== 'undefined' ?  'target="_blank"' : '' %>><i class="fa <%= item.icon %> fa-fw"></i> <%= item.text %></a><%= typeof(item.isExternal)!== 'undefined' ? '<small><i class="fa fa-external-link fa-fw text-primary"></i></small>' : '' %></li>
   <% }); %>
 </ul>

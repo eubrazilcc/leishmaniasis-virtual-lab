@@ -8,8 +8,10 @@ define([ 'app', 'apps/config/marionette/configuration', 'apps/header/show/header
 		var config = new Configuration();
 		Workspace.Controller = {
 			showHeader : function(navLinks) {
+				var docLinks = Lvl.request('navigation:documentation:entities');
 				var view = new View.Header({
-					navigation : navLinks
+					navigation : navLinks,
+					collection : docLinks
 				});
 				view.on('access:user:profile', function(accession) {
 					require([ 'apps/access/profile/profile_viewer', 'entities/user' ], function(UserProfileView, UserModel) {

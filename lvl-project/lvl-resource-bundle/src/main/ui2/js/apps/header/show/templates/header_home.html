@@ -13,42 +13,17 @@
 		<div class="collapse navbar-collapse" id="navbar-collapse-1">
 			<ul class="nav navbar-nav navbar-right">
 			    <li><a href="/#<%= sessionLink() %>"><%= sessionText() %></a></li>				
-				
-				
-				
-				
 				<li class="dropdown">
-					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Support <span class="caret"></span></a>
-					<ul class="dropdown-menu" role="menu">						
-						<li><a href="#">Screencasts</a></li>
-						<li><a href="#">Presentations</a></li>
-						<li><a href="#">Publications</a></li>
-						<li class="divider"></li>
-						<li><a href="#">Mailing list</a></li>
-					</ul>
-				</li>
-				<li class="dropdown">
-					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Software <span class="caret"></span></a>
-					<ul class="dropdown-menu" role="menu">
-						<li><a href="#">Releases</a></li>
-						<li><a href="#">Marketplace</a></li>
-						<li class="divider"></li>
-						<li><a href="#">Development</a></li>
-						<li><a href="#">API Documentation <i class="fa fa-external-link fa-fw"></i></a></li>
-					</ul>
-				</li>
-				
-				
-				
-				<li class="dropdown">
-					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Resources <span class="caret"></span></a>
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Documentation <span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu">
 						<% _.each(items, function(item){ %>
-              			<li><a href="<%= item.href %>" target="_blank"><i class="fa <%= item.icon %> fa-fw"></i> <%= item.text %></a></li>
+              			<li><a href="<%= item.href %>"><i class="fa <%= item.icon %> fa-fw"></i> <%= item.text %></a></li>
               			<% }); %>
 					</ul>
 				</li>
-			</ul>			
+				<li><a href="/#support">Support</a></li>
+				<li><a href="/#software">Software</a></li>
+			</ul>
 		</div>
 	</div>
 </nav>

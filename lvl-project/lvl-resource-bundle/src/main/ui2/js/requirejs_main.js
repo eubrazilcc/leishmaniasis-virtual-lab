@@ -52,7 +52,9 @@ requirejs.config({
 		'hopscotch' : [ '//cdnjs.cloudflare.com/ajax/libs/hopscotch/0.2.3/js/hopscotch.min', 'vendor/cached/hopscotch.min' ],		
 		/* Add support for underscore templates */
 		'text' : [ '//cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min', 'vendor/cached/text.min' ],
-		'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ]
+		'tpl' : [ '//cdnjs.cloudflare.com/ajax/libs/requirejs-tpl/0.0.2/tpl.min', 'vendor/cached/tpl.min' ],
+		/* Wait for the DOM is ready */
+		'domReady' : [ '//cdnjs.cloudflare.com/ajax/libs/require-domReady/2.0.1/domReady.min', 'vendor/cached/domReady.min' ]
 	},
 	shim : {
 		'jquery.spin' : {
@@ -135,7 +137,8 @@ requirejs.config({
 		},
 		'tpl' : {
 			deps : [ 'text' ]
-		}
+		},
+		'domReady' : []
 	},
 	callback : function() {
 		require([ 'jquery' ], function() {

@@ -9,7 +9,8 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				href : '/#home',
 				icon : 'fa-chain-broken',
 				text : 'Unknown',
-				isFirst : '' /* labels the first element of a collection */
+				isFirst : '', /* labels the first element of a collection */
+				isExternal : undefined /* labels external links that should be opened in a new tab/window */
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);
@@ -99,40 +100,29 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				text : 'Settings'
 			} ]);
 		};
-
-		var iniExternalLinks = function() { // TODO : remove
-			Entities.externalLinks = new Entities.NavigationCollection([ {
-				id : 10,
-				href : 'http://www.eubrazilcloudconnect.eu/',
-				icon : 'fa-cloud',
-				text : 'EUBrazilCC',
-				isFirst : 'external'
-			}, {
-				id : 11,
-				href : '/doc/',
-				icon : 'fa-book',
-				text : 'API Documentation'
-			} ]);
-		};
 		
-		var iniSupportLinks = function() {
-			Entities.supportLinks = new Entities.NavigationCollection([ {
+		var iniDocumentationLinks = function() {
+			Entities.documentationLinks = new Entities.NavigationCollection([ {
 				id : 10,
-				href : '/#support/screencasts',
+				href : '/#doc/screencasts',
 				icon : 'fa-video-camera',
 				text : 'Screencasts',
 				isFirst : 'documentation'
 			}, {
 				id : 11,
-				href : '/#support/presentations',
+				href : '/#doc/presentations',
 				icon : 'fa-desktop',
 				text : 'Presentations'
 			}, {
 				id : 12,
-				href : '/#support/publications',
+				href : '/#doc/publications',
 				icon : 'fa-file-text-o',
 				text : 'Publications'
-			}, {
+			} ]);
+		};
+		
+		var iniSupportLinks = function() {
+			Entities.supportLinks = new Entities.NavigationCollection([ {
 				id : 13,
 				href : '/#support/mailing-list',
 				icon : 'fa-envelope-o',
@@ -161,7 +151,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				isFirst : 'development'
 			}, {
 				id : 17,
-				href : '/doc/',
+				href : '/apidoc/',
 				icon : 'fa-book',
 				text : 'API Documentation',
 				isExternal : true
@@ -186,6 +176,12 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 					iniExternalLinks();
 				}
 				return Entities.externalLinks;
+			},
+			getDocumentationEntities : function() {
+				if (Entities.documentationLinks === undefined) {
+					iniDocumentationLinks();
+				}
+				return Entities.documentationLinks;
 			},
 			getSupportEntities : function() {
 				if (Entities.supportLinks === undefined) {
@@ -221,6 +217,10 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 		Lvl.reqres.setHandler('navigation:external:entities', function() {
 			return API.getExternalEntities();
 		});
+		
+		Lvl.reqres.setHandler('navigation:documentation:entities', function() {
+			return API.getDocumentationEntities();
+		});		
 		
 		Lvl.reqres.setHandler('navigation:support:entities', function() {
 			return API.getSupportEntities();

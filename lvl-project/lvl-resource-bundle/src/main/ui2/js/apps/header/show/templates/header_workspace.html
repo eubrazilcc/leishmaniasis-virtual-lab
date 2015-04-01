@@ -12,15 +12,25 @@
 		</div>
 		<div class="collapse navbar-collapse" id="navbar-collapse-1">			
 			<ul class="nav navbar-nav navbar-right">					
-				<li><a href="#" id="btnAlerts"><i class="fa fa-bell fa-fw"></i> Alerts <span class="badge">0</span></a></li>
+				<li><a href="#" id="btnAlerts" title="Alerts"><i class="fa fa-bell fa-fw"></i><span class="hidden-md hidden-sm"> Alerts </span><span class="badge">0</span></a></li>
 				<li class="dropdown">
-					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" id="username"><i class="fa fa-user fa-fw"></i> <%= username() %> <span class="caret"></span></a>
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" id="username" title="My account"><i class="fa fa-user fa-fw"></i><span class="hidden-md hidden-sm"> <%= username() %> </span><span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu">						
 						<li><a href="#" id="btnProfile">Profile</a></li>
 						<li class="divider"></li>
 						<li><a href="/#logout" id="btnSignOut"><i class="fa fa-sign-out fa-fw"></i> Sign out</a></li>
 					</ul>
 				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" title="Documentation"><span class="hidden-lg hidden-xs"><i class="fa fa-book fa-fw"></i></span><span class="hidden-md hidden-sm"> Documentation </span><span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu">
+						<% _.each(items, function(item){ %>
+              			<li><a href="<%= item.href %>"><i class="fa <%= item.icon %> fa-fw"></i> <%= item.text %></a></li>
+              			<% }); %>
+					</ul>
+				</li>
+				<li><a href="/#support" title="Support"><span class="hidden-lg hidden-xs"><i class="fa fa-life-ring fa-fw"></i></span><span class="hidden-md hidden-sm"> Support</span></a></li>
+				<li><a href="/#software" title="Software"><span class="hidden-lg hidden-xs"><i class="fa fa-file-code-o fa-fw"></i></span><span class="hidden-md hidden-sm"> Software</span></a></li>
 				<li class="hidden-xs">
 					<a href="#" id="btnSearchToggle" title="Search for items"><i class="fa fa-search fa-fw"></i></a>
 				</li>
@@ -68,7 +78,7 @@
 		<div class="row">
 			<div class="col-xs-12 text-center">
 				<div id="lvl-save-items-target">
-					<i class="fa fa-shopping-cart fa-5x"></i><br> My Saved Items
+					<i class="fa fa-archive fa-5x"></i><br> My Saved Items
 				</div>
 			</div>
 		</div>		

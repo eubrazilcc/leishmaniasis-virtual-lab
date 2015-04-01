@@ -6,6 +6,35 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
 	'use strict';
 	var Lvl = new Marionette.Application();
 
+	require([ 'domReady' ], function(domReady) {
+		domReady(function() {
+			// browser window scroll (in pixels) after which the "back to top" link is shown
+			var offset = 300,
+			// browser window scroll (in pixels) after which the "back to top" link opacity is reduced
+			offset_opacity = 1200,
+			// duration of the top scrolling animation (in ms)
+			scroll_top_duration = 700,
+			// grab the "back to top" link
+			$back_to_top = $('.lvl-back-to-top');
+			// hide or show the "back to top" link
+			$(window).scroll(function() {
+				$back_to_top.removeAttr('style');
+				($(this).scrollTop() > offset) ? $back_to_top.addClass('btt-is-visible') : $back_to_top.removeClass('btt-is-visible btt-fade-out');
+				if ($(this).scrollTop() > offset_opacity) {
+					$back_to_top.addClass('btt-fade-out');
+				}
+			});
+
+			// smooth scroll to top
+			$back_to_top.on('click', function(event) {
+				event.preventDefault();
+				$('body,html').animate({
+					scrollTop : 0,
+				}, scroll_top_duration);
+			});			
+		});
+	});
+
 	Lvl.addRegions({
 		headerRegion : '#header-region',
 		mainRegion : '#main-region',
@@ -24,7 +53,7 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
 	Lvl.getCurrentRoute = function() {
 		return Backbone.history.fragment
 	};
-	
+
 	Lvl.vent = new Backbone.Wreqr.EventAggregator();
 
 	Lvl.startSubApp = function(appName, args) {
