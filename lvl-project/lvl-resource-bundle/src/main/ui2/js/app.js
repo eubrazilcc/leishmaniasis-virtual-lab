@@ -8,9 +8,11 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
 
 	require([ 'domReady' ], function(domReady) {
 		domReady(function() {
-			// browser window scroll (in pixels) after which the "back to top" link is shown
+			// browser window scroll (in pixels) after which the "back to top"
+			// link is shown
 			var offset = 300,
-			// browser window scroll (in pixels) after which the "back to top" link opacity is reduced
+			// browser window scroll (in pixels) after which the "back to top"
+			// link opacity is reduced
 			offset_opacity = 1200,
 			// duration of the top scrolling animation (in ms)
 			scroll_top_duration = 700,
@@ -24,14 +26,13 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
 					$back_to_top.addClass('btt-fade-out');
 				}
 			});
-
 			// smooth scroll to top
 			$back_to_top.on('click', function(event) {
 				event.preventDefault();
 				$('body,html').animate({
 					scrollTop : 0,
 				}, scroll_top_duration);
-			});			
+			});
 		});
 	});
 
@@ -92,7 +93,8 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
 			Backbone.history instanceof History || (Backbone.history = new History());
 			require([ 'apps/config/marionette/styles/style', 'apps/header/header_app', 'apps/footer/footer_app', 'apps/home/home_router',
 					'apps/access/access_router', 'apps/collection/collection_router', 'apps/social/social_router', 'apps/e-compendium/e-compendium_router',
-					'apps/analysis/analysis_router', 'apps/enm/enm_router', 'apps/drive/drive_router', 'apps/settings/settings_router' ], function(Style) {
+					'apps/analysis/analysis_router', 'apps/enm/enm_router', 'apps/drive/drive_router', 'apps/settings/settings_router',
+					'apps/documentation/documentation_router' ], function(Style) {
 				// load base styles
 				new Style().loadBaseStyles();
 				// start history

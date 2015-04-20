@@ -2,9 +2,10 @@
  * RequireJS module that defines the view: footer->show.
  */
 
-define([ 'marionette', 'tpl!apps/footer/show/templates/footer' ], function(Marionette, FooterTpl) {
-	return {
-		Footer : Marionette.ItemView.extend({
+define([ 'app', 'tpl!apps/footer/show/templates/footer' ], function(Lvl, FooterTpl) {
+	Lvl.module('FooterApp.Show.View', function(View, Lvl, Backbone, Marionette, $, _) {
+		'use strict';
+		View.Footer = Marionette.ItemView.extend({
 			id : 'default',
 			template : FooterTpl,
 			events : {
@@ -19,6 +20,7 @@ define([ 'marionette', 'tpl!apps/footer/show/templates/footer' ], function(Mario
 				e.preventDefault();
 				this.trigger('access:view:terms_and_conditions');
 			}
-		})
-	};
+		});
+	});
+	return Lvl.FooterApp.Show.View;
 });
