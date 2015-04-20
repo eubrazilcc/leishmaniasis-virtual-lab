@@ -1,14 +1,14 @@
 /**
- * RequireJS module that defines the view: documentation->show.
+ * RequireJS module that defines the view: software->show.
  */
 
-define([ 'app', 'tpl!apps/documentation/show/templates/documentation' ], function(Lvl, DocumentationTpl) {
-	Lvl.module('DocumentationApp.Show.View', function(View, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'tpl!apps/software/show/templates/software' ], function(Lvl, SoftwareTpl) {
+	Lvl.module('SoftwareApp.Show.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.Content = Marionette.ItemView.extend({
-			template : DocumentationTpl,
+			template : SoftwareTpl,
 			initialize : function(options) {
-				this.section = (options.section || 'documentation').toLowerCase();
+				this.section = (options.section || 'software').toLowerCase();
 				$(window).on('resize', this.setupAffix);
 			},
 			onDestroy : function() {
@@ -30,7 +30,7 @@ define([ 'app', 'tpl!apps/documentation/show/templates/documentation' ], functio
 			onShow : function() {
 				var _self = this;
 				$('div#lvl-toc-nav > ul > li').each(function() {
-					if ($(this).find('a').attr('href') === '/#doc/' + _self.section) {
+					if ($(this).find('a').attr('href') === '/#software/' + _self.section) {
 						$(this).addClass('active');
 					} else {
 						$(this).removeClass('active');
@@ -43,18 +43,8 @@ define([ 'app', 'tpl!apps/documentation/show/templates/documentation' ], functio
 			},
 			onDomRefresh : function() {
 				this.setupAffix();
-			},
-			events : {
-				'show.bs.modal #modalVideoViewer' : 'showVideoViewer'
-			},
-			showVideoViewer : function(e) {
-				var caller = $(e.relatedTarget);
-				var data = caller.data('whatever');
-				var modal = $('#modalVideoViewer');
-				modal.find('.modal-title').text(data.title);
-				modal.find('.modal-body div iframe').attr('src', data.url);
 			}
 		});
 	});
-	return Lvl.DocumentationApp.Show.View;
+	return Lvl.SoftwareApp.Show.View;
 });

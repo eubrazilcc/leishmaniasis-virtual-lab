@@ -140,9 +140,9 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				isFirst : 'software'
 			}, {
 				id : 15,
-				href : '/#software/marketplace',
-				icon : 'fa-shopping-cart',
-				text : 'Marketplace'
+				href : '/#software/downloads',
+				icon : 'fa-download',
+				text : 'Downloads'
 			}, {
 				id : 16,
 				href : '/#software/development',
