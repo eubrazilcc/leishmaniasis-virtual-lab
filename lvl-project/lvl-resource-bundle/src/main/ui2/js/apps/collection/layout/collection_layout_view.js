@@ -37,9 +37,9 @@ define([ 'app', 'apps/config/marionette/regions/fadein', 'tpl!apps/collection/la
 				// unsubscribe from events
 				$(document).off('keyup', this.handleEscKeyUpEvent);
 			},
-			onRender : function(options) {
-				this.tabList.show(new View.TabList({
-					collection : options.navLinks
+			onBeforeShow : function() {
+				this.showChildView('tabList', new View.TabList({
+					collection : this.navLinks
 				}));
 			},
 			events : {

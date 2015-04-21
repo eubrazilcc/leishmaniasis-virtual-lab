@@ -30,9 +30,9 @@ define([ 'app', 'apps/config/marionette/regions/fadein', 'tpl!apps/drive/layout/
 			initialize : function(options) {
 				this.navLinks = options.navigation;
 			},
-			onRender : function(options) {
-				this.tabList.show(new View.TabList({
-					collection : options.navLinks
+			onBeforeShow : function() {
+				this.showChildView('tabList', new View.TabList({
+					collection : this.navLinks
 				}));
 			}
 		});

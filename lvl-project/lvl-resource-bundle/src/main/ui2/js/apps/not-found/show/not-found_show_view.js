@@ -18,6 +18,7 @@ define([ 'app', 'tpl!apps/not-found/show/templates/not-found', 'tpl!apps/not-fou
 			regions : {
 				navigation : '#section-navigation',
 				settings : '#section-settings',
+				about : '#section-about',
 				documentation : '#section-documentation',
 				support : '#section-support',
 				software : '#section-software'
@@ -25,6 +26,7 @@ define([ 'app', 'tpl!apps/not-found/show/templates/not-found', 'tpl!apps/not-fou
 			initialize : function(options) {
 				this.navLinks = options.navigation;
 				this.settingsLinks = options.settings;
+				this.aboutLinks = options.about;
 				this.documentationLinks = options.documentation;
 				this.supportLinks = options.support;
 				this.softwareLinks = options.software;
@@ -35,6 +37,9 @@ define([ 'app', 'tpl!apps/not-found/show/templates/not-found', 'tpl!apps/not-fou
 				}));
 				this.settings.show(new View.Navigation({
 					collection : options.settingsLinks
+				}));
+				this.about.show(new View.Navigation({
+					collection : options.aboutLinks
 				}));
 				this.documentation.show(new View.Navigation({
 					collection : options.documentationLinks

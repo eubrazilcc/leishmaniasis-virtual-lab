@@ -1,6 +1,5 @@
 /**
- * RequireJS module that defines the routes of the sub-application:
- * documentation.
+ * RequireJS module that defines the routes of the sub-application: documentation.
  */
 
 define([ 'app', 'routefilter' ], function(Lvl) {

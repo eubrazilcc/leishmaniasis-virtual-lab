@@ -36,7 +36,7 @@ requirejs.config({
 		/* Chance.js */
 		'chance' : 'vendor/provided/chance.min',
 		/* Moment.js */
-		'moment' : [ '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment.min', 'vendor/cached/moment.min' ],
+		'moment' : [ '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min', 'vendor/cached/moment.min' ],
 		/* Pace */
 		'pace' : [ '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min', 'vendor/cached/pace.min' ],
 		/* qTip2 */

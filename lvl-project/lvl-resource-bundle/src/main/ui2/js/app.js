@@ -94,7 +94,8 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
 			require([ 'apps/config/marionette/styles/style', 'apps/header/header_app', 'apps/footer/footer_app', 'apps/home/home_router',
 					'apps/access/access_router', 'apps/collection/collection_router', 'apps/social/social_router', 'apps/e-compendium/e-compendium_router',
 					'apps/analysis/analysis_router', 'apps/enm/enm_router', 'apps/drive/drive_router', 'apps/settings/settings_router',
-					'apps/documentation/documentation_router', 'apps/support/support_router', 'apps/software/software_router' ], function(Style) {
+					'apps/open/about/about_router', 'apps/documentation/documentation_router', 'apps/support/support_router', 
+					'apps/software/software_router' ], function(Style) {
 				// load base styles
 				new Style().loadBaseStyles();
 				// start history
