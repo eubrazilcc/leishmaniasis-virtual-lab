@@ -49,6 +49,7 @@ import com.connexience.api.model.EscDocumentVersion;
 import com.connexience.api.model.EscFolder;
 import com.connexience.api.model.EscWorkflow;
 import com.connexience.api.model.EscWorkflowInvocation;
+import com.connexience.api.model.EscWorkflowParameterDesc;
 import com.connexience.api.model.json.JSONObject;
 import com.google.common.collect.ImmutableList;
 
@@ -139,13 +140,8 @@ public enum ESCentralConnector implements Closeable2 {
 			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);
 			checkState(escWorkflow != null, "Workflow not found");
 			final WorkflowParameters.Builder builder = WorkflowParameters.builder();			
-			final Map<String, String> map = (versionId == null) ? workflowClient().listCallableWorkflowParameters(workflowId) :
-				workflowClient().listCallableWorkflowParameters(workflowId, versionId);
-			for (final Map.Entry<String, String> entry : map.entrySet()) {
-
-				// "block" is not used yet
-				// "value" is the Java data type returned by e-SC. Should it be a default value?
-				builder.parameter("block", entry.getKey(), entry.getValue());
+			for (EscWorkflowParameterDesc d : workflowClient().listCallableWorkflowParametersEx(workflowId, versionId).values()) {
+				builder.parameter(d.getName(), d.getValue(), d.getType(), d.getDescription(), d.getOptions());
 			}
 			return builder.build();
 		} catch (Exception e) {
@@ -161,10 +157,9 @@ public enum ESCentralConnector implements Closeable2 {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		final JSONObject params = new JSONObject();
 		if (parameters != null) {
-			for (final Map.Entry<String, List<Pair<String, String>>> entry : parameters.getParameters().entrySet()) {
-				for (final Pair<String, String> pair : entry.getValue()) {
-					params.put(pair.getKey(), pair.getValue());				
-				}
+			for (final Map.Entry<String, List<String>> entry : parameters.getParameters().entrySet()) {
+			  List<String> a = entry.getValue();
+				params.put(entry.getKey(), a.get(0));
 			}
 		}
 		try {
