@@ -7,14 +7,9 @@ define([ 'app', 'apps/header/show/header_home_view' ], function(Lvl, View) {
 		'use strict';
 		Home.Controller = {
 			showHeader : function() {
-				require([ 'entities/navigation' ], function() {
-					var links = Lvl.request('navigation:documentation:entities');
-					var view = new View.Header({
-						collection : links
-					});
-					Lvl.headerRegion.show(view);
-					return View.Header.id;
-				});
+				var view = new View.Header();
+				Lvl.headerRegion.show(view);
+				return View.Header.id;
 			}
 		}
 	});

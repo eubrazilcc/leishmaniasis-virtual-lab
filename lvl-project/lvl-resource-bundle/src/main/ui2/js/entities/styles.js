@@ -46,7 +46,7 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 				id : 'bootstrapvalidator',
 				url : '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/css/bootstrapValidator.min.css' + bust
 			} ]);
-		};
+		};				
 
 		var iniBackgridStyles = function() {
 			Entities.backgridStyles = new Entities.StyleCollection([ {
@@ -91,7 +91,7 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 				url : '//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css' + bust
 			} ]);
 		};
-		
+
 		var iniHopscotchStyles = function() {
 			Entities.hopscotchStyles = new Entities.StyleCollection([ {
 				id : 'hopscotch',
@@ -111,7 +111,7 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 					iniFormValidationStyles();
 				}
 				return Entities.formValidationStyles;
-			},
+			},			
 			getBackgridStyles : function() {
 				if (Entities.backgridStyles === undefined) {
 					iniBackgridStyles();
@@ -156,7 +156,7 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 
 		Lvl.reqres.setHandler('styles:form-validation:entities', function() {
 			return API.getFormValidationStyles();
-		});
+		});		
 
 		Lvl.reqres.setHandler('styles:backgrid:entities', function() {
 			return API.getBackgridStyles();
@@ -173,11 +173,11 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 		Lvl.reqres.setHandler('styles:qtip:entities', function() {
 			return API.getQtipStyles();
 		});
-		
+
 		Lvl.reqres.setHandler('styles:chartist:entities', function() {
 			return API.getChartistStyles();
 		});
-		
+
 		Lvl.reqres.setHandler('styles:hopscotch:entities', function() {
 			return API.getHopscotchStyles();
 		});

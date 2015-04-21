@@ -13,8 +13,7 @@ requirejs.config({
 		'jquery.spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/jquery.spin.min', 'jquery.spin.min' ],
 		/* Boostrap front-end framework */
 		'bootstrap' : [ '//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min', 'vendor/cached/bootstrap.min' ],
-		'bootstrapvalidator' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min', // 0.5.4: commercial license
-		'vendor/cached/bootstrapValidator.min' ],
+		'bootstrapvalidator' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min', 'vendor/cached/bootstrapValidator.min' ], // 0.5.4: commercial license
 		/* Backbone + Marionette MVC framework */
 		'underscore' : [ '//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min', 'vendor/cached/underscore-min' ],
 		'backbone' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min', 'vendor/cached/backbone-min' ],
@@ -66,7 +65,7 @@ requirejs.config({
 		'bootstrapvalidator' : {
 			deps : [ 'bootstrap' ],
 			exports : 'BootstrapValidator'
-		},
+		},		
 		'underscore' : {
 			exports : '_'
 		},
@@ -134,7 +133,7 @@ requirejs.config({
 		},
 		'hopscotch' : {
 			exports : 'hopscotch'
-		},
+		},		
 		'tpl' : {
 			deps : [ 'text' ]
 		},

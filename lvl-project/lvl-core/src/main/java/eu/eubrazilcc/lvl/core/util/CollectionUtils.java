@@ -26,8 +26,10 @@ import static com.google.common.base.Joiner.on;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Function;
@@ -40,7 +42,7 @@ import com.google.common.base.Joiner.MapJoiner;
 public final class CollectionUtils {
 
 	public static <E> String collectionToString(final Collection<E> collection) {
-		return Arrays.toString(from(collection).transform(new Function<E, String>() {
+		return Arrays.toString(from(collection != null ? collection : new ArrayList<E>()).transform(new Function<E, String>() {
 			@Override
 			public String apply(final E item) {
 				return item != null ? item.toString() : null;
@@ -48,9 +50,9 @@ public final class CollectionUtils {
 		}).filter(notNull()).toArray(String.class));		
 	}
 
-	public static <K, V> String mapToString(final Map<K, V> map) {
+	public static <K, V> String mapToString(final Map<K, V> map) {	
 		final MapJoiner mapJoiner = on(',').withKeyValueSeparator("=");
-		return mapJoiner.join(map);
-	}	
+		return mapJoiner.join(map != null ? map : new HashMap<K, V>());
+	}
 
 }
