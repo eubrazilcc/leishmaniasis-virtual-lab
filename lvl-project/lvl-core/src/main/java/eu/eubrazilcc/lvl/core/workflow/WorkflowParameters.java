@@ -38,17 +38,17 @@ import eu.eubrazilcc.lvl.core.Pair;
  */
 public class WorkflowParameters {
 
-	private Map<String, List<Pair<String, String>>> parameters = new Hashtable<String, List<Pair<String, String>>>();
+	private Map<String, List<String>> parameters = new Hashtable<String, List<String>>();
 
-	public Map<String, List<Pair<String, String>>> getParameters() {
+	public Map<String, List<String>> getParameters() {
 		return parameters;
 	}
 
-	public void setParameters(final Map<String, List<Pair<String, String>>> parameters) {
+	public void setParameters(final Map<String, List<String>> parameters) {
 		if (parameters != null) {
 			this.parameters = parameters;
 		} else {
-			this.parameters = new Hashtable<String, List<Pair<String, String>>>();
+			this.parameters = new Hashtable<String, List<String>>();
 		}
 	}
 
@@ -83,15 +83,21 @@ public class WorkflowParameters {
 
 		private final WorkflowParameters instance = new WorkflowParameters();
 
-		public Builder parameter(final String block, final String parameter, final String value) {
-			final List<Pair<String, String>> pairs = instance.getParameters().containsKey(block) ? instance.getParameters().get(block) 
-					: new ArrayList<Pair<String,String>>();			
-			pairs.add(Pair.of(parameter, value));		
-			instance.getParameters().put(block, pairs);			
+		public Builder parameter(final String name, final String value, final String type, final String description, final String ... options) {
+			List<String> a = instance.getParameters().get(name);
+			if (a == null) a = new ArrayList<String>();
+			else a.clear();
+			a.add(value);
+			a.add(type);
+			a.add(description);
+			if (options != null)
+			  for (String o : options)
+			    a.add(o);
+			instance.getParameters().put(name, a);
 			return this;
 		}
 
-		public Builder parameters(final Map<String, List<Pair<String, String>>> parameters) {
+		public Builder parameters(final Map<String, List<String>> parameters) {
 			instance.setParameters(parameters);
 			return this;
 		}

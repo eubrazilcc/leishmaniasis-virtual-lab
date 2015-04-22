@@ -118,13 +118,13 @@ public class ESCentralTest {
 			System.out.println(" >> Workflow parameters: " + parameters.toString());  		      
 
 			final WorkflowParameters parameters2 = WorkflowParameters.builder()
-					// TODO .parameter("block_11", "SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/L.chagasi1.fasta/download")
-					.parameter("block_11", "SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/hsp70.fasta/download")
-					.parameter("block_11", "HTTPGet-RequestHeaders", "Authorization: Bearer 5nCukjgc7lo6CxoPKHdaa7WfSMQbbA+SnL6jOpAdTFw=")
+					// TODO .parameter("SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/L.chagasi1.fasta/download")
+					.parameter("SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/hsp70.fasta/download", null, null)
+					.parameter("HTTPGet-RequestHeaders", "Authorization: Bearer JOSRpOrkn5keBwuLhNAqybyQhEw0Ak7LFJ1WSR/J8XQ=", null, null)
 					// this parameter must be a e-SC document
-					// .parameter("block_0", "ReferenceData-FileId", "hsp70_LVL.fasta")
-					.parameter("block_1", "Align", "1")
-					.parameter("block_8", "No. of Bootstrap Replications", "20")
+					// .parameter("ReferenceData-FileId", "hsp70_LVL.fasta")
+					.parameter("Align", "1", null, null)
+					.parameter("No. of Bootstrap Replications", "20", null, null)
 					.build();
 
 			// test submitting a workflow to e-SC
