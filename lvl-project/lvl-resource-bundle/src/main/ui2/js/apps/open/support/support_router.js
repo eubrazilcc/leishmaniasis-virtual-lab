@@ -1,5 +1,5 @@
 /**
- * RequireJS module that defines the routes of the sub-application: support.
+ * RequireJS module that defines the routes of the sub-application: open->support.
  */
 
 define([ 'app', 'routefilter' ], function(Lvl) {
@@ -11,7 +11,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				'support/:section' : 'showSupport'
 			},
 			before : function() {
-				require([ 'apps/support/support_app' ], function() {
+				require([ 'apps/open/support/support_app' ], function() {
 					Lvl.execute('set:active:header', 'home');
 					Lvl.execute('set:active:footer', 'home');
 					Lvl.startSubApp('SupportApp');

@@ -1,5 +1,5 @@
 /**
- * RequireJS module that defines the sub-application: software.
+ * RequireJS module that defines the sub-application: open->software.
  */
 
 define([ 'app' ], function(Lvl) {
@@ -19,7 +19,7 @@ define([ 'app' ], function(Lvl) {
 
 		/* Commands and events */
 		Lvl.commands.setHandler('show:software', function(section) {
-			require([ 'apps/software/show/software_show_ctrl' ], function(ShowController) {
+			require([ 'apps/open/software/show/software_show_ctrl' ], function(ShowController) {
 				ShowController.showSoftware(section);
 			});
 		});

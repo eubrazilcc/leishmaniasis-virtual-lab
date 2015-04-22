@@ -1,5 +1,5 @@
 /**
- * RequireJS module that defines the routes of the sub-application: software.
+ * RequireJS module that defines the routes of the sub-application: open->software.
  */
 
 define([ 'app', 'routefilter' ], function(Lvl) {
@@ -11,7 +11,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				'software/:section' : 'showSoftware'
 			},
 			before : function() {
-				require([ 'apps/software/software_app' ], function() {
+				require([ 'apps/open/software/software_app' ], function() {
 					Lvl.execute('set:active:header', 'home');
 					Lvl.execute('set:active:footer', 'home');
 					Lvl.startSubApp('SoftwareApp');

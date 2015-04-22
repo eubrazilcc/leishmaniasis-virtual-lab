@@ -1,5 +1,5 @@
 /**
- * RequireJS module that defines the sub-application: support.
+ * RequireJS module that defines the sub-application: open->support.
  */
 
 define([ 'app' ], function(Lvl) {
@@ -19,7 +19,7 @@ define([ 'app' ], function(Lvl) {
 
 		/* Commands and events */
 		Lvl.commands.setHandler('show:support', function(section) {
-			require([ 'apps/support/show/support_show_ctrl' ], function(ShowController) {
+			require([ 'apps/open/support/show/support_show_ctrl' ], function(ShowController) {
 				ShowController.showSupport(section);
 			});
 		});

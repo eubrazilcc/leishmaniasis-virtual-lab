@@ -13,16 +13,18 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				'doc/:section' : 'showDocumentation'
 			},
 			before : function() {
-				require([ 'apps/documentation/documentation_app' ], function() {
+				require([ 'apps/open/documentation/documentation_app' ], function() {
 					Lvl.execute('set:active:header', 'home');
 					Lvl.execute('set:active:footer', 'home');
 					Lvl.startSubApp('DocumentationApp');
 				});
 			},
 			showDocumentation : function(section) {
-				section = (section || 'documentation').toLowerCase();
-				if (section === 'documentation' || section === 'screencasts' || section === 'presentations' || section === 'publications') {
+				section = (section || 'doc').toLowerCase();
+				if (section === 'doc' || section === 'screencasts' || section === 'presentations' || section === 'publications') {
 					Lvl.execute('show:documentation', section);
+				} else if (section === 'documentation') {
+					Lvl.execute('show:documentation', 'doc');
 				} else {
 					Lvl.navigate('not-found', {
 						trigger : true,

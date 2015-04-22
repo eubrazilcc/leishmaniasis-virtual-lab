@@ -19,7 +19,7 @@ define([ 'app' ], function(Lvl) {
 
 		/* Commands and events */
 		Lvl.commands.setHandler('show:documentation', function(section) {
-			require([ 'apps/documentation/show/documentation_show_ctrl' ], function(ShowController) {
+			require([ 'apps/open/documentation/show/documentation_show_ctrl' ], function(ShowController) {
 				ShowController.showDocumentation(section);
 			});
 		});

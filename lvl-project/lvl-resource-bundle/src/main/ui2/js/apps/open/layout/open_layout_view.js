@@ -98,16 +98,19 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 				// create sub-sections and add then to the ToC
 				for (var i = 0; i < this.model.get('subSections').length; i++) {
 					this.addRegion('lvl-subsection_' + i, "#lvl-subsection_" + i);
-					this.getRegion('lvl-subsection_' + i).show(
-							new View.SubSection({
-								model : new Backbone.Model({
-									'subsection-application' : this.model.get('mainSection').get('section'),
-									'subsection-name' : this.model.get('subSections').at(i).get('name'),
-									'subsection-section' : this.model.get('subSections').at(i).get('section'),
-									'subsection-content' : this.model.get('subSections').at(i).get('htmlContent')
-											+ (i < this.model.get('subSections').length - 1 ? '<hr>' : '')
-								})
-							}));
+					var subsectionView = new View.SubSection({
+						model : new Backbone.Model({
+							'subsection-application' : this.model.get('mainSection').get('section'),
+							'subsection-name' : this.model.get('subSections').at(i).get('name'),
+							'subsection-section' : this.model.get('subSections').at(i).get('section'),
+							'subsection-content' : this.model.get('subSections').at(i).get('htmlContent')
+									+ (i < this.model.get('subSections').length - 1 ? '<hr>' : '')
+						})
+					});
+					if (this.model.get('subSections').at(i).get('events')) {
+						subsectionView.delegateEvents(this.model.get('subSections').at(i).get('events'));
+					}
+					this.getRegion('lvl-subsection_' + i).show(subsectionView);
 					toc.add([ {
 						id : i + 1,
 						application : this.model.get('mainSection').get('section'),
@@ -125,7 +128,7 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 				this.showChildView('tocNavigationBar', new View.NavList({
 					collection : toc
 				}));
-				// events list
+				// events list (agenda)
 				this.showChildView('eventList', new View.EventList({
 					collection : this.model.get('agenda')
 				}));
