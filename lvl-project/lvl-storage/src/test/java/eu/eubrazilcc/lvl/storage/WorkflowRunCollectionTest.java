@@ -53,9 +53,9 @@ public class WorkflowRunCollectionTest {
 					.id("ABCD123")
 					.workflowId("980TYHN1")
 					.invocationId("1209")
-					.parameters(WorkflowParameters.builder().parameter("blockA", "var1", "1").parameter("blockA", "var2", "2").build())
+					.parameters(WorkflowParameters.builder().parameter("var1", "1", null, null).parameter("var2", "2", null, null).build())
 					.submitter("submitter")
-					.submitted(new Date())					
+					.submitted(new Date())
 					.build();
 			WORKFLOW_RUN_DAO.insert(run);
 

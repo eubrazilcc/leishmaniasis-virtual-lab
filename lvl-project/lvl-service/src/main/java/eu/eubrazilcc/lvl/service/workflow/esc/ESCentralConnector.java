@@ -54,7 +54,6 @@ import com.connexience.api.model.json.JSONObject;
 import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
-import eu.eubrazilcc.lvl.core.Pair;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowProduct;
@@ -158,7 +157,7 @@ public enum ESCentralConnector implements Closeable2 {
 		final JSONObject params = new JSONObject();
 		if (parameters != null) {
 			for (final Map.Entry<String, List<String>> entry : parameters.getParameters().entrySet()) {
-			  List<String> a = entry.getValue();
+				List<String> a = entry.getValue();
 				params.put(entry.getKey(), a.get(0));
 			}
 		}
@@ -174,7 +173,7 @@ public enum ESCentralConnector implements Closeable2 {
 	public String executeWorkflow(final String workflowId, final @Nullable WorkflowParameters parameters) {
 		return executeWorkflow(workflowId, null, parameters);
 	}
-	
+
 	public void cancelExecution(final String invocationId) {
 		checkArgument(isNotBlank(invocationId), "Uninitialized or invalid invocation identifier");
 		try {

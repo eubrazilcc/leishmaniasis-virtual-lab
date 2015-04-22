@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import eu.eubrazilcc.lvl.core.Pair;
-
 /**
  * Contains workflow parameters.
  * @author Erik Torres <ertorser@upv.es>
@@ -91,8 +89,8 @@ public class WorkflowParameters {
 			a.add(type);
 			a.add(description);
 			if (options != null)
-			  for (String o : options)
-			    a.add(o);
+				for (String o : options)
+					a.add(o);
 			instance.getParameters().put(name, a);
 			return this;
 		}

@@ -7,16 +7,11 @@ define([ 'app', 'apps/open/layout/open_layout_view', 'apps/open/layout/entities/
 	Lvl.module('OpenContent.Layout', function(Show, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Show.Controller = {
-			showLayout : function(name, application, section, mainSectionHtml, subSectionsHtml) {
+			showLayout : function(options) {
+				options = options || {};
+				options.agenda = new EventEntity.EventCollection();
 				var view = new View.Layout({
-					model : new LayoutEntity.Layout({
-						name : name || 'Unknown',
-						application : (application || 'unknown').toLowerCase(),
-						section : (section || 'unknown').toLowerCase(),
-						agenda : new EventEntity.EventCollection(),
-					}),
-					mainSectionHtml : mainSectionHtml,
-					subSectionsHtml : subSectionsHtml
+					model : new LayoutEntity.Layout(options)
 				});
 				Lvl.mainRegion.show(view);
 			}

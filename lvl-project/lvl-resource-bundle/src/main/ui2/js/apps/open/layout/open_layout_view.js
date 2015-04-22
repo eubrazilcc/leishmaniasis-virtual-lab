@@ -34,15 +34,15 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 					reset : true
 				});
 			},
-		});		
+		});
 		View.SubSection = Marionette.ItemView.extend({
 			template : SubsectionTpl,
 			templateHelpers : function() {
 				return {
-					name : this.model.get('sub-section-name'),
-					application : this.model.get('application'),
-					section : this.model.get('sub-section'),
-					content : this.model.get('sub-section-content')
+					application : this.model.get('subsection-application'),
+					section : this.model.get('subsection-section'),
+					name : this.model.get('subsection-name'),
+					content : this.model.get('subsection-content')
 				}
 			}
 		});
@@ -50,9 +50,8 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 			template : LayoutTpl,
 			templateHelpers : function() {
 				return {
-					name : this.model.get('name'),
-					application : this.model.get('application'),
-					section : this.model.get('section')
+					name : this.model.get('mainSection').get('name'),
+					application : this.model.get('mainSection').get('section')
 				}
 			},
 			regions : {
@@ -61,8 +60,10 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 				eventList : '#lvl-events-list'
 			},
 			initialize : function(options) {
-				this.mainSectionHtml = options.mainSectionHtml;
-				this.subSectionsHtml = options.subSectionsHtml;
+				this.activeSection = options.activeSection;
+				this.mainSection = options.mainSection;
+				this.subSections = options.subSections;
+				this.agenda = options.agenda;
 				$(window).on('resize', this.setupAffix);
 			},
 			onDestroy : function() {
@@ -82,64 +83,66 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 				});
 			},
 			onBeforeShow : function() {
-				var section = this.model.get('section');				
-				// main section
-				var MainSectionView = Marionette.ItemView.extend({
-					template : _.template(this.mainSectionHtml)
-				});
-				this.showChildView('mainSectionContent', new MainSectionView());
-				// sub-sections
-				for (var i = 0; i < this.subSectionsHtml.length; i++) {					
-					this.addRegion('lvl-subsection_' + i, "#lvl-subsection_" + i);
-					this.getRegion('lvl-subsection_' + i).show(new View.SubSection({
-						model : new Backbone.Model({
-							'sub-section-name' : 'Name',
-							'application' : this.model.get('application'),
-							'sub-section' : 'section',
-							'sub-section-content' : '123'
-						})
-					}));
-				}
-				
-				
-				// TODO : end here //  this.subSectionViews[i] // (section || 'unknown').toLowerCase()
-				
-				
-				
-				// table of content				
+				// start the table of content (ToC)
 				var toc = new TocEntity.TocCollection([ {
 					id : 0,
-					application : this.model.get('application'),
-					section : section,
-					text : this.model.get('name')
-				} ]);				
+					application : this.model.get('mainSection').get('section'),
+					section : this.model.get('mainSection').get('section'),
+					text : this.model.get('mainSection').get('name')
+				} ]);
+				// create main section
+				var MainSectionView = Marionette.ItemView.extend({
+					template : _.template(this.model.get('mainSection').get('htmlContent'))
+				});
+				this.showChildView('mainSectionContent', new MainSectionView());
+				// create sub-sections and add then to the ToC
+				for (var i = 0; i < this.model.get('subSections').length; i++) {
+					this.addRegion('lvl-subsection_' + i, "#lvl-subsection_" + i);
+					this.getRegion('lvl-subsection_' + i).show(
+							new View.SubSection({
+								model : new Backbone.Model({
+									'subsection-application' : this.model.get('mainSection').get('section'),
+									'subsection-name' : this.model.get('subSections').at(i).get('name'),
+									'subsection-section' : this.model.get('subSections').at(i).get('section'),
+									'subsection-content' : this.model.get('subSections').at(i).get('htmlContent')
+											+ (i < this.model.get('subSections').length - 1 ? '<hr>' : '')
+								})
+							}));
+					toc.add([ {
+						id : i + 1,
+						application : this.model.get('mainSection').get('section'),
+						section : this.model.get('subSections').at(i).get('section'),
+						text : this.model.get('subSections').at(i).get('name')
+					} ]);
+				}
+				// find which is the active section
+				var activeSection = this.model.get('activeSection') || this.model.get('mainSection').get('section');
 				var tocItemToSelect = toc.find(function(tocItem) {
-					return tocItem.get('section') === section;
+					return tocItem.get('section') === activeSection;
 				});
 				tocItemToSelect.select();
 				toc.trigger('reset');
 				this.showChildView('tocNavigationBar', new View.NavList({
 					collection : toc
 				}));
-				
-				
 				// events list
 				this.showChildView('eventList', new View.EventList({
 					collection : this.model.get('agenda')
-				}));				
+				}));
 			},
 			onShow : function() {
-				var _self = this, application = _self.model.get('application'), section = _self.model.get('section');
+				var _self = this, application = _self.model.get('mainSection').get('section'), activeSection = (_self.model.get('activeSection') || _self.model
+						.get('mainSection').get('section'));
 				$('div#lvl-toc-nav > ul > li').each(function() {
-					if ($(this).find('a').attr('href') === '/#' + application + '/' + section) {
+					if ($(this).find('a').attr('href') === '/#' + application + '/' + activeSection) {
 						$(this).addClass('active');
 					} else {
 						$(this).removeClass('active');
 					}
 				});
-				var emSize = parseFloat($('section#' + section).css('font-size'));
+				var emSize = parseFloat($('section#' + activeSection).css('font-size'));
 				$('html, body').animate({
-					scrollTop : $('section#' + section).offset().top - (_self.$el.offset().top + 6.5 * emSize)
+					scrollTop : $('section#' + activeSection).offset().top - (_self.$el.offset().top + 6.5 * emSize)
 				}, 700);
 			},
 			onDomRefresh : function() {
