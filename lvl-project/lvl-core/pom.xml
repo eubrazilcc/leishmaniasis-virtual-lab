@@ -284,6 +284,31 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		          					</args>
 								</configuration>
 							</execution>
+							<execution>
+								<id>jaxb2-taxonomy</id>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+								<configuration>
+									<schemaDirectory>${project.basedir}/src/main/dtd/taxonomy</schemaDirectory>
+									<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+									<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.taxonomy</generatePackage>
+									<extension>true</extension>							
+									<episode>false</episode>							
+									<schemaLanguage>DTD</schemaLanguage>
+									<schemaIncludes>
+										<schemaInclude>taxon.dtd</schemaInclude>
+							    	</schemaIncludes>
+							    	<markGenerated>true</markGenerated>
+							    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
+							    	<cleanPackageDirectories>true</cleanPackageDirectories>
+							    	<verbose>false</verbose>
+							    	<args>
+							    		<arg>-Xfluent-api</arg>
+							    		<arg>-Xcommons-lang</arg>
+		          					</args>
+								</configuration>
+							</execution>
 						</executions>
 					</plugin>			
 				</plugins>

@@ -48,7 +48,11 @@ public class TestUtils {
 	public static final String PUBMED_FOLDER = "pubmed";
 	public static final String PM_SETS_FOLDER = PUBMED_FOLDER + separator + "sets";
 	public static final String PM_ARTICLES_FOLDER = PUBMED_FOLDER + separator + "articles";
-	public static final String GEOJSON_FOLDER = "geojson";	
+	
+	public static final String TAXONOMY_FOLDER = "taxonomy";
+	public static final String TAXONOMY_SETS_FOLDER = TAXONOMY_FOLDER + separator + "sets";
+	
+	public static final String GEOJSON_FOLDER = "geojson";
 
 	public static final String RESOURCES_FOLDER;
 	static {
@@ -84,6 +88,11 @@ public class TestUtils {
 	
 	public static Collection<File> getPubMedXMLSetFiles() {
 		final File dir = new File(concat(TEST_RESOURCES_PATH, PM_SETS_FOLDER));
+		return listFiles(dir, new String[] { "xml" }, false);
+	}
+	
+	public static Collection<File> getTaxonomyXMLSetFiles() {
+		final File dir = new File(concat(TEST_RESOURCES_PATH, TAXONOMY_SETS_FOLDER));
 		return listFiles(dir, new String[] { "xml" }, false);
 	}
 

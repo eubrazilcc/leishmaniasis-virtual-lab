@@ -2,9 +2,9 @@
  * RequireJS module that defines the view: open->layout.
  */
 
-define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/tpls/nav-list', 'tpl!apps/open/layout/tpls/nav-list-item',
-		'tpl!apps/open/layout/tpls/event-list', 'tpl!apps/open/layout/tpls/event-list-item', 'apps/open/layout/entities/toc' ], function(Lvl, LayoutTpl,
-		NavListTpl, NavItemTpl, EventListTpl, EventItemTpl, TocEntity) {
+define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/tpls/subsection', 'tpl!apps/open/layout/tpls/nav-list',
+		'tpl!apps/open/layout/tpls/nav-list-item', 'tpl!apps/open/layout/tpls/event-list', 'tpl!apps/open/layout/tpls/event-list-item',
+		'apps/open/layout/entities/toc' ], function(Lvl, LayoutTpl, SubsectionTpl, NavListTpl, NavItemTpl, EventListTpl, EventItemTpl, TocEntity) {
 	Lvl.module('OpenContent.Layout.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.NavItem = Marionette.ItemView.extend({
@@ -25,7 +25,7 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 			tagName : 'li',
 			template : EventItemTpl
 		});
-		View.EventList = Marionette.CompositeView.extend({			
+		View.EventList = Marionette.CompositeView.extend({
 			template : EventListTpl,
 			childView : View.EventItem,
 			childViewContainer : 'ul',
@@ -34,6 +34,17 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 					reset : true
 				});
 			},
+		});		
+		View.SubSection = Marionette.ItemView.extend({
+			template : SubsectionTpl,
+			templateHelpers : function() {
+				return {
+					name : this.model.get('sub-section-name'),
+					application : this.model.get('application'),
+					section : this.model.get('sub-section'),
+					content : this.model.get('sub-section-content')
+				}
+			}
 		});
 		View.Layout = Marionette.LayoutView.extend({
 			template : LayoutTpl,
@@ -50,7 +61,8 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 				eventList : '#lvl-events-list'
 			},
 			initialize : function(options) {
-				this.main_section_view = options.main_section_view;
+				this.mainSectionHtml = options.mainSectionHtml;
+				this.subSectionsHtml = options.subSectionsHtml;
 				$(window).on('resize', this.setupAffix);
 			},
 			onDestroy : function() {
@@ -70,13 +82,37 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 				});
 			},
 			onBeforeShow : function() {
-				var section = this.model.get('section');
+				var section = this.model.get('section');				
+				// main section
+				var MainSectionView = Marionette.ItemView.extend({
+					template : _.template(this.mainSectionHtml)
+				});
+				this.showChildView('mainSectionContent', new MainSectionView());
+				// sub-sections
+				for (var i = 0; i < this.subSectionsHtml.length; i++) {					
+					this.addRegion('lvl-subsection_' + i, "#lvl-subsection_" + i);
+					this.getRegion('lvl-subsection_' + i).show(new View.SubSection({
+						model : new Backbone.Model({
+							'sub-section-name' : 'Name',
+							'application' : this.model.get('application'),
+							'sub-section' : 'section',
+							'sub-section-content' : '123'
+						})
+					}));
+				}
+				
+				
+				// TODO : end here //  this.subSectionViews[i] // (section || 'unknown').toLowerCase()
+				
+				
+				
+				// table of content				
 				var toc = new TocEntity.TocCollection([ {
 					id : 0,
 					application : this.model.get('application'),
 					section : section,
 					text : this.model.get('name')
-				} ]);
+				} ]);				
 				var tocItemToSelect = toc.find(function(tocItem) {
 					return tocItem.get('section') === section;
 				});
@@ -85,10 +121,12 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 				this.showChildView('tocNavigationBar', new View.NavList({
 					collection : toc
 				}));
-				this.showChildView('mainSectionContent', this.main_section_view);
+				
+				
+				// events list
 				this.showChildView('eventList', new View.EventList({
 					collection : this.model.get('agenda')
-				}));
+				}));				
 			},
 			onShow : function() {
 				var _self = this, application = _self.model.get('application'), section = _self.model.get('section');

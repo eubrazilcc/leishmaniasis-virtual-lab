@@ -27,6 +27,7 @@ import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLSetFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLSetFiles;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getTaxonomyXMLSetFiles;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.getGenInfoIdentifier;
@@ -37,6 +38,7 @@ import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.inferCountry;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.parseSequence;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.parseArticle;
+import static eu.eubrazilcc.lvl.core.xml.TaxonomyXmlBinder.TAXONOMY_XMLB;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -57,6 +59,7 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSet;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticleSet;
+import eu.eubrazilcc.lvl.core.xml.ncbi.taxonomy.TaxaSet;
 
 /**
  * Test XML to/from NCBI Java object binding.
@@ -265,6 +268,17 @@ public class NCBIXmlBindingTest {
 				assertThat("Reference publication year coincides with expected", reference.getPublicationYear() > 1900, equalTo(true));
 				/* Uncomment for additional output */
 				System.out.println(" >> Reference  : " + reference.toString());
+			}
+
+			// test parsing Taxonomy XML records
+			files = getTaxonomyXMLSetFiles();
+			for (final File file : files) {
+				System.out.println(" >> Taxonomy set XML file: " + file.getCanonicalPath());
+				final TaxaSet taxaSet = TAXONOMY_XMLB.typeFromFile(file);
+				assertThat("Taxonomy XML set is not null", taxaSet, notNullValue());
+				assertThat("Taxonomy XML taxons is not null", taxaSet.getTaxon(), notNullValue());
+				assertThat("Taxonomy XML taxons is not empty", !taxaSet.getTaxon().isEmpty());
+				// TODO : complete
 			}
 
 		} catch (Exception e) {
