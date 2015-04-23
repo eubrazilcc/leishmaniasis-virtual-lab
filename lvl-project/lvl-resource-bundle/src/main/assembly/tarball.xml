@@ -60,7 +60,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		</fileSet>
 		<fileSet>
 			<directory>${project.basedir}/src/main/doc</directory>
-			<outputDirectory>htdocs/doc</outputDirectory>
+			<outputDirectory>htdocs/apidoc</outputDirectory>
 		</fileSet>
 	</fileSets>
 	<dependencySets>
