@@ -19,7 +19,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 			},
 			showSupport : function(section) {
 				section = (section || 'support').toLowerCase();
-				if (section === 'support' || section === 'mailing-list') {
+				if (section === 'support' || section === 'mailing-list' || section === 'report-an-issue') {
 					Lvl.execute('show:support', section);
 				} else {
 					Lvl.navigate('not-found', {
