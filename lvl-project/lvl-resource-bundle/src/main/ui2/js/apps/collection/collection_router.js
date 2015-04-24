@@ -8,12 +8,9 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 		var config = new Configuration();
 		var Router = Backbone.Router.extend({
 			routes : {
-				'collection' : 'defaultCollection',
-				'collection/browse' : 'browseCollectionDefault',
-				'collection/browse/:id' : 'browseCollection',
-				'collection/map' : 'mapCollection',
-				'collection/stats' : 'statsCollection',
-				'collection/submit' : 'submitCollection'
+				'collection' : 'showCollection',
+				'collection/:section' : 'showCollection',
+				'collection/:section/:subsection' : 'showCollection'
 			},
 			before : function() {
 				if (!config.isAuthenticated()) {
@@ -30,32 +27,23 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 				});
 				return true;
 			},
-			defaultCollection : function() {
-				var self = this;
-				Lvl.navigate('collection/browse', {
-					trigger : true,
-					replace : true
-				});
-			},
-			browseCollectionDefault : function() {
-				var self = this;
-				Lvl.navigate('collection/browse/sandflies', {
-					trigger : true,
-					replace : true
-				});
-			},
-			browseCollection : function(id) {
-				var id2 = id || 'sandflies';
-				Lvl.execute('collection:set:active', 'browse', id2);
-			},
-			mapCollection : function() {
-				Lvl.execute('collection:set:active', 'map');
-			},
-			statsCollection : function() {
-				Lvl.execute('collection:set:active', 'stats');
-			},
-			submitCollection : function() {
-				Lvl.execute('collection:set:active', 'submit');
+			showCollection : function(section, subsection) {
+				section = (section || 'browse').toLowerCase();
+				if (section === 'browse') {
+					subsection = (subsection || 'sandflies').toLowerCase();
+					Lvl.navigate('collection/' + section + '/' + subsection, {
+						trigger : false,
+						replace : true
+					});
+					Lvl.execute('collection:set:active', section, subsection);
+				} else if (section === 'map' || section === 'stats' || section === 'submit') {
+					Lvl.execute('collection:set:active', section);
+				} else {
+					Lvl.navigate('not-found', {
+						trigger : true,
+						replace : true
+					});
+				}
 			}
 		});
 		Lvl.addInitializer(function() {

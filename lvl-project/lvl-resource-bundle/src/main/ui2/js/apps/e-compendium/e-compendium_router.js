@@ -8,11 +8,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 		var config = new Configuration();
 		var Router = Backbone.Router.extend({
 			routes : {
-				'e-compendium' : 'defaultECompendium',
-				'e-compendium/browse' : 'browseECompendium',
-				'e-compendium/map' : 'mapECompendium',
-				'e-compendium/stats' : 'statsECompendium',
-				'e-compendium/submit' : 'submitECompendium'
+				'e-compendium' : 'showECompendium',
+				'e-compendium/:section' : 'showECompendium'
 			},
 			before : function() {
 				if (!config.isAuthenticated()) {
@@ -29,24 +26,22 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 				});
 				return true;
 			},
-			defaultECompendium : function() {
-				var self = this;
-				Lvl.navigate('e-compendium/browse', {
-					trigger : true,
-					replace : true
-				});
-			},
-			browseECompendium : function() {
-				Lvl.execute('e-compendium:set:active', 'browse');
-			},
-			mapECompendium : function() {
-				Lvl.execute('e-compendium:set:active', 'map');
-			},
-			statsECompendium : function() {
-				Lvl.execute('e-compendium:set:active', 'stats');
-			},
-			submitECompendium : function() {
-				Lvl.execute('e-compendium:set:active', 'submit');
+			showECompendium : function(section) {
+				section = (section || 'browse').toLowerCase();
+				if (section === 'browse') {
+					Lvl.navigate('e-compendium/' + section, {
+						trigger : false,
+						replace : true
+					});
+					Lvl.execute('e-compendium:set:active', section);
+				} else if (section === 'map' || section === 'stats' || section === 'submit') {
+					Lvl.execute('e-compendium:set:active', section);
+				} else {
+					Lvl.navigate('not-found', {
+						trigger : true,
+						replace : true
+					});
+				}
 			}
 		});
 		Lvl.addInitializer(function() {

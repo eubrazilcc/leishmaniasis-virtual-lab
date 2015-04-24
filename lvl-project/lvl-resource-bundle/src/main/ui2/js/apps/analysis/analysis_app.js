@@ -17,21 +17,11 @@ define([ 'app' ], function(Lvl) {
 			console.log('stopping AnalysisApp');
 		};
 
-		AnalysisApp.currentSection = null;
-
 		/* Commands and events */
-		Lvl.commands.setHandler('analysis:set:active', function(section, id) {
-			section = section || 'default';
-			if (AnalysisApp.currentSection !== section) {
-				if (section === 'pipelines' || section === 'runs') {
-					require([ 'apps/analysis/layout/analysis_layout_ctrl' ], function(LayoutController) {
-						AnalysisApp.currentSection = LayoutController.showLayout(section, id);
-					});
-				} else {
-					Lvl.mainRegion.currentView.reset();
-					AnalysisApp.currentSection = null;
-				}
-			}
+		Lvl.commands.setHandler('analysis:set:active', function(section, subsection) {
+			require([ 'apps/analysis/layout/analysis_layout_ctrl' ], function(LayoutController) {
+				AnalysisApp.currentSection = LayoutController.showLayout(section, subsection);
+			});
 		});
 	});
 });

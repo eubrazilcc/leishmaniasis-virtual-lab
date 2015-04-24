@@ -9,13 +9,13 @@ requirejs.config({
 	paths : {
 		/* jQuery JavaScript library */
 		'jquery' : [ '//code.jquery.com/jquery-2.1.3.min', 'vendor/cached/jquery.min' ],
-		'spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min', 'vendor/cached/spin.min' ],
-		'jquery.spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/jquery.spin.min', 'jquery.spin.min' ],
+		'spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min', 'vendor/cached/spin.min' ], // 2.1.0 is unavailable in CDN
+		'jquery.spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/jquery.spin.min', 'jquery.spin.min' ], // 2.1.0 is unavailable in CDN
 		/* Boostrap front-end framework */
-		'bootstrap' : [ '//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min', 'vendor/cached/bootstrap.min' ],
-		'bootstrapvalidator' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min', 'vendor/cached/bootstrapValidator.min' ], // 0.5.4: commercial license
+		'bootstrap' : [ '//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min', 'vendor/cached/bootstrap.min' ],
+		'bootstrapvalidator' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min', 'vendor/cached/bootstrapValidator.min' ], // 0.6.2: commercial license
 		/* Backbone + Marionette MVC framework */
-		'underscore' : [ '//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min', 'vendor/cached/underscore-min' ],
+		'underscore' : [ '//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min', 'vendor/cached/underscore-min' ],
 		'backbone' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min', 'vendor/cached/backbone-min' ],
 		'marionette' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.marionette/2.4.1/backbone.marionette.min', 'vendor/cached/backbone.marionette.min' ],
 		/* Useful backbone plug-ins */
@@ -30,23 +30,23 @@ requirejs.config({
 		'backgrid-select-all' : 'vendor/provided/backgrid-select-all.min',
 		'backgrid-filter' : 'vendor/provided/backgrid-filter.min',
 		/* OpenLayers */
-		'openlayers' : [ '//cdnjs.cloudflare.com/ajax/libs/ol3/3.2.1/ol.min', 'vendor/cached/ol.min' ],
+		'openlayers' : [ '//cdnjs.cloudflare.com/ajax/libs/ol3/3.4.0/ol.min', 'vendor/cached/ol.min' ],
 		/* Filesize.js */
 		'filesize' : [ '//cdn.filesizejs.com/filesize.min', 'vendor/cached/filesize.min' ],
 		/* Chance.js */
-		'chance' : 'vendor/provided/chance.min',
+		'chance' : 'vendor/provided/chance.min', // remove map line from JS library to avoid unavailable map error
 		/* Moment.js */
 		'moment' : [ '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min', 'vendor/cached/moment.min' ],
 		/* Pace */
 		'pace' : [ '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min', 'vendor/cached/pace.min' ],
 		/* qTip2 */
 		'imagesloaded' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.1.8/imagesloaded.pkgd.min', 'vendor/cached/imagesloaded.pkgd.min' ],
-		'qtip' : [ '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ], // 2.2.1: map is unavailable
+		'qtip' : [ '//cdn.jsdelivr.net/qtip2/2.2.0/jquery.qtip.min', 'vendor/cached/jquery.qtip.min' ], // use 2.2.0 instead of 2.2.1 to avoid unavailable map error
 		/* jsPhyloSVG */
 		'raphael' : [ '//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min', 'vendor/cached/raphael-min' ],
 		'jsphylosvg' : 'vendor/provided/jsphylosvg-min',
 		/* Chart.js */
-		'chartjs' : [ '//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.1/Chart.min', 'vendor/cached/Chart.min' ],		
+		'chartjs' : [ '//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min', 'vendor/cached/Chart.min' ],		
 		/* Hopscotch */
 		'hopscotch' : [ '//cdnjs.cloudflare.com/ajax/libs/hopscotch/0.2.3/js/hopscotch.min', 'vendor/cached/hopscotch.min' ],		
 		/* Add support for underscore templates */

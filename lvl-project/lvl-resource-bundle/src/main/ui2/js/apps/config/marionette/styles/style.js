@@ -9,13 +9,13 @@ define([ 'marionette', 'apps/config/marionette/configuration' ], function(Marion
 			this.bust = new Configuration().get('bust', '');
 			this.baseStyles = [ {
 				id : 'bootstrap',
-				url : '//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css' + this.bust
+				url : '//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css' + this.bust
 			}, {
 				id : 'font-awesome',
 				url : '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css' + this.bust
 			}, {
 				id : 'theme',
-				url : '//maxcdn.bootstrapcdn.com/bootswatch/3.3.2/paper/bootstrap.min.css' + this.bust
+				url : '//maxcdn.bootstrapcdn.com/bootswatch/3.3.4/paper/bootstrap.min.css' + this.bust
 			}, {
 				id : 'lvl',
 				url : '/css/lvl.css' + this.bust

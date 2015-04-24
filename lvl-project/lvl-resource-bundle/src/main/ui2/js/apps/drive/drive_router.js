@@ -8,9 +8,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 		var config = new Configuration();
 		var Router = Backbone.Router.extend({
 			routes : {
-				'drive' : 'defaultDrive',
-				'drive/datasets' : 'showDatasets',
-				'drive/links' : 'showLinks'
+				'drive' : 'showDrive',
+				'drive/:section' : 'showDrive'
 			},
 			before : function() {
 				if (!config.isAuthenticated()) {
@@ -27,18 +26,22 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 				});
 				return true;
 			},
-			defaultDrive : function() {
-				var self = this;
-				Lvl.navigate('drive/datasets', {
-					trigger : true,
-					replace : true
-				});
-			},
-			showDatasets : function() {
-				Lvl.execute('drive:set:active', 'datasets');
-			},
-			showLinks : function() {
-				Lvl.execute('drive:set:active', 'links');
+			showDrive : function(section) {
+				section = (section || 'datasets').toLowerCase();
+				if (section === 'datasets') {
+					Lvl.navigate('drive/' + section, {
+						trigger : false,
+						replace : true
+					});
+					Lvl.execute('drive:set:active', section);
+				} else if (section === 'links') {
+					Lvl.execute('drive:set:active', section);
+				} else {
+					Lvl.navigate('not-found', {
+						trigger : true,
+						replace : true
+					});
+				}
 			}
 		});
 		Lvl.addInitializer(function() {

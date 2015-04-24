@@ -67,7 +67,7 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 		var iniOpenLayersStyles = function() {
 			Entities.openLayersStyles = new Entities.StyleCollection([ {
 				id : 'ol',
-				url : '//cdnjs.cloudflare.com/ajax/libs/ol3/3.2.1/ol.min.css' + bust
+				url : '//cdnjs.cloudflare.com/ajax/libs/ol3/3.4.0/ol.min.css' + bust
 			} ]);
 		};
 
@@ -81,14 +81,7 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 		var iniQtipStyles = function() {
 			Entities.qtipStyles = new Entities.StyleCollection([ {
 				id : 'qtip',
-				url : '//cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.min.css' + bust
-			} ]);
-		};
-
-		var iniChartistStyles = function() {
-			Entities.chartistStyles = new Entities.StyleCollection([ {
-				id : 'chartist',
-				url : '//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css' + bust
+				url : '//cdn.jsdelivr.net/qtip2/2.2.0/jquery.qtip.min.css' + bust
 			} ]);
 		};
 
@@ -135,13 +128,7 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 					iniQtipStyles();
 				}
 				return Entities.qtipStyles;
-			},
-			getChartistStyles : function() {
-				if (Entities.chartistStyles === undefined) {
-					iniChartistStyles();
-				}
-				return Entities.chartistStyles;
-			},
+			},			
 			getHopscotchStyles : function() {
 				if (Entities.hopscotchStyles === undefined) {
 					iniHopscotchStyles();
@@ -172,10 +159,6 @@ define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configur
 
 		Lvl.reqres.setHandler('styles:qtip:entities', function() {
 			return API.getQtipStyles();
-		});
-
-		Lvl.reqres.setHandler('styles:chartist:entities', function() {
-			return API.getChartistStyles();
 		});
 
 		Lvl.reqres.setHandler('styles:hopscotch:entities', function() {

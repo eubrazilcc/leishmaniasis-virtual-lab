@@ -13,17 +13,19 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				'account/validation(/:email)(/:code)' : 'validateAccount',
 				'logout' : 'logout'
 			},
-			before : function() {
+			before : function(route) {
 				require([ 'apps/access/access_app' ], function() {
-					Lvl.execute('set:active:header', 'no_header');
-					Lvl.execute('set:active:footer', 'no_footer');
+					if (route !== 'logout') {
+						Lvl.execute('set:active:header', 'no_header');
+						Lvl.execute('set:active:footer', 'no_footer');
+					}
 					Lvl.startSubApp('AccessApp');
 				});
 			},
 			showLogin : function(target, reason) {
 				Lvl.execute('show:login', target, reason);
 			},
-			authorizationCallback : function(provider, section, email, access_token) {				
+			authorizationCallback : function(provider, section, email, access_token) {
 				Lvl.execute('show:authz:callback', provider, section, email, access_token);
 			},
 			showRegistration : function() {

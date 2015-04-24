@@ -2,18 +2,12 @@
  * RequireJS module that defines the view: collection->stats.
  */
 
-define([ 'app', 'tpl!apps/collection/stats/templates/collection_stats', 'apps/config/marionette/styles/style' ], function(Lvl, StatsTpl, Style) {
+define([ 'app', 'tpl!apps/collection/stats/templates/collection_stats' ], function(Lvl, StatsTpl) {
 	Lvl.module('CollectionApp.Stats.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.Content = Marionette.ItemView.extend({
 			id : 'stats',
-			template : StatsTpl,
-			onBeforeRender : function() {
-				require([ 'entities/styles' ], function() {
-					var stylesLoader = new Style();
-					stylesLoader.loadCss(Lvl.request('styles:chartist:entities').toJSON());
-				});
-			},
+			template : StatsTpl,			
 			onRender : function() {
 				var bin_colors = [ 'rgba(13, 162, 23, 1)', 'rgba(229, 28, 33, 1)' ];
 				var bin_highlights = [ 'rgba(13, 162, 23, 0.8)', 'rgba(229, 28, 33, 0.8)' ];

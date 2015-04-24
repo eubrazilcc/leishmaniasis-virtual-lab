@@ -159,8 +159,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					// reset search terms
 					var searchCont = $('#lvl-search-terms-container');
 					searchCont.empty();
-					// setup search terms from
-					// server response
+					// setup search terms from server response
 					if (self.collection.formattedQuery && self.collection.formattedQuery.length > 0) {
 						var i = 1;
 						_.each(self.collection.formattedQuery, function(item) {
@@ -255,6 +254,11 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 			handleDragStart : function(e) {
 				e.originalEvent.dataTransfer.setData('srcId', $(e.target).attr('data-savable-id'));
 				Lvl.vent.trigger('editable:items:dragstart');
+
+				// TODO
+				console.log('COLLECTION : DRAG_START FIRED');
+				// TODO
+
 			},
 			handleDragEnd : function(e) {
 				Lvl.vent.trigger('editable:items:dragend');
@@ -281,9 +285,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				});
 			},
 			onDestroy : function() {
-				// don't remove the styles in
-				// order to enable them to be
-				// reused
+				// don't remove the styles in order to enable them to be reused
 				pace.stop();
 				// remove all event handlers
 				Lvl.vent.off('search:form:submitted');

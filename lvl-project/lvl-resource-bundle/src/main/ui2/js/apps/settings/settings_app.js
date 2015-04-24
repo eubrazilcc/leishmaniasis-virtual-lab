@@ -17,21 +17,11 @@ define([ 'app' ], function(Lvl) {
 			console.log('stopping SettingsApp');
 		};
 
-		SettingsApp.currentSection = null;
-
 		/* Commands and events */
 		Lvl.commands.setHandler('settings:set:active', function(section) {
-			section = section || 'default';
-			if (SettingsApp.currentSection !== section) {
-				if (section === 'account' || section === 'instances') {
-					require([ 'apps/settings/layout/settings_layout_ctrl' ], function(LayoutController) {
-						SettingsApp.currentSection = LayoutController.showLayout(section);
-					});
-				} else {
-					Lvl.mainRegion.currentView.reset();
-					SettingsApp.currentSection = null;
-				}
-			}
+			require([ 'apps/settings/layout/settings_layout_ctrl' ], function(LayoutController) {
+				SettingsApp.currentSection = LayoutController.showLayout(section);
+			});
 		});
 	});
 });

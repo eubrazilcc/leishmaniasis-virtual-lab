@@ -10,3 +10,9 @@ See the [CHANGELOG](CHANGELOG).
 ### Build instructions
 npm install
 grunt
+
+###
+New alternatives:
+
+grunt + bower + yeoman
+gulp + yeoman

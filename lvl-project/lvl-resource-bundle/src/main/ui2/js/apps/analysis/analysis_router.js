@@ -8,10 +8,9 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 		var config = new Configuration();
 		var Router = Backbone.Router.extend({
 			routes : {
-				'analysis' : 'defaultAnalysis',
-				'analysis/pipelines' : 'showPipelines',
-				'analysis/runs' : 'showRuns',
-				'analysis/runs/:id' : 'showRun'
+				'analysis' : 'showAnalysis',
+				'analysis/:section' : 'showAnalysis',
+				'analysis/:section/:subsection' : 'showAnalysis'
 			},
 			before : function() {
 				if (!config.isAuthenticated()) {
@@ -28,21 +27,22 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 				});
 				return true;
 			},
-			defaultAnalysis : function() {
-				var self = this;
-				Lvl.navigate('analysis/pipelines', {
-					trigger : true,
-					replace : true
-				});
-			},
-			showPipelines : function() {
-				Lvl.execute('analysis:set:active', 'pipelines');
-			},			
-			showRuns : function() {
-				Lvl.execute('analysis:set:active', 'runs');
-			},
-			showRun : function(id) {
-				Lvl.execute('analysis:set:active', 'runs', id);
+			showAnalysis : function(section, subsection) {
+				section = (section || 'pipelines').toLowerCase();
+				if (section === 'pipelines') {
+					Lvl.navigate('analysis/' + section, {
+						trigger : false,
+						replace : true
+					});
+					Lvl.execute('analysis:set:active', section);
+				} else if (section === 'runs') {
+					Lvl.execute('analysis:set:active', section, subsection);
+				} else {
+					Lvl.navigate('not-found', {
+						trigger : true,
+						replace : true
+					});
+				}
 			}
 		});
 		Lvl.addInitializer(function() {

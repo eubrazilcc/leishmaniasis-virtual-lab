@@ -8,9 +8,8 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 		var config = new Configuration();
 		var Router = Backbone.Router.extend({
 			routes : {
-				'settings' : 'defaultSettings',
-				'settings/account' : 'accountSettings',				
-				'settings/instances' : 'instancesSettings'
+				'settings' : 'showSettings',
+				'settings/:section' : 'showSettings'
 			},
 			before : function() {
 				if (!config.isAuthenticated()) {
@@ -27,18 +26,22 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 				});
 				return true;
 			},
-			defaultSettings : function() {
-				var self = this;
-				Lvl.navigate('settings/account', {
-					trigger : true,
-					replace : true
-				});
-			},
-			accountSettings : function() {
-				Lvl.execute('settings:set:active', 'account');
-			},
-			instancesSettings : function() {
-				Lvl.execute('settings:set:active', 'instances');
+			showSettings : function(section) {
+				section = (section || 'account').toLowerCase();
+				if (section === 'account') {
+					Lvl.navigate('settings/' + section, {
+						trigger : false,
+						replace : true
+					});
+					Lvl.execute('settings:set:active', section);
+				} else if (section === 'instances') {
+					Lvl.execute('settings:set:active', section);
+				} else {
+					Lvl.navigate('not-found', {
+						trigger : true,
+						replace : true
+					});
+				}
 			}
 		});
 		Lvl.addInitializer(function() {
