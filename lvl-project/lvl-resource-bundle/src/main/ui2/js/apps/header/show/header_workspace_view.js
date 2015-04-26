@@ -4,8 +4,8 @@
 
 define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/header/show/templates/header_nav',
 		'tpl!apps/header/show/templates/header_nav_link', 'tpl!apps/header/show/templates/header_notifications', 'apps/config/marionette/styles/style',
-		'apps/config/marionette/configuration', 'moment', 'qtip' ], function(Lvl, WorkspaceHeaderTpl, NavigationTpl, NavigationLinkTpl, NotificationsTpl,
-		Style, Configuration, moment) {
+		'apps/config/marionette/configuration', 'entities/saved_item', 'moment', 'qtip' ], function(Lvl, WorkspaceHeaderTpl, NavigationTpl, NavigationLinkTpl,
+		NotificationsTpl, Style, Configuration, SavedItemEntity, moment) {
 	Lvl.module('HeaderApp.Workspace.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var config = new Configuration();
 		function openSearchForm() {
@@ -90,7 +90,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				} else {
 					openSearchForm();
 				}
-			},			
+			},
 			collapseSearchForm : function(e) {
 				e.preventDefault();
 				closeSearchForm();
@@ -103,15 +103,15 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 			showUserProfile : function(e) {
 				e.preventDefault();
 				this.trigger('access:user:profile');
-			},					
+			},
 			submitSearchFormXs : function(e) {
-				e.preventDefault();				
+				e.preventDefault();
 				var searchInputXs = this.$('#lvl-search-form-input-xs');
 				var searchInput = this.$('#lvl-search-form-input');
 				searchInput.val(searchInputXs.val());
 				this.$('#lvl-search-form').submit();
 				searchInputXs.val('');
-			},			
+			},
 			submitSearchForm : function(e) {
 				e.preventDefault();
 				var searchInput = this.$('#lvl-search-form-input');
@@ -135,15 +135,13 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				e.preventDefault();
 				var srcId = e.originalEvent.dataTransfer.getData('srcId');
 				var srcElem = $('div[data-savable-id="' + srcId + '"]');
+				var savableItem = new SavedItemEntity.SavedItem(JSON.parse(e.originalEvent.dataTransfer.getData('savItem')));
 				
-				
-				
-				
+				// TODO				
+				console.log('DROP_TAG: ' + srcElem.prop('tagName'));
+				console.log('DROP_SAV: ' + JSON.stringify(savableItem.toJSON()));
 				// TODO
-				console.log('DROP: ' + srcElem.prop('tagName'));
-				// TODO
-				
-				
+
 				srcElem.remove();
 				this.hideMySavedItems();
 			},
@@ -166,12 +164,12 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				$(document).on('keyup', this.handleEscKeyUpEvent);
 			},
 			onDestroy : function() {
-				closeSearchForm(0);				
+				closeSearchForm(0);
 				// remove all event handlers
 				Lvl.vent.off('editable:items:dragstart');
 				Lvl.vent.off('editable:items:dragend');
 				$(document).off('keyup', this.handleEscKeyUpEvent);
-			},			
+			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {
 					var stylesLoader = new Style();

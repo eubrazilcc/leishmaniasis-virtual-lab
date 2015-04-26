@@ -4,9 +4,9 @@
 
 define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!apps/collection/browse/templates/toolbar_browse',
 		'tpl!apps/collection/browse/templates/search_term', 'tpl!apps/collection/browse/templates/add_search_term',
-		'tpl!apps/collection/browse/templates/save_search', 'apps/config/marionette/styles/style', 'entities/sequence', 'pace', 'common/country_names',
-		'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, ToolbarTpl, SearchTermTpl,
-		AddSearchTermTpl, SaveSearchTpl, Style, SequenceModel, pace, mapCn) {
+		'tpl!apps/collection/browse/templates/save_search', 'apps/config/marionette/styles/style', 'entities/sequence', 'entities/saved_item', 'pace',
+		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl,
+		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, Style, SequenceEntity, SavedItemEntity, pace, mapCn) {
 	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
@@ -187,7 +187,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 			events : {
 				'click a[data-search-term]' : 'resetSearchTerms',
 				'submit form#lvl-add-search-term-form' : 'addSearchTerm',
-				'click div.lvl-savable' : 'handleDragStart',
+				'click div.lvl-savable' : 'handleClickSavable',
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
 				'click a[data-seq_id]' : 'showSequenceRecord'
@@ -251,14 +251,23 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					newTermInput.val('');
 				}
 			},
+			handleClickSavable : function(e) {
+				require([ 'common/growl' ], function(createGrowl) {
+					createGrowl('Unsaved search',
+							'Hold and drag the <i class="fa fa-bookmark-o"></i><sub><i class="fa fa-plus-circle"></i></sub> sign to open your saved items',
+							false);
+				});
+			},
 			handleDragStart : function(e) {
+				var self = this;
 				e.originalEvent.dataTransfer.setData('srcId', $(e.target).attr('data-savable-id'));
+				e.originalEvent.dataTransfer.setData('savItem', JSON.stringify(new SavedItemEntity.SavedItem({
+					id : '-1',
+					type : 'sequence search',
+					description : '',
+					pocket : self.collection.formattedQuery
+				}).toJSON()));
 				Lvl.vent.trigger('editable:items:dragstart');
-
-				// TODO
-				console.log('COLLECTION : DRAG_START FIRED');
-				// TODO
-
 			},
 			handleDragEnd : function(e) {
 				Lvl.vent.trigger('editable:items:dragend');

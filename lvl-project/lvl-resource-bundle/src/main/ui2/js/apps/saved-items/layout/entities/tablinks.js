@@ -1,9 +1,9 @@
 /**
- * RequireJS module that defines the entity: settings->tab-link.
+ * RequireJS module that defines the entity: saved-items->tab-link.
  */
 
 define([ 'app', 'backbone.picky' ], function(Lvl) {
-	Lvl.module('SettingsApp.Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('SavedItemsApp.Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		Entities.Navigation = Backbone.Model.extend({
 			defaults : {
 				link : '',
@@ -35,7 +35,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 			}
 		});
 
-		Entities.NavigationSettings = Backbone.Collection.extend({
+		Entities.NavigationSavedItems = Backbone.Collection.extend({
 			model : Entities.Navigation,
 			comparator : 'id',
 			initialize : function() {
@@ -45,16 +45,11 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 		});
 
 		var iniNavigationLinks = function() {
-			Entities.navigationLinks = new Entities.NavigationSettings([ {
+			Entities.navigationLinks = new Entities.NavigationSavedItems([ {
 				id : 1,
-				link : 'account',
-				icon : 'fa-user',
-				text : 'Account'
-			}, {
-				id : 2,
-				link : 'instances',
-				icon : 'fa-cloud',
-				text : 'Instances'
+				link : 'searches',
+				icon : 'fa-search',
+				text : 'Saved searches'
 			} ]);
 		};
 
@@ -67,7 +62,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 			}
 		}
 
-		Lvl.reqres.setHandler('settings:navigation:entities', function() {
+		Lvl.reqres.setHandler('saved-items:navigation:entities', function() {
 			return API.getNavigationEntities();
 		});
 	});
