@@ -99,7 +99,7 @@ public final class QueryUtils {
 				final boolean isField = !TEXT_FIELD.equals(key);
 				return FormattedQueryParam.builder()
 						.term((isField ? escape(key) + KEYWORD_SEPARATOR : "") + escape(value))
-						.validity(isField ? fieldValidator.apply(key) : true)
+						.valid(isField ? fieldValidator.apply(key) : true)
 						.build();
 			}
 		}).values());
@@ -127,7 +127,7 @@ public final class QueryUtils {
 		checkArgument(str != null, "Invalid input string");
 		return new LinkedHashSet<String>(Arrays.asList(normalizeSpace(str).split(" "))).toString().replaceAll("(^\\[|\\]$)", "").replace(", ", " ");
 	}
-	
+
 	private static String escape(final String str) {
 		final Matcher matcher = CONTAINS_SPACE_PATTERN.matcher(str);
 		return matcher.matches() ? QUOTES + str + QUOTES : str;

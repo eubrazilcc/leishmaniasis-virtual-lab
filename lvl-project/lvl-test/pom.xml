@@ -36,7 +36,34 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<description>LVL common test support classes</description>
 	<url>http://eubrazilcloudconnect.eu/</url>
 	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.glassfish.jersey</groupId>
+				<artifactId>jersey-bom</artifactId>
+				<version>${jersey.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
 	<dependencies>
+		<!-- Transitively includes Jackson JSON processor from Jersey. Jackson must be 
+			provided in production (e.g. with Jersey) -->
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		
+		<!-- JAX-RS API: no specific implementation of JAX-RS is required -->
+		<dependency>
+			<groupId>javax.ws.rs</groupId>
+			<artifactId>javax.ws.rs-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	
 		<!-- JUnit -->
 		<dependency>
 			<groupId>junit</groupId>

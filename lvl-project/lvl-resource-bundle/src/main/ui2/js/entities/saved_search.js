@@ -1,51 +1,49 @@
 /**
- * RequireJS module that defines the entity: saved_item.
+ * RequireJS module that defines the entity: saved_search.
  */
 
 define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
-	Lvl.module('Entities.SavedItem', function(Entities, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('Entities.SavedSearch', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
-		Entities.SavedItem = Backbone.Model.extend({
+		Entities.SavedSearch = Backbone.Model.extend({
+			urlRoot : config.get('service', '') + '/saved/searches',
 			defaults : {
-				id : '',
 				type : '',
+				saved : '',
 				description : '',
-				pocket : {}
+				search : {}
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);
 				_.extend(this, selectable);
 			},
 			validate : function(attrs, options) {
-				var errors = {};
-				if (!attrs.id) {
-					errors.id = 'can\'t be empty';
-				}
+				var errors = {};				
 				if (!attrs.type) {
 					errors.type = 'can\'t be empty';
 				}
-				if (!attrs.pocket) {
-					errors.pocket = 'can\'t be empty';
+				if (!attrs.search) {
+					errors.search = 'can\'t be empty';
 				}
 				if (!_.isEmpty(errors)) {
 					return errors;
 				}
 			}
 		});
-		Entities.SavedItemCollection = Backbone.Collection.extend({
-			model : Entities.SavedItem,
-			comparator : 'id',
+		Entities.SavedSearchCollection = Backbone.Collection.extend({
+			model : Entities.SavedSearch,
+			comparator : 'searchId',
 			initialize : function() {
 				var singleSelect = new Backbone.Picky.SingleSelect(this);
 				_.extend(this, singleSelect);
 			}
 		});
-		Entities.SavedItemPageableCollection = Backbone.PageableCollection.extend({
-			model : Entities.SavedItem,
+		Entities.SavedSearchPageableCollection = Backbone.PageableCollection.extend({
+			model : Entities.SavedSearch,
 			mode : 'server',
 			url : function() {
-				return config.get('service', '') + '/saved_items';
+				return config.get('service', '') + '/saved/searches';
 			},
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
@@ -74,5 +72,5 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 			}
 		});
 	});
-	return Lvl.Entities.SavedItem;
+	return Lvl.Entities.SavedSearch;
 });

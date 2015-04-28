@@ -94,7 +94,7 @@ public class NotificationResource {
 		final List<Notification> notifications = NOTIFICATION_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count);
 		paginable.setElements(notifications);
 		// set total count and return to the caller
-		final int totalEntries = ((Long)count.getValue()).intValue();
+		final int totalEntries = notifications.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);
 		return paginable;
 	}

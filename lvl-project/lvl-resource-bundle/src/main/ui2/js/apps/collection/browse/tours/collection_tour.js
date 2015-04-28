@@ -37,7 +37,7 @@ define(
 								placement : 'bottom',
 								fixedElement : true,
 								title : 'This is the search box',
-								content : 'It supports the <a href="/doc/" target="_blank">LvLQL</a> query language to search the collection. Enter <code>partial sequence</code> in the input box and hit <kbd>enter</kbd>. Once the search is completed continue this tour.'
+								content : 'It supports the <a href="/apidoc/" target="_blank">LvLQL</a> query language to search the collection. Enter <code>partial sequence</code> in the input box and hit <kbd>enter</kbd>. Once the search is completed continue this tour.'
 							},
 							{
 								target : document.querySelector('ul#lvl-search-terms-container'),

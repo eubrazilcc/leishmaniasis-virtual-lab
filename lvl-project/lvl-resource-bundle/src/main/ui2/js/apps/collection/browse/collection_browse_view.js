@@ -4,9 +4,9 @@
 
 define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!apps/collection/browse/templates/toolbar_browse',
 		'tpl!apps/collection/browse/templates/search_term', 'tpl!apps/collection/browse/templates/add_search_term',
-		'tpl!apps/collection/browse/templates/save_search', 'apps/config/marionette/styles/style', 'entities/sequence', 'entities/saved_item', 'pace',
+		'tpl!apps/collection/browse/templates/save_search', 'apps/config/marionette/styles/style', 'entities/sequence', 'entities/saved_search', 'pace',
 		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl,
-		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, Style, SequenceEntity, SavedItemEntity, pace, mapCn) {
+		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, Style, SequenceEntity, SavedSearchEntity, pace, mapCn) {
 	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
@@ -166,7 +166,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 							searchCont.append(SearchTermTpl({
 								sterm_id : 'sterm_' + (i++),
 								sterm_text : item['term'],
-								sterm_icon : Boolean(item['validity']) ? 'label-success' : 'label-warning',
+								sterm_icon : Boolean(item['valid']) ? 'label-success' : 'label-warning',
 								sterm_title : 'Remove'
 							}));
 						});
@@ -254,18 +254,18 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 			handleClickSavable : function(e) {
 				require([ 'common/growl' ], function(createGrowl) {
 					createGrowl('Unsaved search',
-							'Hold and drag the <i class="fa fa-bookmark-o"></i><sub><i class="fa fa-plus-circle"></i></sub> sign to open your saved items',
+							'Start dragging the <i class="fa fa-bookmark-o"></i><sub><i class="fa fa-plus-circle"></i></sub> icon to open your saved items',
 							false);
 				});
 			},
 			handleDragStart : function(e) {
 				var self = this;
 				e.originalEvent.dataTransfer.setData('srcId', $(e.target).attr('data-savable-id'));
-				e.originalEvent.dataTransfer.setData('savItem', JSON.stringify(new SavedItemEntity.SavedItem({
-					id : '-1',
-					type : 'sequence search',
+				e.originalEvent.dataTransfer.setData('savableType', 'saved_search');
+				e.originalEvent.dataTransfer.setData('savable', JSON.stringify(new SavedSearchEntity.SavedSearch({
+					type : 'sequences;' + self.data_source,
 					description : '',
-					pocket : self.collection.formattedQuery
+					search : self.collection.formattedQuery
 				}).toJSON()));
 				Lvl.vent.trigger('editable:items:dragstart');
 			},

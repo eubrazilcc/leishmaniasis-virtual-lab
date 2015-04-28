@@ -129,7 +129,7 @@ public final class CitationResource {
 				ImmutableMap.of(ORIGINAL_ARTICLE_KEY, false), count);
 		paginable.setElements(references);
 		// set additional and return to the caller
-		final int totalEntries = ((Long)count.getValue()).intValue();
+		final int totalEntries = references.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);
 		final List<FormattedQueryParam> formattedQuery = formattedQuery(filter, Reference.class);
 		paginable.setFormattedQuery(formattedQuery);

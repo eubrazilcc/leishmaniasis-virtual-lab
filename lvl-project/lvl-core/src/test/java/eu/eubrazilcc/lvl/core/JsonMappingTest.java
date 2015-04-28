@@ -165,6 +165,14 @@ public class JsonMappingTest {
 					.build();
 			assertThat("instance is not null", instance, notNullValue());
 
+			final SavedSearch savedSearch = SavedSearch.builder()
+					.id("abc123")
+					.type("sequence ; sandflies")
+					.saved(new Date())
+					.search(newHashSet(FormattedQueryParam.builder().term("country:spain").valid(true).build(),
+							FormattedQueryParam.builder().term("sequence").build()))
+							.build();
+
 			// test GenBank sequence
 			testGenBankSequence(gbSeq);
 
@@ -212,6 +220,13 @@ public class JsonMappingTest {
 			// test instance with links
 			instance.setLinks(newArrayList(refLink));
 			testInstance(instance);
+
+			// test saved searches
+			testSavedSearch(savedSearch);
+
+			// test saved searches with links
+			savedSearch.setLinks(newArrayList(refLink));
+			testSavedSearch(savedSearch);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -331,6 +346,20 @@ public class JsonMappingTest {
 		final LvlInstance instance2 = JSON_MAPPER.readValue(payload, LvlInstance.class);
 		assertThat("deserialized instance is not null", instance2, notNullValue());
 		assertThat("deserialized instance coincides with expected", instance2, equalTo(instance));
+	}
+
+	private void testSavedSearch(final SavedSearch savedSearch) throws IOException {
+		// test instance JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(savedSearch);
+		assertThat("serialized saved search is not null", payload, notNullValue());
+		assertThat("serialized saved search is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized saved search (JSON): " + payload);
+
+		// test instance JSON deserialization
+		final SavedSearch savedSearch2 = JSON_MAPPER.readValue(payload, SavedSearch.class);
+		assertThat("deserialized saved search is not null", savedSearch2, notNullValue());
+		assertThat("deserialized saved search coincides with expected", savedSearch2, equalTo(savedSearch));
 	}
 
 }

@@ -104,7 +104,7 @@ public class DatasetResource {
 		final List<Dataset> datasets = DATASET_DAO.list(ns2dbnamespace(namespace2, ownerid), paginable.getPageFirstEntry(), per_page, null, null, count);
 		paginable.setElements(datasets);
 		// set total count and return to the caller
-		final int totalEntries = ((Long)count.getValue()).intValue();
+		final int totalEntries = datasets.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);
 		return paginable;
 	}

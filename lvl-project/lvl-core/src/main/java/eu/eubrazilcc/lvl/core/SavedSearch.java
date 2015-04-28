@@ -25,18 +25,23 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
 
 import org.glassfish.jersey.linking.Binding;
@@ -47,24 +52,21 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.collect.Sets;
 
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Represents a single object or a collection of objects that is backed to a file in the application's database. Besides the properties
- * that are provided by the base class {@link BaseFile}, this class also provides the following additional properties: a list of 
- * {@link #getEditors() editors} to facilitate the application to control who is accessing the data, a collection of {@link #getTags() tags} 
- * for indexing the data sets, a {@link DatasetMetadata#getNamespace() namespace} for isolating the data sets and an optional {@link #getPublicLink() public link} 
- * that can be used to share the data with users who are not required to authenticate with the application.
+ * Saved search.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Dataset extends BaseFile implements Linkable<Dataset> {
+public class SavedSearch extends SavedItem implements Linkable<SavedSearch> {	
 
 	@InjectLinks({
-		@InjectLink(value="datasets/objects/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={
+		@InjectLink(value="saved/searches/{urlSafeNamespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
 				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
-				@Binding(name="urlSafeFilename", value="${instance.urlSafeFilename}")
+				@Binding(name="urlSafeId", value="${instance.urlSafeId}")
 		})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
@@ -75,11 +77,12 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 	@JsonIgnore
 	private String urlSafeNamespace;
 	@JsonIgnore
-	private String urlSafeFilename;	
+	private String urlSafeId;
 
 	private String namespace;
+	private Set<FormattedQueryParam> search = newHashSet();
 
-	public Dataset() {
+	public SavedSearch() {
 		super();
 		setNamespace(LVL_DEFAULT_NS);
 	}
@@ -106,12 +109,12 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		this.urlSafeNamespace = urlSafeNamespace;
 	}
 
-	public String getUrlSafeFilename() {
-		return urlSafeFilename;
+	public String getUrlSafeId() {
+		return urlSafeId;
 	}
 
-	public void setUrlSafeFilename(final String urlSafeFilename) {
-		this.urlSafeFilename = urlSafeFilename;
+	public void setUrlSafeId(final String urlSafeId) {
+		this.urlSafeId = urlSafeId;
 	}
 
 	public String getNamespace() {
@@ -123,54 +126,55 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(namespace, LVL_DEFAULT_NS).trim()));
 	}
 
-	@Override
-	public void setFilename(final String filename) {
-		super.setFilename(filename);
-		setUrlSafeFilename(urlEncodeUtf8(trimToEmpty(filename)));
-		// update latest version property
-		Metadata metadata2 = getMetadata();		
-		if (metadata2 == null) {
-			metadata2 = Metadata.builder().build(); 
-		}
-		if (metadata2.getIsLastestVersion() != null) {
-			metadata2.setIsLastestVersion(getFilename());
-		}
+	public void setId(final String id) {
+		this.id = id;
+		setUrlSafeId(urlEncodeUtf8(trimToEmpty(id)));
+	}	
+
+	public Set<FormattedQueryParam> getSearch() {
+		return search;
+	}
+
+	public void setSearch(final Set<FormattedQueryParam> search) {
+		this.search = search != null ? Sets.<FormattedQueryParam>newHashSet(search) : Sets.<FormattedQueryParam>newHashSet();
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof Dataset)) {
+		if (obj == null || !(obj instanceof SavedSearch)) {
 			return false;
 		}
-		final Dataset other = Dataset.class.cast(obj);
-		return  Objects.equals(urlSafeNamespace, other.urlSafeNamespace)
-				&& Objects.equals(urlSafeFilename, other.urlSafeFilename)				
+		final SavedSearch other = SavedSearch.class.cast(obj);
+		return Objects.equals(links, other.links)
+				&& Objects.equals(urlSafeNamespace, other.urlSafeNamespace)
+				&& Objects.equals(urlSafeId, other.urlSafeId)
 				&& equalsIgnoringVolatile(other);
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final Dataset other) {
+	public boolean equalsIgnoringVolatile(final SavedSearch other) {
 		if (other == null) {
 			return false;
 		}
-		return super.equals((BaseFile)other)
+		return super.equals((SavedItem)other)
 				&& Objects.equals(namespace, other.namespace)
-				&& Objects.equals(links, other.links);
+				&& Objects.equals(search, other.search);
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, urlSafeNamespace, urlSafeFilename, namespace);
+		return super.hashCode() + Objects.hash(links, urlSafeNamespace, urlSafeId, namespace, search);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
-				.add("BaseFile", super.toString())
+				.add("SavedItem", super.toString())
 				.add("links", links)
 				.add("urlSafeNamespace", urlSafeNamespace)
-				.add("urlSafeFilename", urlSafeFilename)
+				.add("urlSafeId", urlSafeId)
 				.add("namespace", namespace)
+				.add("search", search)
 				.toString();
 	}
 
@@ -182,7 +186,7 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 
 	public static class Builder {
 
-		private final Dataset instance = new Dataset();
+		private final SavedSearch instance = new SavedSearch();
 
 		public Builder links(final List<Link> links) {
 			instance.setLinks(links);
@@ -194,55 +198,34 @@ public class Dataset extends BaseFile implements Linkable<Dataset> {
 			return this;
 		}
 
-		/* Inherited from BaseFile */
-
 		public Builder id(final String id) {
-			instance.setId(id);
+			String id2 = null;
+			checkArgument(isNotBlank(id2 = trimToNull(id)), "Uninitialized or invalid id");
+			instance.setId(id2);
+			return this;			
+		}
+
+		public Builder type(final String type) {
+			instance.setType(parseType(type));
 			return this;
 		}
 
-		public Builder length(final long length) {
-			instance.setLength(length);
+		public Builder description(final @Nullable String description) {
+			instance.setDescription(trim(description));
 			return this;
 		}
 
-		public Builder chunkSize(final long chunkSize) {
-			instance.setChunkSize(chunkSize);
+		public Builder saved(final @Nullable Date saved) {
+			instance.setSaved(saved);
 			return this;
 		}
 
-		public Builder uploadDate(final Date uploadDate) {
-			instance.setUploadDate(uploadDate);
+		public Builder search(final @Nullable Set<FormattedQueryParam> search) {
+			instance.setSearch(search);
 			return this;
 		}
 
-		public Builder md5(final String md5) {
-			instance.setMd5(md5);
-			return this;
-		}
-
-		public Builder filename(final String filename) {
-			checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-			instance.setFilename(filename.trim());
-			return this;
-		}
-
-		public Builder contentType(final String contentType) {
-			instance.setContentType(contentType);
-			return this;
-		}
-
-		public Builder aliases(final List<String> aliases) {
-			instance.setAliases(aliases);
-			return this;
-		}
-
-		public Builder metadata(final Metadata metadata) {
-			instance.setMetadata(metadata);			
-			return this;
-		}
-
-		public Dataset build() {
+		public SavedSearch build() {
 			return instance;
 		}
 

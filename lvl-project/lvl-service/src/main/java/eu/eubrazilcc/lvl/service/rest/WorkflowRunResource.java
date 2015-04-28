@@ -118,7 +118,7 @@ public final class WorkflowRunResource {
 		final List<WorkflowRun> publicLinks = WORKFLOW_RUN_DAO.list(paginable.getPageFirstEntry(), per_page, null, null, null, count, ownerid);
 		paginable.setElements(publicLinks);
 		// set total count and return to the caller
-		final int totalEntries = ((Long)count.getValue()).intValue();
+		final int totalEntries = publicLinks.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);
 		return paginable;
 	}

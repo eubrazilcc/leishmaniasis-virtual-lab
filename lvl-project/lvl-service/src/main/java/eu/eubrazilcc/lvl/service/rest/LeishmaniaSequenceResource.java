@@ -136,7 +136,7 @@ public final class LeishmaniaSequenceResource {
 				ImmutableMap.of(ORIGINAL_SEQUENCE_KEY, false), count);
 		paginable.setElements(sequences);
 		// set additional output and return to the caller
-		final int totalEntries = ((Long)count.getValue()).intValue();
+		final int totalEntries = sequences.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);
 		final List<FormattedQueryParam> formattedQuery = formattedQuery(filter, Sequence.class);
 		paginable.setFormattedQuery(formattedQuery);

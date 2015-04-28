@@ -24,6 +24,8 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
+import java.util.Objects;
+
 /**
  * Formatted query parameter.
  * @author Erik Torres <ertorser@upv.es>
@@ -31,7 +33,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 public class FormattedQueryParam {
 
 	private String term;
-	private boolean validity;
+	private boolean valid;
 
 	public String getTerm() {
 		return term;
@@ -39,18 +41,33 @@ public class FormattedQueryParam {
 	public void setTerm(final String term) {
 		this.term = term;
 	}
-	public boolean isValidity() {
-		return validity;
+	public boolean isValid() {
+		return valid;
 	}
-	public void setValidity(final boolean validity) {
-		this.validity = validity;
+	public void setValid(final boolean valid) {
+		this.valid = valid;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (obj == null || !(obj instanceof FormattedQueryParam)) {
+			return false;
+		}
+		final FormattedQueryParam other = FormattedQueryParam.class.cast(obj);
+		return Objects.equals(term, other.term)
+				&& Objects.equals(valid, other.valid);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(term, valid);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(FormattedQueryParam.class)
 				.add("term", term)
-				.add("validity", validity)
+				.add("valid", valid)
 				.toString();
 	}
 
@@ -69,8 +86,8 @@ public class FormattedQueryParam {
 			return this;
 		}
 
-		public Builder validity(final boolean validity) {
-			instance.setValidity(validity);
+		public Builder valid(final boolean valid) {
+			instance.setValid(valid);
 			return this;
 		}
 

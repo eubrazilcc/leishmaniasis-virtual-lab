@@ -4,8 +4,8 @@
 
 define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/header/show/templates/header_nav',
 		'tpl!apps/header/show/templates/header_nav_link', 'tpl!apps/header/show/templates/header_notifications', 'apps/config/marionette/styles/style',
-		'apps/config/marionette/configuration', 'entities/saved_item', 'moment', 'qtip' ], function(Lvl, WorkspaceHeaderTpl, NavigationTpl, NavigationLinkTpl,
-		NotificationsTpl, Style, Configuration, SavedItemEntity, moment) {
+		'apps/config/marionette/configuration', 'moment', 'qtip' ], function(Lvl, WorkspaceHeaderTpl, NavigationTpl, NavigationLinkTpl, NotificationsTpl,
+		Style, Configuration, moment) {
 	Lvl.module('HeaderApp.Workspace.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var config = new Configuration();
 		function openSearchForm() {
@@ -135,14 +135,28 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				e.preventDefault();
 				var srcId = e.originalEvent.dataTransfer.getData('srcId');
 				var srcElem = $('div[data-savable-id="' + srcId + '"]');
-				var savableItem = new SavedItemEntity.SavedItem(JSON.parse(e.originalEvent.dataTransfer.getData('savItem')));
-				
-				// TODO				
-				console.log('DROP_TAG: ' + srcElem.prop('tagName'));
-				console.log('DROP_SAV: ' + JSON.stringify(savableItem.toJSON()));
-				// TODO
+				var savableType = e.originalEvent.dataTransfer.getData('savableType');
+				var savable = e.originalEvent.dataTransfer.getData('savable');
+				if (savableType && savable) {
+					require([ 'entities/' + savableType ], function(SavableEntity) {
+						switch (savableType) {
+						case 'saved_search':
+							var savableObj = new SavableEntity.SavedSearch(JSON.parse(savable));							
 
+							// TODO
+							console.log('SAVED: ' + JSON.stringify(savableObj.toJSON()));
+							// TODO
+
+							savableObj.save();
+							break;
+						default:
+							console.error('Unsupported savable type ignored: ' + savableType);
+							break;
+						}
+					});
+				}
 				srcElem.remove();
+				console.log && console.log('dropped element: ' + srcElem.prop('tagName').toLowerCase() + ', with id: ' + srcId);				
 				this.hideMySavedItems();
 			},
 			showMySavedItems : function() {

@@ -108,7 +108,7 @@ public class LvlInstanceResource {
 		final List<LvlInstance> instances = INSTANCE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count);
 		paginable.setElements(instances);
 		// set total count and return to the caller
-		final int totalEntries = ((Long)count.getValue()).intValue();
+		final int totalEntries = instances.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);
 		return paginable;
 	}
