@@ -38,7 +38,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
       <div class="row">
         <div class="col-xs-12">
           <h1>Leishmaniasis Virtual Laboratory (LVL) Administration &amp; Development Guide</h1>
-          <p class="lead">Version 0.0.1 - March 2015</p>
+          <p class="lead">Version 0.1.0 - April 2015</p>
           <p>
             <strong>Abstract.</strong> This document is a guide to the administration and configuration of the Leishmaniasis Virtual Laboratory (LVL).
           </p>
@@ -214,13 +214,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               text of the <a href="https://joinup.ec.europa.eu/software/page/eupl/licence-eupl" target="_blank">EUPL license</a> is 
               available in PDF file format in the 22 official languages of the EU.</p>
               
-            <p>A <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-resource-bundle/EUPL_LICENCE-1.1.TXT" target="_blank">readable version</a>
+            <p>A <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-bundle/EUPL_LICENCE-1.1.TXT" target="_blank">readable version</a>
               of the license extracted from the original English version and formatted to align within 80 columns is provided with the
               LVL distribution.</p>
               
             <p>The EUPL license is <a href="https://joinup.ec.europa.eu/software/page/eupl/eupl-compatible-open-source-licences" target="_blank">compatible</a>
               with most commonly used open-source licenses, such as Apache, MIT and LGPL, always depending on the use of the licensed 
-              software. The following <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-resource-bundle/NOTICE.TXT" target="_blank">copyright notice</a>
+              software. The following <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-bundle/NOTICE.TXT" target="_blank">copyright notice</a>
               is distributed with the LVL, to specify the use of external software in the LVL.</p>
             
           </div>
@@ -270,7 +270,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
               <li class="list-group-item">
                 <h4 class="list-group-item-heading"><a id="lvl_lvl-collection"></a>LVL collection</h4>
                 <p class="list-group-item-text">
-                  A database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>. <em>Recommended version:</em> 2.6.8. Also, a message 
+                  A database based on <a href="https://www.mongodb.org/" target="_blank">MongoDB</a>. <em>Recommended version:</em> 3.0.2. Also, a message 
                   broker based in <a href="http://activemq.apache.org/" target="_blank">Apache ActiveMQ</a> is provided to coordinate the operation among 
                   the <i>LVL service</i> replicas. <em>Recommended version:</em> 5.6.0 (embedded version 5.10.1).
                 </p>
@@ -321,7 +321,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
                     Besides supporting the execution of the user interface, the HTTP server can also serve to provide access to the data that is anonymously 
                     shared through public links. It's highly recommended that this data can be accessed outside the RESTful API to avoid overloading the
                     Java application server. When the option <code>portal.public</code> is available in the LVL 
-                    <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-resource-bundle/src/main/etc/lvl.xml" target="_blank" class="alert-link">main configuration</a>
+                    <a href="https://github.com/eubrazilcc/leishmaniasis-virtual-lab/blob/master/lvl-project/lvl-bundle/src/main/etc/lvl.xml" target="_blank" class="alert-link">main configuration</a>
                     a link will be automatically injected in the public link under the tag <code>downloadLink</code>. See the 
                     <a href="#examples_restful_api_export_public_link_to_sequence" class="alert-link">examples</a> bellow for further details.
                   </p>
@@ -366,7 +366,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
             <br />
 
-            <code> $ sudo tar xvzf lvl-resource-bundle-0.0.1.tar.gz -C /opt/lvl </code>
+            <code> $ sudo tar xvzf lvl-bundle-0.1.0.tar.gz -C /opt/lvl </code>
 
             <p></p>
 
@@ -626,7 +626,7 @@ total 8.0K
 
             <code> $ cd lvl-project </code>
             <br />
-            <code> $ mvn clean install -pl lvl-core,lvl-storage </code>            
+            <code> $ mvn clean install -pl lvl-test,lvl-core,lvl-storage </code>            
             <p></p>
 
             <p>Build the LVL services:</p>
@@ -646,11 +646,11 @@ total 8.0K
 
             <p>Build the LVL resources bundle and copy it to your server:</p>
 
-            <code> $ mvn clean package -pl lvl-resource-bundle </code>
+            <code> $ mvn clean package -pl lvl-bundle </code>
 
             <br />
 
-            <code> $ scp lvl-resource-bundle/target/lvl-resource-bundle-0.0.1.tar.gz &lt;USERNAME&gt;@&lt;SERVER_HOSTNAME&gt;:&lt;SERVER_LOCATION&gt;/ </code>
+            <code> $ scp lvl-bundle/target/lvl-bundle-0.1.0.tar.gz &lt;USERNAME&gt;@&lt;SERVER_HOSTNAME&gt;:&lt;SERVER_LOCATION&gt;/ </code>
             <p></p>
 
             <h3>Integration tests</h3>

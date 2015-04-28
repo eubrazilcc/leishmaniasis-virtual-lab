@@ -1,4 +1,4 @@
-﻿Leishmaniasis-Virtual-Lab - (v0.0.1)
+﻿Leishmaniasis-Virtual-Lab - (v0.1.0)
 ==
 The Leishmaniasis Virtual Laboratory: an open, collaborative environment for research in leishmaniasis.
 

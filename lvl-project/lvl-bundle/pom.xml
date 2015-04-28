@@ -27,7 +27,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<parent>
 		<groupId>eu.eubrazilcc.lvl</groupId>
 		<artifactId>lvl-project</artifactId>
-		<version>0.0.2</version>
+		<version>0.1.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 
