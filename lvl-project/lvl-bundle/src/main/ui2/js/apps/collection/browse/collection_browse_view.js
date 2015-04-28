@@ -254,7 +254,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 			handleClickSavable : function(e) {
 				require([ 'common/growl' ], function(createGrowl) {
 					createGrowl('Unsaved search',
-							'Start dragging the <i class="fa fa-bookmark-o"></i><sub><i class="fa fa-plus-circle"></i></sub> icon to open your saved items',
+							'Start dragging the icon <i class="fa fa-bookmark-o"></i><sub><i class="fa fa-plus-circle"></i></sub> to open your saved items',
 							false);
 				});
 			},

@@ -141,13 +141,25 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 					require([ 'entities/' + savableType ], function(SavableEntity) {
 						switch (savableType) {
 						case 'saved_search':
-							var savableObj = new SavableEntity.SavedSearch(JSON.parse(savable));							
-
-							// TODO
-							console.log('SAVED: ' + JSON.stringify(savableObj.toJSON()));
-							// TODO
-
-							savableObj.save();
+							var savableObj = new SavableEntity.SavedSearch(JSON.parse(savable));
+							savableObj.oauth2_token = config.authorizationToken();
+							savableObj.save({}, {
+								success : function(model, resp, options) {
+									require([ 'common/growl' ], function(createGrowl) {
+										var anchor = $('<a>', {
+											href : options.xhr.getResponseHeader('Location')
+										})[0];
+										var filename = anchor.pathname.substring(anchor.pathname.lastIndexOf('/') + 1);
+										createGrowl('Search saved',
+												'<a href="/#saved-items/searches"><i class="fa fa-arrow-circle-right fa-fw"></i> Saved searches</a>', false);
+									});
+								},
+								error : function(model, resp, options) {
+									require([ 'common/alert' ], function(alertDialog) {
+										alertDialog('Error', 'Failed to save search.');
+									});
+								}
+							});
 							break;
 						default:
 							console.error('Unsupported savable type ignored: ' + savableType);
@@ -156,7 +168,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 					});
 				}
 				srcElem.remove();
-				console.log && console.log('dropped element: ' + srcElem.prop('tagName').toLowerCase() + ', with id: ' + srcId);				
+				console.log && console.log('dropped element: ' + srcElem.prop('tagName').toLowerCase() + ', with id: ' + srcId);
 				this.hideMySavedItems();
 			},
 			showMySavedItems : function() {

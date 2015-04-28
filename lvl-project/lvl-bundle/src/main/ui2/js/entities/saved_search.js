@@ -7,7 +7,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		'use strict';
 		var config = new Configuration();
 		Entities.SavedSearch = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/saved/searches',
+			urlRoot : config.get('service', '') + '/saved/searches/~/',
 			defaults : {
 				type : '',
 				saved : '',
@@ -43,7 +43,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 			model : Entities.SavedSearch,
 			mode : 'server',
 			url : function() {
-				return config.get('service', '') + '/saved/searches';
+				return config.get('service', '') + '/saved/searches/~';
 			},
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
