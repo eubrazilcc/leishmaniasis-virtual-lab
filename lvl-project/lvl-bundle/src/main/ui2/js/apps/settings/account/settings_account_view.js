@@ -2,7 +2,7 @@
  * RequireJS module that defines the view: settings->account.
  */
 
-define([ 'marionette', 'tpl!apps/settings/account/templates/settings_account' ], function(Marionette, AccountTpl) {
+define([ 'marionette', 'tpl!apps/settings/account/tpls/settings_account' ], function(Marionette, AccountTpl) {
 	return {
 		Content : Marionette.ItemView.extend({
 			id : 'account',

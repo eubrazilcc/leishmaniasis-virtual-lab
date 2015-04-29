@@ -173,7 +173,7 @@ define(
 								}
 							});
 						}
-						this.searchSequences(search);
+						this.searchLinks(search);
 					},
 					addSearchTerm : function(e) {
 						e.preventDefault();

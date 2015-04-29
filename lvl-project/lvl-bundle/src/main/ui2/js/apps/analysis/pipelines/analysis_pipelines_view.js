@@ -152,7 +152,7 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 						}
 					});
 				}
-				this.searchSequences(search);
+				this.searchPipelines(search);
 			},
 			addSearchTerm : function(e) {
 				e.preventDefault();

@@ -139,7 +139,7 @@ define([ 'app', 'tpl!apps/e-compendium/browse/tpls/e-compendium_browse', 'tpl!ap
 						}
 					});
 				}
-				this.searchSequences(search);
+				this.searchCitations(search);
 			},
 			addSearchTerm : function(e) {
 				e.preventDefault();
