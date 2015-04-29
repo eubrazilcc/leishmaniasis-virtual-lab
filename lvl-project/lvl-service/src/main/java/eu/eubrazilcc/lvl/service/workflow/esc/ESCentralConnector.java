@@ -156,9 +156,8 @@ public enum ESCentralConnector implements Closeable2 {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		final JSONObject params = new JSONObject();
 		if (parameters != null) {
-			for (final Map.Entry<String, List<String>> entry : parameters.getParameters().entrySet()) {
-				List<String> a = entry.getValue();
-				params.put(entry.getKey(), a.get(0));
+			for (final Map<String, String> p : parameters.getParameters()) {
+				params.put(p.get("name"), p.get("value"));
 			}
 		}
 		try {
