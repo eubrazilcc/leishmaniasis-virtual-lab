@@ -51,6 +51,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
@@ -69,6 +71,8 @@ public class ESCentralTest {
 			ESCentralTest.class.getSimpleName() + "_" + random(8, true, true)));
 
 	private static final List<String> ESC_DOCUMENTS = newArrayList();
+
+	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
 	@Rule
 	public ConditionalIgnoreRule rule = new ConditionalIgnoreRule();
@@ -132,6 +136,18 @@ public class ESCentralTest {
 					.parameter("Align", "1", null, null)
 					.parameter("No. of Bootstrap Replications", "20", null, null)
 					.build();
+
+			// test JSON serialization
+			final String payload = JSON_MAPPER.writeValueAsString(parameters2);
+			assertThat("serialized workflow parameters is not null", payload, notNullValue());
+			assertThat("serialized workflow parameters is not empty", isNotBlank(payload), equalTo(true));
+			/* uncomment for additional output */
+			System.out.println(" >> Serialized workflow parameters (JSON): " + payload);
+
+			// test JSON deserialization
+			final WorkflowParameters parameters3 = JSON_MAPPER.readValue(payload, WorkflowParameters.class);
+			assertThat("deserialized workflow parameters is not null", parameters3, notNullValue());
+			assertThat("deserialized workflow parameters coincides with expected", parameters3, equalTo(parameters2));
 
 			// test submitting a workflow to e-SC
 			final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflowId, versionId, parameters2);
