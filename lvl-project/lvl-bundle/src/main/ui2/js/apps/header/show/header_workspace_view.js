@@ -30,11 +30,13 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 			template : NavigationLinkTpl,
 			onRender : function() {
 				this.$el.attr('role', 'presentation');
-				if (this.model.selected) {
-					this.$el.addClass('hidden');
-				}
-				if (this.model.get('isFirst') === 'settings') {
-					this.$el.prepend('<li role="presentation" class="divider"></li>');
+				if (this.model.get('text').toLowerCase() !== 'separator') {					
+					if (this.model.selected) {
+						this.$el.addClass('hidden');
+					}
+				} else {
+					this.$el.empty();
+					this.$el.addClass('divider');					
 				}
 			}
 		});

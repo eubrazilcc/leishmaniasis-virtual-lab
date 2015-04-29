@@ -9,8 +9,8 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				href : '/#home',
 				icon : 'fa-chain-broken',
 				text : 'Unknown',
-				isFirst : '', /* labels the first element of a collection */
-				isExternal : undefined /* labels external links that should be opened in a new tab/window */
+				isExternal : undefined
+			/* labels external links that should be opened in a new tab/window */
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);
@@ -51,8 +51,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				id : 1,
 				href : '/#home',
 				icon : 'fa-home',
-				text : 'Home',
-				isFirst : 'navigation'
+				text : 'Home'
 			}, {
 				id : 2,
 				href : '/#social',
@@ -88,90 +87,87 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		var iniSettingsLinks = function() {
 			Entities.settingsLinks = new Entities.NavigationCollection([ {
-				id : 8,
+				id : 9,
 				href : '/#saved-items',
 				icon : 'fa-archive',
-				text : 'Saved Items',
-				isFirst : 'settings'
+				text : 'Saved Items'
 			}, {
-				id : 9,
+				id : 10,
 				href : '/#settings',
 				icon : 'fa-cog',
 				text : 'Settings'
 			} ]);
 		};
-		
+
 		var iniAboutLinks = function() {
 			Entities.aboutLinks = new Entities.NavigationCollection([ {
-				id : 10,
+				id : 12,
 				href : '/#about/project',
 				icon : 'fa-group',
-				text : 'Project',
-				isFirst : 'about'
+				text : 'Project'
 			}, {
-				id : 11,
+				id : 13,
 				href : '/#about/key-features',
 				icon : 'fa-key',
 				text : 'Key Features'
 			} ]);
 		};
-		
+
 		var iniDocumentationLinks = function() {
 			Entities.documentationLinks = new Entities.NavigationCollection([ {
-				id : 12,
+				id : 15,
 				href : '/#doc/screencasts',
 				icon : 'fa-video-camera',
-				text : 'Screencasts',
-				isFirst : 'documentation'
+				text : 'Screencasts'
 			}, {
-				id : 13,
+				id : 16,
 				href : '/#doc/presentations',
 				icon : 'fa-desktop',
 				text : 'Presentations'
 			}, {
-				id : 14,
+				id : 17,
 				href : '/#doc/publications',
 				icon : 'fa-file-text-o',
 				text : 'Publications'
 			} ]);
 		};
-		
+
 		var iniSupportLinks = function() {
 			Entities.supportLinks = new Entities.NavigationCollection([ {
-				id : 15,
+				id : 19,
 				href : '/#support/mailing-list',
 				icon : 'fa-envelope-o',
 				text : 'Mailing list',
 				isFirst : 'support'
 			} ]);
 		};
-		
+
 		var iniSoftwareLinks = function() {
 			Entities.softwareLinks = new Entities.NavigationCollection([ {
-				id : 16,
+				id : 21,
 				href : '/#software/releases',
 				icon : 'fa-bullhorn',
 				text : 'Releases',
 				isFirst : 'software'
 			}, {
-				id : 17,
+				id : 22,
 				href : '/#software/downloads',
 				icon : 'fa-download',
 				text : 'Downloads'
 			}, {
-				id : 18,
+				id : 23,
 				href : '/#software/development',
 				icon : 'fa-github-alt',
 				text : 'Development',
 				isFirst : 'development'
 			}, {
-				id : 19,
+				id : 24,
 				href : '/apidoc/',
 				icon : 'fa-book',
 				text : 'API Documentation',
 				isExternal : true
 			} ]);
-		};		
+		};
 
 		var API = {
 			getNavigationEntities : function() {
@@ -185,13 +181,13 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 					iniSettingsLinks();
 				}
 				return Entities.settingsLinks;
-			},			
+			},
 			getAboutEntities : function() {
 				if (Entities.aboutLinks === undefined) {
 					iniAboutLinks();
 				}
 				return Entities.aboutLinks;
-			},			
+			},
 			getDocumentationEntities : function() {
 				if (Entities.documentationLinks === undefined) {
 					iniDocumentationLinks();
@@ -217,7 +213,15 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				if (Entities.settingsLinks === undefined) {
 					iniSettingsLinks();
 				}
-				return new Entities.NavigationCollection(Entities.navigationLinks.toJSON().concat(Entities.settingsLinks.toJSON()));
+				var navigationLinksJson = Entities.navigationLinks.toJSON();
+				return new Entities.NavigationCollection(navigationLinksJson.concat({
+					'id' : _.max(navigationLinksJson, function(link) {
+						return link.id;
+					}).id + 1,
+					'href' : '#',
+					'icon' : 'fa-minus',
+					'text' : 'separator'
+				}).concat(Entities.settingsLinks.toJSON()));
 			}
 		}
 
@@ -231,16 +235,16 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		Lvl.reqres.setHandler('navigation:about:entities', function() {
 			return API.getAboutEntities();
-		});		
-		
+		});
+
 		Lvl.reqres.setHandler('navigation:documentation:entities', function() {
 			return API.getDocumentationEntities();
-		});		
-		
+		});
+
 		Lvl.reqres.setHandler('navigation:support:entities', function() {
 			return API.getSupportEntities();
 		});
-		
+
 		Lvl.reqres.setHandler('navigation:software:entities', function() {
 			return API.getSoftwareEntities();
 		});

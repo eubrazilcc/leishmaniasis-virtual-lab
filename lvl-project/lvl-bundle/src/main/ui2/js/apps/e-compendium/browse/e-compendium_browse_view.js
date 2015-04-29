@@ -207,6 +207,7 @@ define([ 'app', 'tpl!apps/e-compendium/browse/tpls/e-compendium_browse', 'tpl!ap
 			onDestroy : function() {
 				// don't remove the styles in order to enable them to be reused
 				pace.stop();
+				this.stopListening();
 				// remove all event handlers
 				Lvl.vent.off('search:form:submitted');
 				$('#lvl-search-form').unbind();
