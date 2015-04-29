@@ -36,17 +36,17 @@ import java.util.Objects;
  */
 public class WorkflowParameters {
 
-	private Map<String, List<String>> parameters = new Hashtable<String, List<String>>();
+	private List<Map<String, String>> parameters = new ArrayList<Map<String, String>>();
 
-	public Map<String, List<String>> getParameters() {
+	public List<Map<String, String>> getParameters() {
 		return parameters;
 	}
 
-	public void setParameters(final Map<String, List<String>> parameters) {
+	public void setParameters(final List<Map<String, String>> parameters) {
 		if (parameters != null) {
 			this.parameters = parameters;
 		} else {
-			this.parameters = new Hashtable<String, List<String>>();
+			this.parameters = new ArrayList<Map<String, String>>();
 		}
 	}
 
@@ -82,20 +82,21 @@ public class WorkflowParameters {
 		private final WorkflowParameters instance = new WorkflowParameters();
 
 		public Builder parameter(final String name, final String value, final String type, final String description, final String ... options) {
-			List<String> a = instance.getParameters().get(name);
-			if (a == null) a = new ArrayList<String>();
-			else a.clear();
-			a.add(value);
-			a.add(type);
-			a.add(description);
+            Map m = new Hashtable<String, String>();
+			m.put("name", name);
+			m.put("value", value);
+			if (type != null)
+				m.put("type", type);
+			if (description != null)
+				m.put("description", description);
 			if (options != null)
-				for (String o : options)
-					a.add(o);
-			instance.getParameters().put(name, a);
+				for (int i = 0; i < options.length; i++)
+					m.put("option_" + Integer.toString(i), options[i]);
+			instance.getParameters().add(m);
 			return this;
 		}
 
-		public Builder parameters(final Map<String, List<String>> parameters) {
+		public Builder parameters(final List<Map<String, String>> parameters) {
 			instance.setParameters(parameters);
 			return this;
 		}
