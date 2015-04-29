@@ -49,6 +49,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
@@ -67,6 +69,8 @@ public class ESCentralTest {
 			ESCentralTest.class.getSimpleName() + "_" + random(8, true, true)));
 
 	private static final List<String> ESC_DOCUMENTS = newArrayList();
+
+	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
 	@Rule
 	public ConditionalIgnoreRule rule = new ConditionalIgnoreRule();
@@ -120,12 +124,24 @@ public class ESCentralTest {
 			final WorkflowParameters parameters2 = WorkflowParameters.builder()
 					// TODO .parameter("SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/L.chagasi1.fasta/download")
 					.parameter("SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/hsp70.fasta/download", null, null)
-					.parameter("HTTPGet-RequestHeaders", "Authorization: Bearer JOSRpOrkn5keBwuLhNAqybyQhEw0Ak7LFJ1WSR/J8XQ=", null, null)
+					.parameter("HTTPGet-RequestHeaders", "Authorization: Bearer ioRXl8p5IqlB7FDye7RhXiIW+OfFGGthH91CaFq4tu4=", null, null)
 					// this parameter must be a e-SC document
 					// .parameter("ReferenceData-FileId", "hsp70_LVL.fasta")
 					.parameter("Align", "1", null, null)
 					.parameter("No. of Bootstrap Replications", "20", null, null)
 					.build();
+
+			// test JSON serialization
+			final String payload = JSON_MAPPER.writeValueAsString(parameters2);
+			assertThat("serialized workflow parameters is not null", payload, notNullValue());
+			assertThat("serialized workflow parameters is not empty", isNotBlank(payload), equalTo(true));
+			/* uncomment for additional output */
+			System.out.println(" >> Serialized workflow parameters (JSON): " + payload);
+
+			// test JSON deserialization
+			final WorkflowParameters parameters3 = JSON_MAPPER.readValue(payload, WorkflowParameters.class);
+			assertThat("deserialized workflow parameters is not null", parameters3, notNullValue());
+			assertThat("deserialized workflow parameters coincides with expected", parameters3, equalTo(parameters2));
 
 			// test submitting a workflow to e-SC
 			final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflowId, versionId, parameters2);

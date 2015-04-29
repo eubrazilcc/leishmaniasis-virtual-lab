@@ -3,10 +3,10 @@
  */
 
 define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!apps/collection/browse/templates/toolbar_browse',
-		'tpl!apps/collection/browse/templates/search_term', 'tpl!apps/collection/browse/templates/add_search_term',
-		'tpl!apps/collection/browse/templates/save_search', 'apps/config/marionette/styles/style', 'entities/sequence', 'entities/saved_search', 'pace',
-		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl,
-		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, Style, SequenceEntity, SavedSearchEntity, pace, mapCn) {
+		'tpl!common/search/tpls/search_term', 'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search',
+		'apps/config/marionette/styles/style', 'entities/sequence', 'entities/saved_search', 'pace', 'common/country_names', 'backbone.oauth2', 'backgrid',
+		'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl,
+		Style, SequenceEntity, SavedSearchEntity, pace, mapCn) {
 	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
