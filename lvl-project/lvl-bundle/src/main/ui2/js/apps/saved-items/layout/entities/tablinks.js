@@ -49,7 +49,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				id : 1,
 				link : 'searches',
 				icon : 'fa-search',
-				text : 'Saved searches'
+				text : 'Searches'
 			} ]);
 		};
 
