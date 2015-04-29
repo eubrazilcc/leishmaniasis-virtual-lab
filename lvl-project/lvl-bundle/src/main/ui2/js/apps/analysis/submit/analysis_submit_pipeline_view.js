@@ -25,40 +25,19 @@ define([ 'app', 'tpl!apps/analysis/submit/templates/analysis_submit_pipeline', '
 					'version' : '902',
 					'invocationId' : null,
 					'parameters' : {
-						'parameters': {
-					        'Align': [
-					            formData.align_input
-					        ],
-					        'HTTPGet-RequestHeaders': [
-					            'Authorization: Bearer ' + config.authorizationToken()
-					        ],
-					        'No. of Bootstrap Replications': [
-					            formData.replicates_input
-					        ],
-					        'SequenceURL': [
-					            config.get('service') + '/datasets/objects/~/' + encodeURIComponent(formData.fasta_select) + '/download'
-					        ]
-					    }
-						
-						
-						
-						/* TODO 'parameters' : {
-							'block_11' : [ {
-								'key' : 'SequenceURL',
-								'value' : config.get('service') + '/datasets/objects/~/' + encodeURIComponent(formData.fasta_select) + '/download'
-							}, {
-								'key' : 'HTTPGet-RequestHeaders',
-								'value' : 'Authorization: Bearer ' + config.authorizationToken()
-							} ],
-							'block_1' : [ {
-								'key' : 'Align',
-								'value' : formData.align_input
-							} ],
-							'block_8' : [ {
-								'key' : 'No. of Bootstrap Replications',
-								'value' : formData.replicates_input
-							} ]
-						} */
+						'parameters' : [ {
+							'name' : 'SequenceURL',
+							'value' : config.get('service') + '/datasets/objects/~/' + encodeURIComponent(formData.fasta_select) + '/download'
+						}, {
+							'name' : 'HTTPGet-RequestHeaders',
+							'value' : 'Authorization: Bearer ' + config.authorizationToken()
+						}, {
+							'name' : 'Align',
+							'value' : formData.align_input
+						}, {
+							'name' : 'No. of Bootstrap Replications',
+							'value' : formData.replicates_input
+						} ]
 					},
 					'submitter' : null,
 					'submitted' : null,

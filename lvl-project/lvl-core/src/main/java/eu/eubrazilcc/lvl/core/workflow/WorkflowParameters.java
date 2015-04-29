@@ -23,12 +23,14 @@
 package eu.eubrazilcc.lvl.core.workflow;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.collect.Lists.newArrayList;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import com.google.common.collect.Lists;
 
 /**
  * Contains workflow parameters.
@@ -36,18 +38,14 @@ import java.util.Objects;
  */
 public class WorkflowParameters {
 
-	private List<Map<String, String>> parameters = new ArrayList<Map<String, String>>();
+	private List<Map<String, String>> parameters = newArrayList();
 
 	public List<Map<String, String>> getParameters() {
 		return parameters;
 	}
 
 	public void setParameters(final List<Map<String, String>> parameters) {
-		if (parameters != null) {
-			this.parameters = parameters;
-		} else {
-			this.parameters = new ArrayList<Map<String, String>>();
-		}
+		this.parameters = parameters != null ? newArrayList(parameters) : Lists.<Map<String, String>>newArrayList();		
 	}
 
 	@Override
@@ -81,18 +79,23 @@ public class WorkflowParameters {
 
 		private final WorkflowParameters instance = new WorkflowParameters();
 
-		public Builder parameter(final String name, final String value, final String type, final String description, final String ... options) {
-            Map m = new Hashtable<String, String>();
-			m.put("name", name);
-			m.put("value", value);
-			if (type != null)
-				m.put("type", type);
-			if (description != null)
-				m.put("description", description);
-			if (options != null)
-				for (int i = 0; i < options.length; i++)
-					m.put("option_" + Integer.toString(i), options[i]);
-			instance.getParameters().add(m);
+		public Builder parameter(final String name, final String value, final String type, final String description, 
+				final String... options) {
+			final Map<String, String> map = new Hashtable<>();
+			map.put("name", name);
+			map.put("value", value);
+			if (type != null) {
+				map.put("type", type);
+			}
+			if (description != null) {
+				map.put("description", description);
+			}
+			if (options != null) {
+				for (int i = 0; i < options.length; i++) {
+					map.put("option_" + Integer.toString(i), options[i]);
+				}
+			}
+			instance.getParameters().add(map);
 			return this;
 		}
 

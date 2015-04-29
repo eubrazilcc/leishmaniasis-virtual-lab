@@ -31,17 +31,17 @@ import static java.io.File.separator;
 import static java.lang.System.getProperty;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
+import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -123,16 +123,11 @@ public class ESCentralTest {
 			/* uncomment for additional output */
 			System.out.println(" >> Workflow parameters: " + parameters.toString());  		      
 
-            BufferedReader fich = new BufferedReader(new FileReader(concat(DEFAULT_LOCATION, TEST_CONFIG_DIR + separator + "e-sc.test")));
-            String auth = fich.readLine();
-            fich.close();
-
 			final WorkflowParameters parameters2 = WorkflowParameters.builder()
-					// TODO .parameter("SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/L.chagasi1.fasta/download")
 					.parameter("SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/hsp70.fasta/download", null, null)
-					.parameter("HTTPGet-RequestHeaders", "Authorization: Bearer " + auth, null, null)
+					.parameter("HTTPGet-RequestHeaders", "Authorization: Bearer " + new EnableESCentralTestIsFound().getAuthToken(), null, null)
 					// this parameter must be a e-SC document
-					// .parameter("ReferenceData-FileId", "hsp70_LVL.fasta")
+					// TODO .parameter("ReferenceData-FileId", "hsp70_LVL.fasta")
 					.parameter("Align", "1", null, null)
 					.parameter("No. of Bootstrap Replications", "20", null, null)
 					.build();
@@ -197,10 +192,13 @@ public class ESCentralTest {
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
 	public class EnableESCentralTestIsFound implements IgnoreCondition {
+		private final File file = new File(concat(DEFAULT_LOCATION, TEST_CONFIG_DIR + separator + "e-sc.test"));
 		@Override
-		public boolean isSatisfied() {
-			final File file = new File(concat(DEFAULT_LOCATION, TEST_CONFIG_DIR + separator + "e-sc.test"));
+		public boolean isSatisfied() {			
 			return !file.canRead();
+		}
+		public String getAuthToken() throws IOException {
+			return trimToEmpty(readFileToString(file)).replaceAll("(?m)^\\s", "");
 		}
 	}
 

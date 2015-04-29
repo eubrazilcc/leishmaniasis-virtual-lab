@@ -33,7 +33,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -63,7 +62,7 @@ import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
  * Workflow connector based on e-Science Central.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="http://www.esciencecentral.co.uk/">e-Science Central</a>
- * @see <a href="http://sourceforge.net/projects/esciencecentral/">e-Science Central at SourceForge.org</a>
+ * @see <a href="https://bitbucket.org/digitalinstitute/esciencecentral/">e-Science Central at Bitbucket</a>
  */
 public enum ESCentralConnector implements Closeable2 {
 
@@ -103,7 +102,7 @@ public enum ESCentralConnector implements Closeable2 {
 
 	public ImmutableList<WorkflowDefinition> listWorkflows() {
 		try {
-			final ImmutableList.Builder<WorkflowDefinition> builder = new ImmutableList.Builder<WorkflowDefinition>();
+			final ImmutableList.Builder<WorkflowDefinition> builder = new ImmutableList.Builder<>();
 			for (final EscWorkflow escWorkflow : workflowClient().listAllWorkflows()) {
 				builder.add(WorkflowDefinition.builder()
 						.id(escWorkflow.getId())
@@ -118,7 +117,7 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 	}
 
-	public WorkflowDefinition getWorkflow(final String workflowId) throws IllegalStateException {
+	public WorkflowDefinition getWorkflow(final String workflowId) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		try {
 			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);
@@ -138,9 +137,9 @@ public enum ESCentralConnector implements Closeable2 {
 		try {
 			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);
 			checkState(escWorkflow != null, "Workflow not found");
-			final WorkflowParameters.Builder builder = WorkflowParameters.builder();			
-			for (EscWorkflowParameterDesc d : workflowClient().listCallableWorkflowParametersEx(workflowId, versionId).values()) {
-				builder.parameter(d.getName(), d.getValue(), d.getType(), d.getDescription(), d.getOptions());
+			final WorkflowParameters.Builder builder = WorkflowParameters.builder();		
+			for (final EscWorkflowParameterDesc desc : workflowClient().listCallableWorkflowParametersEx(workflowId, versionId).values()) {
+				builder.parameter(desc.getName(), desc.getValue(), desc.getType(), desc.getDescription(), desc.getOptions());
 			}
 			return builder.build();
 		} catch (Exception e) {
@@ -156,8 +155,8 @@ public enum ESCentralConnector implements Closeable2 {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		final JSONObject params = new JSONObject();
 		if (parameters != null) {
-			for (final Map<String, String> p : parameters.getParameters()) {
-				params.put(p.get("name"), p.get("value"));
+			for (final Map<String, String> param : parameters.getParameters()) {
+				params.put(param.get("name"), param.get("value"));
 			}
 		}
 		try {
@@ -195,7 +194,7 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 	}
 
-	public String uploadFile(final File inputFile) throws IllegalStateException {
+	public String uploadFile(final File inputFile) {
 		checkArgument(inputFile != null && inputFile.exists(), "Uninitialized or invalid input file");
 		try {
 			final EscFolder home = storageClient().homeFolder();
@@ -238,9 +237,9 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 	}
 
-	public ImmutableList<WorkflowProduct> saveProducts(final String invocationId, final File outputDir) throws IllegalStateException {
+	public ImmutableList<WorkflowProduct> saveProducts(final String invocationId, final File outputDir) {
 		checkArgument(isNotBlank(invocationId), "Uninitialized or invalid invocation identifier");
-		final ImmutableList.Builder<WorkflowProduct> builder = new ImmutableList.Builder<WorkflowProduct>();
+		final ImmutableList.Builder<WorkflowProduct> builder = new ImmutableList.Builder<>();
 		try {
 			final EscDocument[] docs = storageClient().folderDocuments(invocationId);
 			for (final EscDocument doc : docs) {
@@ -263,7 +262,7 @@ public enum ESCentralConnector implements Closeable2 {
 
 	@Override
 	public void preload() {
-		LOGGER.info("e-Science Central connector initialized successfully");
+		LOGGER.info("e-SC connector initialized successfully");
 	}
 
 	@Override
@@ -278,7 +277,7 @@ public enum ESCentralConnector implements Closeable2 {
 			}
 		} finally {
 			mutex.unlock();
-			LOGGER.info("e-Science Central connector shutdown successfully");
+			LOGGER.info("e-SC connector shutdown successfully");
 		}
 	}
 
