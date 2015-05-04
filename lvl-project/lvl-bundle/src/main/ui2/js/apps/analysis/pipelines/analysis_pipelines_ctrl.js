@@ -15,21 +15,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow', 'ap
 					})
 				});
 				view.on('analysis:pipeline:run', function(workflowId) {
-					/* TODO require([ 'entities/dataset', 'apps/analysis/submit/analysis_submit_pipeline_view' ], function(DatasetModel, SubmitView) {
-						var datasets = new DatasetModel.DatasetAllCollection({
-							oauth2_token : config.authorizationToken()
-						});
-						var dialogView = new SubmitView.Content({
-							collection : datasets,
-							'workflowId' : workflowId
-						});
-						datasets.fetch({
-							reset : true
-						}).done(function() {
-							Lvl.dialogRegion.show(dialogView);
-						});
-					}); */
-					require([ 'apps/analysis/submit2/analysis_submit_pipeline_view' ], function(SubmitView) {
+					require([ 'apps/analysis/submit/analysis_submit_pipeline_view' ], function(SubmitView) {
 						var dialogView = new SubmitView.Content({
 							'workflowId' : workflowId
 						});
