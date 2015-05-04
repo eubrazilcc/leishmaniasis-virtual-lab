@@ -1572,6 +1572,22 @@ Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:
             <p>This profile will run with the JAXB2 Maven Plugin with the parameters: <code>-Xfluent-api</code> and <code>-Xcommons-lang</code>, as mentioned
             	above.</p>
             
+            <h3>Examples:</h3>
+            
+            <h4>Count Leishmania sequences annotated with the taxonomy feature cross-referenced from NCBI taxonomy database:</h4>
+            
+            <code>
+            &gt; db.leishmania.find({'leishmania.sequence.gbseqFeatureTable.gbfeature' : { $elemMatch : { 'gbfeatureQuals.gbqualifier' : { $elemMatch : { 'gbqualifierName' : 'db_xref', 'gbqualifierValue' : /^taxon:/ } } } } }).count()
+            </code>
+            <p></p>
+            
+            <h4>Count Sandflies sequences annotated with the taxonomy feature cross-referenced from NCBI taxonomy database:</h4>
+            
+            <code>
+            &gt;db.sandflies.find({'sandfly.sequence.gbseqFeatureTable.gbfeature' : { $elemMatch : { 'gbfeatureQuals.gbqualifier' : { $elemMatch : { 'gbqualifierName' : 'db_xref', 'gbqualifierValue' : /^taxon:/ } } } } }).count()
+            </code>
+            <p></p>
+            
           </div>
         </div>
       </div>

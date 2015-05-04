@@ -120,7 +120,7 @@ public enum ESCentralConnector implements Closeable2 {
 	public WorkflowDefinition getWorkflow(final String workflowId) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		try {
-			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);
+			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);			
 			checkState(escWorkflow != null, "Workflow not found");
 			return WorkflowDefinition.builder()
 					.id(escWorkflow.getId())
@@ -137,7 +137,7 @@ public enum ESCentralConnector implements Closeable2 {
 		try {
 			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);
 			checkState(escWorkflow != null, "Workflow not found");
-			final WorkflowParameters.Builder builder = WorkflowParameters.builder();		
+			final WorkflowParameters.Builder builder = WorkflowParameters.builder();
 			for (final EscWorkflowParameterDesc desc : workflowClient().listCallableWorkflowParametersEx(workflowId, versionId).values()) {
 				builder.parameter(desc.getName(), desc.getValue(), desc.getType(), desc.getDescription(), desc.getOptions());
 			}

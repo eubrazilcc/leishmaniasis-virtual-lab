@@ -162,7 +162,12 @@ public enum SavedSearchDAO implements AuthenticatedDAO<String, SavedSearch> {
 			public SavedSearch apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
 			}
-		});		
+		});
+	}
+	
+	@Override
+	public List<String> typeahead(final String field, final String query, final int size) {
+		throw new UnsupportedOperationException("Typeahead searches are not currently supported in this class");
 	}
 
 	@Override

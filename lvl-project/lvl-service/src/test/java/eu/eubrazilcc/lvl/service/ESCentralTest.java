@@ -121,7 +121,7 @@ public class ESCentralTest {
 			assertThat("workflow parameters list is not null", parameters.getParameters(), notNullValue());
 			assertThat("workflow parameters list is not empty", !parameters.getParameters().isEmpty(), equalTo(true));
 			/* uncomment for additional output */
-			System.out.println(" >> Workflow parameters: " + parameters.toString());  		      
+			System.out.println(" >> Workflow parameters: " + parameters.toString());
 
 			final WorkflowParameters parameters2 = WorkflowParameters.builder()
 					.parameter("SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/hsp70.fasta/download", null, null)

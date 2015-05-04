@@ -67,6 +67,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 
+import com.google.common.collect.Lists;
+
 import eu.eubrazilcc.lvl.core.Dataset;
 import eu.eubrazilcc.lvl.service.Datasets;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
@@ -240,6 +242,21 @@ public class DatasetResource {
 		return Response.ok(stream, isNotBlank(dataset.getContentType()) ? dataset.getContentType(): APPLICATION_OCTET_STREAM)
 				.header("content-disposition", "attachment; filename = " + dataset.getFilename())
 				.build();
+	}
+
+	@GET
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{query: " + URL_FRAGMENT_PATTERN + "}/typeahead")
+	@Produces(APPLICATION_JSON)
+	public List<String> typeahead(final @PathParam("namespace") String namespace, final @PathParam("query") String query, 
+			final @QueryParam("max") @DefaultValue("100") int max, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace), query2 = parseParam(query);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":*:view")
+				.getPrincipal();
+		// get dataset filenames from database
+		final List<String> filenames = DATASET_DAO.typeahead(ns2dbnamespace(namespace2, ownerid), query2, max);
+		return filenames != null ? filenames : Lists.<String>newArrayList();
 	}
 
 }

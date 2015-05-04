@@ -106,6 +106,15 @@ public interface BaseDAO<K, E> {
 	 */
 	List<E> list(int start, int size, @Nullable ImmutableMap<String, String> filter, @Nullable Sorting sorting, 
 			@Nullable ImmutableMap<String, Boolean> projection, @Nullable MutableLong count);
+	
+	/**
+	 * Optional operation that search a field for the specified query, returning a list of items that match the query.
+	 * @param field - field to query against
+	 * @param query - the query to match
+	 * @param size - maximum number of elements returned
+	 * @return the fields that matches the query.
+	 */
+	List<String> typeahead(String field, String query, int size);
 
 	/**
 	 * Returns the number of elements in the database.

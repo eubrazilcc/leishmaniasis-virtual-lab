@@ -50,7 +50,8 @@ define([ 'app', 'tpl!apps/settings/instances/tpls/settings_instances', 'tpl!apps
 					var rawValue = this.model.get(this.column.get('name'));
 					var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 					if (formattedValue && typeof formattedValue === 'number') {
-						this.$el.append('<i class="fa fa-heartbeat fa-fw text-success"></i> ' + moment(formattedValue).format('MMM DD[,] YYYY [at] HH[:]mm'));
+						var color = (formattedValue + 43200) > new Date().getTime() ? 'text-success' : 'text-danger';
+						this.$el.append('<i class="fa fa-heartbeat fa-fw ' + color + '"></i> ' + moment(formattedValue).format('MMM DD[,] YYYY [at] HH[:]mm'));
 					}
 					this.delegateEvents();
 					return this;

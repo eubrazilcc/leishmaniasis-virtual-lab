@@ -80,6 +80,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				'click a#lvl-search-form-collapse-btn' : 'collapseSearchForm',
 				'click button#lvl-search-form-submit-btn-xs' : 'submitSearchFormXs',
 				'submit form#lvl-search-form' : 'submitSearchForm',
+				'submit form#lvl-search-form-xs' : 'submitSearchFormXs',
 				'dragover div#lvl-save-items-target' : 'saveItemsDragOverHandler',
 				'dragenter div#lvl-save-items-target' : 'saveItemsDragEnterHandler',
 				'dragleave div#lvl-save-items-target' : 'saveItemsDragLeaveHandler',

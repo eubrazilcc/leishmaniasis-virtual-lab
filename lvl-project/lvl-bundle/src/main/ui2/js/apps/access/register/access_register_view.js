@@ -5,6 +5,7 @@
 define([ 'app', 'tpl!apps/access/register/templates/register', 'apps/config/marionette/styles/style', 'apps/config/marionette/configuration',
 		'bootstrapvalidator', 'backbone.syphon' ], function(Lvl, RegisterTpl, Style, Configuration) {
 	Lvl.module('AccessApp.Register.View', function(View, Lvl, Backbone, Marionette, $, _) {
+		'use strict';
 		var lvlAuth = new Configuration().get('auth', '');
 		View.Content = Marionette.ItemView.extend({
 			template : RegisterTpl,
@@ -56,7 +57,7 @@ define([ 'app', 'tpl!apps/access/register/templates/register', 'apps/config/mari
 					});
 				}).fail(function() {
 					$('#alertBox').removeClass('hidden');				
-				});				
+				});
 			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {

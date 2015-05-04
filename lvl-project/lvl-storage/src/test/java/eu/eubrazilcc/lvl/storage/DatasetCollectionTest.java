@@ -166,7 +166,29 @@ public class DatasetCollectionTest {
 			checkDataset(dataset, textFile1, "namespace", null, metadata);
 			checkFile(textFile1, dataset.getOutfile());
 			/* Uncomment for additional output */
-			System.out.println(dataset.toString());			
+			System.out.println(dataset.toString());
+			
+			// test type-ahead with filename
+			List<String> filenames = DATASET_DAO.typeahead("namespace", "ile1", 100);
+			assertThat("filenames are not null", filenames, notNullValue());
+			assertThat("filenames are not empty", filenames.isEmpty(), equalTo(false));
+			assertThat("number of filenames coincides with expected", filenames.size(), equalTo(2));
+			/* Uncomment for additional output */
+			System.out.println(filenames.toString());
+			
+			filenames = DATASET_DAO.typeahead("namespace", "ile1", 1);
+			assertThat("filenames are not null", filenames, notNullValue());
+			assertThat("filenames are not empty", filenames.isEmpty(), equalTo(false));
+			assertThat("number of filenames coincides with expected", filenames.size(), equalTo(1));
+			/* Uncomment for additional output */
+			System.out.println(filenames.toString());
+			
+			filenames = DATASET_DAO.typeahead("namespace", "GZ", 100);
+			assertThat("filenames are not null", filenames, notNullValue());
+			assertThat("filenames are not empty", filenames.isEmpty(), equalTo(false));
+			assertThat("number of filenames coincides with expected", filenames.size(), equalTo(1));
+			/* Uncomment for additional output */
+			System.out.println(filenames.toString());
 
 			// create open access link
 			final String secret = DATASET_DAO.createOpenAccessLink("namespace", gzipFile1.getName());

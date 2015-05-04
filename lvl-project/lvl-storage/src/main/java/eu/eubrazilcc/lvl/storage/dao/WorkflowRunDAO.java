@@ -164,6 +164,11 @@ public enum WorkflowRunDAO implements AuthenticatedDAO<String, WorkflowRun> {
 			}
 		});		
 	}
+	
+	@Override
+	public List<String> typeahead(final String field, final String query, final int size) {
+		throw new UnsupportedOperationException("Typeahead searches are not currently supported in this class");
+	}
 
 	@Override
 	public long count() {

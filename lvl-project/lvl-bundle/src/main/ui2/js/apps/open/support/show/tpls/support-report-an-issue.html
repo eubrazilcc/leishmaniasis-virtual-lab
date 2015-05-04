@@ -4,61 +4,61 @@
 	form:
 </p>
 <div class="well">
-	<form class="form-horizontal">
+	<form class="form-horizontal" id="lvlIssueReportForm" novalidate="novalidate" data-pristine="true">
 		<fieldset>
 			<legend>Issue report form</legend>
 			<div class="form-group">
-	      		<label for="inputEmail" class="col-lg-2 control-label">Email</label>
+	      		<label for="email" class="col-lg-2 control-label">Email<sup class="text-danger" title="Required">*</sup></label>
 	      		<div class="col-lg-10">
-	        		<input type="email" class="form-control" id="inputEmail" placeholder="Enter your email" required autocomplete="off">
+	        		<input type="email" class="form-control" name="email" placeholder="Enter your email" required>
 	        		<span class="help-block">We will send you a response after your report is investigated.</span>
 	      		</div>
 	    	</div>	    	
 	    	<div class="form-group">
-	      		<label for="inputBrowser" class="col-lg-2 control-label">Browser</label>
+	      		<label for="browser" class="col-lg-2 control-label">Browser<sup class="text-danger" title="Required">*</sup></label>
 	      		<div class="col-lg-10">
-	        		<input type="text" class="form-control" id="inputBrowser" placeholder="Which browser are you using (with version number)" required>
+	        		<input type="text" class="form-control" name="browser" placeholder="Which browser are you using (with version number)" required>
 	        		<span class="help-block">For example: Firefox 37.0.1</span>
 	      		</div>
 	    	</div>
 	    	<div class="form-group">
-	      		<label for="inputOS" class="col-lg-2 control-label">System</label>
+	      		<label for="system" class="col-lg-2 control-label">System<sup class="text-danger" title="Required">*</sup></label>
 	      		<div class="col-lg-10">
-	        		<input type="text" class="form-control" id="inputOS" placeholder="Which operating system is used (with version number)" required>
+	        		<input type="text" class="form-control" name="system" placeholder="Which operating system is used (with version number)" required>
 	        		<span class="help-block">For example: Windows 7</span>
 	      		</div>
 	    	</div>
 	    	<div class="form-group">
-	    		<label for="inputConfig" class="col-lg-2 control-label">Configuration</label>
+	    		<label for="config" class="col-lg-2 control-label">Configuration</label>
 	    		<div class="col-lg-10">
-	    			<textarea class="form-control" rows="3" id="inputConfig"></textarea>
+	    			<textarea class="form-control" rows="3" name="config"></textarea>
 	    			<span class="help-block">Any configuration details that might be relevant (unusual browser configuration, extensions used if any).</span>
 	    		</div>
 	    	</div>
 	    	<div class="form-group">
-	    		<label for="inputSteps" class="col-lg-2 control-label">Steps</label>
+	    		<label for="steps" class="col-lg-2 control-label">Steps</label>
 	    		<div class="col-lg-10">
-	    			<textarea class="form-control" rows="3" id="inputSteps"></textarea>
+	    			<textarea class="form-control" rows="3" name="steps"></textarea>
 	    			<span class="help-block">Steps that need to be followed to see the error.</span>
 	    		</div>
 	    	</div>
 	    	<div class="form-group">
-	    		<label for="inputDescription" class="col-lg-2 control-label">Description</label>
+	    		<label for="description" class="col-lg-2 control-label">Description<sup class="text-danger" title="Required">*</sup></label>
 	    		<div class="col-lg-10">
-	    			<textarea class="form-control" rows="3" id="inputDescription"></textarea>
+	    			<textarea class="form-control" rows="3" name="description" required></textarea>
 	    			<span class="help-block">Description of what happens and what you think is wrong.</span>
 	    		</div>
 	    	</div>
 	    	<div class="form-group">
-	      		<label for="inputScreenshot" class="col-lg-2 control-label">Screenshot</label>
+	      		<label for="screenshot" class="col-lg-2 control-label">Screenshot</label>
 	      		<div class="col-lg-10">
-	      			<input type="file" class="form-control" id="inputScreenshot" accept="image/*">
+	      			<input type="file" class="form-control" id="screenshot" accept="image/*">
 	        		<span class="help-block">Adding an screenshot will help us find the problem.</span>
 	      		</div>
 	    	</div>
 	    	<div class="form-group">
 	    		<div class="col-lg-10 col-lg-offset-2">
-	    			<button type="reset" class="btn btn-default">Report issue</button>
+	    			<button type="submit" class="btn btn-default" id="lvlReportIssueBtn" disabled="disabled">Report issue</button>
 	    		</div>
 	    	</div>
 	    	<input type="hidden" id="inputLvlVersion" value="1.0.0">  	

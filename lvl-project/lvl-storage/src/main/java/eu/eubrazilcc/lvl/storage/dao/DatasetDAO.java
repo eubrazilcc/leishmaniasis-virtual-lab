@@ -193,6 +193,11 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 	public void undoLatestVersion(final @Nullable String namespace, final String filename) {
 		MONGODB_CONN.undoLatestVersion(namespace, filename);		
 	}
+	
+	@Override
+	public List<String> typeahead(final @Nullable String namespace, final String query, final int size) {
+		return MONGODB_CONN.typeaheadFile(namespace, query, size);
+	}
 
 	@Override
 	public long count(final @Nullable String namespace) {

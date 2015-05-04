@@ -201,6 +201,15 @@ public interface BaseFileDAO<K, E extends BaseFile> {
 	 * @param filename - filename whose associate file is to be searched in the database
 	 */
 	void undoLatestVersion(@Nullable String namespace, String filename);
+	
+	/**
+	 * Optional operation that search the filename for the specified query, returning a list of items that match the query.
+	 * @param namespace - (optional) name space to be searched in the database. When nothing specified, the default namespace is used
+	 * @param query - the query to match
+	 * @param size - maximum number of elements returned
+	 * @return the fields that matches the query.
+	 */
+	List<String> typeahead(@Nullable String namespace, String query, int size);
 
 	/**
 	 * Returns the number of files in the database under the specified name space. All the files stored in the database (including versions) 

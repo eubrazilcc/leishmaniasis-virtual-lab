@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.List;
 
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Path;
@@ -368,7 +369,34 @@ public class DatasetResourceTest extends Testable {
 		location = new URI((String)response.getHeaders().get("Location").get(0));			
 		assertThat("Create dataset (NCBI.GZIP sandfly) location is not null", location, notNullValue());
 		assertThat("Create dataset (NCBI.GZIP sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
-
+		
+		// test type-ahead
+		List<?> filenames = testCtxt.target().path(path.value())
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
+				.path("my_")
+				.path("typeahead")
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
+				.get(List.class);			
+		assertThat("Get filenames (typeahead) result is not null", filenames, notNullValue());
+		assertThat("Get filenames (typeahead) is not empty", filenames.isEmpty(), equalTo(false));
+		assertThat("Number of filenames (typeahead) coincides with expected", filenames.size(), equalTo(3));
+		// uncomment for additional output
+		System.out.println(" >> Get filenames (typeahead) result: " + filenames.toString());
+		
+		filenames = testCtxt.target().path(path.value())
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
+				.path("ZIP")
+				.path("typeahead")
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
+				.get(List.class);			
+		assertThat("Get filenames (typeahead) result is not null", filenames, notNullValue());
+		assertThat("Get filenames (typeahead) is not empty", filenames.isEmpty(), equalTo(false));
+		assertThat("Number of filenames (typeahead) coincides with expected", filenames.size(), equalTo(1));
+		// uncomment for additional output
+		System.out.println(" >> Get filenames (typeahead) result: " + filenames.toString());		
+		
 		// test file download
 		URI downloadUri = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS))
 				.path(urlEncodeUtf8("my_ncbi_sequence.xml")).path("download").getUri();

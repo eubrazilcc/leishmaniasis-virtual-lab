@@ -251,6 +251,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<version>${mongodb.driver.version}</version>
 			</dependency>
 			
+			<!-- TODO <dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongodb-driver</artifactId>
+				<version>3.0.0</version>
+			</dependency> -->
+			
 			<!-- Apache ActiveMQ: open source message broker -->
 			
 			<dependency> <!-- Broker service, including a client -->

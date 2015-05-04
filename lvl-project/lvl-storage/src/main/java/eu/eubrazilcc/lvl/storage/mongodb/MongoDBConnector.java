@@ -299,7 +299,7 @@ public enum MongoDBConnector implements Closeable2 {
 			}
 		})), new BasicDBObject("default_language", "english").append("name", collection + ".text_idx"));
 	}
-	
+
 	/**
 	 * Creates a sparse, non unique, index, if one does not already exist on the specified collection.
 	 * Indexes created with this method are created in the background. <strong>Note:</strong> Do NOT use compound indexes to
@@ -1002,6 +1002,25 @@ public enum MongoDBConnector implements Closeable2 {
 			restoreLatestVersion(gfsNs, filename2);
 		}
 	}
+
+	public List<String> typeaheadFile(final @Nullable String namespace, final String query, final int size) {
+		checkArgument(isNotBlank(query), "Uninitialized or invalid query");
+		final String query2 = query.trim();
+		final List<String> list = newArrayList();
+		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
+		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);		
+		final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)).append(
+				"filename", new BasicDBObject("$regex", query2).append("$options", "i")), new BasicDBObject("filename", 1));
+		cursor.skip(0).limit(size);
+		try {
+			while (cursor.hasNext()) {
+				list.add(((GridFSDBFile) cursor.next()).getFilename());
+			}
+		} finally {
+			cursor.close();
+		}		
+		return list;
+	}	
 
 	/**
 	 * Counts the files stored in the specified name space.

@@ -10,10 +10,11 @@ requirejs.config({
 		/* jQuery JavaScript library */
 		'jquery' : [ '//code.jquery.com/jquery-2.1.3.min', 'vendor/cached/jquery.min' ],
 		'spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min', 'vendor/cached/spin.min' ], // 2.1.0 is unavailable in CDN
-		'jquery.spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/jquery.spin.min', 'jquery.spin.min' ], // 2.1.0 is unavailable in CDN
+		'jquery.spin' : [ '//cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/jquery.spin.min', 'vendor/cached/jquery.spin.min' ], // 2.1.0 is unavailable in CDN
 		/* Boostrap front-end framework */
 		'bootstrap' : [ '//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min', 'vendor/cached/bootstrap.min' ],
 		'bootstrapvalidator' : [ '//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min', 'vendor/cached/bootstrapValidator.min' ], // 0.6.2: commercial license
+		'bootstrap3-typeahead' : 'vendor/provided/bootstrap3-typeahead.min',
 		/* Backbone + Marionette MVC framework */
 		'underscore' : [ '//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min', 'vendor/cached/underscore-min' ],
 		'backbone' : [ '//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min', 'vendor/cached/backbone-min' ],
@@ -65,7 +66,10 @@ requirejs.config({
 		'bootstrapvalidator' : {
 			deps : [ 'bootstrap' ],
 			exports : 'BootstrapValidator'
-		},		
+		},
+		'bootstrap3-typeahead' : {
+			deps : [ 'bootstrap' ]
+		},
 		'underscore' : {
 			exports : '_'
 		},

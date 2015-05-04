@@ -9,18 +9,18 @@
 <br>
 <h5>Subscribing to the users list</h5>
 <div class="well">
-	<form class="form-horizontal">
+	<form class="form-horizontal" id="lvlSubscribeForm" novalidate="novalidate" data-pristine="true">
 		<fieldset>
 			<legend>Subscription form</legend>
 			<div class="form-group">
-	      		<label for="inputEmail" class="col-lg-2 control-label">Email</label>
+	      		<label for="inputEmail" class="col-lg-2 control-label">Email<sup class="text-danger" title="Required">*</sup></label>
 	      		<div class="col-lg-10">
-	        		<input type="email" class="form-control" id="inputEmail" placeholder="Enter your email" required autocomplete="off">
+	        		<input type="email" class="form-control" name="email" placeholder="Enter your email" required>
 	      		</div>
 	    	</div>
 	    	<div class="form-group">
 	    		<div class="col-lg-10 col-lg-offset-2">
-	    			<button type="reset" class="btn btn-default">Subscribe</button>
+	    			<button type="submit" class="btn btn-default" id="lvlSubscribeBtn" disabled="disabled">Subscribe</button>
 	    		</div>
 	    	</div>
 	    </fieldset>

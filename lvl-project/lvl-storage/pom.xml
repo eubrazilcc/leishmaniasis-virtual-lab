@@ -66,6 +66,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<artifactId>mongo-java-driver</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		<!-- TODO <dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver</artifactId>
+			<scope>provided</scope>
+		</dependency> -->
 		
 		<!-- Apache ActiveMQ: (optional) embedded broker -->		
 		<dependency>
