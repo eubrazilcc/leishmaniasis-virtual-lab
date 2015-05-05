@@ -70,10 +70,19 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 						e.preventDefault();
 						var formData = Backbone.Syphon.serialize(this);
 						var self = this;
+						var stableVersion = 0;
+						switch (self.workflowId) {
+						case 'workflows-eubcc-nj_pipeline-1.0':
+							stableVersion = 902;
+							break;
+						default:
+							stableVersion = 0;
+							break;
+						}
 						var requestData = {
 							'id' : null,
 							'workflowId' : self.workflowId,
-							'version' : '902', // TODO
+							'version' : stableVersion,
 							'invocationId' : null,
 							'parameters' : {
 								'parameters' : []
