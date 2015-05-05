@@ -462,10 +462,19 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 				if ("accession".equalsIgnoreCase(parameter)) {
 					// convert the expression to upper case and compare for exact matching
 					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toUpperCase());
-				} else if ("locale".equalsIgnoreCase(parameter)) {
-					// regular expression to match the language part of the locale
-					final Pattern regex = compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");					
-					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);
+				} else if ("locale".equalsIgnoreCase(parameter)) {					
+					if (compile("[a-z]{2}").matcher(expression).matches()) {
+						// search the language part of the locale
+						final Pattern regex = compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");
+						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);
+					} else if (compile("_[A-Z]{2}").matcher(expression).matches()) {
+						// search the country part of the locale
+						final Pattern regex = compile("([a-z]{2}){0,1}(" + expression.toUpperCase() + ")");
+						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);						
+					} else {
+						// exact match
+						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
+					}
 				} else if ("length".equalsIgnoreCase(parameter)) {
 					// comparison operator
 					query2 = mongoNumeriComparison(field, expression);

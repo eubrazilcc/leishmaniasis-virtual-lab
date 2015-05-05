@@ -31,6 +31,7 @@ import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.ORIGINAL_SEQUENCE_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -276,10 +277,22 @@ public class SandflyCollectionTest {
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(1));
 
 			// filter: keyword matching search
-			filter = of("locale", Locale.ENGLISH.toString());
+			filter = of("locale", Locale.ENGLISH.toString()); // language
 			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandfly is not null", sandflies, notNullValue());
 			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), equalTo(numItems / 2));
+
+			filter = of("locale", "_" + Locale.FRANCE.getCountry()); // country
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
+			assertThat("filtered sandfly is not null", sandflies, notNullValue());
+			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), 
+					anyOf(equalTo(numItems / 2), equalTo((numItems / 2) + 1)));
+
+			filter = of("locale", Locale.FRANCE.toString()); // exact match
+			sandflies = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
+			assertThat("filtered sandfly is not null", sandflies, notNullValue());
+			assertThat("number of filtered sandfly coincides with expected", sandflies.size(), 
+					anyOf(equalTo(numItems / 2), equalTo((numItems / 2) + 1)));
 
 			// filter: combined keyword matching search
 			filter = of("source", GENBANK, "accession", Integer.toString(random.nextInt(numItems)));

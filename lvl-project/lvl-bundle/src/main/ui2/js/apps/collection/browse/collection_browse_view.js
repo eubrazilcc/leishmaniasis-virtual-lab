@@ -83,7 +83,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 								var code2 = twoLetterCode ? twoLetterCode.toUpperCase() : '';
 								var countryName = mapCn[code2];
 								if (countryName) {
-									this.$el.append('<a href="/#collection/map/country/' + code2.toLowerCase() + '"><img src="img/blank.gif" class="flag flag-'
+									this.$el.append('<a href="#" data-country-code2="' + code2.toLowerCase() + '"><img src="img/blank.gif" class="flag flag-'
 											+ code2.toLowerCase() + '" alt="' + countryName + '" /><span class="hidden-xs"> ' + countryName + '</span></a>');
 								}
 							}
@@ -190,6 +190,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				'click div.lvl-savable' : 'handleClickSavable',
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
+				'click a[data-country-code2]' : 'filterByCountry',
 				'click a[data-seq_id]' : 'showSequenceRecord'
 			},
 			exportFile : function(e, data) {
@@ -250,6 +251,13 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				} else {
 					newTermInput.val('');
 				}
+			},
+			filterByCountry : function(e) {
+				e.preventDefault();
+				var _self = this;
+				var target = $(e.target);
+				var countryCode = target.is('span') || target.is('img') ? target.parent('a').get(0).getAttribute('data-country-code2') : target.attr('data-country-code2');
+				this.searchSequences('locale:_' + countryCode.toUpperCase());				
 			},
 			handleClickSavable : function(e) {
 				require([ 'common/growl' ], function(createGrowl) {

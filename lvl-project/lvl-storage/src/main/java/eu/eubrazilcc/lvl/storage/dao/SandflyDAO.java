@@ -460,9 +460,18 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 					// convert the expression to upper case and compare for exact matching
 					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toUpperCase()); // TODO
 				} else if ("locale".equalsIgnoreCase(parameter)) {
-					// regular expression to match the language part of the locale
-					final Pattern regex = compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");
-					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex); // TODO
+					if (compile("[a-z]{2}").matcher(expression).matches()) {
+						// search the language part of the locale
+						final Pattern regex = compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");
+						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex); // TODO
+					} else if (compile("_[A-Z]{2}").matcher(expression).matches()) {
+						// search the country part of the locale
+						final Pattern regex = compile("([a-z]{2}){0,1}(" + expression.toUpperCase() + ")");
+						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex); // TODO
+					} else {
+						// exact match
+						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression); // TODO
+					}
 				} else if ("length".equalsIgnoreCase(parameter)) {
 					// comparison operator
 					query2 = mongoNumeriComparison(field, expression); // TODO

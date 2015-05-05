@@ -32,6 +32,7 @@ import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.ORIGINAL_SEQUENCE_KEY;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -253,7 +254,7 @@ public class LeishmaniaCollectionTest {
 				}
 				start += leishmanias.size();
 			} while (!leishmanias.isEmpty());
-			
+
 			// collection statistics
 			final Map<String, List<SimpleStat>> stats = LEISHMANIA_DAO.collectionStats();
 			assertThat("leishmania collection stats is not null", stats, notNullValue());
@@ -278,10 +279,22 @@ public class LeishmaniaCollectionTest {
 			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), equalTo(1));
 
 			// filter: keyword matching search
-			filter = of("locale", Locale.ENGLISH.toString());
+			filter = of("locale", Locale.ENGLISH.toString()); // language
 			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
 			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), equalTo(numItems / 2));
+			
+			filter = of("locale", "_" + Locale.FRANCE.getCountry()); // country
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
+			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
+			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), 
+					anyOf(equalTo(numItems / 2), equalTo((numItems / 2) + 1)));
+			
+			filter = of("locale", Locale.FRANCE.toString()); // exact match
+			leishmanias = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
+			assertThat("filtered leishmania is not null", leishmanias, notNullValue());
+			assertThat("number of filtered leishmania coincides with expected", leishmanias.size(), 
+					anyOf(equalTo(numItems / 2), equalTo((numItems / 2) + 1)));
 
 			// filter: combined keyword matching search
 			filter = of("source", GENBANK, "accession", Integer.toString(random.nextInt(numItems)));
