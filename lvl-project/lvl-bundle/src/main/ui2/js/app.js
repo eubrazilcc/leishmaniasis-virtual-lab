@@ -46,6 +46,27 @@ define([ 'marionette', 'apps/config/marionette/regions/dialog' ], function(Mario
 		footerRegion : '#footer-region'
 	});
 
+	var flash = {
+		params : {},
+		addParams : function(options) {
+			this.params = options || {};
+		},
+		reset : function() {
+			this.params = {};
+		}
+	};
+
+	Lvl.flash = function(params) {
+		flash.addParams(params);
+		return this;
+	};
+
+	Lvl.flashed = function() {
+		var params = flash.params;
+		flash.reset();		
+		return params;
+	};
+
 	Lvl.navigate = function(route, options) {
 		options || (options = {});
 		Backbone.history.navigate(route, options);

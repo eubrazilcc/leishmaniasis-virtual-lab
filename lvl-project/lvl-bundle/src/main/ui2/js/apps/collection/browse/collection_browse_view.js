@@ -256,8 +256,9 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				e.preventDefault();
 				var _self = this;
 				var target = $(e.target);
-				var countryCode = target.is('span') || target.is('img') ? target.parent('a').get(0).getAttribute('data-country-code2') : target.attr('data-country-code2');
-				this.searchSequences('locale:_' + countryCode.toUpperCase());				
+				var countryCode = target.is('span') || target.is('img') ? target.parent('a').get(0).getAttribute('data-country-code2') : target
+						.attr('data-country-code2');
+				this.searchSequences('locale:_' + countryCode.toUpperCase());
 			},
 			handleClickSavable : function(e) {
 				require([ 'common/growl' ], function(createGrowl) {
@@ -271,7 +272,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				e.originalEvent.dataTransfer.setData('srcId', $(e.target).attr('data-savable-id'));
 				e.originalEvent.dataTransfer.setData('savableType', 'saved_search');
 				e.originalEvent.dataTransfer.setData('savable', JSON.stringify(new SavedSearchEntity.SavedSearch({
-					type : 'sequences;' + self.data_source,
+					type : 'collection;browse;' + self.data_source,
 					description : '',
 					search : self.collection.formattedQuery
 				}).toJSON()));
@@ -352,10 +353,21 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				$(filter.el).addClass('hidden');
 
 				this.grid.clearSelectedModels();
-
-				this.collection.fetch({
-					reset : true
-				});
+			},
+			onShow : function() {
+				var _self = this;
+				var params = Lvl.flashed();				
+				if (!jQuery.isEmptyObject(params) && params.get('type') === 'collection;browse;' + _self.data_source) {					
+					var search = '';
+					_.each(params.get('search'), function(item) {						
+						search += item.term;						
+					});					
+					_self.searchSequences(search);					
+				} else {
+					this.collection.fetch({
+						reset : true
+					});
+				}
 			}
 		});
 	});

@@ -20,7 +20,7 @@ define([ 'app', 'tpl!apps/saved-items/searches/tpls/saved-items_searches', 'tpl!
 							this.$el.empty();
 							var rawValue = this.model.get(this.column.get('name'));
 							if (rawValue !== undefined) {
-								this.$el.append(rawValue.replace(';', ' <i class="fa fa-angle-double-right fa-fw"></i> '));
+								this.$el.append(rawValue.replace(/;/g, ' <i class="fa fa-angle-double-right fa-fw"></i> '));
 							}
 							this.delegateEvents();
 							return this;
@@ -190,7 +190,12 @@ define([ 'app', 'tpl!apps/saved-items/searches/tpls/saved-items_searches', 'tpl!
 			searchSavedSearches : function(search) {
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
-				backgridFilter.submit();
+				// TODO backgridFilter.submit();				
+				// TODO
+				require([ 'common/growl' ], function(createGrowl) {
+					createGrowl('Operation unavailable', 'Search feature is coming soon. Stay tuned!', false);
+				});
+				// TODO
 			},
 			resetSearchTerms : function(e) {
 				e.preventDefault();
@@ -261,14 +266,9 @@ define([ 'app', 'tpl!apps/saved-items/searches/tpls/saved-items_searches', 'tpl!
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-run-search') : target.attr('data-run-search');
 				var item = this.collection.get(itemId);
-				item.oauth2_token = config.authorizationToken();
-
-				// TODO
-				require([ 'common/growl' ], function(createGrowl) {
-					createGrowl('Operation unavailable', 'Run saved search coming soon. Stay tuned!', false);
+				Lvl.flash(item).navigate(item.get('type').replace(/;/g, '/').replace(/\s+/g, ''), {
+					trigger : true
 				});
-				// TODO
-
 			},
 			removeSearch : function(e) {
 				e.preventDefault();

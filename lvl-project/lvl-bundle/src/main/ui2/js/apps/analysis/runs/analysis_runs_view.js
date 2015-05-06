@@ -158,7 +158,12 @@ define(
 					searchLinks : function(search) {
 						var backgridFilter = $('form.backgrid-filter:first');
 						backgridFilter.find('input:first').val(search);
-						backgridFilter.submit();
+						// TODO backgridFilter.submit();				
+						// TODO
+						require([ 'common/growl' ], function(createGrowl) {
+							createGrowl('Operation unavailable', 'Search feature is coming soon. Stay tuned!', false);
+						});
+						// TODO
 					},
 					resetSearchTerms : function(e) {
 						e.preventDefault();

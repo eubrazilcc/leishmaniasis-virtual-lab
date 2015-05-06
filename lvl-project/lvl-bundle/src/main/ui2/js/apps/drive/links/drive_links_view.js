@@ -188,7 +188,12 @@ define(
 											searchLinks : function(search) {
 												var backgridFilter = $('form.backgrid-filter:first');
 												backgridFilter.find('input:first').val(search);
-												backgridFilter.submit();
+												// TODO backgridFilter.submit();				
+												// TODO
+												require([ 'common/growl' ], function(createGrowl) {
+													createGrowl('Operation unavailable', 'Search feature is coming soon. Stay tuned!', false);
+												});
+												// TODO
 											},
 											resetSearchTerms : function(e) {
 												e.preventDefault();
@@ -313,11 +318,21 @@ define(
 												});
 											},
 											onDestroy : function() {
-												// don't remove the styles in
-												// order to enable them to be
-												// reused
+												// don't remove the styles in order to enable them to be reused
 												pace.stop();
 												this.stopListening();
+												// remove all event handlers
+												Lvl.vent.off('search:form:submitted');
+												$('#lvl-search-form').unbind();
+												$('button#lvl-feature-tour-btn').unbind();
+												// clean menu
+												$('#lvl-floating-menu').hide(0);
+												$('#lvl-floating-menu-toggle').hide(0);
+												$('#lvl-floating-menu').empty();
+												// clean tour
+												require([ 'hopscotch' ], function(hopscotch) {
+													hopscotch.endTour();
+												});
 											},
 											onRender : function() {
 												var self = this;
