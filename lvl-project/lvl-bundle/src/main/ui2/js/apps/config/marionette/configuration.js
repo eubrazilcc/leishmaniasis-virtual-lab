@@ -5,11 +5,18 @@
  * change or disappear in the next versions of RequireJS without warning.
  */
 
-define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
+define([ 'marionette', 'underscore', 'jquery', 'text!data/config.json' ], function(Marionette, _, $, ConfigJson) {
 	var bust = requirejs.s.contexts._.config.urlArgs ? '?' + requirejs.s.contexts._.config.urlArgs : '';
-	Marionette.Controller.Configuration = Marionette.Controller.extend({
-		initialize : function(options) {
-			this.endpoint = 'http://lvl.i3m.upv.es';
+	Marionette.Object.Configuration = Marionette.Object.extend({
+		initialize : function() {
+			var configObj;
+			try {
+				configObj = JSON.parse(ConfigJson);
+			} catch (err) {
+				alert('Failed to load configuration: ' + err);
+				throw err;
+			}
+			this.endpoint = configObj.endpoint.url;
 			this.config = [ {
 				id : 'bust',
 				value : bust
@@ -18,19 +25,19 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 				value : this.endpoint
 			}, {
 				id : 'auth',
-				value : this.endpoint + '/lvl-auth/oauth2/v1'
+				value : this.endpoint + '/lvl-auth/oauth2/v' + configObj.endpoint.api_version
 			}, {
 				id : 'service',
-				value : this.endpoint + '/lvl-service/rest/v1'
+				value : this.endpoint + '/lvl-service/rest/v' + configObj.endpoint.api_version
 			}, {
 				id : 'oauth2_app',
 				value : {
-					'client_id' : 'lvl_portal',
-					'client_secret' : 'changeit'
+					'client_id' : configObj.oauth2.client_id,
+					'client_secret' : configObj.oauth2.client_secret
 				}
 			}, {
 				id : 'linkedin_api_key',
-				value : '771s7duqp3m4zc'
+				value : configObj.linkedin.api_key
 			} ];
 		},
 		get : function(id, _def) {
@@ -139,5 +146,5 @@ define([ 'marionette', 'underscore', 'jquery' ], function(Marionette, _, $) {
 					+ encodeURIComponent(this.redirectUri()) + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
 		}
 	});
-	return Marionette.Controller.Configuration;
+	return Marionette.Object.Configuration;
 });

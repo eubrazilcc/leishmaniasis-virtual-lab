@@ -4,10 +4,17 @@
 
 define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps/e-compendium/browse/tpls/toolbar_browse',
 		'tpl!common/search/tpls/search_term', 'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search',
-		'apps/config/marionette/styles/style', 'entities/workflow', 'pace', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all',
-		'backgrid-filter' ], function(Lvl, PipelinesTpl, ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, Style, WorkflowModel, pace) {
+		'apps/config/marionette/styles/style', 'entities/workflow', 'text!data/pipelines.json', 'pace', 'backbone.oauth2', 'backgrid', 'backgrid-paginator',
+		'backgrid-select-all', 'backgrid-filter' ], function(Lvl, PipelinesTpl, ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, Style,
+		WorkflowModel, PipelinesJson, pace) {
 	Lvl.module('AnalysisApp.Pipelines.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
+		var pipelinesObj = [];
+		try {
+			pipelinesObj = JSON.parse(PipelinesJson);
+		} catch (err) {
+			console.log('Failed to load pipelines configuration: ' + err);
+		}
 		var columns = [
 				{
 					name : 'id',
@@ -43,11 +50,14 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								if ('workflows-eubcc-nj_pipeline-1.0' === formattedValue) {
+								var pipeline = _.find(pipelinesObj, function(item) {
+									return item.id === formattedValue;
+								});								
+								if (pipeline) {
 									this.$el.append('<a href="#" data-pipeline="' + formattedValue
 											+ '" title="Run" class="text-muted"><i class="fa fa-play fa-fw"></i></a>');
 								} else {
-									this.$el.append('<span class="text-muted"><i class="fa fa-pause fa-fw"></i></span>');
+									this.$el.append('<span title="Under development" class="text-muted"><i class="fa fa-wrench fa-fw"></i></span>');
 								}
 							}
 							this.delegateEvents();
@@ -128,7 +138,7 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
 				'click a[data-pipeline]' : 'runPipeline'
-			},			
+			},
 			deselectAll : function(e) {
 				e.preventDefault();
 				$('#lvl-floating-menu').hide('fast');

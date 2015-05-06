@@ -4,7 +4,7 @@
  */
 
 define([ 'marionette', 'apps/config/marionette/configuration' ], function(Marionette, Configuration) {
-	Marionette.Controller.Style = Marionette.Controller.extend({
+	Marionette.Object.Style = Marionette.Object.extend({
 		initialize : function(options) {
 			this.bust = new Configuration().get('bust', '');
 			this.baseStyles = [ {
@@ -52,5 +52,5 @@ define([ 'marionette', 'apps/config/marionette/configuration' ], function(Marion
 			this.loadCss(this.baseStyles);
 		}
 	});
-	return Marionette.Controller.Style;
+	return Marionette.Object.Style;
 });
