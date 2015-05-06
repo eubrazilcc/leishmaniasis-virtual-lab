@@ -1,5 +1,5 @@
 <!-- Top navigation bar -->
-<nav class="navbar navbar-default navbar-fixed-top">
+<nav class="navbar navbar-inverse navbar-fixed-top">
 	<div class="container-fluid">
 		<div class="navbar-header">
 			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
@@ -11,7 +11,8 @@
 			<a class="navbar-brand" href="/#home" title="Leishmaniasis Virtual Laboratory">L<span class="text-danger">ei</span>shVL</a>
 		</div>
 		<div class="collapse navbar-collapse" id="navbar-collapse-1">			
-			<ul class="nav navbar-nav navbar-right">				
+			<ul class="nav navbar-nav navbar-right">
+				<li role="presentation" class="disabled bg-danger"><a href="javascript:;" title="Admin mode"><i class="fa fa-warning fa-fw"></i> ADMIN MODE</a></li>				
 				<li class="dropdown">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" id="username" title="My account"><i class="fa fa-user fa-fw"></i><span class="hidden-md hidden-sm"> <%= username() %> </span><span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu">
@@ -40,10 +41,7 @@
 							</button>
 						</span>
 					</div>
-				</div>
-				<div class="form-group">
-          			<div id="section-navigation"></div>
-        		</div>
+				</div>				
 			</form>			
 		</div>
 	</div>

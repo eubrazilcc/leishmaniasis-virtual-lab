@@ -98,15 +98,24 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				text : 'Settings'
 			} ]);
 		};
+		
+		var iniAdminLinks = function() {
+			Entities.adminLinks = new Entities.NavigationCollection([ {
+				id : 12,
+				href : '/#admin',
+				icon : 'fa-wrench',
+				text : 'Admin'
+			} ]);
+		};
 
 		var iniAboutLinks = function() {
 			Entities.aboutLinks = new Entities.NavigationCollection([ {
-				id : 12,
+				id : 14,
 				href : '/#about/project',
 				icon : 'fa-group',
 				text : 'Project'
 			}, {
-				id : 13,
+				id : 15,
 				href : '/#about/key-features',
 				icon : 'fa-key',
 				text : 'Key Features'
@@ -115,17 +124,17 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		var iniDocumentationLinks = function() {
 			Entities.documentationLinks = new Entities.NavigationCollection([ {
-				id : 15,
+				id : 17,
 				href : '/#doc/screencasts',
 				icon : 'fa-video-camera',
 				text : 'Screencasts'
 			}, {
-				id : 16,
+				id : 18,
 				href : '/#doc/presentations',
 				icon : 'fa-desktop',
 				text : 'Presentations'
 			}, {
-				id : 17,
+				id : 19,
 				href : '/#doc/publications',
 				icon : 'fa-file-text-o',
 				text : 'Publications'
@@ -134,34 +143,31 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		var iniSupportLinks = function() {
 			Entities.supportLinks = new Entities.NavigationCollection([ {
-				id : 19,
+				id : 21,
 				href : '/#support/mailing-list',
 				icon : 'fa-envelope-o',
-				text : 'Mailing list',
-				isFirst : 'support'
+				text : 'Mailing list'
 			} ]);
 		};
 
 		var iniSoftwareLinks = function() {
 			Entities.softwareLinks = new Entities.NavigationCollection([ {
-				id : 21,
+				id : 23,
 				href : '/#software/releases',
 				icon : 'fa-bullhorn',
-				text : 'Releases',
-				isFirst : 'software'
+				text : 'Releases'
 			}, {
-				id : 22,
+				id : 24,
 				href : '/#software/downloads',
 				icon : 'fa-download',
 				text : 'Downloads'
 			}, {
-				id : 23,
+				id : 25,
 				href : '/#software/development',
 				icon : 'fa-github-alt',
-				text : 'Development',
-				isFirst : 'development'
+				text : 'Development'
 			}, {
-				id : 24,
+				id : 26,
 				href : '/apidoc/',
 				icon : 'fa-book',
 				text : 'API Documentation',

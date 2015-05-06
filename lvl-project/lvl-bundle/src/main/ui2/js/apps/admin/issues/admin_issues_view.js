@@ -1,51 +1,52 @@
 /**
- * RequireJS module that defines the view: collection->browse.
+ * RequireJS module that defines the view: admin->issues.
  */
 
-define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!apps/collection/browse/templates/toolbar_browse',
+define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issues/tpls/toolbar_browse',
 		'tpl!common/search/tpls/search_term', 'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search',
-		'apps/config/marionette/styles/style', 'entities/sequence', 'entities/saved_search', 'pace', 'common/country_names', 'backbone.oauth2', 'backgrid',
-		'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl, ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl,
-		Style, SequenceEntity, SavedSearchEntity, pace, mapCn) {
-	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
+		'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'entities/saved_search', 'pace', 'moment', 'backbone.oauth2',
+		'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, SearchesTpl, ToolbarTpl, SearchTermTpl, AddSearchTermTpl,
+		SaveSearchTpl, Style, Configuration, SearchEntity, pace, moment) {
+	Lvl.module('Admin.Searches.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
+		var config = new Configuration();
 		var columns = [
 				{
-					name : 'dataSource',
-					label : 'Source',
+					name : 'type',
+					label : 'Target',
 					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'definition',
-					label : 'Definition',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'accession',
-					label : 'Accession',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'length',
-					label : 'Length',
-					editable : false,
-					cell : 'integer',
-					formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
-						innerFormatter : new Backgrid.NumberFormatter({
-							decimals : 0
-						}),
-						fromRaw : function(rawValue, model) {
-							var self = this;
-							return self.innerFormatter.fromRaw(rawValue) + " bp";
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							if (rawValue !== undefined) {
+								this.$el.append(rawValue.replace(/;/g, ' <i class="fa fa-angle-double-right fa-fw"></i> '));
+							}
+							this.delegateEvents();
+							return this;
 						}
 					})
 				},
 				{
-					name : 'gene',
-					label : 'Gene',
+					name : 'saved',
+					label : 'Saved',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'number') {
+								this.$el.append('<i class="fa fa-clock-o fa-fw"></i> ' + moment(formattedValue).format('MMM DD[,] YYYY [at] HH[:]mm'));
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},
+				{
+					name : 'search',
+					label : 'Search',
 					editable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
@@ -54,7 +55,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 							if (rawValue !== undefined) {
 								var names = '';
 								for (var i = 0; i < rawValue.length; i++) {
-									names += rawValue[i] + ' ';
+									var color = Boolean(rawValue[i]['valid']) ? 'label-success' : 'label-warning';
+									names += '<span class="label ' + color + '">' + rawValue[i]['term'] + '</span> ';
 								}
 								this.$el.append(names.trim());
 							}
@@ -64,14 +66,14 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					})
 				},
 				{
-					name : 'organism',
-					label : 'Organism',
+					name : 'description',
+					label : 'Description',
 					editable : false,
 					cell : 'string'
 				},
 				{
-					name : 'locale',
-					label : 'Country',
+					name : 'id',
+					label : '',
 					editable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
@@ -79,13 +81,8 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								var twoLetterCode = formattedValue.split("_")[1];
-								var code2 = twoLetterCode ? twoLetterCode.toUpperCase() : '';
-								var countryName = mapCn[code2];
-								if (countryName) {
-									this.$el.append('<a href="#" data-country-code2="' + code2.toLowerCase() + '"><img src="img/blank.gif" class="flag flag-'
-											+ code2.toLowerCase() + '" alt="' + countryName + '" /><span class="hidden-xs"> ' + countryName + '</span></a>');
-								}
+								this.$el.append('<a href="#" title="Run" class="text-muted" data-run-search="' + formattedValue
+										+ '"><i class="fa fa-play fa-fw"></i></a>');
 							}
 							this.delegateEvents();
 							return this;
@@ -96,15 +93,14 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					name : 'id',
 					label : '',
 					editable : false,
-					sortable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="#" title="Open" data-seq_id="' + formattedValue
-										+ '" class="text-muted"><i class="fa fa-eye fa-fw"></i></a>');
+								this.$el.append('<a href="#" title="Remove" class="text-muted" data-remove-search="' + formattedValue
+										+ '"><i class="fa fa-times fa-fw"></i></a>');
 							}
 							this.delegateEvents();
 							return this;
@@ -112,10 +108,9 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					})
 				} ];
 		View.Content = Marionette.ItemView.extend({
-			id : 'browse',
-			template : BrowseTpl,
+			id : 'issues',
+			template : SearchesTpl,
 			initialize : function() {
-				this.data_source = this.collection.data_source || 'sandflies';
 				this.listenTo(this.collection, 'request', this.displaySpinner);
 				this.listenTo(this.collection, 'sync error', this.removeSpinner);
 				this.grid = new Backgrid.Grid({
@@ -125,21 +120,15 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 						headerCell : 'select-all'
 					} ].concat(columns),
 					collection : this.collection,
-					emptyText : 'No sequences found'
+					emptyText : 'No issues found'
 				});
 				// setup search
-				Lvl.vent.on('search:form:submitted', this.searchSequences);
+				Lvl.vent.on('search:form:submitted', this.searchSavedSearches);
 				// setup menu
 				$('#lvl-floating-menu-toggle').show(0);
 				$('#lvl-floating-menu').hide(0);
 				$('#lvl-floating-menu').empty();
-				$('#lvl-floating-menu').append(ToolbarTpl({
-					isSanflies : 'sandflies' === this.data_source,
-					isLeishmania : 'leishmania' === this.data_source
-				}));
-				$('a#export-btn').on('click', {
-					view : this
-				}, this.exportFile);
+				$('#lvl-floating-menu').append(ToolbarTpl({}));
 				$('a#uncheck-btn').on('click', {
 					grid : this.grid
 				}, this.deselectAll);
@@ -190,31 +179,23 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				'click div.lvl-savable' : 'handleClickSavable',
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
-				'click a[data-country-code2]' : 'filterByCountry',
-				'click a[data-seq_id]' : 'showSequenceRecord'
-			},
-			exportFile : function(e, data) {
-				e.preventDefault();
-				var selectedModels = e.data.view.grid.getSelectedModels();
-				if (selectedModels && selectedModels.length > 0) {
-					$('#lvl-floating-menu').hide('fast');
-					e.data.view.trigger('sequences:file:export', e.data.view.collection.data_source, selectedModels);
-				} else {
-					$('#lvl-floating-menu').hide('0');
-					require([ 'common/growl' ], function(createGrowl) {
-						createGrowl('No sequences selected', 'Select at least one sequence to be exported', false);
-					});
-				}
+				'click a[data-run-search]' : 'runSearch',
+				'click a[data-remove-search]' : 'removeSearch'
 			},
 			deselectAll : function(e) {
 				e.preventDefault();
 				$('#lvl-floating-menu').hide('fast');
 				e.data.grid.clearSelectedModels();
 			},
-			searchSequences : function(search) {
+			searchSavedSearches : function(search) {
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
-				backgridFilter.submit();
+				// TODO backgridFilter.submit();				
+				// TODO
+				require([ 'common/growl' ], function(createGrowl) {
+					createGrowl('Operation unavailable', 'Search feature is coming soon. Stay tuned!', false);
+				});
+				// TODO
 			},
 			resetSearchTerms : function(e) {
 				e.preventDefault();
@@ -229,7 +210,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 						}
 					});
 				}
-				this.searchSequences(search);
+				this.searchSavedSearches(search);
 			},
 			addSearchTerm : function(e) {
 				e.preventDefault();
@@ -252,14 +233,6 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 					newTermInput.val('');
 				}
 			},
-			filterByCountry : function(e) {
-				e.preventDefault();
-				var _self = this;
-				var target = $(e.target);
-				var countryCode = target.is('span') || target.is('img') ? target.parent('a').get(0).getAttribute('data-country-code2') : target
-						.attr('data-country-code2');
-				this.searchSequences('locale:_' + countryCode.toUpperCase());
-			},
 			handleClickSavable : function(e) {
 				require([ 'common/growl' ], function(createGrowl) {
 					createGrowl('Unsaved search',
@@ -272,7 +245,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				e.originalEvent.dataTransfer.setData('srcId', $(e.target).attr('data-savable-id'));
 				e.originalEvent.dataTransfer.setData('savableType', 'saved_search');
 				e.originalEvent.dataTransfer.setData('savable', JSON.stringify(new SavedSearchEntity.SavedSearch({
-					type : 'collection;browse;' + self.data_source,
+					type : 'sequences;' + self.data_source,
 					description : '',
 					search : self.collection.formattedQuery
 				}).toJSON()));
@@ -280,19 +253,40 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 			},
 			handleDragEnd : function(e) {
 				Lvl.vent.trigger('editable:items:dragend');
-			},
-			startTour : function(e) {
-				e.preventDefault();
-				require([ 'apps/collection/browse/tours/collection_tour' ], function(tour) {
-					tour();
-				});
-			},
-			showSequenceRecord : function(e) {
+			},			
+			runSearch : function(e) {
 				e.preventDefault();
 				var self = this;
 				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-seq_id') : target.attr('data-seq_id');
-				this.trigger('sequences:view:sequence', self.collection.data_source, itemId);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-run-search') : target.attr('data-run-search');
+				var item = this.collection.get(itemId);
+				Lvl.flash(item).navigate(item.get('type').replace(/;/g, '/').replace(/\s+/g, ''), {
+					trigger : true
+				});
+			},
+			removeSearch : function(e) {
+				e.preventDefault();
+				var self = this;
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove-search') : target.attr('data-remove-search');
+				var item = this.collection.get(itemId);
+				item.oauth2_token = config.authorizationToken();
+				require([ 'common/confirm' ], function(confirmDialog) {
+					confirmDialog('Confirm deletion', 'This action will delete the selected search. Are you sure?', function() {
+						self.collection.remove(item);
+						item.destroy({
+							success : function(e) {
+							},
+							error : function(e) {
+								require([ 'common/alert' ], function(alertDialog) {
+									alertDialog('Error', 'The search cannot be removed.');
+								});
+							}
+						});
+					}, {
+						btn_text : 'Delete'
+					});
+				});
 			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {
@@ -309,17 +303,11 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				// remove all event handlers
 				Lvl.vent.off('search:form:submitted');
 				$('#lvl-search-form').unbind();
-				$('a#export-btn').unbind();
-				$('a#uncheck-btn').unbind();
 				$('button#lvl-feature-tour-btn').unbind();
 				// clean menu
 				$('#lvl-floating-menu').hide(0);
 				$('#lvl-floating-menu-toggle').hide(0);
-				$('#lvl-floating-menu').empty();
-				// clean tour
-				require([ 'hopscotch' ], function(hopscotch) {
-					hopscotch.endTour();
-				});
+				$('#lvl-floating-menu').empty();				
 			},
 			onRender : function() {
 				var self = this;
@@ -344,7 +332,7 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				var filter = new Backgrid.Extension.ServerSideFilter({
 					collection : this.collection,
 					name : 'q',
-					placeholder : 'filter sequences'
+					placeholder : 'filter citations'
 				});
 
 				var filterToolbar = this.$('#grid-filter-toolbar');
@@ -353,23 +341,12 @@ define([ 'app', 'tpl!apps/collection/browse/templates/collection_browse', 'tpl!a
 				$(filter.el).addClass('hidden');
 
 				this.grid.clearSelectedModels();
-			},
-			onShow : function() {
-				var _self = this;
-				var params = Lvl.flashed();				
-				if (!$.isEmptyObject(params) && params.get('type') === 'collection;browse;' + _self.data_source) {					
-					var search = '';
-					_.each(params.get('search'), function(item) {						
-						search += item.term;						
-					});					
-					_self.searchSequences(search);					
-				} else {
-					this.collection.fetch({
-						reset : true
-					});
-				}
+
+				this.collection.fetch({
+					reset : true
+				});
 			}
 		});
 	});
-	return Lvl.CollectionApp.Browse.View;
+	return Lvl.Admin.Searches.View;
 });

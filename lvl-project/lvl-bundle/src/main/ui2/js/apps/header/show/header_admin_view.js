@@ -1,12 +1,12 @@
 /**
- * RequireJS module that defines the view: header->workspace.
+ * RequireJS module that defines the view: header->admin.
  */
 
-define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/header/show/templates/header_nav',
+define([ 'app', 'tpl!apps/header/show/templates/header_admin', 'tpl!apps/header/show/templates/header_nav',
 		'tpl!apps/header/show/templates/header_nav_link', 'tpl!apps/header/show/templates/header_notifications', 'apps/config/marionette/styles/style',
-		'apps/config/marionette/configuration', 'moment', 'qtip' ], function(Lvl, WorkspaceHeaderTpl, NavigationTpl, NavigationLinkTpl, NotificationsTpl,
+		'apps/config/marionette/configuration', 'moment', 'qtip' ], function(Lvl, AdminHeaderTpl, NavigationTpl, NavigationLinkTpl, NotificationsTpl,
 		Style, Configuration, moment) {
-	Lvl.module('HeaderApp.Workspace.View', function(View, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('HeaderApp.Admin.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var config = new Configuration();
 		function openSearchForm() {
 			var searchBox = $('#lvl-search-box');
@@ -24,39 +24,9 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 				searchBox.hide(duration);
 			}
 		}
-		View.id = 'workspace';
-		View.NavigationLink = Marionette.ItemView.extend({
-			tagName : 'li',
-			template : NavigationLinkTpl,
-			onRender : function() {
-				this.$el.attr('role', 'presentation');
-				if (this.model.get('text').toLowerCase() !== 'separator') {
-					if (this.model.selected) {
-						this.$el.addClass('hidden');
-					}
-				} else {
-					this.$el.empty();
-					this.$el.addClass('divider');
-				}
-			}
-		});
-		View.Navigation = Marionette.CompositeView.extend({
-			template : NavigationTpl,
-			childView : View.NavigationLink,
-			childViewContainer : 'ul',
-			collectionEvents : {
-				'reset' : 'render'
-			},
-			onBeforeRender : function() {
-				var selectedNavLink = this.collection.selected || this.collection.at(0);
-				this.model.set({
-					'selected_icon' : selectedNavLink.get('icon'),
-					'selected_text' : selectedNavLink.get('text')
-				});
-			}
-		});
+		View.id = 'admin';		
 		View.Header = Marionette.LayoutView.extend({
-			template : WorkspaceHeaderTpl,
+			template : AdminHeaderTpl,
 			templateHelpers : function() {
 				$.ajax({
 					type : 'GET',
@@ -210,11 +180,7 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 					stylesLoader.loadCss(Lvl.request('styles:qtip:entities').toJSON());
 				});
 			},
-			onRender : function(options) {
-				this.navigation.show(new View.Navigation({
-					model : options.navLinks.selected || options.navLinks.at(0),
-					collection : options.navLinks
-				}));
+			onRender : function(options) {				
 				this.$('#btnAlerts').click(function(event) {
 					event.preventDefault();
 				}).qtip({
@@ -265,5 +231,5 @@ define([ 'app', 'tpl!apps/header/show/templates/header_workspace', 'tpl!apps/hea
 			}
 		});
 	});
-	return Lvl.HeaderApp.Workspace.View;
+	return Lvl.HeaderApp.Admin.View;
 });

@@ -21,9 +21,9 @@ define([ 'app', 'entities/navigation' ], function(Lvl) {
 
 		/**
 		 * Sets the active header. The 'id' parameter defines the header type:
-		 * home, workspace or no_header (default option). The 'application'
-		 * parameter defines the current application: DNA sequence collection,
-		 * social network, e-compendium, etc.
+		 * home, workspace, admin or no_header (default option). The
+		 * 'application' parameter defines the current application: DNA sequence
+		 * collection, social network, e-compendium, etc.
 		 */
 		Lvl.commands.setHandler('set:active:header', function(id, application) {
 			id = (id || 'default').toLowerCase();
@@ -37,6 +37,10 @@ define([ 'app', 'entities/navigation' ], function(Lvl) {
 				} else if (id === 'workspace') {
 					require([ 'apps/header/show/header_workspace_ctrl' ], function(WorkspaceHeaderCtrl) {
 						HeaderApp.currentHeader = WorkspaceHeaderCtrl.showHeader(HeaderApp.navLinks);
+					});
+				} else if (id === 'admin') {
+					require([ 'apps/header/show/header_admin_ctrl' ], function(AdminHeaderCtrl) {
+						HeaderApp.currentHeader = AdminHeaderCtrl.showHeader();
 					});
 				} else {
 					Lvl.headerRegion.reset();

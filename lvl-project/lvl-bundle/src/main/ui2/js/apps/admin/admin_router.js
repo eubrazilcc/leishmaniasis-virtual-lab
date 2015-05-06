@@ -1,15 +1,15 @@
 /**
- * RequireJS module that defines the routes of the sub-application: saved-items.
+ * RequireJS module that defines the routes of the sub-application: admin.
  */
 
 define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], function(Lvl, Configuration) {
-	Lvl.module('Routers.SavedItemsApp', function(SavedItemsAppRouter, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('Routers.AdminApp', function(AdminAppRouter, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
 		var Router = Backbone.Router.extend({
 			routes : {
-				'saved-items' : 'showSavedItems',
-				'saved-items/:section' : 'showSavedItems'
+				'admin' : 'showAdmin',
+				'admin/:section' : 'showAdmin'
 			},
 			before : function() {
 				if (!config.isAuthenticated()) {
@@ -19,21 +19,21 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 					});
 					return false;
 				}
-				require([ 'apps/saved-items/saved-items_app' ], function() {
-					Lvl.execute('set:active:header', 'workspace', 'saved-items');
-					Lvl.execute('set:active:footer', 'workspace');
-					Lvl.startSubApp('SavedItemsApp');
+				require([ 'apps/admin/admin_app' ], function() {
+					Lvl.execute('set:active:header', 'admin');
+					Lvl.execute('set:active:footer', 'home');
+					Lvl.startSubApp('AdminApp');
 				});
 				return true;
 			},
-			showSavedItems : function(section) {
-				section = (section || 'searches').toLowerCase();
-				if (section === 'searches') {
-					Lvl.navigate('saved-items/' + section, {
+			showAdmin : function(section) {
+				section = (section || 'issues').toLowerCase();
+				if (section === 'issues') {
+					Lvl.navigate('admin/' + section, {
 						trigger : false,
 						replace : true
 					});
-					Lvl.execute('saved-items:set:active', section);				
+					Lvl.execute('admin:set:active', section);				
 				} else {
 					Lvl.navigate('not-found', {
 						trigger : true,
