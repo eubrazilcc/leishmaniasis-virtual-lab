@@ -59,6 +59,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.junit.After;
 import org.junit.Before;
@@ -72,10 +73,12 @@ import eu.eubrazilcc.lvl.service.testable.CitationResourceTest;
 import eu.eubrazilcc.lvl.service.testable.DatasetOpenAccessResourceTest;
 import eu.eubrazilcc.lvl.service.testable.DatasetResourceTest;
 import eu.eubrazilcc.lvl.service.testable.DatasetShareResourceTest;
+import eu.eubrazilcc.lvl.service.testable.IssuesResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LvlInstanceResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflyResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SavedSearchResourceTest;
+import eu.eubrazilcc.lvl.service.testable.SubscriptionRequestResourceTest;
 import eu.eubrazilcc.lvl.service.testable.TaskResourceTest;
 import eu.eubrazilcc.lvl.storage.oauth2.AccessToken;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
@@ -132,6 +135,7 @@ public class ServiceTest {
 				.register(MapperProvider.class)
 				.register(JacksonFeature.class)
 				.register(SseFeature.class)
+				.register(MultiPartFeature.class)
 				.build();
 		// configure Web target
 		target = client.target(BASE_URI);
@@ -222,7 +226,7 @@ public class ServiceTest {
 					"user2", new TestCredential(ownerId2, TOKEN_USER2), 
 					"user3", new TestCredential(ownerId3, TOKEN_USER3)));
 
-			// test task resource
+			/* // test task resource
 			new TaskResourceTest(testCtxt).test();
 
 			// test sand-flies resource
@@ -247,12 +251,18 @@ public class ServiceTest {
 			new LvlInstanceResourceTest(testCtxt).test();
 
 			// test saved search resource
-			new SavedSearchResourceTest(testCtxt).test();
+			new SavedSearchResourceTest(testCtxt).test(); */
+			
+			// test issues resource
+			new IssuesResourceTest(testCtxt).test();
+			
+			// test subscription request resource
+			new SubscriptionRequestResourceTest(testCtxt).test();
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("ServiceTest.test() failed: " + e.getMessage());
-		} finally {			
+		} finally {
 			System.out.println("ServiceTest.test() has finished");
 		}
 	}

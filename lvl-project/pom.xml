@@ -79,8 +79,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<exec-maven-plugin.version>1.4.0</exec-maven-plugin.version>
 		<m2e.lifecycle-mapping.version>1.0.0</m2e.lifecycle-mapping.version>
 		<maven-activemq-plugin.version>5.7.0</maven-activemq-plugin.version>
-		<maven-assembly-plugin.version>2.5.3</maven-assembly-plugin.version>
-		<maven-compiler-plugin.version>3.2</maven-compiler-plugin.version>		
+		<maven-assembly-plugin.version>2.5.4</maven-assembly-plugin.version>
+		<maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>		
 		<maven-jar-plugin.version>2.6</maven-jar-plugin.version>
 		<maven-jaxb2-plugin.version>0.12.3</maven-jaxb2-plugin.version>
 		<maven-jaxb2-plugin.jaxb2-commons-lang.version>2.4</maven-jaxb2-plugin.jaxb2-commons-lang.version>

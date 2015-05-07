@@ -90,7 +90,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency> <!-- Add Server-Sent Events (SSE) support -->
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-sse</artifactId>
-		</dependency>		
+		</dependency>
+		<dependency><!-- Add support for multipart form upload -->
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-multipart</artifactId>
+		</dependency>
 		<dependency> <!-- Add declarative hyperlinking support -->
     		<groupId>org.glassfish.jersey.ext</groupId>
     		<artifactId>jersey-declarative-linking</artifactId>    		

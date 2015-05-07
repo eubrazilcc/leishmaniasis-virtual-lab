@@ -40,7 +40,6 @@ import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.support.SubscriptionRequest;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
-import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper;
 
 /**
  * Tests {@link SubscriptionRequest} collection in the database.
@@ -59,12 +58,6 @@ public class SubscriptionRequestCollectionTest {
 					.requested(new SimpleDateFormat("yyyy-mm-dd").parse("2015-01-01"))
 					.channels(newHashSet("mailing list"))					
 					.build();
-
-			// TODO
-			final String payload = MongoDBJsonMapper.JSON_MAPPER.writeValueAsString(request);
-			System.err.println("\n\n >> PAYLOAD:\n\n" + payload + "\n");
-			// TODO
-
 			WriteResult<SubscriptionRequest> writeResult = SUBSCRIPTION_REQ_DAO.insert(request);
 			assertThat("insert write result is not null", writeResult, notNullValue());
 			assertThat("insert write result Id is not null", writeResult.getId(), notNullValue());

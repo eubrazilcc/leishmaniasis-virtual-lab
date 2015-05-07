@@ -31,10 +31,12 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newTreeMap;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.support.IssueStatus.NEW;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToNull;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import java.util.Date;
 import java.util.List;
@@ -48,6 +50,7 @@ import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -64,13 +67,16 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 public class Issue implements Linkable<Issue> {
 
 	@InjectLinks({
-		@InjectLink(value="support/issues/{id}", rel=SELF, type=APPLICATION_JSON, 
-				bindings={@Binding(name="id", value="${instance.id}")})
+		@InjectLink(value="support/issues/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, 
+				bindings={@Binding(name="urlSafeId", value="${instance.urlSafeId}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
+	
+	@JsonIgnore
+	private String urlSafeId;
 
 	private String id;
 	private String email;
@@ -100,12 +106,21 @@ public class Issue implements Linkable<Issue> {
 			this.links = null;
 		}
 	}
+	
+	public String getUrlSafeId() {
+		return urlSafeId;
+	}
+
+	public void setUrlSafeId(final String urlSafeId) {
+		this.urlSafeId = urlSafeId;
+	}
 
 	public String getId() {
 		return id;
 	}
 	public void setId(final String id) {
 		this.id = id;
+		setUrlSafeId(urlEncodeUtf8(trimToEmpty(id)));
 	}
 	public String getEmail() {
 		return email;
@@ -190,6 +205,7 @@ public class Issue implements Linkable<Issue> {
 		}
 		final Issue other = Issue.class.cast(obj);
 		return Objects.equals(links, other.links)
+				&& Objects.equals(urlSafeId, other.urlSafeId)
 				&& equalsIgnoringVolatile(other);
 	}
 
@@ -212,7 +228,7 @@ public class Issue implements Linkable<Issue> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, id, email, opened, browser, system, configuration, steps, description, 
+		return Objects.hash(links, urlSafeId, id, email, opened, browser, system, configuration, steps, description, 
 				screenshot, status, owner, closed, followUp);
 	}
 
@@ -220,6 +236,7 @@ public class Issue implements Linkable<Issue> {
 	public String toString() {
 		return toStringHelper(this)
 				.add("links", links)
+				.add("urlSafeId", urlSafeId)
 				.add("id", id)
 				.add("email", email)
 				.add("opened", opened)

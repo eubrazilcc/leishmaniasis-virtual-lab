@@ -36,13 +36,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<lvl.version>${project.version}</lvl.version>
-		<logback.version>1.1.2</logback.version>
-		<slf4j.version>1.7.10</slf4j.version>
-		<javamail.version>1.5.2</javamail.version>
-		<org.apache.httpcomponents.version>4.4</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
+		<logback.version>1.1.3</logback.version>
+		<slf4j.version>1.7.12</slf4j.version>
+		<javamail.version>1.5.3</javamail.version>
+		<org.apache.httpcomponents.version>4.4.1</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
 		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
 		<org.apache.shiro.version>1.2.3</org.apache.shiro.version>
-		<mongodb.driver.version>2.13.0</mongodb.driver.version>
+		<mongodb.driver.version>2.13.1</mongodb.driver.version>
 		<activemq.version>5.11.1</activemq.version>
 		<antlr4.version>4.5</antlr4.version>
 		<e-science-central.version>3.1-SNAPSHOT</e-science-central.version>
@@ -92,7 +92,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency> <!-- Utility classes for the classes that are considered to be Java standards -->
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
-				<version>3.3.2</version>
+				<version>3.4</version>
 			</dependency>
 
 			<!-- Apache HttpComponents: HTTP/1.1 compliant HTTP agents -->
@@ -147,7 +147,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency> <!-- core -->
 				<groupId>org.apache.tika</groupId>
 				<artifactId>tika-core</artifactId>
-				<version>1.7</version>
+				<version>1.8</version>
 			</dependency>
 			
 			<!-- Apache Shiro: an open-source security framework that handles authentication, authorization, 
