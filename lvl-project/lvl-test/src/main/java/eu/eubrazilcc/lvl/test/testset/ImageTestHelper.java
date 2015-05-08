@@ -28,6 +28,7 @@ import static java.awt.Color.red;
 import static java.awt.Color.white;
 import static java.awt.image.BufferedImage.TYPE_INT_RGB;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.awt.Graphics2D;
@@ -39,10 +40,10 @@ import java.util.Random;
 import javax.imageio.ImageIO;
 
 /**
- * Creates images that can be used in tests.
+ * Creates and loads images that can be used in tests.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ImageCreator {
+public class ImageTestHelper {
 
 	public static int MAX_PIXELS = 256;
 
@@ -57,7 +58,7 @@ public class ImageCreator {
 	public static File createTestPng(final File dir, final String filename) throws IOException {		
 		return createTestImage(dir, filename, "PNG");
 	}
-	
+
 	/**
 	 * Creates a JPEG image file in the specified directory with the specified file name. After creating the image, this
 	 * method checks that the created file is writable and that has content (file length is not <tt>0</tt>).
@@ -69,7 +70,7 @@ public class ImageCreator {
 	public static File createTestJpeg(final File dir, final String filename) throws IOException {		
 		return createTestImage(dir, filename, "JPEG");
 	}
-	
+
 	private static File createTestImage(final File dir, final String filename, final String format) throws IOException {
 		final BufferedImage img = new BufferedImage(MAX_PIXELS, MAX_PIXELS, TYPE_INT_RGB);
 		// set image background color
@@ -91,4 +92,11 @@ public class ImageCreator {
 		return imgFile;
 	}
 
+	public static void verifyImage(final File imgFile) throws IOException {
+		final BufferedImage img = ImageIO.read(imgFile);
+		assertThat("Image is not null", img, notNullValue());
+		assertThat("Image is height is not 0", img.getHeight() > 0, equalTo(true));
+		assertThat("Image is width is not 0", img.getWidth() > 0, equalTo(true));
+		assertThat("Image content is not null", img.getData(), notNullValue());		
+	}
 }

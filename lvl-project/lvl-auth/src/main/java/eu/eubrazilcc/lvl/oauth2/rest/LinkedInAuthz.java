@@ -97,7 +97,9 @@ public class LinkedInAuthz {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " LinkedIn AuthZ Resource";
 
-	protected final static Logger LOGGER = getLogger(LinkedInAuthz.class);
+	protected static final Logger LOGGER = getLogger(LinkedInAuthz.class);
+	
+	private static final int TIMEOUT = 10000;
 
 	@POST
 	@Path("state")
@@ -140,6 +142,8 @@ public class LinkedInAuthz {
 			// exchange authorization code for a request token
 			final long issuedAt = currentTimeMillis() / 1000l;
 			String response = Request.Post("https://www.linkedin.com/uas/oauth2/accessToken")
+					.connectTimeout(TIMEOUT)
+					.socketTimeout(TIMEOUT)
 					.addHeader("Accept", "application/json")
 					.bodyForm(form)
 					.execute()
@@ -154,6 +158,8 @@ public class LinkedInAuthz {
 			final URIBuilder uriBuilder = new URIBuilder("https://api.linkedin.com/v1/people/~:(id,first-name,last-name,industry,positions,email-address)");
 			uriBuilder.addParameter("format", "json");
 			response = Request.Get(uriBuilder.build())
+					.connectTimeout(TIMEOUT)
+					.socketTimeout(TIMEOUT)
 					.addHeader("Authorization", "Bearer " + accessToken)
 					.execute()
 					.returnContent()

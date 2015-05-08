@@ -25,11 +25,15 @@ package eu.eubrazilcc.lvl.service.rest;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
+import static eu.eubrazilcc.lvl.storage.support.dao.IssueAttachmentDAO.ISSUE_ATTACHMENT_DAO;
 import static eu.eubrazilcc.lvl.storage.support.dao.IssueDAO.ISSUE_DAO;
 import static java.io.File.createTempFile;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -38,10 +42,12 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.REQUEST_ENTITY_TOO_LARGE;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,6 +70,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
@@ -75,9 +82,11 @@ import org.slf4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import eu.eubrazilcc.lvl.core.Metadata;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.support.Issue;
+import eu.eubrazilcc.lvl.core.support.IssueAttachment;
 import eu.eubrazilcc.lvl.core.support.IssueStatus;
 import eu.eubrazilcc.lvl.service.Issues;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
@@ -166,6 +175,7 @@ public class IssueResource {
 
 	private void saveItem(final Issue issue, final InputStream is, final FormDataContentDisposition fileDisposition) {
 		// save the attachment
+		String attachmentId = null;
 		if (is != null && fileDisposition != null) {
 			String filename2 = null;
 			if (isBlank(filename2 = trimToNull(fileDisposition.getFileName()))) {
@@ -174,6 +184,7 @@ public class IssueResource {
 			File tmpFile = null;
 			OutputStream os = null;
 			try {
+				attachmentId = randomUUID().toString();
 				tmpFile = createTempFile("lvl-issue-attachment", ".tmp");			
 				os = new FileOutputStream(tmpFile);
 				long total = 0l, max = CONFIG_MANAGER.getMaxUserUploadedFileSize() * 1024l;
@@ -186,12 +197,7 @@ public class IssueResource {
 						throw new WebApplicationException("Attachment exceeds the allowable limit", REQUEST_ENTITY_TOO_LARGE);
 					}
 				}
-
-				// TODO
-				System.err.println("\n\n >> FILE CONTENT: " + tmpFile.length() + "\n");
-				System.err.println("\n\n >> FILE NAME: " + filename2 + "\n");
-				// TODO				
-
+				ISSUE_ATTACHMENT_DAO.insert(null, attachmentId, tmpFile, Metadata.builder().originalFilename(filename2).build());
 			} catch (IOException e) {
 				throw new WebApplicationException("Failed to save attachment", INTERNAL_SERVER_ERROR);
 			} finally {
@@ -210,6 +216,9 @@ public class IssueResource {
 		issue.setStatus(IssueStatus.NEW);		
 		issue.setClosed(null);
 		issue.getFollowUp().clear();
+		if (attachmentId != null) {
+			issue.setScreenshot(attachmentId);
+		}
 		// create issue in the database
 		ISSUE_DAO.insert(issue);
 	}
@@ -247,6 +256,40 @@ public class IssueResource {
 		}
 		// delete
 		ISSUE_DAO.delete(id);
+	}
+
+	// TODO
+	@GET
+	@Path("{id: " + URL_FRAGMENT_PATTERN + "}/{attachment: " + URL_FRAGMENT_PATTERN + "}/download")
+	@Produces(APPLICATION_OCTET_STREAM)
+	public Response downloadDataset(final @PathParam("id") String id, final @PathParam("attachment") String attachment, final @Context UriInfo uriInfo, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String id2 = parseParam(id), attachment2 = parseParam(attachment);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresRoles(ImmutableList.of("admin"));
+		// get from database
+		final IssueAttachment attachment3 = ISSUE_ATTACHMENT_DAO.find(null, attachment2);		
+		if (attachment3 == null || attachment3.getOutfile() == null) {
+			throw new WebApplicationException("Element not found", NOT_FOUND);
+		}
+		// attach file to response
+		final StreamingOutput stream = new StreamingOutput() {
+			@Override
+			public void write(final OutputStream os) throws IOException {
+				try (final FileInputStream is = new FileInputStream(attachment3.getOutfile())) {
+					final byte[] buffer = new byte[1024];
+					int noOfBytes = 0;
+					while ((noOfBytes = is.read(buffer)) != -1) {
+						os.write(buffer, 0, noOfBytes);
+					}
+				} catch (Exception e) {
+					throw new WebApplicationException("Failed to write file to output", INTERNAL_SERVER_ERROR);
+				}
+			}
+		};
+		LOGGER.trace("Downloading issue attachment: issue=" + id2 + ", attachment=" + attachment2);
+		return Response.ok(stream, isNotBlank(attachment3.getContentType()) ? attachment3.getContentType(): APPLICATION_OCTET_STREAM)
+				.header("content-disposition", "attachment; filename = " + attachment3.getMetadata().getOriginalFilename())
+				.build();
 	}
 
 }

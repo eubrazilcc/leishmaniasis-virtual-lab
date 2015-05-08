@@ -24,13 +24,16 @@ package eu.eubrazilcc.lvl.service.testable;
 
 import static com.google.common.net.MediaType.parse;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
-import static eu.eubrazilcc.lvl.test.testset.ImageCreator.createTestPng;
+import static eu.eubrazilcc.lvl.test.testset.ImageTestHelper.createTestPng;
+import static eu.eubrazilcc.lvl.test.testset.ImageTestHelper.verifyImage;
 import static java.lang.System.getProperty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
@@ -44,9 +47,12 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Date;
 
@@ -54,6 +60,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.fluent.Request;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
 
@@ -177,16 +190,65 @@ public class IssuesResourceTest extends Testable {
 		issue.setStatus(issue2.getStatus());
 		assertThat("Get issue (multipart with attachment) by Id cosed date is null", issue2.getClosed(), nullValue());
 		assertThat("Get issue (multipart with attachment) by Id follow-up is not empty", issue2.getFollowUp().isEmpty(), equalTo(true));		
+		assertThat("Get issue (multipart with attachment) by Id screenshot is not empty", isNotBlank(issue2.getScreenshot()), equalTo(true));
+		issue.setScreenshot(issue2.getScreenshot());
 		assertThat("Get issue (multipart with attachment) by Id coincides with expected", issue2.equalsIgnoringVolatile(issue));
 		// uncomment for additional output
 		System.out.println(" >> Get issue (multipart with attachment) by Id result: " + issue2.toString());
 
-		// get the attachment
-
-
-
-
-		// TODO
+		// attachment file download
+		URI downloadUri = testCtxt.target()
+				.path(path.value()).path(urlEncodeUtf8(issue.getId())).path(urlEncodeUtf8(issue.getScreenshot())).path("download")
+				.getUri();
+		org.apache.http.client.fluent.Response response3 = Request.Get(downloadUri)
+				.version(HttpVersion.HTTP_1_1) // use HTTP/1.1
+				.addHeader("Accept", APPLICATION_OCTET_STREAM)
+				.addHeader(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
+				.execute();
+		assertThat("Download attachment file response is not null", response3, notNullValue());
+		HttpResponse response4 = response3.returnResponse();
+		assertThat("Download attachment file HTTP response is not null", response4, notNullValue());
+		assertThat("Download attachment file status line is not null", response4.getStatusLine(), notNullValue());
+		assertThat("Download attachment file status coincides with expected", response4.getStatusLine().getStatusCode(),
+				equalTo(OK.getStatusCode()));
+		Header[] headers = response4.getAllHeaders();
+		assertThat("Download attachment file headers is not null", headers, notNullValue());
+		assertThat("Download attachment file headers is not empty", headers.length, greaterThan(0));
+		String filename = null;
+		for (int i = 0; i < headers.length && filename == null; i++) {
+			if ("content-disposition".equalsIgnoreCase(headers[i].getName())) {
+				final HeaderElement[] elements = headers[i].getElements();
+				if (elements != null) {
+					for (int j = 0; j < elements.length && filename == null; j++) {							
+						if ("attachment".equalsIgnoreCase(elements[j].getName())) {
+							final NameValuePair pair = elements[j].getParameterByName("filename");
+							if (pair != null) {
+								filename = pair.getValue();
+							}
+						}
+					}
+				}
+			}
+		}
+		assertThat("Download attachment file filename is not empty", isNotBlank(filename), equalTo(true));
+		HttpEntity entity = response4.getEntity();
+		assertThat("Download attachment file entity is not null", entity, notNullValue());
+		assertThat("Download attachment file content length coincides with expected", entity.getContentLength(), greaterThan(0l));
+		File outfile = new File(testCtxt.testOutputDir(), filename);
+		outfile.createNewFile();
+		try (final InputStream inputStream = entity.getContent();
+				final FileOutputStream outputStream = new FileOutputStream(outfile)) {
+			int read = 0;
+			byte[] bytes = new byte[1024];
+			while ((read = inputStream.read(bytes)) != -1) {
+				outputStream.write(bytes, 0, read);
+			}
+		}
+		assertThat("Downloaded file exists", outfile.exists(), equalTo(true));
+		assertThat("Downloaded file is not empty", outfile.length(), greaterThan(0L));
+		verifyImage(outfile);		
+		// uncomment for additional output
+		System.out.println(" >> Saved file: " + filename);
 
 		// test create new issue (multipart no attachment)
 		try (final FormDataMultiPart multipart = new FormDataMultiPart()) {

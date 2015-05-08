@@ -226,7 +226,7 @@ public class ServiceTest {
 					"user2", new TestCredential(ownerId2, TOKEN_USER2), 
 					"user3", new TestCredential(ownerId3, TOKEN_USER3)));
 
-			/* // test task resource
+			// test task resource
 			new TaskResourceTest(testCtxt).runTest();
 
 			// test sand-flies resource
@@ -251,13 +251,13 @@ public class ServiceTest {
 			new LvlInstanceResourceTest(testCtxt).runTest();
 
 			// test saved search resource
-			new SavedSearchResourceTest(testCtxt).runTest(); */
+			new SavedSearchResourceTest(testCtxt).runTest();
 			
 			// test issues resource
 			new IssuesResourceTest(testCtxt).runTest();
 			
-			/* // test subscription request resource
-			new SubscriptionRequestResourceTest(testCtxt).runTest(); */
+			// test subscription request resource
+			new SubscriptionRequestResourceTest(testCtxt).runTest();
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
