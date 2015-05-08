@@ -22,13 +22,22 @@
 
 package eu.eubrazilcc.lvl.service.testable;
 
+import static com.google.common.net.MediaType.parse;
+import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
+import static eu.eubrazilcc.lvl.test.testset.ImageCreator.createTestPng;
+import static java.lang.System.getProperty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.io.FilenameUtils.getName;
+import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -36,12 +45,13 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.net.URI;
 import java.util.Date;
 
 import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -61,13 +71,24 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class IssuesResourceTest extends Testable {
 
 	public IssuesResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, IssuesResourceTest.class);
+	}
+
+	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
+			IssuesResourceTest.class.getSimpleName() + "_" + random(8, true, true)));
+
+	protected void setUp() {
+		super.setUp();
+		deleteQuietly(TEST_OUTPUT_DIR);
+	}
+
+	protected void cleanUp() {
+		super.cleanUp();
+		deleteQuietly(TEST_OUTPUT_DIR);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(IssuesResourceTest.class.getSimpleName(), "test");
-
 		// test create new issue
 		final Path path = IssueResource.class.getAnnotation(Path.class);
 		final Issue issue = Issue.builder()
@@ -100,6 +121,7 @@ public class IssuesResourceTest extends Testable {
 		// test get issue by Id (Java object)
 		Issue issue2 = testCtxt.target().path(path.value()).path(issue.getId())
 				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Issue.class);
 		assertThat("Get issue by Id result is not null", issue2, notNullValue());
 		assertThat("Get issue by Id opened date is not null", issue2.getOpened(), notNullValue());
@@ -113,9 +135,11 @@ public class IssuesResourceTest extends Testable {
 		System.out.println(" >> Get issue by Id result: " + issue2.toString());
 
 		// test create new issue (multipart with attachment)
-		final InputStream is = new ByteArrayInputStream("This is a test".getBytes());
+		final File imgFile = createTestPng(TEST_OUTPUT_DIR, "screenshot.png");		
+		final com.google.common.net.MediaType gooImgType = parse(mimeType(imgFile));
+		final MediaType imgType = new MediaType(gooImgType.type(), gooImgType.subtype());
 		try (final FormDataMultiPart multipart = new FormDataMultiPart()) {
-			multipart.field("issue", issue, APPLICATION_JSON_TYPE).bodyPart(new StreamDataBodyPart("file", is));
+			multipart.field("issue", issue, APPLICATION_JSON_TYPE).bodyPart(new StreamDataBodyPart("file", new FileInputStream(imgFile), imgFile.getName(), imgType));
 			response = testCtxt.target()
 					.path(path.value())
 					.path("with-attachment")
@@ -144,6 +168,7 @@ public class IssuesResourceTest extends Testable {
 		// test get issue by Id (multipart with attachment as a Java object)
 		issue2 = testCtxt.target().path(path.value()).path(issue.getId())
 				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Issue.class);
 		assertThat("Get issue (multipart with attachment) by Id result is not null", issue2, notNullValue());
 		assertThat("Get issue (multipart with attachment) by Id opened date is not null", issue2.getOpened(), notNullValue());
@@ -156,8 +181,11 @@ public class IssuesResourceTest extends Testable {
 		// uncomment for additional output
 		System.out.println(" >> Get issue (multipart with attachment) by Id result: " + issue2.toString());
 
-		// TODO
 		// get the attachment
+
+
+
+
 		// TODO
 
 		// test create new issue (multipart no attachment)
@@ -191,6 +219,7 @@ public class IssuesResourceTest extends Testable {
 		// test get issue by Id (multipart no attachment as a Java object)
 		issue2 = testCtxt.target().path(path.value()).path(issue.getId())
 				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Issue.class);
 		assertThat("Get issue (multipart no attachment) by Id result is not null", issue2, notNullValue());
 		assertThat("Get issue (multipart no attachment) by Id opened date is not null", issue2.getOpened(), notNullValue());
@@ -207,6 +236,7 @@ public class IssuesResourceTest extends Testable {
 		response = testCtxt.target()
 				.path(path.value())
 				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get();
 		assertThat("Get issues response is not null", response, notNullValue());
 		assertThat("Get issues response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
@@ -220,7 +250,9 @@ public class IssuesResourceTest extends Testable {
 		System.out.println(" >> Get issues HTTP headers: " + response.getStringHeaders());			
 
 		// test list all issues (Java object)
-		Issues issues = testCtxt.target().path(path.value()).request(APPLICATION_JSON)
+		Issues issues = testCtxt.target().path(path.value())
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Issues.class);
 		assertThat("Get issues result is not null", issues, notNullValue());
 		assertThat("Get issues list is not null", issues.getElements(), notNullValue());
@@ -234,6 +266,7 @@ public class IssuesResourceTest extends Testable {
 		issue.getFollowUp().put(new Date().getTime(), "Something new");
 		response = testCtxt.target().path(path.value()).path(issue.getId())
 				.request()
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.put(entity(issue, APPLICATION_JSON));
 		assertThat("Update issue response is not null", response, notNullValue());
 		assertThat("Update issue response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
@@ -249,6 +282,7 @@ public class IssuesResourceTest extends Testable {
 		// test get issue by Id after update
 		issue2 = testCtxt.target().path(path.value()).path(issue.getId())
 				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Issue.class);
 		assertThat("Get issue by Id after update result is not null", issue2, notNullValue());
 		assertThat("Get issue by Id after update coincides with expected", issue2.equalsIgnoringVolatile(issue));
@@ -258,6 +292,7 @@ public class IssuesResourceTest extends Testable {
 		// test delete issue
 		response = testCtxt.target().path(path.value()).path(issue.getId())
 				.request()
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.delete();
 		assertThat("Delete issue response is not null", response, notNullValue());
 		assertThat("Delete issue response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
@@ -269,8 +304,6 @@ public class IssuesResourceTest extends Testable {
 		System.out.println(" >> Delete issue response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete issue response JAX-RS object: " + response);
 		System.out.println(" >> Delete issue HTTP headers: " + response.getStringHeaders());
-
-		printTestEnd(IssuesResourceTest.class.getSimpleName(), "test");
 	}
 
 }

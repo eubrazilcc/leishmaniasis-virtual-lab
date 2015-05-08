@@ -69,13 +69,11 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class SandflyResourceTest extends Testable {
 
 	public SandflyResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, SandflyResourceTest.class);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(SandflyResourceTest.class.getSimpleName(), "test");
-
 		// test create new sandfly
 		final GBSeq sandflySeq = GBSEQ_XML_FACTORY.createGBSeq()
 				.withGBSeqPrimaryAccession("ABC12345678")
@@ -436,8 +434,6 @@ public class SandflyResourceTest extends Testable {
 		System.out.println(" >> Delete sandfly response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete sandfly response JAX-RS object: " + response);
 		System.out.println(" >> Delete sandfly HTTP headers: " + response.getStringHeaders());
-
-		printTestEnd(SandflyResourceTest.class.getSimpleName(), "test");
 	}
 
 }

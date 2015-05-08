@@ -60,12 +60,10 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class TaskResourceTest extends Testable {
 
 	public TaskResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, TaskResourceTest.class);
 	}
 
 	public void test() throws Exception {
-		printTestStart(TaskResourceTest.class.getSimpleName(), "test");
-
 		// test import sandflies task
 		final Path path = TaskResource.class.getAnnotation(Path.class);
 		Task task = Task.builder()
@@ -156,8 +154,6 @@ public class TaskResourceTest extends Testable {
 			// uncomment for additional output				
 			System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
 		}
-
-		printTestEnd(TaskResourceTest.class.getSimpleName(), "test");
 	}
 
 }

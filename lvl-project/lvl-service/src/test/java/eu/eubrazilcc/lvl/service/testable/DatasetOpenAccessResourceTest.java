@@ -77,13 +77,11 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class DatasetOpenAccessResourceTest extends Testable {
 
 	public DatasetOpenAccessResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, DatasetOpenAccessResourceTest.class);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(DatasetOpenAccessResourceTest.class.getSimpleName(), "test");
-
 		// test create open access link
 		final Path path = DatasetOpenAccessResource.class.getAnnotation(Path.class);
 		final DatasetOpenAccess openAccess = DatasetOpenAccess.builder()
@@ -267,8 +265,6 @@ public class DatasetOpenAccessResourceTest extends Testable {
 		System.out.println(" >> Delete dataset open access link response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete dataset open access link response JAX-RS object: " + response);
 		System.out.println(" >> Delete dataset open access link HTTP headers: " + response.getStringHeaders());
-
-		printTestEnd(DatasetOpenAccessResourceTest.class.getSimpleName(), "test");
 	}
 
 }

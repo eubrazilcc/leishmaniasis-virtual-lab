@@ -62,13 +62,11 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class CitationResourceTest extends Testable {
 
 	public CitationResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, CitationResourceTest.class);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(CitationResourceTest.class.getSimpleName(), "test");
-
 		// test create new reference
 		final String pmid = "00000000";
 
@@ -211,8 +209,6 @@ public class CitationResourceTest extends Testable {
 		System.out.println(" >> Delete reference response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete reference response JAX-RS object: " + response);
 		System.out.println(" >> Delete reference HTTP headers: " + response.getStringHeaders());
-
-		printTestEnd(CitationResourceTest.class.getSimpleName(), "test");
 	}
 
 }

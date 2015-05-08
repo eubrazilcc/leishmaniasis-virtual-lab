@@ -58,13 +58,11 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class LvlInstanceResourceTest extends Testable {
 
 	public LvlInstanceResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, LvlInstanceResourceTest.class);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(LvlInstanceResourceTest.class.getSimpleName(), "test");
-
 		// test create new instance
 		final String instanceId = "00000001";
 		final Date heartbeat = new Date();			
@@ -191,8 +189,6 @@ public class LvlInstanceResourceTest extends Testable {
 		System.out.println(" >> Delete instance response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete instance response JAX-RS object: " + response);
 		System.out.println(" >> Delete instance HTTP headers: " + response.getStringHeaders());
-
-		printTestEnd(LvlInstanceResourceTest.class.getSimpleName(), "test");
 	}
 
 }

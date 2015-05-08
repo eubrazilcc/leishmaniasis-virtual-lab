@@ -119,6 +119,10 @@ public enum ConfigurationManager implements Closeable2 {
 		return configuration().getHtdocsDir();
 	}
 
+	public long getMaxUserUploadedFileSize() {
+		return configuration().getMaxUserUploadedFileSize();
+	}
+	
 	public String getDbName() {
 		return configuration().getDbName();
 	}
@@ -257,7 +261,8 @@ public enum ConfigurationManager implements Closeable2 {
 							configuration.setThrowExceptionOnMissing(true);
 							final File rootDir = getFile("lvl-root", configuration, foundNameList, true, null);
 							final File localCacheDir = getFile("storage.local-cache", configuration, foundNameList, true, null);
-							final File htdocsDir = getFile("storage.htdocs", configuration, foundNameList, false, null);
+							final File htdocsDir = getFile("storage.htdocs", configuration, foundNameList, false, null);							
+							final long maxUserUploadedFileSize = getLong("storage.limits.max-user-uploaded-file-size", configuration, foundNameList, 2048l);							
 							final String dbName = getString("database.name", configuration, foundNameList, "lvldb");
 							final String dbUsername = getString("database.credentials.username", configuration, foundNameList, null);
 							final String dbPassword = getString("database.credentials.password", configuration, foundNameList, null);
@@ -293,7 +298,7 @@ public enum ConfigurationManager implements Closeable2 {
 									}								
 								}
 							}
-							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, dbName, dbUsername, dbPassword, dbHosts, 
+							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, maxUserUploadedFileSize, dbName, dbUsername, dbPassword, dbHosts, 
 									brokerEmbedded, messageBrokers, smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, 
 									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, linkedInAPIKey, linkedInSecretKey, googleAPIKey, othersMap);
 							LOGGER.info(dont_use.toString());
@@ -351,6 +356,12 @@ public enum ConfigurationManager implements Closeable2 {
 		foundNameList.add(name);
 		return configuration.getInt(name, defaultValue);
 	}
+	
+	private static @Nullable Long getLong(final String name, final CombinedConfiguration configuration, 
+			final List<String> foundNameList, final @Nullable Long defaultValue) {
+		foundNameList.add(name);
+		return configuration.getLong(name, defaultValue);
+	}
 
 	private static @Nullable Boolean getBoolean(final String name, final CombinedConfiguration configuration, 
 			final List<String> foundNameList, final @Nullable Boolean defaultValue) {
@@ -394,6 +405,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final File rootDir;
 		private final File localCacheDir;
 		private final File htdocsDir;
+		private final long maxUserUploadedFileSize;
 		private final String dbName;
 		private final Optional<String> dbUsername;
 		private final Optional<String> dbPassword;
@@ -417,7 +429,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final Optional<String> googleAPIKey;		
 		// other configurations
 		private final ImmutableMap<String, String> othersMap;
-		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, 
+		public Configuration(final File rootDir, final File localCacheDir, final File htdocsDir, final long maxUserUploadedFileSize,
 				final String dbName, final @Nullable String dbUsername, final @Nullable String dbPassword, final ImmutableList<String> dbHosts,
 				final boolean brokerEmbedded, final ImmutableList<String> messageBrokers,
 				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
@@ -430,6 +442,7 @@ public enum ConfigurationManager implements Closeable2 {
 			final File baseLocalCacheDir = checkNotNull(localCacheDir, "Uninitialized local cache directory");			
 			this.localCacheDir = new File(baseLocalCacheDir, instanceId);			
 			this.htdocsDir = checkNotNull(htdocsDir, "Uninitialized hyper-text documents directory");
+			this. maxUserUploadedFileSize = maxUserUploadedFileSize;
 			this.dbName = dbName;
 			this.dbUsername = fromNullable(trimToNull(dbUsername));
 			this.dbPassword = fromNullable(trimToNull(dbPassword));
@@ -463,6 +476,9 @@ public enum ConfigurationManager implements Closeable2 {
 		public File getHtdocsDir() {
 			return htdocsDir;
 		}		
+		public long getMaxUserUploadedFileSize() {
+			return maxUserUploadedFileSize;
+		}
 		public String getDbName() {
 			return dbName;
 		}
@@ -537,6 +553,7 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("rootDir", rootDir)
 					.add("localCacheDir", localCacheDir)
 					.add("htdocsDir", htdocsDir)
+					.add("maxUserUploadedFileSize", maxUserUploadedFileSize)
 					.add("dbName", dbName)
 					.add("dbUsername", dbUsername.orNull())
 					.add("dbPassword", dbPassword.orNull())

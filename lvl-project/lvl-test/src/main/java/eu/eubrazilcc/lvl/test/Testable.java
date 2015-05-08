@@ -28,20 +28,33 @@ package eu.eubrazilcc.lvl.test;
  */
 public abstract class Testable {
 
-	protected final TestContext testCtxt;	
+	protected final TestContext testCtxt;
+	private final Class<?> implementingClass;
 
-	public Testable(final TestContext testCtxt) {
+	public Testable(final TestContext testCtxt, final Class<?> implementingClass) {
 		this.testCtxt = testCtxt;
+		this.implementingClass = implementingClass;
 	}
 
-	public abstract void test() throws Exception;
-
-	public void printTestStart(final String test, final String method) {
-		System.out.println("  >> " + test + "." + method + "() is starting...");
+	protected void setUp() {
+		System.out.println("  >> " + implementingClass.getSimpleName() + ".test() is starting...");
 	}
 
-	public void printTestEnd(final String test, final String method) {
-		System.out.println("  >> " + test + "." + method + "() ends.");
+	protected void cleanUp() {
+		System.out.println("  >> " + implementingClass.getSimpleName() + ".test() ends.");
+	}
+
+	protected abstract void test() throws Exception;
+
+	public void runTest() throws Exception {
+		setUp();
+		try {
+			test();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			cleanUp();
+		}
 	}
 
 }

@@ -227,37 +227,37 @@ public class ServiceTest {
 					"user3", new TestCredential(ownerId3, TOKEN_USER3)));
 
 			/* // test task resource
-			new TaskResourceTest(testCtxt).test();
+			new TaskResourceTest(testCtxt).runTest();
 
 			// test sand-flies resource
-			new SandflyResourceTest(testCtxt).test();
+			new SandflyResourceTest(testCtxt).runTest();
 
 			// test leishmania resource
-			new LeishmaniaResourceTest(testCtxt).test();
+			new LeishmaniaResourceTest(testCtxt).runTest();
 
 			// test dataset resource
-			new DatasetResourceTest(testCtxt).test();
+			new DatasetResourceTest(testCtxt).runTest();
 
 			// test shared dataset resource
-			new DatasetShareResourceTest(testCtxt).test();
+			new DatasetShareResourceTest(testCtxt).runTest();
 
 			// test dataset open access resource
-			new DatasetOpenAccessResourceTest(testCtxt).test();
+			new DatasetOpenAccessResourceTest(testCtxt).runTest();
 
 			// test citation resource
-			new CitationResourceTest(testCtxt).test();
+			new CitationResourceTest(testCtxt).runTest();
 
 			// test instance resource
-			new LvlInstanceResourceTest(testCtxt).test();
+			new LvlInstanceResourceTest(testCtxt).runTest();
 
 			// test saved search resource
-			new SavedSearchResourceTest(testCtxt).test(); */
+			new SavedSearchResourceTest(testCtxt).runTest(); */
 			
 			// test issues resource
-			new IssuesResourceTest(testCtxt).test();
+			new IssuesResourceTest(testCtxt).runTest();
 			
-			// test subscription request resource
-			new SubscriptionRequestResourceTest(testCtxt).test();
+			/* // test subscription request resource
+			new SubscriptionRequestResourceTest(testCtxt).runTest(); */
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

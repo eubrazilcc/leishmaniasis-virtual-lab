@@ -59,13 +59,11 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class DatasetShareResourceTest extends Testable {
 
 	public DatasetShareResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, DatasetShareResourceTest.class);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(DatasetShareResourceTest.class.getSimpleName(), "test");
-
 		// test create a dataset share (user1 grants access to user2)
 		final Path path = DatasetShareResource.class.getAnnotation(Path.class);
 		final DatasetShare share = DatasetShare.builder()
@@ -243,8 +241,6 @@ public class DatasetShareResourceTest extends Testable {
 		System.out.println(" >> Delete dataset share response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete dataset share response JAX-RS object: " + response);
 		System.out.println(" >> Delete dataset share HTTP headers: " + response.getStringHeaders());
-
-		printTestEnd(DatasetShareResourceTest.class.getSimpleName(), "test");
 	}
 
 }

@@ -56,12 +56,14 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.support.SubscriptionRequest;
 import eu.eubrazilcc.lvl.service.SubscriptionRequests;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
  * {@link SubscriptionRequest} resource.
@@ -69,8 +71,6 @@ import eu.eubrazilcc.lvl.service.SubscriptionRequests;
  */
 @Path("/support/subscriptions/requests")
 public class SubscriptionRequestResource {
-
-	// TODO : restrict access to users with admin role (except creation which is open)
 	
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Subscription Requests Resource";
 
@@ -84,6 +84,7 @@ public class SubscriptionRequestResource {
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresRoles(ImmutableList.of("admin"));
 		final SubscriptionRequests paginable = SubscriptionRequests.start()
 				.page(page)
 				.perPage(per_page)
@@ -111,6 +112,7 @@ public class SubscriptionRequestResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresRoles(ImmutableList.of("admin"));
 		// get from database
 		final SubscriptionRequest subscriptionRequest = SUBSCRIPTION_REQ_DAO.find(id);
 		if (request == null) {
@@ -144,6 +146,7 @@ public class SubscriptionRequestResource {
 		if (isBlank(id) || update == null || update.getRequested() == null || (update.getFulfilled() != null && update.getRequested().after(update.getFulfilled()))) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresRoles(ImmutableList.of("admin"));
 		// get from database
 		final SubscriptionRequest current = SUBSCRIPTION_REQ_DAO.find(id);
 		if (current == null) {
@@ -160,6 +163,7 @@ public class SubscriptionRequestResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresRoles(ImmutableList.of("admin"));
 		// get from database
 		final SubscriptionRequest current = SUBSCRIPTION_REQ_DAO.find(id);
 		if (current == null) {

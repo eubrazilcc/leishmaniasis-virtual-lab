@@ -60,13 +60,11 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class LeishmaniaResourceTest extends Testable {
 
 	public LeishmaniaResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, LeishmaniaResourceTest.class);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(LeishmaniaResourceTest.class.getSimpleName(), "test");
-
 		// test create new leishmania
 		final Path path = LeishmaniaSequenceResource.class.getAnnotation(Path.class);
 		final Leishmania leishmania = Leishmania.builder()
@@ -194,8 +192,6 @@ public class LeishmaniaResourceTest extends Testable {
 		System.out.println(" >> Delete leishmania response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete leishmania response JAX-RS object: " + response);
 		System.out.println(" >> Delete leishmania HTTP headers: " + response.getStringHeaders());
-
-		printTestEnd(LeishmaniaResourceTest.class.getSimpleName(), "test");
 	}
 
 }

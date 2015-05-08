@@ -39,6 +39,7 @@ public class TestUtils {
 	public static final String ANCHOR_FILENAME = "m2anchor";
 
 	public static final String FASTA_FOLDER = "fasta";
+	public static final String IMAGES_FOLDER = "images";
 
 	public static final String RESOURCES_FOLDER;
 	static {
@@ -55,6 +56,6 @@ public class TestUtils {
 	public static Collection<File> getFastaFiles() {
 		final File dir = new File(concat(TEST_RESOURCES_PATH, FASTA_FOLDER));
 		return listFiles(dir, new String[] { "txt" }, false);
-	}
+	}	
 
 }

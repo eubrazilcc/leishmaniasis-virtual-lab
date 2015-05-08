@@ -25,7 +25,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 <!-- Configure the Leishmaniasis Virtual Laboratory (LVL)            -->
 <!--                                                                 -->
 <!-- Documentation of this file format can be found at:              -->
-<!-- http://lvl.i3m.upv.es/doc//#configuration                       -->
+<!-- http://lvl.i3m.upv.es/apidoc/#configuration                     -->
 <!--                                                                 -->
 <!-- Additional configuration files can be loaded from:              -->
 <!-- $LVL_HOME/etc/                                                  -->
@@ -51,7 +51,15 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<local-cache>$TMP/.lvl/cache</local-cache>
 		
 		<!-- The base directory where the static HTTP resources are located -->
-		<htdocs>${lvl-root}/htdocs</htdocs>		
+		<htdocs>${lvl-root}/htdocs</htdocs>
+		
+		<!-- Storage usage restrictions -->
+		<limits>
+			
+			<!-- Maximum number of KB that users can upload to the storage in a single object -->
+			<max-user-uploaded-file-size>2048</max-user-uploaded-file-size> <!-- 2 MB -->
+			
+		</limits>
 
 	</storage>
 

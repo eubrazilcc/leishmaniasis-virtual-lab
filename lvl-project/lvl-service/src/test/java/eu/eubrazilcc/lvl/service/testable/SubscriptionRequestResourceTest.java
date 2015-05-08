@@ -23,6 +23,8 @@
 package eu.eubrazilcc.lvl.service.testable;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
+import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.CREATED;
@@ -55,13 +57,11 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class SubscriptionRequestResourceTest extends Testable {
 
 	public SubscriptionRequestResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, SubscriptionRequestResourceTest.class);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(SubscriptionRequestResourceTest.class.getSimpleName(), "test");
-
 		// test create new request		
 		final Path path = SubscriptionRequestResource.class.getAnnotation(Path.class);
 		final SubscriptionRequest request = SubscriptionRequest.builder()
@@ -92,6 +92,7 @@ public class SubscriptionRequestResourceTest extends Testable {
 		// test get request by Id (Java object)
 		SubscriptionRequest request2 = testCtxt.target().path(path.value()).path(request.getId())
 				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(SubscriptionRequest.class);
 		assertThat("Get request by Id result is not null", request2, notNullValue());
 		assertThat("Get request by Id requested date is not null", request2.getRequested(), notNullValue());
@@ -105,6 +106,7 @@ public class SubscriptionRequestResourceTest extends Testable {
 		response = testCtxt.target()
 				.path(path.value())
 				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get();
 		assertThat("Get requests response is not null", response, notNullValue());
 		assertThat("Get requests response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
@@ -118,7 +120,10 @@ public class SubscriptionRequestResourceTest extends Testable {
 		System.out.println(" >> Get requests HTTP headers: " + response.getStringHeaders());			
 
 		// test list all requests (Java object)
-		SubscriptionRequests requests = testCtxt.target().path(path.value()).request(APPLICATION_JSON)
+		SubscriptionRequests requests = testCtxt.target()
+				.path(path.value())
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(SubscriptionRequests.class);
 		assertThat("Get requests result is not null", requests, notNullValue());
 		assertThat("Get requests list is not null", requests.getElements(), notNullValue());
@@ -129,8 +134,11 @@ public class SubscriptionRequestResourceTest extends Testable {
 
 		// test update request
 		request.setFulfilled(new Date());
-		response = testCtxt.target().path(path.value()).path(request.getId())
+		response = testCtxt.target()
+				.path(path.value())
+				.path(request.getId())				
 				.request()
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.put(entity(request, APPLICATION_JSON));
 		assertThat("Update request response is not null", response, notNullValue());
 		assertThat("Update request response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
@@ -144,8 +152,11 @@ public class SubscriptionRequestResourceTest extends Testable {
 		System.out.println(" >> Update request HTTP headers: " + response.getStringHeaders());
 
 		// test get request by Id after update
-		request2 = testCtxt.target().path(path.value()).path(request.getId())
+		request2 = testCtxt.target()
+				.path(path.value())
+				.path(request.getId())
 				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(SubscriptionRequest.class);
 		assertThat("Get request by Id after update result is not null", request2, notNullValue());
 		assertThat("Get request by Id after update coincides with expected", request2.equalsIgnoringVolatile(request));
@@ -155,6 +166,7 @@ public class SubscriptionRequestResourceTest extends Testable {
 		// test delete request
 		response = testCtxt.target().path(path.value()).path(request.getId())
 				.request()
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.delete();
 		assertThat("Delete request response is not null", response, notNullValue());
 		assertThat("Delete request response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
@@ -166,8 +178,6 @@ public class SubscriptionRequestResourceTest extends Testable {
 		System.out.println(" >> Delete request response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete request response JAX-RS object: " + response);
 		System.out.println(" >> Delete request HTTP headers: " + response.getStringHeaders());
-
-		printTestEnd(SubscriptionRequestResourceTest.class.getSimpleName(), "test");
 	}
 
 }

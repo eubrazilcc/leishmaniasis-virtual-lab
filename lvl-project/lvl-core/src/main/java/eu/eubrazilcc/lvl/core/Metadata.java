@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
  */
 public class Metadata extends Versionable {
 
+	private String originalFilename;
 	private String openAccessLink;
 	private Date openAccessDate;
 
@@ -46,6 +47,14 @@ public class Metadata extends Versionable {
 	private Set<String> tags = newHashSet();
 	private String description;
 	private Target target;
+
+	public @Nullable String getOriginalFilename() {
+		return originalFilename;
+	}
+
+	public void setOriginalFilename(final @Nullable String originalFilename) {
+		this.originalFilename = originalFilename;
+	}
 
 	public @Nullable String getOpenAccessLink() {
 		return openAccessLink;
@@ -107,6 +116,7 @@ public class Metadata extends Versionable {
 		}
 		final Metadata other = Metadata.class.cast(obj);
 		return super.equals((Versionable)other)
+				&& Objects.equals(originalFilename, other.originalFilename)
 				&& Objects.equals(openAccessLink, other.openAccessLink)
 				&& Objects.equals(openAccessDate, other.openAccessDate)
 				&& Objects.equals(editor, other.editor)
@@ -117,13 +127,14 @@ public class Metadata extends Versionable {
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(openAccessLink, openAccessDate, editor, tags, description, target);
+		return super.hashCode() + Objects.hash(originalFilename, openAccessLink, openAccessDate, editor, tags, description, target);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("Versionable", super.toString())
+				.add("originalFilename", originalFilename)
 				.add("openAccessLink", openAccessLink)
 				.add("openAccessDate", openAccessDate)
 				.add("editor", editor)
@@ -155,6 +166,11 @@ public class Metadata extends Versionable {
 
 		public Builder tags(final Set<String> tags) {
 			instance.setTags(tags);
+			return this;
+		}
+
+		public Builder originalFilename(final String originalFilename) {
+			instance.setOriginalFilename(trimToNull(originalFilename));
 			return this;
 		}
 

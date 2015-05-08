@@ -58,13 +58,11 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class SavedSearchResourceTest extends Testable {
 
 	public SavedSearchResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, SavedSearchResourceTest.class);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(SavedSearchResourceTest.class.getSimpleName(), "test");
-
 		// test create new saved search
 		final Path path = SavedSearchResource.class.getAnnotation(Path.class);
 		final SavedSearch search = SavedSearch.builder()
@@ -189,8 +187,6 @@ public class SavedSearchResourceTest extends Testable {
 		System.out.println(" >> Delete saved search response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete saved search response JAX-RS object: " + response);
 		System.out.println(" >> Delete saved search HTTP headers: " + response.getStringHeaders());
-
-		printTestEnd(SavedSearchResourceTest.class.getSimpleName(), "test");
 	}
 
 }

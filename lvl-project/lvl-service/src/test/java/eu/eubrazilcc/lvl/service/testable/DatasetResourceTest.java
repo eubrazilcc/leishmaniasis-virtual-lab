@@ -78,13 +78,11 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class DatasetResourceTest extends Testable {
 
 	public DatasetResourceTest(final TestContext testCtxt) {
-		super(testCtxt);
+		super(testCtxt, DatasetResourceTest.class);
 	}
 
 	@Override
 	public void test() throws Exception {
-		printTestStart(DatasetResourceTest.class.getSimpleName(), "test");
-
 		// test create dataset (GZIP compressed FASTA sandfly)
 		final Path path = DatasetResource.class.getAnnotation(Path.class);
 		Target datasetTarget = Target.builder()
@@ -450,8 +448,6 @@ public class DatasetResourceTest extends Testable {
 		assertThat("XML parsed from downloaded file is not null", sequence, notNullValue());
 		// uncomment for additional output
 		System.out.println(" >> Saved file: " + filename);		
-
-		printTestEnd(DatasetResourceTest.class.getSimpleName(), "test");
 	}
 
 }
