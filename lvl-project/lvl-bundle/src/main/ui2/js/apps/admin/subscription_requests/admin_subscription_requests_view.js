@@ -1,26 +1,40 @@
 /**
- * RequireJS module that defines the view: admin->issues.
+ * RequireJS module that defines the view: admin->subscription_requests.
  */
 
-define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issues/tpls/toolbar_browse',
+define([ 'app', 'tpl!apps/admin/subscription_requests/tpls/admin_subscription_requests', 'tpl!apps/admin/subscription_requests/tpls/toolbar',
 		'tpl!common/search/tpls/search_term', 'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search',
-		'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'entities/saved_search', 'pace', 'moment', 'backbone.oauth2',
-		'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, SearchesTpl, ToolbarTpl, SearchTermTpl, AddSearchTermTpl,
-		SaveSearchTpl, Style, Configuration, SearchEntity, pace, moment) {
-	Lvl.module('AdminApp.Searches.View', function(View, Lvl, Backbone, Marionette, $, _) {
+		'apps/config/marionette/styles/style', 'apps/config/marionette/configuration', 'entities/subscription_request', 'pace', 'moment', 'backbone.oauth2',
+		'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, SubscReqsTpl, ToolbarTpl, SearchTermTpl, AddSearchTermTpl,
+		SaveSearchTpl, Style, Configuration, SubscReqsEntity, pace, moment) {
+	Lvl.module('AdminApp.SubscReqs.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
 		var columns = [
 				{
-					name : 'type',
-					label : 'Target',
+					name : 'email',
+					label : 'Email',
+					editable : false,
+					cell : 'string'
+				},
+				{
+					name : 'channels',
+					label : 'Channels',
 					editable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();
 							var rawValue = this.model.get(this.column.get('name'));
 							if (rawValue !== undefined) {
-								this.$el.append(rawValue.replace(/;/g, ' <i class="fa fa-angle-double-right fa-fw"></i> '));
+								var names = '';
+								for (var i = 0; i < rawValue.length; i++) {
+									var color = 'label-default';
+									if ('mailing list' === rawValue[i]) {
+										color = 'label-success';
+									}
+									names += '<span class="label ' + color + '">' + rawValue[i] + '</span> ';
+								}
+								this.$el.append(names.trim());
 							}
 							this.delegateEvents();
 							return this;
@@ -28,8 +42,8 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 					})
 				},
 				{
-					name : 'saved',
-					label : 'Saved',
+					name : 'requested',
+					label : 'Requested',
 					editable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
@@ -45,44 +59,16 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 					})
 				},
 				{
-					name : 'search',
-					label : 'Search',
-					editable : false,
-					cell : Backgrid.Cell.extend({
-						render : function() {
-							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));
-							if (rawValue !== undefined) {
-								var names = '';
-								for (var i = 0; i < rawValue.length; i++) {
-									var color = Boolean(rawValue[i]['valid']) ? 'label-success' : 'label-warning';
-									names += '<span class="label ' + color + '">' + rawValue[i]['term'] + '</span> ';
-								}
-								this.$el.append(names.trim());
-							}
-							this.delegateEvents();
-							return this;
-						}
-					})
-				},
-				{
-					name : 'description',
-					label : 'Description',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'id',
-					label : '',
+					name : 'fulfilled',
+					label : 'Fulfilled',
 					editable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="#" title="Run" class="text-muted" data-run-search="' + formattedValue
-										+ '"><i class="fa fa-play fa-fw"></i></a>');
+							if (formattedValue && typeof formattedValue === 'number') {
+								this.$el.append('<i class="fa fa-history fa-fw"></i> ' + moment(formattedValue).format('MMM DD[,] YYYY [at] HH[:]mm'));
 							}
 							this.delegateEvents();
 							return this;
@@ -93,14 +79,15 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 					name : 'id',
 					label : '',
 					editable : false,
+					sortable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="#" title="Remove" class="text-muted" data-remove-search="' + formattedValue
-										+ '"><i class="fa fa-times fa-fw"></i></a>');
+								this.$el.append('<a href="#" title="Remove" data-remove-subscr-req="' + formattedValue
+										+ '" class="text-muted"><i class="fa fa-times fa-fw"></i></a>');
 							}
 							this.delegateEvents();
 							return this;
@@ -108,8 +95,8 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 					})
 				} ];
 		View.Content = Marionette.ItemView.extend({
-			id : 'issues',
-			template : SearchesTpl,
+			id : 'subscription_requests',
+			template : SubscReqsTpl,
 			initialize : function() {
 				this.listenTo(this.collection, 'request', this.displaySpinner);
 				this.listenTo(this.collection, 'sync error', this.removeSpinner);
@@ -120,10 +107,10 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 						headerCell : 'select-all'
 					} ].concat(columns),
 					collection : this.collection,
-					emptyText : 'No issues found'
+					emptyText : 'No requests found'
 				});
 				// setup search
-				Lvl.vent.on('search:form:submitted', this.searchSavedSearches);
+				Lvl.vent.on('search:form:submitted', this.searchSubscrReqs);
 				// setup menu
 				$('#lvl-floating-menu-toggle').show(0);
 				$('#lvl-floating-menu').hide(0);
@@ -179,18 +166,17 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 				'click div.lvl-savable' : 'handleClickSavable',
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
-				'click a[data-run-search]' : 'runSearch',
-				'click a[data-remove-search]' : 'removeSearch'
+				'click a[data-remove-subscr-req]' : 'removeSubscrReq'
 			},
 			deselectAll : function(e) {
 				e.preventDefault();
 				$('#lvl-floating-menu').hide('fast');
 				e.data.grid.clearSelectedModels();
 			},
-			searchSavedSearches : function(search) {
+			searchSubscrReqs : function(search) {
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
-				// TODO backgridFilter.submit();				
+				// TODO backgridFilter.submit();
 				// TODO
 				require([ 'common/growl' ], function(createGrowl) {
 					createGrowl('Operation unavailable', 'Search feature is coming soon. Stay tuned!', false);
@@ -210,7 +196,7 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 						}
 					});
 				}
-				this.searchSavedSearches(search);
+				this.searchSubscrReqs(search);
 			},
 			addSearchTerm : function(e) {
 				e.preventDefault();
@@ -253,33 +239,23 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 			},
 			handleDragEnd : function(e) {
 				Lvl.vent.trigger('editable:items:dragend');
-			},			
-			runSearch : function(e) {
-				e.preventDefault();
-				var self = this;
-				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-run-search') : target.attr('data-run-search');
-				var item = this.collection.get(itemId);
-				Lvl.flash(item).navigate(item.get('type').replace(/;/g, '/').replace(/\s+/g, ''), {
-					trigger : true
-				});
 			},
-			removeSearch : function(e) {
+			removeSubscrReq : function(e) {
 				e.preventDefault();
 				var self = this;
 				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove-search') : target.attr('data-remove-search');
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove-subscr-req') : target.attr('data-remove-subscr-req');
 				var item = this.collection.get(itemId);
 				item.oauth2_token = config.authorizationToken();
 				require([ 'common/confirm' ], function(confirmDialog) {
-					confirmDialog('Confirm deletion', 'This action will delete the selected search. Are you sure?', function() {
+					confirmDialog('Confirm deletion', 'This action will delete the selected request. Are you sure?', function() {
 						self.collection.remove(item);
 						item.destroy({
 							success : function(e) {
 							},
 							error : function(e) {
 								require([ 'common/alert' ], function(alertDialog) {
-									alertDialog('Error', 'The search cannot be removed.');
+									alertDialog('Error', 'The request cannot be removed.');
 								});
 							}
 						});
@@ -293,7 +269,6 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 					var stylesLoader = new Style();
 					stylesLoader.loadCss(Lvl.request('styles:backgrid:entities').toJSON());
 					stylesLoader.loadCss(Lvl.request('styles:pace:entities').toJSON());
-					stylesLoader.loadCss(Lvl.request('styles:flags:entities').toJSON());
 				});
 			},
 			onDestroy : function() {
@@ -307,7 +282,7 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 				// clean menu
 				$('#lvl-floating-menu').hide(0);
 				$('#lvl-floating-menu-toggle').hide(0);
-				$('#lvl-floating-menu').empty();				
+				$('#lvl-floating-menu').empty();
 			},
 			onRender : function() {
 				var self = this;
@@ -348,5 +323,5 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 			}
 		});
 	});
-	return Lvl.AdminApp.Searches.View;
+	return Lvl.AdminApp.SubscReqs.View;
 });

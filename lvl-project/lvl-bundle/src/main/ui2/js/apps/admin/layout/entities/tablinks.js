@@ -50,6 +50,11 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				link : 'issues',
 				icon : 'fa-bug',
 				text : 'Issues'
+			}, {
+				id : 2,
+				link : 'subscription_requests',
+				icon : 'fa-user-plus',
+				text : 'Subscription requests'
 			} ]);
 		};
 

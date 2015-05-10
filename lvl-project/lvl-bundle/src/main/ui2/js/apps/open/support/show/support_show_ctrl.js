@@ -49,7 +49,7 @@ define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/sho
 												}
 											}).on('success.field.bv', function(e, data) {
 												var isValid = data.bv.isValid();
-												data.bv.disableSubmitButtons(!isValid);
+												data.bv.disableSubmitButtons(!isValid);												
 											});
 										}
 									},
@@ -58,7 +58,8 @@ define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/sho
 										$('#lvlSubscribeForm button[type="submit"]').attr('disabled', 'disabled');
 										var formData = Backbone.Syphon.serialize(this);
 										var requestData = {
-											'email' : formData.email
+											'email' : formData.email,
+											'channels' : [ 'mailing list' ]
 										};
 										// submit request to LVL server
 										var self = this;
@@ -66,10 +67,12 @@ define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/sho
 											type : 'POST',
 											contentType : 'application/json',
 											crossDomain : true,
-											url : lvlService + '/support',
+											url : lvlService + '/support/subscriptions/requests',
 											data : JSON.stringify(requestData)
 										}).always(function() {
-											$('#lvlSubscribeForm input.form-control').val('');
+											var form = $('#lvlSubscribeForm');
+											form.bootstrapValidator('resetForm', true);
+											form.bootstrapValidator('disableSubmitButtons', true);
 										}).done(
 												function(data, textStatus, request) {
 													require([ 'common/growl' ], function(createGrowl) {
@@ -138,7 +141,9 @@ define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/sho
 											url : lvlService + '/support',
 											data : JSON.stringify(requestData)
 										}).always(function() {
-											$('#lvlIssueReportForm input.form-control').val('');
+											var form = $('#lvlIssueReportForm');
+											form.bootstrapValidator('resetForm', true);
+											form.bootstrapValidator('disableSubmitButtons', true);
 										}).done(
 												function(data, textStatus, request) {
 													require([ 'common/growl' ], function(createGrowl) {

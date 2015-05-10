@@ -33,7 +33,9 @@ define([ 'app', 'apps/config/marionette/configuration', 'routefilter' ], functio
 						trigger : false,
 						replace : true
 					});
-					Lvl.execute('admin:set:active', section);				
+					Lvl.execute('admin:set:active', section);
+				} else if (section === 'subscription_requests') {
+					Lvl.execute('admin:set:active', 'subscription_requests');
 				} else {
 					Lvl.navigate('not-found', {
 						trigger : true,
