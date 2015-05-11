@@ -166,7 +166,7 @@ public enum SubscriptionRequestDAO implements BaseDAO<String, SubscriptionReques
 	}
 
 	private BasicDBObject sortCriteria() {
-		return new BasicDBObject(REQUESTED_KEY, 1);
+		return new BasicDBObject(REQUESTED_KEY, -1);
 	}
 
 	private SubscriptionRequest parseBasicDBObject(final BasicDBObject obj) {

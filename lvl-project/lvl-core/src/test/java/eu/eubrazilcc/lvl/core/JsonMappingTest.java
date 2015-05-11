@@ -52,6 +52,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.core.support.Issue;
+import eu.eubrazilcc.lvl.core.support.IssueStatus;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 
@@ -172,6 +174,18 @@ public class JsonMappingTest {
 					.search(newHashSet(FormattedQueryParam.builder().term("country:spain").valid(true).build(),
 							FormattedQueryParam.builder().term("sequence").build()))
 							.build();
+			assertThat("saved search is not null", savedSearch, notNullValue());
+
+			final Issue issue = Issue.builder()
+					.newId()
+					.status(IssueStatus.NEW)
+					.email("username@example.com")
+					.browser("Google Chrome 42")
+					.system("Ubuntu 14.04")
+					.description("Problem description")
+					.opened(new Date())
+					.build();
+			assertThat("issue is not null", issue, notNullValue());			
 
 			// test GenBank sequence
 			testGenBankSequence(gbSeq);
@@ -227,6 +241,13 @@ public class JsonMappingTest {
 			// test saved searches with links
 			savedSearch.setLinks(newArrayList(refLink));
 			testSavedSearch(savedSearch);
+
+			// test issues
+			testIssue(issue);
+
+			// test issue with links
+			issue.setLinks(newArrayList(refLink));
+			testIssue(issue);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -360,6 +381,20 @@ public class JsonMappingTest {
 		final SavedSearch savedSearch2 = JSON_MAPPER.readValue(payload, SavedSearch.class);
 		assertThat("deserialized saved search is not null", savedSearch2, notNullValue());
 		assertThat("deserialized saved search coincides with expected", savedSearch2, equalTo(savedSearch));
+	}
+
+	private void testIssue(final Issue issue) throws IOException {
+		// test instance JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(issue);		
+		assertThat("serialized issue is not null", payload, notNullValue());
+		assertThat("serialized issue is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized issue (JSON): " + payload);
+
+		// test instance JSON deserialization
+		final Issue issue2 = JSON_MAPPER.readValue(payload, Issue.class);
+		assertThat("deserialized issue is not null", issue2, notNullValue());
+		assertThat("deserialized issue coincides with expected", issue2, equalTo(issue));
 	}
 
 }

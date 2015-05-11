@@ -126,7 +126,7 @@ public class IssueResource {
 		paginable.setElements(issues);
 		// set total count and return to the caller
 		final int totalEntries = issues.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
-		paginable.setTotalCount(totalEntries);
+		paginable.setTotalCount(totalEntries);		
 		return paginable;
 	}
 
@@ -213,7 +213,7 @@ public class IssueResource {
 		// complete required fields
 		issue.setId(randomUUID().toString());
 		issue.setOpened(new Date());
-		issue.setStatus(IssueStatus.NEW);		
+		issue.setStatus(IssueStatus.NEW);
 		issue.setClosed(null);
 		issue.getFollowUp().clear();
 		if (attachmentId != null) {

@@ -324,6 +324,7 @@ public class IssuesResourceTest extends Testable {
 		System.out.println(" >> Get issues result: " + issues.toString());			
 
 		// test update issue
+		issue.setStatus(IssueStatus.CLOSED);
 		issue.setClosed(new Date());
 		issue.getFollowUp().put(new Date().getTime(), "Something new");
 		response = testCtxt.target().path(path.value()).path(issue.getId())

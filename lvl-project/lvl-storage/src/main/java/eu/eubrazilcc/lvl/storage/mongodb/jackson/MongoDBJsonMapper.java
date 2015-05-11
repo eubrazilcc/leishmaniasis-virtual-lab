@@ -35,7 +35,7 @@ public final class MongoDBJsonMapper {
 	static {
 		// apply general configuration
 		JSON_MAPPER.setSerializationInclusion(Include.NON_NULL);
-		JSON_MAPPER.setSerializationInclusion(Include.NON_DEFAULT);		
+		JSON_MAPPER.setSerializationInclusion(Include.NON_DEFAULT);
 	}
 
 }

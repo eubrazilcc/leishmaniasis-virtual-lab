@@ -30,13 +30,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newTreeMap;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
-import static eu.eubrazilcc.lvl.core.support.IssueStatus.NEW;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.trimToNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.util.Date;
 import java.util.List;
@@ -74,7 +73,7 @@ public class Issue implements Linkable<Issue> {
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
-	
+
 	@JsonIgnore
 	private String urlSafeId;
 
@@ -87,8 +86,8 @@ public class Issue implements Linkable<Issue> {
 	private Optional<String> steps = absent();
 	private String description;
 	private Optional<String> screenshot = absent();
+	private IssueStatus status;
 
-	private IssueStatus status = NEW;
 	private Optional<String> owner = absent();
 	private Optional<Date> closed = absent();
 	private Map<Long, String> followUp = newTreeMap();
@@ -100,13 +99,9 @@ public class Issue implements Linkable<Issue> {
 
 	@Override
 	public void setLinks(final List<Link> links) {
-		if (links != null) {
-			this.links = newArrayList(links);
-		} else {
-			this.links = null;
-		}
+		this.links = links != null ? newArrayList(links) : null;		
 	}
-	
+
 	public String getUrlSafeId() {
 		return urlSafeId;
 	}
@@ -147,13 +142,13 @@ public class Issue implements Linkable<Issue> {
 		this.system = system;
 	}
 	public String getConfiguration() {
-		return configuration.or("");
+		return configuration.orNull();
 	}
 	public void setConfiguration(final @Nullable String configuration) {
 		this.configuration = fromNullable(configuration);
 	}
 	public String getSteps() {
-		return steps.or("");
+		return steps.orNull();
 	}
 	public void setSteps(final @Nullable String steps) {
 		this.steps = fromNullable(steps);
@@ -165,7 +160,7 @@ public class Issue implements Linkable<Issue> {
 		this.description = description;
 	}
 	public String getScreenshot() {
-		return screenshot.or("");
+		return screenshot.orNull();
 	}
 	public void setScreenshot(final @Nullable String screenshot) {
 		this.screenshot = fromNullable(screenshot);
@@ -177,7 +172,7 @@ public class Issue implements Linkable<Issue> {
 		this.status = status;
 	}
 	public String getOwner() {
-		return owner.or("");
+		return owner.orNull();
 	}
 	public void setOwner(final @Nullable String owner) {
 		this.owner = fromNullable(owner);

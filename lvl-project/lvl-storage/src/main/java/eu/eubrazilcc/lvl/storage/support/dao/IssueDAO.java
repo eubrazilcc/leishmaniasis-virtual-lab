@@ -170,7 +170,7 @@ public enum IssueDAO implements BaseDAO<String, Issue> {
 	}
 
 	private BasicDBObject sortCriteria() {
-		return new BasicDBObject(OPENED_KEY, 1);
+		return new BasicDBObject(OPENED_KEY, -1);
 	}
 
 	private Issue parseBasicDBObject(final BasicDBObject obj) {

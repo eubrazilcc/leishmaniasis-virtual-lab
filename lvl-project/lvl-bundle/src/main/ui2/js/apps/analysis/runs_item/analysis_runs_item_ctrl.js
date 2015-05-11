@@ -18,8 +18,10 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/workflow_run',
 				view.on('analysis:pipeline:product:show', function(productJSON) {
 					var product = JSON.parse(productJSON);
 					if (product.path.substr(product.path.length - '.nwk'.length, product.path.length) === '.nwk') {
-						require([ 'apps/analysis/tree_viewer/analysis_tree_viewer_view' ], function(TreeViewerView) {
-							var dialogView = new TreeViewerView.Content({
+						// TODO require([ 'apps/analysis/tree_viewer/analysis_tree_viewer_view' ], function(TreeViewerView) {
+							// TODO var dialogView = new TreeViewerView.Content({
+						require([ 'apps/analysis/text_viewer/analysis_text_viewer_view' ], function(TextViewerView) {	
+							var dialogView = new TextViewerView.Content({
 								'product' : product
 							});
 							Lvl.dialogRegion.show(dialogView);

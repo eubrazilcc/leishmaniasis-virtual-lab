@@ -31,6 +31,6 @@ public enum IssueStatus {
 	NEW,
 	ASSIGNED,
 	CLOSED,
-	REOPENED
-	
+	REOPENED;
+
 }

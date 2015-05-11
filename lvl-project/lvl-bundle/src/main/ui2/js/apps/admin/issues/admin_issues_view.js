@@ -10,12 +10,32 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 	Lvl.module('AdminApp.Issues.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
-		var columns = [
+		var columns = [				
 				{
-					name : 'email',
-					label : 'Email',
+					name : 'status',
+					label : 'Status',
 					editable : false,
-					cell : 'string'
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							if (rawValue !== undefined) {
+								var color = 'label-default';
+								if ('NEW' === rawValue) {
+									color = 'label-info';
+								} else if ('ASSIGNED' === rawValue) {
+									color = 'label-success';
+								} else if ('CLOSED' === rawValue) {
+									color = 'label-danger';
+								} else if ('REOPENED' === rawValue) {
+									color = 'label-warning';
+								}
+								this.$el.append('<span class="label ' + color + '">' + rawValue + '</span> ');
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
 				},
 				{
 					name : 'opened',
@@ -33,6 +53,29 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 							return this;
 						}
 					})
+				},
+				{
+					name : 'closed',
+					label : 'Closed',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'number') {
+								this.$el.append('<i class="fa fa-history fa-fw"></i> ' + moment(formattedValue).format('MMM DD[,] YYYY [at] HH[:]mm'));
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},
+				{
+					name : 'email',
+					label : 'Reporter',
+					editable : false,
+					cell : 'string'
 				},
 				{
 					name : 'browser',
@@ -57,30 +100,7 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 					label : 'Screenshot',
 					editable : false,
 					cell : 'string'
-				},
-				{
-					name : 'status',
-					label : 'Status',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'closed',
-					label : 'Closed',
-					editable : false,
-					cell : Backgrid.Cell.extend({
-						render : function() {
-							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));
-							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'number') {
-								this.$el.append('<i class="fa fa-history fa-fw"></i> ' + moment(formattedValue).format('MMM DD[,] YYYY [at] HH[:]mm'));
-							}
-							this.delegateEvents();
-							return this;
-						}
-					})
-				},
+				},							
 				{
 					name : 'id',
 					label : '',
@@ -163,14 +183,15 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 					} else {
 						$('#lvl-search-terms').hide('fast');
 					}
-				});
+				});				
 			},
 			events : {
 				'click a[data-search-term]' : 'resetSearchTerms',
 				'submit form#lvl-add-search-term-form' : 'addSearchTerm',
 				'click div.lvl-savable' : 'handleClickSavable',
 				'dragstart div.lvl-savable' : 'handleDragStart',
-				'dragend div.lvl-savable' : 'handleDragEnd'
+				'dragend div.lvl-savable' : 'handleDragEnd',
+				'click a[data-remove-issue]' : 'removeIssue'
 			},
 			deselectAll : function(e) {
 				e.preventDefault();
@@ -243,6 +264,30 @@ define([ 'app', 'tpl!apps/admin/issues/tpls/admin_issues', 'tpl!apps/admin/issue
 			},
 			handleDragEnd : function(e) {
 				Lvl.vent.trigger('editable:items:dragend');
+			},
+			removeIssue : function(e) {
+				e.preventDefault();
+				var self = this;
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-remove-issue') : target.attr('data-remove-issue');
+				var item = this.collection.get(itemId);
+				item.oauth2_token = config.authorizationToken();
+				require([ 'common/confirm' ], function(confirmDialog) {
+					confirmDialog('Confirm deletion', 'This action will delete the selected issue. Are you sure?', function() {
+						self.collection.remove(item);
+						item.destroy({
+							success : function(e) {
+							},
+							error : function(e) {
+								require([ 'common/alert' ], function(alertDialog) {
+									alertDialog('Error', 'The issue cannot be removed.');
+								});
+							}
+						});
+					}, {
+						btn_text : 'Delete'
+					});
+				});
 			},
 			onBeforeRender : function() {
 				require([ 'entities/styles' ], function() {
