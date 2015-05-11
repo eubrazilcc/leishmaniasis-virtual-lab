@@ -4,7 +4,8 @@
 
 define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/tpls/subsection', 'tpl!apps/open/layout/tpls/nav-list',
 		'tpl!apps/open/layout/tpls/nav-list-item', 'tpl!apps/open/layout/tpls/event-list', 'tpl!apps/open/layout/tpls/event-list-item',
-		'apps/open/layout/entities/toc' ], function(Lvl, LayoutTpl, SubsectionTpl, NavListTpl, NavItemTpl, EventListTpl, EventItemTpl, TocEntity) {
+		'apps/open/layout/entities/toc', 'apps/config/marionette/styles/style' ], function(Lvl, LayoutTpl, SubsectionTpl, NavListTpl, NavItemTpl, EventListTpl,
+		EventItemTpl, TocEntity, Style) {
 	Lvl.module('OpenContent.Layout.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.NavItem = Marionette.ItemView.extend({
@@ -67,6 +68,7 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 				$(window).on('resize', this.setupAffix);
 			},
 			onDestroy : function() {
+				this.stopListening();
 				$(window).off('resize', this.setupAffix);
 			},
 			setupAffix : function() {
@@ -80,6 +82,12 @@ define([ 'app', 'tpl!apps/open/layout/tpls/open-layout', 'tpl!apps/open/layout/t
 							}
 						});
 					});
+				});
+			},
+			onBeforeRender : function() {
+				require([ 'entities/styles' ], function() {
+					var stylesLoader = new Style();
+					stylesLoader.loadCss(Lvl.request('styles:pace:entities').toJSON());
 				});
 			},
 			onBeforeShow : function() {

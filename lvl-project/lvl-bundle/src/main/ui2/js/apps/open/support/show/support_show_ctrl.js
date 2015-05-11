@@ -4,8 +4,8 @@
 
 define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/show/tpls/support-main-section.html',
 		'text!apps/open/support/show/tpls/support-mailing-list-section.html', 'text!apps/open/support/show/tpls/support-report-an-issue.html',
-		'apps/open/layout/entities/section', 'apps/config/marionette/configuration', 'bootstrapvalidator', 'backbone.syphon' ], function(Lvl, LayoutController,
-		MainSectionHtml, MailingListSectionHtml, ReportAnIssueSectionHtml, SectionEntity, Configuration) {
+		'apps/open/layout/entities/section', 'apps/config/marionette/configuration', 'pace', 'bootstrapvalidator', 'backbone.syphon' ], function(Lvl,
+		LayoutController, MainSectionHtml, MailingListSectionHtml, ReportAnIssueSectionHtml, SectionEntity, Configuration, pace) {
 	Lvl.module('SupportApp.Show', function(Show, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var lvlService = new Configuration().get('service', '');
@@ -49,12 +49,13 @@ define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/sho
 												}
 											}).on('success.field.bv', function(e, data) {
 												var isValid = data.bv.isValid();
-												data.bv.disableSubmitButtons(!isValid);												
+												data.bv.disableSubmitButtons(!isValid);
 											});
 										}
 									},
 									'click #lvlSubscribeBtn' : function(e) {
 										e.preventDefault();
+										pace.restart();
 										$('#lvlSubscribeForm button[type="submit"]').attr('disabled', 'disabled');
 										var formData = Backbone.Syphon.serialize(this);
 										var requestData = {
@@ -70,6 +71,7 @@ define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/sho
 											url : lvlService + '/support/subscriptions/requests',
 											data : JSON.stringify(requestData)
 										}).always(function() {
+											pace.stop();
 											var form = $('#lvlSubscribeForm');
 											form.bootstrapValidator('resetForm', true);
 											form.bootstrapValidator('disableSubmitButtons', true);
@@ -114,10 +116,31 @@ define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/sho
 																message : 'The input is not a valid email address'
 															}
 														}
+													},
+													'browser' : {
+														verbose : false,
+														validators : {
+															notEmpty : {
+																message : 'The browser is required and cannot be empty'
+															}
+														}
+													},
+													'system' : {
+														verbose : false,
+														validators : {
+															notEmpty : {
+																message : 'The system is required and cannot be empty'
+															}
+														}
+													},
+													'description' : {
+														verbose : false,
+														validators : {
+															notEmpty : {
+																message : 'The description is required and cannot be empty'
+															}
+														}
 													}
-
-												// email, browser, system, config, steps, description, screenshot
-
 												}
 											}).on('success.field.bv', function(e, data) {
 												var isValid = data.bv.isValid();
@@ -127,33 +150,49 @@ define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/sho
 									},
 									'click #lvlReportIssueBtn' : function(e) {
 										e.preventDefault();
+										pace.restart();
 										$('#lvlIssueReportForm button[type="submit"]').attr('disabled', 'disabled');
 										var formData = Backbone.Syphon.serialize(this);
-										var requestData = {
-											'email' : formData.email
-										};
+										var request = new FormData();
+										var issueBlob = new Blob([ JSON.stringify({
+											'email' : formData.email,
+											'browser' : formData.browser,
+											'system' : formData.system,
+											'configuration' : formData.config,
+											'steps' : formData.steps,
+											'description' : formData.description
+										}) ], {
+											type : 'application/json'
+										});
+										request.append('issue', issueBlob);
+										var inputScreenshot = $('#screenshot');
+										if (inputScreenshot.val()) {
+											request.append('file', inputScreenshot.get(0).files[0]);
+										}
 										// submit request to LVL server
 										var self = this;
 										var jqxhr = $.ajax({
 											type : 'POST',
-											contentType : 'application/json',
+											processData : false,
+											contentType : false,
 											crossDomain : true,
-											url : lvlService + '/support',
-											data : JSON.stringify(requestData)
+											url : lvlService + '/support/issues/with-attachment',
+											data : request
 										}).always(function() {
+											pace.stop();
 											var form = $('#lvlIssueReportForm');
 											form.bootstrapValidator('resetForm', true);
 											form.bootstrapValidator('disableSubmitButtons', true);
 										}).done(
 												function(data, textStatus, request) {
 													require([ 'common/growl' ], function(createGrowl) {
-														createGrowl('Subscription successful', 'You should receive a confirmation e-mail '
-																+ 'at the address that you provided.', false);
+														createGrowl('New issue report created', 'Our team will investigate your report and will send you a '
+																+ 'follow-up e-mail at the address that you provided.', false);
 													});
 												}).fail(function(jqXHR, textStatus, errorThrown) {
 											if (jqXHR.status !== 404) {
 												require([ 'common/alert' ], function(alertDialog) {
-													alertDialog('Error', 'The subscription request cannot be sent.');
+													alertDialog('Error', 'The issue report cannot be sent.');
 												});
 											}
 										});

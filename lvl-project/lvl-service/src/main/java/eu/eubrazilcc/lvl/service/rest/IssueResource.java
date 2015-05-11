@@ -258,7 +258,6 @@ public class IssueResource {
 		ISSUE_DAO.delete(id);
 	}
 
-	// TODO
 	@GET
 	@Path("{id: " + URL_FRAGMENT_PATTERN + "}/{attachment: " + URL_FRAGMENT_PATTERN + "}/download")
 	@Produces(APPLICATION_OCTET_STREAM)

@@ -2,15 +2,15 @@
  * RequireJS module that defines the controller: admin->issues.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'entities/saved_search', 'apps/admin/issues/admin_issues_view' ], function(Lvl,
-		Configuration, SearchEntity, View) {
-	Lvl.module('AdminApp.Searches', function(Searches, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'apps/config/marionette/configuration', 'entities/issue', 'apps/admin/issues/admin_issues_view' ], function(Lvl, Configuration, IssueEntity,
+		View) {
+	Lvl.module('AdminApp.Issues', function(Issues, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var config = new Configuration();
-		Searches.Controller = {
+		Issues.Controller = {
 			showSection : function() {
 				var view = new View.Content({
-					collection : new SearchEntity.SavedSearchPageableCollection({
+					collection : new IssueEntity.IssuePageableCollection({
 						oauth2_token : config.authorizationToken()
 					})
 				});
@@ -19,5 +19,5 @@ define([ 'app', 'apps/config/marionette/configuration', 'entities/saved_search',
 			}
 		}
 	});
-	return Lvl.AdminApp.Searches.Controller;
+	return Lvl.AdminApp.Issues.Controller;
 });
