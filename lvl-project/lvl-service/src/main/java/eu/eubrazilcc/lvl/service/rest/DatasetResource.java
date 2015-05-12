@@ -98,6 +98,7 @@ public class DatasetResource {
 				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":*:view");
 		final String ownerid = securityManager.getPrincipal();
 		final Datasets paginable = Datasets.start()
+				.namespace(namespace2)
 				.page(page)
 				.perPage(per_page)
 				.build();

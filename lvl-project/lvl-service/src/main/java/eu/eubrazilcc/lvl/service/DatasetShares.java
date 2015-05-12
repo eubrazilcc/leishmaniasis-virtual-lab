@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang.StringUtils.trimToEmpty;
 
 import java.util.List;
 
@@ -43,7 +44,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.DatasetShare;
-import eu.eubrazilcc.lvl.core.Paginable;
+import eu.eubrazilcc.lvl.core.PaginableWithNamespace;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.service.rest.DatasetResource;
@@ -52,7 +53,7 @@ import eu.eubrazilcc.lvl.service.rest.DatasetResource;
  * Wraps a collection of {@link DatasetShare}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DatasetShares extends Paginable<DatasetShare> {
+public class DatasetShares extends PaginableWithNamespace<DatasetShare> {
 
 	@InjectLinks({
 		@InjectLink(resource=DatasetResource.class, method="getDatasetShares", bindings={
@@ -105,6 +106,11 @@ public class DatasetShares extends Paginable<DatasetShare> {
 	public static class DatasetSharesBuilder {
 
 		private final DatasetShares instance = new DatasetShares();
+
+		public DatasetSharesBuilder namespace(final String namespace) {
+			instance.setNamespace(trimToEmpty(namespace));
+			return this;
+		}
 
 		public DatasetSharesBuilder page(final int page) {
 			instance.setPage(page);

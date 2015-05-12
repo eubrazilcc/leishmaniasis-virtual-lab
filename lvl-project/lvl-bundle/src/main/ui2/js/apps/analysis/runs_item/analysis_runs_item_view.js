@@ -10,6 +10,34 @@ define([ 'app', 'tpl!apps/analysis/runs_item/templates/analysis_runs_item', 'app
 		View.Content = Marionette.ItemView.extend({
 			id : 'runs',
 			template : RunItemTpl,
+			templateHelpers : function() {
+				return {
+					statusClass : function() {
+						var clazz = 'default';
+						if (!this.status || !this.status.status) {
+							return clazz;
+						}						
+						switch (this.status.status) {
+						case 'Queued':
+							clazz = 'default';
+							break;
+						case 'Running':
+							clazz = 'primary';
+							break;
+						case 'Finished':
+							clazz = 'success';
+							break;
+						case 'ExecutionError':
+							clazz = 'danger';
+							break;
+						case 'Unknown':
+							clazz = 'warning';
+							break;
+						}
+						return clazz;
+					}
+				};
+			},
 			initialize : function() {
 				this.listenTo(this.model, 'request', this.displaySpinner);
 				this.listenTo(this.model, 'sync error', this.removeSpinner);
@@ -80,7 +108,7 @@ define([ 'app', 'tpl!apps/analysis/runs_item/templates/analysis_runs_item', 'app
 					reset : true
 				}).done(function() {
 					var status = self.model.get('status');
-					if (status && (status.status === 'Finished' || status.status === 'ExecutionError')) {
+					if (status && (status.status === 'Finished' || status.status === 'ExecutionError' || status.status === 'Unknown')) {
 						self.terminateTimer();
 					}
 				});

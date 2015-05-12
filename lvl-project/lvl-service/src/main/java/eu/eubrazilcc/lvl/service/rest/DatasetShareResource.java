@@ -90,6 +90,7 @@ public class DatasetShareResource {
 				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":" + filename2 + ":view")
 				.getPrincipal();
 		final DatasetShares paginable = DatasetShares.start()
+				.namespace(namespace2)
 				.page(page)
 				.perPage(per_page)
 				.build();

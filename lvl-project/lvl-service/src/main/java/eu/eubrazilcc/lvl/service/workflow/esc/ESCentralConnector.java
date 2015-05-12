@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.service.workflow.esc;
 
+import static com.connexience.api.model.EscWorkflowInvocation.INVOCATION_FINISHED_WITH_ERRORS;
+import static com.connexience.api.model.EscWorkflowInvocation.INVOCATION_STATE_UNKNOWN;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
@@ -184,10 +186,13 @@ public enum ESCentralConnector implements Closeable2 {
 	public WorkflowStatus getStatus(final String invocationId) {
 		checkArgument(isNotBlank(invocationId), "Uninitialized or invalid invocation identifier");
 		try {
-			final EscWorkflowInvocation invocation = workflowClient().getInvocation(invocationId);
+			final EscWorkflowInvocation invocation = workflowClient().getInvocation(invocationId);			
 			return WorkflowStatus.builder()
 					.completeness(checkPercent(invocation.getPercentComplete()))
-					.status(invocation.getStatus())
+					.status(invocation.getStatus())					
+					.completed(!invocation.isInProgress())
+					.failed(INVOCATION_FINISHED_WITH_ERRORS.equals(invocation.getStatus()) || INVOCATION_STATE_UNKNOWN.equals(invocation.getStatus()))
+					.description(invocation.getStatusMessage())					
 					.build();
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to monitor workflow execution", e);

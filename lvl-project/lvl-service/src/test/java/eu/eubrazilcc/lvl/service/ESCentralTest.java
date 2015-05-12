@@ -107,7 +107,7 @@ public class ESCentralTest {
 			System.out.println(" >> Available workflows: " + collectionToString(workflows));			
 
 			String workflowId = "workflows-eubcc-nj_pipeline-1.0";
-			String versionId = "902"; // null for last version
+			String versionId = "3193"; // null for last version
 
 			// test get workflow definition from e-SC
 			final WorkflowDefinition workflow = ESCENTRAL_CONN.getWorkflow(workflowId);
@@ -145,7 +145,7 @@ public class ESCentralTest {
 			assertThat("deserialized workflow parameters coincides with expected", parameters3, equalTo(parameters2));
 
 			// test submitting a workflow to e-SC
-			final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflowId, versionId, parameters2);
+			String invocationId = ESCENTRAL_CONN.executeWorkflow(workflowId, versionId, parameters2);
 			assertThat("workflow invocation Id is not null", invocationId, notNullValue());
 			assertThat("workflow invocation Id is not empty", isNotBlank(invocationId));
 			/* uncomment for additional output */
@@ -166,7 +166,7 @@ public class ESCentralTest {
 				}
 			}
 			assertThat("workflow status is not null", status, notNullValue());
-			assertThat("workflow execution is successful", !status.hasFailed(), equalTo(true));
+			assertThat("workflow execution is successful", !status.isFailed(), equalTo(true));
 
 			// test retrieving products from e-SC
 			TEST_OUTPUT_DIR.mkdirs(); // force directory creation (maybe deleted by previous tests?)
@@ -178,6 +178,38 @@ public class ESCentralTest {
 			for (final File file : outputFiles) {
 				System.out.println(" >> Product file: " + file.getCanonicalPath());
 			}
+
+			// test submitting a workflow to e-SC (with wrong parameters)
+			final WorkflowParameters badParameters = WorkflowParameters.builder()
+					.parameter("SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/hsp70.fastaBAD/download", null, null)
+					.parameter("HTTPGet-RequestHeaders", "Authorization: Bearer " + new EnableESCentralTestIsFound().getAuthToken(), null, null)
+					.parameter("Align", "1", null, null)
+					.parameter("No. of Bootstrap Replications", "20", null, null)
+					.build();
+
+			invocationId = ESCENTRAL_CONN.executeWorkflow(workflowId, versionId, badParameters);
+			assertThat("workflow (with wrong params) invocation Id is not null", invocationId, notNullValue());
+			assertThat("workflow (with wrong params) invocation Id is not empty", isNotBlank(invocationId));
+			/* uncomment for additional output */
+			System.out.println(" >> Workflow invocation Id: " + invocationId);
+			
+			// test workflow completion
+			isCompleted = false;
+			status = null;
+			while (!isCompleted) {
+				status = ESCENTRAL_CONN.getStatus(invocationId);
+				assertThat("workflow (with wrong params) status is not null", status, notNullValue());
+				/* uncomment for additional output */
+				System.out.println(" >> Workflow (with wrong params) status: " + status.toString());
+				if (status.isCompleted()) {
+					isCompleted = true;
+				} else {
+					Thread.sleep(2000l);
+				}
+			}
+			assertThat("workflow (with wrong params) status is not null", status, notNullValue());
+			assertThat("workflow (with wrong params) execution is failed", !status.isFailed(), equalTo(false));
+			assertThat("workflow (with wrong params) status message", isNotBlank(status.getDescription()), equalTo(true));
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

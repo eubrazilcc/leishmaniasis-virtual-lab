@@ -53,10 +53,8 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
  * Represents a single object or a collection of objects that is backed to a file in the application's database. Besides the properties
- * that are provided by the base class {@link BaseFile}, this class also provides the following additional properties: a list of 
- * {@link #getEditors() editors} to facilitate the application to control who is accessing the data, a collection of {@link #getTags() tags} 
- * for indexing the data sets, a {@link DatasetMetadata#getNamespace() namespace} for isolating the data sets and an optional {@link #getPublicLink() public link} 
- * that can be used to share the data with users who are not required to authenticate with the application.
+ * that are provided by the base class {@link BaseFile}, this class also provides the following additional properties: a {@link #getNamespace() namespace} 
+ * for isolating the data sets.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class Dataset extends BaseFile implements Linkable<Dataset> {

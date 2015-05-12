@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang.StringUtils.trimToEmpty;
 
 import java.util.List;
 
@@ -43,7 +44,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.Dataset;
-import eu.eubrazilcc.lvl.core.Paginable;
+import eu.eubrazilcc.lvl.core.PaginableWithNamespace;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.service.rest.DatasetResource;
@@ -52,7 +53,7 @@ import eu.eubrazilcc.lvl.service.rest.DatasetResource;
  * Wraps a collection of {@link Dataset}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Datasets extends Paginable<Dataset> {
+public class Datasets extends PaginableWithNamespace<Dataset> {
 
 	@InjectLinks({
 		@InjectLink(resource=DatasetResource.class, method="getDatasets", bindings={
@@ -98,6 +99,8 @@ public class Datasets extends Paginable<Dataset> {
 				.toString();
 	}
 
+	/* Fluent API */
+
 	public static DatasetsBuilder start() {
 		return new DatasetsBuilder();
 	}
@@ -105,6 +108,11 @@ public class Datasets extends Paginable<Dataset> {
 	public static class DatasetsBuilder {
 
 		private final Datasets instance = new Datasets();
+
+		public DatasetsBuilder namespace(final String namespace) {
+			instance.setNamespace(trimToEmpty(namespace));
+			return this;
+		}
 
 		public DatasetsBuilder page(final int page) {
 			instance.setPage(page);
@@ -126,5 +134,5 @@ public class Datasets extends Paginable<Dataset> {
 		}
 
 	}
-	
+
 }

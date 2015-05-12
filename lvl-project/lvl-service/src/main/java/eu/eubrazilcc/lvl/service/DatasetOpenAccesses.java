@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang.StringUtils.trimToEmpty;
 
 import java.util.List;
 
@@ -43,7 +44,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.DatasetOpenAccess;
-import eu.eubrazilcc.lvl.core.Paginable;
+import eu.eubrazilcc.lvl.core.PaginableWithNamespace;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.service.rest.DatasetOpenAccessResource;
@@ -52,7 +53,7 @@ import eu.eubrazilcc.lvl.service.rest.DatasetOpenAccessResource;
  * Wraps a collection of {@link DatasetOpenAccess}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DatasetOpenAccesses extends Paginable<DatasetOpenAccess> {
+public class DatasetOpenAccesses extends PaginableWithNamespace<DatasetOpenAccess> {
 
 	@InjectLinks({
 		@InjectLink(resource=DatasetOpenAccessResource.class, method="getDatasetOpenAccesses", bindings={
@@ -105,6 +106,11 @@ public class DatasetOpenAccesses extends Paginable<DatasetOpenAccess> {
 	public static class DatasetOpenAccessesBuilder {
 
 		private final DatasetOpenAccesses instance = new DatasetOpenAccesses();
+
+		public DatasetOpenAccessesBuilder namespace(final String namespace) {
+			instance.setNamespace(trimToEmpty(namespace));
+			return this;
+		}
 
 		public DatasetOpenAccessesBuilder page(final int page) {
 			instance.setPage(page);

@@ -213,7 +213,7 @@ public enum SavedSearchDAO implements AuthenticatedDAO<String, SavedSearch> {
 	}
 
 	private BasicDBObject sortCriteria() {
-		return new BasicDBObject(PRIMARY_KEY, 1);
+		return new BasicDBObject(SAVED_KEY, -1);
 	}
 
 	private SavedSearch parseBasicDBObject(final BasicDBObject obj) {

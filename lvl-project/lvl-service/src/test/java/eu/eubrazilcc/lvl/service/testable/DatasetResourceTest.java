@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
+import static java.lang.Math.min;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
@@ -126,7 +127,7 @@ public class DatasetResourceTest extends Testable {
 		assertThat("Get datasets (root account) items count coincide with list size", datasets.getElements().size(), 
 				equalTo(datasets.getTotalCount()));
 		// uncomment for additional output			
-		System.out.println(" >> Get datasets (root account) result: " + datasets.toString());
+		System.out.println(" >> Get datasets (root account) result: " + datasets.toString());		
 
 		// test list datasets (from user unauthorized user account)
 		try {
@@ -200,7 +201,7 @@ public class DatasetResourceTest extends Testable {
 		assertThat("Get dataset (url encoded) result is not null", dataset2, notNullValue());
 		assertThat("Get dataset (url encoded) Id coincides with expected", dataset2.getId(), equalTo(datasetId));
 		// uncomment for additional output
-		System.out.println(" >> Get dataset (url encoded) result: " + dataset2.toString());			
+		System.out.println(" >> Get dataset (url encoded) result: " + dataset2.toString());
 
 		// test update dataset
 		dataset.getMetadata().setDescription("Different description");
@@ -367,7 +368,29 @@ public class DatasetResourceTest extends Testable {
 		location = new URI((String)response.getHeaders().get("Location").get(0));			
 		assertThat("Create dataset (NCBI.GZIP sandfly) location is not null", location, notNullValue());
 		assertThat("Create dataset (NCBI.GZIP sandfly) path is not empty", isNotBlank(location.getPath()), equalTo(true));
-		
+
+		// test pagination (JSON encoded)
+		final int perPage = 2;
+		response = testCtxt.target().path(path.value()).path(urlEncodeUtf8(testCtxt.ownerid("user1")))
+				.queryParam("per_page", perPage)
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
+				.get();
+		assertThat("Paginate datasets first page response is not null", response, notNullValue());
+		assertThat("Paginate datasets first page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+		assertThat("Paginate datasets first page response is not empty", response.getEntity(), notNullValue());
+		payload = response.readEntity(String.class);
+		assertThat("Paginate datasets first page response entity is not null", payload, notNullValue());
+		assertThat("Paginate datasets first page response entity is not empty", isNotBlank(payload));			
+		datasets = testCtxt.jsonMapper().readValue(payload, Datasets.class);			
+		assertThat("Paginate datasets first page result is not null", datasets, notNullValue());
+		assertThat("Paginate datasets first page list is not null", datasets.getElements(), notNullValue());
+		assertThat("Paginate datasets first page list is not empty", !datasets.getElements().isEmpty());
+		assertThat("Paginate datasets first page items count coincide with page size", datasets.getElements().size(), 
+				equalTo(min(perPage, datasets.getTotalCount())));
+		// uncomment for additional output			
+		System.out.println(" >> Paginate datasets first page response body (JSON): " + payload);
+
 		// test type-ahead
 		List<?> filenames = testCtxt.target().path(path.value())
 				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
@@ -381,7 +404,7 @@ public class DatasetResourceTest extends Testable {
 		assertThat("Number of filenames (typeahead) coincides with expected", filenames.size(), equalTo(3));
 		// uncomment for additional output
 		System.out.println(" >> Get filenames (typeahead) result: " + filenames.toString());
-		
+
 		filenames = testCtxt.target().path(path.value())
 				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 				.path("ZIP")
@@ -394,7 +417,7 @@ public class DatasetResourceTest extends Testable {
 		assertThat("Number of filenames (typeahead) coincides with expected", filenames.size(), equalTo(1));
 		// uncomment for additional output
 		System.out.println(" >> Get filenames (typeahead) result: " + filenames.toString());		
-		
+
 		// test file download
 		URI downloadUri = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS))
 				.path(urlEncodeUtf8("my_ncbi_sequence.xml")).path("download").getUri();

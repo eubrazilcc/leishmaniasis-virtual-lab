@@ -92,6 +92,7 @@ public class DatasetOpenAccessResource {
 				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":*:view");
 		final String ownerid = securityManager.getPrincipal();
 		final DatasetOpenAccesses paginable = DatasetOpenAccesses.start()
+				.namespace(namespace2)
 				.page(page)
 				.perPage(per_page)
 				.build();

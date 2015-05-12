@@ -34,7 +34,10 @@ import javax.annotation.Nullable;
 
 /**
  * Provides the basis for metadata storage, including a {@link Versionable#getIsLastestVersion() property} to label the latest 
- * version of a file.
+ * version of a file. Besides the properties that are provided by the the base file (BaseFile class), this class also provides 
+ * the following additional properties: a {@link #getEditor() editor} to facilitate the application to control who is accessing 
+ * the data, a collection of {@link #getTags() tags} for indexing the data sets, and an optional {@link #getPublicLink() public link} 
+ * that can be used to share the data with users who are not required to authenticate with the application.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class Metadata extends Versionable {

@@ -33,7 +33,7 @@ requirejs.config({
 		/* OpenLayers */
 		'openlayers' : [ '//cdnjs.cloudflare.com/ajax/libs/ol3/3.4.0/ol.min', 'vendor/cached/ol.min' ],
 		/* Filesize.js */
-		'filesize' : [ '//cdn.filesizejs.com/filesize.min', 'vendor/cached/filesize.min' ],
+		'filesize' : 'vendor/provided/filesize.min',
 		/* Chance.js */
 		'chance' : 'vendor/provided/chance.min', // remove map line from JS library to avoid unavailable map error
 		/* Moment.js */

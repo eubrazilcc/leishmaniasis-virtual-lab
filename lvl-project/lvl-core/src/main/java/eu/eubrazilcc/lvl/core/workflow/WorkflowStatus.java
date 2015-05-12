@@ -23,6 +23,8 @@
 package eu.eubrazilcc.lvl.core.workflow;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ComparisonChain.start;
 import static com.google.common.collect.Range.closed;
@@ -30,7 +32,9 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import javax.annotation.Nullable;
+
+import com.google.common.base.Optional;
 import com.google.common.collect.Range;
 
 /**
@@ -43,6 +47,10 @@ public class WorkflowStatus implements Comparable<WorkflowStatus> {
 
 	private int completeness;
 	private String status;
+	private Optional<String> description = absent();
+
+	private boolean completed;
+	private boolean failed;
 
 	public int getCompleteness() {
 		return completeness;
@@ -56,15 +64,23 @@ public class WorkflowStatus implements Comparable<WorkflowStatus> {
 	public void setStatus(final String status) {
 		this.status = status;
 	}
-
-	@JsonIgnore
-	public boolean isCompleted() {
-		return (completeness == 100 && "Finished".equalsIgnoreCase(status)) || "ExecutionError".equalsIgnoreCase(status);
+	public String getDescription() {
+		return description.orNull();
 	}
-
-	@JsonIgnore
-	public boolean hasFailed() {
-		return "ExecutionError".equalsIgnoreCase(status);
+	public void setDescription(final @Nullable String description) {
+		this.description = fromNullable(description);
+	}
+	public boolean isCompleted() {
+		return completed;
+	}
+	public void setCompleted(final boolean completed) {
+		this.completed = completed;
+	}
+	public boolean isFailed() {
+		return failed;
+	}
+	public void setFailed(final boolean failed) {
+		this.failed = failed;
 	}
 
 	@Override
@@ -82,12 +98,15 @@ public class WorkflowStatus implements Comparable<WorkflowStatus> {
 		}
 		final WorkflowStatus other = WorkflowStatus.class.cast(obj);
 		return Objects.equals(completeness, other.completeness)
-				&& Objects.equals(status, other.status);
+				&& Objects.equals(status, other.status)
+				&& Objects.equals(description, other.description)
+				&& Objects.equals(completed, other.completed)
+				&& Objects.equals(failed, other.failed);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(completeness, status);
+		return Objects.hash(completeness, status, description, completed, failed);
 	}
 
 	@Override
@@ -95,6 +114,9 @@ public class WorkflowStatus implements Comparable<WorkflowStatus> {
 		return toStringHelper(this)
 				.add("completeness", completeness)
 				.add("status", status)
+				.add("description", description.orNull())
+				.add("completed", completed)
+				.add("failed", failed)
 				.toString();
 	}
 
@@ -125,6 +147,21 @@ public class WorkflowStatus implements Comparable<WorkflowStatus> {
 
 		public Builder status(final String status) {
 			instance.setStatus(status);
+			return this;
+		}
+
+		public Builder description(final @Nullable String description) {
+			instance.setDescription(description);
+			return this;
+		}
+
+		public Builder completed(final boolean completed) {
+			instance.setCompleted(completed);
+			return this;
+		}
+
+		public Builder failed(final boolean failed) {
+			instance.setFailed(failed);
 			return this;
 		}
 

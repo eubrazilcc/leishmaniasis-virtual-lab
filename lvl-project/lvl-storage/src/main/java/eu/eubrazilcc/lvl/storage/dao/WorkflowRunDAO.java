@@ -213,7 +213,7 @@ public enum WorkflowRunDAO implements AuthenticatedDAO<String, WorkflowRun> {
 	}
 
 	private BasicDBObject sortCriteria() {
-		return new BasicDBObject(PRIMARY_KEY, 1);
+		return new BasicDBObject(SUBMITTED_KEY, -1);
 	}
 
 	private WorkflowRun parseBasicDBObject(final BasicDBObject obj) {

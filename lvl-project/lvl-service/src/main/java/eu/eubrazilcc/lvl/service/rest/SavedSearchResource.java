@@ -37,6 +37,7 @@ import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -73,7 +74,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
-import eu.eubrazilcc.lvl.core.Paginable;
+import eu.eubrazilcc.lvl.core.PaginableWithNamespace;
 import eu.eubrazilcc.lvl.core.SavedSearch;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
@@ -101,6 +102,7 @@ public final class SavedSearchResource {
 				.requiresPermissions("saved:searches:" + ns2permission(namespace2) + ":*:view")
 				.getPrincipal();
 		final SavedSearches paginable = SavedSearches.start()
+				.namespace(namespace2)
 				.page(page)
 				.perPage(per_page)
 				.build();
@@ -196,7 +198,7 @@ public final class SavedSearchResource {
 	 * Wraps a collection of {@link SavedSearch}.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	public static class SavedSearches extends Paginable<SavedSearch> {		
+	public static class SavedSearches extends PaginableWithNamespace<SavedSearch> {		
 
 		@InjectLinks({
 			@InjectLink(resource=SavedSearchResource.class, method="getSavedSearches", bindings={
@@ -261,6 +263,11 @@ public final class SavedSearchResource {
 		public static class SavedSearchesBuilder {
 
 			private final SavedSearches instance = new SavedSearches();
+
+			public SavedSearchesBuilder namespace(final String namespace) {
+				instance.setNamespace(trimToEmpty(namespace));
+				return this;
+			}
 
 			public SavedSearchesBuilder page(final int page) {
 				instance.setPage(page);

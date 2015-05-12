@@ -17,7 +17,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				submitted : '',
 				status : {
 					'completeness' : 0,
-					'status' : 'Unknown'
+					'status' : 'Retrieving status...'
 				},
 				products : null
 			},
