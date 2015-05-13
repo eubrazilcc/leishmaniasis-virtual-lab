@@ -1,5 +1,5 @@
 EUBrazilCC LVL - Leishmaniasis Virtual Laboratory
-Copyright 2014 EUBrazilCC (EU-Brazil Cloud Connect)
+Copyright 2014-2015 EUBrazilCC (EU-Brazil Cloud Connect)
 
 This "NOTICE" text file is part of the distribution. Any derivative works that
 you distribute must include a readable copy of the attribution notices contained

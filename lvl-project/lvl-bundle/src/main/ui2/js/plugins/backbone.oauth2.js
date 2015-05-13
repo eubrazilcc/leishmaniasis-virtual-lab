@@ -1,5 +1,5 @@
 // Backbone.OAuth2
-// Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
+// Copyright 2014-2015 EUBrazilCC (EU‐Brazil Cloud Connect)
 // Licensed under the EUPL license
 // Author: Erik Torres <ertorser@upv.es>
 // For HTTP basic authentication with login and password see: https://github.com/fiznool/backbone.basicauth

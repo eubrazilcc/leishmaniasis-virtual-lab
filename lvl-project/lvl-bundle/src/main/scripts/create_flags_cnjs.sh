@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ##############################################################################
-# Copyright 2014 EUBrazilCC (EU‐Brazil Cloud Connect)
+# Copyright 2014-2015 EUBrazilCC (EU‐Brazil Cloud Connect)
 # 
 # Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
 # the European Commission - subsequent versions of the EUPL (the "Licence");
