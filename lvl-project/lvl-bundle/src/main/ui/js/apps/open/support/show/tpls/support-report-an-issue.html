@@ -1,0 +1,67 @@
+<p>
+	If you find something that is not working as expected on the 
+	<a href="/#home" title="Leishmaniasis Virtual Laboratory">L<span class="text-danger">ei</span>shVL</a>, please report your issue using the following
+	form:
+</p>
+<div class="well">
+	<form class="form-horizontal" id="lvlIssueReportForm" novalidate="novalidate" data-pristine="true">
+		<fieldset>
+			<legend>Issue report form</legend>
+			<div class="form-group">
+	      		<label for="email" class="col-lg-2 control-label">Email<sup class="text-danger" title="Required">*</sup></label>
+	      		<div class="col-lg-10">
+	        		<input type="email" class="form-control" name="email" placeholder="Enter your email" required>
+	        		<span class="help-block">We will send you a response after your report is investigated.</span>
+	      		</div>
+	    	</div>	    	
+	    	<div class="form-group">
+	      		<label for="browser" class="col-lg-2 control-label">Browser<sup class="text-danger" title="Required">*</sup></label>
+	      		<div class="col-lg-10">
+	        		<input type="text" class="form-control" name="browser" placeholder="Which browser are you using (with version number)" required>
+	        		<span class="help-block">For example: Firefox 37.0.1</span>
+	      		</div>
+	    	</div>
+	    	<div class="form-group">
+	      		<label for="system" class="col-lg-2 control-label">System<sup class="text-danger" title="Required">*</sup></label>
+	      		<div class="col-lg-10">
+	        		<input type="text" class="form-control" name="system" placeholder="Which operating system is used (with version number)" required>
+	        		<span class="help-block">For example: Windows 7</span>
+	      		</div>
+	    	</div>
+	    	<div class="form-group">
+	    		<label for="config" class="col-lg-2 control-label">Configuration</label>
+	    		<div class="col-lg-10">
+	    			<textarea class="form-control" rows="3" name="config"></textarea>
+	    			<span class="help-block">Any configuration details that might be relevant (unusual browser configuration, extensions used if any).</span>
+	    		</div>
+	    	</div>
+	    	<div class="form-group">
+	    		<label for="steps" class="col-lg-2 control-label">Steps</label>
+	    		<div class="col-lg-10">
+	    			<textarea class="form-control" rows="3" name="steps"></textarea>
+	    			<span class="help-block">Steps that need to be followed to see the error.</span>
+	    		</div>
+	    	</div>
+	    	<div class="form-group">
+	    		<label for="description" class="col-lg-2 control-label">Description<sup class="text-danger" title="Required">*</sup></label>
+	    		<div class="col-lg-10">
+	    			<textarea class="form-control" rows="3" name="description" required></textarea>
+	    			<span class="help-block">Description of what happens and what you think is wrong.</span>
+	    		</div>
+	    	</div>
+	    	<div class="form-group">
+	      		<label for="screenshot" class="col-lg-2 control-label">Screenshot</label>
+	      		<div class="col-lg-10">
+	      			<input type="file" class="form-control" id="screenshot" accept="image/*">
+	        		<span class="help-block">Adding an screenshot will help us find the problem.</span>
+	      		</div>
+	    	</div>
+	    	<div class="form-group">
+	    		<div class="col-lg-10 col-lg-offset-2">
+	    			<button type="submit" class="btn btn-default" id="lvlReportIssueBtn" disabled="disabled">Report issue</button>
+	    		</div>
+	    	</div>
+	    	<input type="hidden" id="inputLvlVersion" value="1.0.0">  	
+	    </fieldset>
+	</form>
+</div>

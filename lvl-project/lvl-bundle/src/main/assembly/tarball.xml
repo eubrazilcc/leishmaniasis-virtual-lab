@@ -55,7 +55,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<directoryMode>0755</directoryMode>
 		</fileSet>
 		<fileSet>
-			<directory>${project.basedir}/src/main/ui2</directory>
+			<directory>${project.basedir}/src/main/ui</directory>
 			<outputDirectory>htdocs</outputDirectory>
 		</fileSet>
 		<fileSet>

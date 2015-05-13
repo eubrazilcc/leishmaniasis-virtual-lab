@@ -189,6 +189,23 @@ public class LvlInstanceResourceTest extends Testable {
 		System.out.println(" >> Delete instance response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete instance response JAX-RS object: " + response);
 		System.out.println(" >> Delete instance HTTP headers: " + response.getStringHeaders());
+
+		// test get collection statistics
+		response = testCtxt.target().path(path.value())
+				.path("stats/collection")
+				.request()
+				.accept(APPLICATION_JSON)
+				.get();
+		assertThat("Get collection stats is not null", response, notNullValue());
+		assertThat("Get collection stats is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+		assertThat("Get collection stats is not empty", response.getEntity(), notNullValue());
+		payload = response.readEntity(String.class);
+		assertThat("Get collection stats entity is not null", payload, notNullValue());
+		assertThat("Get collection stats entity is not empty", isNotBlank(payload));
+		// uncomment for additional output
+		System.out.println(" >> Get collection stats body (JSON): " + payload);
+		System.out.println(" >> Get collection stats JAX-RS object: " + response);
+		System.out.println(" >> Get collection stats HTTP headers: " + response.getStringHeaders());
 	}
 
 }

@@ -1,0 +1,79 @@
+<!-- Top navigation bar -->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/#home" title="Leishmaniasis Virtual Laboratory">L<span class="text-danger">ei</span>shVL</a>
+		</div>
+		<div class="collapse navbar-collapse" id="navbar-collapse-1">			
+			<ul class="nav navbar-nav navbar-right">
+				<li role="presentation" class="disabled bg-danger"><a href="javascript:;" title="Admin mode"><i class="fa fa-warning fa-fw"></i> ADMIN MODE</a></li>				
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" id="username" title="My account"><i class="fa fa-user fa-fw"></i><span class="hidden-md hidden-sm"> <%= username() %> </span><span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu">
+						<li class="hidden" id="sectionAdmin"><a href="/#admin" title="Admin this site">Admin</a></li>
+						<li><a href="#" id="btnProfile" title="Show your profile">Profile</a></li>
+						<li class="divider"></li>
+						<li><a href="/#logout" id="btnSignOut" title="Sign out"><i class="fa fa-sign-out fa-fw"></i> Sign out</a></li>
+					</ul>
+				</li>
+				<li><a href="#" id="btnAlerts" title="Alerts"><i class="fa fa-bell fa-fw"></i><span class="hidden-md hidden-sm"> Alerts </span><span class="badge">0</span></a></li>
+				<li><a href="/#about" title="About"><span class="hidden-lg hidden-xs"><i class="fa fa-info-circle fa-fw"></i></span><span class="hidden-md hidden-sm"> About</span></a></li>
+				<li><a href="/#doc" title="Documentation"><span class="hidden-lg hidden-xs"><i class="fa fa-book fa-fw"></i></span><span class="hidden-md hidden-sm">Documentation</span></a></li>
+				<li><a href="/#support" title="Support"><span class="hidden-lg hidden-xs"><i class="fa fa-life-ring fa-fw"></i></span><span class="hidden-md hidden-sm"> Support</span></a></li>
+				<li><a href="/#software" title="Software"><span class="hidden-lg hidden-xs"><i class="fa fa-file-code-o fa-fw"></i></span><span class="hidden-md hidden-sm"> Software</span></a></li>
+				<li class="hidden-xs">
+					<a href="#" id="btnSearchToggle" title="Search for items"><i class="fa fa-search fa-fw"></i></a>
+				</li>
+			</ul>
+			<form id="lvl-search-form-xs" class="navbar-form navbar-left" role="form-navigation">
+				<div class="form-group visible-xs">
+					<div class="input-group">
+						<input id="lvl-search-form-input-xs" type="text" class="form-control" placeholder="Search for items" autocomplete="off" autofocus="autofocus">
+						<span class="input-group-btn">
+							<button id="lvl-search-form-submit-btn-xs" class="btn btn-default" type="button">
+								<i class="fa fa-search fa-fw"></i>
+							</button>
+						</span>
+					</div>
+				</div>				
+			</form>			
+		</div>
+	</div>
+</nav>
+
+<div id="lvl-search-box" class="hidden-xs" style="display: none;">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-xs-12">
+				<form id="lvl-search-form" role="form-search">
+					<fieldset>
+						<div class="form-group">
+							<div class="input-group">
+								<input id="lvl-search-form-input" type="text" class="form-control" placeholder="Search for items and hit enter" autocomplete="off">
+								<span class="input-group-addon"><a href="#" class="text-muted lvl-btn-close" id="lvl-search-form-collapse-btn" title="Close"><i class="fa fa-times-circle fa-fw"></i></a></span>
+							</div>
+						</div>
+					</fieldset>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="lvl-save-items" style="display: none;">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-xs-12 text-center">
+				<div id="lvl-save-items-target">
+					<i class="fa fa-archive fa-5x"></i><br> My Saved Items
+				</div>
+			</div>
+		</div>		
+	</div>
+</div>
