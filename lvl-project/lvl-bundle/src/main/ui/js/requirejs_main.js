@@ -13,7 +13,7 @@ requirejs.config({
 		'jquery.spin' : 'vendor/jquery.spin.min', // 2.1.0
 		/* Boostrap front-end framework */
 		'bootstrap' : 'vendor/bootstrap.min', // 3.3.4
-		'bootstrapvalidator' : 'vendor/bootstrapValidator.min', // 0.5.3 (0.6.2 commercial license)
+		'bootstrapvalidator' : 'vendor/bootstrapValidator.min', // 0.5.3 (0.6.2 is commercial)
 		'bootstrap3-typeahead' : 'vendor/bootstrap3-typeahead.min',
 		/* Backbone + Marionette MVC framework */
 		'underscore' : 'vendor/underscore-min', // 1.8.3
@@ -56,10 +56,7 @@ requirejs.config({
 		/* Wait for the DOM is ready */
 		'domReady' : 'vendor/domReady.min' // 2.0.1
 	},
-	shim : {
-		'jquery.spin' : {
-			deps : [ 'spin', 'jquery' ]
-		},
+	shim : {		
 		'bootstrap' : {
 			deps : [ 'jquery' ]
 		},
@@ -67,81 +64,20 @@ requirejs.config({
 			deps : [ 'bootstrap' ],
 			exports : 'BootstrapValidator'
 		},
-		'bootstrap3-typeahead' : {
-			deps : [ 'bootstrap' ]
-		},
-		'underscore' : {
-			exports : '_'
-		},
-		'backbone' : {
-			deps : [ 'jquery', 'underscore' ],
-			exports : 'Backbone'
-		},
-		'routefilter' : {
-			deps : [ 'backbone' ]
-		},
-		'backbone.syphon' : {
-			deps : [ 'backbone' ]
-		},
-		'backbone.picky' : {
-			deps : [ 'backbone' ]
-		},
-		'backbone.paginator' : {
-			deps : [ 'backbone' ]
-		},
-		'backbone.oauth2' : {
-			deps : [ 'backbone' ]
-		},
 		'backgrid' : {
 			deps : [ 'backbone' ],
 			exports : 'Backgrid'
-		},
-		'backgrid-paginator' : {
-			deps : [ 'backgrid', 'backbone.paginator' ]
 		},
 		'backgrid-select-all' : {
 			deps : [ 'backgrid' ]
 		},
 		'backgrid-filter' : {
 			deps : [ 'backgrid' ]
-		},
-		'marionette' : {
-			deps : [ 'backbone' ],
-			exports : 'Marionette'
-		},
-		'openlayers' : {
-			deps : [ 'jquery' ],
-			exports : 'ol'
-		},
-		'chance' : {
-			exports : 'Chance'
-		},
-		'moment' : {
-			deps : [ 'jquery' ]
-		},
-		'imagesloaded' : {
-			deps : [ 'jquery' ]
-		},
-		'qtip' : {
-			deps : [ 'jquery', 'imagesloaded' ]
-		},
-		'raphael' : {
-			exports : 'Raphael'
-		},
+		},		
 		'jsphylosvg' : {
 			deps : [ 'raphael' ],
 			exports : 'Smits'
-		},
-		'chartjs' : {
-			exports : 'Chart'
-		},
-		'hopscotch' : {
-			exports : 'hopscotch'
-		},
-		'tpl' : {
-			deps : [ 'text' ]
-		},
-		'domReady' : []
+		}
 	},
 	callback : function() {
 		require([ 'jquery' ], function() {
