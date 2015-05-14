@@ -7,8 +7,7 @@ define([ 'app', 'apps/collection/layout/collection_layout_view' ], function(Lvl,
 		'use strict';
 		Layout.Controller = {
 			showLayout : function(section, id) {
-				require([ 'apps/collection/' + section + '/collection_' + section + '_ctrl', 'apps/collection/layout/entities/tablinks' ], function(
-						SectionController) {
+				var controller = function(SectionController) {
 					var tabLinks = Lvl.request('collection:navigation:entities');
 					var tabLinkToSelect = tabLinks.find(function(tabLink) {
 						return tabLink.get('link') === section;
@@ -20,7 +19,22 @@ define([ 'app', 'apps/collection/layout/collection_layout_view' ], function(Lvl,
 					});
 					Lvl.mainRegion.show(view);
 					return SectionController.showSection(id);
-				});
+				};
+				switch (section) {
+				case 'map':
+					require([ 'apps/collection/map/collection_map_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
+					break;
+				case 'stats':
+					require([ 'apps/collection/stats/collection_stats_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
+					break;
+				case 'submit':
+					require([ 'apps/collection/submit/collection_submit_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
+					break;
+				case 'browse':
+				default:
+					require([ 'apps/collection/browse/collection_browse_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
+					break;
+				}
 			}
 		}
 	});

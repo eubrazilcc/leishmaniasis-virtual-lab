@@ -8,7 +8,7 @@ define([ 'app', 'apps/drive/layout/drive_layout_view' ], function(Lvl, View) {
 		Layout.Controller = {
 			showLayout : function(section, id) {
 				var subapp = section + (id ? '_item' : '');
-				require([ 'apps/drive/' + subapp + '/drive_' + subapp + '_ctrl', 'apps/drive/layout/entities/tablinks' ], function(SectionController) {
+				var controller = function(SectionController) {
 					var tabLinks = Lvl.request('drive:navigation:entities');
 					var tabLinkToSelect = tabLinks.find(function(tabLink) {
 						return tabLink.get('link') === section;
@@ -20,7 +20,16 @@ define([ 'app', 'apps/drive/layout/drive_layout_view' ], function(Lvl, View) {
 					});
 					Lvl.mainRegion.show(view);
 					return SectionController.showSection(id);
-				});
+				};
+				switch (subapp) {
+				case 'links':
+					require([ 'apps/drive/links/drive_links_ctrl', 'apps/drive/layout/entities/tablinks' ], controller);
+					break;
+				case 'datasets':
+				default:
+					require([ 'apps/drive/datasets/drive_datasets_ctrl', 'apps/drive/layout/entities/tablinks' ], controller);	
+					break;
+				}				
 			}
 		}
 	});

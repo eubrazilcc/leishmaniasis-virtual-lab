@@ -7,8 +7,7 @@ define([ 'app', 'apps/e-compendium/layout/e-compendium_layout_view' ], function(
 		'use strict';
 		Layout.Controller = {
 			showLayout : function(section) {
-				require([ 'apps/e-compendium/' + section + '/e-compendium_' + section + '_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], function(
-						SectionController) {
+				var controller = function(SectionController) {
 					var tabLinks = Lvl.request('e-compendium:navigation:entities');
 					var tabLinkToSelect = tabLinks.find(function(tabLink) {
 						return tabLink.get('link') === section;
@@ -20,7 +19,22 @@ define([ 'app', 'apps/e-compendium/layout/e-compendium_layout_view' ], function(
 					});
 					Lvl.mainRegion.show(view);
 					return SectionController.showSection();
-				});
+				};
+				switch (section) {
+				case 'map':
+					require([ 'apps/e-compendium/map/e-compendium_map_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
+					break;
+				case 'stats':
+					require([ 'apps/e-compendium/stats/e-compendium_stats_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
+					break;
+				case 'submit':
+					require([ 'apps/e-compendium/submit/e-compendium_submit_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
+					break;
+				case 'browse':
+				default:
+					require([ 'apps/e-compendium/browse/e-compendium_browse_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
+					break;
+				}
 			}
 		}
 	});

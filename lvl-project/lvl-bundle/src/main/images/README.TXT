@@ -1,0 +1,1 @@
+Original images before they are optimized for Web using TinyPNG: https://tinypng.com/

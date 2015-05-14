@@ -4,15 +4,15 @@
 
 requirejs.config({
 	/* avoids cache. Remove on production! */
-	urlArgs : 'bust=' + (new Date()).getTime(),
+	//urlArgs : 'bust=' + (new Date()).getTime(),
 	baseUrl : 'js',
-	paths : {
+	paths : {		
 		/* jQuery JavaScript library */
-		'jquery' : 'vendor/jquery-2.1.4.min',
+		'jquery' : '//code.jquery.com/jquery-2.1.4.min', // 2.1.4
 		'spin' : 'vendor/spin.min', // 2.1.0
 		'jquery.spin' : 'vendor/jquery.spin.min', // 2.1.0
 		/* Boostrap front-end framework */
-		'bootstrap' : 'vendor/bootstrap.min', // 3.3.4
+		'bootstrap' : '//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min', // 3.3.4
 		'bootstrapvalidator' : 'vendor/bootstrapValidator.min', // 0.5.3 (0.6.2 is commercial)
 		'bootstrap3-typeahead' : 'vendor/bootstrap3-typeahead.min',
 		/* Backbone + Marionette MVC framework */
@@ -61,8 +61,7 @@ requirejs.config({
 			deps : [ 'jquery' ]
 		},
 		'bootstrapvalidator' : {
-			deps : [ 'bootstrap' ],
-			exports : 'BootstrapValidator'
+			deps : [ 'bootstrap' ]
 		},
 		'backgrid' : {
 			deps : [ 'backbone' ],
@@ -81,8 +80,7 @@ requirejs.config({
 	},
 	callback : function() {
 		require([ 'jquery' ], function() {
-			// tell jQuery to watch for any 401, 403 or 404 errors and handle them
-			// appropriately
+			// tell jQuery to watch for any 401, 403 or 404 errors and handle them appropriately
 			$.ajaxSetup({
 				statusCode : {
 					401 : function() {

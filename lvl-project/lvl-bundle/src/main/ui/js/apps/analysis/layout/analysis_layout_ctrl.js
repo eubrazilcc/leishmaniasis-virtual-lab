@@ -8,7 +8,7 @@ define([ 'app', 'apps/analysis/layout/analysis_layout_view' ], function(Lvl, Vie
 		Layout.Controller = {
 			showLayout : function(section, id) {
 				var subapp = section + (id ? '_item' : '');
-				require([ 'apps/analysis/' + subapp + '/analysis_' + subapp + '_ctrl', 'apps/analysis/layout/entities/tablinks' ], function(SectionController) {
+				var controller = function(SectionController) {
 					var tabLinks = Lvl.request('analysis:navigation:entities');
 					var tabLinkToSelect = tabLinks.find(function(tabLink) {
 						return tabLink.get('link') === section;
@@ -20,7 +20,19 @@ define([ 'app', 'apps/analysis/layout/analysis_layout_view' ], function(Lvl, Vie
 					});
 					Lvl.mainRegion.show(view);
 					return SectionController.showSection(id);
-				});
+				};
+				switch (subapp) {
+				case 'runs':
+					require([ 'apps/analysis/runs/analysis_runs_ctrl', 'apps/analysis/layout/entities/tablinks' ], controller);
+					break;
+				case 'runs_item':
+					require([ 'apps/analysis/runs_item/analysis_runs_item_ctrl', 'apps/analysis/layout/entities/tablinks' ], controller);
+					break;				
+				case 'pipelines':
+				default:
+					require([ 'apps/analysis/pipelines/analysis_pipelines_ctrl', 'apps/analysis/layout/entities/tablinks' ], controller);
+					break;
+				}
 			}
 		}
 	});

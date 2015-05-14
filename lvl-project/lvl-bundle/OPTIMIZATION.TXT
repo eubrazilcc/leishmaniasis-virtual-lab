@@ -1,0 +1,54 @@
+==================================================================
+Add to documentation: Minify Resources (HTML, CSS, and JavaScript)
+==================================================================
+
+Comment the property 'urlArgs' in the RequireJS main file (requirejs_main.js).
+
+1) For minifying HTML:
+
+    https://www.npmjs.com/package/html-minifier
+    
+    $ html-minifier -c html-minifier.conf index.html
+    
+    $ find dist/js/ -iname '*.html' -print0 | xargs -0 -I"{}" html-minifier "{}" -c html-minifier.conf -o "{}"
+
+2) For minifying CSS:
+
+    See: 3.b - RequireJS optimization tool
+
+3) For minifying JavaScript:
+
+3.a) Standalone:
+
+    https://github.com/mishoo/UglifyJS2
+
+    $ uglifyjs -c -m -o jquery.spin.min.js --source-map jquery.spin.min.map -- jquery.spin.js
+
+3.b) RequireJS optimization tool:
+
+    http://requirejs.org/docs/optimization.html
+     
+    https://github.com/jrburke/r.js/blob/master/build/example.build.js
+
+    $ r.js -o build.js
+
+==========================
+Optimization full example:
+==========================
+
+ertorser@regab:~$ mkdir TEMP
+
+ertorser@regab:~$ cd TEMP/
+
+ertorser@regab:~/TEMP$ clear ; rm -rf /home/ertorser/TEMP/ui/ ; \
+cp -r ~/Workspace/eclipse-jee-luna/leishmaniasis-virtual-lab/lvl-project/lvl-bundle/src/main/ui/ /home/ertorser/TEMP/
+
+ertorser@regab:~/TEMP/ui$ r.js -o build.js
+
+ertorser@regab:~/TEMP$ find dist/js/ -iname '*.html' -print0 | xargs -0 -I"{}" html-minifier "{}" -c html-minifier.conf -o "{}"
+
+ertorser@regab:~/TEMP/ui$ cd dist/
+
+ertorser@regab:~/TEMP/ui/dist$ rm -f build.txt
+
+ertorser@regab:~/TEMP/ui/dist$ python -m SimpleHTTPServer 8001

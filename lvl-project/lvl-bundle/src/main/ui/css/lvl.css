@@ -1,8 +1,5 @@
 @CHARSET "UTF-8";
 
-@import 'bootstrap.min.css';
-@import 'font-awesome.min.css';
-@import 'bootstrap-paper.min.css';
 @import 'backgrid.min.css';
 @import 'backgrid-paginator.min.css';
 @import 'backgrid-select-all.min.css';
