@@ -39,7 +39,7 @@ define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'ch
 				};
 				// submit request to LVL server
 				var self = this;
-				$('#export-btn').attr('disabled', 'disabled');
+				$('#export-btn').attr('disabled', 'disabled');				
 				var jqxhr = $.ajax({
 					type : 'POST',
 					contentType : 'application/json',

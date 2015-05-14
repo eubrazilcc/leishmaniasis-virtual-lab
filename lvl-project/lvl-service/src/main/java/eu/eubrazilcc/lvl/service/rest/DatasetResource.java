@@ -137,7 +137,7 @@ public class DatasetResource {
 		final String namespace2 = parseParam(namespace);
 		String filename2 = null;
 		if (dataset == null || isBlank(filename2 = trimToNull(dataset.getFilename()))) {
-			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameter: filename", BAD_REQUEST);
 		}
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":*:create")

@@ -31,10 +31,6 @@ import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 
 /**
  * Base class from which to extend to create objects stored in the file-system and referred in the application's database.
@@ -44,8 +40,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
  * @see <a href="http://docs.mongodb.org/manual/reference/gridfs/#gridfs-files-collection">GridFS Reference: The files Collection</a>
  */
 @JsonIgnoreProperties({ "outfile" })
-@JsonTypeInfo(property = "type_", use = Id.NAME)
-@JsonSubTypes({ @Type(Dataset.class) })
 public class BaseFile {	
 
 	private String id;

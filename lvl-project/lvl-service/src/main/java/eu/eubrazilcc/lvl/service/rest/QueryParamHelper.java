@@ -40,7 +40,7 @@ public final class QueryParamHelper {
 	public static final String parseParam(final String param) {
 		String param2 = null;
 		if (isBlank(param) || isBlank(param2 = trimToNull(urlDecodeUtf8(param)))) {
-			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameter: " + param, BAD_REQUEST);
 		}
 		return param2;
 	}

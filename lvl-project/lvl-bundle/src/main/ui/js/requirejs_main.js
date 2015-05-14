@@ -4,7 +4,7 @@
 
 requirejs.config({
 	/* avoids cache. Remove on production! */
-	//urlArgs : 'bust=' + (new Date()).getTime(),
+	urlArgs : 'bust=' + (new Date()).getTime(),
 	baseUrl : 'js',
 	paths : {		
 		/* jQuery JavaScript library */

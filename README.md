@@ -1,4 +1,4 @@
-# Leishmaniasis-Virtual-Lab - [v0.0.1](http://lvl.i3m.upv.es/doc/#installation)
+# Leishmaniasis-Virtual-Lab - [v0.2.0](http://lvl.i3m.upv.es/doc/#installation)
 
 [http://lvl.i3m.upv.es](http://lvl.i3m.upv.es) - The Leishmaniasis Virtual Laboratory: an open, collaborative environment for research in leishmaniasis.
 
@@ -10,13 +10,13 @@
 
 ## Endpoints
 
-* Sandbox: [http://lvl.i3m.upv.es](http://lvl.i3m.upv.es)
-* Production: *TODO*
+* Sandbox: [http://dedalo.i3m.upv.es](http://dedalo.i3m.upv.es)
+* Production: [http://lvl.i3m.upv.es](http://lvl.i3m.upv.es)
 
 ## Documentation
 
-* [Official website development](http://lvl.i3m.upv.es)
-* Official website *TODO*
+* [Official website development](http://dedalo.i3m.upv.es/apidoc/)
+* [Official website](http://lvl.i3m.upv.es/apidoc/)
 
 ## Release History
 

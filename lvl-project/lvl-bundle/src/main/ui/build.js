@@ -1,4 +1,4 @@
-/* r.js -o build.js */
+/* RequireJS optimizer configuration. Usage: r.js -o build.js */
 ({	
 	mainConfigFile : 'js/requirejs_main.js',
 	appDir : './',
