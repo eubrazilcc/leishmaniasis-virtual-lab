@@ -52,3 +52,6 @@ ertorser@regab:~/TEMP/ui$ cd dist/
 ertorser@regab:~/TEMP/ui/dist$ rm -f build.txt
 
 ertorser@regab:~/TEMP/ui/dist$ python -m SimpleHTTPServer 8001
+
+
+mvn clean source:jar javadoc:jar install -DcreateChecksum=true -pl lvl-auth,lvl-service,lvl-bundle

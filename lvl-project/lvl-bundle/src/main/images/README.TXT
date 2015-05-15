@@ -1,1 +1,1 @@
-Original images before they are optimized for Web using TinyPNG: https://tinypng.com/
+Original images before they are optimized for Web using TinyPNG: https://tinypng.com/; and SVGO: https://github.com/svg/svgo
