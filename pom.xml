@@ -26,7 +26,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
 	<groupId>eu.eubrazilcc.lvl</groupId>
 	<artifactId>leishmaniasis-virtual-lab</artifactId>
-	<version>0.2.0</version>
+	<version>0.2.1</version>
 	<packaging>pom</packaging>
 
 	<name>leishmaniasis-virtual-laboratory - BOM</name>
@@ -81,6 +81,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>commons-collections</groupId>
 				<artifactId>commons-collections</artifactId>
 				<version>3.2.1</version>
+			</dependency>
+			
+			<dependency> <!-- Execute external processes from within the JVM -->
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-exec</artifactId>
+				<version>1.3</version>
 			</dependency>
 
 			<dependency> <!-- I/O routines -->

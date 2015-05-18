@@ -34,6 +34,10 @@ Usage examples:
  For additional support on ETE:
 
     http://etetoolkit.org/
+    
+ Possible integration in Java:
+ 
+    http://mvnrepository.com/artifact/org.python/jython/2.7.0
 """
 
 from argparse import ArgumentParser

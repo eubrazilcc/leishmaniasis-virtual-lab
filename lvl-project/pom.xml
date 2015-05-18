@@ -26,7 +26,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<parent>
 		<groupId>eu.eubrazilcc.lvl</groupId>
 		<artifactId>leishmaniasis-virtual-lab</artifactId>
-		<version>0.2.0</version>
+		<version>0.2.1</version>
 		<relativePath>..</relativePath>
 	</parent>
 
