@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -98,7 +99,14 @@ public class ESCentralTest {
 	@ConditionalIgnore(condition=EnableESCentralTestIsFound.class)
 	public void test() {
 		System.out.println("ESCentralTest.test()");
-		try {			
+		try {
+			// list panel sequence files
+			final String panelFolderId = "4568";
+			final Map<String, String> panels = ESCENTRAL_CONN.listFiles(panelFolderId);
+			assertThat("panel sequences list is not null", panels, notNullValue());
+			assertThat("panel sequences list is not empty", !panels.isEmpty(), equalTo(true));			
+			System.out.println(" >> Available panel sequences: " + panels);			
+			
 			// test listing available workflows from e-SC
 			final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
 			assertThat("workflows list is not null", workflows, notNullValue());

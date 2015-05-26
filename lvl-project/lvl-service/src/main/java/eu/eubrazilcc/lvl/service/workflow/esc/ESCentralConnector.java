@@ -26,10 +26,12 @@ import static com.connexience.api.model.EscWorkflowInvocation.INVOCATION_FINISHE
 import static com.connexience.api.model.EscWorkflowInvocation.INVOCATION_STATE_UNKNOWN;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Maps.newHashMap;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.workflow.WorkflowStatus.checkPercent;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
+import static java.util.Collections.unmodifiableMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -210,6 +212,19 @@ public enum ESCentralConnector implements Closeable2 {
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to upload file", e);
 		}
+	}
+	
+	public Map<String, String> listFiles(final String folderId) {
+		final Map<String, String> map = newHashMap();
+		try {
+			final EscDocument[] docs = storageClient().folderDocuments(folderId);
+			for (final EscDocument doc : docs) {
+				map.put(doc.getId(), doc.getName());				
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException("Failed to list files", e);
+		}
+		return unmodifiableMap(map);
 	}
 
 	/* TODO public ImmutableList<WorkflowDataObject> listFiles() {

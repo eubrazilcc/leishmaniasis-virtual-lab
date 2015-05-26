@@ -107,7 +107,7 @@ public class TaskResource {
 		}
 		switch (task.getType()) {
 		case IMPORT_SANDFLY_SEQ:
-		case IMPORT_LEISMANIA_SEQ:
+		case IMPORT_LEISHMANIA_SEQ:
 			OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("tasks:data:maintenance:*:create");
 			final List<String> ids = task.getIds();
 			ImportSequencesTask<? extends Sequence> importSequencesTask = null;

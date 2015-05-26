@@ -7,9 +7,9 @@
 			<h4 class="modal-title" id="myModalLabel">Export to dataset</h4>
 		</div>
 		<div class="modal-body">
-            <fieldset>
-	            <legend>A dataset will be created with the following sequences:</legend>
-	            <form role="form">
+			<form role="form">
+            	<fieldset>
+	            	<legend>A dataset will be created with the following sequences:</legend>	            
 	            	<div class="form-group">
 	            		<ul class="list-inline">
 							<% _.each(items, function(item){ %>
@@ -39,8 +39,8 @@
 							<option value="gzip">GZIP</option>
 						</select>
 					</div>
-				</form>
 				</fieldset>
+			</form>
 			<a id="alert" href=""></a>
 		</div>
 		<div class="modal-footer">

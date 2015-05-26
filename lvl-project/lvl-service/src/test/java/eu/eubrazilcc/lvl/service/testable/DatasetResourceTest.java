@@ -23,19 +23,28 @@
 package eu.eubrazilcc.lvl.service.testable;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static com.google.common.net.MediaType.parse;
 import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
+import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
+import static eu.eubrazilcc.lvl.test.testset.FastaTestHelper.createTestFasta;
 import static java.lang.Math.min;
+import static java.lang.System.getProperty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static org.apache.commons.io.FilenameUtils.concat;
+import static org.apache.commons.io.FilenameUtils.getName;
+import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -46,6 +55,7 @@ import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URI;
@@ -53,6 +63,7 @@ import java.util.List;
 
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.Header;
@@ -62,6 +73,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.fluent.Request;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
 
 import eu.eubrazilcc.lvl.core.Dataset;
 import eu.eubrazilcc.lvl.core.Metadata;
@@ -80,6 +93,19 @@ public class DatasetResourceTest extends Testable {
 
 	public DatasetResourceTest(final TestContext testCtxt) {
 		super(testCtxt, DatasetResourceTest.class);
+	}
+
+	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
+			DatasetResourceTest.class.getSimpleName() + "_" + random(8, true, true)));
+
+	protected void setUp() {
+		super.setUp();
+		deleteQuietly(TEST_OUTPUT_DIR);
+	}
+
+	protected void cleanUp() {
+		super.cleanUp();
+		deleteQuietly(TEST_OUTPUT_DIR);
 	}
 
 	@Override
@@ -192,7 +218,7 @@ public class DatasetResourceTest extends Testable {
 		System.out.println(" >> Get dataset result: " + dataset2.toString());
 
 		// test get dataset manually encoding the namespace and filename
-		final String datasetId = dataset2.getId();
+		String datasetId = dataset2.getId();
 		dataset2 = testCtxt.target().path(path.value()).path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getNamespace(), LVL_DEFAULT_NS).trim()))
 				.path(urlEncodeUtf8(defaultIfBlank(datasets.getElements().get(0).getFilename(), LVL_DEFAULT_NS).trim()))
 				.request(APPLICATION_JSON)
@@ -470,7 +496,39 @@ public class DatasetResourceTest extends Testable {
 		GBSeq sequence = getSequence(outfile);
 		assertThat("XML parsed from downloaded file is not null", sequence, notNullValue());
 		// uncomment for additional output
-		System.out.println(" >> Saved file: " + filename);		
+		System.out.println(" >> Saved file: " + filename);
+
+		// test upload custom file (FASTA)
+		dataset = Dataset.builder()
+				.filename("custom_sequences.fasta")
+				.metadata(Metadata.builder().target(Target.builder().build()).build())
+				.build();
+		final File fastaFile = createTestFasta(TEST_OUTPUT_DIR, "sequence.fasta", 3, "NA");
+		final com.google.common.net.MediaType gooFileType = parse(mimeType(fastaFile));
+		final MediaType fileType = new MediaType(gooFileType.type(), gooFileType.subtype());
+		try (final FormDataMultiPart multipart = new FormDataMultiPart()) {
+			multipart.field("dataset", dataset, APPLICATION_JSON_TYPE).bodyPart(new StreamDataBodyPart("file", new FileInputStream(fastaFile), fastaFile.getName(), fileType));
+			response = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).path("upload").request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
+					.post(entity(multipart, multipart.getMediaType()));
+			assertThat("Upload custom dataset (fasta file) response is not null", response, notNullValue());
+			assertThat("Upload custom dataset (fasta file) response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+			assertThat("Upload custom dataset (fasta file) response is not empty", response.getEntity(), notNullValue());
+			payload = response.readEntity(String.class);
+			assertThat("Upload custom dataset (fasta file) response entity is not null", payload, notNullValue());
+			assertThat("Upload custom dataset (fasta file) response entity is empty", isBlank(payload));
+			// uncomment for additional output			
+			System.out.println(" >> Upload custom dataset (fasta file) response body (JSON), empty is OK: " + payload);
+			System.out.println(" >> Upload custom dataset (fasta file) response JAX-RS object: " + response);
+			System.out.println(" >> Upload custom dataset (fasta file) HTTP headers: " + response.getStringHeaders());
+			location = new URI((String)response.getHeaders().get("Location").get(0));
+			assertThat("Upload custom dataset (fasta file) location is not null", location, notNullValue());
+			assertThat("Upload custom dataset (fasta file) path is not empty", isNotBlank(location.getPath()), equalTo(true));
+
+			datasetId = getName(location.toURL().getPath());
+			assertThat("Uploaded custom dataset (fasta file) Id is not null", datasetId, notNullValue());
+			assertThat("Uploaded custom dataset (fasta file) Id is not empty", isNotBlank(datasetId), equalTo(true));			
+		}
 	}
 
 }

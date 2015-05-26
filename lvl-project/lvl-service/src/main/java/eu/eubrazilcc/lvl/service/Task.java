@@ -87,7 +87,7 @@ public class Task {
 
 	public static enum TaskType {
 		IMPORT_SANDFLY_SEQ,
-		IMPORT_LEISMANIA_SEQ;
+		IMPORT_LEISHMANIA_SEQ;
 	}
 
 	/* Fluent API */

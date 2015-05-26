@@ -42,6 +42,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<org.apache.httpcomponents.version>4.4.1</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
 		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
 		<org.apache.shiro.version>1.2.3</org.apache.shiro.version>
+		<akka.version>2.3.11</akka.version>
+		<avro.version>1.7.7</avro.version>
 		<mongodb.driver.version>2.13.1</mongodb.driver.version>
 		<activemq.version>5.11.1</activemq.version>
 		<antlr4.version>4.5</antlr4.version>
@@ -176,6 +178,29 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<artifactId>shiro-web</artifactId>
 				<version>${org.apache.shiro.version}</version>
 			</dependency>
+			
+			<!-- Apache Avro: a language-neutral, platform-neutral, extensible data serializing framework -->
+			
+			<dependency>
+				<groupId>org.apache.avro</groupId>
+				<artifactId>avro</artifactId>
+				<version>${avro.version}</version>
+			</dependency>
+			
+			<!-- Akka: open-source toolkit and runtime for building concurrent and
+				distributed applications on the JVM -->
+				
+			<dependency>
+				<groupId>com.typesafe.akka</groupId>
+				<artifactId>akka-actor_2.11</artifactId>
+				<version>${akka.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>com.typesafe.akka</groupId>
+				<artifactId>akka-slf4j_2.11</artifactId>
+				<version>${akka.version}</version>
+			</dependency>
 
 			<!-- Guava: Google Core Libraries for Java -->
 
@@ -191,7 +216,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>com.google.code.findbugs</groupId>
 				<artifactId>jsr305</artifactId>
 				<version>3.0.0</version>
-			</dependency>
+			</dependency>			
 
 			<!-- The javax.inject API: declare this dependency (provided) to be able 
 				to compile an application when no specific implementation of dependency injection 

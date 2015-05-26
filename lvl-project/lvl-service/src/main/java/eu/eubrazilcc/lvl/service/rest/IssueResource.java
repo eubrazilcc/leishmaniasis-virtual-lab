@@ -197,6 +197,8 @@ public class IssueResource {
 						throw new WebApplicationException("Attachment exceeds the allowable limit", REQUEST_ENTITY_TOO_LARGE);
 					}
 				}
+				os.flush();
+				os.close();
 				ISSUE_ATTACHMENT_DAO.insert(null, attachmentId, tmpFile, Metadata.builder().originalFilename(filename2).build());
 			} catch (IOException e) {
 				throw new WebApplicationException("Failed to save attachment", INTERNAL_SERVER_ERROR);

@@ -1,0 +1,34 @@
+<div class="modal-dialog">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">
+				<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+			</button>
+			<h4 class="modal-title" id="myModalLabel">Upload dataset</h4>
+		</div>
+		<div class="modal-body">
+			<form role="form" id="dsUpForm" autocomplete="off" novalidate="novalidate">
+            	<fieldset>
+	            	<legend>Upload a file from your computer:</legend>	            	            
+	            	<div class="form-group">
+	            		<label for="filename_input">Name (optional):</label>
+	            		<input type="text" class="form-control" id="filename_input" name="filename_input" placeholder="Enter filename">
+	            	</div>
+	            	<div class="form-group">
+	            		<label for="description_input">Description (optional):</label>
+	            		<input type="text" class="form-control" id="description_input" name="description_input" placeholder="Enter description">
+	            	</div>	            	
+	            	<div class="form-group">
+	            		<label for="file_input" class="control-label">File<sup class="text-danger" title="Required">*</sup>:</label>
+	            		<input type="file" class="form-control" id="file_input" name="file_input" accept=".fas,.fasta,text/*">
+	            	</div>	            	
+				</fieldset>					
+			</form>				
+			<a id="alert" href=""></a>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			<button type="submit" class="btn btn-primary" id="upload-btn">Upload</button>
+		</div>
+	</div>
+</div>

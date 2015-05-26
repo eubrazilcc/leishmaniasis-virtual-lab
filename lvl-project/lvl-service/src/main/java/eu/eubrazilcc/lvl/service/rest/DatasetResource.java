@@ -32,9 +32,11 @@ import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.DatasetDAO.DATASET_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToNull;
@@ -42,6 +44,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
@@ -65,6 +68,8 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.mutable.MutableLong;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 
 import com.google.common.collect.Lists;
@@ -152,15 +157,61 @@ public class DatasetResource {
 		dataset.setNamespace(dbns);
 		dataset.setFilename(filename2);		
 		dataset.getMetadata().setEditor(ownerid);
-		// create new entry in the database		
-		final WriteResult<Dataset> result = DATASET_DAO.insert(dbns, filename2, dataset.getOutfile(), 
-				dataset.getMetadata());
-		LOGGER.trace("New dataset created: ns=" + dbns + ", fn=" + filename2 + ", id=" + result.getId());
-		final UriBuilder uriBuilder = uriInfo.getBaseUriBuilder()
-				.path(getClass())
-				.path(urlEncodeUtf8(dbns))
-				.path(dataset.getUrlSafeFilename());
-		return Response.created(uriBuilder.build()).build();
+		// create new entry in the database
+		try {
+			final WriteResult<Dataset> result = DATASET_DAO.insert(dbns, filename2, dataset.getOutfile(), 
+					dataset.getMetadata());		
+			LOGGER.trace("New dataset created: ns=" + dbns + ", fn=" + filename2 + ", id=" + result.getId());
+			final UriBuilder uriBuilder = uriInfo.getBaseUriBuilder()
+					.path(getClass())
+					.path(urlEncodeUtf8(dbns))
+					.path(dataset.getUrlSafeFilename());
+			return Response.created(uriBuilder.build()).build();
+		} finally {
+			deleteQuietly(dataset.getOutfile());
+		}
+	}
+
+	@POST
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/upload")
+	@Consumes(MULTIPART_FORM_DATA)
+	public Response createDataset(final @PathParam("namespace") String namespace, final @FormDataParam("dataset") Dataset dataset, 
+			final @FormDataParam("file") InputStream is, final @FormDataParam("file") FormDataContentDisposition fileDisposition, 			
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace);	
+		if (dataset == null || is == null || fileDisposition == null) {
+			throw new WebApplicationException("Missing required parameter", BAD_REQUEST);
+		}
+		String filename2 = null;
+		if (isBlank(filename2 = trimToNull(dataset.getFilename())) && isBlank(filename2 = trimToNull(fileDisposition.getFileName()))) {
+			throw new WebApplicationException("Missing required parameter: filename", BAD_REQUEST);
+		}		
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("datasets:files:" + ns2permission(namespace2) + ":*:create")
+				.getPrincipal();
+		// save the attachment to a temporary file
+		writeDataset(dataset, is, filename2);
+		if (dataset.getOutfile() == null) {
+			throw new WebApplicationException("Failed to write dataset to file", INTERNAL_SERVER_ERROR);			
+		}
+		// update dataset, setting ownerid as dataset editor
+		final String dbns = ns2dbnamespace(namespace2, ownerid);
+		dataset.setNamespace(dbns);
+		dataset.setFilename(filename2);
+		dataset.getMetadata().setEditor(ownerid);
+		// create new entry in the database
+		try {
+			final WriteResult<Dataset> result = DATASET_DAO.insert(dbns, filename2, dataset.getOutfile(), 
+					dataset.getMetadata());		
+			LOGGER.trace("New dataset created: ns=" + dbns + ", fn=" + filename2 + ", id=" + result.getId());
+			final UriBuilder uriBuilder = uriInfo.getBaseUriBuilder()
+					.path(getClass())
+					.path(urlEncodeUtf8(dbns))
+					.path(dataset.getUrlSafeFilename());
+			return Response.created(uriBuilder.build()).build();
+		} finally {
+			deleteQuietly(dataset.getOutfile());
+		}
 	}
 
 	@PUT

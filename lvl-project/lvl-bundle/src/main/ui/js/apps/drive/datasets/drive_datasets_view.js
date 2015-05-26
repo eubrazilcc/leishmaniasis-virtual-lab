@@ -197,6 +197,9 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/tpls/drive_datasets', 'tp
 				$('#lvl-floating-menu').hide(0);
 				$('#lvl-floating-menu').empty();
 				$('#lvl-floating-menu').append(ToolbarTpl({}));
+				$('a#upload-btn').on('click', {
+					view : this
+				}, this.uploadFile);
 				$('a#uncheck-btn').on('click', {
 					grid : this.grid
 				}, this.deselectAll);
@@ -249,6 +252,11 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/tpls/drive_datasets', 'tp
 				'dragend div.lvl-savable' : 'handleDragEnd',
 				'click a[data-dataset]' : 'createLink',
 				'click a[data-remove]' : 'removeDataset'
+			},
+			uploadFile : function(e, data) {
+				e.preventDefault();
+				$('#lvl-floating-menu').hide('fast');
+				e.data.view.trigger('datasets:file:upload');
 			},
 			deselectAll : function(e) {
 				e.preventDefault();
@@ -394,6 +402,8 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/tpls/drive_datasets', 'tp
 				// remove all event handlers
 				Lvl.vent.off('search:form:submitted');
 				$('#lvl-search-form').unbind();
+				$('a#upload-btn').unbind();
+				$('a#uncheck-btn').unbind();
 				$('button#lvl-feature-tour-btn').unbind();
 				// clean menu
 				$('#lvl-floating-menu').hide(0);

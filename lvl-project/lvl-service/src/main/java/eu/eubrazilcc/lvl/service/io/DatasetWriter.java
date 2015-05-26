@@ -25,12 +25,14 @@ package eu.eubrazilcc.lvl.service.io;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.FluentIterable.from;
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.toFasta;
+import static eu.eubrazilcc.lvl.core.io.FastaReader.readFasta;
 import static eu.eubrazilcc.lvl.core.io.FileCompressor.gzip;
+import static eu.eubrazilcc.lvl.core.util.MimeUtils.isTextFile;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
@@ -41,6 +43,8 @@ import static java.nio.file.Files.delete;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.REQUEST_ENTITY_TOO_LARGE;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.getBaseName;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -52,8 +56,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.DirectoryNotEmptyException;
 import java.util.List;
+
+import javax.ws.rs.WebApplicationException;
 
 import org.slf4j.Logger;
 
@@ -91,7 +99,7 @@ public final class DatasetWriter {
 		checkArgument(dataset != null, "Uninitialized dataset");
 		checkArgument(dataset.getOutfile() == null, "The dataset already contains an output file");
 		checkArgument(dataset.getMetadata() != null, "Uninitialized or invalid metadata");
-		final Metadata metadata = dataset.getMetadata();		
+		final Metadata metadata = dataset.getMetadata();
 		checkArgument(metadata.getTarget() != null, "Uninitialized target");
 		checkArgument(metadata.getTarget().getIds() != null && !metadata.getTarget().getIds().isEmpty(), "Uninitialized or invalid id");
 		checkArgument(isNotBlank(metadata.getTarget().getType()), "Uninitialized or invalid type");
@@ -104,6 +112,85 @@ public final class DatasetWriter {
 			throw new IllegalArgumentException("Unsupported type: " + metadata.getTarget().getType());
 		}
 		dataset.setOutfile(outfile);		
+	}
+
+	public static void writeDataset(final Dataset dataset, final InputStream is, final String filename) {
+		checkArgument(dataset != null, "Uninitialized dataset");
+		checkArgument(dataset.getOutfile() == null, "The dataset already contains an output file");
+		checkArgument(dataset.getMetadata() != null, "Uninitialized or invalid metadata");
+		checkArgument(is != null, "Uninitialized input stream");
+		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
+		File tmpFile = null;
+		OutputStream os = null;
+		try {
+			final File baseOutputDir = new File(CONFIG_MANAGER.getLocalCacheDir(), DatasetWriter.class.getSimpleName());
+			baseOutputDir.mkdirs();				
+			final File outputDir = createTempDirectory(baseOutputDir.toPath(), "dataset-").toFile();
+			tmpFile = new File(outputDir, getBaseName(filename));
+			LOGGER.trace("Writing custom dataset to '" + tmpFile.getCanonicalPath() + "'");
+			os = new FileOutputStream(tmpFile);
+			long total = 0l, max = CONFIG_MANAGER.getMaxUserUploadedFileSize() * 1024l;
+			int read = 0;
+			byte[] bytes = new byte[1024];
+			while ((read = is.read(bytes)) != -1) {
+				os.write(bytes, 0, read);
+				total += read;
+				if (total > max) {
+					throw new WebApplicationException("Attachment exceeds the allowable limit", REQUEST_ENTITY_TOO_LARGE);
+				}
+			}
+			os.flush();
+			os.close();
+			dataset.setOutfile(tmpFile);			
+			final String type = discoverFileFormat(tmpFile);
+			if ("FASTA".equals(type)) {
+				dataset.getMetadata().getTarget().setType("sequence");
+				dataset.getMetadata().getTags().add("fasta");
+			} else if ("GBSeq".equals(type)) {
+				dataset.getMetadata().getTarget().setType("sequence");
+				dataset.getMetadata().getTags().add("ncbi_xml");
+			} else {
+				throw new IllegalArgumentException("Unknown file format");
+			}
+		} catch (IOException e) {
+			throw new WebApplicationException("Failed to save attachment", INTERNAL_SERVER_ERROR);
+		} finally {
+			try {
+				is.close();
+			} catch (Exception ignore) { }
+			try {
+				os.close();
+			} catch (Exception ignore) { }		
+		}
+	}
+
+	private static String discoverFileFormat(final File file) {
+		if (isTextFile(file)) {
+			if (isFastaFile(file)) {
+				return "FASTA";
+			} else if (isGbXmlSeqFile(file)) {
+				return "GBSeq";
+			}
+		}
+		throw new IllegalStateException("Unsupported file format");
+	}
+
+	private static boolean isFastaFile(final File file) {
+		boolean checked = false;
+		try {
+			final String[] sequences = readFasta(file);
+			checked = sequences != null && sequences.length > 0;
+		} catch (Exception ignore) { }
+		return checked;
+	}
+
+	private static boolean isGbXmlSeqFile(final File file) {
+		boolean checked = false;
+		try {
+			final GBSeq sequence = getSequence(file);
+			checked = sequence != null && isNotBlank(sequence.getGBSeqPrimaryAccession());
+		} catch (Exception ignore) { }
+		return checked;
 	}
 
 	private static File sequence2dataset(final Dataset dataset) {
@@ -151,14 +238,14 @@ public final class DatasetWriter {
 
 	private static File writeFastaSequence(final File inFile, final File outDir, final String compression) throws IOException {		
 		final File outFile = new File(outDir, getBaseName(inFile.getCanonicalPath()) + ".fasta" + (compression.equals(GZIP) ? ".gz" : ""));
-		LOGGER.trace("Writing FASTA sequence from '" + inFile.getCanonicalPath() + "' to '" + outFile.getCanonicalPath());
+		LOGGER.trace("Writing FASTA sequence from '" + inFile.getCanonicalPath() + "' to '" + outFile.getCanonicalPath() + "'");
 		toFasta(inFile, outFile.getCanonicalPath(), compression.equals(GZIP));
 		return outFile;
 	}
 
 	private static File writeFastaSequences(final List<File> files, final File outDir, final String compression) throws IOException {
 		final File outFile = new File(outDir, "sequences.fasta" + (compression.equals(GZIP) ? ".gz" : ""));
-		LOGGER.trace("Writing a bulk of FASTA sequences to '" + outFile.getCanonicalPath());
+		LOGGER.trace("Writing a bulk of FASTA sequences to '" + outFile.getCanonicalPath() + "'");
 		toFasta(files, outFile.getCanonicalPath(), compression.equals(GZIP));
 		return outFile;
 	}
@@ -166,7 +253,7 @@ public final class DatasetWriter {
 	private static File writeGbXmlSequence(final File inFile, final File outDir, final String compression) throws IOException {		
 		final File outFile = new File(outDir, getName(inFile.getCanonicalPath()));
 		String outFilename = outFile.getCanonicalPath();		
-		LOGGER.trace("Writing NCBI sequence from '" + inFile.getCanonicalPath() + "' to '" + outFile.getCanonicalPath());
+		LOGGER.trace("Writing NCBI sequence from '" + inFile.getCanonicalPath() + "' to '" + outFile.getCanonicalPath() + "'");
 		outFile.getParentFile().mkdirs();
 		try (final FileInputStream fin = new FileInputStream(inFile); final FileOutputStream fos = new FileOutputStream(outFile)) {			
 			copy(fin, fos);

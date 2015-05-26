@@ -35,8 +35,10 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
+import static eu.eubrazilcc.lvl.core.io.FastaReader.readFasta;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -80,6 +82,12 @@ public class GbSeqXmlFileTest {
 				assertThat("fasta sequence is not empty", isNotBlank(payload), equalTo(true));
 				/* uncomment for additional output */
 				System.out.println(" >> FASTA sequence \n" + payload);
+				
+				final String[] sequences = readFasta(output);
+				assertThat("sequences are not null", sequences, notNullValue());
+				assertThat("number of sequences coincides with expected", sequences.length, equalTo(1));
+				/* uncomment for additional output */
+				System.out.println(" >> Read sequences \n" + Arrays.toString(sequences));
 			}
 
 			// test writing a single FASTA file (uncompressed)
@@ -91,6 +99,12 @@ public class GbSeqXmlFileTest {
 			assertThat("fasta sequences is not empty", isNotBlank(payload), equalTo(true));
 			/* uncomment for additional output */
 			System.out.println(" >> FASTA sequences \n" + payload);
+			
+			final String[] sequences = readFasta(output);
+			assertThat("sequences are not null", sequences, notNullValue());
+			assertThat("number of sequences coincides with expected", sequences.length, equalTo(files.size()));
+			/* uncomment for additional output */
+			System.out.println(" >> Read sequences \n" + Arrays.toString(sequences));
 
 			// test writing a FASTA file (compressed)
 			final List<File> list = newArrayList(files);

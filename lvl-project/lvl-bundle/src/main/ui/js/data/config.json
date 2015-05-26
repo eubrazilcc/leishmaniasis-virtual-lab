@@ -1,6 +1,6 @@
 {
 	"endpoint" : {
-		"url" : "http://lvl.i3m.upv.es",
+		"url" : "http://dedalo.i3m.upv.es",
 		"api_version" : "1"
 	},
 	"oauth2" : {

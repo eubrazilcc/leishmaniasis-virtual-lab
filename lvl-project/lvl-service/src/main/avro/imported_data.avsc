@@ -1,0 +1,26 @@
+{
+	"namespace" : "eu.eubrazilcc.lvl.service.avro.messages",
+	"type" : "record",
+	"name" : "ImportedData",
+	"fields" : [
+		{
+			"name" : "datasource",
+			"type" : "string"
+		},
+		{
+			"name" : "count",
+			"type" : "int",
+			"default" : 0
+		},
+		{
+			"name" : "hasError",
+			"type" : "boolean",
+			"default" : false
+		},
+		{
+			"name" : "errorMessage",
+			"type" : "string",
+			"default" : ""
+		}
+	]
+}
