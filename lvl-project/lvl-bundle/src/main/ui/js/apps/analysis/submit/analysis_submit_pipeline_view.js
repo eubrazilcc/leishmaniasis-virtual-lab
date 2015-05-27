@@ -33,6 +33,27 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 							});
 						}
 					});
+				} else if (this.model.get('option_0') !== undefined) {
+					var _self = this;
+					var options = _.map(_.filter(_.keys(this.model.toJSON()), function(key) {
+						return key.match(/^option_\d+/);
+					}), function(opt) {
+						var tokens = _self.model.get(opt).split('|');
+						return {
+							id : tokens[0],
+							name : tokens[0] + ' (' + tokens[1] + ')' 
+						};
+						return _self.model.get(opt);
+					});
+					this.$el.find('input.form-control').attr({
+						'data-provide' : 'typeahead',
+						'autocomplete' : 'off'
+					});
+					var input = this.$el.find('input[data-provide="typeahead"]');
+					input.typeahead({
+						source : options,
+						autoSelect : true
+					});
 				}
 			},
 			onDestroy : function() {
@@ -45,7 +66,12 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 			childViewContainer : 'fieldset',
 			onRender : function() {
 				this.collection.fetch({
-					reset : true
+					reset : true,
+					beforeSend : function(xhr) {
+						xhr.setRequestHeader('Content-Type', 'application/json');
+					},
+					data : JSON.stringify(this.collection.wfOpts),
+					type : 'POST'
 				});
 			}
 		});
@@ -56,9 +82,12 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 			},
 			initialize : function(options) {
 				this.workflowId = options.workflowId;
+				this.wfConf = options.wfConf;
 				this.parameters = new ParamsEntity.WorkflowParametersCollection({
 					oauth2_token : Lvl.config.authorizationToken(),
-					workflowId : this.workflowId
+					workflowId : this.workflowId,
+					versionId : this.wfConf.stable,
+					wfOpts : this.wfConf.parameters
 				});
 				this.listenTo(this.parameters, 'reset', this.startTypeahead);
 			},
@@ -97,9 +126,14 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 						value = Lvl.config.get('service') + '/datasets/objects/~/' + encodeURIComponent(formData[param.get('name')]) + '/download'
 						break;
 					default:
-						value = formData[param.get('name')];
+						var inVal = formData[param.get('name')];
+						if (inVal.match(/^\d+\s+\([\w\.]+\)/)) {
+							value = inVal.split(' ')[0];
+						} else {							
+							value = inVal;
+						}
 						break;
-					}
+					}					
 					requestData.parameters.parameters.push({
 						'name' : param.get('name'),
 						'value' : value

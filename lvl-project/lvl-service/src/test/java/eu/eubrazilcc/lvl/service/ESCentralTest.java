@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRA
 import static eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.TEST_CONFIG_DIR;
 import static java.io.File.separator;
 import static java.lang.System.getProperty;
+import static java.util.Arrays.asList;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.io.FileUtils.readFileToString;
@@ -54,6 +55,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eu.eubrazilcc.lvl.core.workflow.WfOption;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
@@ -106,7 +108,7 @@ public class ESCentralTest {
 			assertThat("panel sequences list is not null", panels, notNullValue());
 			assertThat("panel sequences list is not empty", !panels.isEmpty(), equalTo(true));			
 			System.out.println(" >> Available panel sequences: " + panels);			
-			
+
 			// test listing available workflows from e-SC
 			final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
 			assertThat("workflows list is not null", workflows, notNullValue());
@@ -124,12 +126,13 @@ public class ESCentralTest {
 			System.out.println(" >> Workflow definition: " + workflow.toString());
 
 			// test get workflow parameters from e-SC
-			final WorkflowParameters parameters = ESCENTRAL_CONN.getParameters(workflowId, versionId);
+			final WorkflowParameters parameters = ESCENTRAL_CONN.getParameters(workflowId, versionId, 
+					asList(WfOption.builder().name("ReferenceData-FileId").folderId(panelFolderId).build()));
 			assertThat("workflow parameters are not null", parameters, notNullValue());
 			assertThat("workflow parameters list is not null", parameters.getParameters(), notNullValue());
 			assertThat("workflow parameters list is not empty", !parameters.getParameters().isEmpty(), equalTo(true));
 			/* uncomment for additional output */
-			System.out.println(" >> Workflow parameters: " + parameters.toString());
+			System.out.println(" >> Workflow parameters: " + parameters.toString());			
 
 			final WorkflowParameters parameters2 = WorkflowParameters.builder()
 					.parameter("SequenceURL", "http://lvl.i3m.upv.es/lvl-service/rest/v1/datasets/objects/root%40lvl/hsp70.fasta/download", null, null)
@@ -200,7 +203,7 @@ public class ESCentralTest {
 			assertThat("workflow (with wrong params) invocation Id is not empty", isNotBlank(invocationId));
 			/* uncomment for additional output */
 			System.out.println(" >> Workflow invocation Id: " + invocationId);
-			
+
 			// test workflow completion
 			isCompleted = false;
 			status = null;

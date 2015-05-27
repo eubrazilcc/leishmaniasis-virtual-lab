@@ -1,6 +1,12 @@
 [
 	{ 
 		"id" : "workflows-eubcc-nj_pipeline-1.0",
-		"stable" : "3193" 
+		"stable" : "3898",
+		"parameters" : [
+			{
+				"name" : "ReferenceData-FileId",
+				"folderId" : "4568"
+			}
+		]
 	}
 ]

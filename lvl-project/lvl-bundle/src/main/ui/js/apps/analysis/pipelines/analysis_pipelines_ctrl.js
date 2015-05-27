@@ -12,10 +12,11 @@ define([ 'app', 'entities/workflow', 'apps/analysis/pipelines/analysis_pipelines
 						oauth2_token : Lvl.config.authorizationToken()
 					})
 				});
-				view.on('analysis:pipeline:run', function(workflowId) {
+				view.on('analysis:pipeline:run', function(wfId, wfConf) {					
 					require([ 'apps/analysis/submit/analysis_submit_pipeline_view' ], function(SubmitView) {
 						var dialogView = new SubmitView.Content({
-							'workflowId' : workflowId
+							'workflowId' : wfId,
+							'wfConf' : wfConf
 						});
 						Lvl.dialogRegion.show(dialogView);
 					});

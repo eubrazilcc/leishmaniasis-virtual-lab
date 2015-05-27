@@ -25,14 +25,19 @@ package eu.eubrazilcc.lvl.service.rest;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -40,9 +45,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import eu.eubrazilcc.lvl.core.workflow.WfOption;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.service.WorkflowDefinitions;
@@ -83,7 +88,7 @@ public class WorkflowDefinitionResource {
 	public WorkflowDefinition getWorkflow(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:definitions:public:" + id.trim() + ":view");
 		// get workflows from e-SC and find definition
@@ -95,30 +100,49 @@ public class WorkflowDefinitionResource {
 			}
 		}
 		if (workflow == null) {
-			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", NOT_FOUND);
 		}
 		return workflow;
 	}
-	
+
 	@GET
-	@Path("{id}/params")
+	@Path("{id}/{version}/params")
 	@Produces(APPLICATION_JSON)
-	public List<Map<String, String>> getWorkflowParams(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
+	public List<Map<String, String>> getWorkflowParams(final @PathParam("id") String id, final @PathParam("version") String version, 
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		if (isBlank(id) || isBlank(version)) {
+			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:definitions:public:" + id.trim() + ":view");
+		// get workflows from e-SC		
+		return getWorkflowParams(id, version, null);
+	}
+
+	@POST
+	@Path("{id}/{version}/params")
+	@Consumes(APPLICATION_JSON)
+	@Produces(APPLICATION_JSON)
+	public List<Map<String, String>> getWorkflowParams(final @PathParam("id") String id, final @PathParam("version") String version,
+			final @Nullable List<WfOption> options, final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		if (isBlank(id) || isBlank(version)) {
+			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
+		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:definitions:public:" + id.trim() + ":view");
+		// get workflows from e-SC		
+		return getWorkflowParams(id, version, options);
+	}
+
+	private List<Map<String, String>> getWorkflowParams(final String id, final String version, final @Nullable List<WfOption> options) {
 		// get workflows from e-SC		
 		final List<WorkflowDefinition> workflows = ESCENTRAL_CONN.listWorkflows();
 		WorkflowParameters parameters = null;
 		for (int i = 0; i < workflows.size() && parameters == null; i++) {
 			if (workflows.get(i).getId().equals(id)) {
-				parameters = ESCENTRAL_CONN.getParameters(workflows.get(i).getId(), null);				
+				parameters = ESCENTRAL_CONN.getParameters(workflows.get(i).getId(), version, options);			
 			}
 		}
 		if (parameters == null) {
-			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", NOT_FOUND);
 		}
 		return parameters.getParameters();
 	}

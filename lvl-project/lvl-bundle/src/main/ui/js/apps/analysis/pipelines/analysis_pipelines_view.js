@@ -14,6 +14,11 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 		} catch (err) {
 			console.log('Failed to load pipelines configuration: ' + err);
 		}
+		var findPipeline = function(id) {
+			return _.find(pipelinesObj, function(item) {
+				return item.id === id;
+			});
+		};
 		var columns = [
 				{
 					name : 'id',
@@ -48,10 +53,8 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 							this.$el.empty();
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'string') {
-								var pipeline = _.find(pipelinesObj, function(item) {
-									return item.id === formattedValue;
-								});
+							if (formattedValue && typeof formattedValue === 'string') {								
+								var pipeline = findPipeline(formattedValue);
 								if (pipeline) {
 									this.$el.append('<a href="#" data-pipeline="' + formattedValue
 											+ '" title="Run" class="text-muted"><i class="fa fa-play fa-fw"></i></a>');
@@ -220,7 +223,7 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 				e.preventDefault();
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pipeline') : target.getAttribute('data-pipeline');
-				this.trigger('analysis:pipeline:run', itemId);
+				this.trigger('analysis:pipeline:run', itemId, findPipeline(itemId));
 			},
 			onDestroy : function() {
 				pace.stop();

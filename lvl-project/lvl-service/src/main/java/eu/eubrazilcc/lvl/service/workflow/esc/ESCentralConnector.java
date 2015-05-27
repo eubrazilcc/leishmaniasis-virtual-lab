@@ -29,15 +29,17 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.newHashMap;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.workflow.WorkflowStatus.checkPercent;
+import static java.util.Collections.unmodifiableMap;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
-import static java.util.Collections.unmodifiableMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -57,6 +59,7 @@ import com.connexience.api.model.json.JSONObject;
 import com.google.common.collect.ImmutableList;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
+import eu.eubrazilcc.lvl.core.workflow.WfOption;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowDefinition;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowParameters;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowProduct;
@@ -136,23 +139,51 @@ public enum ESCentralConnector implements Closeable2 {
 		}
 	}
 
-	public WorkflowParameters getParameters(final String workflowId, final @Nullable String versionId) {
+	public WorkflowParameters getParameters(final String workflowId, final @Nullable String versionId, final @Nullable List<WfOption> options) {
 		checkArgument(isNotBlank(workflowId), "Uninitialized or invalid workflow identifier");
 		try {
+			// get workflow parameters
 			final EscWorkflow escWorkflow = workflowClient().getWorkflow(workflowId);
 			checkState(escWorkflow != null, "Workflow not found");
 			final WorkflowParameters.Builder builder = WorkflowParameters.builder();
 			for (final EscWorkflowParameterDesc desc : workflowClient().listCallableWorkflowParametersEx(workflowId, versionId).values()) {
 				builder.parameter(desc.getName(), desc.getValue(), desc.getType(), desc.getDescription(), desc.getOptions());
 			}
-			return builder.build();
+			final WorkflowParameters parameters = builder.build();
+			// parse options and update parameters
+			if (options != null) {
+				for (final WfOption option : options) {
+					Map<String, String> param = null;
+					for (int i = 0; i < parameters.getParameters().size() && param == null; i++) {
+						if (option.getName().equals(parameters.getParameters().get(i).get("name"))) {
+							param = parameters.getParameters().get(i);
+						}
+					}
+					if (param != null) {
+						int i = 0;
+						// list files
+						if (isNotBlank(option.getFolderId())) {
+							final Map<String, String> files = ESCENTRAL_CONN.listFiles(option.getFolderId());
+							if (files != null) {								
+								final Map<String, String> fileOpts = newHashMap();
+								for (final Map.Entry<String, String> entry : new TreeMap<>(files).entrySet()) {
+									fileOpts.put("option_" + Integer.toString(i), entry.getKey() + "|" + entry.getValue());
+									i++;
+								}
+								param.putAll(fileOpts);
+							}
+						}
+					}
+				}
+			}
+			return parameters;
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to get workflow parameters", e);			
 		}
 	}
 
 	public WorkflowParameters getParameters(final String workflowId) {
-		return getParameters(workflowId, null);
+		return getParameters(workflowId, null, null);
 	}
 
 	public String executeWorkflow(final String workflowId, final @Nullable String versionId, final @Nullable WorkflowParameters parameters) {
@@ -213,7 +244,7 @@ public enum ESCentralConnector implements Closeable2 {
 			throw new IllegalStateException("Failed to upload file", e);
 		}
 	}
-	
+
 	public Map<String, String> listFiles(final String folderId) {
 		final Map<String, String> map = newHashMap();
 		try {

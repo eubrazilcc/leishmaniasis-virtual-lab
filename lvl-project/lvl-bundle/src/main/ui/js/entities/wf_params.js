@@ -30,14 +30,17 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		Entities.WorkflowParametersCollection = Backbone.Collection.extend({
 			urlRoot : config.get('service', '') + '/pipelines/definitions/',
 			url : function() {
-				return this.urlRoot + this.workflowId + '/params';
+				return this.urlRoot + this.workflowId + '/' + this.versionId + '/params';
 			},
 			model : Entities.WorkflowParameters,
 			comparator : 'name',
 			initialize : function(options) {
 				var singleSelect = new Backbone.Picky.SingleSelect(this);
 				_.extend(this, singleSelect);
-				this.oauth2_token = options.oauth2_token, this.workflowId = options.workflowId
+				this.oauth2_token = options.oauth2_token;
+				this.workflowId = options.workflowId;
+				this.versionId = options.versionId,
+				this.wfOpts = options.wfOpts
 			}
 		});
 	});

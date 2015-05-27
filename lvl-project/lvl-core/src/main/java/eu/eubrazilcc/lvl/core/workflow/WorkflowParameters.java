@@ -79,8 +79,7 @@ public class WorkflowParameters {
 
 		private final WorkflowParameters instance = new WorkflowParameters();
 
-		public Builder parameter(final String name, final String value, final String type, final String description, 
-				final String... options) {
+		public Builder parameter(final String name, final String value, final String type, final String description, final String... options) {
 			final Map<String, String> map = new Hashtable<>();
 			map.put("name", name);
 			map.put("value", value);
