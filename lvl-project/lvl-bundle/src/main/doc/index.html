@@ -1231,27 +1231,34 @@ Server has startup warnings:
             
             <p>First, download the e-SC service certificate from the EUBrazilCC site:</p>
             
-            <code>$ wget http://eubrazilcc-rm.i3m.upv.es/attachments/download/22/upv-vm-2.crt</code>
+            <code>$ wget http://eubrazilcc-rm.i3m.upv.es/attachments/download/46/eubrazilcc-esc.i3m.upv.es.cer</code>
             <p></p>
             
             <p>It's highly recommended to check the validity of the certificate before installing it to the Java trusted repository:</p>
             
-            <code>$ openssl x509 -in upv-vm-2.crt -noout -text</code>
+            <code>$ openssl x509 -in eubrazilcc-esc.i3m.upv.es.cer -noout -text</code>
             <p></p>
 
 <pre>
 ...
 
-Issuer: C=ES, ST=Catalonia, L=Valencia, O=Newcastle University, OU=School of Computing Science, CN=158.42.105.23
+Issuer: C=ES, L=Valencia, O=Newcastle University, OU=School of Computing Science, CN=Jacek Cala
 Validity
-    Not Before: Oct  1 23:00:54 2014 GMT
-    Not After : Dec 30 23:00:54 2014 GMT
-Subject: C=ES, ST=Catalonia, L=Valencia, O=Newcastle University, OU=School of Computing Science, CN=158.42.105.23
+    Not Before: Jan 12 23:27:01 2015 GMT
+    Not After : Feb 16 23:27:01 2016 GMT
+Subject: C=ES, L=Valencia, O=Newcastle University, OU=School of Computing Science, CN=Jacek Cala
 </pre>
 
             <p>Install the certificate in the default Java key store:</p>
             
-            <code>$ sudo keytool -import -alias esc-server -file upv-vm-2.crt -keystore $JAVA_HOME/jre/lib/security/cacerts</code>
+            <p>a) On Debian-based systems (e.g. Ubuntu):</p>
+            
+            <code>$ sudo keytool -import -alias eubrazilcc-esc -file eubrazilcc-esc.i3m.upv.es.cer -keystore /etc/ssl/certs/java/cacerts</code>
+            <p></p>
+            
+            <p>b) On other systems:</p>
+            
+            <code>$ sudo keytool -import -alias eubrazilcc-esc -file eubrazilcc-esc.i3m.upv.es.cer -keystore $JAVA_HOME/jre/lib/security/cacerts</code>
             <p></p>
 
 <pre>
@@ -1266,37 +1273,37 @@ Certificate was added to keystore
 
             <p>Check that the certificate is accessible from Java:</p>
 
-            <code>$ keytool -list -alias esc-server -keystore $JAVA_HOME/jre/lib/security/cacerts</code>
+            <code>$ keytool -list -alias eubrazilcc-esc -keystore /etc/ssl/certs/java/cacerts</code>
             <p></p>
 
 <pre>
-esc-server, Oct 10, 2014, trustedCertEntry, 
-Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:10:BF:5C:93
+eubrazilcc-esc, May 27, 2015, trustedCertEntry, 
+Certificate fingerprint (SHA1): F9:59:9F:FE:88:89:1D:88:F2:8A:3B:9C:72:C6:04:C8:61:22:17:F6
 </pre>
 
             <p>Optionally, you can create a link in your local system to configure Java to use your key store as the default key store:</p>
 
-            <code>$ ln -s $JAVA_HOME/jre/lib/security/cacerts $HOME/.keystore</code>
+            <code>$ ln -s /etc/ssl/certs/java/cacerts $HOME/.keystore</code>
             <p></p>
 
             <p>Now, you don't have to specify the path to the Java key store:</p>
 
-            <code>$ keytool -list -alias esc-server</code>
+            <code>$ keytool -list -alias eubrazilcc-esc</code>
             <p></p>
 
 <pre>
-esc-server, Oct 10, 2014, trustedCertEntry, 
-Certificate fingerprint (SHA1): 90:C9:9B:7E:0E:64:65:0C:E0:08:E2:A2:8F:E5:20:20:10:BF:5C:93
+eubrazilcc-esc, May 27, 2015, trustedCertEntry, 
+Certificate fingerprint (SHA1): F9:59:9F:FE:88:89:1D:88:F2:8A:3B:9C:72:C6:04:C8:61:22:17:F6
 </pre>
 
             <p>To remove the certificate from the Java key store:</p>
 
-            <code>$ keytool -delete -alias esc-server -keystore $JAVA_HOME/jre/lib/security/cacerts</code>
+            <code>$ keytool -delete -alias eubrazilcc-esc -keystore /etc/ssl/certs/java/cacerts</code>
             <p></p>
 
             <h4>Installing e-SC certificate in development or testbed</h4>            
             
-            <code> $ keytool -import -alias esc-server -file ./esc-server.cer -keystore ./client-truststore </code>
+            <code> $ keytool -import -alias eubrazilcc-esc -file ./eubrazilcc-esc.i3m.upv.es.cer -keystore ./client-truststore </code>
             <p></p>
 
             <h2>

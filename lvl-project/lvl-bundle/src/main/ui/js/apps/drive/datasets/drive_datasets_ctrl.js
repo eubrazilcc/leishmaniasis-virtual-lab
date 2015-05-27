@@ -14,7 +14,13 @@ define([ 'app', 'entities/dataset', 'apps/drive/datasets/drive_datasets_view' ],
 				});
 				view.on('datasets:file:upload', function() {
 					require([ 'apps/drive/upload/ds_up' ], function(UploadView) {
-						var dialogView = new UploadView.Content({});
+						var dialogView = new UploadView.Content({
+							model : new Backbone.Model({
+								'request' : null,
+								'effective_fname' : null,
+								'overwrite' : true
+							})
+						});
 						Lvl.dialogRegion.show(dialogView);
 					});
 				});

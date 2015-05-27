@@ -30,7 +30,7 @@ define([ 'qtip', 'tpl!common/tpls/alert' ], function(qtip, AlertTpl) {
 			},
 			hide : false,
 			style : {
-				classes : 'qtip-bootstrap dialogue'
+				classes : 'qtip-bootstrap dialogue lvl-qtip-alert'
 			},
 			events : {
 				render : function(event, api) {

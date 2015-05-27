@@ -125,46 +125,8 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 					});
 				}).fail(function() {
 					self.trigger('destroy');
-					require([ 'qtip' ], function(qtip) {
-						var message = $('<p />', {
-							text : 'Failed to submit molecular pipeline to the LVL service.'
-						}), ok = $('<button />', {
-							text : 'Close',
-							'class' : 'full'
-						});
-						$('#alert').qtip({
-							content : {
-								text : message.add(ok),
-								title : {
-									text : 'Error',
-									button : true
-								}
-							},
-							position : {
-								my : 'center',
-								at : 'center',
-								target : $(window)
-							},
-							show : {
-								ready : true,
-								modal : {
-									on : true,
-									blur : false
-								}
-							},
-							hide : false,
-							style : 'qtip-bootstrap dialogue',
-							events : {
-								render : function(event, api) {
-									$('button', api.elements.content).click(function() {
-										api.hide();
-									});
-								},
-								hide : function(event, api) {
-									api.destroy();
-								}
-							}
-						});
+					require([ 'common/alert' ], function(alertDialog) {
+						alertDialog('Error', 'Failed to submit molecular pipeline to the LVL service.');
 					});
 				});
 			},

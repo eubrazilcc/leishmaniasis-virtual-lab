@@ -39,7 +39,7 @@ define([ 'qtip', 'tpl!common/tpls/confirm' ], function(qtip, ConfirmTpl) {
 			},
 			hide : false,
 			style : {
-				classes : 'qtip-bootstrap dialogue'
+				classes : 'qtip-bootstrap dialogue lvl-qtip-confirm'
 			},
 			events : {
 				render : function(event, api) {

@@ -30,7 +30,7 @@ define([ 'qtip', 'tpl!common/tpls/info' ], function(qtip, InfoTpl) {
 			},
 			hide : false,
 			style : {
-				classes : 'qtip-bootstrap dialogue'
+				classes : 'qtip-bootstrap dialogue lvl-qtip-info'
 			},
 			events : {
 				render : function(event, api) {

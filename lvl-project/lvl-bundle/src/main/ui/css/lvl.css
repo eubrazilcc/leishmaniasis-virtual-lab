@@ -153,6 +153,21 @@ div#lvl-qtip-growl-container .qtip {
 	margin: 0 0 5px 0;
 }
 
+@media ( min-width : 768px ) {
+	.lvl-qtip-alert {
+		width: 380px !important;
+		max-width: 380px !important;
+	}
+	.lvl-qtip-confirm {
+		width: 380px !important;
+		max-width: 380px !important;
+	}
+	.lvl-qtip-info {
+		width: 380px !important;
+		max-width: 380px !important;
+	}
+}
+
 div#lvl-search-box {
 	opacity: 1;
 	position: fixed;

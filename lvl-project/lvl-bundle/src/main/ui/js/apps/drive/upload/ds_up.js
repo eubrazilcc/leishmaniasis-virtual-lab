@@ -2,101 +2,109 @@
  * RequireJS module that defines the view: drive->upload_dataset.
  */
 
-define([ 'app', 'tpl!apps/drive/upload/tpls/ds_up', 'bootstrapvalidator', 'backbone.syphon' ], function(Lvl, UploadDatasetTpl) {
+define([ 'app', 'tpl!apps/drive/upload/tpls/ds_up', 'pace', 'bootstrapvalidator', 'backbone.syphon' ], function(Lvl, UploadDatasetTpl, pace) {
 	Lvl.module('DriveApp.Upload.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.Content = Marionette.ItemView.extend({
-			template : UploadDatasetTpl,			
+			template : UploadDatasetTpl,
 			events : {
 				'click button#upload-btn' : 'uploadDataset'
 			},
+			initialize : function() {
+				this.listenTo(this.model, 'change', this.modelChanged);
+			},
+			modelChanged : function(model) {
+				var _self = this;
+				if (model.get('overwrite') === false) {
+					_self.saveModel();
+				} else {
+					require([ 'common/confirm' ], function(confirmDialog) {
+						confirmDialog('Dataset overwriting',
+								'This action will overwrite/replace an existing dataset. Are you sure?<p>Dataset: <span class="text-danger">'
+										+ model.get('effective_fname') + '</span></p>', function() {
+									_self.saveModel();
+								}, {
+									btn_text : 'Replace'
+								});
+					});
+					_self.trigger('destroy');
+				}
+			},
+			saveModel : function() {
+				// submit request to LVL server
+				pace.restart();
+				var _self = this;
+				var jqxhr = $.ajax({
+					type : 'POST',
+					processData : false,
+					contentType : false,
+					crossDomain : true,
+					url : Lvl.config.get('service', '') + '/datasets/objects/~/upload',
+					data : _self.model.get('request'),
+					headers : Lvl.config.authorizationHeader()
+				}).always(function() {
+					pace.stop();
+				}).done(function(data, textStatus, request) {
+					_self.trigger('destroy');
+					require([ 'common/growl' ], function(createGrowl) {
+						var anchor = $('<a>', {
+							href : request.getResponseHeader('Location')
+						})[0];
+						var filename = anchor.pathname.substring(anchor.pathname.lastIndexOf('/') + 1);
+						createGrowl('New dataset created', filename, false);
+						Lvl.vent.trigger('datasets:file:uploaded');
+					});
+				}).fail(function() {
+					_self.trigger('destroy');
+					require([ 'common/alert' ], function(alertDialog) {
+						alertDialog('Error', 'Failed to save dataset.');
+					});
+				});
+			},
 			uploadDataset : function(e) {
 				e.preventDefault();
-				var _self = this;
-				_self.$('#upload-btn').prop('disabled', true);
+				pace.restart();
 				var formData = Backbone.Syphon.serialize(this);
-				
-				
-				
-				
-				/* TODO var requestData = {
+				var request = new FormData();
+				var dsBlob = new Blob([ JSON.stringify({
 					'filename' : formData.filename_input,
 					'metadata' : {
 						'description' : formData.description_input,
-						'target' : {
-							'collection' : this.data_source,
-							'compression' : formData.compression_select,
-							'filter' : formData.filter_select,
-							'ids' : _.pluck(this.collection.toJSON(), 'id'),
-							'type' : 'sequence'
-						}
+						'target' : {}
 					}
-				};
-				// submit request to LVL server
-				var self = this;
-				$('#export-btn').attr('disabled', 'disabled');				
-				var jqxhr = $.ajax({
-					type : 'POST',
-					contentType : 'application/json',
+				}) ], {
+					type : 'application/json'
+				});
+				var file = $('#file_input').get(0).files[0];
+				var eFname = formData.filename_input || file.name;
+				request.append('dataset', dsBlob);
+				request.append('file', file);
+				// check filename availability
+				var _self = this;
+				_self.$('#upload-btn').prop('disabled', true);
+				$.ajax({
+					type : 'GET',
+					dataType : 'json',
 					crossDomain : true,
-					url : Lvl.config.get('service', '') + '/datasets/objects/~',
-					data : JSON.stringify(requestData),
+					url : Lvl.config.get('service', '') + '/datasets/objects/~/' + encodeURIComponent(eFname) + '/typeahead',
 					headers : Lvl.config.authorizationHeader()
-				}).done(
-						function(data, textStatus, request) {
-							self.trigger('destroy');
-							require([ 'common/growl' ], function(createGrowl) {
-								var anchor = $('<a>', {
-									href : request.getResponseHeader('Location')
-								})[0];
-								var filename = anchor.pathname.substring(anchor.pathname.lastIndexOf('/') + 1);
-								createGrowl('New dataset created', filename
-										+ ' <a href="/#drive/datasets"><i class="fa fa-arrow-circle-right fa-fw"></i> datasets</a>', false);
-							});
-						}).fail(function() {
-					self.trigger('destroy');
-					require([ 'qtip' ], function(qtip) {
-						var message = $('<p />', {
-							text : 'Failed to create dataset.'
-						}), ok = $('<button />', {
-							text : 'Close',
-							'class' : 'full'
-						});
-						$('#alert').qtip({
-							content : {
-								text : message.add(ok),
-								title : {
-									text : 'Error',
-									button : true
-								}
-							},
-							position : {
-								my : 'center',
-								at : 'center',
-								target : $(window)
-							},
-							show : {
-								ready : true,
-								modal : {
-									on : true,
-									blur : false
-								}
-							},
-							hide : false,
-							style : 'qtip-bootstrap dialogue',
-							events : {
-								render : function(event, api) {
-									$('button', api.elements.content).click(function() {
-										api.hide();
-									});
-								},
-								hide : function(event, api) {
-									api.destroy();
-								}
-							}
-						});
+				}).always(function() {
+					pace.stop();
+					var form = $('#dsUpForm');
+					form.bootstrapValidator('resetForm', true);
+					form.bootstrapValidator('disableSubmitButtons', true);
+				}).done(function(data) {
+					_self.model.set({
+						'request' : request,
+						'effective_fname' : eFname,
+						'overwrite' : _.contains(data, eFname)
 					});
-				}); */
+				}).fail(function() {
+					_self.trigger('destroy');
+					require([ 'common/alert' ], function(alertDialog) {
+						alertDialog('Error', 'Failed to save dataset.');
+					});
+				});
 			},
 			onShow : function() {
 				var _self = this;
@@ -110,7 +118,7 @@ define([ 'app', 'tpl!apps/drive/upload/tpls/ds_up', 'bootstrapvalidator', 'backb
 								file : {
 									extension : 'txt,xml,fas,fasta,fna,ffn,faa,frn',
 									type : 'text/plain,text/xml',
-									maxSize : 5*1024*1024,				                    
+									maxSize : 5 * 1024 * 1024,
 									message : 'The selected file is not valid, it should be (txt,xml,fas,fasta,fna,ffn,faa,frn) and 5 MB at maximum.'
 								}
 							}

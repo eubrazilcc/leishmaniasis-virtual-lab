@@ -190,6 +190,7 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/tpls/drive_datasets', 'tp
 					collection : this.collection,
 					emptyText : 'No datasets found'
 				});
+				Lvl.vent.on('datasets:file:uploaded', this.render);
 				// setup search
 				Lvl.vent.on('search:form:submitted', this.searchDatasets);
 				// setup menu
@@ -262,7 +263,7 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/tpls/drive_datasets', 'tp
 				e.preventDefault();
 				$('#lvl-floating-menu').hide('fast');
 				e.data.grid.clearSelectedModels();
-			},
+			},			
 			searchDatasets : function(search) {
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
@@ -400,6 +401,7 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/tpls/drive_datasets', 'tp
 				pace.stop();
 				this.stopListening();
 				// remove all event handlers
+				Lvl.vent.off('datasets:file:uploaded');
 				Lvl.vent.off('search:form:submitted');
 				$('#lvl-search-form').unbind();
 				$('a#upload-btn').unbind();
