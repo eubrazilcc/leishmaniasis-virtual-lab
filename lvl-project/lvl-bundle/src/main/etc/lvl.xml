@@ -148,5 +148,15 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		</credentials>
 	
 	</workflow>
-
+	
+	<!-- Utility tools -->
+	<tools>
+	
+		<!-- Scripts -->
+		<scripts>
+			<phylo-tree>${lvl-root}/bin/tree-generator.py</phylo-tree>
+		</scripts>
+	
+	</tools>
+	
 </config>

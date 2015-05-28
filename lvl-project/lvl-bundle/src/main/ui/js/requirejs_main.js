@@ -42,10 +42,7 @@ requirejs.config({
 		'pace' : 'vendor/pace.min', // 1.0.0
 		/* qTip2 */
 		'imagesloaded' : 'vendor/imagesloaded.pkgd.min', // 3.1.8
-		'qtip' : 'vendor/jquery.qtip.min', // 2.2.1
-		/* jsPhyloSVG */
-		'raphael' : 'vendor/raphael-min', // 2.1.2
-		'jsphylosvg' : 'vendor/jsphylosvg-min', // 1.0.0
+		'qtip' : 'vendor/jquery.qtip.min', // 2.2.1		
 		/* Chart.js */
 		'chartjs' : 'vendor/Chart.min', // 1.0.2
 		/* Hopscotch */
@@ -72,10 +69,6 @@ requirejs.config({
 		},
 		'backgrid-filter' : {
 			deps : [ 'backgrid' ]
-		},		
-		'jsphylosvg' : {
-			deps : [ 'raphael' ],
-			exports : 'Smits'
 		}
 	},
 	callback : function() {

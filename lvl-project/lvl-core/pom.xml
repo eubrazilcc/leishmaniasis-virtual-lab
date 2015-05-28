@@ -49,6 +49,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	</dependencyManagement>
 	
 	<dependencies>
+		<!-- LVL modules -->		
+		<dependency>
+			<groupId>eu.eubrazilcc.lvl</groupId>
+			<artifactId>lvl-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	
 		<!-- Apache commons -->
 		<dependency> <!-- needed by auto-generated JAXB binding classes -->
 			<groupId>org.apache.commons</groupId>

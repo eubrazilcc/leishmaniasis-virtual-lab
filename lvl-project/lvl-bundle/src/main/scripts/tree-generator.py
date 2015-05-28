@@ -29,7 +29,7 @@ Usage examples:
  1) Exports a phylogenetic tree to a SVG file, loading the tree from Newick a
     file, and including the sequences alignment from a FASTA file:
 
-    tree-generator.py tree.nh alignment.fasta -o im.svg
+    tree-generator.py tree.nh -a alignment.fasta -o img.svg
 
  For additional support on ETE:
 
@@ -60,20 +60,21 @@ def load_tree(f_tree, f_align):
 
     # Load phylogenetic tree
     tree = PhyloTree(f_tree.read())
-    tree.link_to_alignment(f_align.read())
+    if f_align is not None:    
+        tree.link_to_alignment(f_align.read())
     return tree, ts
 
 if __name__ == "__main__":
     # Parse input arguments
     parser = ArgumentParser()
-    parser.add_argument("tree", help="tree", 
+    parser.add_argument("tree", help="phylogenetic tree (Newick)", 
         type=lambda x: is_valid_file(parser, x))
-    parser.add_argument("alignment", help="sequences alignment", 
-        type=lambda x: is_valid_file(parser, x))
-    parser.add_argument("-o", "--output", help="output file", 
+    parser.add_argument("-a", "--alignment", help="sequences alignment (FASTA)", 
+        type=lambda x: is_valid_file(parser, x), required=False)
+    parser.add_argument("-o", "--output", help="output file (PNG, SVG)", 
         default="phylotree.svg")
     args = parser.parse_args()
-    
+
     # Visualize the phylogenetic tree
     t, ts = load_tree(args.tree, args.alignment)
     ##t.show(tree_style=ts)

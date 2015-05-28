@@ -15,23 +15,12 @@ define([ 'app', 'entities/workflow_run', 'apps/analysis/runs_item/analysis_runs_
 				});
 				view.on('analysis:pipeline:product:show', function(productJSON) {
 					var product = JSON.parse(productJSON);
-					if (product.path.substr(product.path.length - '.nwk'.length, product.path.length) === '.nwk') {
-						// TODO require([ 'apps/analysis/tree_viewer/analysis_tree_viewer_view' ], function(TreeViewerView) {
-							// TODO var dialogView = new TreeViewerView.Content({
-						require([ 'apps/analysis/text_viewer/analysis_text_viewer_view' ], function(TextViewerView) {	
-							var dialogView = new TextViewerView.Content({
-								'product' : product
-							});
-							Lvl.dialogRegion.show(dialogView);
+					require([ 'apps/analysis/text_viewer/analysis_text_viewer_view' ], function(TextViewerView) {
+						var dialogView = new TextViewerView.Content({
+							'product' : product
 						});
-					} else {
-						require([ 'apps/analysis/text_viewer/analysis_text_viewer_view' ], function(TextViewerView) {
-							var dialogView = new TextViewerView.Content({
-								'product' : product
-							});
-							Lvl.dialogRegion.show(dialogView);
-						});
-					}
+						Lvl.dialogRegion.show(dialogView);
+					});
 				});
 				Lvl.mainRegion.currentView.tabContent.show(view);
 				return View.Content.id;

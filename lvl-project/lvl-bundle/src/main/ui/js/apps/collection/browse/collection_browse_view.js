@@ -292,7 +292,7 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-seq_id') : target.attr('data-seq_id');
 				this.trigger('sequences:view:sequence', self.collection.data_source, itemId);
-			},			
+			},
 			onDestroy : function() {
 				pace.stop();
 				this.stopListening();
@@ -347,7 +347,8 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 			onShow : function() {
 				var _self = this;
 				var params = Lvl.flashed();
-				if (!$.isEmptyObject(params) && params.get('type') === 'collection;browse;' + _self.data_source) {
+				if (!$.isEmptyObject(params) && (params instanceof SavedSearchEntity.SavedSearch)
+						&& (params.get('type') === 'collection;browse;' + _self.data_source)) {
 					var search = '';
 					_.each(params.get('search'), function(item) {
 						search += item.term;

@@ -4,9 +4,12 @@
 			<button type="button" class="close" data-dismiss="modal">
 				<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
 			</button>
-			<h4 class="modal-title" id="myModalLabel">Text viewer</h4>
+			<h4 class="modal-title" id="myModalLabel">Quick view
+				<a href="javascript:;" type="button" class="btn btn-default btn-sm" id="btn-view-raw" target="_blank" title="Open raw"><i class="fa fa-code fa-fw"></i><span class="hidden-sm hidden-xs"> Open raw</span></a>
+				<a href="javascript:;" type="button" class="btn btn-default btn-sm" id="btn-download-raw" target="_blank" title="Download"><i class="fa fa-download fa-fw"></i><span class="hidden-sm hidden-xs"> Download</span></a>
+				<a href="javascript:;" type="button" class="btn btn-primary btn-sm hidden" id="btn-open-tree-viewer" target="_blank" title="Open in tree viewer"><i class="fa fa-external-link fa-fw"></i><span class="hidden-sm hidden-xs"> Open in tree viewer</span></a></h4>
 		</div>
-		<div class="modal-body">			
+		<div class="modal-body">
 			<div class="row">
 				<div class="col-xs-12">
 					<div id="textCanvas"></div>

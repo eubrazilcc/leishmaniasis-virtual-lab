@@ -114,7 +114,7 @@ public enum ConfigurationManager implements Closeable2 {
 	public String getInstanceId() {
 		return configuration().getInstanceId();
 	}
-	
+
 	public File getHtdocsDir() {
 		return configuration().getHtdocsDir();
 	}
@@ -122,7 +122,7 @@ public enum ConfigurationManager implements Closeable2 {
 	public long getMaxUserUploadedFileSize() {
 		return configuration().getMaxUserUploadedFileSize();
 	}
-	
+
 	public String getDbName() {
 		return configuration().getDbName();
 	}
@@ -190,6 +190,10 @@ public enum ConfigurationManager implements Closeable2 {
 
 	public String getWfPasswd() {
 		return configuration().getWfPasswd().or("");
+	}
+
+	public String getPhyloTreeToolPath() {
+		return configuration().getPhyloTreeToolPath().or("");
 	}
 
 	public String getLinkedInAPIKey() {
@@ -281,6 +285,7 @@ public enum ConfigurationManager implements Closeable2 {
 							final int wfPort = getInteger("workflow.endpoint.port", configuration, foundNameList, wfSecure ? 443 : 80);							
 							final String wfUsername = getString("workflow.credentials.username", configuration, foundNameList, null);
 							final String wfPasswd = getString("workflow.credentials.password", configuration, foundNameList, null);
+							final String phyloTreeToolPath = getPath("tools.scripts.phylo-tree", configuration, foundNameList, null);
 							// get secondary property will return null if the requested property is missing
 							configuration.setThrowExceptionOnMissing(false);
 							final String linkedInAPIKey = getString("authz-server.linkedin.api-key", configuration, foundNameList, null); 
@@ -295,12 +300,13 @@ public enum ConfigurationManager implements Closeable2 {
 									final String value = configuration.getString(key);
 									if (value != null) {
 										othersMap.put(key, value);
-									}								
+									}
 								}
 							}
 							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, maxUserUploadedFileSize, dbName, dbUsername, dbPassword, dbHosts, 
 									brokerEmbedded, messageBrokers, smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, 
-									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, linkedInAPIKey, linkedInSecretKey, googleAPIKey, othersMap);
+									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, phyloTreeToolPath, linkedInAPIKey, linkedInSecretKey, googleAPIKey, 
+									othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
 							throw new IllegalStateException("Main configuration not found");
@@ -331,6 +337,12 @@ public enum ConfigurationManager implements Closeable2 {
 		return value != null ? new File(value) : defaultValue;		
 	}
 
+	private static @Nullable String getPath(final String name, final CombinedConfiguration configuration, 
+			final List<String> foundNameList, final @Nullable String defaultValue) {
+		final File file = getFile(name, configuration, foundNameList, false, null);
+		return file != null ? file.getAbsolutePath() : defaultValue;		
+	}
+
 	private static @Nullable URL getUrl(final String name, final CombinedConfiguration configuration, 
 			final List<String> foundNameList, final @Nullable URL defaultValue) {
 		foundNameList.add(name);
@@ -356,7 +368,7 @@ public enum ConfigurationManager implements Closeable2 {
 		foundNameList.add(name);
 		return configuration.getInt(name, defaultValue);
 	}
-	
+
 	private static @Nullable Long getLong(final String name, final CombinedConfiguration configuration, 
 			final List<String> foundNameList, final @Nullable Long defaultValue) {
 		foundNameList.add(name);
@@ -422,6 +434,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final int wfPort;							
 		private final Optional<String> wfUsername;
 		private final Optional<String> wfPasswd;
+		private final Optional<String> phyloTreeToolPath;
 		// authorization server configuration
 		private final Optional<String> linkedInAPIKey;
 		private final Optional<String> linkedInSecretKey;
@@ -435,6 +448,7 @@ public enum ConfigurationManager implements Closeable2 {
 				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
 				final @Nullable String portalEndpoint,
 				final @Nullable String wfHostname, final boolean wfSecure, final int wfPort, final @Nullable String wfUsername, final @Nullable String wfPasswd,
+				final @Nullable String phyloTreeToolPath,
 				final @Nullable String linkedInAPIKey, final @Nullable String linkedInSecretKey,
 				final @Nullable String googleAPIKey,
 				final @Nullable Map<String, String> othersMap) {
@@ -459,6 +473,7 @@ public enum ConfigurationManager implements Closeable2 {
 			this.wfPort = wfPort;
 			this.wfUsername = fromNullable(trimToNull(wfUsername));
 			this.wfPasswd = fromNullable(trimToNull(wfPasswd));
+			this.phyloTreeToolPath = fromNullable(phyloTreeToolPath);
 			this.linkedInAPIKey = fromNullable(trimToNull(linkedInAPIKey));
 			this.linkedInSecretKey = fromNullable(trimToNull(linkedInSecretKey));
 			this.googleAPIKey = fromNullable(trimToNull(googleAPIKey));
@@ -527,6 +542,9 @@ public enum ConfigurationManager implements Closeable2 {
 		public Optional<String> getWfPasswd() {
 			return wfPasswd;
 		}		
+		public Optional<String> getPhyloTreeToolPath() {
+			return phyloTreeToolPath;
+		}
 		public Optional<String> getLinkedInAPIKey() {
 			return linkedInAPIKey;
 		}
@@ -570,6 +588,7 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("wfPort", wfPort)
 					.add("wfUsername", wfUsername.orNull())
 					.add("wfPasswd", wfPasswd.orNull())
+					.add("phyloTreeToolPath", phyloTreeToolPath.orNull())
 					.add("linkedInAPIKey", linkedInAPIKey.orNull())
 					.add("linkedInSecretKey", linkedInSecretKey.orNull())
 					.add("googleAPIKey", googleAPIKey.orNull())

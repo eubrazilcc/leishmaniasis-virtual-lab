@@ -10,6 +10,17 @@ define([ 'app', 'tpl!apps/analysis/text_viewer/tpls/analysis_text_viewer', 'pace
 			initialize : function(options) {
 				this.product = options.product;
 			},
+			events : {
+				'click a#btn-open-tree-viewer' : 'openTreeViewer'
+			},
+			openTreeViewer : function(e) {
+				e.preventDefault();
+				var self = this;
+				self.trigger('destroy');
+				Lvl.flash(self.product).navigate('viewer/tree', {
+					trigger : true
+				});				
+			},
 			onRender : function() {
 				var self = this;
 				pace.start();
@@ -21,50 +32,27 @@ define([ 'app', 'tpl!apps/analysis/text_viewer/tpls/analysis_text_viewer', 'pace
 							url : Lvl.config.get('service', '') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
 									+ btoa(unescape(encodeURIComponent(self.product.path))),
 							headers : Lvl.config.authorizationHeader()
-						}).done(function(data) {
-					self.$('#textCanvas').html('<pre>' + data + '</pre>');
-				}).fail(function() {
-					self.trigger('destroy');
-					require([ 'qtip' ], function(qtip) {
-						var message = $('<p />', {
-							text : 'Failed to load text product from the LVL service.'
-						}), ok = $('<button />', {
-							text : 'Close',
-							'class' : 'full'
-						});
-						$('#alert').qtip({
-							content : {
-								text : message.add(ok),
-								title : {
-									text : 'Error',
-									button : true
-								}
-							},
-							position : {
-								my : 'center',
-								at : 'center',
-								target : $(window)
-							},
-							show : {
-								ready : true,
-								modal : {
-									on : true,
-									blur : false
-								}
-							},
-							hide : false,
-							style : 'qtip-bootstrap dialogue',
-							events : {
-								render : function(event, api) {
-									$('button', api.elements.content).click(function() {
-										api.hide();
+						}).done(
+						function(data) {
+							self.$('#textCanvas').html('<pre>' + data + '</pre>');
+							self.$('#btn-view-raw').attr(
+									{
+										'href' : Lvl.config.get('service', '') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
+												+ btoa(unescape(encodeURIComponent(self.product.path))) + '?' + Lvl.config.authorizationQuery()
 									});
-								},
-								hide : function(event, api) {
-									api.destroy();
-								}
+							self.$('#btn-download-raw').attr(
+									{
+										'href' : Lvl.config.get('service', '') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
+												+ btoa(unescape(encodeURIComponent(self.product.path))) + '?' + Lvl.config.authorizationQuery(),
+										'download' : self.product.path
+									});
+							if (self.product.path.substr(self.product.path.length - '.nwk'.length, self.product.path.length) === '.nwk') {
+								self.$('#btn-open-tree-viewer').removeClass('hidden');
 							}
-						});
+						}).fail(function() {
+					self.trigger('destroy');
+					require([ 'common/alert' ], function(alertDialog) {
+						alertDialog('Error', 'Failed to load text product from the LVL service.');
 					});
 				});
 			},
