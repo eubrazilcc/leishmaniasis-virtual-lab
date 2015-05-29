@@ -6,8 +6,8 @@ define([ 'app', 'apps/analysis/layout/analysis_layout_view' ], function(Lvl, Vie
 	Lvl.module('AnalysisApp.Layout', function(Layout, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Layout.Controller = {
-			showLayout : function(section, id) {
-				var subapp = section + (id ? '_item' : '');
+			showLayout : function(section, id, viewer) {
+				var subapp = section + (id ? '_item' : '') + (viewer ? '_' + viewer : '');				
 				var controller = function(SectionController) {
 					var tabLinks = Lvl.request('analysis:navigation:entities');
 					var tabLinkToSelect = tabLinks.find(function(tabLink) {
@@ -27,7 +27,10 @@ define([ 'app', 'apps/analysis/layout/analysis_layout_view' ], function(Lvl, Vie
 					break;
 				case 'runs_item':
 					require([ 'apps/analysis/runs_item/analysis_runs_item_ctrl', 'apps/analysis/layout/entities/tablinks' ], controller);
-					break;				
+					break;
+				case 'runs_item_treeviewer':
+					require([ 'apps/analysis/trevi/trevic', 'apps/analysis/layout/entities/tablinks' ], controller);
+					break;
 				case 'pipelines':
 				default:
 					require([ 'apps/analysis/pipelines/analysis_pipelines_ctrl', 'apps/analysis/layout/entities/tablinks' ], controller);

@@ -18,9 +18,9 @@ define([ 'app' ], function(Lvl) {
 		};
 
 		/* Commands and events */
-		Lvl.commands.setHandler('analysis:set:active', function(section, subsection) {
+		Lvl.commands.setHandler('analysis:set:active', function(section, subsection, viewer) {
 			require([ 'apps/analysis/layout/analysis_layout_ctrl' ], function(LayoutController) {
-				AnalysisApp.currentSection = LayoutController.showLayout(section, subsection);
+				AnalysisApp.currentSection = LayoutController.showLayout(section, subsection, viewer);
 			});
 		});
 	});

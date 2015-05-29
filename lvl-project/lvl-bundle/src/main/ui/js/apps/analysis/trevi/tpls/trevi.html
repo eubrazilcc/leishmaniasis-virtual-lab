@@ -1,0 +1,23 @@
+<div class="row" id="tree-viewer-toolbar">
+	<div class="col-xs-12">
+		<ul class="breadcrumb">
+			<li><a href="/#analysis/runs">Runs</a></li>
+			<li><a href="/#analysis/runs/<%= id %>"><%= id %></a></li>
+			<li class="active">Tree Viewer</li>
+		</ul>
+	</div>
+	<div class="col-xs-12">
+		<div class="pull-right">
+			<a href="#" class="btn btn-default" id="btn-zoom-in" title="Zoom In"><i class="fa fa-search-plus"></i></a>
+			<a href="#" class="btn btn-default" id="btn-zoom-out" title="Zoom Out"><i class="fa fa-search-minus"></i></a>
+			<a href="#" class="btn btn-primary" id="btn-restore" title="Restore"><i class="fa fa-arrows-alt"></i></a>
+		</div>
+	</div>
+</div>
+<div class="row" id="item-container">
+	<div class="col-xs-12">
+		<div>
+        	<img id="svg-container" src="/img/blank.svg" width="900" height="900">
+        </div>
+	</div>
+</div>

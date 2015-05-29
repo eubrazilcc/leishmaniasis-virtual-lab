@@ -47,6 +47,8 @@ requirejs.config({
 		'chartjs' : 'vendor/Chart.min', // 1.0.2
 		/* Hopscotch */
 		'hopscotch' : 'vendor/hopscotch.min', // 0.2.4
+		/* SVG pan and zoom */
+		'jquery.panzoom' : 'vendor/jquery.panzoom.min', // 2.0.5
 		/* Add support for underscore templates */
 		'text' : 'vendor/text.min', // 2.0.12
 		'tpl' : 'vendor/tpl.min', // 0.0.2

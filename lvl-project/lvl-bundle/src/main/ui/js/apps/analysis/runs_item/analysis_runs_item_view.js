@@ -7,7 +7,7 @@ define([ 'app', 'tpl!apps/analysis/runs_item/tpls/analysis_runs_item', 'entities
 	Lvl.module('AnalysisApp.RunsItem.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.Content = Marionette.ItemView.extend({
-			id : 'runs',
+			id : 'runs_item',
 			template : RunItemTpl,
 			templateHelpers : function() {
 				return {
@@ -57,22 +57,9 @@ define([ 'app', 'tpl!apps/analysis/runs_item/tpls/analysis_runs_item', 'entities
 					scrollTop : 0
 				}, '500', 'swing');
 			},
-			events : {
-				'click a#hide-edition-toolbar-btn' : 'hideToolbar',
-				'click a#show-edition-toolbar-btn' : 'showToolbar',
+			events : {				
 				'click a[data-open]' : 'openRun',
 				'click a#refresh-btn' : 'refreshRun'
-			},
-			hideToolbar : function(e) {
-				e.preventDefault();
-				this.$('#edition-toolbar').hide();
-				this.$('#show-edition-toolbar-btn').removeClass('hidden');
-				this.$('#show-edition-toolbar-btn').show();
-			},
-			showToolbar : function(e) {
-				e.preventDefault();
-				this.$('#show-edition-toolbar-btn').hide();
-				this.$('#edition-toolbar').show();
 			},
 			openRun : function(e) {
 				e.preventDefault();

@@ -17,7 +17,7 @@ define([ 'app', 'tpl!apps/analysis/text_viewer/tpls/analysis_text_viewer', 'pace
 				e.preventDefault();
 				var self = this;
 				self.trigger('destroy');
-				Lvl.flash(self.product).navigate('viewer/tree', {
+				Lvl.flash(self.product).navigate('analysis/runs/' + self.product.id + '/treeviewer', {
 					trigger : true
 				});				
 			},

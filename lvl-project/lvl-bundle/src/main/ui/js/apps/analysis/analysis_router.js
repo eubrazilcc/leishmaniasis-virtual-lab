@@ -9,7 +9,8 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 			routes : {
 				'analysis' : 'showAnalysis',
 				'analysis/:section' : 'showAnalysis',
-				'analysis/:section/:subsection' : 'showAnalysis'
+				'analysis/:section/:subsection' : 'showAnalysis',
+				'analysis/:section/:subsection/:viewer' : 'showInViewer'
 			},
 			before : function() {
 				if (!Lvl.config.isAuthenticated()) {
@@ -36,6 +37,17 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 					Lvl.execute('analysis:set:active', section);
 				} else if (section === 'runs') {
 					Lvl.execute('analysis:set:active', section, subsection);
+				} else {
+					Lvl.navigate('not-found', {
+						trigger : true,
+						replace : true
+					});
+				}
+			},
+			showInViewer : function(section, subsection, viewer) {
+				section = (section || 'runs').toLowerCase();
+				if (section === 'runs') {
+					Lvl.execute('analysis:set:active', section, subsection, viewer);
 				} else {
 					Lvl.navigate('not-found', {
 						trigger : true,
