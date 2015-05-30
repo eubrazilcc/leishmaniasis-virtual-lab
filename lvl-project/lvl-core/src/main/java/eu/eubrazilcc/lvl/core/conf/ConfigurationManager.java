@@ -284,10 +284,10 @@ public enum ConfigurationManager implements Closeable2 {
 							final boolean wfSecure = getBoolean("workflow.endpoint.secure", configuration, foundNameList, false);
 							final int wfPort = getInteger("workflow.endpoint.port", configuration, foundNameList, wfSecure ? 443 : 80);							
 							final String wfUsername = getString("workflow.credentials.username", configuration, foundNameList, null);
-							final String wfPasswd = getString("workflow.credentials.password", configuration, foundNameList, null);
-							final String phyloTreeToolPath = getPath("tools.scripts.phylo-tree", configuration, foundNameList, null);
+							final String wfPasswd = getString("workflow.credentials.password", configuration, foundNameList, null);							
 							// get secondary property will return null if the requested property is missing
 							configuration.setThrowExceptionOnMissing(false);
+							final String phyloTreeToolPath = getPath("tools.scripts.phylo-tree", configuration, foundNameList, null);
 							final String linkedInAPIKey = getString("authz-server.linkedin.api-key", configuration, foundNameList, null); 
 							final String linkedInSecretKey = getString("authz-server.linkedin.secret-key", configuration, foundNameList, null);
 							final String googleAPIKey = getString("rest-service.google.api-key", configuration, foundNameList, null);

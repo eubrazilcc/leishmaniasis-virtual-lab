@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.mongodb.cache;
+package eu.eubrazilcc.lvl.service.cache;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
@@ -31,7 +31,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 public class CachedFile {
 
 	private String cachedFilename;
-	private String md5;
 
 	public String getCachedFilename() {
 		return cachedFilename;
@@ -41,19 +40,10 @@ public class CachedFile {
 		this.cachedFilename = cachedFilename;
 	}
 
-	public String getMd5() {
-		return md5;
-	}
-
-	public void setMd5(final String md5) {
-		this.md5 = md5;
-	}
-
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("cachedFilename", cachedFilename)
-				.add("md5", md5)
 				.toString();
 	}
 
@@ -72,15 +62,10 @@ public class CachedFile {
 			return this;
 		}
 
-		public Builder md5(final String md5) {
-			instance.setMd5(md5);
-			return this;
-		}
-
 		public CachedFile build() {
 			return instance;
 		}
 
 	}
-
+	
 }

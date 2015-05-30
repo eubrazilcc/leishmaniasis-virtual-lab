@@ -55,8 +55,8 @@ import eu.eubrazilcc.lvl.core.support.IssueAttachment;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
 import eu.eubrazilcc.lvl.storage.dao.BaseFileDAO;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
-import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedFile;
-import eu.eubrazilcc.lvl.storage.mongodb.cache.FilePersistingCache;
+import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedGridFSFile;
+import eu.eubrazilcc.lvl.storage.mongodb.cache.GridFSFilePersistingCache;
 
 /**
  * {@link IssueAttachment} DAO.
@@ -68,7 +68,7 @@ public enum IssueAttachmentDAO implements BaseFileDAO<String, IssueAttachment> {
 
 	private final static Logger LOGGER = getLogger(IssueAttachmentDAO.class);
 
-	private final FilePersistingCache persistingCache = new FilePersistingCache();
+	private final GridFSFilePersistingCache persistingCache = new GridFSFilePersistingCache();
 
 	public static final String NAMESPACE = "lvl_issues_attachments";
 
@@ -197,7 +197,7 @@ public enum IssueAttachmentDAO implements BaseFileDAO<String, IssueAttachment> {
 		IssueAttachment attachment = null;
 		if (gfsFile != null) {
 			attachment = toIssueAttachment(gfsFile);
-			CachedFile cachedFile = persistingCache.getIfPresent(NAMESPACE, gfsFile.getFilename());
+			CachedGridFSFile cachedFile = persistingCache.getIfPresent(NAMESPACE, gfsFile.getFilename());
 			if (cachedFile != null) {
 				if (!cachedFile.getMd5().equals(gfsFile.getMD5())) {
 					cachedFile = persistingCache.update(NAMESPACE, gfsFile);

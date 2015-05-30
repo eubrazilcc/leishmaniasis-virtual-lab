@@ -25,8 +25,10 @@ package eu.eubrazilcc.lvl.service.rest;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Sets.newHashSet;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
+import static eu.eubrazilcc.lvl.core.io.PhyloTreeCreator.newickToSvg;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2dbnamespace;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
@@ -39,8 +41,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.createTempDirectory;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_SVG_XML;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.readFileToString;
@@ -85,6 +89,8 @@ import eu.eubrazilcc.lvl.core.workflow.WorkflowProduct;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowRun;
 import eu.eubrazilcc.lvl.core.workflow.WorkflowStatus;
 import eu.eubrazilcc.lvl.service.WorkflowRuns;
+import eu.eubrazilcc.lvl.service.cache.CachedFile;
+import eu.eubrazilcc.lvl.service.cache.RenderedFilePersistingCache;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
@@ -98,6 +104,8 @@ public final class WorkflowRunResource {
 	public static final String RESOURCE_NAME = LVL_NAME + " Pipeline Runs Resource";
 
 	protected final static Logger LOGGER = getLogger(WorkflowRunResource.class);
+
+	private final RenderedFilePersistingCache renderedFileCache = new RenderedFilePersistingCache();
 
 	@GET
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
@@ -130,7 +138,7 @@ public final class WorkflowRunResource {
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
 		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
+			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":" + id2 + ":view")
@@ -138,7 +146,7 @@ public final class WorkflowRunResource {
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id2, ownerid);
 		if (run == null) {
-			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", NOT_FOUND);
 		}
 		// update status (when needed)
 		if (run.getStatus() == null || !run.getStatus().isCompleted()) {
@@ -222,7 +230,7 @@ public final class WorkflowRunResource {
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id);
 		if (run == null) {
-			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", NOT_FOUND);
 		}
 		// update
 		WORKFLOW_RUN_DAO.update(update);
@@ -239,7 +247,7 @@ public final class WorkflowRunResource {
 		// get from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id2);
 		if (run == null) {
-			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", NOT_FOUND);
 		}		
 		// delete
 		try {
@@ -277,7 +285,7 @@ public final class WorkflowRunResource {
 		// get run from database
 		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id2, ownerid);
 		if (run == null) {
-			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+			throw new WebApplicationException("Element not found", NOT_FOUND);
 		}
 		// get dataset from database
 		String content = null;
@@ -285,7 +293,7 @@ public final class WorkflowRunResource {
 			final String dbns = ns2dbnamespace(LVL_DEFAULT_NS, ownerid);
 			final Dataset dataset = DATASET_DAO.find(dbns, decode(new String(decodeBase64(path2)), UTF_8.name()));
 			if (dataset == null || dataset.getOutfile() == null || !dataset.getOutfile().canRead()) {
-				throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);				
+				throw new WebApplicationException("Element not found", NOT_FOUND);				
 			}
 			content = readFileToString(dataset.getOutfile());			
 		} catch (WebApplicationException wap) {
@@ -294,6 +302,53 @@ public final class WorkflowRunResource {
 			LOGGER.error("Failed to read product text file", e);
 		}		
 		return content;
+	}
+
+	/**
+	 * It uses the solution #1 described here to encode a path in the URL: 
+	 * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_.22Unicode_Problem.22">Base64 encoding and decoding</a>
+	 */
+	@GET
+	@Path("svg_product/{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}/{path}")
+	@Produces(APPLICATION_SVG_XML)	
+	public String getSvgRenderedTree(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @PathParam("path") String path,
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id), path2 = parseParam(path);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":" + id2 + ":view")
+				.getPrincipal();
+		// try to get rendered file from cache
+		final String cacheKey = namespace2 + "/" + id2 + "/" + path2;
+		String svg = null, svgFilename = null;
+		File tmpDir = null;
+		CachedFile cachedFile = renderedFileCache.getIfPresent(cacheKey);
+		if (cachedFile == null) {
+			// get run from database
+			final WorkflowRun run = WORKFLOW_RUN_DAO.find(id2, ownerid);
+			if (run == null) {
+				throw new WebApplicationException("Element not found", NOT_FOUND);
+			}
+			// get dataset from database
+			try {
+				final String dbns = ns2dbnamespace(LVL_DEFAULT_NS, ownerid);
+				final Dataset dataset = DATASET_DAO.find(dbns, decode(new String(decodeBase64(path2)), UTF_8.name()));
+				if (dataset == null || dataset.getOutfile() == null || !dataset.getOutfile().canRead()) {
+					throw new WebApplicationException("Element not found", NOT_FOUND);				
+				}
+				tmpDir = createTempDirectory(CONFIG_MANAGER.getLocalCacheDir().toPath(), 
+						WorkflowRunResource.class.getSimpleName() + "_").toFile();				
+				svgFilename = newickToSvg(dataset.getOutfile(), null, tmpDir);				
+				cachedFile = renderedFileCache.put(cacheKey, new File(svgFilename));
+				svg = readFileToString(new File(cachedFile.getCachedFilename()));
+			} catch (WebApplicationException wap) {
+				throw wap;
+			} catch (IOException | InterruptedException e) {
+				LOGGER.error("Failed to render SVG from tree file", e);
+			} finally {
+				deleteQuietly(tmpDir);
+			}
+		}
+		return svg;
 	}
 
 }

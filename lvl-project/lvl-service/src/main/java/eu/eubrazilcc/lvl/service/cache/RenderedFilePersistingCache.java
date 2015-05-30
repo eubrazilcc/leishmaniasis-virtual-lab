@@ -20,41 +20,40 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.mongodb.cache;
+package eu.eubrazilcc.lvl.service.cache;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.cache.CacheBuilder.newBuilder;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static java.lang.System.getProperty;
+import static java.nio.file.Files.move;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
 import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
-
-import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-import com.mongodb.gridfs.GridFSDBFile;
 
 /**
  * Stores files in a temporary directory, which is used as a caching system. A file is deleted
  * when the cache reference expires.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class FilePersistingCache {
+public class RenderedFilePersistingCache {
 
-	private static final Logger LOGGER = getLogger(FilePersistingCache.class);
+	private static final Logger LOGGER = getLogger(RenderedFilePersistingCache.class);
 
 	public static final int MAX_CACHED_ELEMENTS = 100;
 	public static final int CACHE_EXPIRATION_SECONDS = 86400; // one day
@@ -68,8 +67,8 @@ public class FilePersistingCache {
 	private final String cacheName;
 	private final File cacheDir;
 
-	public FilePersistingCache() {
-		this.cacheName = FilePersistingCache.class.getSimpleName() + "_" + random(8, true, true);
+	public RenderedFilePersistingCache() {
+		this.cacheName = RenderedFilePersistingCache.class.getSimpleName() + "_" + random(8, true, true);
 		File localCacheDir;
 		try {
 			localCacheDir = new File(CONFIG_MANAGER.getLocalCacheDir(), this.cacheName);
@@ -81,51 +80,48 @@ public class FilePersistingCache {
 		LOGGER.info("File persistent cache: " + this.cacheDir.getAbsolutePath());
 	}
 
-	public CachedFile getIfPresent(final @Nullable String namespace, final String filename) {
-		return CACHE.getIfPresent(toKey(namespace, filename));
+	public CachedFile getIfPresent(final String key) {
+		String key2 = null;
+		checkArgument(isNotBlank(key2 = trimToNull(key)), "Uninitialized or invalid key");
+		return CACHE.getIfPresent(key2);
 	}
 
-	public CachedFile put(final @Nullable String namespace, final GridFSDBFile gfsFile) throws IOException {		
-		checkArgument(gfsFile != null && isNotBlank(gfsFile.getFilename()) && isNotBlank(gfsFile.getMD5()), 
-				"Uninitialized or invalid file");
-		File outfile = null;
+	public CachedFile put(final String key, final File file) throws IOException {
+		String key2 = null;
+		checkArgument(isNotBlank(key2 = trimToNull(key)), "Uninitialized or invalid key");
+		checkArgument(file != null && file.canRead(), "Uninitialized or invalid file");
+		File renderedFile = null;
 		try {
 			final String uuid = randomUUID().toString();
-			outfile = new File(new File(cacheDir, uuid.substring(0, 2)), uuid);
-			final File parentDir = outfile.getParentFile();
+			renderedFile = new File(new File(cacheDir, uuid.substring(0, 2)), uuid);
+			final File parentDir = renderedFile.getParentFile();
 			if (parentDir.exists() || parentDir.mkdirs());
-			if ((outfile.isFile() && outfile.canWrite()) || outfile.createNewFile());
+			if ((renderedFile.isFile() && renderedFile.canWrite()) || renderedFile.createNewFile());
 			final CachedFile cachedFile = CachedFile.builder()
-					.cachedFilename(outfile.getCanonicalPath())
-					.md5(gfsFile.getMD5())
+					.cachedFilename(renderedFile.getCanonicalPath())
 					.build();
-			gfsFile.writeTo(outfile);
-			CACHE.put(toKey(namespace, gfsFile.getFilename()), cachedFile);
+			move(file.toPath(), renderedFile.toPath(), REPLACE_EXISTING);			
+			CACHE.put(key2, cachedFile);
 			return cachedFile;
 		} catch (Exception e) {
-			deleteQuietly(outfile);
+			deleteQuietly(renderedFile);
 			throw e;
 		}
 	}
 
-	public CachedFile update(final @Nullable String namespace, final GridFSDBFile gfsFile) throws IOException {
-		checkArgument(gfsFile != null && isNotBlank(gfsFile.getFilename()) && isNotBlank(gfsFile.getMD5()), 
-				"Uninitialized or invalid file");
-		invalidate(namespace, gfsFile.getFilename());
-		return put(namespace, gfsFile);
+	public CachedFile update(final String key, final File file) throws IOException {		
+		invalidate(key);
+		return put(key, file);
 	}
 
-	public void invalidate(final @Nullable String namespace, final String filename) {
-		CACHE.invalidate(toKey(namespace, filename));
+	public void invalidate(final String key) {
+		String key2 = null;
+		checkArgument(isNotBlank(key2 = trimToNull(key)), "Uninitialized or invalid key");
+		CACHE.invalidate(key2);
 	}
-	
+
 	public void invalidateAll() {
 		CACHE.invalidateAll();
-	}
-
-	private static String toKey(final @Nullable String namespace, final String filename) {
-		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		return trimToEmpty(namespace) + "/" + filename.trim();
 	}
 
 	/**
@@ -133,7 +129,6 @@ public class FilePersistingCache {
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
 	public static class PersistingRemovalListener implements RemovalListener<String, CachedFile> {
-
 		@Override
 		public void onRemoval(final RemovalNotification<String, CachedFile> notification) {
 			if (notification != null && notification.getValue() != null 

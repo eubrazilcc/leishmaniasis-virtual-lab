@@ -54,8 +54,8 @@ import eu.eubrazilcc.lvl.core.Metadata;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.GridFSDBFileWrapper;
-import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedFile;
-import eu.eubrazilcc.lvl.storage.mongodb.cache.FilePersistingCache;
+import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedGridFSFile;
+import eu.eubrazilcc.lvl.storage.mongodb.cache.GridFSFilePersistingCache;
 
 /**
  * {@link Dataset} DAO.
@@ -67,7 +67,7 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 
 	private final static Logger LOGGER = getLogger(DatasetDAO.class);
 
-	private final FilePersistingCache persistingCache = new FilePersistingCache();	
+	private final GridFSFilePersistingCache gfsPersistingCache = new GridFSFilePersistingCache();
 
 	@Override
 	public WriteResult<Dataset> insert(final @Nullable String namespace, final @Nullable String filename, final File file, final @Nullable Metadata metadata) {
@@ -210,20 +210,20 @@ public enum DatasetDAO implements BaseFileDAO<String, Dataset> {
 	}
 
 	public void cleanCache() {
-		persistingCache.invalidateAll();
+		gfsPersistingCache.invalidateAll();
 	}	
 
 	private Dataset parseGridFSDBFileOrNull(final GridFSDBFile gfsFile, final String namespace) throws IOException {
 		Dataset dataset = null;
 		if (gfsFile != null) {
 			dataset = toDataset(gfsFile, namespace);
-			CachedFile cachedFile = persistingCache.getIfPresent(namespace, gfsFile.getFilename());
+			CachedGridFSFile cachedFile = gfsPersistingCache.getIfPresent(namespace, gfsFile.getFilename());
 			if (cachedFile != null) {
 				if (!cachedFile.getMd5().equals(gfsFile.getMD5())) {
-					cachedFile = persistingCache.update(namespace, gfsFile);
+					cachedFile = gfsPersistingCache.update(namespace, gfsFile);
 				}
 			} else {
-				cachedFile = persistingCache.put(namespace, gfsFile);
+				cachedFile = gfsPersistingCache.put(namespace, gfsFile);
 			}
 			dataset.setOutfile(new File(cachedFile.getCachedFilename()));
 		}
