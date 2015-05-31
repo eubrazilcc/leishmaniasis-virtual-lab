@@ -45,7 +45,7 @@ cp -r ~/Workspace/eclipse-jee-luna/leishmaniasis-virtual-lab/lvl-project/lvl-bun
 
 ertorser@regab:~/TEMP/ui$ r.js -o build.js
 
-ertorser@regab:~/TEMP$ find dist/js/ -iname '*.html' -print0 | xargs -0 -I"{}" html-minifier "{}" -c html-minifier.conf -o "{}"
+ertorser@regab:~/TEMP/ui$ find dist/js/ -iname '*.html' -print0 | xargs -0 -I"{}" html-minifier "{}" -c html-minifier.conf -o "{}"
 
 ertorser@regab:~/TEMP/ui$ cd dist/
 
