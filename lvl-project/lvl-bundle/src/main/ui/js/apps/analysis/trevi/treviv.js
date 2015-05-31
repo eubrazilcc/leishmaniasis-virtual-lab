@@ -33,39 +33,44 @@ define([ 'app', 'tpl!apps/analysis/trevi/tpls/trevi', 'entities/workflow_run', '
 			zoomInTree : function(e) {
 				e.preventDefault();
 				var self = this;
-				self.$el.find('img#svg-container').panzoom('zoom');
+				self.$el.find('div#svg-container svg').panzoom('zoom');
 			},
 			zoomOutTree : function(e) {
 				e.preventDefault();
 				var self = this;
-				self.$el.find('img#svg-container').panzoom('zoom', true);
+				self.$el.find('div#svg-container svg').panzoom('zoom', true);
 			},
 			restoreTree : function(e) {
 				e.preventDefault();
 				var self = this;
-				self.$el.find('img#svg-container').panzoom('reset');
+				self.$el.find('div#svg-container svg').panzoom('reset');
 			},
 			onDestroy : function() {
 				pace.stop();
 				this.stopListening();
 			},
-			onRender : function() {
+			onShow : function() {
 				var self = this;
 				pace.start();
-				self.model.fetch({
-					reset : true
-				}).done(function() {
-					self.$el.find('img#svg-container').panzoom({});
-				});
-			},
-			onShow : function() {
 				var params = Lvl.flashed();
 				if (!$.isEmptyObject(params) && params.id && params.path) {
-					
-					// TODO
-					console.log(JSON.stringify(params));
-					// TODO
-					
+					$.ajax(
+							{
+								type : 'GET',
+								dataType : 'xml',
+								crossDomain : true,
+								url : Lvl.config.get('service', '') + '/pipelines/runs/svg_product/~/' + params.id + '/'
+										+ btoa(unescape(encodeURIComponent(params.path))),
+								headers : Lvl.config.authorizationHeader()
+							}).done(function(data) {
+						var svg = $(data).find('svg');
+						self.$el.find('div#svg-container').html(svg);
+						self.$el.find('div#svg-container svg').panzoom({});
+					}).fail(function(jqXHR, textStatus, errorThrown) {
+						require([ 'common/alert' ], function(alertDialog) {
+							alertDialog('Error', 'Failed to render SVG.');
+						});
+					});
 				}
 			}
 		});

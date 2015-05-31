@@ -4,6 +4,14 @@
 
 	$ apt-get install python-numpy python-qt4 python-lxml python-mysqldb python-pip
 	
-	$ pip install --upgrade ete2	
+	$ pip install --upgrade ete2
+	
+	An X backend is needed, at least a virtual X system such as Xvfb (X virtual framebuffer):
+	
+	https://github.com/jhcepas/ete/blob/master/sdoc/tutorial/tutorial_webplugin.rst#no-x-system-available
+	
+	$ apt-get install xvfb
+	
+	And use <command>xvfb-run</command> to run your ETE scripts.
 
 </p>

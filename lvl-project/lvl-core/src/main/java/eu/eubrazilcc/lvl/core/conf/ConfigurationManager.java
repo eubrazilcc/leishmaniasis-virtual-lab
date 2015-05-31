@@ -195,6 +195,10 @@ public enum ConfigurationManager implements Closeable2 {
 	public String getPhyloTreeToolPath() {
 		return configuration().getPhyloTreeToolPath().or("");
 	}
+	
+	public boolean isUseXvfb() {
+		return configuration().isUseXvfb();
+	}
 
 	public String getLinkedInAPIKey() {
 		return configuration().getLinkedInAPIKey().or("");
@@ -288,6 +292,7 @@ public enum ConfigurationManager implements Closeable2 {
 							// get secondary property will return null if the requested property is missing
 							configuration.setThrowExceptionOnMissing(false);
 							final String phyloTreeToolPath = getPath("tools.scripts.phylo-tree", configuration, foundNameList, null);
+							final boolean useXvfb = getBoolean("tools.xserver.use-xvfb", configuration, foundNameList, false);
 							final String linkedInAPIKey = getString("authz-server.linkedin.api-key", configuration, foundNameList, null); 
 							final String linkedInSecretKey = getString("authz-server.linkedin.secret-key", configuration, foundNameList, null);
 							final String googleAPIKey = getString("rest-service.google.api-key", configuration, foundNameList, null);
@@ -305,8 +310,8 @@ public enum ConfigurationManager implements Closeable2 {
 							}
 							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, maxUserUploadedFileSize, dbName, dbUsername, dbPassword, dbHosts, 
 									brokerEmbedded, messageBrokers, smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, 
-									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, phyloTreeToolPath, linkedInAPIKey, linkedInSecretKey, googleAPIKey, 
-									othersMap);
+									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, phyloTreeToolPath, useXvfb, linkedInAPIKey, linkedInSecretKey, 
+									googleAPIKey, othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
 							throw new IllegalStateException("Main configuration not found");
@@ -435,6 +440,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final Optional<String> wfUsername;
 		private final Optional<String> wfPasswd;
 		private final Optional<String> phyloTreeToolPath;
+		private final boolean useXvfb;
 		// authorization server configuration
 		private final Optional<String> linkedInAPIKey;
 		private final Optional<String> linkedInSecretKey;
@@ -448,7 +454,7 @@ public enum ConfigurationManager implements Closeable2 {
 				final String smtpHost, final int smtpPort, final String smtpSupportEmail, final String smtpNoreplyEmail,
 				final @Nullable String portalEndpoint,
 				final @Nullable String wfHostname, final boolean wfSecure, final int wfPort, final @Nullable String wfUsername, final @Nullable String wfPasswd,
-				final @Nullable String phyloTreeToolPath,
+				final @Nullable String phyloTreeToolPath, final boolean useXvfb,
 				final @Nullable String linkedInAPIKey, final @Nullable String linkedInSecretKey,
 				final @Nullable String googleAPIKey,
 				final @Nullable Map<String, String> othersMap) {
@@ -474,6 +480,7 @@ public enum ConfigurationManager implements Closeable2 {
 			this.wfUsername = fromNullable(trimToNull(wfUsername));
 			this.wfPasswd = fromNullable(trimToNull(wfPasswd));
 			this.phyloTreeToolPath = fromNullable(phyloTreeToolPath);
+			this.useXvfb = useXvfb;
 			this.linkedInAPIKey = fromNullable(trimToNull(linkedInAPIKey));
 			this.linkedInSecretKey = fromNullable(trimToNull(linkedInSecretKey));
 			this.googleAPIKey = fromNullable(trimToNull(googleAPIKey));
@@ -544,6 +551,9 @@ public enum ConfigurationManager implements Closeable2 {
 		}		
 		public Optional<String> getPhyloTreeToolPath() {
 			return phyloTreeToolPath;
+		}		
+		public boolean isUseXvfb() {
+			return useXvfb;
 		}
 		public Optional<String> getLinkedInAPIKey() {
 			return linkedInAPIKey;
@@ -589,6 +599,7 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("wfUsername", wfUsername.orNull())
 					.add("wfPasswd", wfPasswd.orNull())
 					.add("phyloTreeToolPath", phyloTreeToolPath.orNull())
+					.add("useXvfb", useXvfb)
 					.add("linkedInAPIKey", linkedInAPIKey.orNull())
 					.add("linkedInSecretKey", linkedInSecretKey.orNull())
 					.add("googleAPIKey", googleAPIKey.orNull())

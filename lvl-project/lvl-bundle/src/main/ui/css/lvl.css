@@ -421,6 +421,38 @@ div.lvl-savable:hover > span.lvl-savable-msg {
 	}
 }
 
+/* Tree viewer controls */
+
+div.lvl-tv-ctrls {
+	position: fixed;
+	top: 180px;
+	right: 15px;
+	z-index: +1000 !important;
+}
+
+ul.lvl-tv-ctrls {
+	list-style-type: none;
+	margin: 0px !important;
+	padding: 0px !important;
+}
+
+ul.lvl-tv-ctrls li {
+	padding: 10px !important;	
+}
+
+ul.lvl-tv-ctrls li:hover, ul.lvl-tv-ctrls li:focus {
+	background-color: white;
+}
+
+a.lvl-tv-ctrl {
+	color: #bbbbbb;
+	background-color: none;
+}
+
+a.lvl-tv-ctrl:hover, a.lvl-tv-ctrl:focus {
+	color: #666666;	
+}
+
 /* Override Backgrid.js styles */
 .backgrid-container {
 	position: relative;

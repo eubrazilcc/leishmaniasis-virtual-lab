@@ -156,6 +156,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<scripts>
 			<phylo-tree>${lvl-root}/bin/tree-generator.py</phylo-tree>
 		</scripts>
+		
+		<!-- X server configuration -->
+		<xserver>
+			<!-- Use Xvfb (X virtual framebuffer) -->
+			<use-xvfb>false</use-xvfb>
+		</xserver>
 	
 	</tools>
 

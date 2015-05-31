@@ -1,3 +1,10 @@
+<div class="lvl-tv-ctrls">
+	<ul class="lvl-tv-ctrls">
+		<li><a href="#" class="lvl-tv-ctrl" id="btn-zoom-in" title="Zoom In"><i class="fa fa-search-plus fa-2x"></i></a></li>
+		<li><a href="#" class="lvl-tv-ctrl" id="btn-zoom-out" title="Zoom Out"><i class="fa fa-search-minus fa-2x"></i></a></li>
+		<li><a href="#" class="lvl-tv-ctrl" id="btn-restore" title="Restore"><i class="fa fa-arrows-alt fa-2x"></i></a></li>
+	</ul>
+</div>
 <div class="row" id="tree-viewer-toolbar">
 	<div class="col-xs-12">
 		<ul class="breadcrumb">
@@ -5,19 +12,13 @@
 			<li><a href="/#analysis/runs/<%= id %>"><%= id %></a></li>
 			<li class="active">Tree Viewer</li>
 		</ul>
-	</div>
-	<div class="col-xs-12">
-		<div class="pull-right">
-			<a href="#" class="btn btn-default" id="btn-zoom-in" title="Zoom In"><i class="fa fa-search-plus"></i></a>
-			<a href="#" class="btn btn-default" id="btn-zoom-out" title="Zoom Out"><i class="fa fa-search-minus"></i></a>
-			<a href="#" class="btn btn-primary" id="btn-restore" title="Restore"><i class="fa fa-arrows-alt"></i></a>
-		</div>
-	</div>
+	</div>	
 </div>
 <div class="row" id="item-container">
 	<div class="col-xs-12">
-		<div id="svg-container2">
-        	<img id="svg-container" src="/img/blank.svg" width="900" height="900">
+		<div id="svg-container">
+        	<!-- <img id="svg-container" src="/img/cross.svg"> -->
+        	<svg xmlns="http://www.w3.org/2000/svg" width="612" height="612" viewBox="0 0 612 612"><path d="M576.52.603L306 270.608 35.478.603 0 36.003l270.522 270.008L0 575.998l35.478 35.4L306 341.41l270.52 269.987 35.48-35.4L341.46 306.01 612 36.005" fill="#b3b3b3"/></svg>
         </div>
 	</div>
 </div>

@@ -44,6 +44,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_SVG_XML;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
@@ -333,13 +334,12 @@ public final class WorkflowRunResource {
 				final String dbns = ns2dbnamespace(LVL_DEFAULT_NS, ownerid);
 				final Dataset dataset = DATASET_DAO.find(dbns, decode(new String(decodeBase64(path2)), UTF_8.name()));
 				if (dataset == null || dataset.getOutfile() == null || !dataset.getOutfile().canRead()) {
-					throw new WebApplicationException("Element not found", NOT_FOUND);				
+					throw new WebApplicationException("Element not found", NOT_FOUND);
 				}
 				tmpDir = createTempDirectory(CONFIG_MANAGER.getLocalCacheDir().toPath(), 
 						WorkflowRunResource.class.getSimpleName() + "_").toFile();				
 				svgFilename = newickToSvg(dataset.getOutfile(), null, tmpDir);				
-				cachedFile = renderedFileCache.put(cacheKey, new File(svgFilename));
-				svg = readFileToString(new File(cachedFile.getCachedFilename()));
+				cachedFile = renderedFileCache.put(cacheKey, new File(svgFilename));				
 			} catch (WebApplicationException wap) {
 				throw wap;
 			} catch (IOException | InterruptedException e) {
@@ -347,6 +347,14 @@ public final class WorkflowRunResource {
 			} finally {
 				deleteQuietly(tmpDir);
 			}
+		}
+		if (cachedFile == null || isBlank(cachedFile.getCachedFilename())) {
+			throw new WebApplicationException("SVG not found in cache", INTERNAL_SERVER_ERROR);
+		}
+		try {
+			svg = readFileToString(new File(cachedFile.getCachedFilename()));
+		} catch (IOException e) {
+			throw new WebApplicationException("Failed to load SVG from cache", e, INTERNAL_SERVER_ERROR);
 		}
 		return svg;
 	}

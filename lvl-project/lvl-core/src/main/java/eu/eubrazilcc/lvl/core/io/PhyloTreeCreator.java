@@ -86,7 +86,7 @@ public class PhyloTreeCreator {
 	}
 
 	private static void phyloTreeTool(final String tree, final @Nullable String alignment, final String output, final String phyloTreeToolPath) throws IOException, InterruptedException {
-		execCommand(phyloTreeToolPath + " \"" + tree + "\" " + (alignment != null ? " -a \"" + alignment + "\" " : "") + " -o \"" + output + "\"", 60);
+		execCommand((CONFIG_MANAGER.isUseXvfb() ? "/usr/bin/env xvfb-run " : "") + phyloTreeToolPath + " \"" + tree + "\" " + (alignment != null ? " -a \"" + alignment + "\" " : "") + " -o \"" + output + "\"", 60);
 	}
 
 }
