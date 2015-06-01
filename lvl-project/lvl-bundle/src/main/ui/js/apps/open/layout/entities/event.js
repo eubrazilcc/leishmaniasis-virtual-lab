@@ -3,9 +3,11 @@
  */
 
 define([ 'app' ], function(Lvl) {
-	Lvl.module('Entities.OpenContent.Event', function(Entities, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('Entities.OpenContent.Event', function(Entities, Lvl, Backbone, Marionette, $, _) {		
+		'use strict';
+		
 		Entities.Event = Backbone.Model.extend({
-			urlRoot : '/js/data/events.json?burst=' + Math.random(),
+			urlRoot : '/js/data/events.json?bust=' + Lvl.config.get('sessid', ''),
 			defaults : {
 				event : 'Unknown',
 				link : '',
@@ -37,7 +39,7 @@ define([ 'app' ], function(Lvl) {
 		});
 
 		Entities.EventCollection = Backbone.Collection.extend({
-			url : '/js/data/events.json?burst=' + Math.random(),
+			url : '/js/data/events.json?bust=' + Lvl.config.get('sessid', ''),
 			model : Entities.Event
 		});
 	});

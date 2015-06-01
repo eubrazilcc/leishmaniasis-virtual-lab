@@ -2,12 +2,11 @@
  * RequireJS module that defines the entity: statistic.
  */
 
-define([ 'app', 'apps/config/marionette/configuration' ], function(Lvl, Configuration) {
+define([ 'app' ], function(Lvl) {
 	Lvl.module('Entities.Statistic', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.Statistic = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/instances/stats/collection',
+			urlRoot : Lvl.config.get('service', '') + '/instances/stats/collection',
 			defaults : {
 				'leishmania.gene' : [ {
 					"label" : "",

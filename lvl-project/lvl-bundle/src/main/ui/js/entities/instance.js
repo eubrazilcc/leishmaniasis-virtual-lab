@@ -2,10 +2,9 @@
  * RequireJS module that defines the entity: LVL instance.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.Instance', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.Instance = Backbone.Model.extend({
 			defaults : {
 				instanceId : '',
@@ -38,8 +37,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		Entities.InstancePageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Instance,
 			mode : 'server',
-			// url : 'instances.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/instances',
+			url : Lvl.config.get('service', '') + '/instances',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

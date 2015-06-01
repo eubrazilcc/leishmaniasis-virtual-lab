@@ -2,12 +2,11 @@
  * RequireJS module that defines the entity: saved_search.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.SavedSearch', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.SavedSearch = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/saved/searches/~/',
+			urlRoot : Lvl.config.get('service', '') + '/saved/searches/~/',
 			defaults : {
 				type : '',
 				saved : '',
@@ -19,7 +18,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 				_.extend(this, selectable);
 			},
 			validate : function(attrs, options) {
-				var errors = {};				
+				var errors = {};
 				if (!attrs.type) {
 					errors.type = 'can\'t be empty';
 				}
@@ -43,7 +42,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 			model : Entities.SavedSearch,
 			mode : 'server',
 			url : function() {
-				return config.get('service', '') + '/saved/searches/~';
+				return Lvl.config.get('service', '') + '/saved/searches/~';
 			},
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token

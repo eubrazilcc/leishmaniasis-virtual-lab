@@ -2,10 +2,9 @@
  * RequireJS module that defines the entity: workflow.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.Workflow', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.WorkflowDefinition = Backbone.Model.extend({
 			defaults : {
 				id : '',
@@ -40,8 +39,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		Entities.WorkflowDefinitionPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.WorkflowDefinition,
 			mode : 'server',
-			// url : 'wrokflow_definition.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/pipelines/definitions',
+			url : Lvl.config.get('service', '') + '/pipelines/definitions',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

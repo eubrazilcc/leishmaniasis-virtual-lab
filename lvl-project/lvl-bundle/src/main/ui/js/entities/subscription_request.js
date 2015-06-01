@@ -2,12 +2,11 @@
  * RequireJS module that defines the entity: subscription request.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.SubscrReq', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.SubscrReq = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/support/subscriptions/requests',
+			urlRoot : Lvl.config.get('service', '') + '/support/subscriptions/requests',
 			defaults : {
 				id : '',
 				email : '',
@@ -49,7 +48,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		Entities.SubscrReqPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.SubscrReq,
 			mode : 'server',
-			url : config.get('service', '') + '/support/subscriptions/requests',
+			url : Lvl.config.get('service', '') + '/support/subscriptions/requests',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

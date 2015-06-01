@@ -3,8 +3,8 @@
  */
 
 define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!apps/analysis/submit/tpls/parameters',
-		'tpl!apps/analysis/submit/tpls/parameter', 'entities/wf_params', 'text!data/pipelines.json', 'backbone.syphon', 'bootstrap3-typeahead' ], function(Lvl,
-		SubmitPipelineTpl, ParametersTpl, ParamTpl, ParamsEntity, PipelinesJson) {
+		'tpl!apps/analysis/submit/tpls/parameter', 'entities/wf_params', 'backbone.syphon', 'bootstrap3-typeahead' ], function(Lvl, SubmitPipelineTpl,
+		ParametersTpl, ParamTpl, ParamsEntity) {
 	Lvl.module('AnalysisApp.Submit.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.ParamItem = Marionette.ItemView.extend({
@@ -41,7 +41,7 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 						var tokens = _self.model.get(opt).split('|');
 						return {
 							id : tokens[0],
-							name : tokens[0] + ' (' + tokens[1] + ')' 
+							name : tokens[0] + ' (' + tokens[1] + ')'
 						};
 						return _self.model.get(opt);
 					});
@@ -86,8 +86,8 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 				this.parameters = new ParamsEntity.WorkflowParametersCollection({
 					oauth2_token : Lvl.config.authorizationToken(),
 					workflowId : this.workflowId,
-					versionId : this.wfConf.stable,
-					wfOpts : this.wfConf.parameters
+					versionId : this.wfConf.get('stable'),
+					wfOpts : this.wfConf.get('parameters')
 				});
 				this.listenTo(this.parameters, 'reset', this.startTypeahead);
 			},
@@ -98,19 +98,10 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 				e.preventDefault();
 				var formData = Backbone.Syphon.serialize(this);
 				var self = this;
-				var pipelinesObj = [];
-				try {
-					pipelinesObj = JSON.parse(PipelinesJson);
-				} catch (err) {
-					console.log('Failed to load pipelines configuration: ' + err);
-				}
-				var pipeline = _.find(pipelinesObj, function(item) {
-					return item.id === self.workflowId;
-				});
 				var requestData = {
 					'id' : null,
 					'workflowId' : self.workflowId,
-					'version' : pipeline ? pipeline.stable || 0 : 0,
+					'version' : self.parameters.versionId || 0,
 					'invocationId' : null,
 					'parameters' : {
 						'parameters' : []
@@ -129,11 +120,11 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 						var inVal = formData[param.get('name')];
 						if (inVal.match(/^\d+\s+\([\w\.]+\)/)) {
 							value = inVal.split(' ')[0];
-						} else {							
+						} else {
 							value = inVal;
 						}
 						break;
-					}					
+					}
 					requestData.parameters.parameters.push({
 						'name' : param.get('name'),
 						'value' : value

@@ -1,16 +1,15 @@
 /**
- * RequireJS module that defines the entity: dataset.
+ * RequireJS module that defines the entity: user.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.User', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.User = Backbone.Model.extend({
-			urlRoot : config.get('auth', '') + '/users/',
+			urlRoot : Lvl.config.get('auth', '') + '/users/',
 			url : function() {
 				return this.urlRoot + this.id + '?use_email=true';
-			},			
+			},
 			idAttribute : 'email',
 			defaults : {
 				provider : '',
@@ -41,8 +40,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 		Entities.UserPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.User,
 			mode : 'server',
-			// url : 'users.json?burst=' + Math.random(),
-			url : config.get('auth', '') + '/users',
+			url : Lvl.config.get('auth', '') + '/users',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -69,7 +67,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.paginator' ], 
 		});
 		Entities.UserAllCollection = Backbone.PageableCollection.extend({
 			model : Entities.User,
-			url : config.get('auth', '') + '/users',
+			url : Lvl.config.get('auth', '') + '/users',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

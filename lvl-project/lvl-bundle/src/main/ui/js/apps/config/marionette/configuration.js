@@ -1,43 +1,42 @@
 /**
- * RequireJS module that defines configuration parameters that are globally available 
- * to all the other modules of the application. Note that this module uses the 
- * 'requirejs.s.contexts._.config' hack to read values of configuration that could 
- * change or disappear in the next versions of RequireJS without warning.
+ * RequireJS module that defines configuration parameters that are globally
+ * available to all the other modules of the application. Note that this module
+ * uses the 'requirejs.s.contexts._.config' hack to read values of configuration
+ * that could change or disappear in the next versions of RequireJS without
+ * warning.
  */
 
-define([ 'marionette', 'underscore', 'jquery', 'text!data/config.json' ], function(Marionette, _, $, ConfigJson) {
+define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/properties' ], function(Marionette, _, $, PropsEntity) {
+	'use strict';
 	var bust = requirejs.s.contexts._.config.urlArgs ? '?' + requirejs.s.contexts._.config.urlArgs : '';
 	Marionette.Object.Configuration = Marionette.Object.extend({
 		initialize : function() {
-			var configObj;
-			try {
-				configObj = JSON.parse(ConfigJson);
-			} catch (err) {
-				alert('Failed to load configuration: ' + err);
-				throw err;
-			}
-			this.endpoint = configObj.endpoint.url;
+			var props = PropsEntity.Properties;
+			this.endpoint = props.getProperty('endpoint', 'url', '');
 			this.config = [ {
 				id : 'bust',
 				value : bust
+			}, {
+				id : 'sessid',
+				value : Math.random()
 			}, {
 				id : 'endpoint',
 				value : this.endpoint
 			}, {
 				id : 'auth',
-				value : this.endpoint + '/lvl-auth/oauth2/v' + configObj.endpoint.api_version
+				value : this.endpoint + '/lvl-auth/oauth2/v' + props.getProperty('endpoint', 'api_version', '')
 			}, {
 				id : 'service',
-				value : this.endpoint + '/lvl-service/rest/v' + configObj.endpoint.api_version
+				value : this.endpoint + '/lvl-service/rest/v' + props.getProperty('endpoint', 'api_version', '')
 			}, {
 				id : 'oauth2_app',
 				value : {
-					'client_id' : configObj.oauth2.client_id,
-					'client_secret' : configObj.oauth2.client_secret
+					'client_id' : props.getProperty('oauth2', 'client_id', ''),
+					'client_secret' : props.getProperty('oauth2', 'client_secret', '')
 				}
 			}, {
 				id : 'linkedin_api_key',
-				value : configObj.linkedin.api_key
+				value : props.getProperty('linkedin', 'api_key', '')
 			} ];
 		},
 		get : function(id, _def) {

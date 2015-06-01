@@ -2,10 +2,9 @@
  * RequireJS module that defines the entity: reference.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.Reference', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.Reference = Backbone.Model.extend({
 			defaults : {
 				pubmedId : '',
@@ -44,8 +43,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		Entities.ReferencePageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Reference,
 			mode : 'server',
-			// url : 'citations.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/citations',
+			url : Lvl.config.get('service', '') + '/citations',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

@@ -3,22 +3,12 @@
  */
 
 define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps/e-compendium/browse/tpls/toolbar_browse',
-		'tpl!common/search/tpls/search_term', 'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/workflow',
-		'text!data/pipelines.json', 'pace', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl,
-		PipelinesTpl, ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, WorkflowModel, PipelinesJson, pace) {
+		'tpl!common/search/tpls/search_term', 'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/workflow', 'pace',
+		'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, PipelinesTpl, ToolbarTpl, SearchTermTpl,
+		AddSearchTermTpl, SaveSearchTpl, WorkflowModel, pace) {
 	Lvl.module('AnalysisApp.Pipelines.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var pipelinesObj = [];
-		try {
-			pipelinesObj = JSON.parse(PipelinesJson);
-		} catch (err) {
-			console.log('Failed to load pipelines configuration: ' + err);
-		}
-		var findPipeline = function(id) {
-			return _.find(pipelinesObj, function(item) {
-				return item.id === id;
-			});
-		};
+		var wfConfs = null;		
 		var columns = [
 				{
 					name : 'id',
@@ -53,8 +43,8 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 							this.$el.empty();
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'string') {								
-								var pipeline = findPipeline(formattedValue);
+							if (formattedValue && typeof formattedValue === 'string') {
+								var pipeline = wfConfs.findPipeline(formattedValue);
 								if (pipeline) {
 									this.$el.append('<a href="#" data-pipeline="' + formattedValue
 											+ '" title="Run" class="text-muted"><i class="fa fa-play fa-fw"></i></a>');
@@ -70,7 +60,8 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 		View.Content = Marionette.ItemView.extend({
 			id : 'pipelines',
 			template : PipelinesTpl,
-			initialize : function() {
+			initialize : function(options) {
+				wfConfs = options.wfConfs;
 				this.listenTo(this.collection, 'request', this.displaySpinner);
 				this.listenTo(this.collection, 'sync error', this.removeSpinner);
 				this.grid = new Backgrid.Grid({
@@ -149,7 +140,7 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 			searchPipelines : function(search) {
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
-				// TODO backgridFilter.submit();				
+				// TODO backgridFilter.submit();
 				// TODO
 				require([ 'common/growl' ], function(createGrowl) {
 					createGrowl('Operation unavailable', 'Search feature is coming soon. Stay tuned!', false);
@@ -223,7 +214,7 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 				e.preventDefault();
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pipeline') : target.getAttribute('data-pipeline');
-				this.trigger('analysis:pipeline:run', itemId, findPipeline(itemId));
+				this.trigger('analysis:pipeline:run', itemId, wfConfs.findPipeline(itemId));
 			},
 			onDestroy : function() {
 				pace.stop();
@@ -274,8 +265,14 @@ define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps
 
 				this.grid.clearSelectedModels();
 
-				this.collection.fetch({
+				wfConfs.fetch({
 					reset : true
+				}).fail(function(jqXHR, textStatus, errorThrown) {
+					console.log('Failed to load pipelines configuration: ' + errorThrown);
+				}).always(function() {
+					self.collection.fetch({
+						reset : true
+					});
 				});
 			}
 		});

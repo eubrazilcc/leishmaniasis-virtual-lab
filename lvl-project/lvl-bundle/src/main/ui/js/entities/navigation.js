@@ -3,14 +3,14 @@
  */
 
 define([ 'app', 'backbone.picky' ], function(Lvl) {
-	Lvl.module('Entities', function(Entities, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('Entities.Navigation', function(Entities, Lvl, Backbone, Marionette, $, _) {
+		'use strict';
 		Entities.Navigation = Backbone.Model.extend({
 			defaults : {
 				href : '/#home',
 				icon : 'fa-chain-broken',
 				text : 'Unknown',
-				isExternal : undefined
-			/* labels external links that should be opened in a new tab/window */
+				isExternal : undefined /* labels external links that should be opened in a new tab/window */
 			},
 			initialize : function() {
 				var selectable = new Backbone.Picky.Selectable(this);
@@ -260,5 +260,5 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 		});
 	});
 
-	return;
+	return Lvl.Entities.Navigation;
 });

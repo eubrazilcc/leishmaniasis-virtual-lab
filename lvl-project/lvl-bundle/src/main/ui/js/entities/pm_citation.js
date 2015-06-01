@@ -2,12 +2,11 @@
  * RequireJS module that defines the entity: PubMed citation.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky' ], function(Lvl) {
 	Lvl.module('Entities.PmCitation', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.PmCitation = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/citations/',
+			urlRoot : Lvl.config.get('service', '') + '/citations/',
 			url : function() {
 				return this.urlRoot + this.id + '/export/pubmed';
 			},

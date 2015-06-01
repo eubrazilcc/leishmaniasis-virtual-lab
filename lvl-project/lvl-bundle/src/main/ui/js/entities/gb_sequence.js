@@ -2,12 +2,11 @@
  * RequireJS module that defines the entity: GenBank sequence.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky' ], function(Lvl) {
 	Lvl.module('Entities.GbSequence', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.GbSequence = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/sequences/',
+			urlRoot : Lvl.config.get('service', '') + '/sequences/',
 			url : function() {
 				return this.urlRoot + this.get('dataSource') + '/' + this.id + '/export/gb/xml';
 			},

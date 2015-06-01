@@ -2,12 +2,11 @@
  * RequireJS module that defines the entity: workflow_run.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.WorkflowRun', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.WorkflowRun = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/pipelines/runs/~/',
+			urlRoot : Lvl.config.get('service', '') + '/pipelines/runs/~/',
 			defaults : {
 				id : '',
 				workflowId : '',
@@ -58,8 +57,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		Entities.WorkflowRunPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.WorkflowRun,
 			mode : 'server',
-			// url : 'workflow_data.json?burst=' + Math.random(),
-			url : config.get('service', '') + '/pipelines/runs/~',
+			url : Lvl.config.get('service', '') + '/pipelines/runs/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -86,7 +84,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		});
 		Entities.WorkflowRunAllCollection = Backbone.PageableCollection.extend({
 			model : Entities.WorkflowRun,
-			url : config.get('service', '') + '/pipelines/runs/~',
+			url : Lvl.config.get('service', '') + '/pipelines/runs/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

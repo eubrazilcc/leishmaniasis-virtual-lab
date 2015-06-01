@@ -1,13 +1,37 @@
-{
-	"endpoint" : {
-		"url" : "http://dedalo.i3m.upv.es",
-		"api_version" : "1"
+[
+	{
+		"property" : "endpoint",
+		"values" : [
+			{
+				"name" : "url",
+				"value" : "http://dedalo.i3m.upv.es"
+			},
+			{
+				"name" : "api_version",
+				"value" : "1"
+			}
+		]
 	},
-	"oauth2" : {
-		"client_id" : "lvl_portal",
-		"client_secret" : "changeit"
+	{
+		"property" : "oauth2",
+		"values" : [
+			{
+				"name" : "client_id",
+				"value" : "lvl_portal"
+			},
+			{
+				"name" : "client_secret",
+				"value" : "changeit"
+			}
+		]
 	},
-	"linkedin" : {
-		"api_key" : "771s7duqp3m4zc"
+	{
+		"property" : "linkedin",
+		"values" : [
+			{
+				"name" : "api_key",
+				"value" : "771s7duqp3m4zc"
+			}
+		]
 	}
-}
+]

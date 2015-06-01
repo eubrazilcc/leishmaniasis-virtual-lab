@@ -2,10 +2,9 @@
  * RequireJS module that defines the entity: sequence.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.Sequence', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.Sequence = Backbone.Model.extend({
 			defaults : {
 				id : '',
@@ -56,13 +55,11 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		Entities.SequencePageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Sequence,
 			mode : 'server',
-			// url : 'sequences.json?burst=' + Math.random(),
 			url : function() {
-				return config.get('service', '') + '/sequences/' + this.data_source;
+				return Lvl.config.get('service', '') + '/sequences/' + this.data_source;
 			},
 			initialize : function(options) {
-				this.oauth2_token = options.oauth2_token,
-				this.data_source = options.data_source || 'sandflies'
+				this.oauth2_token = options.oauth2_token, this.data_source = options.data_source || 'sandflies'
 			},
 			state : {
 				pageSize : 100,

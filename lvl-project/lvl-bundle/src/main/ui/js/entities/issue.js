@@ -2,12 +2,11 @@
  * RequireJS module that defines the entity: issue.
  */
 
-define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backbone.paginator' ], function(Lvl, Configuration) {
+define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.Issue', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var config = new Configuration();
 		Entities.Issue = Backbone.Model.extend({
-			urlRoot : config.get('service', '') + '/support/issues',
+			urlRoot : Lvl.config.get('service', '') + '/support/issues',
 			defaults : {
 				id : '',
 				email : '',
@@ -54,7 +53,7 @@ define([ 'app', 'apps/config/marionette/configuration', 'backbone.picky', 'backb
 		Entities.IssuePageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Issue,
 			mode : 'server',
-			url : config.get('service', '') + '/support/issues',
+			url : Lvl.config.get('service', '') + '/support/issues',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
