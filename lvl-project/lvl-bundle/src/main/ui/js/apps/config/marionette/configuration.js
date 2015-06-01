@@ -11,8 +11,8 @@ define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/propertie
 	var bust = requirejs.s.contexts._.config.urlArgs ? '?' + requirejs.s.contexts._.config.urlArgs : '';
 	Marionette.Object.Configuration = Marionette.Object.extend({
 		initialize : function() {
-			var props = PropsEntity.Properties;
-			this.endpoint = props.getProperty('endpoint', 'url', '');
+			this.props = PropsEntity.Properties;
+			this.endpoint = this.props.getProperty('endpoint', 'url', '');
 			this.config = [ {
 				id : 'bust',
 				value : bust
@@ -24,19 +24,16 @@ define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/propertie
 				value : this.endpoint
 			}, {
 				id : 'auth',
-				value : this.endpoint + '/lvl-auth/oauth2/v' + props.getProperty('endpoint', 'api_version', '')
+				value : this.endpoint + '/lvl-auth/oauth2/v' + this.props.getProperty('endpoint', 'api_version', '')
 			}, {
 				id : 'service',
-				value : this.endpoint + '/lvl-service/rest/v' + props.getProperty('endpoint', 'api_version', '')
+				value : this.endpoint + '/lvl-service/rest/v' + this.props.getProperty('endpoint', 'api_version', '')
 			}, {
 				id : 'oauth2_app',
 				value : {
-					'client_id' : props.getProperty('oauth2', 'client_id', ''),
-					'client_secret' : props.getProperty('oauth2', 'client_secret', '')
+					'client_id' : this.props.getProperty('oauth2', 'client_id', ''),
+					'client_secret' : this.props.getProperty('oauth2', 'client_secret', '')
 				}
-			}, {
-				id : 'linkedin_api_key',
-				value : props.getProperty('linkedin', 'api_key', '')
 			} ];
 		},
 		get : function(id, _def) {
@@ -141,8 +138,8 @@ define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/propertie
 			return this.get('auth') + '/linkedin/callback';
 		},
 		linkedInAuthEndpoint : function(state) {
-			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.get('linkedin_api_key') + '&redirect_uri='
-					+ encodeURIComponent(this.redirectUri()) + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
+			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.props.getProperty('linkedin', 'api_key', '')
+					+ '&redirect_uri=' + encodeURIComponent(this.redirectUri()) + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
 		}
 	});
 	return Marionette.Object.Configuration;
