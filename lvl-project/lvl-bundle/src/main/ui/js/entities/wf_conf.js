@@ -7,7 +7,7 @@ define([ 'app' ], function(Lvl) {
 		'use strict';
 
 		Entities.WfConf = Backbone.Model.extend({
-			urlRoot : '/js/data/pipelines.json?bust=' + Lvl.config.get('sessid', ''),
+			urlRoot : '/js/data/pipelines.json?bust=' + Lvl.config.get('global.sessid'),
 			defaults : {
 				id : '',
 				stable : '',
@@ -28,7 +28,7 @@ define([ 'app' ], function(Lvl) {
 		});
 
 		Entities.WfConfCollection = Backbone.Collection.extend({
-			url : '/js/data/pipelines.json?bust=' + Lvl.config.get('sessid', ''),
+			url : '/js/data/pipelines.json?bust=' + Lvl.config.get('global.sessid'),
 			model : Entities.WfConf,
 			findPipeline : function(id) {
 				return _(this.models).find(function(item) {

@@ -39,7 +39,7 @@ define([ 'app', 'tpl!apps/drive/upload/tpls/ds_up', 'pace', 'bootstrapvalidator'
 					processData : false,
 					contentType : false,
 					crossDomain : true,
-					url : Lvl.config.get('service', '') + '/datasets/objects/~/upload',
+					url : Lvl.config.get('service.url') + '/datasets/objects/~/upload',
 					data : _self.model.get('request'),
 					headers : Lvl.config.authorizationHeader()
 				}).always(function() {
@@ -86,7 +86,7 @@ define([ 'app', 'tpl!apps/drive/upload/tpls/ds_up', 'pace', 'bootstrapvalidator'
 					type : 'GET',
 					dataType : 'json',
 					crossDomain : true,
-					url : Lvl.config.get('service', '') + '/datasets/objects/~/' + encodeURIComponent(eFname) + '/typeahead',
+					url : Lvl.config.get('service.url') + '/datasets/objects/~/' + encodeURIComponent(eFname) + '/typeahead',
 					headers : Lvl.config.authorizationHeader()
 				}).always(function() {
 					pace.stop();

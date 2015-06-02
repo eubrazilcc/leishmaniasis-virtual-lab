@@ -6,7 +6,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.SubscrReq', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Entities.SubscrReq = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('service', '') + '/support/subscriptions/requests',
+			urlRoot : Lvl.config.get('service.url') + '/support/subscriptions/requests',
 			defaults : {
 				id : '',
 				email : '',
@@ -48,7 +48,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 		Entities.SubscrReqPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.SubscrReq,
 			mode : 'server',
-			url : Lvl.config.get('service', '') + '/support/subscriptions/requests',
+			url : Lvl.config.get('service.url') + '/support/subscriptions/requests',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

@@ -148,7 +148,7 @@ define([ 'app', 'marionette', 'tpl!apps/drive/datasets/tpls/drive_datasets', 'tp
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="' + Lvl.config.get('service', '') + '/datasets/objects/~/' + formattedValue + "/download?"
+								this.$el.append('<a href="' + Lvl.config.get('service.url') + '/datasets/objects/~/' + formattedValue + "/download?"
 										+ Lvl.config.authorizationQuery()
 										+ '" target="_blank" title="Download" class="text-muted"><i class="fa fa-download fa-fw"></i></a>');
 							}

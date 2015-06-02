@@ -26,7 +26,7 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 								type : 'GET',
 								dataType : 'json',
 								crossDomain : true,
-								url : Lvl.config.get('service', '') + '/datasets/objects/~/' + query + '/typeahead',
+								url : Lvl.config.get('service.url') + '/datasets/objects/~/' + query + '/typeahead',
 								headers : Lvl.config.authorizationHeader()
 							}).done(function(data) {
 								return process(data);
@@ -114,11 +114,11 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 						value = 'Authorization: Bearer ' + Lvl.config.authorizationToken()
 						break;
 					case 'SequenceURL':
-						value = Lvl.config.get('service') + '/datasets/objects/~/' + encodeURIComponent(formData[param.get('name')]) + '/download'
+						value = Lvl.config.get('service.url') + '/datasets/objects/~/' + encodeURIComponent(formData[param.get('name')]) + '/download'
 						break;
 					default:
 						var inVal = formData[param.get('name')];
-						if (inVal.match(/^\d+\s+\([\w\.]+\)/)) {
+						if (inVal.match(/^\d+\s+\([\w\._-]+\)/)) {
 							value = inVal.split(' ')[0];
 						} else {
 							value = inVal;
@@ -129,14 +129,14 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 						'name' : param.get('name'),
 						'value' : value
 					});
-				});
+				});				
 				// submit request to LVL server
 				$('#submit-btn').attr('disabled', 'disabled');
 				var jqxhr = $.ajax({
 					type : 'POST',
 					contentType : 'application/json',
 					crossDomain : true,
-					url : Lvl.config.get('service', '') + '/pipelines/runs/~',
+					url : Lvl.config.get('service.url') + '/pipelines/runs/~',
 					data : JSON.stringify(requestData),
 					headers : Lvl.config.authorizationHeader()
 				}).done(function(data, textStatus, request) {

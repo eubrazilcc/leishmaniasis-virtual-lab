@@ -2,7 +2,7 @@
  * Creates alert dialogs using qTip2.
  */
 
-define([ 'qtip', 'tpl!common/tpls/alert' ], function(qtip, AlertTpl) {
+define([ 'qtip', 'tpl!common/tpls/alert', 'imagesloaded' ], function(qtip, AlertTpl) {
 	return function(title, message) {
 		var title2 = title || '';
 		var message2 = message || '';

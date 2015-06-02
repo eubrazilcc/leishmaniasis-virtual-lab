@@ -1,7 +1,7 @@
 [
 	{
-		"property" : "endpoint",
-		"values" : [
+		"section" : "endpoint",
+		"properties" : [
 			{
 				"name" : "url",
 				"value" : "http://dedalo.i3m.upv.es"
@@ -13,8 +13,8 @@
 		]
 	},
 	{
-		"property" : "oauth2",
-		"values" : [
+		"section" : "oauth2",
+		"properties" : [
 			{
 				"name" : "client_id",
 				"value" : "lvl_portal"
@@ -26,12 +26,16 @@
 		]
 	},
 	{
-		"property" : "linkedin",
-		"values" : [
+		"section" : "linkedin",
+		"properties" : [
 			{
 				"name" : "api_key",
 				"value" : "771s7duqp3m4zc"
 			}
 		]
+	},
+	{
+		"section" : "global",
+		"properties" : []
 	}
 ]

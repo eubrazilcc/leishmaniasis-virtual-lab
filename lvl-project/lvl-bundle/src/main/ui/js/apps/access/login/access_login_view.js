@@ -45,11 +45,11 @@ define([ 'app', 'tpl!apps/access/login/tpls/login', 'chance', 'bootstrapvalidato
 					type : 'POST',
 					contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
 					crossDomain : true,
-					url : Lvl.config.get('auth') + '/linkedin/state',
+					url : Lvl.config.get('auth.url') + '/linkedin/state',
 					data : {
 						'state' : challenge,
 						'redirect_uri' : Lvl.config.redirectUri(),
-						'callback' : Lvl.config.get('endpoint') + '/#auth/linkedin/' + target
+						'callback' : Lvl.config.get('endpoint.url') + '/#auth/linkedin/' + target
 					}
 				}).done(function(data, textStatus, request) {
 					window.location.replace(Lvl.config.linkedInAuthEndpoint(challenge));
@@ -109,10 +109,10 @@ define([ 'app', 'tpl!apps/access/login/tpls/login', 'chance', 'bootstrapvalidato
 							// contact the LVL authorization service
 							var jqxhr = $.ajax({
 								type : 'POST',
-								url : Lvl.config.get('auth') + '/token',
+								url : Lvl.config.get('auth.url') + '/token',
 								data : {
-									'client_id' : Lvl.config.get('oauth2_app').client_id,
-									'client_secret' : Lvl.config.get('oauth2_app').client_secret,
+									'client_id' : Lvl.config.get('oauth2.client_id'),
+									'client_secret' : Lvl.config.get('oauth2.client_secret'),
 									'grant_type' : 'password',
 									'username' : $('input[name=login-email]').val(),
 									'password' : $('input[name=login-pass]').val(),

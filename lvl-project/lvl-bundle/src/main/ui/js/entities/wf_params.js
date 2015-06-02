@@ -27,7 +27,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 			}
 		});
 		Entities.WorkflowParametersCollection = Backbone.Collection.extend({
-			urlRoot : Lvl.config.get('service', '') + '/pipelines/definitions/',
+			urlRoot : Lvl.config.get('service.url') + '/pipelines/definitions/',
 			url : function() {
 				return this.urlRoot + this.workflowId + '/' + this.versionId + '/params';
 			},

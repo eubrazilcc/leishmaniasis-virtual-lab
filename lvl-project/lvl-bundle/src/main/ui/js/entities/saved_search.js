@@ -6,7 +6,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.SavedSearch', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Entities.SavedSearch = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('service', '') + '/saved/searches/~/',
+			urlRoot : Lvl.config.get('service.url') + '/saved/searches/~/',
 			defaults : {
 				type : '',
 				saved : '',
@@ -42,7 +42,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 			model : Entities.SavedSearch,
 			mode : 'server',
 			url : function() {
-				return Lvl.config.get('service', '') + '/saved/searches/~';
+				return Lvl.config.get('service.url') + '/saved/searches/~';
 			},
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token

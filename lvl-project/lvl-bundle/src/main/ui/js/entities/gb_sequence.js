@@ -6,7 +6,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 	Lvl.module('Entities.GbSequence', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Entities.GbSequence = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('service', '') + '/sequences/',
+			urlRoot : Lvl.config.get('service.url') + '/sequences/',
 			url : function() {
 				return this.urlRoot + this.get('dataSource') + '/' + this.id + '/export/gb/xml';
 			},

@@ -97,12 +97,12 @@ define([ 'app', 'tpl!apps/collection/map/tpls/collection_map' ], function(Lvl, M
 
 					var vectorLayer = new ol.layer.Vector({
 						/* TODO source : new ol.source.Vector({
-							url : Lvl.config.get('service', '') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&' + Lvl.config.authorizationQuery(),
+							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&' + Lvl.config.authorizationQuery(),
 							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
 						}), */
 						source : new ol.source.GeoJSON({
 							projection : 'EPSG:3857',
-							url : Lvl.config.get('service', '') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&'
+							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&'
 									+ Lvl.config.authorizationQuery()
 						}),
 						style : function(feature, resolution) {
@@ -117,13 +117,13 @@ define([ 'app', 'tpl!apps/collection/map/tpls/collection_map' ], function(Lvl, M
 
 					var heatmapLayer = new ol.layer.Heatmap({
 						/* TODO source : new ol.source.Vector({
-							url : Lvl.config.get('service', '') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&' + Lvl.config.authorizationQuery(),
+							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&' + Lvl.config.authorizationQuery(),
 							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
 						}), */
 						source : new ol.source.GeoJSON({
 							extractStyles : false,
 							projection : 'EPSG:3857',
-							url : Lvl.config.get('service', '') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&'
+							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&'
 									+ Lvl.config.authorizationQuery()
 						}),
 						radius : 5

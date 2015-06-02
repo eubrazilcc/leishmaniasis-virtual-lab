@@ -29,7 +29,7 @@ define([ 'app', 'tpl!apps/analysis/text_viewer/tpls/analysis_text_viewer', 'pace
 							type : 'GET',
 							dataType : 'text',
 							crossDomain : true,
-							url : Lvl.config.get('service', '') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
+							url : Lvl.config.get('service.url') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
 									+ btoa(unescape(encodeURIComponent(self.product.path))),
 							headers : Lvl.config.authorizationHeader()
 						}).done(
@@ -37,12 +37,12 @@ define([ 'app', 'tpl!apps/analysis/text_viewer/tpls/analysis_text_viewer', 'pace
 							self.$('#textCanvas').html('<pre>' + data + '</pre>');
 							self.$('#btn-view-raw').attr(
 									{
-										'href' : Lvl.config.get('service', '') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
+										'href' : Lvl.config.get('service.url') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
 												+ btoa(unescape(encodeURIComponent(self.product.path))) + '?' + Lvl.config.authorizationQuery()
 									});
 							self.$('#btn-download-raw').attr(
 									{
-										'href' : Lvl.config.get('service', '') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
+										'href' : Lvl.config.get('service.url') + '/pipelines/runs/text_product/~/' + self.product.id + '/'
 												+ btoa(unescape(encodeURIComponent(self.product.path))) + '?' + Lvl.config.authorizationQuery(),
 										'download' : self.product.path
 									});

@@ -7,7 +7,7 @@ define([ 'app' ], function(Lvl) {
 		'use strict';
 		
 		Entities.Event = Backbone.Model.extend({
-			urlRoot : '/js/data/events.json?bust=' + Lvl.config.get('sessid', ''),
+			urlRoot : '/js/data/events.json?bust=' + Lvl.config.get('global.sessid'),
 			defaults : {
 				event : 'Unknown',
 				link : '',
@@ -39,7 +39,7 @@ define([ 'app' ], function(Lvl) {
 		});
 
 		Entities.EventCollection = Backbone.Collection.extend({
-			url : '/js/data/events.json?bust=' + Lvl.config.get('sessid', ''),
+			url : '/js/data/events.json?bust=' + Lvl.config.get('global.sessid'),
 			model : Entities.Event
 		});
 	});

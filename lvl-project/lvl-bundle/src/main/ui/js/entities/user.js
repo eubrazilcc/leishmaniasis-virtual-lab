@@ -6,7 +6,7 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.User', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Entities.User = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('auth', '') + '/users/',
+			urlRoot : Lvl.config.get('auth.url') + '/users/',
 			url : function() {
 				return this.urlRoot + this.id + '?use_email=true';
 			},
@@ -40,7 +40,7 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 		Entities.UserPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.User,
 			mode : 'server',
-			url : Lvl.config.get('auth', '') + '/users',
+			url : Lvl.config.get('auth.url') + '/users',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -67,7 +67,7 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 		});
 		Entities.UserAllCollection = Backbone.PageableCollection.extend({
 			model : Entities.User,
-			url : Lvl.config.get('auth', '') + '/users',
+			url : Lvl.config.get('auth.url') + '/users',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

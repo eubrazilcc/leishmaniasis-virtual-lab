@@ -5,7 +5,7 @@
 define([ 'app', 'tpl!apps/access/register/tpls/register', 'bootstrapvalidator', 'backbone.syphon' ], function(Lvl, RegisterTpl) {
 	Lvl.module('AccessApp.Register.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var lvlAuth = Lvl.config.get('auth', '');
+		var lvlAuth = Lvl.config.get('auth.url');
 		View.Content = Marionette.ItemView.extend({
 			template : RegisterTpl,
 			events : {

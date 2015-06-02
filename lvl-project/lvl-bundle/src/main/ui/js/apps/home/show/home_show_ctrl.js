@@ -5,7 +5,7 @@
 define([ 'app', 'apps/home/show/home_show_view' ], function(Lvl, View) {
 	Lvl.module('HomeApp.Show', function(Show, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var lvlEndpoint = Lvl.config.get('endpoint', '');
+		var lvlEndpoint = Lvl.config.get('endpoint.url');
 		Show.Controller = {
 			showHome : function() {
 				var view = new View.Content({

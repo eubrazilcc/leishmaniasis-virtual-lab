@@ -39,12 +39,12 @@ define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'ch
 				};
 				// submit request to LVL server
 				var self = this;
-				$('#export-btn').attr('disabled', 'disabled');				
+				$('#export-btn').attr('disabled', 'disabled');
 				var jqxhr = $.ajax({
 					type : 'POST',
 					contentType : 'application/json',
 					crossDomain : true,
-					url : Lvl.config.get('service', '') + '/datasets/objects/~',
+					url : Lvl.config.get('service.url') + '/datasets/objects/~',
 					data : JSON.stringify(requestData),
 					headers : Lvl.config.authorizationHeader()
 				}).done(
@@ -60,46 +60,8 @@ define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'ch
 							});
 						}).fail(function() {
 					self.trigger('destroy');
-					require([ 'qtip' ], function(qtip) {
-						var message = $('<p />', {
-							text : 'Failed to create dataset.'
-						}), ok = $('<button />', {
-							text : 'Close',
-							'class' : 'full'
-						});
-						$('#alert').qtip({
-							content : {
-								text : message.add(ok),
-								title : {
-									text : 'Error',
-									button : true
-								}
-							},
-							position : {
-								my : 'center',
-								at : 'center',
-								target : $(window)
-							},
-							show : {
-								ready : true,
-								modal : {
-									on : true,
-									blur : false
-								}
-							},
-							hide : false,
-							style : 'qtip-bootstrap dialogue',
-							events : {
-								render : function(event, api) {
-									$('button', api.elements.content).click(function() {
-										api.hide();
-									});
-								},
-								hide : function(event, api) {
-									api.destroy();
-								}
-							}
-						});
+					require([ 'common/alert' ], function(alertDialog) {
+						alertDialog('Error', 'Failed to create dataset.');
 					});
 				});
 			}

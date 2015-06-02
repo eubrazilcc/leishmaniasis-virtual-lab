@@ -3,8 +3,8 @@
  */
 
 define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/show/tpls/header_nav', 'tpl!apps/header/show/tpls/header_nav_link',
-		'tpl!apps/header/show/tpls/header_notifications', 'moment', 'qtip' ], function(Lvl, WorkspaceHeaderTpl, NavigationTpl, NavigationLinkTpl,
-		NotificationsTpl, moment) {
+		'tpl!apps/header/show/tpls/header_notifications', 'moment', 'qtip', 'imagesloaded' ], function(Lvl, WorkspaceHeaderTpl, NavigationTpl,
+		NavigationLinkTpl, NotificationsTpl, moment) {
 	Lvl.module('HeaderApp.Workspace.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		function openSearchForm() {
@@ -59,7 +59,7 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 			templateHelpers : function() {
 				$.ajax({
 					type : 'GET',
-					url : Lvl.config.get('auth') + '/users/' + Lvl.config.session.get('user.session').email + "?use_email=true",
+					url : Lvl.config.get('auth.url') + '/users/' + Lvl.config.session.get('user.session').email + "?use_email=true",
 					headers : Lvl.config.authorizationHeader(),
 					dataType : 'json'
 				}).done(function(data, textStatus, request) {
@@ -215,7 +215,7 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 						text : function(event, api) {
 							api.elements.content.html('<img src="/img/ajax_loader_gray_32.gif" alt="Loading..."/>');
 							return $.ajax({
-								url : Lvl.config.get('service', '') + '/notifications',
+								url : Lvl.config.get('service.url') + '/notifications',
 								type : 'GET',
 								headers : Lvl.config.authorizationHeader(),
 								dataType : 'json'

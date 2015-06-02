@@ -2,7 +2,7 @@
  * Creates informative dialogs using qTip2.
  */
 
-define([ 'qtip', 'tpl!common/tpls/info' ], function(qtip, InfoTpl) {
+define([ 'qtip', 'tpl!common/tpls/info', 'imagesloaded' ], function(qtip, InfoTpl) {
 	return function(title, message) {
 		var title2 = title || '';
 		var message2 = message || '';

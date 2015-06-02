@@ -6,7 +6,7 @@ define([ 'app' ], function(Lvl) {
 	Lvl.module('Entities.Statistic', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Entities.Statistic = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('service', '') + '/instances/stats/collection',
+			urlRoot : Lvl.config.get('service.url') + '/instances/stats/collection',
 			defaults : {
 				'leishmania.gene' : [ {
 					"label" : "",

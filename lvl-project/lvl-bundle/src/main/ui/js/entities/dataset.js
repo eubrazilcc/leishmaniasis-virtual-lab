@@ -6,7 +6,7 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.Dataset', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Entities.Dataset = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('service', '') + '/datasets/objects/~/',
+			urlRoot : Lvl.config.get('service.url') + '/datasets/objects/~/',
 			idAttribute : 'filename',
 			defaults : {
 				description : '',
@@ -38,7 +38,7 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 		Entities.DatasetPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Dataset,
 			mode : 'server',
-			url : Lvl.config.get('service', '') + '/datasets/objects/~',
+			url : Lvl.config.get('service.url') + '/datasets/objects/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -65,7 +65,7 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 		});
 		Entities.DatasetAllCollection = Backbone.PageableCollection.extend({
 			model : Entities.Dataset,
-			url : Lvl.config.get('service', '') + '/datasets/objects/~',
+			url : Lvl.config.get('service.url') + '/datasets/objects/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

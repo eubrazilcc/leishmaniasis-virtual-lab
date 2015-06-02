@@ -43,7 +43,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 		Entities.ReferencePageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Reference,
 			mode : 'server',
-			url : Lvl.config.get('service', '') + '/citations',
+			url : Lvl.config.get('service.url') + '/citations',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

@@ -48,7 +48,7 @@ define([ 'app', 'marionette', 'tpl!apps/drive/links/tpls/drive_links', 'tpl!apps
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="' + Lvl.config.get('service', '') + '/public/datasets/' + formattedValue
+								this.$el.append('<a href="' + Lvl.config.get('service.url') + '/public/datasets/' + formattedValue
 										+ '" target="_blank" title="Download" class="text-muted"><i class="fa fa-download fa-fw"></i></a>');
 							}
 							this.delegateEvents();
@@ -255,7 +255,7 @@ define([ 'app', 'marionette', 'tpl!apps/drive/links/tpls/drive_links', 'tpl!apps
 					type : 'GET',
 					dataType : 'text',
 					crossDomain : true,
-					url : Lvl.config.get('service', '') + '/public/datasets/' + encodeURIComponent(itemId) + '/shortened_url',
+					url : Lvl.config.get('service.url') + '/public/datasets/' + encodeURIComponent(itemId) + '/shortened_url',
 					headers : Lvl.config.authorizationHeader()
 				}).done(function(data) {
 					require([ 'common/info' ], function(infoDialog) {

@@ -5,7 +5,7 @@
 define([ 'app', 'tpl!apps/access/account-validation/tpls/account-validation', 'bootstrapvalidator', 'backbone.syphon' ], function(Lvl, AccountValidationTpl) {
 	Lvl.module('AccessApp.AccountValidation.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var lvlAuth = Lvl.config.get('auth', '');
+		var lvlAuth = Lvl.config.get('auth.url');
 		View.Content = Marionette.ItemView.extend({
 			template : AccountValidationTpl,
 			templateHelpers : {

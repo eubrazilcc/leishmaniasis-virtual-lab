@@ -6,7 +6,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.Issue', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Entities.Issue = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('service', '') + '/support/issues',
+			urlRoot : Lvl.config.get('service.url') + '/support/issues',
 			defaults : {
 				id : '',
 				email : '',
@@ -53,7 +53,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 		Entities.IssuePageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Issue,
 			mode : 'server',
-			url : Lvl.config.get('service', '') + '/support/issues',
+			url : Lvl.config.get('service.url') + '/support/issues',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

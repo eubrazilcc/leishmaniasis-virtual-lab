@@ -6,7 +6,7 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 	Lvl.module('Entities.Link', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Entities.Link = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('service', '') + '/datasets/open_access/~/',
+			urlRoot : Lvl.config.get('service.url') + '/datasets/open_access/~/',
 			idAttribute : 'filename',
 			defaults : {
 				openAccessLink : '',
@@ -33,12 +33,12 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 			}
 		});
 		Entities.LinkCreate = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('service', '') + '/datasets/open_access/~/'
+			urlRoot : Lvl.config.get('service.url') + '/datasets/open_access/~/'
 		});
 		Entities.LinkPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.Link,
 			mode : 'server',
-			url : Lvl.config.get('service', '') + '/datasets/open_access/~',
+			url : Lvl.config.get('service.url') + '/datasets/open_access/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},
@@ -65,7 +65,7 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 		});
 		Entities.LinkAllCollection = Backbone.PageableCollection.extend({
 			model : Entities.Link,
-			url : Lvl.config.get('service', '') + '/datasets/open_access/~',
+			url : Lvl.config.get('service.url') + '/datasets/open_access/~',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

@@ -2,7 +2,7 @@
  * Creates confirm dialogs using qTip2.
  */
 
-define([ 'qtip', 'tpl!common/tpls/confirm' ], function(qtip, ConfirmTpl) {
+define([ 'qtip', 'tpl!common/tpls/confirm', 'imagesloaded' ], function(qtip, ConfirmTpl) {
 	return function(title, message, callback, options) {
 		var title2 = title || '';
 		var message2 = message || '';

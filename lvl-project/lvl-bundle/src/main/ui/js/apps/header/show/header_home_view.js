@@ -2,7 +2,7 @@
  * RequireJS module that defines the view: header->home.
  */
 
-define([ 'app', 'tpl!apps/header/show/tpls/header_home', 'qtip' ], function(Lvl, HomeHeaderTpl) {
+define([ 'app', 'tpl!apps/header/show/tpls/header_home', 'qtip', 'imagesloaded' ], function(Lvl, HomeHeaderTpl) {
 	Lvl.module('HeaderApp.Home.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.id = 'home';

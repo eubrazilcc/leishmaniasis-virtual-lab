@@ -8,7 +8,7 @@ define([ 'app', 'apps/open/layout/open_layout_ctrl', 'text!apps/open/support/sho
 		MailingListSectionHtml, ReportAnIssueSectionHtml, SectionEntity, pace) {
 	Lvl.module('SupportApp.Show', function(Show, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		var lvlService = Lvl.config.get('service', '');
+		var lvlService = Lvl.config.get('service.url');
 		Show.Controller = {
 			showSupport : function(section) {
 				var section = section || 'support';

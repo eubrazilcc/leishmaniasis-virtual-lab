@@ -6,7 +6,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 	Lvl.module('Entities.PmCitation', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Entities.PmCitation = Backbone.Model.extend({
-			urlRoot : Lvl.config.get('service', '') + '/citations/',
+			urlRoot : Lvl.config.get('service.url') + '/citations/',
 			url : function() {
 				return this.urlRoot + this.id + '/export/pubmed';
 			},

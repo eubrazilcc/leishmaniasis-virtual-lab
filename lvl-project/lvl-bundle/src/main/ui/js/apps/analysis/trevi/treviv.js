@@ -59,7 +59,7 @@ define([ 'app', 'tpl!apps/analysis/trevi/tpls/trevi', 'entities/workflow_run', '
 								type : 'GET',
 								dataType : 'xml',
 								crossDomain : true,
-								url : Lvl.config.get('service', '') + '/pipelines/runs/svg_product/~/' + params.id + '/'
+								url : Lvl.config.get('service.url') + '/pipelines/runs/svg_product/~/' + params.id + '/'
 										+ btoa(unescape(encodeURIComponent(params.path))),
 								headers : Lvl.config.authorizationHeader()
 							}).done(function(data) {

@@ -11,36 +11,42 @@ define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/propertie
 	var bust = requirejs.s.contexts._.config.urlArgs ? '?' + requirejs.s.contexts._.config.urlArgs : '';
 	Marionette.Object.Configuration = Marionette.Object.extend({
 		initialize : function() {
-			this.props = PropsEntity.Properties;
-			this.endpoint = this.props.getProperty('endpoint', 'url', '');
-			this.config = [ {
-				id : 'bust',
-				value : bust
-			}, {
-				id : 'sessid',
-				value : Math.random()
-			}, {
-				id : 'endpoint',
-				value : this.endpoint
-			}, {
-				id : 'auth',
-				value : this.endpoint + '/lvl-auth/oauth2/v' + this.props.getProperty('endpoint', 'api_version', '')
-			}, {
-				id : 'service',
-				value : this.endpoint + '/lvl-service/rest/v' + this.props.getProperty('endpoint', 'api_version', '')
-			}, {
-				id : 'oauth2_app',
-				value : {
-					'client_id' : this.props.getProperty('oauth2', 'client_id', ''),
-					'client_secret' : this.props.getProperty('oauth2', 'client_secret', '')
-				}
-			} ];
+			this.props = new PropsEntity.PropsCol();
 		},
-		get : function(id, _def) {
-			var res = _.find(this.config, function(obj) {
-				return obj.id === id
+		loadProperties : function() {
+			var _self = this;
+			return _self.props.fetch({
+				reset : true
+			}).done(function() {
+				_self.props.add([ {
+					section : 'global',
+					properties : [ {
+						name : 'bust',
+						value : bust
+					}, {
+						name : 'sessid',
+						value : PropsEntity.sessionId
+					} ]
+				}, {
+					section : 'auth',
+					properties : [ {
+						name : 'url',
+						value : _self.props.getProperty('endpoint', 'url') + '/lvl-auth/oauth2/v' + _self.props.getProperty('endpoint', 'api_version')
+					} ]
+				}, {
+					section : 'service',
+					properties : [ {
+						name : 'url',
+						value : _self.props.getProperty('endpoint', 'url') + '/lvl-service/rest/v' + _self.props.getProperty('endpoint', 'api_version')
+					} ]
+				} ], {
+					merge : true
+				});
 			});
-			return res ? res.value : _def;
+		},
+		get : function(id) {
+			var res = id.split('.', 2);
+			return this.props.getProperty(res[0], res[1]);
 		},
 		getUserLocation : function(callback, error) {
 			if ('function' === typeof callback) {
@@ -138,7 +144,7 @@ define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/propertie
 			return this.get('auth') + '/linkedin/callback';
 		},
 		linkedInAuthEndpoint : function(state) {
-			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.props.getProperty('linkedin', 'api_key', '')
+			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.props.getProperty('linkedin', 'api_key')
 					+ '&redirect_uri=' + encodeURIComponent(this.redirectUri()) + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
 		}
 	});

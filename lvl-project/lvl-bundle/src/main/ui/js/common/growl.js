@@ -2,7 +2,7 @@
  * Creates Growl like notifications using qTip2.
  */
 
-define([ 'qtip' ], function(qtip) {
+define([ 'qtip', 'imagesloaded' ], function(qtip) {
 	return function(title, alert, persistent) {
 		var target = $('.qtip.jgrowl:visible:last');
 		var growlTitle = title || '';

@@ -39,7 +39,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 		Entities.WorkflowDefinitionPageableCollection = Backbone.PageableCollection.extend({
 			model : Entities.WorkflowDefinition,
 			mode : 'server',
-			url : Lvl.config.get('service', '') + '/pipelines/definitions',
+			url : Lvl.config.get('service.url') + '/pipelines/definitions',
 			initialize : function(options) {
 				this.oauth2_token = options.oauth2_token
 			},

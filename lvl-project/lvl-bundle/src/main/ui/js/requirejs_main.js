@@ -6,7 +6,7 @@ requirejs.config({
 	/* avoids cache. Remove on production! */
 	urlArgs : 'bust=' + (new Date()).getTime(),
 	baseUrl : 'js',
-	paths : {		
+	paths : {
 		/* jQuery JavaScript library */
 		'jquery' : '//code.jquery.com/jquery-2.1.4.min', // 2.1.4
 		'spin' : 'vendor/spin.min', // 2.1.0
@@ -17,7 +17,7 @@ requirejs.config({
 		'bootstrap3-typeahead' : 'vendor/bootstrap3-typeahead.min',
 		/* Backbone + Marionette MVC framework */
 		'underscore' : 'vendor/underscore-min', // 1.8.3
-		'backbone' : 'vendor/backbone-min', // 1.1.2
+		'backbone' : 'vendor/backbone-min', // 1.2
 		'marionette' : 'vendor/backbone.marionette.min', // 2.4.1
 		/* Useful backbone plug-ins */
 		'routefilter' : 'vendor/backbone.routefilter.min', // 0.2.0
@@ -42,7 +42,7 @@ requirejs.config({
 		'pace' : 'vendor/pace.min', // 1.0.0
 		/* qTip2 */
 		'imagesloaded' : 'vendor/imagesloaded.pkgd.min', // 3.1.8
-		'qtip' : 'vendor/jquery.qtip.min', // 2.2.1		
+		'qtip' : 'vendor/jquery.qtip.min', // 2.2.1
 		/* Chart.js */
 		'chartjs' : 'vendor/Chart.min', // 1.0.2
 		/* Hopscotch */
@@ -55,7 +55,7 @@ requirejs.config({
 		/* Wait for the DOM is ready */
 		'domReady' : 'vendor/domReady.min' // 2.0.1
 	},
-	shim : {		
+	shim : {
 		'bootstrap' : {
 			deps : [ 'jquery' ]
 		},
@@ -95,5 +95,6 @@ requirejs.config({
 });
 
 require([ 'app', 'jquery', 'bootstrap' ], function(Lvl) {
-	Lvl.start();
+	// load configuration properties, and then start the LVL application
+	Lvl.config.loadProperties().then(Lvl.start());
 });
