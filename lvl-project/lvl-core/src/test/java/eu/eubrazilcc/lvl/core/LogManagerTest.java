@@ -40,18 +40,23 @@ public class LogManagerTest {
 		System.out.println("LogManagerTest.test()");
 		try {
 			// j.u.l. logger
-			final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(
-					LogManagerTest.class.getCanonicalName());
+			final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(LogManagerTest.class.getCanonicalName());
 			julLogger.setLevel(java.util.logging.Level.INFO);
 			julLogger.info("This message was generated with j.u.l., logged with Logback+SL4J");
-			
+
+			// log4j logger
+			final org.apache.log4j.Logger log4jLogger = org.apache.log4j.Logger.getLogger(LogManagerTest.class);
+			log4jLogger.setLevel(org.apache.log4j.Level.INFO);
+			log4jLogger.info("This message was generated with log4j, logged with Logback+SL4J");
+
 			// SLF4J logger
 			final org.slf4j.Logger slf4jLogger = org.slf4j.LoggerFactory.getLogger(LogManagerTest.class);
 			slf4jLogger.info("This message was generated with SL4J, logged with Logback+SL4J");
-			
+
 			// print logback internal state 
 			final LoggerContext loggerContext = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
 			StatusPrinter.print(loggerContext);
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("LogManagerTest.test() failed: " + e.getMessage());

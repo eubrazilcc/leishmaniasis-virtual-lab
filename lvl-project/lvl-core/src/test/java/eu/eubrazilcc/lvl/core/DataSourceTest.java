@@ -25,6 +25,8 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.collect.ImmutableMap.of;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK_SHORT;
+import static eu.eubrazilcc.lvl.core.DataSource.LEISHVL;
+import static eu.eubrazilcc.lvl.core.DataSource.LEISHVL_SHORT;
 import static eu.eubrazilcc.lvl.core.DataSource.PUBMED;
 import static eu.eubrazilcc.lvl.core.DataSource.PUBMED_SHORT;
 import static eu.eubrazilcc.lvl.core.DataSource.toLongNotation;
@@ -54,12 +56,14 @@ public class DataSourceTest {
 		System.out.println("DataSourceTest.test()");
 		try {
 			// create test datasets
-			final ImmutableMap<String, String> testDataset1 = of(GENBANK_SHORT, GENBANK, PUBMED_SHORT, PUBMED);
+			final ImmutableMap<String, String> testDataset1 = of(GENBANK_SHORT, GENBANK, PUBMED_SHORT, PUBMED, LEISHVL_SHORT, LEISHVL);
 			final ImmutableMap<String, String> testDataset2 = of(GENBANK, GENBANK_SHORT, PUBMED, PUBMED_SHORT, GENBANK_SHORT, GENBANK_SHORT, 
-					PUBMED_SHORT, PUBMED_SHORT);
-			final ImmutableMap<String, String> testDataset3 = of(GENBANK_SHORT, GENBANK, PUBMED_SHORT, PUBMED, GENBANK, GENBANK, PUBMED, PUBMED);
+					PUBMED_SHORT, PUBMED_SHORT, LEISHVL, LEISHVL_SHORT);
+			ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+			builder.put(GENBANK_SHORT, GENBANK); builder.put(PUBMED_SHORT, PUBMED); builder.put(LEISHVL_SHORT, LEISHVL);
+			builder.put(GENBANK, GENBANK); builder.put(PUBMED, PUBMED); builder.put(LEISHVL, LEISHVL);
+			final ImmutableMap<String, String> testDataset3 = builder.build();			
 			
-
 			// test conversion from long to short notation
 			for (final Entry<String, String> entry : testDataset1.entrySet()) {
 				final String dataSource = toShortNotation(entry.getValue(), NOTATION_LONG);

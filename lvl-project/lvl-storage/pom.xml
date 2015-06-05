@@ -27,7 +27,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<parent>
 		<groupId>eu.eubrazilcc.lvl</groupId>
 		<artifactId>lvl-project</artifactId>
-		<version>0.2.1</version>
+		<version>0.3.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	
@@ -94,6 +94,18 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>antlr4-runtime</artifactId>
+		</dependency>
+		
+		<!-- Implementation of the W3C PROV standard -->
+		<dependency> <!-- Provides serialization to JSON -->
+			<groupId>org.openprovenance.prov</groupId>
+			<artifactId>prov-interop</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		
 		<!-- Transitively includes Jackson JSON processor from Jersey. Jackson must be 
@@ -166,6 +178,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jul-to-slf4j</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

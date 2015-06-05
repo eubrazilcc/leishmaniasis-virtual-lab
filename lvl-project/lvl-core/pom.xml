@@ -27,7 +27,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<parent>
 		<groupId>eu.eubrazilcc.lvl</groupId>
 		<artifactId>lvl-project</artifactId>
-		<version>0.2.1</version>
+		<version>0.3.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	
@@ -163,7 +163,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.slf4j</groupId>
 			<artifactId>jul-to-slf4j</artifactId>
 			<scope>provided</scope>
-		</dependency>		
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 	
 	<profiles>

@@ -62,6 +62,11 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				text : 'Stats'
 			}, {
 				id : 4,
+				link : 'my-seqs',
+				icon : 'fa-folder',
+				text : 'My Seqs'
+			}, {
+				id : 5,
 				link : 'submit',
 				icon : 'fa-cloud-upload',
 				text : 'Submit'

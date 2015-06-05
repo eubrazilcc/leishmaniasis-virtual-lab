@@ -26,7 +26,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
 	<groupId>eu.eubrazilcc.lvl</groupId>
 	<artifactId>leishmaniasis-virtual-lab</artifactId>
-	<version>0.2.1</version>
+	<version>0.3.0</version>
 	<packaging>pom</packaging>
 
 	<name>leishmaniasis-virtual-laboratory - BOM</name>
@@ -46,6 +46,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<avro.version>1.7.7</avro.version>
 		<mongodb.driver.version>2.13.1</mongodb.driver.version>
 		<activemq.version>5.11.1</activemq.version>
+		<opm.prov.version>0.6.1</opm.prov.version>
 		<antlr4.version>4.5</antlr4.version>
 		<e-science-central.version>3.1-SNAPSHOT</e-science-central.version>
 	</properties>
@@ -328,6 +329,17 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<version>0.16</version>
 			</dependency>
 			
+			<!-- Open Provenance Model (OPM): an implementation of the W3C PROV standard. The 
+				interoperability framework for PROV provides utility methods to write/read 
+				different formats like XML, JSON and conversion to the DOT format for 
+				visualization. Also includes the template system for PROV bundles -->
+			
+			<dependency> 
+				<groupId>org.openprovenance.prov</groupId>
+				<artifactId>prov-interop</artifactId>
+				<version>${opm.prov.version}</version>
+			</dependency>			
+			
 			<!-- The ANTLR 4 Runtime -->
 			
 			<dependency>
@@ -357,6 +369,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<dependency> <!-- java.util.logging (jul) bridge -->
 				<groupId>org.slf4j</groupId>
 				<artifactId>jul-to-slf4j</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			
+			<dependency> <!-- Log4j implemented over SLF4J -->
+				<groupId>org.slf4j</groupId>
+				<artifactId>log4j-over-slf4j</artifactId>
 				<version>${slf4j.version}</version>
 			</dependency>
 			

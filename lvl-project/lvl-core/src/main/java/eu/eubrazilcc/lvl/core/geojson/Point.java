@@ -65,7 +65,7 @@ public class Point extends GeoJsonObject {
 				.add("geojson_obj", super.toString())
 				.add("coordinates", coordinates)
 				.toString();
-	}
+	}	
 
 	/* Fluent API */
 

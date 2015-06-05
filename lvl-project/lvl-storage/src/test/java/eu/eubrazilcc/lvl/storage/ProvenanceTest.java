@@ -20,34 +20,43 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core;
+package eu.eubrazilcc.lvl.storage;
 
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
-import java.io.File;
-
 import org.junit.Test;
+import org.openprovenance.prov.model.Document;
+
+import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
+import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.storage.prov.SequenceProv;
 
 /**
- * Tests configuration.
+ * Test support for data provenance.
+ * 
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ConfigurationTest {
+public class ProvenanceTest {
 
 	@Test
 	public void test() {
-		System.out.println("ConfigurationTest.test()");
 		try {
-			final File rootDir = CONFIG_MANAGER.getRootDir();
-			assertThat("root directory is not null", rootDir, notNullValue());
+			System.out.println("ProvenanceTest.test()");
+
+			// test sequence provenance
+			final Point point = Point.builder().coordinates(LngLatAlt.builder().longitude(2.0d).latitude(1.0d).build()).build();
+			final SequenceProv sequenceProv = new SequenceProv();
+			final Document document = sequenceProv.importGenbankSeq("ACCN:U49845", point, "LVL:GB:U49845");
+			sequenceProv.exportToFile(document, "/tmp/provenance2.json");
+			sequenceProv.exportToFile(document, "/tmp/provenance2.svg");
+
+			// TODO
+			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			fail("ConfigurationTest.test() failed: " + e.getMessage());
-		} finally {			
-			System.out.println("ConfigurationTest.test() has finished");
+			fail("ProvenanceTest.test() failed: " + e.getMessage());
+		} finally {
+			System.out.println("ProvenanceTest.test() has finished");
 		}
 	}
 

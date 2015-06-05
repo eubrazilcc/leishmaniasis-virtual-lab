@@ -53,7 +53,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 			}, {
 				id : 2,
 				link : 'instances',
-				icon : 'fa-cloud',
+				icon : 'fa-server',
 				text : 'Instances'
 			} ]);
 		};

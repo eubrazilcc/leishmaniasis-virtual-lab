@@ -20,35 +20,8 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core;
-
-import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
-
-import java.io.File;
-
-import org.junit.Test;
-
 /**
- * Tests configuration.
+ * Provides the classes needed to record the provenance of the different datasets.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ConfigurationTest {
-
-	@Test
-	public void test() {
-		System.out.println("ConfigurationTest.test()");
-		try {
-			final File rootDir = CONFIG_MANAGER.getRootDir();
-			assertThat("root directory is not null", rootDir, notNullValue());
-		} catch (Exception e) {
-			e.printStackTrace(System.err);
-			fail("ConfigurationTest.test() failed: " + e.getMessage());
-		} finally {			
-			System.out.println("ConfigurationTest.test() has finished");
-		}
-	}
-
-}
+package eu.eubrazilcc.lvl.storage.prov;

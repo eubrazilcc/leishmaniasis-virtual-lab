@@ -93,6 +93,10 @@ public class LngLatAlt {
 				.toString();
 	}
 
+	public static String toHumanString(final LngLatAlt lngLatAlt) {
+		return lngLatAlt.getLatitude() + "\u00b0" + " N " + lngLatAlt.getLongitude() + "\u00b0" + " W";
+	}	
+
 	/* Fluent API */
 
 	public static Builder builder() {

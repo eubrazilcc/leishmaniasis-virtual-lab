@@ -36,14 +36,16 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 public final class DataSource {
 
 	/* Long or full notation */
-
+	
 	public static final String GENBANK = "GenBank";
 	public static final String PUBMED = "PubMed";
+	public static final String LEISHVL = "LeishVL";
 
 	/* Short notation */
-
+	
 	public static final String GENBANK_SHORT = "gb";
 	public static final String PUBMED_SHORT = "pm";
+	public static final String LEISHVL_SHORT = "lvl";
 
 	/**
 	 * Converts from the specified notation to short notation.
@@ -63,6 +65,8 @@ public final class DataSource {
 				shortenedDataSource = GENBANK_SHORT;
 			} else if (PUBMED.equalsIgnoreCase(trimmedDataSource)) {
 				shortenedDataSource = PUBMED_SHORT;
+			} else if (LEISHVL.equalsIgnoreCase(trimmedDataSource)) {
+				shortenedDataSource = LEISHVL_SHORT;
 			}
 			break;
 		default:
@@ -87,6 +91,8 @@ public final class DataSource {
 			shortenedDataSource = GENBANK_SHORT;
 		} else if (PUBMED.equalsIgnoreCase(trimmedDataSource) || PUBMED_SHORT.equalsIgnoreCase(trimmedDataSource)) {
 			shortenedDataSource = PUBMED_SHORT;
+		} else if (LEISHVL.equalsIgnoreCase(trimmedDataSource) || LEISHVL_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+			shortenedDataSource = LEISHVL_SHORT;
 		}
 		checkState(isNotBlank(shortenedDataSource), "The specified data source cannot be found");
 		return shortenedDataSource;
@@ -110,6 +116,8 @@ public final class DataSource {
 				expandedDataSource = GENBANK;
 			} else if (PUBMED_SHORT.equalsIgnoreCase(trimmedDataSource)) {
 				expandedDataSource = PUBMED;
+			} else if (LEISHVL_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+				expandedDataSource = LEISHVL;
 			}
 			break;
 		default:
@@ -134,6 +142,8 @@ public final class DataSource {
 			expandedDataSource = GENBANK;
 		} else if (PUBMED_SHORT.equalsIgnoreCase(trimmedDataSource) || PUBMED.equalsIgnoreCase(trimmedDataSource)) {
 			expandedDataSource = PUBMED;
+		} else if (LEISHVL_SHORT.equalsIgnoreCase(trimmedDataSource) || LEISHVL.equalsIgnoreCase(trimmedDataSource)) {
+			expandedDataSource = LEISHVL;
 		}
 		checkState(isNotBlank(expandedDataSource), "The specified data source cannot be found");
 		return expandedDataSource;

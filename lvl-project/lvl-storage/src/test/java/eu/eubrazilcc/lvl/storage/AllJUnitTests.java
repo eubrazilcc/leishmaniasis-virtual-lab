@@ -41,8 +41,9 @@ import org.junit.runners.Suite.SuiteClasses;
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
-@SuiteClasses({ SequenceKeyTest.class, PermissionElBuilderTest.class, PermissionHelperTest.class, PermissionHistoryTest.class, CryptProviderTest.class, 
-	MongoDBMapTest.class, MongoDBComparisonTest.class, ResourceIdentifierPatternTest.class, GravatarTest.class, UrlShortenerTest.class })
+/* TODO @SuiteClasses({ SequenceKeyTest.class, PermissionElBuilderTest.class, PermissionHelperTest.class, PermissionHistoryTest.class, CryptProviderTest.class, 
+	MongoDBMapTest.class, MongoDBComparisonTest.class, ResourceIdentifierPatternTest.class, ProvenanceTest.class, GravatarTest.class, UrlShortenerTest.class }) */
+@SuiteClasses({ ProvenanceTest.class })
 public class AllJUnitTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";
