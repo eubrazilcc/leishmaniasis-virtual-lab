@@ -22,14 +22,17 @@
 .lvl-jumbo {
 	margin-top: 12px;
 	padding-top: 23px;
-	padding-bottom: 23px;
-	background-image: url("../img/bg.svg");
-	background-size: auto 100%;
-	background-origin: content-box;
+	padding-bottom: 23px;	
 	background-repeat: no-repeat;
-	background-position: center top;
+    background-size: cover;
+    background-position: center top;
 	background-image: url("../img/bg.svg");
 	background-color: #f9f9f9;
+}
+
+svg#lvl-bg path {
+	fill: #ecf0f1;
+	stroke: #ecf0f1;
 }
 
 .lvl-info {
