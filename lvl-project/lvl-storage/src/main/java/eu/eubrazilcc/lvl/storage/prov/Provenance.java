@@ -46,6 +46,7 @@ import org.openprovenance.prov.model.QualifiedName;
 import org.openprovenance.prov.model.Type;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Definitions and other constants related to data provenance.
@@ -127,11 +128,28 @@ public enum Provenance {
 	public Type downloadActionType() {
 		return type("sov", "DownloadAction");
 	}
+	
+	public Type organizationType() {
+		return type("sov", "Organization");
+	}
+	
+	public Type personType() {
+		return type("sov", "Person");
+	}
+	
+	/* Application types */
+	public Type approvalType() {
+		return type(LVL_PREFIX, "Approval");
+	}
 
 	/* Attributes */
 
 	public Attribute classAttr(final Class<?> clazz) {
 		return (Attribute) PROVENANCE.factory().newOther(PROVENANCE.qn("class"), clazz.getCanonicalName(), PROVENANCE.factory().getName().XSD_STRING);
+	}
+	
+	public Attribute identityProviderAttr(final String provider) {
+		return (Attribute) PROVENANCE.factory().newOther(PROVENANCE.qn("idp"), provider, PROVENANCE.factory().getName().XSD_STRING);
 	}
 
 	public Attribute locationAttr(final @Nullable Point point) {
@@ -161,13 +179,26 @@ public enum Provenance {
 		}));
 		return agent;
 	}
+	
+	public Agent organizationAgent(final String name) {
+		return PROVENANCE.factory().newAgent(PROVENANCE.qn(name), asList(new Attribute[] {
+				PROVENANCE.organizationType()
+		}));
+	}
+	
+	public Agent personAgent(final User user) {
+		return PROVENANCE.factory().newAgent(PROVENANCE.qn(user.getUserid()), asList(new Attribute[] {
+				PROVENANCE.personType(),
+				PROVENANCE.identityProviderAttr(user.getProvider())
+		}));
+	}
 
 	public Agent softwareAgent(final Class<?> clazz) {
 		return PROVENANCE.factory().newAgent(PROVENANCE.qn(clazz.getSimpleName()), asList(new Attribute[] {
 				PROVENANCE.softwareAgentType(),
 				PROVENANCE.classAttr(clazz)
 		}));
-	}
+	}	
 
 	/* Entities */
 

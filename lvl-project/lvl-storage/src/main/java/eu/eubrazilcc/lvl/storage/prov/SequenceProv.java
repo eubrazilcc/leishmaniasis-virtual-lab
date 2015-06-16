@@ -38,7 +38,10 @@ import org.openprovenance.prov.model.Bundle;
 import org.openprovenance.prov.model.Document;
 import org.openprovenance.prov.model.Entity;
 import org.openprovenance.prov.model.QualifiedName;
+import org.openprovenance.prov.model.Role;
 import org.openprovenance.prov.model.Statement;
+import org.openprovenance.prov.model.StatementOrBundle;
+import org.openprovenance.prov.model.Used;
 import org.openprovenance.prov.model.WasAssociatedWith;
 import org.openprovenance.prov.model.WasInformedBy;
 
@@ -50,6 +53,7 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.http.client.HttpClientProvider;
 import eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder;
 import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Provenance for biological sequences.
@@ -57,7 +61,7 @@ import eu.eubrazilcc.lvl.storage.dao.SequenceDAO;
  */
 public class SequenceProv {
 
-	public Document importGenbankSeq(final String seqId, final @Nullable Point point, final String recordId) {
+	public Document importFromGenbank(final String gbSeqId, final @Nullable Point point, final String recordId) {
 		final Document graph = PROVENANCE.factory().newDocument();		 
 
 		// system initialization
@@ -69,7 +73,7 @@ public class SequenceProv {
 				system, provBundle,
 				PROVENANCE.factory().newWasAttributedTo(PROVENANCE.qn("attr"), provBundle.getId(), system.getId())
 		}));
-		
+
 		// import activity
 		final Agent importer = PROVENANCE.softwareAgent(EntrezHelper.class);
 		bundle.getStatement().addAll(asList(new Statement[] { 
@@ -91,7 +95,7 @@ public class SequenceProv {
 				PROVENANCE.urlAttr("http://www.ncbi.nlm.nih.gov/nuccore/")
 		}));
 		final Entity sequence = PROVENANCE.entity(GB_PREFIX, "Sequence");
-		final Entity seq1 = PROVENANCE.entity(GB_PREFIX, seqId, PROVENANCE.datasetType());
+		final Entity seq1 = PROVENANCE.entity(GB_PREFIX, gbSeqId, PROVENANCE.datasetType());
 		bundle.getStatement().addAll(asList(new Statement[] {
 				genbank, sequence, seq1, 
 				PROVENANCE.factory().newSpecializationOf(seq1.getId(), sequence.getId()),
@@ -177,7 +181,7 @@ public class SequenceProv {
 		final Agent dbClient = PROVENANCE.softwareAgent(SequenceDAO.class);
 		final Activity insertIntoDbAct = PROVENANCE.factory().newActivity(PROVENANCE.qn("register"));
 		final Entity sequenceDocument = PROVENANCE.entity(LVL_PREFIX, "Document");
-		final Entity seqObj4 = PROVENANCE.entity(LVL_PREFIX, recordId + "-v1", PROVENANCE.datasetType());
+		final Entity seqObj4 = PROVENANCE.entity(LVL_PREFIX, recordId, PROVENANCE.datasetType());
 		bundle.getStatement().addAll(asList(new Statement[] {
 				collection, dbClient, insertIntoDbAct, sequenceDocument, seqObj4,
 				PROVENANCE.factory().newActedOnBehalfOf(null, dbClient.getId(), importer.getId()),
@@ -198,7 +202,105 @@ public class SequenceProv {
 	public Document uploadUserSequence(final QualifiedName qn, final String userId) {
 		// TODO
 		return null;
-	}	
+	}
+	
+	public Document modifySequenceDraft(final String recordId, final User curator, final String newRecordId) {
+		final Document graph = PROVENANCE.factory().newDocument();		 
+
+		// system initialization
+		final String provId = randomProvId();
+		final Bundle bundle = PROVENANCE.factory().newNamedBundle(PROVENANCE.qn(provId), PROVENANCE.ns(), Lists.<Statement>newArrayList());
+		final Agent system = PROVENANCE.lvlAgent();
+		final Entity provBundle = PROVENANCE.entity(LVL_PREFIX, provId, PROVENANCE.bundleType());		
+		bundle.getStatement().addAll(asList(new Statement[] { 
+				system, provBundle,
+				PROVENANCE.factory().newWasAttributedTo(PROVENANCE.qn("attr"), provBundle.getId(), system.getId())
+		}));
+		
+		// edit activity
+		final Agent curatorAgent = PROVENANCE.personAgent(curator);
+		final Entity seqObj1 = PROVENANCE.entity(LVL_PREFIX, recordId);
+		final Entity seqObj2 = PROVENANCE.entity(LVL_PREFIX, newRecordId);
+		final Activity editAct = PROVENANCE.factory().newActivity(PROVENANCE.qn("edit"));
+		final Role curatorRole = PROVENANCE.factory().newRole("Curator", PROVENANCE.qn("Curator"));
+		final Used usedSequence = PROVENANCE.factory().newUsed(null, editAct.getId(), seqObj1.getId());
+		PROVENANCE.factory().addRole(usedSequence, curatorRole);
+		bundle.getStatement().addAll(asList(new Statement[] {
+				curatorAgent, editAct, seqObj1, seqObj2,
+				PROVENANCE.factory().newActedOnBehalfOf(null, curatorAgent.getId(), system.getId()),
+				PROVENANCE.factory().newWasAssociatedWith(null, editAct.getId(), curatorAgent.getId()),
+				usedSequence,
+				PROVENANCE.factory().newWasInvalidatedBy(null, seqObj1.getId(), editAct.getId()),
+				PROVENANCE.factory().newWasGeneratedBy(null, seqObj2.getId(), editAct.getId(), PROVENANCE.factory().newTimeNow(), null),
+				PROVENANCE.factory().newWasDerivedFrom(null, seqObj2.getId(), seqObj1.getId(), editAct.getId(), null, null, null),
+		}));		
+		
+		graph.getStatementOrBundle().add(bundle);
+		graph.setNamespace(PROVENANCE.ns());
+		return graph;
+	}
+
+	public Document approveSequence(final String recordId, final User curator, final String sequenceId) {
+		final Document graph = PROVENANCE.factory().newDocument();		 
+
+		// system initialization
+		final String provId = randomProvId();
+		final Bundle bundle = PROVENANCE.factory().newNamedBundle(PROVENANCE.qn(provId), PROVENANCE.ns(), Lists.<Statement>newArrayList());
+		final Agent system = PROVENANCE.lvlAgent();
+		final Entity provBundle = PROVENANCE.entity(LVL_PREFIX, provId, PROVENANCE.bundleType());		
+		bundle.getStatement().addAll(asList(new Statement[] { 
+				system, provBundle,
+				PROVENANCE.factory().newWasAttributedTo(PROVENANCE.qn("attr"), provBundle.getId(), system.getId())
+		}));
+
+		// check activity
+		final Agent curatorAgent = PROVENANCE.personAgent(curator);
+		final Entity curationPolicy = PROVENANCE.entity(LVL_PREFIX, "CurationPolicy", Lists.<Attribute>newArrayList());
+		final Entity seqObj1 = PROVENANCE.entity(LVL_PREFIX, recordId);
+		final Entity seqObj2 = PROVENANCE.entity(LVL_PREFIX, "obj1");
+		final Activity checkAct = PROVENANCE.factory().newActivity(PROVENANCE.qn("check"), null, null, asList(new Attribute[] { 
+				PROVENANCE.approvalType()
+		}));
+		final Role curatorRole = PROVENANCE.factory().newRole("Curator", PROVENANCE.qn("Curator"));
+		final Used usedSequence = PROVENANCE.factory().newUsed(null, checkAct.getId(), seqObj1.getId());
+		PROVENANCE.factory().addRole(usedSequence, curatorRole);
+		bundle.getStatement().addAll(asList(new Statement[] {
+				curatorAgent, curationPolicy, checkAct, seqObj1, seqObj2,
+				PROVENANCE.factory().newActedOnBehalfOf(null, curatorAgent.getId(), system.getId()),
+				PROVENANCE.factory().newWasAttributedTo(PROVENANCE.qn("attr"), curationPolicy.getId(), system.getId()),
+				PROVENANCE.factory().newWasAssociatedWith(null, checkAct.getId(), curatorAgent.getId(), curationPolicy.getId(), null),
+				usedSequence,
+				PROVENANCE.factory().newWasInvalidatedBy(null, seqObj1.getId(), checkAct.getId()),
+				PROVENANCE.factory().newWasGeneratedBy(null, seqObj2.getId(), checkAct.getId()),
+				PROVENANCE.factory().newWasDerivedFrom(null, seqObj2.getId(), seqObj1.getId(), checkAct.getId(), null, null, null),
+		}));
+		
+		// publish activity		
+		final Activity publishAct = PROVENANCE.factory().newActivity(PROVENANCE.qn("publish"));		
+		final Entity seqObj3 = PROVENANCE.entity(LVL_PREFIX, sequenceId);
+		bundle.getStatement().addAll(asList(new Statement[] {
+				publishAct, seqObj3,
+				PROVENANCE.factory().newWasAssociatedWith(null, publishAct.getId(), curatorAgent.getId()),
+				PROVENANCE.factory().newUsed(null, publishAct.getId(), seqObj3.getId()),
+				PROVENANCE.factory().newWasGeneratedBy(null, seqObj3.getId(), publishAct.getId(), PROVENANCE.factory().newTimeNow(), null),
+				PROVENANCE.factory().newWasDerivedFrom(null, seqObj3.getId(), seqObj2.getId(), publishAct.getId(), null, null, null)
+		}));
+
+		graph.getStatementOrBundle().add(bundle);
+		graph.setNamespace(PROVENANCE.ns());
+		return graph;
+	}
+
+	public Document combine(final Document... documents) {
+		final Document graph = PROVENANCE.factory().newDocument();
+		for (final Document doc : documents) {
+			for (final StatementOrBundle item : doc.getStatementOrBundle()) {
+				graph.getStatementOrBundle().add(item);
+			}
+		}
+		graph.setNamespace(PROVENANCE.ns());
+		return graph;
+	}
 
 	/* TODO sudo apt-get install graphviz */
 	public void exportToFile(final Document document, final String file) {
