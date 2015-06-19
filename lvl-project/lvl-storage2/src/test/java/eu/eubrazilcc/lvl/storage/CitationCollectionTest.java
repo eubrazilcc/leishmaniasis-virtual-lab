@@ -30,9 +30,9 @@ import static eu.eubrazilcc.lvl.storage.Citation.PRIMARY_KEY;
 import static eu.eubrazilcc.lvl.storage.Citation.PUBMED_KEY;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_COMPARE;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_REGEX;
+import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_TEXT;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_OR;
-import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_TEXT;
 import static eu.eubrazilcc.lvl.storage.LvlObject.LvlObjectStatus.DRAFT;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
@@ -169,6 +169,14 @@ public class CitationCollectionTest {
 			assertThat("number of features coincides with expected", features.getFeatures().size(), equalTo(2));			
 			/* Uncomment for additional output */
 			System.out.println(" >> Feature collection (getWithin):\n" + objectToJson(features, JSON_PRETTY_PRINTER));
+
+			// type ahead
+			final List<String> values = citations.typeahead(PRIMARY_KEY, "ion_", 10).get(TIMEOUT, SECONDS);
+			assertThat("typeahead values are not null", values, notNullValue());
+			assertThat("typeahead values are not empty", values.isEmpty(), equalTo(false));
+			assertThat("number of typeahead values coincides with expected", values.size(), equalTo(2));			
+			/* Uncomment for additional output */
+			System.out.println(" >> Typeahead:\n" + objectToJson(values, JSON_PRETTY_PRINTER));
 
 			// list with all properties			
 			int count = citations.fetch(0, Integer.MAX_VALUE, null, null, null).get(TIMEOUT, SECONDS);

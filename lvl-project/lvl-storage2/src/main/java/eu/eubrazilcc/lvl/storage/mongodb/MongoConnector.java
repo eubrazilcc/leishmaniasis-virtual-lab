@@ -55,8 +55,10 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static java.lang.Integer.parseInt;
+import static org.apache.commons.beanutils.PropertyUtils.getSimpleProperty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -521,6 +523,42 @@ public enum MongoConnector implements Closeable2 {
 			@Override
 			public void onResult(final Void result, final Throwable t) {
 				if (t == null) future.set(features); else future.setException(t);
+			}
+		});
+		return future;
+	}
+
+	public <T extends LvlObject> ListenableFuture<List<String>> typeahead(final LvlCollection<T> collection, final Class<T> type,
+			final String field, final String query, final int size) {
+		String field2 = null, query2 = null;
+		checkArgument(isNotBlank(field2 = trimToNull(field)), "Uninitialized or invalid field");
+		checkArgument(isNotBlank(query2 = trimToNull(query)), "Uninitialized or invalid query");
+		final int size2 = size > 0 ? size : 10;
+		final SettableFuture<List<String>> future = SettableFuture.create();
+		final List<String> values = newArrayList();
+		final MongoCollection<Document> dbcol = getCollection(collection);
+		final FindIterable<Document> iterable = dbcol
+				.find(regex(field2, query2, "i"))
+				.projection(fields(include(field2)))
+				.sort(orderBy(ascending(field2)))
+				.limit(size2);
+		final String _field2 = field2;
+		iterable.forEach(new Block<Document>() {
+			@Override
+			public void apply(final Document doc) {
+				try {
+					T obj = parseDocument(doc, type);
+					final Object value = getSimpleProperty(obj, _field2);					
+					if (value != null) values.add(value.toString());
+				} catch (Exception e) {
+					LOGGER.error("Failed to parse result, [collection='" + collection.getCollection() + "', objectId='" 
+							+ doc.get("_id", ObjectId.class).toHexString() + "']", e);
+				}
+			}
+		}, new SingleResultCallback<Void>() {
+			@Override
+			public void onResult(final Void result, final Throwable t) {
+				if (t == null) future.set(values); else future.setException(t);
 			}
 		});
 		return future;

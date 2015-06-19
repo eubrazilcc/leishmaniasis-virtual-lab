@@ -219,15 +219,14 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	}
 
 	/**
-	 * Optional operation that searches a field for the specified query, returning a list of items that match the query.
+	 * Searches a field for the specified query, returning a list of values that match the query.
 	 * @param field - field to query against
 	 * @param query - the query to match
 	 * @param size - maximum number of elements returned
-	 * @return the fields that matches the query.
+	 * @return a future whose response is the values that matches the query.
 	 */
-	public List<String> typeahead(String field, String query, int size) {
-		// TODO
-		throw new UnsupportedOperationException("Typeahead searches are not currently supported in this collection");
+	public ListenableFuture<List<String>> typeahead(final String field, final String query, final int size) {
+		return MONGODB_CONN.typeahead(this, type, field, query, size);
 	}
 
 	/**
