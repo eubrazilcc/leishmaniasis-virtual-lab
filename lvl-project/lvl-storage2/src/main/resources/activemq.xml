@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<!-- 
+Copyright 2014-2015 EUBrazilCC (EU‐Brazil Cloud Connect)
+
+Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+the European Commission - subsequent versions of the EUPL (the "Licence");
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+  http://ec.europa.eu/idabc/eupl
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and 
+limitations under the Licence.
+
+This product combines work with different licenses. See the "NOTICE" text
+file for details on the various modules and licenses.
+The "NOTICE" text file is part of the distribution. Any derivative works
+that you distribute must include a readable copy of the "NOTICE" text file.
+-->
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+    <!-- Allows using system properties as variables in this configuration file -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <value>classpath*:activemq.properties</value>
+        </property>
+    </bean>
+    
+    <!-- Deactivate ActiveMQ shutdown hook to avoid errors, the LVL ensures that the close method will be 
+    	called on broker service shutdown -->
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" 
+    	dataDirectory="${activemq.data}" useShutdownHook="false">
+
+        <destinationPolicy>
+            <policyMap>
+                <policyEntries>
+                    <policyEntry topic=">" producerFlowControl="true">
+                        <pendingMessageLimitStrategy>
+                            <constantPendingMessageLimitStrategy limit="1000"/>
+                        </pendingMessageLimitStrategy>
+                    </policyEntry>
+                    <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
+                        <pendingQueuePolicy>
+                            <vmQueueCursor/>
+                        </pendingQueuePolicy>
+                    </policyEntry>
+                </policyEntries>
+            </policyMap>
+        </destinationPolicy>
+
+        <managementContext>
+            <managementContext createConnector="false"/>
+        </managementContext>
+
+        <!-- Use a KahaDB store as message persistence for the broker -->
+        <persistenceAdapter>
+            <kahaDB directory="${activemq.data}/kahadb" journalMaxFileLength="32mb"/>
+        </persistenceAdapter>
+
+        <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage limit="128 mb"/>
+                </memoryUsage>
+                <storeUsage>
+                    <storeUsage limit="5 gb"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="1 gb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
+
+        <!-- Transport connectors -->
+        <transportConnectors>
+            <transportConnector name="nio" uri="nio://0.0.0.0:${activemq.port}?transport.soTimeout=60000&amp;maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+        </transportConnectors>
+
+		<!-- Setup a network of brokers
+		<networkConnectors>
+			<networkConnector uri="static://(tcp://remotehost:61617)"
+				name="bridge" dynamicOnly="true" prefetchSize="1">			
+			</networkConnector>			
+		</networkConnectors> -->
+		
+		<!-- destroy the spring context on shutdown -->
+		<shutdownHooks>
+            <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
+        </shutdownHooks>
+		
+    </broker>
+
+</beans>

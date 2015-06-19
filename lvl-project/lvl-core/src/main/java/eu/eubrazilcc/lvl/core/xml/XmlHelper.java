@@ -22,14 +22,20 @@
 
 package eu.eubrazilcc.lvl.core.xml;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.xml.transform.OutputKeys.ENCODING;
+import static javax.xml.transform.OutputKeys.INDENT;
 import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -59,6 +65,41 @@ public final class XmlHelper {
 			final Transformer transformer = tf.newTransformer();
 			transformer.setOutputProperty(ENCODING, UTF_8.name());
 			transformer.setOutputProperty(OMIT_XML_DECLARATION, "yes");
+			final StringWriter writer = new StringWriter();
+			transformer.transform(new DOMSource(document), new StreamResult(writer));
+			docStr = writer.toString();
+		} catch (Exception e) {
+			docStr = null;
+			LOGGER.warn("Failed to convert DOM document to String", e);
+		}
+		return docStr;
+	}
+
+	public static String prettyPrint(final String payload) {
+		checkArgument(isNoneBlank(payload), "Uninitialized XML payload");
+		String docStr = null;
+		try {
+			final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			dbf.setValidating(false);
+			final DocumentBuilder db = dbf.newDocumentBuilder();
+			final Document document = db.parse(new ByteArrayInputStream(payload.getBytes()));
+			docStr = prettyPrint(document);
+		} catch (Exception e) {
+			docStr = null;
+			LOGGER.warn("Failed to convert DOM document to String", e);
+		}
+		return docStr;
+	}
+
+	public static String prettyPrint(final Document document) {
+		checkNotNull(document, "Uninitialized document");
+		String docStr = null;
+		try {
+			final TransformerFactory tf = TransformerFactory.newInstance();
+			final Transformer transformer = tf.newTransformer();
+			transformer.setOutputProperty(ENCODING, UTF_8.name());
+			transformer.setOutputProperty(OMIT_XML_DECLARATION, "yes");
+			transformer.setOutputProperty(INDENT, "yes");
 			final StringWriter writer = new StringWriter();
 			transformer.transform(new DOMSource(document), new StreamResult(writer));
 			docStr = writer.toString();

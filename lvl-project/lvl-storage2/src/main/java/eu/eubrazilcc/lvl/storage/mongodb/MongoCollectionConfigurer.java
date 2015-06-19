@@ -1,0 +1,190 @@
+/*
+ * Copyright 2014-2015 EUBrazilCC (EU‐Brazil Cloud Connect)
+ * 
+ * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+ * the European Commission - subsequent versions of the EUPL (the "Licence");
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ * 
+ *   http://ec.europa.eu/idabc/eupl
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and 
+ * limitations under the Licence.
+ * 
+ * This product combines work with different licenses. See the "NOTICE" text
+ * file for details on the various modules and licenses.
+ * The "NOTICE" text file is part of the distribution. Any derivative works
+ * that you distribute must include a readable copy of the "NOTICE" text file.
+ */
+
+package eu.eubrazilcc.lvl.storage.mongodb;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Maps.toMap;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.bson.Document;
+import org.slf4j.Logger;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.mongodb.client.model.IndexModel;
+import com.mongodb.client.model.IndexOptions;
+
+/**
+ * Applies configuration to collections.
+ * @author Erik Torres <ertorser@upv.es>
+ */
+public class MongoCollectionConfigurer {
+
+	private static final Logger LOGGER = getLogger(MongoCollectionConfigurer.class);
+
+	public static final long TIMEOUT = 5l;
+
+	private final String collection;
+	private final List<IndexModel> indexes;
+
+	private final AtomicBoolean isConfigured = new AtomicBoolean(false);
+
+	public MongoCollectionConfigurer(final String collection, final List<IndexModel> indexes) {
+		this.collection = collection;
+		this.indexes = indexes;
+	}
+
+	public void prepareCollection() {
+		final boolean shouldRun = isConfigured.compareAndSet(false, true);
+		if (shouldRun) {			
+			// create indexes
+			if (indexes != null && !indexes.isEmpty()) {
+				final ListenableFuture<List<String>> future = MONGODB_CONN.createIndexes(collection, indexes);
+				try {
+					future.get(TIMEOUT, SECONDS);
+					LOGGER.info("Collection configured: " + collection);
+				} catch (Exception e) {
+					LOGGER.info("Failed to configure collection: " + collection, e);
+				}				
+			}
+		}
+	}
+
+	/**
+	 * Creates a new index model on a field and sorting the elements in ascending order. Indexes created with this method are created 
+	 * in the background and stores unique elements.
+	 * @param field - field that is used to index the elements
+	 */
+	public static IndexModel indexModel(final String field) {
+		return indexModel(field, false);
+	}
+
+	/**
+	 * Creates an index model on a field. Indexes created with this method are created in the background and stores unique elements.
+	 * @param field - field that is used to index the elements
+	 * @param descending - sort the elements of the index in descending order
+	 */
+	public static IndexModel indexModel(final String field, final boolean descending) {
+		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
+		return indexModel(ImmutableList.of(field), true, descending);
+	}
+
+	/**
+	 * Creates an index model on a set of fields, sorting the elements in ascending order. Indexes created with this method are created 
+	 * in the background and stores unique elements.
+	 * @param fields - fields that are used to index the elements
+	 */
+	public static IndexModel indexModel(final List<String> fields) {
+		return indexModel(fields, true, false);
+	}
+
+	/**
+	 * Creates an index model on a field. Indexes created with this method are created in the background and allow storing duplicated elements.
+	 * @param field - field that is used to index the elements
+	 * @param descending - sort the elements of the index in descending order
+	 */
+	public static IndexModel nonUniqueIndexModel(final String field, final boolean descending) {
+		return indexModel(ImmutableList.of(field), false, descending);
+	}
+
+	/**
+	 * Creates an index model on a set of fields. Indexes created with this method are created in the background and allow storing duplicated elements.
+	 * @param fields - fields that are used to index the elements
+	 * @param descending - sort the elements of the index in descending order
+	 */
+	public static IndexModel nonUniqueIndexModel(final List<String> fields, final boolean descending) {
+		return indexModel(fields, false, descending);
+	}
+
+	/**
+	 * Creates an index model on a set of fields. Indexes created with this method are created in the background and could stores unique elements.
+	 * @param fields - fields that are used to index the elements
+	 * @param descending - sort the elements of the index in descending order
+	 */
+	public static IndexModel indexModel(final List<String> fields, final boolean unique, final boolean descending) {
+		checkArgument(fields != null && !fields.isEmpty(), "Uninitialized or invalid fields");
+		return new IndexModel(new Document(toMap(fields, new Function<String, Object>() {
+			@Override
+			public Object apply(final String field) {
+				return (Integer)(descending ? -1 : 1);
+			}				
+		})), new IndexOptions().unique(unique).background(true));		
+	}
+
+	/**
+	 * Creates a new geospatial index model. Indexes created with this method are created in the background.
+	 * @param field - field that is used to index the elements
+	 */
+	public static IndexModel geospatialIndexModel(final String field) {
+		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
+		return new IndexModel(new Document(field, "2dsphere"), new IndexOptions().background(true));
+	}
+
+	/**
+	 * Creates a text index model. Text indexes created with this method are created in the background and uses English as the default language.
+	 * @param fields - fields that are used to index the elements
+	 * @param prefix - prefix for the index name
+	 */
+	public static IndexModel textIndexModel(final List<String> fields, final String prefix) {
+		checkArgument(fields != null && !fields.isEmpty(), "Uninitialized or invalid fields");
+		checkArgument(isNotBlank(prefix), "Uninitialized or invalid prefix");
+		return new IndexModel(new Document(toMap(fields, new Function<String, Object>() {
+			@Override
+			public Object apply(final String field) {
+				return "text";
+			}
+		})), new IndexOptions().background(true).languageOverride("english").name(prefix + ".text_idx"));
+	}
+
+	/**
+	 * Creates a sparse, non unique, index model. Indexes created with this method are created in the background. <strong>Note:</strong> Do NOT use 
+	 * compound indexes to create an sparse index, since the results are unexpected.
+	 * @param field - field that is used to index the elements
+	 * @param descending - sort the elements of the index in descending order
+	 * @see <a href="http://docs.mongodb.org/manual/core/index-sparse/">MongoDB: Sparse Indexes</a>
+	 */
+	public static IndexModel sparseIndexModel(final String field, final boolean descending) {
+		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
+		return new IndexModel(new Document(field, descending ? -1 : 1), new IndexOptions().background(true).sparse(true));				
+	}
+
+	/**
+	 * Creates a sparse index model with a unique constraint on a field. Indexes created with this method are created in the background. 
+	 * <strong>Note:</strong> Do NOT use compound indexes to create an sparse index, since the results are unexpected.
+	 * @param field - field that is used to index the elements
+	 * @param descending - (optional) sort the elements of the index in descending order
+	 * @see <a href="http://docs.mongodb.org/manual/core/index-sparse/">MongoDB: Sparse Indexes</a>
+	 */
+	public static IndexModel sparseIndexModelWithUniqueConstraint(final String field, final boolean descending) {
+		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
+		return new IndexModel(new Document(field, descending ? -1 : 1), new IndexOptions().background(true).sparse(true).unique(true));
+	}
+
+}

@@ -67,9 +67,9 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<!-- Convenience properties to set library versions -->
-		<jersey.version>2.17</jersey.version>
-		<javax.el.version>2.2.4</javax.el.version> <!-- Despite 2.2.5 is available, Jersey Declarative Linking still uses 2.2.4 -->
-		<javax.el.impl.version>2.2.4</javax.el.impl.version> <!-- Despite 2.2.6 is available, Jersey Declarative Linking still uses 2.2.4 --> <!-- Need to include javax.el due to: https://java.net/jira/browse/JERSEY-2650 -->
+		<jersey.version>2.18</jersey.version>
+		<javax.el.version>2.2.4</javax.el.version> <!-- despite 2.2.5 is available, Jersey Declarative Linking still uses 2.2.4 -->
+		<javax.el.impl.version>2.2.4</javax.el.impl.version> <!-- despite 2.2.6 is available, Jersey Declarative Linking still uses 2.2.4 --> <!-- Need to include javax.el due to: https://java.net/jira/browse/JERSEY-2650 -->
 		<junit.version>4.12</junit.version> <!-- if you change this, then check Hamcrest version -->
 		<hamcrest.version>1.3</hamcrest.version> <!-- coincides with JUnit dependency -->
 		<mockito.version>1.10.19</mockito.version>
@@ -255,6 +255,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<module>lvl-test</module>
 		<module>lvl-core</module>
 		<module>lvl-storage</module>
+		<module>lvl-storage2</module>
 		<module>lvl-auth</module>
 		<module>lvl-service</module>
 		<module>lvl-bundle</module>		

@@ -45,6 +45,7 @@ public class FeatureCollection extends GeoJsonObject implements Iterable<Feature
 	public List<Feature> getFeatures() {
 		return features;
 	}
+	
 	public void setFeatures(final List<Feature> features) {
 		this.features = features;
 	}

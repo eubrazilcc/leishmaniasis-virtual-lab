@@ -55,6 +55,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependencies>
 
 			<!-- Apache Commons: Collection of open source reusable Java components -->
+			
+			<dependency> <!-- Wrapper around reflection and introspection -->
+				<groupId>commons-beanutils</groupId>
+				<artifactId>commons-beanutils</artifactId>
+				<version>1.9.2</version>
+			</dependency>
 
 			<dependency> <!-- Command-line interface utilities -->
 				<groupId>commons-cli</groupId>

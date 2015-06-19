@@ -3,8 +3,8 @@
  */
 
 define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!apps/analysis/submit/tpls/parameters',
-		'tpl!apps/analysis/submit/tpls/parameter', 'entities/wf_params', 'backbone.syphon', 'bootstrap3-typeahead' ], function(Lvl, SubmitPipelineTpl,
-		ParametersTpl, ParamTpl, ParamsEntity) {
+		'tpl!apps/analysis/submit/tpls/parameter', 'entities/wf_params', 'pace', 'backbone.syphon', 'bootstrap3-typeahead' ], function(Lvl, SubmitPipelineTpl,
+		ParametersTpl, ParamTpl, ParamsEntity, pace) {
 	Lvl.module('AnalysisApp.Submit.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.ParamItem = Marionette.ItemView.extend({
@@ -65,13 +65,16 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 			childView : View.ParamItem,
 			childViewContainer : 'fieldset',
 			onRender : function() {
+				pace.restart();
 				this.collection.fetch({
 					reset : true,
 					beforeSend : function(xhr) {
 						xhr.setRequestHeader('Content-Type', 'application/json');
 					},
 					data : JSON.stringify(this.collection.wfOpts),
-					type : 'POST'
+					type : 'POST'				
+				}).always(function() {
+					pace.stop();
 				});
 			}
 		});
