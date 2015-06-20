@@ -28,6 +28,7 @@ import static com.google.common.collect.Maps.toMap;
 import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_LOCATION_FIELD;
 import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_NAMESPACE_FIELD;
+import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_STATUS_FIELD;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -61,11 +62,12 @@ public class MongoCollectionConfigurer {
 	private final AtomicBoolean isConfigured = new AtomicBoolean(false);
 
 	public MongoCollectionConfigurer(final String collection, final boolean namespaceIndex, final boolean guidIndex, final boolean geoIndex, 
-			final List<IndexModel> moreIndexes) {
+			final boolean statusIndex, final List<IndexModel> moreIndexes) {
 		this.collection = collection;
 		if (namespaceIndex) indexes.add(nonUniqueIndexModel(LVL_NAMESPACE_FIELD, false));
 		if (guidIndex) indexes.add(indexModel(LVL_GUID_FIELD));
 		if (geoIndex) indexes.add(geospatialIndexModel(LVL_LOCATION_FIELD));
+		if (statusIndex) indexes.add(nonUniqueIndexModel(LVL_STATUS_FIELD, false));
 		if (moreIndexes != null) indexes.addAll(moreIndexes);
 	}
 

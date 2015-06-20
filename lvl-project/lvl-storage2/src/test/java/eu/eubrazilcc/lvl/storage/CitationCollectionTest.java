@@ -241,12 +241,21 @@ public class CitationCollectionTest {
 			assertThat("number of fetched elements (with filter) coincides with expected", citations.size(), equalTo(count));
 
 			// list with projection
-			count = citations.fetch(0, Integer.MAX_VALUE, null, null, ImmutableMap.of("pubmed", false)).get(TIMEOUT, SECONDS);
+			count = citations.fetch(0, Integer.MAX_VALUE, null, null, ImmutableMap.<String, Boolean>builder()
+					.put("lvl", true)
+					.put("namespace", true)
+					.put("lvlId", true)
+					.put("location", true)
+					.put("status", true)
+					.put("pubmed.medlineCitation.article.articleTitle", true)
+					.put("pubmed.medlineCitation.pmid.value", true)
+					.build()).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with projection) coincides with expected", count, equalTo(2));
 			assertThat("number of fetched elements (with projection) coincides with expected", citations.size(), equalTo(count));
-			assertThat("original article was filtered from database response", citations.get(0).getPubmed(), nullValue());
+			assertThat("original article details were filtered from database response", citations.get(0).getPubmed().getMedlineCitation()
+					.getArticle().getAbstract(), nullValue());
 			/* Uncomment for additional output */
-			System.out.println(" >> Fetched citations (with projection):\n" + citations.toJson(JSON_PRETTY_PRINTER));
+			System.out.println(" >> Fetched citations (with projection):\n" + citations.toJson(JSON_PRETTY_PRINTER));			
 
 			// list with sorting
 			count = citations.fetch(0, Integer.MAX_VALUE, null, ImmutableMap.of(LVL_GUID_FIELD, true), null).get(TIMEOUT, SECONDS);

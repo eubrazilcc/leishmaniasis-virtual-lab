@@ -74,6 +74,7 @@ public abstract class LvlObject implements Linkable {
 	public static final String LVL_NAMESPACE_FIELD = "namespace";
 	public static final String LVL_GUID_FIELD = "lvlId";
 	public static final String LVL_LOCATION_FIELD = "location";
+	public static final String LVL_STATUS_FIELD = "status";
 	
 	@JsonIgnore
 	protected final Logger logger;
@@ -132,8 +133,8 @@ public abstract class LvlObject implements Linkable {
 		this.dbId = dbId;
 	}
 
-	public String getNamespace() {
-		return namespace.or("");
+	public @Nullable String getNamespace() {
+		return namespace.orNull();
 	}
 
 	public void setNamespace(final @Nullable String namespace) {

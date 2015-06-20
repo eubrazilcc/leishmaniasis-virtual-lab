@@ -58,7 +58,7 @@ public class Citation extends LvlObject {
 	public static final String COLLECTION  = "citations";	
 	public static final String PUBMED_KEY  = "pubmed.medlineCitation.pmid.value";
 
-	public static final MongoCollectionConfigurer CONFIGURER = new MongoCollectionConfigurer(COLLECTION, true, true, true, newArrayList(
+	public static final MongoCollectionConfigurer CONFIGURER = new MongoCollectionConfigurer(COLLECTION, true, true, true, true, newArrayList(
 			indexModel(PUBMED_KEY),
 			textIndexModel(ImmutableList.of("pubmed.medlineCitation.article.articleTitle", 
 					"pubmed.medlineCitation.article.abstract.abstractText"), COLLECTION)));
