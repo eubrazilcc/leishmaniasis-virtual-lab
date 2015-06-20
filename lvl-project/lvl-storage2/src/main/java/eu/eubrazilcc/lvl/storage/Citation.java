@@ -25,7 +25,6 @@ package eu.eubrazilcc.lvl.storage;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer.geospatialIndexModel;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer.indexModel;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer.textIndexModel;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -56,15 +55,11 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer;
  */
 public class Citation extends LvlObject {
 
-	public static final String COLLECTION  = "citations";
-	public static final String PRIMARY_KEY = "lvlId";
-	public static final String GEO_KEY     = "location";
+	public static final String COLLECTION  = "citations";	
 	public static final String PUBMED_KEY  = "pubmed.medlineCitation.pmid.value";
 
-	public static final MongoCollectionConfigurer CONFIGURER = new MongoCollectionConfigurer(COLLECTION, newArrayList(
-			indexModel(PRIMARY_KEY),
+	public static final MongoCollectionConfigurer CONFIGURER = new MongoCollectionConfigurer(COLLECTION, true, true, true, newArrayList(
 			indexModel(PUBMED_KEY),
-			geospatialIndexModel(GEO_KEY),
 			textIndexModel(ImmutableList.of("pubmed.medlineCitation.article.articleTitle", 
 					"pubmed.medlineCitation.article.abstract.abstractText"), COLLECTION)));
 
@@ -82,7 +77,7 @@ public class Citation extends LvlObject {
 	private PubmedArticle pubmed; // original PubMed article
 
 	public Citation() {
-		super(COLLECTION, CONFIGURER, PRIMARY_KEY, getLogger(Citation.class));
+		super(COLLECTION, CONFIGURER, getLogger(Citation.class));
 	}
 
 	@Override	

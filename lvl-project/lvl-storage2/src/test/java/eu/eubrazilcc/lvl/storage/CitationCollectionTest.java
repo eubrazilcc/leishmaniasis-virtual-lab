@@ -26,13 +26,13 @@ import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.XmlHelper.prettyPrint;
-import static eu.eubrazilcc.lvl.storage.Citation.PRIMARY_KEY;
 import static eu.eubrazilcc.lvl.storage.Citation.PUBMED_KEY;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_COMPARE;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_REGEX;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_TEXT;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_OR;
+import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.LvlObject.LvlObjectStatus.DRAFT;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
@@ -171,7 +171,7 @@ public class CitationCollectionTest {
 			System.out.println(" >> Feature collection (getWithin):\n" + objectToJson(features, JSON_PRETTY_PRINTER));
 
 			// type ahead
-			final List<String> values = citations.typeahead(PRIMARY_KEY, "ion_", 10).get(TIMEOUT, SECONDS);
+			final List<String> values = citations.typeahead(LVL_GUID_FIELD, "ion_", 10).get(TIMEOUT, SECONDS);
 			assertThat("typeahead values are not null", values, notNullValue());
 			assertThat("typeahead values are not empty", values.isEmpty(), equalTo(false));
 			assertThat("number of typeahead values coincides with expected", values.size(), equalTo(2));			
@@ -196,7 +196,7 @@ public class CitationCollectionTest {
 
 			// list with filters (regular expression)
 			filters = Filters.builder()
-					.filters(newArrayList(Filter.builder().type(FILTER_REGEX).fieldName(PRIMARY_KEY).value("(?i)([a-z])*_2").build()))
+					.filters(newArrayList(Filter.builder().type(FILTER_REGEX).fieldName(LVL_GUID_FIELD).value("(?i)([a-z])*_2").build()))
 					.build();
 			count = citations.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(1));
@@ -249,7 +249,7 @@ public class CitationCollectionTest {
 			System.out.println(" >> Fetched citations (with projection):\n" + citations.toJson(JSON_PRETTY_PRINTER));
 
 			// list with sorting
-			count = citations.fetch(0, Integer.MAX_VALUE, null, ImmutableMap.of(PRIMARY_KEY, true), null).get(TIMEOUT, SECONDS);
+			count = citations.fetch(0, Integer.MAX_VALUE, null, ImmutableMap.of(LVL_GUID_FIELD, true), null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with sorting) coincides with expected", count, equalTo(2));
 			assertThat("number of fetched elements (with sorting) coincides with expected", citations.size(), equalTo(count));
 			assertThat("first citation coincides with expected", citations.get(0).getLvlId(), equalTo(citation2.getLvlId()));
@@ -261,9 +261,9 @@ public class CitationCollectionTest {
 
 			// list with all features (filter, projection and sorting)
 			filters = Filters.builder()
-					.filters(newArrayList(Filter.builder().type(FILTER_REGEX).fieldName(PRIMARY_KEY).value("(?i)([a-z])*_([0-9]){1,2}").build()))
+					.filters(newArrayList(Filter.builder().type(FILTER_REGEX).fieldName(LVL_GUID_FIELD).value("(?i)([a-z])*_([0-9]){1,2}").build()))
 					.build();
-			count = citations.fetch(0, Integer.MAX_VALUE, filters, ImmutableMap.of(PRIMARY_KEY, false), ImmutableMap.of("pubmed", false, "lvl", false)).get(TIMEOUT, SECONDS);
+			count = citations.fetch(0, Integer.MAX_VALUE, filters, ImmutableMap.of(LVL_GUID_FIELD, false), ImmutableMap.of("pubmed", false, "lvl", false)).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with all features) coincides with expected", count, equalTo(2));
 			assertThat("number of fetched elements (with all features) coincides with expected", citations.size(), equalTo(count));
 			assertThat("original article was filtered from database response", citations.get(0).getPubmed(), nullValue());

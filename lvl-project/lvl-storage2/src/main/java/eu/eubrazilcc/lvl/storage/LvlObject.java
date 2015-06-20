@@ -71,6 +71,10 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
  */
 public abstract class LvlObject implements Linkable {
 
+	public static final String LVL_NAMESPACE_FIELD = "namespace";
+	public static final String LVL_GUID_FIELD = "lvlId";
+	public static final String LVL_LOCATION_FIELD = "location";
+	
 	@JsonIgnore
 	protected final Logger logger;
 	@JsonIgnore
@@ -89,7 +93,7 @@ public abstract class LvlObject implements Linkable {
 	private Optional<Document> provenance = absent(); // (optional) provenance
 	private Optional<LvlObjectStatus> status = absent(); // (optional) status
 
-	private static final List<String> PROPS_TO_SUPPRESS = ImmutableList.<String>of("logger", "collection", "configurer", "primaryKey", 
+	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.<String>of("logger", "collection", "configurer", "primaryKey", 
 			"urlSafeNamespace", "urlSafeLvlId");
 
 	@JsonIgnore
@@ -97,6 +101,10 @@ public abstract class LvlObject implements Linkable {
 	@JsonIgnore
 	protected String urlSafeLvlId;
 
+	public LvlObject(final String collection, final MongoCollectionConfigurer configurer, final Logger logger) {
+		this(collection, configurer, LVL_GUID_FIELD, logger);
+	}
+	
 	public LvlObject(final String collection, final MongoCollectionConfigurer configurer, final String primaryKey, final Logger logger) {
 		this.collection = collection;
 		this.configurer = configurer;
@@ -339,7 +347,7 @@ public abstract class LvlObject implements Linkable {
 
 	public static void copyProperties(final LvlObject orig, final LvlObject dest) throws IllegalAccessException, InvocationTargetException {
 		final PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
-		propertyUtilsBean.addBeanIntrospector(new SuppressPropertiesBeanIntrospector(PROPS_TO_SUPPRESS));				
+		propertyUtilsBean.addBeanIntrospector(new SuppressPropertiesBeanIntrospector(FIELDS_TO_SUPPRESS));				
 		final BeanUtilsBean beanUtilsBean = new BeanUtilsBean(new ConvertUtilsBean(), propertyUtilsBean);
 		beanUtilsBean.copyProperties(dest, orig);			
 	}
