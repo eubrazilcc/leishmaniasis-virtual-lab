@@ -53,6 +53,9 @@ import static com.mongodb.client.model.Sorts.descending;
 import static com.mongodb.client.model.Sorts.orderBy;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
+import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_GUID_FIELD;
+import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_LAST_MODIFIED_FIELD;
+import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_LOCATION_FIELD;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.beanutils.PropertyUtils.getSimpleProperty;
@@ -65,6 +68,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -76,6 +80,7 @@ import org.apache.commons.lang3.mutable.MutableLong;
 import org.bson.BsonArray;
 import org.bson.BsonDouble;
 import org.bson.BsonInt32;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -83,9 +88,11 @@ import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -104,6 +111,7 @@ import com.mongodb.async.client.MongoClients;
 import com.mongodb.async.client.MongoCollection;
 import com.mongodb.async.client.MongoDatabase;
 import com.mongodb.client.model.IndexModel;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.connection.ClusterSettings;
@@ -119,6 +127,7 @@ import eu.eubrazilcc.lvl.storage.Filter;
 import eu.eubrazilcc.lvl.storage.Filters;
 import eu.eubrazilcc.lvl.storage.LvlCollection;
 import eu.eubrazilcc.lvl.storage.LvlObject;
+import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDateDeserializer;
 
 /**
  * Data connector based on mongoDB. Access to file collections is provided through the GridFS specification. While other objects
@@ -238,42 +247,33 @@ public enum MongoConnector implements Closeable2 {
 		return future;
 	}
 
-	public <T extends LvlObject> ListenableFuture<String> insert(final T obj) {
-		final SettableFuture<String> future = SettableFuture.create();
-		final MongoCollection<Document> dbcol = getCollection(obj);
-		final Document doc = Document.parse(obj.toJson());		
-		dbcol.insertOne(doc, new SingleResultCallback<Void>() {
-			@Override
-			public void onResult(final Void result, final Throwable t) {
-				if (t == null) {
-					obj.setDbId(doc.get("_id", ObjectId.class).toHexString());
-					future.set(obj.getDbId());
-				} else future.setException(t);
-			}
-		});
-		return future;
-	}
-
-	public <T extends LvlObject> ListenableFuture<Boolean> update(final T obj) {
-		checkArgument(obj != null, "Uninitialized or invalid object");
-		checkArgument(isNotBlank(obj.getPrimaryKey()), "Uninitialized or invalid primary key");
-		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
+	public <T extends LvlObject> ListenableFuture<Boolean> save(final T obj) {
 		final SettableFuture<Boolean> future = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);
-		final Document doc = Document.parse(obj.toJson());
-		dbcol.updateOne(eq(obj.getPrimaryKey(), obj.getLvlId()), new Document("$set", doc), new SingleResultCallback<UpdateResult>() {
+		final Document update = new Document(ImmutableMap.<String, Object>of("$currentDate", new Document(LVL_LAST_MODIFIED_FIELD, true),
+				"$set", parseObject(obj, true, true)));
+		dbcol.updateOne(eq(obj.getPrimaryKey(), obj.getLvlId()), update, new UpdateOptions().upsert(true), new SingleResultCallback<UpdateResult>() {
 			@Override
 			public void onResult(final UpdateResult result, final Throwable t) {
 				if (t == null) {
-					if (result.getModifiedCount() == 1l) {			
+					final int matched = (int)result.getMatchedCount();
+					switch (matched) {
+					case 0:
+						final BsonValue _id = result.getUpsertedId();
+						if (_id != null && _id.isObjectId()) {
+							obj.setDbId(_id.asObjectId().getValue().toHexString());
+							future.set(true);
+						} else future.setException(new IllegalStateException("No new records were inserted, no existing records were modified by the operation"));
+						break;
+					case 1:
 						future.set(true);
-					} else if (result.getModifiedCount() < 1l) {
-						future.set(false);
-					} else {
-						future.setException(new IllegalStateException("Multiple records were modified: " + result.getModifiedCount()));
-					}					
-				} else future.setException(t);				
-			}
+						break;
+					default:
+						future.setException(new IllegalStateException("Illegal number records were modified when only one expected: " + result.getModifiedCount()));
+						break;
+					}
+				} else future.setException(t);
+			}			
 		});
 		return future;
 	}
@@ -456,8 +456,8 @@ public enum MongoConnector implements Closeable2 {
 				.put("distanceField", "_dist.calculated")
 				.build()));
 		final Document project = new Document("$project", new Document(ImmutableMap.<String, Object>builder()
-				.put("lvlId", true)
-				.put("location", true)
+				.put(LVL_GUID_FIELD, true)
+				.put(LVL_LOCATION_FIELD, true)
 				.put("_dist", true)
 				.build()));
 		final Document match = new Document("$match", new Document(ImmutableMap.<String, Object>builder()
@@ -499,12 +499,12 @@ public enum MongoConnector implements Closeable2 {
 		final SettableFuture<FeatureCollection> future = SettableFuture.create();
 		final FeatureCollection features = FeatureCollection.builder().crs(Crs.builder().wgs84().build()).build();
 		final MongoCollection<Document> dbcol = getCollection(collection);
-		final Document geoWithin = new Document("location", new Document(ImmutableMap.<String, Object>builder()
+		final Document geoWithin = new Document(LVL_LOCATION_FIELD, new Document(ImmutableMap.<String, Object>builder()
 				.put("$geoWithin", new Document("$geometry", Document.parse(payload)))
 				.build()));
 		final FindIterable<Document> iterable = dbcol
 				.find(geoWithin)
-				.projection(fields(include("lvlId", "location")));
+				.projection(fields(include(LVL_GUID_FIELD, LVL_LOCATION_FIELD)));
 		iterable.forEach(new Block<Document>() {
 			@Override
 			public void apply(final Document doc) {
@@ -619,7 +619,7 @@ public enum MongoConnector implements Closeable2 {
 		obj.getConfigurer().prepareCollection();
 		final MongoDatabase db = client().getDatabase(CONFIG_MANAGER.getDbName());
 		return db.getCollection(obj.getCollection());
-	}
+	}	
 
 	private <T extends LvlObject> MongoCollection<Document> getCollection(final LvlCollection<T> collection) {
 		checkArgument(collection != null, "Uninitialized collection");
@@ -629,8 +629,20 @@ public enum MongoConnector implements Closeable2 {
 		return db.getCollection(collection.getCollection());
 	}
 
+	private <T extends LvlObject> Document parseObject(final LvlObject obj, final boolean checkFields, final boolean unsetVolatileFields) {
+		checkArgument(obj != null, "Uninitialized object");
+		if (checkFields) {
+			checkArgument(isNotBlank(obj.getPrimaryKey()), "Uninitialized or invalid primary key");
+			checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
+		}
+		if (unsetVolatileFields) {
+			obj.setLastModified(null);
+		}
+		return Document.parse(obj.toJson());
+	}
+
 	private static <T extends LvlObject> T parseDocument(final Document doc, final Class<T> type) throws IOException {
-		final T obj = JSON_MAPPER.addHandler(documentDeserializationProblemHandler).readValue(doc.toJson(), type);
+		final T obj = JSON_MAPPER.registerModule(jacksonModule).reader(type).withHandler(documentDeserializationProblemHandler).readValue(doc.toJson());
 		obj.setDbId(doc.get("_id", ObjectId.class).toHexString());
 		return obj;
 	}
@@ -647,6 +659,9 @@ public enum MongoConnector implements Closeable2 {
 			return false;
 		};
 	};
+
+	private static SimpleModule jacksonModule = new SimpleModule("LeishVLModule", new Version(0, 3, 0, null, "eu.eubrazilcc.lvl", "lvl-storage")).
+			addDeserializer(Date.class, new MongoDateDeserializer());
 
 	/* General methods */
 

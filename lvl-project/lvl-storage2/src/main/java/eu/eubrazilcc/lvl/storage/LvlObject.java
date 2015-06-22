@@ -30,11 +30,11 @@ import static com.google.common.util.concurrent.Futures.transform;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -75,7 +75,8 @@ public abstract class LvlObject implements Linkable {
 	public static final String LVL_GUID_FIELD = "lvlId";
 	public static final String LVL_LOCATION_FIELD = "location";
 	public static final String LVL_STATUS_FIELD = "status";
-	
+	public static final String LVL_LAST_MODIFIED_FIELD = "lastModified";
+
 	@JsonIgnore
 	protected final Logger logger;
 	@JsonIgnore
@@ -85,7 +86,7 @@ public abstract class LvlObject implements Linkable {
 	@JsonIgnore
 	private final String primaryKey;
 	@JsonIgnore
-	private String dbId; // database identifier	
+	private String dbId; // database identifier
 
 	private Optional<String> namespace = absent(); // (optional) namespace
 	private String lvlId; // globally unique identifier
@@ -93,6 +94,8 @@ public abstract class LvlObject implements Linkable {
 	private Optional<Point> location = absent(); // (optional) geospatial location
 	private Optional<Document> provenance = absent(); // (optional) provenance
 	private Optional<LvlObjectStatus> status = absent(); // (optional) status
+
+	private Date lastModified; // last modification date
 
 	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.<String>of("logger", "collection", "configurer", "primaryKey", 
 			"urlSafeNamespace", "urlSafeLvlId");
@@ -105,7 +108,7 @@ public abstract class LvlObject implements Linkable {
 	public LvlObject(final String collection, final MongoCollectionConfigurer configurer, final Logger logger) {
 		this(collection, configurer, LVL_GUID_FIELD, logger);
 	}
-	
+
 	public LvlObject(final String collection, final MongoCollectionConfigurer configurer, final String primaryKey, final Logger logger) {
 		this.collection = collection;
 		this.configurer = configurer;
@@ -175,6 +178,14 @@ public abstract class LvlObject implements Linkable {
 		this.status = fromNullable(status);
 	}
 
+	public Date getLastModified() {
+		return lastModified;
+	}
+
+	public void setLastModified(final Date lastModified) {
+		this.lastModified = lastModified;
+	}
+
 	public String getUrlSafeNamespace() {
 		return urlSafeNamespace;
 	}
@@ -196,42 +207,8 @@ public abstract class LvlObject implements Linkable {
 	 * @param options - operation options
 	 * @return a future.
 	 */
-	public ListenableFuture<String> save(final SaveOptions... options) {
-		if (options != null && options.length > 0) {
-			final List<SaveOptions> optList = asList(options);
-			// update an existing record
-			if (!optList.contains(SaveOptions.FAIL_IF_EXISTS) && optList.contains(SaveOptions.FORCE_TO_OVERRIDE)) {				
-				final LvlObject __obj = this;
-				final SettableFuture<String> saveFuture = SettableFuture.create();
-				final ListenableFuture<Boolean> updateFuture = update();
-				addCallback(updateFuture, new FutureCallback<Boolean>() {
-					@Override
-					public void onSuccess(final Boolean result) {
-						saveFuture.set(__obj.getDbId());					
-					}
-					@Override
-					public void onFailure(final Throwable t) {
-						saveFuture.setException(t);
-					}				
-				});
-				return transform(updateFuture, new AsyncFunction<Boolean, String>() {
-					@Override
-					public ListenableFuture<String> apply(final Boolean input) throws Exception {				
-						return saveFuture;
-					}
-				});
-			}
-		}
-		// insert new record
-		return MONGODB_CONN.insert(this);
-	}
-
-	/**
-	 * Updates an existing record in the database.
-	 * @return a future.
-	 */
-	public ListenableFuture<Boolean> update() {		
-		return MONGODB_CONN.update(this);		
+	public ListenableFuture<Boolean> save(final SaveOptions... options) {
+		return MONGODB_CONN.save(this);
 	}
 
 	/**
@@ -301,12 +278,13 @@ public abstract class LvlObject implements Linkable {
 				&& Objects.equals(lvlId, other.lvlId)
 				&& Objects.equals(location.orNull(), other.location.orNull())
 				&& Objects.equals(provenance.orNull(), other.provenance.orNull())
-				&& Objects.equals(status.orNull(), other.status.orNull());	
+				&& Objects.equals(status.orNull(), other.status.orNull())
+				&& Objects.equals(lastModified, other.lastModified);	
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(dbId, namespace, lvlId, location, provenance, status);
+		return Objects.hash(dbId, namespace, lvlId, location, provenance, status, lastModified);
 	}
 
 	@Override
@@ -318,14 +296,20 @@ public abstract class LvlObject implements Linkable {
 				.add("location", location.orNull())
 				.add("provenance", "<<not displayed>>")
 				.add("status", status.orNull())
+				.add("lastModified", lastModified)
 				.toString();
 	}
 
 	/* Database options */
 
+	/**
+	 * Saving options. By default, the LeishVL will override any existing records of the type {@link LvlObjectStatus#DRAFT} with the new 
+	 * provided values. On the contrary, new versions will be inserted for the objects of the type type {@link LvlObjectStatus#RELEASE}. 
+	 * Obsolete records cannot be updated.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
 	public static enum SaveOptions {
-		FAIL_IF_EXISTS, // by default, the LeishVL will avoid overriding existing records
-		FORCE_TO_OVERRIDE // force the database to override an existing record
+		// none, so far
 	}
 
 	public static enum FetchOptions {

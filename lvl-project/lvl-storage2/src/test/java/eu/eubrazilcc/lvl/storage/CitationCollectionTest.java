@@ -50,7 +50,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.mongodb.MongoWriteException;
 
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
@@ -113,18 +112,11 @@ public class CitationCollectionTest {
 			/* Uncomment for additional output */
 			System.out.println(" >> Inserted citation:\n" + citation1.toJson(JSON_PRETTY_PRINTER));
 
-			try {
-				citation1.save().get(TIMEOUT, SECONDS);
-				fail("Expected exception due to duplicate insertion");
-			} catch (Exception expected) {
-				assertThat("exception cause is not null", expected.getCause(), notNullValue());
-				assertThat("exception cause coincides with expected", expected.getCause() instanceof MongoWriteException, equalTo(true));				
-				System.out.println("Expected exception caught: " + expected.getCause().getMessage());				
-			}
-
 			// find citation by global id
 			Citation citation3 = Citation.builder().lvlId("CITATION_1").build();
 			citation3.fetch().get(TIMEOUT, SECONDS);
+			assertThat("inserted last modified field is not null", citation3.getLastModified(), notNullValue());
+			citation1.setLastModified(citation3.getLastModified());
 			assertThat("fetched citation coincides with expected", citation3, equalTo(citation1));
 			/* Uncomment for additional output */
 			System.out.println(" >> Fetched citation:\n" + citation3.toJson(JSON_PRETTY_PRINTER));
@@ -280,11 +272,13 @@ public class CitationCollectionTest {
 			assertThat("first citation coincides with expected", citations.get(0).getLvlId(), equalTo(citation1.getLvlId()));			
 
 			// update the citation
-			citation1.approve().update().get(TIMEOUT, SECONDS);
+			citation1.approve().save().get(TIMEOUT, SECONDS);
 
 			// find after update
 			citation3 = Citation.builder().lvlId("CITATION_1").build();
 			citation3.fetch().get(TIMEOUT, SECONDS);
+			assertThat("inserted last modified field is not null", citation3.getLastModified(), notNullValue());
+			citation1.setLastModified(citation3.getLastModified());
 			assertThat("fetched citation (after update) coincides with expected", citation3, equalTo(citation1));
 			/* Uncomment for additional output */
 			System.out.println(" >> Fetched citation (after update):\n" + citation3.toJson(JSON_PRETTY_PRINTER));
