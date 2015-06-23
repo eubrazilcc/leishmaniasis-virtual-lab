@@ -110,7 +110,7 @@ public class CitationCollectionTest {
 			assertThat("inserted Id is not null", dbId, notNullValue());
 			assertThat("inserted Id is not empty", isNotBlank(dbId), equalTo(true));
 			/* Uncomment for additional output */
-			System.out.println(" >> Inserted citation:\n" + citation1.toJson(JSON_PRETTY_PRINTER));
+			System.out.println(" >> Inserted citation (" + dbId + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
 
 			// find citation by global id
 			Citation citation3 = Citation.builder().lvlId("CITATION_1").build();
@@ -133,7 +133,7 @@ public class CitationCollectionTest {
 			assertThat("inserted Id is not null", dbId, notNullValue());
 			assertThat("inserted Id is not empty", isNotBlank(dbId), equalTo(true));
 			/* Uncomment for additional output */
-			System.out.println(" >> Inserted citation:\n" + citation2.toJson(JSON_PRETTY_PRINTER));
+			System.out.println(" >> Inserted citation (" + dbId + "):\n" + citation2.toJson(JSON_PRETTY_PRINTER));
 
 			// search by proximity
 			final Citations citations = new Citations();

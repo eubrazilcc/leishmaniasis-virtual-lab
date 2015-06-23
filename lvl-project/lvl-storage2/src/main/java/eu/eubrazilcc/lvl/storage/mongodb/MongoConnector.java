@@ -48,6 +48,7 @@ import static com.mongodb.client.model.Filters.text;
 import static com.mongodb.client.model.Projections.exclude;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static com.mongodb.client.model.Sorts.ascending;
 import static com.mongodb.client.model.Sorts.descending;
 import static com.mongodb.client.model.Sorts.orderBy;
@@ -80,7 +81,6 @@ import org.apache.commons.lang3.mutable.MutableLong;
 import org.bson.BsonArray;
 import org.bson.BsonDouble;
 import org.bson.BsonInt32;
-import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -110,10 +110,9 @@ import com.mongodb.async.client.MongoClientSettings;
 import com.mongodb.async.client.MongoClients;
 import com.mongodb.async.client.MongoCollection;
 import com.mongodb.async.client.MongoDatabase;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.IndexModel;
-import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
 import com.mongodb.connection.ClusterSettings;
 
 import eu.eubrazilcc.lvl.core.BaseFile;
@@ -247,33 +246,30 @@ public enum MongoConnector implements Closeable2 {
 		return future;
 	}
 
+	/**
+	 * Saves the specified object to the database. An alternative of this method could use the method {@link MongoCollection#updateMany(Bson, Bson, com.mongodb.client.model.UpdateOptions, SingleResultCallback)}
+	 * with the <tt>upsert</tt> set to <tt>true</tt> in order to save more than one document.
+	 * @param obj - object to save
+	 * @return a future which result is a boolean indicating whether or not the operation is successfully completed.
+	 */
 	public <T extends LvlObject> ListenableFuture<Boolean> save(final T obj) {
 		final SettableFuture<Boolean> future = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);
 		final Document update = new Document(ImmutableMap.<String, Object>of("$currentDate", new Document(LVL_LAST_MODIFIED_FIELD, true),
 				"$set", parseObject(obj, true, true)));
-		dbcol.updateOne(eq(obj.getPrimaryKey(), obj.getLvlId()), update, new UpdateOptions().upsert(true), new SingleResultCallback<UpdateResult>() {
+		final FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().projection(fields(include(LVL_GUID_FIELD)))
+				.returnDocument(AFTER)
+				.upsert(true);
+		dbcol.findOneAndUpdate(eq(obj.getPrimaryKey(), obj.getLvlId()), update, options, new SingleResultCallback<Document>() {
 			@Override
-			public void onResult(final UpdateResult result, final Throwable t) {
+			public void onResult(final Document result, final Throwable t) {
 				if (t == null) {
-					final int matched = (int)result.getMatchedCount();
-					switch (matched) {
-					case 0:
-						final BsonValue _id = result.getUpsertedId();
-						if (_id != null && _id.isObjectId()) {
-							obj.setDbId(_id.asObjectId().getValue().toHexString());
-							future.set(true);
-						} else future.setException(new IllegalStateException("No new records were inserted, no existing records were modified by the operation"));
-						break;
-					case 1:
+					if (result != null) {
+						obj.setDbId(result.get("_id", ObjectId.class).toHexString());
 						future.set(true);
-						break;
-					default:
-						future.setException(new IllegalStateException("Illegal number records were modified when only one expected: " + result.getModifiedCount()));
-						break;
-					}
+					} else future.setException(new IllegalStateException("No new records were inserted, no existing records were modified by the operation"));					
 				} else future.setException(t);
-			}			
+			}
 		});
 		return future;
 	}
@@ -300,8 +296,8 @@ public enum MongoConnector implements Closeable2 {
 	}
 
 	public <T extends LvlObject> ListenableFuture<List<T>> find(final LvlCollection<T> collection, final Class<T> type, final int start, final int size, 
-			final @Nullable Filters filters, final Map<String, Boolean> sorting, final @Nullable Map<String, Boolean> projections,
-			final MutableLong totalCount) {		
+			final @Nullable Filters filters, final Map<String, Boolean> sorting, final @Nullable Map<String, Boolean> projections, 
+			final @Nullable MutableLong totalCount) {		
 		// parse input parameters
 		final List<Bson> filterFields = newArrayList();
 		if (filters != null && filters.getFilters() != null && !filters.getFilters().isEmpty()) {
@@ -344,7 +340,7 @@ public enum MongoConnector implements Closeable2 {
 			for (final Map.Entry<String, Boolean> projection : projections.entrySet()) {
 				projectionFields.add(projection.getValue() ? include(projection.getKey()) : exclude(projection.getKey()));
 			}
-		} 
+		}
 		final List<Bson> sortingFields = newArrayList();
 		if (sorting != null && !sorting.isEmpty()) {
 			for (final Map.Entry<String, Boolean> sort : sorting.entrySet()) {
@@ -408,7 +404,7 @@ public enum MongoConnector implements Closeable2 {
 		return future;
 	}
 
-	public <T extends LvlObject> ListenableFuture<Boolean> delete(final T obj) {
+	public <T extends LvlObject> ListenableFuture<Boolean> delete(final T obj, final boolean deleteReferences) { // TODO : add cascading
 		checkArgument(obj != null, "Uninitialized or invalid object");
 		checkArgument(isNotBlank(obj.getPrimaryKey()), "Uninitialized or invalid primary key");
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
@@ -642,12 +638,12 @@ public enum MongoConnector implements Closeable2 {
 	}
 
 	private static <T extends LvlObject> T parseDocument(final Document doc, final Class<T> type) throws IOException {
-		final T obj = JSON_MAPPER.registerModule(jacksonModule).reader(type).withHandler(documentDeserializationProblemHandler).readValue(doc.toJson());
+		final T obj = JSON_MAPPER.registerModule(JACKSON_MODULE).reader(type).withHandler(DOC_DESERIALIZATION_PROBLEM_HANDLER).readValue(doc.toJson());
 		obj.setDbId(doc.get("_id", ObjectId.class).toHexString());
 		return obj;
 	}
 
-	private static DeserializationProblemHandler documentDeserializationProblemHandler = new DeserializationProblemHandler() {
+	private static final DeserializationProblemHandler DOC_DESERIALIZATION_PROBLEM_HANDLER = new DeserializationProblemHandler() {
 		public boolean handleUnknownProperty(final DeserializationContext ctxt, final JsonParser jp, final JsonDeserializer<?> deserializer, 
 				final Object beanOrClass, final String propertyName) throws IOException, JsonProcessingException {
 			if ("_id".equals(propertyName) || "_dist".equals(propertyName)) {
@@ -660,7 +656,7 @@ public enum MongoConnector implements Closeable2 {
 		};
 	};
 
-	private static SimpleModule jacksonModule = new SimpleModule("LeishVLModule", new Version(0, 3, 0, null, "eu.eubrazilcc.lvl", "lvl-storage")).
+	private static final SimpleModule JACKSON_MODULE = new SimpleModule("LeishVLModule", new Version(0, 3, 0, null, "eu.eubrazilcc.lvl", "lvl-storage")).
 			addDeserializer(Date.class, new MongoDateDeserializer());
 
 	/* General methods */

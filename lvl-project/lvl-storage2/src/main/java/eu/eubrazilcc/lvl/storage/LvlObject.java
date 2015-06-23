@@ -25,17 +25,21 @@ package eu.eubrazilcc.lvl.storage;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
+import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.util.concurrent.Futures.addCallback;
 import static com.google.common.util.concurrent.Futures.transform;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -96,6 +100,7 @@ public abstract class LvlObject implements Linkable {
 	private Optional<LvlObjectStatus> status = absent(); // (optional) status
 
 	private Date lastModified; // last modification date
+	private Map<String, List<String>> references; // references to other documents
 
 	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.<String>of("logger", "collection", "configurer", "primaryKey", 
 			"urlSafeNamespace", "urlSafeLvlId");
@@ -114,6 +119,7 @@ public abstract class LvlObject implements Linkable {
 		this.configurer = configurer;
 		this.primaryKey = primaryKey;
 		this.logger = logger;
+		this.references = newHashMap();
 	}
 
 	public String getCollection() {
@@ -186,6 +192,14 @@ public abstract class LvlObject implements Linkable {
 		this.lastModified = lastModified;
 	}
 
+	public Map<String, List<String>> getReferences() {
+		return references;
+	}
+
+	public void setReferences(final Map<String, List<String>> references) {
+		this.references = references;
+	}
+
 	public String getUrlSafeNamespace() {
 		return urlSafeNamespace;
 	}
@@ -248,8 +262,9 @@ public abstract class LvlObject implements Linkable {
 	 * @param options - operation options
 	 * @return a future.
 	 */
-	public ListenableFuture<Boolean> delete(final DeleteOptions... options) {		
-		return MONGODB_CONN.delete(this);
+	public ListenableFuture<Boolean> delete(final DeleteOptions... options) {
+		final List<DeleteOptions> optList = (options != null ? asList(options) : Collections.<DeleteOptions>emptyList());
+		return MONGODB_CONN.delete(this, optList.contains(DeleteOptions.DELETE_CASCADING));
 	}
 
 	/**
@@ -279,12 +294,13 @@ public abstract class LvlObject implements Linkable {
 				&& Objects.equals(location.orNull(), other.location.orNull())
 				&& Objects.equals(provenance.orNull(), other.provenance.orNull())
 				&& Objects.equals(status.orNull(), other.status.orNull())
-				&& Objects.equals(lastModified, other.lastModified);	
+				&& Objects.equals(lastModified, other.lastModified)
+				&& Objects.equals(references, other.references);	
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(dbId, namespace, lvlId, location, provenance, status, lastModified);
+		return Objects.hash(dbId, namespace, lvlId, location, provenance, status, lastModified, references);
 	}
 
 	@Override
@@ -297,6 +313,7 @@ public abstract class LvlObject implements Linkable {
 				.add("provenance", "<<not displayed>>")
 				.add("status", status.orNull())
 				.add("lastModified", lastModified)
+				.add("references", references)
 				.toString();
 	}
 
@@ -312,12 +329,22 @@ public abstract class LvlObject implements Linkable {
 		// none, so far
 	}
 
+	/**
+	 * Fetching options. By default, the LeishVL identifier will be use to search the database.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
 	public static enum FetchOptions {
-		FIND_BY_OBJECTID // by default, the LeishVL identifier will be use to search the database
+		// none, so far
 	}
 
+	/**
+	 * Deleting options. By default, the LeishVL will not perform any action on the references registered for an object when the object is 
+	 * deleted from the database. Specify the option {@link DeleteOptions#DELETE_CASCADING} to delete the references with the referrer object.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
 	public static enum DeleteOptions {
-		DELETE_BY_OBJECTID // by default, the LeishVL identifier will be use to search the database
+		DELETE_CASCADING,
+		DELETE_NO_ACTION
 	}
 
 	/* Available states */
