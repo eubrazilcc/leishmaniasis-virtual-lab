@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+import eu.eubrazilcc.lvl.storage.base.LvlCollection;
 
 /**
  * Wraps a collection of {@link Citation}.

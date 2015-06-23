@@ -32,8 +32,8 @@ import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_REGEX;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_TEXT;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_OR;
-import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_GUID_FIELD;
-import static eu.eubrazilcc.lvl.storage.LvlObject.LvlObjectStatus.DRAFT;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -43,9 +43,11 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
+import static org.junit.runners.MethodSorters.NAME_ASCENDING;
 
 import java.util.List;
 
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -62,13 +64,20 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionStats;
  * Tests {@link Citation} collection in the database.
  * @author Erik Torres <ertorser@upv.es>
  */
+@FixMethodOrder(NAME_ASCENDING)
 public class CitationCollectionTest {
 
 	public static final long TIMEOUT = 5l;
 
+	public static final String ID_1 = "CITATION_1";
+	public static final String ID_2 = "CITATION_2";
+
+	/**
+	 * Tests creation, modification and search of objects which state is draft.
+	 */
 	@Test
-	public void test() {
-		System.out.println("CitationCollectionTest.test()");
+	public void test01DraftState() {
+		System.out.println("CitationCollectionTest.test01DraftState()");
 		try {
 			// create geographic objects
 			final Point madPoint = Point.builder().coordinates(LngLatAlt.builder().coordinates(-3.7037901999999576d, 40.4167754d).build()).build();
@@ -98,11 +107,11 @@ public class CitationCollectionTest {
 
 			// insert new citation in the database
 			final Citation citation1 = Citation.builder()
-					.lvlId("CITATION_1")
+					.lvlId(ID_1)
 					.lvl(LvlCitation.builder().cited(newArrayList("SEQ1", "SEQ2")).build())
 					.pubmed(article1)
 					.location(madPoint)
-					.status(DRAFT)
+					.state(DRAFT)
 					.build(); // TODO : include provenance
 			citation1.save().get(TIMEOUT, SECONDS);
 			assertThat("inserted object Id is not null", citation1.getDbId(), notNullValue());
@@ -113,7 +122,7 @@ public class CitationCollectionTest {
 			System.out.println(" >> Inserted citation (" + dbId + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
 
 			// find citation by global id
-			Citation citation3 = Citation.builder().lvlId("CITATION_1").build();
+			Citation citation3 = Citation.builder().lvlId(ID_1).build();
 			citation3.fetch().get(TIMEOUT, SECONDS);
 			assertThat("inserted last modified field is not null", citation3.getLastModified(), notNullValue());
 			citation1.setLastModified(citation3.getLastModified());
@@ -123,7 +132,7 @@ public class CitationCollectionTest {
 
 			// insert a second citation in the database
 			final Citation citation2 = Citation.builder()
-					.lvlId("CITATION_2")
+					.lvlId(ID_2)
 					.pubmed(article2)
 					.location(bcnPoint)
 					.build();
@@ -272,10 +281,11 @@ public class CitationCollectionTest {
 			assertThat("first citation coincides with expected", citations.get(0).getLvlId(), equalTo(citation1.getLvlId()));			
 
 			// update the citation
-			citation1.approve().save().get(TIMEOUT, SECONDS);
+			citation1.getLvl().getCited().add("NEW_SEQ");
+			citation1.save().get(TIMEOUT, SECONDS);
 
 			// find after update
-			citation3 = Citation.builder().lvlId("CITATION_1").build();
+			citation3 = Citation.builder().lvlId(ID_1).build();
 			citation3.fetch().get(TIMEOUT, SECONDS);
 			assertThat("inserted last modified field is not null", citation3.getLastModified(), notNullValue());
 			citation1.setLastModified(citation3.getLastModified());
@@ -327,9 +337,49 @@ public class CitationCollectionTest {
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			fail("CitationCollectionTest.test() failed: " + e.getMessage());
+			fail("CitationCollectionTest.test01DraftState() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("CitationCollectionTest.test() has finished");
+			System.out.println("CitationCollectionTest.test01DraftState() has finished");
+		}
+	}
+
+	/**
+	 * Tests creation, modification and search of objects which state is release.
+	 */
+	@Test
+	public void test02ReleaseState() {
+		try {
+			System.out.println("CitationCollectionTest.test02ReleaseState()");
+			
+			
+			
+			// TODO .approve()
+
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			fail("CitationCollectionTest.test02ReleaseState() failed: " + e.getMessage());
+		} finally {			
+			System.out.println("CitationCollectionTest.test02ReleaseState() has finished");
+		}
+	}
+
+	/**
+	 * Tests creation, modification and search of objects which state is finalized.
+	 */
+	@Test
+	public void test03FinalizedState() {
+		try {
+			System.out.println("CitationCollectionTest.test03FinalizedState()");
+			
+			
+			
+			// TODO
+
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			fail("CitationCollectionTest.test03FinalizedState() failed: " + e.getMessage());
+		} finally {			
+			System.out.println("CitationCollectionTest.test03FinalizedState() has finished");
 		}
 	}
 

@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
+import eu.eubrazilcc.lvl.storage.base.LvlObject;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer;
 
 /**
@@ -58,7 +59,7 @@ public class Citation extends LvlObject {
 	public static final String COLLECTION  = "citations";	
 	public static final String PUBMED_KEY  = "pubmed.medlineCitation.pmid.value";
 
-	public static final MongoCollectionConfigurer CONFIGURER = new MongoCollectionConfigurer(COLLECTION, true, true, true, true, newArrayList(
+	public static final MongoCollectionConfigurer CONFIGURER = new MongoCollectionConfigurer(COLLECTION, true, newArrayList(
 			indexModel(PUBMED_KEY),
 			textIndexModel(ImmutableList.of("pubmed.medlineCitation.article.articleTitle", 
 					"pubmed.medlineCitation.article.abstract.abstractText"), COLLECTION)));

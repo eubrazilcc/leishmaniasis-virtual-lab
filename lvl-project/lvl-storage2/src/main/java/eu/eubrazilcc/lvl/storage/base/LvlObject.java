@@ -20,23 +20,21 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage;
+package eu.eubrazilcc.lvl.storage.base;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.Maps.newHashMap;
-import static com.google.common.util.concurrent.Futures.addCallback;
-import static com.google.common.util.concurrent.Futures.transform;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.FINALIZED;
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.trimToEmpty;
 import static org.apache.commons.lang.StringUtils.trimToNull;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -56,12 +54,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.AsyncFunction;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.storage.Linkable;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
 
@@ -78,8 +74,9 @@ public abstract class LvlObject implements Linkable {
 	public static final String LVL_NAMESPACE_FIELD = "namespace";
 	public static final String LVL_GUID_FIELD = "lvlId";
 	public static final String LVL_LOCATION_FIELD = "location";
-	public static final String LVL_STATUS_FIELD = "status";
+	public static final String LVL_STATE_FIELD = "state";
 	public static final String LVL_LAST_MODIFIED_FIELD = "lastModified";
+	public static final String LVL_LATEST_VERSION_FIELD = "latestVersion";
 
 	@JsonIgnore
 	protected final Logger logger;
@@ -88,8 +85,6 @@ public abstract class LvlObject implements Linkable {
 	@JsonIgnore
 	private final MongoCollectionConfigurer configurer;
 	@JsonIgnore
-	private final String primaryKey;
-	@JsonIgnore
 	private String dbId; // database identifier
 
 	private Optional<String> namespace = absent(); // (optional) namespace
@@ -97,27 +92,26 @@ public abstract class LvlObject implements Linkable {
 
 	private Optional<Point> location = absent(); // (optional) geospatial location
 	private Optional<Document> provenance = absent(); // (optional) provenance
-	private Optional<LvlObjectStatus> status = absent(); // (optional) status
+	private Optional<LvlObjectState> state = absent(); // (optional) state
 
 	private Date lastModified; // last modification date
-	private Map<String, List<String>> references; // references to other documents
-
-	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.<String>of("logger", "collection", "configurer", "primaryKey", 
-			"urlSafeNamespace", "urlSafeLvlId");
+	private String latestVersion; // set to the GUID value in the latest version
+	private Map<String, List<String>> references; // references to other documents	
 
 	@JsonIgnore
 	protected String urlSafeNamespace;
 	@JsonIgnore
 	protected String urlSafeLvlId;
 
-	public LvlObject(final String collection, final MongoCollectionConfigurer configurer, final Logger logger) {
-		this(collection, configurer, LVL_GUID_FIELD, logger);
-	}
+	@JsonIgnore
+	private LvlObjectStateHandler<LvlObject> stateHandler = new DraftStateHandler<>();
+	
+	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.<String>of("logger", "collection", "configurer", "urlSafeNamespace", 
+			"urlSafeLvlId", "stateHandler");
 
-	public LvlObject(final String collection, final MongoCollectionConfigurer configurer, final String primaryKey, final Logger logger) {
+	public LvlObject(final String collection, final MongoCollectionConfigurer configurer, final Logger logger) {
 		this.collection = collection;
 		this.configurer = configurer;
-		this.primaryKey = primaryKey;
 		this.logger = logger;
 		this.references = newHashMap();
 	}
@@ -128,10 +122,6 @@ public abstract class LvlObject implements Linkable {
 
 	public MongoCollectionConfigurer getConfigurer() {
 		return configurer;
-	}
-
-	public String getPrimaryKey() {
-		return primaryKey;
 	}
 
 	public String getDbId() {
@@ -176,12 +166,24 @@ public abstract class LvlObject implements Linkable {
 		this.provenance = fromNullable(provenance);
 	}	
 
-	public @Nullable LvlObjectStatus getStatus() {
-		return status.orNull();
+	public LvlObjectState getState() {
+		return state.or(DRAFT);
 	}
 
-	public void setStatus(final @Nullable LvlObjectStatus status) {
-		this.status = fromNullable(status);
+	public void setState(final @Nullable LvlObjectState state) {
+		this.state = fromNullable(state);
+		switch (this.state.or(DRAFT)) {
+		case RELEASE:
+			stateHandler = new ReleaseStateHandler<>();
+			break;
+		case FINALIZED:
+			stateHandler = new FinalizedStateHandler<>();
+			break;
+		case DRAFT:
+		default:
+			stateHandler = new DraftStateHandler<>();
+			break;
+		}
 	}
 
 	public Date getLastModified() {
@@ -190,6 +192,14 @@ public abstract class LvlObject implements Linkable {
 
 	public void setLastModified(final Date lastModified) {
 		this.lastModified = lastModified;
+	}
+
+	public String getLatestVersion() {
+		return latestVersion;
+	}
+
+	public void setLatestVersion(final String latestVersion) {
+		this.latestVersion = latestVersion;
 	}
 
 	public Map<String, List<String>> getReferences() {
@@ -222,7 +232,7 @@ public abstract class LvlObject implements Linkable {
 	 * @return a future.
 	 */
 	public ListenableFuture<Boolean> save(final SaveOptions... options) {
-		return MONGODB_CONN.save(this);
+		return stateHandler.save(this, options);
 	}
 
 	/**
@@ -231,30 +241,7 @@ public abstract class LvlObject implements Linkable {
 	 * @return a future.
 	 */
 	public ListenableFuture<Boolean> fetch(final FetchOptions... options) {
-		final LvlObject __obj = this;
-		final ListenableFuture<LvlObject> findFuture = MONGODB_CONN.find(this, this.getClass());
-		final SettableFuture<Boolean> foundFuture = SettableFuture.create();		
-		addCallback(findFuture, new FutureCallback<LvlObject>() {
-			@Override
-			public void onSuccess(final LvlObject result) {				
-				try {
-					copyProperties(result, __obj);
-					foundFuture.set(true);
-				} catch (IllegalAccessException | InvocationTargetException e) {
-					foundFuture.setException(e);
-				}
-			}
-			@Override
-			public void onFailure(final Throwable t) {				
-				foundFuture.setException(t);
-			}
-		});
-		return transform(findFuture, new AsyncFunction<LvlObject, Boolean>() {
-			@Override
-			public ListenableFuture<Boolean> apply(final LvlObject input) throws Exception {				
-				return foundFuture;
-			}
-		});
+		return stateHandler.fetch(this, options);
 	}
 
 	/**
@@ -263,8 +250,7 @@ public abstract class LvlObject implements Linkable {
 	 * @return a future.
 	 */
 	public ListenableFuture<Boolean> delete(final DeleteOptions... options) {
-		final List<DeleteOptions> optList = (options != null ? asList(options) : Collections.<DeleteOptions>emptyList());
-		return MONGODB_CONN.delete(this, optList.contains(DeleteOptions.DELETE_CASCADING));
+		return stateHandler.delete(this, options);
 	}
 
 	/**
@@ -293,14 +279,15 @@ public abstract class LvlObject implements Linkable {
 				&& Objects.equals(lvlId, other.lvlId)
 				&& Objects.equals(location.orNull(), other.location.orNull())
 				&& Objects.equals(provenance.orNull(), other.provenance.orNull())
-				&& Objects.equals(status.orNull(), other.status.orNull())
+				&& Objects.equals(state.orNull(), other.state.orNull())
 				&& Objects.equals(lastModified, other.lastModified)
+				&& Objects.equals(latestVersion, other.latestVersion)
 				&& Objects.equals(references, other.references);	
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(dbId, namespace, lvlId, location, provenance, status, lastModified, references);
+		return Objects.hash(dbId, namespace, lvlId, location, provenance, state, lastModified, latestVersion, references);
 	}
 
 	@Override
@@ -311,48 +298,11 @@ public abstract class LvlObject implements Linkable {
 				.add("lvlId", lvlId)
 				.add("location", location.orNull())
 				.add("provenance", "<<not displayed>>")
-				.add("status", status.orNull())
+				.add("state", state.or(DRAFT))
 				.add("lastModified", lastModified)
+				.add("latestVersion", latestVersion)
 				.add("references", references)
 				.toString();
-	}
-
-	/* Database options */
-
-	/**
-	 * Saving options. By default, the LeishVL will override any existing records of the type {@link LvlObjectStatus#DRAFT} with the new 
-	 * provided values. On the contrary, new versions will be inserted for the objects of the type type {@link LvlObjectStatus#RELEASE}. 
-	 * Obsolete records cannot be updated.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static enum SaveOptions {
-		// none, so far
-	}
-
-	/**
-	 * Fetching options. By default, the LeishVL identifier will be use to search the database.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static enum FetchOptions {
-		// none, so far
-	}
-
-	/**
-	 * Deleting options. By default, the LeishVL will not perform any action on the references registered for an object when the object is 
-	 * deleted from the database. Specify the option {@link DeleteOptions#DELETE_CASCADING} to delete the references with the referrer object.
-	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static enum DeleteOptions {
-		DELETE_CASCADING,
-		DELETE_NO_ACTION
-	}
-
-	/* Available states */
-
-	public static enum LvlObjectStatus {
-		DRAFT,   // (create) ->        draft
-		RELEASE, //    draft ->   (approval) ->  release
-		OBSOLETE //    *any* -> (invalidate) -> obsolete
 	}
 
 	/* Utility methods */
@@ -367,20 +317,20 @@ public abstract class LvlObject implements Linkable {
 	/* Fluent API */
 
 	/**
-	 * Sets the status to {@link LvlObjectStatus.RELEASE}.
+	 * Sets the status to {@link LvlObjectState.RELEASE}.
 	 * @return a reference to this class.
 	 */
 	public LvlObject approve() {
-		this.setStatus(LvlObjectStatus.RELEASE);
+		this.setState(RELEASE);
 		return this;
 	}
 
 	/**
-	 * Sets the status to {@link LvlObjectStatus.OBSOLETE}.
+	 * Sets the status to {@link LvlObjectState.FINALIZED}.
 	 * @return a reference to this class.
 	 */
-	public LvlObject invalidate() {
-		this.setStatus(LvlObjectStatus.OBSOLETE);
+	public LvlObject finalized() {
+		this.setState(FINALIZED);
 		return this;
 	}
 
@@ -427,8 +377,8 @@ public abstract class LvlObject implements Linkable {
 			return builder;
 		}
 
-		public B status(final @Nullable LvlObjectStatus status) {
-			instance.setStatus(status);
+		public B state(final @Nullable LvlObjectState state) {
+			instance.setState(state);
 			return builder;
 		}
 

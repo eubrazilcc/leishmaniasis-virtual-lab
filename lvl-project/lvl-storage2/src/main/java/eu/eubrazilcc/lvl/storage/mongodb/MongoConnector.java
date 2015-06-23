@@ -23,8 +23,6 @@
 package eu.eubrazilcc.lvl.storage.mongodb;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.base.Splitter.on;
 import static com.google.common.collect.FluentIterable.from;
@@ -54,9 +52,10 @@ import static com.mongodb.client.model.Sorts.descending;
 import static com.mongodb.client.model.Sorts.orderBy;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
-import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_GUID_FIELD;
-import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_LAST_MODIFIED_FIELD;
-import static eu.eubrazilcc.lvl.storage.LvlObject.LVL_LOCATION_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LAST_MODIFIED_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LATEST_VERSION_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LOCATION_FIELD;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.beanutils.PropertyUtils.getSimpleProperty;
@@ -66,7 +65,6 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
@@ -117,15 +115,14 @@ import com.mongodb.connection.ClusterSettings;
 
 import eu.eubrazilcc.lvl.core.BaseFile;
 import eu.eubrazilcc.lvl.core.Closeable2;
-import eu.eubrazilcc.lvl.core.Versionable;
 import eu.eubrazilcc.lvl.core.geojson.Crs;
 import eu.eubrazilcc.lvl.core.geojson.Feature;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.storage.Filter;
 import eu.eubrazilcc.lvl.storage.Filters;
-import eu.eubrazilcc.lvl.storage.LvlCollection;
-import eu.eubrazilcc.lvl.storage.LvlObject;
+import eu.eubrazilcc.lvl.storage.base.LvlCollection;
+import eu.eubrazilcc.lvl.storage.base.LvlObject;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDateDeserializer;
 
 /**
@@ -139,26 +136,12 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDateDeserializer;
  */
 public enum MongoConnector implements Closeable2 {
 
-	/*
-	 * TODO
-	 * 
-	 * - Add method versions to return JSON directly (without conversion to domain classes). This is needed for all find methods.
-	 */
-
 	MONGODB_CONN;
 
 	private static final Logger LOGGER = getLogger(MongoConnector.class);
 
-	public static final String METADATA_ATTR = "metadata";
-	public static final String IS_LATEST_VERSION_ATTR = "isLastestVersion";
-	public static final String OPEN_ACCESS_LINK_ATTR = "openAccessLink";
-	public static final String OPEN_ACCESS_DATE_ATTR = "openAccessDate";
-	public static final String FILE_VERSION_PROP = METADATA_ATTR + "." + IS_LATEST_VERSION_ATTR;
-	public static final String FILE_OPEN_ACCESS_LINK_PROP = METADATA_ATTR + "." + OPEN_ACCESS_LINK_ATTR;
-	public static final String FILE_OPEN_ACCESS_DATE_PROP = METADATA_ATTR + "." + OPEN_ACCESS_DATE_ATTR;
-
 	private Lock mutex = new ReentrantLock();
-	private MongoClient __client = null;	
+	private MongoClient __client = null;
 
 	private MongoClient client() {
 		mutex.lock();
@@ -206,24 +189,6 @@ public enum MongoConnector implements Closeable2 {
 						.credentialList(credentialList)
 						.build();
 				__client = MongoClients.create(settings);				
-				// check class attributes accessed by reflection
-				try {
-					final Field metadataField = BaseFile.class.getDeclaredField(METADATA_ATTR);					
-					checkNotNull(metadataField, "Metadata property (" + METADATA_ATTR + ") not found in file base: " 
-							+ BaseFile.class.getCanonicalName());
-					final Class<?> metadataType = metadataField.getType();
-					checkState(Versionable.class.isAssignableFrom(metadataType), "Metadata does not implements versionable: " 
-							+ metadataType.getCanonicalName());
-					checkNotNull(Versionable.class.getDeclaredField(IS_LATEST_VERSION_ATTR), 
-							"Version property (" + IS_LATEST_VERSION_ATTR + ") not found in versionable: "
-									+ Versionable.class.getCanonicalName());					
-					checkNotNull(metadataType.getDeclaredField(OPEN_ACCESS_LINK_ATTR), 
-							"Open access link property (" + OPEN_ACCESS_LINK_ATTR + ") not found in metadata: " + metadataType.getCanonicalName());					
-					checkNotNull(metadataType.getDeclaredField(OPEN_ACCESS_DATE_ATTR), 
-							"Open access date property (" + OPEN_ACCESS_DATE_ATTR + ") not found in metadata: " + metadataType.getCanonicalName());					
-				} catch (Exception e) {
-					throw new IllegalStateException("Object versioning needs a compatible version of the LVL core library, but none is available", e);
-				}
 			}
 			return __client;
 		} finally {
@@ -247,8 +212,7 @@ public enum MongoConnector implements Closeable2 {
 	}
 
 	/**
-	 * Saves the specified object to the database. An alternative of this method could use the method {@link MongoCollection#updateMany(Bson, Bson, com.mongodb.client.model.UpdateOptions, SingleResultCallback)}
-	 * with the <tt>upsert</tt> set to <tt>true</tt> in order to save more than one document.
+	 * Saves the specified object to the database.
 	 * @param obj - object to save
 	 * @return a future which result is a boolean indicating whether or not the operation is successfully completed.
 	 */
@@ -260,7 +224,7 @@ public enum MongoConnector implements Closeable2 {
 		final FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().projection(fields(include(LVL_GUID_FIELD)))
 				.returnDocument(AFTER)
 				.upsert(true);
-		dbcol.findOneAndUpdate(eq(obj.getPrimaryKey(), obj.getLvlId()), update, options, new SingleResultCallback<Document>() {
+		dbcol.findOneAndUpdate(eq(LVL_GUID_FIELD, obj.getLvlId()), update, options, new SingleResultCallback<Document>() {
 			@Override
 			public void onResult(final Document result, final Throwable t) {
 				if (t == null) {
@@ -276,11 +240,10 @@ public enum MongoConnector implements Closeable2 {
 
 	public <T extends LvlObject> ListenableFuture<LvlObject> find(final LvlObject obj, final Class<T> type) {
 		checkArgument(obj != null && obj.getClass().isAssignableFrom(type), "Uninitialized or invalid object type");
-		checkArgument(isNotBlank(obj.getPrimaryKey()), "Uninitialized or invalid primary key");
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
 		final SettableFuture<LvlObject> future = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);
-		dbcol.find(eq(obj.getPrimaryKey(), obj.getLvlId())).first(new SingleResultCallback<Document>() {
+		dbcol.find(eq(LVL_GUID_FIELD, obj.getLvlId())).modifiers(LATEST_VERSION_HINT).first(new SingleResultCallback<Document>() {
 			@Override
 			public void onResult(final Document result, final Throwable t) {
 				if (t == null) {
@@ -295,10 +258,16 @@ public enum MongoConnector implements Closeable2 {
 		return future;
 	}
 
+	/**
+	 * Finds elements in a collection.
+	 * Note: <tt>hint</tt> and <tt>text</tt> are mutually exclusive in a query expression.
+	 * @see <a href="http://docs.mongodb.org/manual/reference/method/cursor.hint/#behavior">mongoDB -- cursor.hint()</a>
+	 */
 	public <T extends LvlObject> ListenableFuture<List<T>> find(final LvlCollection<T> collection, final Class<T> type, final int start, final int size, 
 			final @Nullable Filters filters, final Map<String, Boolean> sorting, final @Nullable Map<String, Boolean> projections, 
 			final @Nullable MutableLong totalCount) {		
 		// parse input parameters
+		boolean textFilter = false;
 		final List<Bson> filterFields = newArrayList();
 		if (filters != null && filters.getFilters() != null && !filters.getFilters().isEmpty()) {
 			for (final Filter filter : filters.getFilters()) {
@@ -311,6 +280,7 @@ public enum MongoConnector implements Closeable2 {
 					break;
 				case FILTER_TEXT:
 					filterFields.add(text(value));
+					textFilter = true;
 					break;
 				case FILTER_COMPARE:
 				default:
@@ -334,7 +304,8 @@ public enum MongoConnector implements Closeable2 {
 			}
 		}
 		final Bson filter = (filterFields.isEmpty() ? new Document() : (filters != null && LOGICAL_AND.equals(filters.getType()) 
-				? and(filterFields) : or(filterFields)));				
+				? and(filterFields) : or(filterFields)));
+		final Bson modifiers = (!textFilter ? LATEST_VERSION_HINT : new Document());
 		final List<Bson> projectionFields = newArrayList();
 		if (projections != null && !projections.isEmpty()) {
 			for (final Map.Entry<String, Boolean> projection : projections.entrySet()) {
@@ -366,6 +337,7 @@ public enum MongoConnector implements Closeable2 {
 		final SettableFuture<Void> findFuture = SettableFuture.create();
 		final FindIterable<Document> iterable = dbcol
 				.find(filter)
+				.modifiers(modifiers)
 				.projection(fields(projectionFields))
 				.sort(orderBy(sortingFields))
 				.skip(start)
@@ -406,11 +378,10 @@ public enum MongoConnector implements Closeable2 {
 
 	public <T extends LvlObject> ListenableFuture<Boolean> delete(final T obj, final boolean deleteReferences) { // TODO : add cascading
 		checkArgument(obj != null, "Uninitialized or invalid object");
-		checkArgument(isNotBlank(obj.getPrimaryKey()), "Uninitialized or invalid primary key");
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
 		final SettableFuture<Boolean> future = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);
-		dbcol.deleteOne(eq(obj.getPrimaryKey(), obj.getLvlId()), new SingleResultCallback<DeleteResult>() {
+		dbcol.deleteOne(eq(LVL_GUID_FIELD, obj.getLvlId()), new SingleResultCallback<DeleteResult>() {
 			@Override
 			public void onResult(final DeleteResult result, final Throwable t) {
 				if (t == null) {
@@ -563,7 +534,7 @@ public enum MongoConnector implements Closeable2 {
 	/**
 	 * Collects statistics about the specified collection.
 	 * @param collection - collection from which the statistics are collected
-	 * @return a listenable future
+	 * @return a listenable future which result is the status of the specified collection.
 	 */	
 	public <T extends LvlObject> ListenableFuture<MongoCollectionStats> stats(final LvlCollection<T> collection) {		
 		final MongoCollection<Document> dbcol = getCollection(collection);
@@ -609,6 +580,8 @@ public enum MongoConnector implements Closeable2 {
 		return future;
 	}
 
+	/* Helper methods */
+
 	private <T extends LvlObject> MongoCollection<Document> getCollection(final LvlObject obj) {
 		checkArgument(obj != null, "Uninitialized object");
 		checkArgument(isNotBlank(obj.getCollection()), "Uninitialized or invalid collection");
@@ -625,17 +598,17 @@ public enum MongoConnector implements Closeable2 {
 		return db.getCollection(collection.getCollection());
 	}
 
-	private <T extends LvlObject> Document parseObject(final LvlObject obj, final boolean checkFields, final boolean unsetVolatileFields) {
+	private <T extends LvlObject> Document parseObject(final LvlObject obj, final boolean checkFields, final boolean setDefaults) {
 		checkArgument(obj != null, "Uninitialized object");
 		if (checkFields) {
-			checkArgument(isNotBlank(obj.getPrimaryKey()), "Uninitialized or invalid primary key");
 			checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
 		}
-		if (unsetVolatileFields) {
+		if (setDefaults) {
 			obj.setLastModified(null);
+			obj.setLatestVersion(obj.getLvlId());
 		}
 		return Document.parse(obj.toJson());
-	}
+	}	
 
 	private static <T extends LvlObject> T parseDocument(final Document doc, final Class<T> type) throws IOException {
 		final T obj = JSON_MAPPER.registerModule(JACKSON_MODULE).reader(type).withHandler(DOC_DESERIALIZATION_PROBLEM_HANDLER).readValue(doc.toJson());
@@ -658,6 +631,8 @@ public enum MongoConnector implements Closeable2 {
 
 	private static final SimpleModule JACKSON_MODULE = new SimpleModule("LeishVLModule", new Version(0, 3, 0, null, "eu.eubrazilcc.lvl", "lvl-storage")).
 			addDeserializer(Date.class, new MongoDateDeserializer());
+
+	private static final Document LATEST_VERSION_HINT = new Document("$hint", new Document(LVL_LATEST_VERSION_FIELD, new BsonInt32(1)));
 
 	/* General methods */
 

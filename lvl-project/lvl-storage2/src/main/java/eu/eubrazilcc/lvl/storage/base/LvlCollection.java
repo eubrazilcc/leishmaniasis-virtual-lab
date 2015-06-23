@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage;
+package eu.eubrazilcc.lvl.storage.base;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
@@ -57,6 +57,8 @@ import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
+import eu.eubrazilcc.lvl.storage.Filters;
+import eu.eubrazilcc.lvl.storage.Linkable;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionStats;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
