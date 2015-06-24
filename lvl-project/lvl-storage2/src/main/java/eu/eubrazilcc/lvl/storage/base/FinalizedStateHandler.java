@@ -22,26 +22,22 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
-import java.util.Date;
 import java.util.List;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Behavior corresponding to the finalized state.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class FinalizedStateHandler<T extends LvlObject> implements LvlObjectStateHandler<T> {
+public class FinalizedStateHandler<T extends LvlObject> extends LvlObjectStateHandler<T> {
 
 	@Override
-	public ListenableFuture<Boolean> save(final T obj, final SaveOptions... options) {
-		throw new UnsupportedOperationException("Modifying finalized objects is not supported");
-	}
-
-	@Override
-	public ListenableFuture<Boolean> fetch(final T obj, final FetchOptions... options) {
-		// TODO Auto-generated method stub
-		return null;
+	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
+		final SettableFuture<Void> future = SettableFuture.create();
+		future.setException(new UnsupportedOperationException("Finalized objects cannot be modified"));
+		return future;
 	}
 
 	@Override
@@ -51,7 +47,7 @@ public class FinalizedStateHandler<T extends LvlObject> implements LvlObjectStat
 	}
 
 	@Override
-	public ListenableFuture<Date> undo(final T obj) {
+	public ListenableFuture<Void> undo(final T obj) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -61,5 +57,5 @@ public class FinalizedStateHandler<T extends LvlObject> implements LvlObjectStat
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 }

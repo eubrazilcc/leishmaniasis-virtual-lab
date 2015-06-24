@@ -22,25 +22,58 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
-import java.util.Date;
+import static com.google.common.util.concurrent.Futures.addCallback;
+import static com.google.common.util.concurrent.Futures.transform;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.copyProperties;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Provides different behaviors for different object states.
  * @author Erik Torres <ertorser@upv.es>
  */
-public interface LvlObjectStateHandler<T extends LvlObject> {
+public abstract class LvlObjectStateHandler<T extends LvlObject> {
 
-	ListenableFuture<Boolean> save(T obj, SaveOptions... options);
+	public abstract ListenableFuture<Void> save(T obj, SaveOptions... options);
 
-	ListenableFuture<Boolean> fetch(T obj, FetchOptions... options);
+	public ListenableFuture<Void> fetch(final T obj, final FetchOptions... options) {
+		final LvlObject __obj = obj;
+		final ListenableFuture<LvlObject> findFuture = MONGODB_CONN.find(obj, obj.getClass());
+		final SettableFuture<Void> foundFuture = SettableFuture.create();
+		addCallback(findFuture, new FutureCallback<LvlObject>() {
+			@Override
+			public void onSuccess(final LvlObject result) {				
+				try {
+					copyProperties(result, __obj);						
+					foundFuture.set(null);
+				} catch (IllegalAccessException | InvocationTargetException e) {
+					foundFuture.setException(e);
+				}
+			}
+			@Override
+			public void onFailure(final Throwable t) {				
+				foundFuture.setException(t);
+			}
+		});
+		return transform(findFuture, new AsyncFunction<LvlObject, Void>() {
+			@Override
+			public ListenableFuture<Void> apply(final LvlObject input) throws Exception {				
+				return foundFuture;
+			}
+		});
+	}
 
-	ListenableFuture<Boolean> delete(T obj, DeleteOptions... options);
+	public abstract ListenableFuture<Boolean> delete(T obj, DeleteOptions... options);
 
-	ListenableFuture<Date> undo(T obj);
+	public abstract ListenableFuture<Void> undo(T obj);
 
-	ListenableFuture<List<T>> versions(T obj);
+	public abstract ListenableFuture<List<T>> versions(T obj);
 
 }

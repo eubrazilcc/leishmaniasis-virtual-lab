@@ -34,6 +34,7 @@ import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_OR;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
+import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -97,7 +98,7 @@ public class CitationCollectionTest {
 							.withDateCreated(PUBMED_XML_FACTORY.createDateCreated().withYear(PUBMED_XML_FACTORY.createYear().withvalue("2015")))
 							.withArticle(PUBMED_XML_FACTORY.createArticle().withPubModel("Electronic-Print").withArticleTitle("The best paper in the world").withJournal(PUBMED_XML_FACTORY.createJournal().withTitle("Journal of Awesomeness")).withAbstract(PUBMED_XML_FACTORY.createAbstract().withAbstractText("This paper presents a text.")).withAuthorList(PUBMED_XML_FACTORY.createAuthorList().withAuthor(PUBMED_XML_FACTORY.createAuthor().withLastNameOrForeNameOrInitialsOrSuffixOrNameIDOrCollectiveName("John Doe"))).withPublicationTypeList(PUBMED_XML_FACTORY.createPublicationTypeList().withPublicationType(PUBMED_XML_FACTORY.createPublicationType().withvalue("Journal Article"))).withLanguage(PUBMED_XML_FACTORY.createLanguage().withvalue("eng")).withArticleDate(PUBMED_XML_FACTORY.createArticleDate().withYear(PUBMED_XML_FACTORY.createYear().withvalue("2015")))));
 			/* Uncomment for additional output */
-			System.out.println(" >> Original PubMed article:\n" + prettyPrint(PUBMED_XMLB.typeToXml(article1)));			
+			System.out.println(" >> Original PubMed article:\n" + prettyPrint(PUBMED_XMLB.typeToXml(article1)));
 
 			final PubmedArticle article2 = PUBMED_XML_FACTORY.createPubmedArticle()
 					.withMedlineCitation(PUBMED_XML_FACTORY.createMedlineCitation()
@@ -105,7 +106,7 @@ public class CitationCollectionTest {
 							.withDateCreated(PUBMED_XML_FACTORY.createDateCreated().withYear(PUBMED_XML_FACTORY.createYear().withvalue("2014")))
 							.withArticle(PUBMED_XML_FACTORY.createArticle().withPubModel("Electronic-Print").withArticleTitle("Rocket science rocks").withJournal(PUBMED_XML_FACTORY.createJournal().withTitle("Journal of Awesomeness")).withAbstract(PUBMED_XML_FACTORY.createAbstract().withAbstractText("It rocks! There is no much to say.")).withAuthorList(PUBMED_XML_FACTORY.createAuthorList().withAuthor(PUBMED_XML_FACTORY.createAuthor().withLastNameOrForeNameOrInitialsOrSuffixOrNameIDOrCollectiveName("Jane Doe"))).withPublicationTypeList(PUBMED_XML_FACTORY.createPublicationTypeList().withPublicationType(PUBMED_XML_FACTORY.createPublicationType().withvalue("Journal Article"))).withLanguage(PUBMED_XML_FACTORY.createLanguage().withvalue("eng")).withArticleDate(PUBMED_XML_FACTORY.createArticleDate().withYear(PUBMED_XML_FACTORY.createYear().withvalue("2014")))));
 
-			// insert new citation in the database
+			// create citations
 			final Citation citation1 = Citation.builder()
 					.lvlId(ID_1)
 					.lvl(LvlCitation.builder().cited(newArrayList("SEQ1", "SEQ2")).build())
@@ -113,6 +114,14 @@ public class CitationCollectionTest {
 					.location(madPoint)
 					.state(DRAFT)
 					.build(); // TODO : include provenance
+
+			final Citation citation2 = Citation.builder()
+					.lvlId(ID_2)
+					.pubmed(article2)
+					.location(bcnPoint)
+					.build();
+
+			// insert new citation in the database
 			citation1.save().get(TIMEOUT, SECONDS);
 			assertThat("inserted object Id is not null", citation1.getDbId(), notNullValue());
 			String dbId = citation1.getDbId().toString();
@@ -130,12 +139,7 @@ public class CitationCollectionTest {
 			/* Uncomment for additional output */
 			System.out.println(" >> Fetched citation:\n" + citation3.toJson(JSON_PRETTY_PRINTER));
 
-			// insert a second citation in the database
-			final Citation citation2 = Citation.builder()
-					.lvlId(ID_2)
-					.pubmed(article2)
-					.location(bcnPoint)
-					.build();
+			// insert a second citation in the database			
 			citation2.save().get(TIMEOUT, SECONDS);
 			assertThat("inserted object Id is not null", citation2.getDbId(), notNullValue());
 			dbId = citation2.getDbId().toString();
@@ -294,7 +298,7 @@ public class CitationCollectionTest {
 			System.out.println(" >> Fetched citation (after update):\n" + citation3.toJson(JSON_PRETTY_PRINTER));
 
 			// remove
-			citation1.delete().get(TIMEOUT, SECONDS);			
+			citation2.delete().get(TIMEOUT, SECONDS);			
 			long totalCount = citations.totalCount().get(TIMEOUT, SECONDS).longValue();			
 			assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(1l));
 
@@ -350,10 +354,12 @@ public class CitationCollectionTest {
 	public void test02ReleaseState() {
 		try {
 			System.out.println("CitationCollectionTest.test02ReleaseState()");
-			
-			
-			
+
+
+
 			// TODO .approve()
+
+			// TODO : saving a draft after a release should fail
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -370,9 +376,18 @@ public class CitationCollectionTest {
 	public void test03FinalizedState() {
 		try {
 			System.out.println("CitationCollectionTest.test03FinalizedState()");
-			
-			
-			
+
+			// test saving finalized objects
+			Citation citation1 = Citation.builder().lvlId(ID_1).build();			
+			try {
+				citation1.finalized().save().get(TIMEOUT, SECONDS);
+				fail("Expected exception due to unsupported operation");
+			} catch (Exception expected) {
+				assertThat("exception cause is not null", expected.getCause(), notNullValue());
+				assertThat("exception cause coincides with expected", expected.getCause() instanceof UnsupportedOperationException, equalTo(true));				
+				System.out.println("Expected exception caught: " + expected.getCause().getMessage());				
+			}
+
 			// TODO
 
 		} catch (Exception e) {
@@ -380,6 +395,34 @@ public class CitationCollectionTest {
 			fail("CitationCollectionTest.test03FinalizedState() failed: " + e.getMessage());
 		} finally {			
 			System.out.println("CitationCollectionTest.test03FinalizedState() has finished");
+		}
+	}
+
+	@Test
+	public void test04JsonMapping() {
+		System.out.println("CitationCollectionTest.test04JsonMapping()");
+		try {
+			final Citation citation1 = Citation.builder().lvlId(ID_1).build();
+			citation1.fetch().get(TIMEOUT, SECONDS);
+			assertThat("retrieved object is not null", citation1, notNullValue());
+
+			// test Java object to JSON serialization
+			final String payload = citation1.toJson(JSON_PRETTY_PRINTER);			
+			assertThat("serialized JSON object is not null", payload, notNullValue());
+			assertThat("serialized JSON object is not empty", isNotBlank(payload), equalTo(true));
+			/* uncomment for additional output */
+			System.out.println(" >> Serialized JSON object:\n" + payload);
+
+			// test JSON to Java object deserialization			
+			final Citation citation2 = JSON_MAPPER.readValue(payload, Citation.class);
+			assertThat("deserialized Java object is not null", citation2, notNullValue());
+			assertThat("deserialized Java object coincides with expected", citation2, equalTo(citation1));
+
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			fail("CitationCollectionTest.test04JsonMapping() failed: " + e.getMessage());
+		} finally {			
+			System.out.println("CitationCollectionTest.test04JsonMapping() has finished");
 		}
 	}
 

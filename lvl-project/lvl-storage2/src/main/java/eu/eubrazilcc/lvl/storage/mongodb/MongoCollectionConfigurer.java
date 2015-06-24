@@ -25,8 +25,9 @@ package eu.eubrazilcc.lvl.storage.mongodb;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.toMap;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_ACTIVE_VERSION_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LATEST_VERSION_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LAST_MODIFIED_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LOCATION_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_NAMESPACE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_STATE_FIELD;
@@ -67,7 +68,8 @@ public class MongoCollectionConfigurer {
 		// common indexes		
 		indexes.add(nonUniqueIndexModel(LVL_NAMESPACE_FIELD, false));
 		indexes.add(nonUniqueIndexModel(LVL_GUID_FIELD, false));
-		indexes.add(sparseIndexModelWithUniqueConstraint(LVL_LATEST_VERSION_FIELD, false));
+		indexes.add(nonUniqueIndexModel(LVL_LAST_MODIFIED_FIELD, true));
+		indexes.add(sparseIndexModelWithUniqueConstraint(LVL_ACTIVE_VERSION_FIELD, false));
 		indexes.add(nonUniqueIndexModel(LVL_STATE_FIELD, false));
 		// geospatial indexes
 		if (geoIndex) indexes.add(geospatialIndexModel(LVL_LOCATION_FIELD));

@@ -76,7 +76,7 @@ public abstract class LvlObject implements Linkable {
 	public static final String LVL_LOCATION_FIELD = "location";
 	public static final String LVL_STATE_FIELD = "state";
 	public static final String LVL_LAST_MODIFIED_FIELD = "lastModified";
-	public static final String LVL_LATEST_VERSION_FIELD = "latestVersion";
+	public static final String LVL_ACTIVE_VERSION_FIELD = "activeVersion";
 
 	@JsonIgnore
 	protected final Logger logger;
@@ -95,7 +95,7 @@ public abstract class LvlObject implements Linkable {
 	private Optional<LvlObjectState> state = absent(); // (optional) state
 
 	private Date lastModified; // last modification date
-	private String latestVersion; // set to the GUID value in the latest version
+	private String activeVersion; // set to the GUID value in the active version (in most cases, the latest version)
 	private Map<String, List<String>> references; // references to other documents	
 
 	@JsonIgnore
@@ -105,7 +105,7 @@ public abstract class LvlObject implements Linkable {
 
 	@JsonIgnore
 	private LvlObjectStateHandler<LvlObject> stateHandler = new DraftStateHandler<>();
-	
+
 	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.<String>of("logger", "collection", "configurer", "urlSafeNamespace", 
 			"urlSafeLvlId", "stateHandler");
 
@@ -167,7 +167,7 @@ public abstract class LvlObject implements Linkable {
 	}	
 
 	public LvlObjectState getState() {
-		return state.or(DRAFT);
+		return state.orNull();
 	}
 
 	public void setState(final @Nullable LvlObjectState state) {
@@ -194,12 +194,12 @@ public abstract class LvlObject implements Linkable {
 		this.lastModified = lastModified;
 	}
 
-	public String getLatestVersion() {
-		return latestVersion;
+	public String getActiveVersion() {
+		return activeVersion;
 	}
 
-	public void setLatestVersion(final String latestVersion) {
-		this.latestVersion = latestVersion;
+	public void setActiveVersion(final String activeVersion) {
+		this.activeVersion = activeVersion;
 	}
 
 	public Map<String, List<String>> getReferences() {
@@ -231,7 +231,7 @@ public abstract class LvlObject implements Linkable {
 	 * @param options - operation options
 	 * @return a future.
 	 */
-	public ListenableFuture<Boolean> save(final SaveOptions... options) {
+	public ListenableFuture<Void> save(final SaveOptions... options) {
 		return stateHandler.save(this, options);
 	}
 
@@ -240,7 +240,7 @@ public abstract class LvlObject implements Linkable {
 	 * @param options - operation options
 	 * @return a future.
 	 */
-	public ListenableFuture<Boolean> fetch(final FetchOptions... options) {
+	public ListenableFuture<Void> fetch(final FetchOptions... options) {
 		return stateHandler.fetch(this, options);
 	}
 
@@ -273,21 +273,20 @@ public abstract class LvlObject implements Linkable {
 		if (obj == null || !(obj instanceof LvlObject)) {
 			return false;
 		}
-		final LvlObject other = LvlObject.class.cast(obj);
-		return Objects.equals(dbId, other.dbId)
-				&& Objects.equals(namespace, other.namespace)
+		final LvlObject other = LvlObject.class.cast(obj);		
+		return Objects.equals(namespace, other.namespace)
 				&& Objects.equals(lvlId, other.lvlId)
 				&& Objects.equals(location.orNull(), other.location.orNull())
 				&& Objects.equals(provenance.orNull(), other.provenance.orNull())
 				&& Objects.equals(state.orNull(), other.state.orNull())
 				&& Objects.equals(lastModified, other.lastModified)
-				&& Objects.equals(latestVersion, other.latestVersion)
-				&& Objects.equals(references, other.references);	
+				&& Objects.equals(activeVersion, other.activeVersion)
+				&& Objects.equals(references, other.references);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(dbId, namespace, lvlId, location, provenance, state, lastModified, latestVersion, references);
+		return Objects.hash(dbId, namespace, lvlId, location, provenance, state, lastModified, activeVersion, references);
 	}
 
 	@Override
@@ -300,7 +299,7 @@ public abstract class LvlObject implements Linkable {
 				.add("provenance", "<<not displayed>>")
 				.add("state", state.or(DRAFT))
 				.add("lastModified", lastModified)
-				.add("latestVersion", latestVersion)
+				.add("activeVersion", activeVersion)
 				.add("references", references)
 				.toString();
 	}

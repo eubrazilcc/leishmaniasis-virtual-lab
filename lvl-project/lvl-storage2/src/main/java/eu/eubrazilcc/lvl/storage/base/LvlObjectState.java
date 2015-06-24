@@ -28,8 +28,18 @@ package eu.eubrazilcc.lvl.storage.base;
  */
 public enum LvlObjectState {
 
-	DRAFT,    //            (create) ->     draft
-	RELEASE,  // draft -> (approval) ->   release
-	FINALIZED // *any* -> (finalize) -> finalized
+	DRAFT(100),     //            (create) ->     draft
+	RELEASE(200),   // draft -> (approval) ->   release
+	FINALIZED(300); // *any* -> (finalize) -> finalized
+	
+	private int intState;
+	
+	private LvlObjectState(final int intState) {
+		this.intState = intState;
+	}
+
+	public int getIntState() {
+		return intState;
+	}
 	
 }

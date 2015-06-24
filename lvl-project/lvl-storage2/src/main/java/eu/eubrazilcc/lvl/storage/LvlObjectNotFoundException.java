@@ -20,40 +20,26 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.base;
-
-import java.util.List;
-
-import com.google.common.util.concurrent.ListenableFuture;
+package eu.eubrazilcc.lvl.storage;
 
 /**
- * Behavior corresponding to the release state.
+ * An exception indicating that the searched object was not found.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ReleaseStateHandler<T extends LvlObject> extends LvlObjectStateHandler<T> {
+public class LvlObjectNotFoundException extends LvlException {
 
-	@Override
-	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		// TODO Auto-generated method stub
-		return null;
+	private static final long serialVersionUID = 2740936073405109417L;
+
+	public LvlObjectNotFoundException(final String message, final Throwable cause) {
+		super(message, cause);
 	}
 
-	@Override
-	public ListenableFuture<Boolean> delete(final T obj, final DeleteOptions... options) {
-		// TODO Auto-generated method stub
-		return null;
+	public LvlObjectNotFoundException(final String message) {
+		super(message);
 	}
 
-	@Override
-	public ListenableFuture<Void> undo(final T obj) {
-		// TODO Auto-generated method stub
-		return null;
+	public LvlObjectNotFoundException(final Throwable cause) {
+		super(cause);
 	}
-
-	@Override
-	public ListenableFuture<List<T>> versions(final T obj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 }
