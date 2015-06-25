@@ -25,13 +25,15 @@ package eu.eubrazilcc.lvl.storage.mongodb;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.toMap;
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_ACTIVE_VERSION_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_IS_ACTIVE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LAST_MODIFIED_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LOCATION_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_NAMESPACE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_STATE_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_VERSION_FIELD;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -65,11 +67,12 @@ public class MongoCollectionConfigurer {
 
 	public MongoCollectionConfigurer(final String collection, final boolean geoIndex, final List<IndexModel> moreIndexes) {
 		this.collection = collection;
-		// common indexes		
+		// common indexes
 		indexes.add(nonUniqueIndexModel(LVL_NAMESPACE_FIELD, false));
 		indexes.add(nonUniqueIndexModel(LVL_GUID_FIELD, false));
+		indexes.add(indexModel(LVL_GUID_FIELD, LVL_VERSION_FIELD));
 		indexes.add(nonUniqueIndexModel(LVL_LAST_MODIFIED_FIELD, true));
-		indexes.add(sparseIndexModelWithUniqueConstraint(LVL_ACTIVE_VERSION_FIELD, false));
+		indexes.add(sparseIndexModelWithUniqueConstraint(LVL_IS_ACTIVE_FIELD, false));
 		indexes.add(nonUniqueIndexModel(LVL_STATE_FIELD, false));
 		// geospatial indexes
 		if (geoIndex) indexes.add(geospatialIndexModel(LVL_LOCATION_FIELD));
@@ -98,8 +101,8 @@ public class MongoCollectionConfigurer {
 	 * in the background and stores unique elements.
 	 * @param field - field that is used to index the elements
 	 */
-	public static IndexModel indexModel(final String field) {
-		return indexModel(field, false);
+	public static IndexModel indexModel(final String... field) {
+		return indexModel(asList(field), true, false);
 	}
 
 	/**
@@ -117,8 +120,8 @@ public class MongoCollectionConfigurer {
 	 * in the background and stores unique elements.
 	 * @param fields - fields that are used to index the elements
 	 */
-	public static IndexModel indexModel(final List<String> fields) {
-		return indexModel(fields, true, false);
+	public static IndexModel indexModel(final List<String> fields, final boolean descending) {
+		return indexModel(fields, true, descending);
 	}
 
 	/**

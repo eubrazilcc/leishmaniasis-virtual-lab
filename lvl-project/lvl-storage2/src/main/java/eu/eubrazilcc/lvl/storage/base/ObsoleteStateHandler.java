@@ -22,40 +22,20 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
-import java.util.List;
-
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
- * Behavior corresponding to the finalized state.
+ * Behavior corresponding to the obsolete state.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class FinalizedStateHandler<T extends LvlObject> extends LvlObjectStateHandler<T> {
+public class ObsoleteStateHandler<T extends LvlObject> extends LvlObjectStateHandler<T> {
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
 		final SettableFuture<Void> future = SettableFuture.create();
-		future.setException(new UnsupportedOperationException("Finalized objects cannot be modified"));
+		future.setException(new UnsupportedOperationException("Obsolete objects cannot be modified"));
 		return future;
-	}
-
-	@Override
-	public ListenableFuture<Boolean> delete(final T obj, final DeleteOptions... options) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ListenableFuture<Void> undo(final T obj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ListenableFuture<List<T>> versions(final T obj) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

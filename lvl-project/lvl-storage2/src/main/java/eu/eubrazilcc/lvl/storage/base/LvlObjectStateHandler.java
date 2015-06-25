@@ -24,10 +24,16 @@ package eu.eubrazilcc.lvl.storage.base;
 
 import static com.google.common.util.concurrent.Futures.addCallback;
 import static com.google.common.util.concurrent.Futures.transform;
+import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.DELETE_ACTIVE;
+import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.DELETE_ALL;
+import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.ON_DELETE_CASCADE;
+import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.ON_DELETE_NO_ACTION;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.copyProperties;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+import static java.util.Arrays.asList;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.util.concurrent.AsyncFunction;
@@ -45,7 +51,7 @@ public abstract class LvlObjectStateHandler<T extends LvlObject> {
 
 	public ListenableFuture<Void> fetch(final T obj, final FetchOptions... options) {
 		final LvlObject __obj = obj;
-		final ListenableFuture<LvlObject> findFuture = MONGODB_CONN.find(obj, obj.getClass());
+		final ListenableFuture<LvlObject> findFuture = MONGODB_CONN.findActive(obj, obj.getClass());
 		final SettableFuture<Void> foundFuture = SettableFuture.create();
 		addCallback(findFuture, new FutureCallback<LvlObject>() {
 			@Override
@@ -70,10 +76,15 @@ public abstract class LvlObjectStateHandler<T extends LvlObject> {
 		});
 	}
 
-	public abstract ListenableFuture<Boolean> delete(T obj, DeleteOptions... options);
+	public ListenableFuture<Boolean> delete(final T obj, final DeleteOptions... options) {
+		final List<DeleteOptions> optList = (options != null ? asList(options) : Collections.<DeleteOptions>emptyList());
+		return MONGODB_CONN.delete(obj, !optList.contains(DELETE_ACTIVE) && optList.contains(DELETE_ALL), 
+				!optList.contains(ON_DELETE_NO_ACTION) && optList.contains(ON_DELETE_CASCADE));
+	}
 
-	public abstract ListenableFuture<Void> undo(T obj);
-
-	public abstract ListenableFuture<List<T>> versions(T obj);
+	public ListenableFuture<List<T>> versions(final T obj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

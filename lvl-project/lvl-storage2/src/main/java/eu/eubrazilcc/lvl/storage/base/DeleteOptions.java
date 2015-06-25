@@ -24,12 +24,16 @@ package eu.eubrazilcc.lvl.storage.base;
 
 /**
  * Deleting options. By default, the LeishVL will not perform any action on the references registered for an object when the object is 
- * deleted from the database. Specify the option {@link DeleteOptions#DELETE_CASCADING} to delete the references with the referrer object.
+ * deleted from the database. Specify the option {@link DeleteOptions#ON_DELETE_CASCADE} to delete the references with the referrer object.
+ * Similarly, the default action on object deletion is to only delete the active version of the object. Specify the option {@link DeleteOptions#DELETE_ALL}
+ * to delete all versions of the object stored in the database.
  * @author Erik Torres <ertorser@upv.es>
  */
 public enum DeleteOptions {
 
-	DELETE_CASCADING,
-	DELETE_NO_ACTION
+	ON_DELETE_CASCADE, // allows deletions of references registered within an object when the object is deleted from the database
+	ON_DELETE_NO_ACTION, // (default) when the object is deleted its references are not modified
+	DELETE_ACTIVE, // (default) delete the active version of the object
+	DELETE_ALL // deletes all the versions of the object
 	
 }

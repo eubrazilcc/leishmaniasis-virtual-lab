@@ -38,14 +38,21 @@ import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAP
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.join;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
+import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.runners.MethodSorters.NAME_ASCENDING;
 
+import java.util.Date;
 import java.util.List;
 
 import org.junit.FixMethodOrder;
@@ -123,30 +130,26 @@ public class CitationCollectionTest {
 
 			// insert new citation in the database
 			citation1.save().get(TIMEOUT, SECONDS);
-			assertThat("inserted object Id is not null", citation1.getDbId(), notNullValue());
-			String dbId = citation1.getDbId().toString();
-			assertThat("inserted Id is not null", dbId, notNullValue());
-			assertThat("inserted Id is not empty", isNotBlank(dbId), equalTo(true));
+			assertThat("inserted Id is not empty", trim(citation1.getDbId()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("inserted version is not empty", trim(citation1.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("last modified field is not null", citation1.getLastModified(), notNullValue());
 			/* Uncomment for additional output */
-			System.out.println(" >> Inserted citation (" + dbId + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
+			System.out.println(" >> Inserted citation (" + citation1.getDbId() + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
 
 			// find citation by global id
 			Citation citation3 = Citation.builder().lvlId(ID_1).build();
 			citation3.fetch().get(TIMEOUT, SECONDS);
-			assertThat("inserted last modified field is not null", citation3.getLastModified(), notNullValue());
-			citation1.setLastModified(citation3.getLastModified());
 			assertThat("fetched citation coincides with expected", citation3, equalTo(citation1));
 			/* Uncomment for additional output */
-			System.out.println(" >> Fetched citation:\n" + citation3.toJson(JSON_PRETTY_PRINTER));
+			System.out.println(" >> Fetched citation (" + citation3.getDbId() + "):\n" + citation3.toJson(JSON_PRETTY_PRINTER));
 
-			// insert a second citation in the database			
+			// insert a second citation in the database
 			citation2.save().get(TIMEOUT, SECONDS);
-			assertThat("inserted object Id is not null", citation2.getDbId(), notNullValue());
-			dbId = citation2.getDbId().toString();
-			assertThat("inserted Id is not null", dbId, notNullValue());
-			assertThat("inserted Id is not empty", isNotBlank(dbId), equalTo(true));
+			assertThat("inserted Id is not empty", trim(citation2.getDbId()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("inserted version is not empty", trim(citation2.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("last modified field is not null", citation2.getLastModified(), notNullValue());
 			/* Uncomment for additional output */
-			System.out.println(" >> Inserted citation (" + dbId + "):\n" + citation2.toJson(JSON_PRETTY_PRINTER));
+			System.out.println(" >> Inserted citation (" + citation2.getDbId() + "):\n" + citation2.toJson(JSON_PRETTY_PRINTER));
 
 			// search by proximity
 			final Citations citations = new Citations();
@@ -285,14 +288,15 @@ public class CitationCollectionTest {
 			assertThat("first citation coincides with expected", citations.get(0).getLvlId(), equalTo(citation1.getLvlId()));			
 
 			// update the citation
+			final Date lastModified = citation1.getLastModified();
 			citation1.getLvl().getCited().add("NEW_SEQ");
 			citation1.save().get(TIMEOUT, SECONDS);
+			assertThat("last modified field is not null", citation1.getLastModified(), notNullValue());
+			assertThat("updated last modified value is in the future", citation1.getLastModified().after(lastModified), equalTo(true));
 
 			// find after update
 			citation3 = Citation.builder().lvlId(ID_1).build();
 			citation3.fetch().get(TIMEOUT, SECONDS);
-			assertThat("inserted last modified field is not null", citation3.getLastModified(), notNullValue());
-			citation1.setLastModified(citation3.getLastModified());
 			assertThat("fetched citation (after update) coincides with expected", citation3, equalTo(citation1));
 			/* Uncomment for additional output */
 			System.out.println(" >> Fetched citation (after update):\n" + citation3.toJson(JSON_PRETTY_PRINTER));
@@ -304,7 +308,8 @@ public class CitationCollectionTest {
 
 			// pagination
 			final List<String> ids = newArrayList();
-			for (int i = 0; i < 11; i++) {
+			final int insertedCount = 10;
+			for (int i = 0; i < insertedCount; i++) {
 				final PubmedArticle articleX = PUBMED_XML_FACTORY.createPubmedArticle()
 						.withMedlineCitation(PUBMED_XML_FACTORY.createMedlineCitation()
 								.withPMID(PUBMED_XML_FACTORY.createPMID().withvalue(Integer.toString(i)))
@@ -319,9 +324,12 @@ public class CitationCollectionTest {
 			final int size = 3;
 			int start = 0;
 			do {
-				citations.fetch(start, size, null, null, null).get(TIMEOUT, SECONDS);				
-				if (citations.size() != 0) {
-					System.out.println("Paging: first item " + start + ", showing " + citations.size() + " of " + citations.getTotalCount() + " items");
+				citations.fetch(start, size, null, null, null).get(TIMEOUT, SECONDS);
+				if (citations.size() != 0) {					
+					assertThat("number of fetched elements coincides with expected", citations.size(), allOf(greaterThanOrEqualTo(1), lessThanOrEqualTo(size)));
+					assertThat("total number of fetched elements coincides with expected", citations.getTotalCount(), equalTo(insertedCount + 1));
+					System.out.println("Paging: first item " + start + ", showing " + citations.size() + " of " + citations.getTotalCount() + " items\n"
+							+ "Items: " + join(citations.ids(), ", "));
 				}
 				start += citations.size();
 			} while (!citations.getElements().isEmpty());
@@ -331,7 +339,7 @@ public class CitationCollectionTest {
 				Citation.builder().lvlId(ids.get(i)).build().delete().get(TIMEOUT, SECONDS);
 			}			
 			count = citations.fetch(0, Integer.MAX_VALUE, null, null, null).get(TIMEOUT, SECONDS);
-			assertThat("number of fetched elements coincides with expected", count, equalTo(1));
+			assertThat("number of fetched elements coincides with expected", count, equalTo(1));			
 
 			// collect statistics about the collection
 			final ListenableFuture<MongoCollectionStats> statsFuture = citations.stats();
@@ -355,6 +363,36 @@ public class CitationCollectionTest {
 		try {
 			System.out.println("CitationCollectionTest.test02ReleaseState()");
 
+			// find citation by global id
+			final Citation citation1 = Citation.builder().lvlId(ID_1).build();
+			citation1.fetch().get(TIMEOUT, SECONDS);			
+			assertThat("found Id is not empty", trim(citation1.getDbId()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("found version is not empty", trim(citation1.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("last modified field is not null", citation1.getLastModified(), notNullValue());
+			// Uncomment for additional output
+			System.out.println(" >> Fetched citation (" + citation1.getDbId() + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
+
+			// approve release and save to the database
+			
+			final Date lastModified = citation1.getLastModified();
+			final String dbId = citation1.getDbId();
+			citation1.approve().save().get(TIMEOUT, SECONDS);
+			assertThat("saved Id is not empty", trim(citation1.getDbId()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved version is not empty", trim(citation1.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved Id is different in the new version", citation1.getDbId(), not(equalTo(dbId)));
+			assertThat("last modified field is not null", citation1.getLastModified(), notNullValue());
+			assertThat("updated last modified value is in the future", citation1.getLastModified().after(lastModified), equalTo(true));			
+			// Uncomment for additional output
+			System.out.println(" >> Saved citation (" + citation1.getDbId() + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
+
+
+			/* // find citation by global id			
+			citation3.fetch().get(TIMEOUT, SECONDS);
+			assertThat("inserted last modified field is not null", citation3.getLastModified(), notNullValue());
+			citation1.setLastModified(citation3.getLastModified());
+			assertThat("fetched citation coincides with expected", citation3, equalTo(citation1));
+			/* Uncomment for additional output
+			System.out.println(" >> Fetched citation:\n" + citation3.toJson(JSON_PRETTY_PRINTER)); */
 
 
 			// TODO .approve()
@@ -380,7 +418,7 @@ public class CitationCollectionTest {
 			// test saving finalized objects
 			Citation citation1 = Citation.builder().lvlId(ID_1).build();			
 			try {
-				citation1.finalized().save().get(TIMEOUT, SECONDS);
+				citation1.invalidate().save().get(TIMEOUT, SECONDS);
 				fail("Expected exception due to unsupported operation");
 			} catch (Exception expected) {
 				assertThat("exception cause is not null", expected.getCause(), notNullValue());

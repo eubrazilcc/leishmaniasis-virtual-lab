@@ -23,6 +23,8 @@
 package eu.eubrazilcc.lvl.storage.base;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.util.concurrent.Futures.addCallback;
 import static com.google.common.util.concurrent.Futures.transform;
@@ -33,6 +35,7 @@ import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static java.lang.Math.max;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -45,6 +48,7 @@ import org.slf4j.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.AsyncFunction;
@@ -128,7 +132,7 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	public ListenableFuture<Integer> fetch(final int start, final int size, final @Nullable Filters filters, final @Nullable Map<String, Boolean> sorting, 
 			final @Nullable Map<String, Boolean> projections) {
 		final MutableLong totalCount = new MutableLong(0l);
-		final ListenableFuture<List<T>> findFuture = MONGODB_CONN.find(this, type, start, size, filters, sorting, projections, totalCount);
+		final ListenableFuture<List<T>> findFuture = MONGODB_CONN.findActive(this, type, start, size, filters, sorting, projections, totalCount);
 		final SettableFuture<Integer> countFuture = SettableFuture.create();
 		addCallback(findFuture, new FutureCallback<List<T>>() {
 			@Override
@@ -335,6 +339,15 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 			logger.error("Failed to export object to JSON", e);
 		}
 		return payload;
+	}
+
+	public List<String> ids() {
+		return from(elements != null ? elements : Collections.<T>emptyList()).transform(new Function<T, String>() {
+			@Override
+			public String apply(final T input) {
+				return input.getLvlId();
+			}
+		}).filter(notNull()).toList();
 	}
 
 	@Override

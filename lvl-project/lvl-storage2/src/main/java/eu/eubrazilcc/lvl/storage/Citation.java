@@ -25,7 +25,7 @@ package eu.eubrazilcc.lvl.storage;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer.indexModel;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer.nonUniqueIndexModel;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer.textIndexModel;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -60,7 +60,7 @@ public class Citation extends LvlObject {
 	public static final String PUBMED_KEY  = "pubmed.medlineCitation.pmid.value";
 
 	public static final MongoCollectionConfigurer CONFIGURER = new MongoCollectionConfigurer(COLLECTION, true, newArrayList(
-			indexModel(PUBMED_KEY),
+			nonUniqueIndexModel(PUBMED_KEY, false),
 			textIndexModel(ImmutableList.of("pubmed.medlineCitation.article.articleTitle", 
 					"pubmed.medlineCitation.article.abstract.abstractText"), COLLECTION)));
 

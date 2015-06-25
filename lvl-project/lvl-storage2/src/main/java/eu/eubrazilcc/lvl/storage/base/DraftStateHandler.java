@@ -23,10 +23,6 @@
 package eu.eubrazilcc.lvl.storage.base;
 
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
-import static java.util.Arrays.asList;
-
-import java.util.Collections;
-import java.util.List;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -38,25 +34,7 @@ public class DraftStateHandler<T extends LvlObject> extends LvlObjectStateHandle
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		return MONGODB_CONN.save(obj);
+		return MONGODB_CONN.saveActive(obj);
 	}	
-
-	@Override
-	public ListenableFuture<Boolean> delete(final T obj, final DeleteOptions... options) {
-		final List<DeleteOptions> optList = (options != null ? asList(options) : Collections.<DeleteOptions>emptyList());
-		return MONGODB_CONN.delete(obj, optList.contains(DeleteOptions.DELETE_CASCADING));
-	}
-
-	@Override
-	public ListenableFuture<Void> undo(final T obj) { 
-		// TODO : load previous entry
-		return null;
-	}
-
-	@Override
-	public ListenableFuture<List<T>> versions(final T obj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }

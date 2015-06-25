@@ -22,7 +22,7 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
-import java.util.List;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -34,26 +34,7 @@ public class ReleaseStateHandler<T extends LvlObject> extends LvlObjectStateHand
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ListenableFuture<Boolean> delete(final T obj, final DeleteOptions... options) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ListenableFuture<Void> undo(final T obj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ListenableFuture<List<T>> versions(final T obj) {
-		// TODO Auto-generated method stub
-		return null;
+		return MONGODB_CONN.saveAsVersion(obj);
 	}
 
 }

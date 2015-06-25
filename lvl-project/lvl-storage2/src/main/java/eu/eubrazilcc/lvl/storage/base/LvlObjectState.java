@@ -28,9 +28,9 @@ package eu.eubrazilcc.lvl.storage.base;
  */
 public enum LvlObjectState {
 
-	DRAFT(100),     //            (create) ->     draft
-	RELEASE(200),   // draft -> (approval) ->   release
-	FINALIZED(300); // *any* -> (finalize) -> finalized
+	DRAFT(100),    //              (create) ->    draft
+	RELEASE(200),  // draft ->   (approval) ->  release
+	OBSOLETE(300); // *any* -> (invalidate) -> obsolete
 	
 	private int intState;
 	

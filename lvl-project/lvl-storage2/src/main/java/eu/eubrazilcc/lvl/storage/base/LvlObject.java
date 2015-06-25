@@ -28,11 +28,12 @@ import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.Maps.newHashMap;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.FINALIZED;
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.OBSOLETE;
 import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
-import static org.apache.commons.lang.StringUtils.trimToEmpty;
-import static org.apache.commons.lang.StringUtils.trimToNull;
+import static org.apache.commons.lang3.RandomStringUtils.random;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
@@ -73,10 +74,11 @@ public abstract class LvlObject implements Linkable {
 
 	public static final String LVL_NAMESPACE_FIELD = "namespace";
 	public static final String LVL_GUID_FIELD = "lvlId";
+	public static final String LVL_VERSION_FIELD = "version";
 	public static final String LVL_LOCATION_FIELD = "location";
 	public static final String LVL_STATE_FIELD = "state";
 	public static final String LVL_LAST_MODIFIED_FIELD = "lastModified";
-	public static final String LVL_ACTIVE_VERSION_FIELD = "activeVersion";
+	public static final String LVL_IS_ACTIVE_FIELD = "isActive";
 
 	@JsonIgnore
 	protected final Logger logger;
@@ -89,13 +91,14 @@ public abstract class LvlObject implements Linkable {
 
 	private Optional<String> namespace = absent(); // (optional) namespace
 	private String lvlId; // globally unique identifier
+	private String version; // version identifier
 
 	private Optional<Point> location = absent(); // (optional) geospatial location
 	private Optional<Document> provenance = absent(); // (optional) provenance
 	private Optional<LvlObjectState> state = absent(); // (optional) state
 
 	private Date lastModified; // last modification date
-	private String activeVersion; // set to the GUID value in the active version (in most cases, the latest version)
+	private String isActive; // set to the GUID value in the active version (in most cases, the latest version)
 	private Map<String, List<String>> references; // references to other documents	
 
 	@JsonIgnore
@@ -148,6 +151,14 @@ public abstract class LvlObject implements Linkable {
 	public void setLvlId(final String lvlId) {
 		this.lvlId = trimToEmpty(lvlId);
 		setUrlSafeLvlId(urlEncodeUtf8(this.lvlId));
+	}	
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(final String version) {
+		this.version = trimToEmpty(version);
 	}
 
 	public @Nullable Point getLocation() {
@@ -176,8 +187,8 @@ public abstract class LvlObject implements Linkable {
 		case RELEASE:
 			stateHandler = new ReleaseStateHandler<>();
 			break;
-		case FINALIZED:
-			stateHandler = new FinalizedStateHandler<>();
+		case OBSOLETE:
+			stateHandler = new ObsoleteStateHandler<>();
 			break;
 		case DRAFT:
 		default:
@@ -194,12 +205,12 @@ public abstract class LvlObject implements Linkable {
 		this.lastModified = lastModified;
 	}
 
-	public String getActiveVersion() {
-		return activeVersion;
+	public String getIsActive() {
+		return isActive;
 	}
 
-	public void setActiveVersion(final String activeVersion) {
-		this.activeVersion = activeVersion;
+	public void setIsActive(final String isActive) {
+		this.isActive = isActive;
 	}
 
 	public Map<String, List<String>> getReferences() {
@@ -276,17 +287,18 @@ public abstract class LvlObject implements Linkable {
 		final LvlObject other = LvlObject.class.cast(obj);		
 		return Objects.equals(namespace, other.namespace)
 				&& Objects.equals(lvlId, other.lvlId)
+				&& Objects.equals(version, other.version)
 				&& Objects.equals(location.orNull(), other.location.orNull())
 				&& Objects.equals(provenance.orNull(), other.provenance.orNull())
 				&& Objects.equals(state.orNull(), other.state.orNull())
 				&& Objects.equals(lastModified, other.lastModified)
-				&& Objects.equals(activeVersion, other.activeVersion)
+				&& Objects.equals(isActive, other.isActive)
 				&& Objects.equals(references, other.references);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(dbId, namespace, lvlId, location, provenance, state, lastModified, activeVersion, references);
+		return Objects.hash(dbId, namespace, lvlId, version, location, provenance, state, lastModified, isActive, references);
 	}
 
 	@Override
@@ -295,11 +307,12 @@ public abstract class LvlObject implements Linkable {
 				.add("dbId", dbId)
 				.add("namespace", namespace.orNull())
 				.add("lvlId", lvlId)
+				.add("version", version)
 				.add("location", location.orNull())
 				.add("provenance", "<<not displayed>>")
 				.add("state", state.or(DRAFT))
 				.add("lastModified", lastModified)
-				.add("activeVersion", activeVersion)
+				.add("isActive", isActive)
 				.add("references", references)
 				.toString();
 	}
@@ -311,6 +324,10 @@ public abstract class LvlObject implements Linkable {
 		propertyUtilsBean.addBeanIntrospector(new SuppressPropertiesBeanIntrospector(FIELDS_TO_SUPPRESS));				
 		final BeanUtilsBean beanUtilsBean = new BeanUtilsBean(new ConvertUtilsBean(), propertyUtilsBean);
 		beanUtilsBean.copyProperties(dest, orig);			
+	}
+
+	public static String randomVersion() {
+		return random(8, true, true);
 	}
 
 	/* Fluent API */
@@ -325,11 +342,11 @@ public abstract class LvlObject implements Linkable {
 	}
 
 	/**
-	 * Sets the status to {@link LvlObjectState.FINALIZED}.
+	 * Sets the status to {@link LvlObjectState.OBSOLETE}.
 	 * @return a reference to this class.
 	 */
-	public LvlObject finalized() {
-		this.setState(FINALIZED);
+	public LvlObject invalidate() {
+		this.setState(OBSOLETE);
 		return this;
 	}
 
