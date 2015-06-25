@@ -60,6 +60,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.mongodb.MongoException;
 
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
@@ -299,7 +300,7 @@ public class CitationCollectionTest {
 			citation3.fetch().get(TIMEOUT, SECONDS);
 			assertThat("fetched citation (after update) coincides with expected", citation3, equalTo(citation1));
 			/* Uncomment for additional output */
-			System.out.println(" >> Fetched citation (after update):\n" + citation3.toJson(JSON_PRETTY_PRINTER));
+			System.out.println(" >> Fetched citation (after update, " + citation3.getDbId() + "):\n" + citation3.toJson(JSON_PRETTY_PRINTER));
 
 			// remove
 			citation2.delete().get(TIMEOUT, SECONDS);			
@@ -365,15 +366,14 @@ public class CitationCollectionTest {
 
 			// find citation by global id
 			final Citation citation1 = Citation.builder().lvlId(ID_1).build();
-			citation1.fetch().get(TIMEOUT, SECONDS);			
+			citation1.fetch().get(TIMEOUT, SECONDS);
 			assertThat("found Id is not empty", trim(citation1.getDbId()), allOf(notNullValue(), not(equalTo(""))));
 			assertThat("found version is not empty", trim(citation1.getVersion()), allOf(notNullValue(), not(equalTo(""))));
 			assertThat("last modified field is not null", citation1.getLastModified(), notNullValue());
 			// Uncomment for additional output
 			System.out.println(" >> Fetched citation (" + citation1.getDbId() + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
 
-			// approve release and save to the database
-			
+			// approve release and save to the database			
 			final Date lastModified = citation1.getLastModified();
 			final String dbId = citation1.getDbId();
 			citation1.approve().save().get(TIMEOUT, SECONDS);
@@ -385,19 +385,26 @@ public class CitationCollectionTest {
 			// Uncomment for additional output
 			System.out.println(" >> Saved citation (" + citation1.getDbId() + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
 
+			// find citation after update
+			final Citation citation2 = Citation.builder().lvlId(ID_1).build();
+			citation2.fetch().get(TIMEOUT, SECONDS);			
+			assertThat("fetched citation (after update) coincides with expected", citation2, equalTo(citation1));
+			// Uncomment for additional output
+			System.out.println(" >> Fetched citation (after update, " + citation2.getDbId() + "):\n" + citation2.toJson(JSON_PRETTY_PRINTER));			
+			
+			// saving a draft after a release should fail
+			try {
+				citation2.setState(DRAFT);
+				citation2.save().get(TIMEOUT, SECONDS);
+				fail("Expected exception due to unsupported behavior");
+			} catch (Exception expected) {
+				assertThat("exception cause is not null", expected.getCause(), notNullValue());
+				assertThat("exception cause coincides with expected", expected.getCause() instanceof MongoException, equalTo(true));				
+				System.out.println("Expected exception caught: " + expected.getCause().getMessage());
+			}
+			
 
-			/* // find citation by global id			
-			citation3.fetch().get(TIMEOUT, SECONDS);
-			assertThat("inserted last modified field is not null", citation3.getLastModified(), notNullValue());
-			citation1.setLastModified(citation3.getLastModified());
-			assertThat("fetched citation coincides with expected", citation3, equalTo(citation1));
-			/* Uncomment for additional output
-			System.out.println(" >> Fetched citation:\n" + citation3.toJson(JSON_PRETTY_PRINTER)); */
-
-
-			// TODO .approve()
-
-			// TODO : saving a draft after a release should fail
+			// TODO
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -416,7 +423,7 @@ public class CitationCollectionTest {
 			System.out.println("CitationCollectionTest.test03FinalizedState()");
 
 			// test saving finalized objects
-			Citation citation1 = Citation.builder().lvlId(ID_1).build();			
+			final Citation citation1 = Citation.builder().lvlId(ID_1).build();			
 			try {
 				citation1.invalidate().save().get(TIMEOUT, SECONDS);
 				fail("Expected exception due to unsupported operation");

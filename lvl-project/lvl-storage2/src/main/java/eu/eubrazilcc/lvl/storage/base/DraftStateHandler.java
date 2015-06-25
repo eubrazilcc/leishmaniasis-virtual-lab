@@ -34,6 +34,7 @@ public class DraftStateHandler<T extends LvlObject> extends LvlObjectStateHandle
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
+		obj.setImmutable(false);
 		return MONGODB_CONN.saveActive(obj);
 	}	
 

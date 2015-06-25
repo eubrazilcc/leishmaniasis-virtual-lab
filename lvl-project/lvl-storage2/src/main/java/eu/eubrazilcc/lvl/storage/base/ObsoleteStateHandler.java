@@ -33,6 +33,7 @@ public class ObsoleteStateHandler<T extends LvlObject> extends LvlObjectStateHan
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
+		obj.setImmutable(true);
 		final SettableFuture<Void> future = SettableFuture.create();
 		future.setException(new UnsupportedOperationException("Obsolete objects cannot be modified"));
 		return future;

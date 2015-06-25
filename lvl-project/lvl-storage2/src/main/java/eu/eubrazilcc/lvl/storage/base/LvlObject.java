@@ -79,6 +79,7 @@ public abstract class LvlObject implements Linkable {
 	public static final String LVL_STATE_FIELD = "state";
 	public static final String LVL_LAST_MODIFIED_FIELD = "lastModified";
 	public static final String LVL_IS_ACTIVE_FIELD = "isActive";
+	public static final String LVL_IS_IMMUTABLE_FIELD = "immutable";
 
 	@JsonIgnore
 	protected final Logger logger;
@@ -99,6 +100,7 @@ public abstract class LvlObject implements Linkable {
 
 	private Date lastModified; // last modification date
 	private String isActive; // set to the GUID value in the active version (in most cases, the latest version)
+	private boolean immutable; // set to true to preserve the field values to be overridden
 	private Map<String, List<String>> references; // references to other documents	
 
 	@JsonIgnore
@@ -116,6 +118,7 @@ public abstract class LvlObject implements Linkable {
 		this.collection = collection;
 		this.configurer = configurer;
 		this.logger = logger;
+		this.immutable = false;
 		this.references = newHashMap();
 	}
 
@@ -184,7 +187,7 @@ public abstract class LvlObject implements Linkable {
 	public void setState(final @Nullable LvlObjectState state) {
 		this.state = fromNullable(state);
 		switch (this.state.or(DRAFT)) {
-		case RELEASE:
+		case RELEASE:			
 			stateHandler = new ReleaseStateHandler<>();
 			break;
 		case OBSOLETE:
@@ -211,6 +214,14 @@ public abstract class LvlObject implements Linkable {
 
 	public void setIsActive(final String isActive) {
 		this.isActive = isActive;
+	}	
+
+	public boolean isImmutable() {
+		return immutable;
+	}
+
+	public void setImmutable(final boolean immutable) {
+		this.immutable = immutable;
 	}
 
 	public Map<String, List<String>> getReferences() {

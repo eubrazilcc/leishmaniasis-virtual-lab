@@ -55,6 +55,7 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_IS_ACTIVE_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_IS_IMMUTABLE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LAST_MODIFIED_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LOCATION_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_VERSION_FIELD;
@@ -153,7 +154,7 @@ public enum MongoConnector implements Closeable2 {
 	MONGODB_CONN;
 
 	private static final Logger LOGGER = getLogger(MongoConnector.class);
-	
+
 	public static int TYPEAHEAD_MAX_ITEMS = 10;
 
 	private Lock mutex = new ReentrantLock();
@@ -290,12 +291,13 @@ public enum MongoConnector implements Closeable2 {
 		return future;
 	}
 
-	private <T extends LvlObject> ListenableFuture<Void> save(final T obj, final boolean isActive) {
+	private <T extends LvlObject> ListenableFuture<Void> save(final T obj, final boolean overrideActive) {
 		final SettableFuture<Void> future = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);
 		final String version = randomVersion();
-		final Bson query = isActive ? eq(LVL_IS_ACTIVE_FIELD, obj.getLvlId()) : and(eq(LVL_GUID_FIELD, obj.getLvlId()), eq(LVL_VERSION_FIELD, version)); 
-		final Document update = new Document(ImmutableMap.<String, Object>of("$set", parseObject(obj, isActive),
+		final Bson query = overrideActive ? and(eq(LVL_IS_ACTIVE_FIELD, obj.getLvlId()), ne(LVL_IS_IMMUTABLE_FIELD, true)) 
+				: and(eq(LVL_GUID_FIELD, obj.getLvlId()), eq(LVL_VERSION_FIELD, version)); 
+		final Document update = new Document(ImmutableMap.<String, Object>of("$set", parseObject(obj, overrideActive),
 				"$currentDate", new Document(LVL_LAST_MODIFIED_FIELD, true),
 				"$setOnInsert", new Document(LVL_VERSION_FIELD, version)));
 		final FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().projection(fields(include(LVL_VERSION_FIELD, LVL_LAST_MODIFIED_FIELD)))
@@ -747,13 +749,13 @@ public enum MongoConnector implements Closeable2 {
 		return db.getCollection(collection.getCollection());
 	}
 
-	private <T extends LvlObject> Document parseObject(final LvlObject obj, final boolean isActive) {
+	private <T extends LvlObject> Document parseObject(final LvlObject obj, final boolean overrideActive) {
 		checkArgument(obj != null, "Uninitialized object");
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
-		if (isActive) obj.setIsActive(obj.getLvlId());
+		if (overrideActive) obj.setIsActive(obj.getLvlId());
 		final Document doc = Document.parse(obj.toJson());
 		doc.remove(LVL_LAST_MODIFIED_FIELD);
-		if (!isActive) {
+		if (!overrideActive) {
 			doc.remove(LVL_IS_ACTIVE_FIELD);
 			doc.remove(LVL_VERSION_FIELD);
 		}		

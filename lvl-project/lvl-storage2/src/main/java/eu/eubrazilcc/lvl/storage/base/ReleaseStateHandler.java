@@ -34,6 +34,7 @@ public class ReleaseStateHandler<T extends LvlObject> extends LvlObjectStateHand
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
+		obj.setImmutable(true);
 		return MONGODB_CONN.saveAsVersion(obj);
 	}
 
