@@ -22,6 +22,8 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -34,8 +36,7 @@ public class ReleaseStateHandler<T extends LvlObject> extends LvlObjectStateHand
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		obj.setImmutable(true);
-		return MONGODB_CONN.saveAsVersion(obj);
+		return MONGODB_CONN.saveAsVersion(obj, DRAFT.name(), RELEASE.name());
 	}
 
 }

@@ -26,32 +26,199 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 <meta name="keywords" content="Leishmaniasis,LeishVL,LVL,EUBrazilCC">
 <meta name="author" content="EUBrazilCC consortium">
 <meta charset="UTF-8">
-<title>LVL - Administration &amp; Development Guide</title>
+<title>LeishVL - Administration &amp; Development Guide</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" media="screen">
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.4/readable/bootstrap.min.css">
 </head>
 <body>
 	<div class="container">
-
+	
 		<div class="page-header">
 			<div class="row">
-				<div class="col-xs-12">
-					<h1>LeishVL &ndash; Leishmaniasis Virtual Laboratory</h1>
-					<h2>Administration &amp; Development Guide</h2>
-					<p class="lead">Version 0.3.0 &ndash; June 2015</p>
-					<p><strong>Abstract.</strong> This document is a guide to the administration and configuration of the 
-						Leishmaniasis Virtual Laboratory (LeishVL).
-					</p>
+				<div class="col-xs-6">
+					<div class="pull-left">
+						<ul class="list-inline">
+							<li><a href="">Prev</a></li>
+							<li>&bull;</li>
+							<li>LeishVL &ndash; Administration &amp; Development Guide</li>
+						</ul>
+					</div>
+				</div>
+				<div class="col-xs-6">
+					<div class="pull-right">
+						<ul class="list-inline">							
+							<li>Version 0.3.0 &ndash; June 2015</li>
+							<li>&bull;</li>
+							<li><a href="">Next</a></li>
+						</ul>
+					</div>
 				</div>
 			</div>
 		</div>
-		
+
+		<div class="clearfix">
+			<div class="row">
+				<div class="col-xs-12">
+					<ul class="list-inline">
+						<li><a href="">Table of Contents</a></li>
+						<li>&bull;</li>
+						<li><a href="">Single PDF</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-xs-12">
+					<div class="page-header">
+						<h3 id="type">LeishVL &ndash; Administration &amp; Development Guide</h3>
+					</div>
+				</div>				
+			</div>
+			<div class="row">
+				<div class="col-xs-12">
+					<h4 id="type">Table of Contents</h4>
+				</div>				
+			</div>
+			<div class="row">
+				<div class="col-xs-12">
+					<div class="bs-component">
+						<ul>
+							<li><a href="preface.html">Preface</a>
+								<ul>
+									<li><a href="#about_versioning">Software versioning</a></li>
+									<li><a href="#about_licenses">Licenses</a></li>
+									<li><a href="#about_support">Support</a></li>
+								</ul></li>
+							<li><a href="#installation">Installation</a>
+								<ul>
+									<li><a href="#installation_requirements">Requirements</a></li>
+									<li><a href="#installation_quick_guide">Quick install
+											guide</a></li>
+									<li><a href="#installation_from_source">Installing
+											from source</a></li>
+									<li><a href="#installation_virtual_appliances">Deploying
+											EGI virtual appliances</a></li>
+									<li><a href="#installation_troubleshooting">Troubleshooting</a></li>
+								</ul></li>
+							<li><a href="#configuration">Configuration</a>
+								<ul>
+									<li><a href="#configuration_common">Common
+											configuration</a></li>
+									<li><a href="#configuration_service">Configuring the
+											LVL service</a></li>
+									<li><a href="#configuration_idp_authx">Configuring the
+											LVL IdP &amp; AuthX server</a></li>
+								</ul></li>
+							<li><a href="#security">Security</a>
+								<ul>
+									<li><a href="#security_general">General considerations</a></li>
+									<li><a href="#security_external_services_and_apps">External
+											services and applications</a></li>
+									<li><a href="#security_oauth2_authorization">OAuth 2.0
+											authorization</a></li>
+									<li><a href="#security_linkedin_authentication">Authenticating
+											with LinkedIn</a></li>
+								</ul></li>
+							<li><a href="#database">Database</a>
+								<ul>
+									<li><a href="#database_configuration">Configuration</a></li>
+									<li><a
+										href="#database_compatibility_with_genBank_and_pubmed">Compatibility
+											with GenBank and PubMed</a></li>
+								</ul></li>
+							<li><a href="#restful_api">RESTful API</a>
+								<ul>
+									<li><a href="#restful_api_resources">Resources</a></li>
+									<li><a href="#restful_api_endpoints">Endpoints</a></li>
+									<li><a href="#restful_api_json_support">JSON support</a>
+										<ul>
+											<li><a href="#restful_api_geojson_support">GeoJSON
+													support</a></li>
+										</ul></li>
+									<li><a href="#restful_api_search">Search</a>
+										<ul>
+											<li><a href="#restful_api_search_sequences">Search
+													sequences</a></li>
+											<li><a href="#restful_api_e-compendium">Leishmaniasis
+													e-compendium</a></li>
+										</ul></li>
+								</ul></li>
+							<li><a href="#user_interface">User Interface</a>
+								<ul>
+									<li><a href="#user_interface_run_locally">Run locally</a></li>
+									<li><a href="#user_interface_programming_models">Programming
+											models</a></li>
+									<li><a href="#user_interface_movile_versions">Mobile
+											versions</a></li>
+									<li><a href="#user_interface_resources">UI resources</a>
+										<ul>
+											<li><a href="#user_interface_country_flags">Country
+													flags</a></li>
+										</ul></li>
+								</ul></li>
+							<li><a href="#query_language">Query language</a>
+								<ul>
+									<li><a href="#query_language_definition">LVL query
+											language definition</a></li>
+								</ul></li>
+							<li><a href="#examples">Examples</a>
+								<ul>
+									<li><a href="#examples_restful_api">RESTful API
+											examples</a>
+										<ul>
+											<li><a href="#examples_restful_api_submit_sequence">Submit
+													a new sequence</a></li>
+											<li><a href="#examples_restful_api_get_sequence">Get
+													a sequence using the accession number</a></li>
+											<li><a href="#examples_restful_api_update_sequence">Update
+													a sequence</a></li>
+											<li><a href="#examples_restful_api_delete_sequence">Delete
+													a sequence</a></li>
+											<li><a href="#examples_restful_api_list_sequences">List
+													sequences</a></li>
+											<li><a
+												href="#examples_restful_api_find_nearby_sequences">Find
+													nearby sequences</a></li>
+											<li><a href="#examples_restful_api_import_sequences">Import
+													new sequences into the database</a></li>
+											<li><a
+												href="#examples_restful_api_export_sequences_to_dataset">Export
+													a set of sequences to a dataset</a></li>
+											<li><a
+												href="#examples_restful_api_export_public_link_to_sequence">Export
+													a public link to a sequence</a></li>
+										</ul></li>
+									<li><a href="#examples_oauth2">OAuth2 examples</a>
+										<ul>
+											<li><a href="#examples_oauth2_get_access_token_password">Get
+													access token for user/password</a></li>
+											<li><a
+												href="#examples_oauth2_access_to_protected_resource">Access
+													to protected resource</a></li>
+										</ul></li>
+									<li><a href="#examples_tasks">Task examples</a>
+										<ul>
+											<li><a href="#examples_tasks_import_sequences">Import
+													sequences from external databases (PubMed)</a></li>
+										</ul></li>
+								</ul></li>
+							<li><a href="#limitations">Known limitations</a>
+								<ul>
+									<li><a href="#limitations_usage_limits">Usage limits</a></li>
+									<li><a href="#limitations_desired_features">Desired
+											features list</a></li>
+								</ul></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="clearfix">
 			<div class="row">
 				<div class="col-xs-12">
 					<div class="page-header">
-						<h1 id="type"><a id="about"></a>About this guide</h1>
+						<h2 id="type"><a id="about"></a>About this guide</h2>
 					</div>
 				</div>
 			</div>
@@ -74,23 +241,42 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<ul>
 			<li>Extend mongoDB connector with new versions of the find methods that return JSON directly, avoiding conversion to domain classes.</li>
 		</ul>
-
+		
 		<footer>
 			<div class="row">
 				<div class="col-xs-12">
 					<div class="page-header"></div>
 				</div>
+			</div>
+			<div class="row">
+				<div class="col-xs-6">
+					<div class="pull-left">
+						<ul class="list-inline">
+							<li><a href="">Prev</a></li>
+							<li>&bull;</li>
+							<li>LeishVL &ndash; Administration &amp; Development Guide</li>
+						</ul>
+					</div>
+				</div>
+				<div class="col-xs-6">
+					<div class="pull-right">
+						<ul class="list-inline">							
+							<li>Version 0.3.0 &ndash; June 2015</li>
+							<li>&bull;</li>
+							<li><a href="">Next</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class="row">
 				<div class="col-xs-12">
-					<ul class="list-unstyled">
-						<li class="pull-right"><a href="#top">Back to top</a></li>
-					</ul>
-					<h4>LeishVL &ndash; Leishmaniasis Virtual Laboratory</h4>
-					<p>Copyright &copy; 2014-2015 <a href="http://www.eubrazilcloudconnect.eu/" target="_blank">EUBrazilCC</a>, Licensed under the 
+					<p class="small">Copyright &copy; 2014-2015 <a href="http://www.eubrazilcloudconnect.eu/" target="_blank">EUBrazilCC</a>, Licensed under the 
 						<a href="https://joinup.ec.europa.eu/software/page/eupl" target="_blank">European Union Public Licence (EUPL)</a>.
 					</p>
-					<h1>&nbsp;</h1>
-				</div>				
+					<p>&nbsp;</p>
+				</div>
 			</div>			
+			
 		</footer>
 
 	</div>

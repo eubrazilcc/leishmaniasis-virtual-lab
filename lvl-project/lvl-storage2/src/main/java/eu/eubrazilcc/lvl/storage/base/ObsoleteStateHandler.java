@@ -22,8 +22,11 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.RELEASE;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Behavior corresponding to the obsolete state.
@@ -33,10 +36,7 @@ public class ObsoleteStateHandler<T extends LvlObject> extends LvlObjectStateHan
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		obj.setImmutable(true);
-		final SettableFuture<Void> future = SettableFuture.create();
-		future.setException(new UnsupportedOperationException("Obsolete objects cannot be modified"));
-		return future;
+		return MONGODB_CONN.saveActive(obj, DRAFT.name(), RELEASE.name());
 	}
 
 }

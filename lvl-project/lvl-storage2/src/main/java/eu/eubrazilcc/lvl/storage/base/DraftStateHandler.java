@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -34,8 +35,7 @@ public class DraftStateHandler<T extends LvlObject> extends LvlObjectStateHandle
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		obj.setImmutable(false);
-		return MONGODB_CONN.saveActive(obj);
+		return MONGODB_CONN.saveActive(obj, DRAFT.name());
 	}	
 
 }

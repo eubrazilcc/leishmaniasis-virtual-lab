@@ -41,14 +41,14 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.commons.lang3.StringUtils.trim;
-import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
-import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
+import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
 import static org.junit.Assert.fail;
 import static org.junit.runners.MethodSorters.NAME_ASCENDING;
 
@@ -60,7 +60,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.mongodb.MongoException;
 
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
@@ -390,8 +389,8 @@ public class CitationCollectionTest {
 			citation2.fetch().get(TIMEOUT, SECONDS);			
 			assertThat("fetched citation (after update) coincides with expected", citation2, equalTo(citation1));
 			// Uncomment for additional output
-			System.out.println(" >> Fetched citation (after update, " + citation2.getDbId() + "):\n" + citation2.toJson(JSON_PRETTY_PRINTER));			
-			
+			System.out.println(" >> Fetched citation (after update, " + citation2.getDbId() + "):\n" + citation2.toJson(JSON_PRETTY_PRINTER));
+
 			// saving a draft after a release should fail
 			try {
 				citation2.setState(DRAFT);
@@ -399,10 +398,10 @@ public class CitationCollectionTest {
 				fail("Expected exception due to unsupported behavior");
 			} catch (Exception expected) {
 				assertThat("exception cause is not null", expected.getCause(), notNullValue());
-				assertThat("exception cause coincides with expected", expected.getCause() instanceof MongoException, equalTo(true));				
+				assertThat("exception cause coincides with expected", expected.getCause() instanceof UnsupportedOperationException, equalTo(true));				
 				System.out.println("Expected exception caught: " + expected.getCause().getMessage());
 			}
-			
+
 
 			// TODO
 
@@ -422,15 +421,43 @@ public class CitationCollectionTest {
 		try {
 			System.out.println("CitationCollectionTest.test03FinalizedState()");
 
-			// test saving finalized objects
-			final Citation citation1 = Citation.builder().lvlId(ID_1).build();			
+			// find citation by global id
+			final Citation citation1 = Citation.builder().lvlId(ID_1).build();
+			citation1.fetch().get(TIMEOUT, SECONDS);
+			assertThat("found Id is not empty", trim(citation1.getDbId()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("found version is not empty", trim(citation1.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("last modified field is not null", citation1.getLastModified(), notNullValue());
+			// Uncomment for additional output
+			System.out.println(" >> Fetched citation (" + citation1.getDbId() + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
+
+			// invalidate citation and save to the database			
+			final Date lastModified = citation1.getLastModified();
+			final String dbId = citation1.getDbId();
+			citation1.invalidate().save().get(TIMEOUT, SECONDS);
+			assertThat("saved Id is not empty", trim(citation1.getDbId()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved version is not empty", trim(citation1.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved Id coincides with expected", citation1.getDbId(), equalTo(dbId));
+			assertThat("last modified field is not null", citation1.getLastModified(), notNullValue());
+			assertThat("updated last modified value is in the future", citation1.getLastModified().after(lastModified), equalTo(true));			
+			// Uncomment for additional output
+			System.out.println(" >> Saved citation (" + citation1.getDbId() + "):\n" + citation1.toJson(JSON_PRETTY_PRINTER));
+
+			// find citation after invalidation
+			final Citation citation2 = Citation.builder().lvlId(ID_1).build();
+			citation2.fetch().get(TIMEOUT, SECONDS);			
+			assertThat("fetched citation (after invalidation) coincides with expected", citation2, equalTo(citation1));
+			// Uncomment for additional output
+			System.out.println(" >> Fetched citation (after invalidation, " + citation2.getDbId() + "):\n" + citation2.toJson(JSON_PRETTY_PRINTER));
+
+			// saving a draft after invalidation should fail
 			try {
-				citation1.invalidate().save().get(TIMEOUT, SECONDS);
-				fail("Expected exception due to unsupported operation");
+				citation2.setState(DRAFT);
+				citation2.save().get(TIMEOUT, SECONDS);
+				fail("Expected exception due to unsupported behavior");
 			} catch (Exception expected) {
 				assertThat("exception cause is not null", expected.getCause(), notNullValue());
 				assertThat("exception cause coincides with expected", expected.getCause() instanceof UnsupportedOperationException, equalTo(true));				
-				System.out.println("Expected exception caught: " + expected.getCause().getMessage());				
+				System.out.println("Expected exception caught: " + expected.getCause().getMessage());
 			}
 
 			// TODO

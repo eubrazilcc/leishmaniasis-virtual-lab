@@ -37,6 +37,7 @@ import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.gt;
 import static com.mongodb.client.model.Filters.gte;
+import static com.mongodb.client.model.Filters.in;
 import static com.mongodb.client.model.Filters.lt;
 import static com.mongodb.client.model.Filters.lte;
 import static com.mongodb.client.model.Filters.ne;
@@ -55,13 +56,14 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_IS_ACTIVE_FIELD;
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_IS_IMMUTABLE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LAST_MODIFIED_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LOCATION_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_STATE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_VERSION_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.randomVersion;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static java.lang.Integer.parseInt;
+import static java.util.Arrays.asList;
 import static org.apache.commons.beanutils.PropertyUtils.getSimpleProperty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
@@ -71,6 +73,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +112,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.mongodb.Block;
 import com.mongodb.MongoCredential;
+import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
 import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.client.AggregateIterable;
@@ -238,21 +242,23 @@ public enum MongoConnector implements Closeable2 {
 	 * Saves the specified object to the database, overriding the active version or creating a new entry in case that there are no matches 
 	 * for the object GUID. This method will fail when the active version cannot be overridden.
 	 * @param obj - object to save
+	 * @param allowedTransitions - transitions between states
 	 * @return a future which result indicates that the operation is successfully completed, or an exception when the method fails.
 	 */
-	public <T extends LvlObject> ListenableFuture<Void> saveActive(final T obj) {		
-		return save(obj, true);
+	public <T extends LvlObject> ListenableFuture<Void> saveActive(final T obj, final String... allowedTransitions) {		
+		return save(obj, true, allowedTransitions);
 	}
 
 	/**
 	 * Saves the specified object to the database, creating a new version. After the object is saved, this method will select the latest
 	 * modified record as the new active version. In case that the saved object is not the latest modified, this method will not fail.
 	 * @param obj - object to save
+	 * @param allowedTransitions - transitions between states
 	 * @return a future which result indicates that the operation is successfully completed, or an exception when the method fails.
 	 */
-	public <T extends LvlObject> ListenableFuture<Void> saveAsVersion(final T obj) {
+	public <T extends LvlObject> ListenableFuture<Void> saveAsVersion(final T obj, final String... allowedTransitions) {
 		// insert the object in the collection as a new version
-		final ListenableFuture<Void> insertFuture = save(obj, false);
+		final ListenableFuture<Void> insertFuture = save(obj, false, allowedTransitions);
 		// set the new active version to the latest modified record
 		final SettableFuture<Void> activeFuture = SettableFuture.create();
 		final ListenableFuture<Document> setActiveFuture = activateLastModified(getCollection(obj), obj.getLvlId());
@@ -291,19 +297,23 @@ public enum MongoConnector implements Closeable2 {
 		return future;
 	}
 
-	private <T extends LvlObject> ListenableFuture<Void> save(final T obj, final boolean overrideActive) {
+	private <T extends LvlObject> ListenableFuture<Void> save(final T obj, final boolean overrideActive, final String... allowedTransitions) {
 		final SettableFuture<Void> future = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);
 		final String version = randomVersion();
-		final Bson query = overrideActive ? and(eq(LVL_IS_ACTIVE_FIELD, obj.getLvlId()), ne(LVL_IS_IMMUTABLE_FIELD, true)) 
-				: and(eq(LVL_GUID_FIELD, obj.getLvlId()), eq(LVL_VERSION_FIELD, version)); 
+		final List<String> states = allowedTransitions != null ? asList(allowedTransitions) : Collections.<String>emptyList();
+		// prepare query statement
+		final Bson filter = (overrideActive 
+				? (states.isEmpty() ? eq(LVL_IS_ACTIVE_FIELD, obj.getLvlId()) : and(eq(LVL_IS_ACTIVE_FIELD, obj.getLvlId()), in(LVL_STATE_FIELD, states)))
+						: (states.isEmpty() ? and(eq(LVL_GUID_FIELD, obj.getLvlId()), eq(LVL_VERSION_FIELD, version))
+								: and(eq(LVL_GUID_FIELD, obj.getLvlId()), or(eq(LVL_VERSION_FIELD, version), not(in(LVL_STATE_FIELD, states))))));
 		final Document update = new Document(ImmutableMap.<String, Object>of("$set", parseObject(obj, overrideActive),
 				"$currentDate", new Document(LVL_LAST_MODIFIED_FIELD, true),
 				"$setOnInsert", new Document(LVL_VERSION_FIELD, version)));
 		final FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().projection(fields(include(LVL_VERSION_FIELD, LVL_LAST_MODIFIED_FIELD)))
 				.returnDocument(AFTER)
 				.upsert(true);
-		dbcol.findOneAndUpdate(query, update, options, new SingleResultCallback<Document>() {
+		dbcol.findOneAndUpdate(filter, update, options, new SingleResultCallback<Document>() {
 			@Override
 			public void onResult(final Document result, final Throwable t) {
 				if (t == null) {
@@ -313,6 +323,8 @@ public enum MongoConnector implements Closeable2 {
 						obj.setLastModified(result.getDate(LVL_LAST_MODIFIED_FIELD));
 						future.set(null);
 					} else future.setException(new LvlObjectWriteException("No new records were inserted, no existing records were modified by the operation"));					
+				} else if (t instanceof MongoException && ((MongoException)t).getMessage().matches("(?i:.*Cannot update \\'version\\'.*)")) {
+					future.setException(new UnsupportedOperationException("Cannot make a transition between invalid states", t));
 				} else future.setException(t);
 			}
 		});
