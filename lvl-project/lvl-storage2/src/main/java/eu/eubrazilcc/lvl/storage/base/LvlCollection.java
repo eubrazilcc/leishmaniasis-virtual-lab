@@ -23,6 +23,8 @@
 package eu.eubrazilcc.lvl.storage.base;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Optional.absent;
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
@@ -31,6 +33,8 @@ import static com.google.common.util.concurrent.Futures.transform;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.firstEntryOf;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.totalPages;
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
+import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.OBSOLETE;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static java.lang.Math.max;
@@ -49,7 +53,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
@@ -101,6 +107,7 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	private int totalCount; // total number of elements
 
 	private List<T> elements = newArrayList(); // elements of the current page
+	private Optional<List<String>> excludedStates = absent(); // (optional) objects in these states are excluded from the collection
 
 	public LvlCollection(final String collection, final Class<T> type, final MongoCollectionConfigurer configurer, final Logger logger) {
 		this.collection = collection;
@@ -132,7 +139,8 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	public ListenableFuture<Integer> fetch(final int start, final int size, final @Nullable Filters filters, final @Nullable Map<String, Boolean> sorting, 
 			final @Nullable Map<String, Boolean> projections) {
 		final MutableLong totalCount = new MutableLong(0l);
-		final ListenableFuture<List<T>> findFuture = MONGODB_CONN.findActive(this, type, start, size, filters, sorting, projections, totalCount);
+		final ListenableFuture<List<T>> findFuture = MONGODB_CONN.findActive(this, type, start, size, filters, sorting, projections, totalCount, 
+				excludedStates.orNull());
 		final SettableFuture<Integer> countFuture = SettableFuture.create();
 		addCallback(findFuture, new FutureCallback<List<T>>() {
 			@Override
@@ -164,7 +172,7 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	 */
 	public ListenableFuture<FeatureCollection> getNear(final Point point, final double minDistance, final double maxDistance) {
 		return MONGODB_CONN.fetchNear(this, type, point.getCoordinates().getLongitude(), point.getCoordinates().getLatitude(), 
-				minDistance, maxDistance);
+				minDistance, maxDistance, excludedStates.orNull());
 	}
 
 	/**
@@ -174,7 +182,7 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	 *         which contains the global identifier of the element.
 	 */
 	public ListenableFuture<FeatureCollection> getWithin(final Polygon polygon) {
-		return MONGODB_CONN.fetchWithin(this, type, polygon);
+		return MONGODB_CONN.fetchWithin(this, type, polygon, excludedStates.orNull());
 	}
 
 	public List<T> getElements() {
@@ -189,6 +197,14 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 		}
 	}
 
+	public @Nullable List<String> getExcludedStates() {
+		return excludedStates.orNull();
+	}
+
+	public void setExcludedStates(final @Nullable List<String> excludedStates) {
+		this.excludedStates = fromNullable(excludedStates);
+	}
+
 	/**
 	 * The view maintains a size property, counting the number of elements it contains.
 	 * @return the number of elements loaded in the current view
@@ -198,7 +214,7 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	}
 
 	public ListenableFuture<Long> totalCount() {
-		return MONGODB_CONN.totalCount(this);		
+		return MONGODB_CONN.totalCount(this, excludedStates.orNull());		
 	}
 
 	/**
@@ -232,7 +248,7 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	 * @return a future whose response is the values that matches the query.
 	 */
 	public ListenableFuture<List<String>> typeahead(final String field, final String query, final int size) {
-		return MONGODB_CONN.typeahead(this, type, field, query, size);
+		return MONGODB_CONN.typeahead(this, type, field, query, size, excludedStates.orNull());
 	}
 
 	/**
@@ -240,6 +256,10 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	 */
 	public ListenableFuture<MongoCollectionStats> stats() {
 		return MONGODB_CONN.stats(this);
+	}
+	
+	public ListenableFuture<Void> drop() {
+		return MONGODB_CONN.drop(this);
 	}
 
 	/* Pagination */
@@ -350,6 +370,16 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 		}).filter(notNull()).toList();
 	}
 
+	public LvlCollection<T> releases() {
+		setExcludedStates(ImmutableList.<String>of(DRAFT.name(), OBSOLETE.name()));
+		return this;
+	}
+	
+	public LvlCollection<T> all() {
+		setExcludedStates(null);
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		final List<Link> links = getLinks();
@@ -364,6 +394,7 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 				.add("totalPages", totalPages)
 				.add("totalCount", totalCount)
 				.add("elements", collectionToString(elements))
+				.add("excludedStates", excludedStates.orNull())
 				.add("links", links != null ? collectionToString(links) : null)
 				.toString();
 	}

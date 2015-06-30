@@ -409,9 +409,9 @@ public enum MongoConnector implements Closeable2 {
 	 * included only when no text search is involved in the query.
 	 * @see <a href="http://docs.mongodb.org/manual/reference/method/cursor.hint/#behavior">mongoDB -- cursor.hint()</a>
 	 */
-	public <T extends LvlObject> ListenableFuture<List<T>> findActive(final LvlCollection<T> collection, final Class<T> type, final int start, final int size, 
-			final @Nullable Filters filters, final Map<String, Boolean> sorting, final @Nullable Map<String, Boolean> projections, 
-			final @Nullable MutableLong totalCount) {		
+	public <T extends LvlObject> ListenableFuture<List<T>> findActive(final LvlCollection<T> collection, final Class<T> type, final int start, 
+			final int size, final @Nullable Filters filters, final Map<String, Boolean> sorting, final @Nullable Map<String, Boolean> projections, 
+			final @Nullable MutableLong totalCount, final @Nullable List<String> excludedStates) {		
 		// parse input parameters
 		boolean textFilter = false;
 		final List<Bson> filterFields = newArrayList();
@@ -449,8 +449,9 @@ public enum MongoConnector implements Closeable2 {
 				}
 			}
 		}
-		final Bson filter = and(not(new BsonDocument(LVL_IS_ACTIVE_FIELD, BsonNull.VALUE)), 
-				(filterFields.isEmpty() ? new BsonDocument() : (LOGICAL_AND.equals(filters.getType()) ? and(filterFields) : or(filterFields))));
+		final Bson filter = and(not(new BsonDocument(LVL_IS_ACTIVE_FIELD, BsonNull.VALUE)),
+				(excludedStates != null && !excludedStates.isEmpty() ? not(in(LVL_STATE_FIELD, excludedStates)) : new BsonDocument()),
+				(!filterFields.isEmpty() ? (LOGICAL_AND.equals(filters.getType()) ? and(filterFields) : or(filterFields)) : new BsonDocument()));
 		final List<Bson> projectionFields = newArrayList();
 		if (projections != null) {
 			for (final Map.Entry<String, Boolean> projection : projections.entrySet()) {
@@ -469,7 +470,7 @@ public enum MongoConnector implements Closeable2 {
 		final MutableLong __totalCount = new MutableLong(0l);
 		// get total number of records
 		final SettableFuture<Void> countFuture = SettableFuture.create();		
-		addCallback(totalCount(dbcol, true), new FutureCallback<Long>() {
+		addCallback(totalCount(dbcol, true, excludedStates), new FutureCallback<Long>() {
 			@Override
 			public void onSuccess(final Long result) {
 				__totalCount.setValue(result);
@@ -550,13 +551,17 @@ public enum MongoConnector implements Closeable2 {
 	/**
 	 * Counts the total number of active elements in the specified collection.
 	 */
-	public <T extends LvlObject> ListenableFuture<Long> totalCount(final LvlCollection<T> collection) {		
-		return totalCount(getCollection(collection), true);
+	public <T extends LvlObject> ListenableFuture<Long> totalCount(final LvlCollection<T> collection, final @Nullable List<String> excludedStates) {		
+		return totalCount(getCollection(collection), true, excludedStates);
 	}
 
-	private <T extends LvlObject> ListenableFuture<Long> totalCount(final MongoCollection<Document> dbcol, final boolean onlyActive) {
+	private <T extends LvlObject> ListenableFuture<Long> totalCount(final MongoCollection<Document> dbcol, final boolean onlyActive, 
+			final @Nullable List<String> excludedStates) {
 		final SettableFuture<Long> countFuture = SettableFuture.create();
-		final Bson filter = onlyActive ? not(new BsonDocument(LVL_IS_ACTIVE_FIELD, BsonNull.VALUE)) : new BsonDocument();
+		final Bson activeFilter = onlyActive ? not(new BsonDocument(LVL_IS_ACTIVE_FIELD, BsonNull.VALUE)) : null;
+		final Bson statesFilter = (excludedStates != null && !excludedStates.isEmpty()) ? not(in(LVL_STATE_FIELD, excludedStates)) : null;
+		final Bson filter = (activeFilter != null && statesFilter != null) ? and(activeFilter, statesFilter) 
+				: (activeFilter != null ? activeFilter : (statesFilter != null ? statesFilter : new BsonDocument()));
 		final CountOptions options = new CountOptions().hint(ACTIVE_VERSION_HINT);
 		dbcol.count(filter, options, new SingleResultCallback<Long>() {
 			@Override
@@ -571,8 +576,8 @@ public enum MongoConnector implements Closeable2 {
 	 * Fetches the location of the active elements from the database, returning a collection of GeoJSON points to the caller. The points
 	 * are annotated with the GUID of the corresponding element.
 	 */
-	public <T extends LvlObject> ListenableFuture<FeatureCollection> fetchNear(final LvlCollection<T> collection, final Class<T> type,
-			final double longitude, final double latitude, final double minDistance, final double maxDistance) {
+	public <T extends LvlObject> ListenableFuture<FeatureCollection> fetchNear(final LvlCollection<T> collection, final Class<T> type, final double longitude, 
+			final double latitude, final double minDistance, final double maxDistance, final @Nullable List<String> excludedStates) {
 		final SettableFuture<FeatureCollection> future = SettableFuture.create();
 		final FeatureCollection features = FeatureCollection.builder().crs(Crs.builder().wgs84().build()).build();
 		final MongoCollection<Document> dbcol = getCollection(collection);
@@ -583,9 +588,12 @@ public enum MongoConnector implements Closeable2 {
 				.put("near", new Document("type", "Point").append("coordinates", new BsonArray(newArrayList(new BsonDouble(longitude), new BsonDouble(latitude)))))
 				.put("distanceField", "_dist.calculated")
 				.build()));
-		final Bson project = new SimplePipelineStage("$project", fields(include(LVL_GUID_FIELD, LVL_IS_ACTIVE_FIELD, LVL_LOCATION_FIELD, "_dist")));	
-		final Bson match = new SimplePipelineStage("$match", and(not(new BsonDocument(LVL_IS_ACTIVE_FIELD, BsonNull.VALUE)), 
-				gte("_dist.calculated", new BsonDouble(minDistance))));		
+		final Bson project = new SimplePipelineStage("$project", fields(include(LVL_GUID_FIELD, LVL_IS_ACTIVE_FIELD, LVL_STATE_FIELD,
+				LVL_LOCATION_FIELD, "_dist")));
+		final Bson statesFilter = (excludedStates != null && !excludedStates.isEmpty()) ? not(in(LVL_STATE_FIELD, excludedStates)) 
+				: new BsonDocument();
+		final Bson match = new SimplePipelineStage("$match", and(not(new BsonDocument(LVL_IS_ACTIVE_FIELD, BsonNull.VALUE)), statesFilter,
+				gte("_dist.calculated", new BsonDouble(minDistance))));
 		final AggregateIterable<Document> iterable = dbcol.aggregate(newArrayList(geoNear, project, match));
 		iterable.forEach(new Block<Document>() {
 			@Override
@@ -614,7 +622,8 @@ public enum MongoConnector implements Closeable2 {
 	 * Fetches the location of the active elements from the database, returning a collection of GeoJSON points to the caller. The points are 
 	 * annotated with the GUID of the corresponding element.
 	 */
-	public <T extends LvlObject> ListenableFuture<FeatureCollection> fetchWithin(final LvlCollection<T> collection, final Class<T> type, final Polygon polygon) {
+	public <T extends LvlObject> ListenableFuture<FeatureCollection> fetchWithin(final LvlCollection<T> collection, final Class<T> type, final Polygon polygon, 
+			final @Nullable List<String> excludedStates) {
 		checkArgument(polygon != null, "Uninitialized polygon");
 		String payload = null;
 		try {
@@ -624,11 +633,13 @@ public enum MongoConnector implements Closeable2 {
 		}
 		final SettableFuture<FeatureCollection> future = SettableFuture.create();
 		final FeatureCollection features = FeatureCollection.builder().crs(Crs.builder().wgs84().build()).build();
-		final MongoCollection<Document> dbcol = getCollection(collection);
+		final MongoCollection<Document> dbcol = getCollection(collection);		
 		final Document geoWithin = new Document(LVL_LOCATION_FIELD, new Document(ImmutableMap.<String, Object>of("$geoWithin", 
 				new Document("$geometry", Document.parse(payload)))));
+		final Bson statesFilter = (excludedStates != null && !excludedStates.isEmpty()) ? not(in(LVL_STATE_FIELD, excludedStates)) 
+				: new BsonDocument();		
 		final FindIterable<Document> iterable = dbcol
-				.find(geoWithin)
+				.find(and(geoWithin, statesFilter))
 				.modifiers(new BsonDocument("$hint", ACTIVE_VERSION_HINT))
 				.projection(fields(include(LVL_GUID_FIELD, LVL_LOCATION_FIELD)));
 		iterable.forEach(new Block<Document>() {
@@ -658,7 +669,7 @@ public enum MongoConnector implements Closeable2 {
 	 * Searches for text elements within a collection.
 	 */
 	public <T extends LvlObject> ListenableFuture<List<String>> typeahead(final LvlCollection<T> collection, final Class<T> type, final String field, 
-			final String query, final int size) {
+			final String query, final int size, final @Nullable List<String> excludedStates) { // TODO
 		String field2 = null, query2 = null;
 		checkArgument(isNotBlank(field2 = trimToNull(field)), "Uninitialized or invalid field");
 		checkArgument(isNotBlank(query2 = trimToNull(query)), "Uninitialized or invalid query");
@@ -666,8 +677,11 @@ public enum MongoConnector implements Closeable2 {
 		final SettableFuture<List<String>> future = SettableFuture.create();
 		final List<String> values = newArrayList();
 		final MongoCollection<Document> dbcol = getCollection(collection);
+		final Bson statesFilter = (excludedStates != null && !excludedStates.isEmpty()) ? not(in(LVL_STATE_FIELD, excludedStates)) : null;
+		final Bson typeaheadFilter = regex(field2, query2, "i");
+		final Bson filter = (statesFilter != null ? and(typeaheadFilter, statesFilter) : typeaheadFilter);
 		final FindIterable<Document> iterable = dbcol
-				.find(regex(field2, query2, "i"))
+				.find(filter)
 				.modifiers(new BsonDocument("$hint", ACTIVE_VERSION_HINT))
 				.projection(fields(include(field2)))
 				.sort(orderBy(ascending(field2)))
@@ -699,7 +713,7 @@ public enum MongoConnector implements Closeable2 {
 	 * @param collection - collection from which the statistics are collected
 	 * @return a listenable future which result is the status of the specified collection.
 	 */	
-	public <T extends LvlObject> ListenableFuture<MongoCollectionStats> stats(final LvlCollection<T> collection) {		
+	public <T extends LvlObject> ListenableFuture<MongoCollectionStats> stats(final LvlCollection<T> collection) {
 		final MongoCollection<Document> dbcol = getCollection(collection);
 		final MongoCollectionStats stats = new MongoCollectionStats(collection.getCollection());
 		// get indexes
@@ -743,6 +757,21 @@ public enum MongoConnector implements Closeable2 {
 		return future;
 	}
 
+	public <T extends LvlObject> ListenableFuture<Void> drop(final LvlCollection<T> collection) {
+		final MongoCollection<Document> dbcol = getCollection(collection);
+		final SettableFuture<Void> future = SettableFuture.create();
+		dbcol.drop(new SingleResultCallback<Void>() {
+			@Override
+			public void onResult(final Void result, final Throwable t) {
+				if (t == null) {
+					collection.getConfigurer().unconfigure();
+					future.set(null);
+				} else future.setException(t);
+			}			
+		});
+		return future;
+	}
+
 	/* Helper methods */
 
 	private <T extends LvlObject> MongoCollection<Document> getCollection(final LvlObject obj) {
@@ -764,7 +793,7 @@ public enum MongoConnector implements Closeable2 {
 	private <T extends LvlObject> Document parseObject(final LvlObject obj, final boolean overrideActive) {
 		checkArgument(obj != null, "Uninitialized object");
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
-		if (overrideActive) obj.setIsActive(obj.getLvlId());
+		if (overrideActive) obj.setIsActive(obj.getLvlId());		
 		final Document doc = Document.parse(obj.toJson());
 		doc.remove(LVL_LAST_MODIFIED_FIELD);
 		if (!overrideActive) {

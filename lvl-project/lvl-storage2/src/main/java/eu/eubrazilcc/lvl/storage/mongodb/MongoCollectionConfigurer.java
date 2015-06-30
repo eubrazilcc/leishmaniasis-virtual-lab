@@ -95,6 +95,10 @@ public class MongoCollectionConfigurer {
 			}
 		}
 	}
+	
+	public void unconfigure() {
+		isConfigured.set(false);
+	}
 
 	/**
 	 * Creates a new index model on a field and sorting the elements in ascending order. Indexes created with this method are created 
