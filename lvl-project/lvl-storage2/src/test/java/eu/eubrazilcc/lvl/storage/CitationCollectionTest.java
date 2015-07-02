@@ -33,10 +33,12 @@ import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_REGEX;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_TEXT;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_OR;
+import static eu.eubrazilcc.lvl.storage.base.CollectionOperators.allOperator;
+import static eu.eubrazilcc.lvl.storage.base.CollectionOperators.releasesOperator;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.OBSOLETE;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.RELEASE;
+import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
+import static eu.eubrazilcc.lvl.storage.base.ObjectState.OBSOLETE;
+import static eu.eubrazilcc.lvl.storage.base.ObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
@@ -71,7 +73,8 @@ import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
-import eu.eubrazilcc.lvl.storage.base.LvlObjectState;
+import eu.eubrazilcc.lvl.storage.base.CollectionOperator;
+import eu.eubrazilcc.lvl.storage.base.ObjectState;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionStats;
 
 /**
@@ -101,8 +104,8 @@ public class CitationCollectionTest {
 
 			// operate on the test data-set
 			final Resultset rs = new Resultset(new TestScenario[]{
-					new TestScenario("TestDraft", TestState.ALL, new LvlObjectState[] { DRAFT, DRAFT }),
-					new TestScenario("TestDraft", TestState.RELEASES, new LvlObjectState[] { DRAFT, DRAFT })
+					new TestScenario("TestDraft", TestState.ALL, new ObjectState[] { DRAFT, DRAFT }),
+					new TestScenario("TestDraft", TestState.RELEASES, new ObjectState[] { DRAFT, DRAFT })
 			});
 			operateOnTestDatasets(ds, rs, true);
 
@@ -163,8 +166,8 @@ public class CitationCollectionTest {
 
 			// operate on the test data-set
 			final Resultset rs = new Resultset(new TestScenario[]{
-					new TestScenario("TestRelease", TestState.ALL, new LvlObjectState[] { RELEASE, DRAFT }),
-					new TestScenario("TestRelease", TestState.RELEASES, new LvlObjectState[] { RELEASE, DRAFT })
+					new TestScenario("TestRelease", TestState.ALL, new ObjectState[] { RELEASE, DRAFT }),
+					new TestScenario("TestRelease", TestState.RELEASES, new ObjectState[] { RELEASE, DRAFT })
 			});
 			operateOnTestDatasets(ds, rs, false);
 
@@ -225,8 +228,8 @@ public class CitationCollectionTest {
 
 			// operate on the test data-set
 			final Resultset rs = new Resultset(new TestScenario[]{
-					new TestScenario("TestObsolete", TestState.ALL, new LvlObjectState[] { OBSOLETE, DRAFT }),
-					new TestScenario("TestObsolete", TestState.RELEASES, new LvlObjectState[] { OBSOLETE, DRAFT })
+					new TestScenario("TestObsolete", TestState.ALL, new ObjectState[] { OBSOLETE, DRAFT }),
+					new TestScenario("TestObsolete", TestState.RELEASES, new ObjectState[] { OBSOLETE, DRAFT })
 			});
 			operateOnTestDatasets(ds, rs, false);
 
@@ -305,17 +308,18 @@ public class CitationCollectionTest {
 		System.out.println("CitationCollectionTest.insertTestDatasets() has finished");
 	}
 
-	private void operateOnTestDatasets(final TestDataset ds, final Resultset rs, final boolean testUpdate) throws Exception {		
+	private void operateOnTestDatasets(final TestDataset ds, final Resultset rs, final boolean testUpdate) throws Exception {
+		CollectionOperator<Citation> op = null;
 		FeatureCollection features = null;
 		int count = 0;
 		for (final TestScenario scenario : rs.scenarios) {
 			// setup collection
 			switch (scenario.state) {
 			case ALL:
-				ds.citations.all();
+				op = allOperator(ds.citations);
 				break;
 			case RELEASES:
-				ds.citations.releases();
+				op = releasesOperator(ds.citations);
 				break;
 			default:
 				throw new IllegalStateException("Unknown test state: " + scenario.state);
@@ -323,7 +327,7 @@ public class CitationCollectionTest {
 
 			// search by proximity
 			System.out.println(" >> Search by proximity: " + scenario.toString());
-			features = ds.citations.getNear(ds.vlcPoint, 0.0d, 1000000.0d).get(TIMEOUT, SECONDS);
+			features = op.getNear(ds.vlcPoint, 0.0d, 1000000.0d).get(TIMEOUT, SECONDS);
 			assertThat("feature collection is not null", features, notNullValue());
 			assertThat("feature collection list is not null", features.getFeatures(), notNullValue());
 			assertThat("feature collection list is not empty", features.getFeatures().isEmpty(), equalTo(scenario.numItems() == 0));
@@ -331,7 +335,7 @@ public class CitationCollectionTest {
 			/* Uncomment for additional output */
 			System.out.println(" >> Feature collection (geoNear):\n" + objectToJson(features, JSON_PRETTY_PRINTER));
 
-			features = ds.citations.getNear(ds.vlcPoint, 303000.0d, 305000.0d).get(TIMEOUT, SECONDS);
+			features = op.getNear(ds.vlcPoint, 303000.0d, 305000.0d).get(TIMEOUT, SECONDS);
 			assertThat("feature collection is not null", features, notNullValue());
 			assertThat("feature collection list is not null", features.getFeatures(), notNullValue());
 			assertThat("feature collection list is not empty", features.getFeatures().isEmpty(), equalTo(scenario.numItems(1) == 0));
@@ -341,7 +345,7 @@ public class CitationCollectionTest {
 
 			// find elements within a polygon
 			System.out.println(" >> Find elements within a polygon: " + scenario.toString());
-			features = ds.citations.getWithin(ds.polygon).get(TIMEOUT, SECONDS);
+			features = op.getWithin(ds.polygon).get(TIMEOUT, SECONDS);
 			assertThat("feature collection is not null", features, notNullValue());
 			assertThat("feature collection list is not null", features.getFeatures(), notNullValue());
 			assertThat("feature collection list is not empty", features.getFeatures().isEmpty(), equalTo(scenario.numItems() == 0));
@@ -351,7 +355,7 @@ public class CitationCollectionTest {
 
 			// type ahead
 			System.out.println(" >> Typeahead: " + scenario.toString());
-			final List<String> values = ds.citations.typeahead(LVL_GUID_FIELD, "ion_", 10).get(TIMEOUT, SECONDS);
+			final List<String> values = op.typeahead(LVL_GUID_FIELD, "ion_", 10).get(TIMEOUT, SECONDS);
 			assertThat("typeahead values are not null", values, notNullValue());
 			assertThat("typeahead values are not empty", values.isEmpty(), equalTo(scenario.numItems() == 0));
 			assertThat("number of typeahead values coincides with expected", values.size(), equalTo(scenario.numItems()));			
@@ -360,22 +364,22 @@ public class CitationCollectionTest {
 
 			// list with all properties
 			System.out.println(" >> List with all properties: " + scenario.toString());
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, null, null, null).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, null, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements coincides with expected", count, equalTo(scenario.numItems()));
-			assertThat("number of fetched elements coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements coincides with expected", op.collection().size(), equalTo(count));
 			// Uncomment for additional output
-			System.out.println(" >> Fetched citations:\n" + ds.citations.toJson(JSON_PRETTY_PRINTER));
+			System.out.println(" >> Fetched citations:\n" + op.collection().toJson(JSON_PRETTY_PRINTER));
 
 			// list with filters (equal)
 			System.out.println(" >> List with filters (equal): " + scenario.toString());
 			Filters filters = Filters.builder()
 					.filters(newArrayList(Filter.builder().type(FILTER_COMPARE).fieldName(PUBMED_KEY).value("=EFGH5678").build()))
 					.build();
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(scenario.numItems(1)));
-			assertThat("number of fetched elements (with filter) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with filter) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {
-				assertThat("found citation coincides with expected", ds.citations.get(0).getLvlId(), equalTo(ds.citation0.getLvlId()));
+				assertThat("found citation coincides with expected", op.collection().get(0).getLvlId(), equalTo(ds.citation0.getLvlId()));
 			}
 
 			// list with filters (regular expression)
@@ -383,11 +387,11 @@ public class CitationCollectionTest {
 			filters = Filters.builder()
 					.filters(newArrayList(Filter.builder().type(FILTER_REGEX).fieldName(LVL_GUID_FIELD).value("(?i)([a-z])*_0").build()))
 					.build();
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);			
+			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);			
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(scenario.numItems(1)));
-			assertThat("number of fetched elements (with filter) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with filter) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {
-				assertThat("found citation coincides with expected", ds.citations.get(0).getLvlId(), equalTo(ds.citation0.getLvlId()));
+				assertThat("found citation coincides with expected", op.collection().get(0).getLvlId(), equalTo(ds.citation0.getLvlId()));
 			}
 
 			// list with filters (text)
@@ -395,11 +399,11 @@ public class CitationCollectionTest {
 			filters = Filters.builder()
 					.filters(newArrayList(Filter.builder().type(FILTER_TEXT).fieldName("pubmed.medlineCitation.article.articleTitle").value("ROCK").build()))
 					.build();
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(scenario.numItems(0)));
-			assertThat("number of fetched elements (with filter) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with filter) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {
-				assertThat("found citation coincides with expected", ds.citations.get(0).getLvlId(), equalTo(ds.citation1.getLvlId()));
+				assertThat("found citation coincides with expected", op.collection().get(0).getLvlId(), equalTo(ds.citation1.getLvlId()));
 			}
 
 			// list with filters (compare)
@@ -407,11 +411,11 @@ public class CitationCollectionTest {
 			filters = Filters.builder()
 					.filters(newArrayList(Filter.builder().type(FILTER_COMPARE).fieldName("pubmed.medlineCitation.dateCreated.year.value").value(">=2015").build()))
 					.build();
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(scenario.numItems(1)));
-			assertThat("number of fetched elements (with filter) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with filter) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {
-				assertThat("found citation coincides with expected", ds.citations.get(0).getLvlId(), equalTo(ds.citation0.getLvlId()));
+				assertThat("found citation coincides with expected", op.collection().get(0).getLvlId(), equalTo(ds.citation0.getLvlId()));
 			}
 
 			// list with filters (logical AND)
@@ -420,11 +424,11 @@ public class CitationCollectionTest {
 					.filters(newArrayList(Filter.builder().type(FILTER_TEXT).fieldName("pubmed.medlineCitation.article.abstract.abstractText").value("paper").build(), Filter.builder().type(FILTER_COMPARE).fieldName("pubmed.medlineCitation.pmid.value").value("= EFGH5678  ").build()))
 					.type(LOGICAL_AND)
 					.build();
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(scenario.numItems(1)));
-			assertThat("number of fetched elements (with filter) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with filter) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {
-				assertThat("found citation coincides with expected", ds.citations.get(0).getLvlId(), equalTo(ds.citation0.getLvlId()));
+				assertThat("found citation coincides with expected", op.collection().get(0).getLvlId(), equalTo(ds.citation0.getLvlId()));
 			}
 
 			// list with filters (logical OR)
@@ -433,13 +437,13 @@ public class CitationCollectionTest {
 					.filters(newArrayList(Filter.builder().type(FILTER_COMPARE).fieldName("pubmed.medlineCitation.pmid.value").value("= ABCD1234").build(), Filter.builder().type(FILTER_COMPARE).fieldName("pubmed.medlineCitation.pmid.value").value(" = EFGH5678").build()))
 					.type(LOGICAL_OR)
 					.build();
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(scenario.numItems()));
-			assertThat("number of fetched elements (with filter) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with filter) coincides with expected", op.collection().size(), equalTo(count));
 
 			// list with projection
 			System.out.println(" >> List with projection: " + scenario.toString());
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, null, null, ImmutableMap.<String, Boolean>builder()
+			count = op.fetch(0, Integer.MAX_VALUE, null, null, ImmutableMap.<String, Boolean>builder()
 					.put("lvl", true)
 					.put("namespace", true)
 					.put("lvlId", true)
@@ -449,22 +453,22 @@ public class CitationCollectionTest {
 					.put("pubmed.medlineCitation.pmid.value", true)
 					.build()).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with projection) coincides with expected", count, equalTo(scenario.numItems()));
-			assertThat("number of fetched elements (with projection) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with projection) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {
-				assertThat("original article details were filtered from database response", ds.citations.get(0).getPubmed().getMedlineCitation()
+				assertThat("original article details were filtered from database response", op.collection().get(0).getPubmed().getMedlineCitation()
 						.getArticle().getAbstract(), nullValue());
 			}
 			// Uncomment for additional output
-			System.out.println(" >> Fetched citations (with projection):\n" + ds.citations.toJson(JSON_PRETTY_PRINTER));			
+			System.out.println(" >> Fetched citations (with projection):\n" + op.collection().toJson(JSON_PRETTY_PRINTER));			
 
 			// list with sorting
 			System.out.println(" >> List with sorting: " + scenario.toString());
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, null, ImmutableMap.of(LVL_GUID_FIELD, true), null).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, null, ImmutableMap.of(LVL_GUID_FIELD, true), null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with sorting) coincides with expected", count, equalTo(scenario.numItems()));
-			assertThat("number of fetched elements (with sorting) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with sorting) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {
 				String previous = null, current = null;
-				for (final Citation citation : ds.citations.getElements()) {
+				for (final Citation citation : op.collection().getElements()) {
 					current = citation.getLvlId();
 					if (previous != null) {
 						assertThat("sorting order coincides with expected", current.compareTo(previous), lessThanOrEqualTo(0));
@@ -473,12 +477,12 @@ public class CitationCollectionTest {
 				}
 			}
 
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, null, ImmutableMap.of(PUBMED_KEY, false), null).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, null, ImmutableMap.of(PUBMED_KEY, false), null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with sorting) coincides with expected", count, equalTo(scenario.numItems()));
-			assertThat("number of fetched elements (with sorting) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with sorting) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {
 				String previous = null, current = null;
-				for (final Citation citation : ds.citations.getElements()) {
+				for (final Citation citation : op.collection().getElements()) {
 					current = citation.getPubmed().getMedlineCitation().getPMID().getvalue();
 					if (previous != null) {
 						assertThat("sorting order coincides with expected", current.compareTo(previous), greaterThanOrEqualTo(0));
@@ -492,14 +496,14 @@ public class CitationCollectionTest {
 			filters = Filters.builder()
 					.filters(newArrayList(Filter.builder().type(FILTER_REGEX).fieldName(LVL_GUID_FIELD).value("(?i)([a-z])*_([0-9]){1,2}").build()))
 					.build();
-			count = ds.citations.fetch(0, Integer.MAX_VALUE, filters, ImmutableMap.of(LVL_GUID_FIELD, false), ImmutableMap.of("pubmed", false, "lvl", false)).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, filters, ImmutableMap.of(LVL_GUID_FIELD, false), ImmutableMap.of("pubmed", false, "lvl", false)).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with all features) coincides with expected", count, equalTo(scenario.numItems()));
-			assertThat("number of fetched elements (with all features) coincides with expected", ds.citations.size(), equalTo(count));
+			assertThat("number of fetched elements (with all features) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {
-				assertThat("original article was filtered from database response", ds.citations.get(0).getPubmed(), nullValue());
-				assertThat("additional annotations were filtered from database response", ds.citations.get(0).getLvl(), nullValue());
+				assertThat("original article was filtered from database response", op.collection().get(0).getPubmed(), nullValue());
+				assertThat("additional annotations were filtered from database response", op.collection().get(0).getLvl(), nullValue());
 				String previous = null, current = null;
-				for (final Citation citation : ds.citations.getElements()) {
+				for (final Citation citation : op.collection().getElements()) {
 					current = citation.getLvlId();
 					if (previous != null) {
 						assertThat("sorting order coincides with expected", current.compareTo(previous), greaterThanOrEqualTo(0));
@@ -530,14 +534,14 @@ public class CitationCollectionTest {
 		// remove
 		System.out.println(" >> Remove");
 		ds.citation1.delete().get(TIMEOUT, SECONDS);			
-		long totalCount = ds.citations.all().totalCount().get(TIMEOUT, SECONDS).longValue();			
+		long totalCount = ds.citations.totalCount().get(TIMEOUT, SECONDS).longValue();			
 		assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(1l));
 
 		// pagination
 		final List<String> ids = newArrayList();
 		final int insertedCount = 10, stateCount[] = new int[3];
 		for (int i = 0; i < insertedCount; i++) {
-			LvlObjectState state;
+			ObjectState state;
 			switch (i % 3) {
 			case 0:
 				state = DRAFT;
@@ -574,23 +578,29 @@ public class CitationCollectionTest {
 				// setup collection
 				switch (scenario.state) {
 				case ALL:
-					ds.citations.all();
+					op = allOperator(ds.citations);
 					break;
 				case RELEASES:
-					ds.citations.releases();
+					op = releasesOperator(ds.citations);
 					break;
 				default:
 					throw new IllegalStateException("Unknown test state: " + scenario.state);
 				}
-				ds.citations.fetch(start, size, null, null, null).get(TIMEOUT, SECONDS);
-				if (ds.citations.size() != 0) {					
-					assertThat("number of fetched elements coincides with expected", ds.citations.size(), allOf(greaterThanOrEqualTo(1), lessThanOrEqualTo(size)));
-					assertThat("total number of fetched elements coincides with expected", ds.citations.getTotalCount(), equalTo(scenario.numItems(stateCount, 1)));
-					System.out.println("Paging: first item " + start + ", showing " + ds.citations.size() + " of " + ds.citations.getTotalCount() + " items\n"
-							+ "Items: " + join(ds.citations.ids(), ", "));
+				op.fetch(start, size, null, null, null).get(TIMEOUT, SECONDS);
+				if (op.collection().size() != 0) {					
+					assertThat("number of fetched elements coincides with expected", op.collection().size(), allOf(greaterThanOrEqualTo(1), lessThanOrEqualTo(size)));
+					
+					// TODO
+					System.err.println("\n\n >> PAGINATION: " + scenario.toString() + "\ntotalCount=" + op.collection().getTotalCount()
+							+ ", expected=" + scenario.numItems(stateCount, 1) + "\n" + op.collection().toJson(JSON_PRETTY_PRINTER) + "\n");
+					// TODO
+					
+					assertThat("total number of fetched elements coincides with expected", op.collection().getTotalCount(), equalTo(scenario.numItems(stateCount, 1)));
+					System.out.println("Paging: first item " + start + ", showing " + op.collection().size() + " of " + op.collection().getTotalCount() + " items\n"
+							+ "Items: " + join(op.collection().ids(), ", "));
 				}
-				start += ds.citations.size();
-			} while (!ds.citations.getElements().isEmpty());
+				start += op.collection().size();
+			} while (!op.collection().getElements().isEmpty());
 		}
 
 		// delete all the elements inserted in the previous test (pagination)
@@ -598,7 +608,7 @@ public class CitationCollectionTest {
 		for (int i = 0; i < ids.size(); i++) {
 			Citation.builder().lvlId(ids.get(i)).build().delete().get(TIMEOUT, SECONDS);
 		}
-		count = ds.citations.all().fetch(0, Integer.MAX_VALUE, null, null, null).get(TIMEOUT, SECONDS);
+		count = ds.citations.fetch(0, Integer.MAX_VALUE, null, null, null).get(TIMEOUT, SECONDS);
 		assertThat("number of fetched elements coincides with expected", count, equalTo(1));			
 
 		// collect statistics about the collection
@@ -611,7 +621,7 @@ public class CitationCollectionTest {
 		// clean-up the last element from the database
 		System.out.println(" >> Clean-up the last element from the database");
 		ds.citation0.delete().get(TIMEOUT, SECONDS);
-		totalCount = ds.citations.all().totalCount().get(TIMEOUT, SECONDS).longValue();			
+		totalCount = ds.citations.totalCount().get(TIMEOUT, SECONDS).longValue();			
 		assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(0l));
 
 		System.out.println("CitationCollectionTest.operateOnTestDatasets() has finished");
@@ -683,9 +693,9 @@ public class CitationCollectionTest {
 
 		private final String name;
 		private final TestState state;
-		private final LvlObjectState[] states;
+		private final ObjectState[] states;
 
-		public TestScenario(final String name, final TestState state, final LvlObjectState[] states) {
+		public TestScenario(final String name, final TestState state, final ObjectState[] states) {
 			this.name = name;
 			this.state = state;
 			this.states = states;
@@ -718,7 +728,7 @@ public class CitationCollectionTest {
 			return count;
 		}
 
-		private int numExcluded(final Integer[] excludes, final LvlObjectState state) {
+		private int numExcluded(final Integer[] excludes, final ObjectState state) {
 			int numExcluded = 0;
 			if (excludes != null) {
 				for (final int pos : excludes) {

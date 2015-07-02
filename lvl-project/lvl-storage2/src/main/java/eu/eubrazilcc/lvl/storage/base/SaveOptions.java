@@ -23,8 +23,8 @@
 package eu.eubrazilcc.lvl.storage.base;
 
 /**
- * Saving options. By default, the LeishVL will override any existing records of the type {@link LvlObjectState#DRAFT} with the new 
- * provided values. On the contrary, new versions will be inserted for the objects of the type type {@link LvlObjectState#RELEASE}. 
+ * Saving options. By default, the LeishVL will override any existing records of the type {@link ObjectState#DRAFT} with the new 
+ * provided values. On the contrary, new versions will be inserted for the objects of the type type {@link ObjectState#RELEASE}. 
  * Obsolete records cannot be updated.
  * @author Erik Torres <ertorser@upv.es>
  */

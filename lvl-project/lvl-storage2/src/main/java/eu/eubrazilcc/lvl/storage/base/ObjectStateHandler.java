@@ -45,7 +45,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * Provides different behaviors for different object states.
  * @author Erik Torres <ertorser@upv.es>
  */
-public abstract class LvlObjectStateHandler<T extends LvlObject> {
+public abstract class ObjectStateHandler<T extends LvlObject> {
 
 	public abstract ListenableFuture<Void> save(T obj, SaveOptions... options);
 

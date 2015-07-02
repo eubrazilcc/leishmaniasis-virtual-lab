@@ -23,19 +23,12 @@
 package eu.eubrazilcc.lvl.storage.base;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Optional.absent;
-import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.util.concurrent.Futures.addCallback;
-import static com.google.common.util.concurrent.Futures.transform;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.firstEntryOf;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.totalPages;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.OBSOLETE;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static java.lang.Math.max;
 
@@ -46,24 +39,17 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
 
-import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.AsyncFunction;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
-import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
@@ -82,7 +68,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
  * @author Erik Torres <ertorser@upv.es>
  */
 @JsonIgnoreProperties({ "page", "perPage", "query", "sort", "order", "pageFirstEntry", "totalPages" })
-public abstract class LvlCollection<T extends LvlObject> implements Linkable {
+public abstract class LvlCollection<T extends LvlObject> implements Linkable, CollectionOperator<T> {
 
 	@JsonIgnore
 	protected final Logger logger;
@@ -92,6 +78,8 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	private final String collection;
 	@JsonIgnore
 	private final MongoCollectionConfigurer configurer;
+	@JsonIgnore
+	private final AllCollectionOperator<T> defaultOperator;
 
 	public final static int PER_PAGE_MIN = 1;
 
@@ -107,83 +95,76 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	private int totalCount; // total number of elements
 
 	private List<T> elements = newArrayList(); // elements of the current page
-	private Optional<List<String>> excludedStates = absent(); // (optional) objects in these states are excluded from the collection
 
 	public LvlCollection(final String collection, final Class<T> type, final MongoCollectionConfigurer configurer, final Logger logger) {
 		this.collection = collection;
 		this.type = type;
 		this.configurer = configurer;
 		this.logger = logger;
+		this.defaultOperator = new AllCollectionOperator<>(this);
 	}
 
 	public String getCollection() {
 		return collection;
 	}
 
+	public Class<T> getType() {
+		return type;
+	}
+
 	public MongoCollectionConfigurer getConfigurer() {
 		return configurer;
 	}
 
-	/* Database operations */
+	/* Collection operator implementation */
 
-	/**
-	 * Loads a view of the collection that contains the elements in the specified range. The elements are sorted by their keys, in ascending order.
-	 * Optionally, the database response can be filtered (if the filter is invalid, an empty view will be created).
-	 * @param start - starting index
-	 * @param size - maximum number of elements returned
-	 * @param filter - (optional) the expression to be used to filter the collection
-	 * @param sorting - (optional) sorting order
-	 * @param projection - (optional) specifies the fields to return. Set the field name to <tt>true</tt> to include the field, <tt>false</tt>
-	 *        to exclude the field. To return all fields in the matching document, omit this parameter
-	 */	
+	@Override
 	public ListenableFuture<Integer> fetch(final int start, final int size, final @Nullable Filters filters, final @Nullable Map<String, Boolean> sorting, 
 			final @Nullable Map<String, Boolean> projections) {
-		final MutableLong totalCount = new MutableLong(0l);
-		final ListenableFuture<List<T>> findFuture = MONGODB_CONN.findActive(this, type, start, size, filters, sorting, projections, totalCount, 
-				excludedStates.orNull());
-		final SettableFuture<Integer> countFuture = SettableFuture.create();
-		addCallback(findFuture, new FutureCallback<List<T>>() {
-			@Override
-			public void onSuccess(final List<T> result) {
-				setElements(result);
-				setTotalCount(totalCount.getValue().intValue());
-				countFuture.set(elements.size());
-			}
-			@Override
-			public void onFailure(final Throwable t) {				
-				countFuture.setException(t);
-			}
-		});
-		return transform(findFuture, new AsyncFunction<List<T>, Integer>() {
-			@Override
-			public ListenableFuture<Integer> apply(final List<T> input) throws Exception {				
-				return countFuture;
-			}
-		});
+		return defaultOperator.fetch(start, size, filters, sorting, projections);
 	}
 
-	/**
-	 * Gets the elements that are within the specified distance (in meters) from the specified center point (using WGS84).
-	 * @param point - longitude, latitude pair represented in WGS84 coordinate reference system (CRS)
-	 * @param minDistance - minimum distance
-	 * @param maxDistance - limits the results to those elements that fall within the specified distance (in meters) from the center point
-	 * @return a collection of GeoJSON points with the location of the elements matching the query, annotated with the feature <tt>name</tt>
-	 *         which contains the global identifier of the element.
-	 */
+	@Override
 	public ListenableFuture<FeatureCollection> getNear(final Point point, final double minDistance, final double maxDistance) {
-		return MONGODB_CONN.fetchNear(this, type, point.getCoordinates().getLongitude(), point.getCoordinates().getLatitude(), 
-				minDistance, maxDistance, excludedStates.orNull());
+		return defaultOperator.getNear(point, minDistance, maxDistance);
 	}
 
-	/**
-	 * Gets the elements that exist entirely within the defined polygon.
-	 * @param polygon - geometric shape with at least four edges
-	 * @return a collection of GeoJSON points with the location of the elements matching the query, annotated with the feature <tt>name</tt>
-	 *         which contains the global identifier of the element.
-	 */
+	@Override
 	public ListenableFuture<FeatureCollection> getWithin(final Polygon polygon) {
-		return MONGODB_CONN.fetchWithin(this, type, polygon, excludedStates.orNull());
+		return defaultOperator.getWithin(polygon);
 	}
+
+	@Override
+	public ListenableFuture<Long> totalCount() {
+		return defaultOperator.totalCount();	
+	}
+
+	@Override
+	public ListenableFuture<List<String>> typeahead(final String field, final String query, final int size) {
+		return defaultOperator.typeahead(field, query, size);
+	}
+
+	@Override
+	public ListenableFuture<MongoCollectionStats> stats() {
+		return defaultOperator.stats();
+	}
+
+	@Override
+	public ListenableFuture<Void> drop() {
+		return defaultOperator.drop();
+	}
+
+	@Override
+	public LvlCollection<T> collection() {
+		return this;
+	}
+
+	@Override
+	public @Nullable List<String> excludedStates() {
+		return defaultOperator.excludedStates();
+	}
+
+	/* Operate on the elements loaded in the current view */
 
 	public List<T> getElements() {
 		return elements;
@@ -197,12 +178,13 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 		}
 	}
 
-	public @Nullable List<String> getExcludedStates() {
-		return excludedStates.orNull();
-	}
-
-	public void setExcludedStates(final @Nullable List<String> excludedStates) {
-		this.excludedStates = fromNullable(excludedStates);
+	public List<String> ids() {
+		return from(elements != null ? elements : Collections.<T>emptyList()).transform(new Function<T, String>() {
+			@Override
+			public String apply(final T input) {
+				return input.getLvlId();
+			}
+		}).filter(notNull()).toList();
 	}
 
 	/**
@@ -211,10 +193,6 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 	 */
 	public int size() {
 		return elements.size();
-	}
-
-	public ListenableFuture<Long> totalCount() {
-		return MONGODB_CONN.totalCount(this, excludedStates.orNull());		
 	}
 
 	/**
@@ -237,29 +215,7 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 			public boolean apply(final T item) {
 				return item.getLvlId().equals(id);
 			}			
-		}, null);		
-	}
-
-	/**
-	 * Searches a field for the specified query, returning a list of values that match the query.
-	 * @param field - field to query against
-	 * @param query - the query to match
-	 * @param size - maximum number of elements returned
-	 * @return a future whose response is the values that matches the query.
-	 */
-	public ListenableFuture<List<String>> typeahead(final String field, final String query, final int size) {
-		return MONGODB_CONN.typeahead(this, type, field, query, size, excludedStates.orNull());
-	}
-
-	/**
-	 * Collects statistics about this collection.
-	 */
-	public ListenableFuture<MongoCollectionStats> stats() {
-		return MONGODB_CONN.stats(this);
-	}
-	
-	public ListenableFuture<Void> drop() {
-		return MONGODB_CONN.drop(this);
+		}, null);
 	}
 
 	/* Pagination */
@@ -359,31 +315,12 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 			logger.error("Failed to export object to JSON", e);
 		}
 		return payload;
-	}
-
-	public List<String> ids() {
-		return from(elements != null ? elements : Collections.<T>emptyList()).transform(new Function<T, String>() {
-			@Override
-			public String apply(final T input) {
-				return input.getLvlId();
-			}
-		}).filter(notNull()).toList();
-	}
-
-	public LvlCollection<T> releases() {
-		setExcludedStates(ImmutableList.<String>of(DRAFT.name(), OBSOLETE.name()));
-		return this;
-	}
-	
-	public LvlCollection<T> all() {
-		setExcludedStates(null);
-		return this;
-	}
+	}	
 
 	@Override
 	public String toString() {
 		final List<Link> links = getLinks();
-		return toStringHelper(Paginable.class.getSimpleName())
+		return toStringHelper(this)
 				.add("page", page)
 				.add("perPage", perPage)
 				.add("sort", sort)
@@ -394,7 +331,6 @@ public abstract class LvlCollection<T extends LvlObject> implements Linkable {
 				.add("totalPages", totalPages)
 				.add("totalCount", totalCount)
 				.add("elements", collectionToString(elements))
-				.add("excludedStates", excludedStates.orNull())
 				.add("links", links != null ? collectionToString(links) : null)
 				.toString();
 	}

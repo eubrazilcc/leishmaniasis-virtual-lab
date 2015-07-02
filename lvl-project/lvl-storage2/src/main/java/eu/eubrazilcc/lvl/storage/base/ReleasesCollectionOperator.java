@@ -22,21 +22,27 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.base.ObjectState.OBSOLETE;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.collect.ImmutableList;
 
 /**
- * Behavior corresponding to the draft state.
+ * Operates on the released elements of a collection.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DraftStateHandler<T extends LvlObject> extends ObjectStateHandler<T> {
+public class ReleasesCollectionOperator<T extends LvlObject> extends CollectionOperatorImpl<T> {
+
+	public ReleasesCollectionOperator(final LvlCollection<T> lvlCol) {
+		super(lvlCol, ImmutableList.<String>of(DRAFT.name(), OBSOLETE.name()));
+	}
 
 	@Override
-	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		if (obj.getState() == null) obj.setState(DRAFT);
-		return MONGODB_CONN.saveActive(obj, DRAFT.name());
-	}	
-
+	public String toString() {
+		return toStringHelper(this)
+				.add(CollectionOperator.class.getSimpleName(), super.toString())				
+				.toString();
+	}
+	
 }

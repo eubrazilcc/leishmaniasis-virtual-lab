@@ -27,9 +27,9 @@ import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.Maps.newHashMap;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.OBSOLETE;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.RELEASE;
+import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
+import static eu.eubrazilcc.lvl.storage.base.ObjectState.OBSOLETE;
+import static eu.eubrazilcc.lvl.storage.base.ObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static org.apache.commons.lang3.RandomStringUtils.random;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
@@ -78,7 +78,8 @@ public abstract class LvlObject implements Linkable {
 	public static final String LVL_LOCATION_FIELD = "location";
 	public static final String LVL_STATE_FIELD = "state";
 	public static final String LVL_LAST_MODIFIED_FIELD = "lastModified";
-	public static final String LVL_IS_ACTIVE_FIELD = "isActive";
+	public static final String LVL_SPARSE_IS_ACTIVE_FIELD = "isActive";
+	public static final String LVL_DENSE_IS_ACTIVE_FIELD = "isActive2";
 
 	@JsonIgnore
 	protected final Logger logger;
@@ -95,10 +96,11 @@ public abstract class LvlObject implements Linkable {
 
 	private Optional<Point> location = absent(); // (optional) geospatial location
 	private Optional<Document> provenance = absent(); // (optional) provenance
-	private Optional<LvlObjectState> state = absent(); // (optional) state
+	private Optional<ObjectState> state = absent(); // (optional) state
 
 	private Date lastModified; // last modification date
 	private String isActive; // set to the GUID value in the active version (in most cases, the latest version)
+	private String isActive2; // a copy of the field with an alternative index
 	private Map<String, List<String>> references; // references to other documents	
 
 	@JsonIgnore
@@ -107,7 +109,7 @@ public abstract class LvlObject implements Linkable {
 	protected String urlSafeLvlId;
 
 	@JsonIgnore
-	private LvlObjectStateHandler<LvlObject> stateHandler = new DraftStateHandler<>();
+	private ObjectStateHandler<LvlObject> stateHandler = new DraftStateHandler<>();
 
 	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.<String>of("logger", "collection", "configurer", "urlSafeNamespace", 
 			"urlSafeLvlId", "stateHandler");
@@ -177,11 +179,11 @@ public abstract class LvlObject implements Linkable {
 		this.provenance = fromNullable(provenance);
 	}	
 
-	public LvlObjectState getState() {
+	public ObjectState getState() {
 		return state.orNull();
 	}
 
-	public void setState(final @Nullable LvlObjectState state) {
+	public void setState(final @Nullable ObjectState state) {
 		this.state = fromNullable(state);
 		switch (this.state.or(DRAFT)) {
 		case RELEASE:			
@@ -211,6 +213,14 @@ public abstract class LvlObject implements Linkable {
 
 	public void setIsActive(final String isActive) {
 		this.isActive = isActive;
+	}
+	
+	public String getIsActive2() {
+		return isActive2;
+	}
+
+	public void setIsActive2(final String isActive2) {
+		this.isActive2 = isActive2;
 	}
 
 	public Map<String, List<String>> getReferences() {
@@ -293,12 +303,13 @@ public abstract class LvlObject implements Linkable {
 				&& Objects.equals(state.orNull(), other.state.orNull())
 				&& Objects.equals(lastModified, other.lastModified)
 				&& Objects.equals(isActive, other.isActive)
+				&& Objects.equals(isActive2, other.isActive2)
 				&& Objects.equals(references, other.references);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(dbId, namespace, lvlId, version, location, provenance, state, lastModified, isActive, references);
+		return Objects.hash(dbId, namespace, lvlId, version, location, provenance, state, lastModified, isActive, isActive2, references);
 	}
 
 	@Override
@@ -313,6 +324,7 @@ public abstract class LvlObject implements Linkable {
 				.add("state", state.or(DRAFT))
 				.add("lastModified", lastModified)
 				.add("isActive", isActive)
+				.add("isActive2", isActive2)
 				.add("references", references)
 				.toString();
 	}
@@ -333,7 +345,7 @@ public abstract class LvlObject implements Linkable {
 	/* Fluent API */
 
 	/**
-	 * Sets the status to {@link LvlObjectState.RELEASE}.
+	 * Sets the status to {@link ObjectState.RELEASE}.
 	 * @return a reference to this class.
 	 */
 	public LvlObject approve() {
@@ -342,7 +354,7 @@ public abstract class LvlObject implements Linkable {
 	}
 
 	/**
-	 * Sets the status to {@link LvlObjectState.OBSOLETE}.
+	 * Sets the status to {@link ObjectState.OBSOLETE}.
 	 * @return a reference to this class.
 	 */
 	public LvlObject invalidate() {
@@ -393,7 +405,7 @@ public abstract class LvlObject implements Linkable {
 			return builder;
 		}
 
-		public B state(final @Nullable LvlObjectState state) {
+		public B state(final @Nullable ObjectState state) {
 			instance.setState(state);
 			return builder;
 		}

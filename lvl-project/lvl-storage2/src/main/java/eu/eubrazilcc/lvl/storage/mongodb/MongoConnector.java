@@ -55,7 +55,8 @@ import static com.mongodb.client.model.Sorts.orderBy;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_IS_ACTIVE_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_DENSE_IS_ACTIVE_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_SPARSE_IS_ACTIVE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LAST_MODIFIED_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LOCATION_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_STATE_FIELD;
@@ -87,6 +88,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonDouble;
+import org.bson.BsonElement;
 import org.bson.BsonInt32;
 import org.bson.BsonNull;
 import org.bson.BsonString;
@@ -196,7 +198,7 @@ public enum MongoConnector implements Closeable2 {
 				final ClusterSettings clusterSettings = ClusterSettings.builder()
 						.hosts(seeds)
 						.build();
-				// enable/disable authentication (requires MongoDB server to be configured to support authentication)
+				// authentication settings (requires MongoDB server to be configured to support authentication)
 				final List<MongoCredential> credentialList = newArrayList();
 				if (!CONFIG_MANAGER.isAnonymousDbAccess()) {
 					credentialList.add(createMongoCRCredential(CONFIG_MANAGER.getDbUsername(), 
@@ -268,11 +270,6 @@ public enum MongoConnector implements Closeable2 {
 				if (result != null) {
 					final String activeVersion = result.getString(LVL_VERSION_FIELD);
 					final String thisVersion = obj.getVersion();
-					
-					// TODO
-					System.err.println("\n\n >> HERE: active=" + result + ", saved=" + obj + "\n");
-					// TODO
-					
 					if (!thisVersion.equals(activeVersion)) {
 						LOGGER.info("The later modification '" + activeVersion + "' is the new active version instead of this '" + thisVersion 
 								+ "' [collection= " + obj.getCollection() + ", lvlId=" + obj.getLvlId() + "]");
@@ -301,14 +298,13 @@ public enum MongoConnector implements Closeable2 {
 		});
 		return future;
 	}
-	
+
 	/**
 	 * Base method to save objects to the database.
 	 * <p><b>Since the current version of the {@link MongoCollection#findOneAndUpdate(Bson, Bson, FindOneAndUpdateOptions, SingleResultCallback)} method does not
 	 * provide support for index hints, this method will always use an index, like in the following example:</b></p>
-	 * <p>Using to match the active objects {@link #matchActive(LvlObject)} will not use any index. Therefore, the following filter is preferred which
-	 * includes a search on the object identifier, using the index defined for this field in the database:</p>
-	 * <tt>and(matchGuid(obj), matchActive(obj))</tt></p>
+	 * <p>Using to match the active objects {@link #matchActive(LvlObject)} will not use the sparse index. Therefore, the following filter 
+	 * {@link #matchActive(LvlObject)} is preferred which includes a search on the alternative index.</p>
 	 * @param obj - object to save
 	 * @param overrideActive - set to <tt>true</tt> to override the active version of the object
 	 * @param allowedTransitions - transitions between states
@@ -320,7 +316,7 @@ public enum MongoConnector implements Closeable2 {
 		final String version = randomVersion();
 		final List<String> states = (allowedTransitions != null ? asList(allowedTransitions) : Collections.<String>emptyList());
 		// prepare query statement
-		final Bson filter = (overrideActive ? (states.isEmpty() ? and(matchGuid(obj), matchActive(obj)) : and(matchGuid(obj), matchActive(obj), matchStates(states))) 
+		final Bson filter = (overrideActive ? (states.isEmpty() ? matchActive2(obj) : and(matchActive2(obj), matchStates(states))) 
 				: (states.isEmpty() ? and(matchGuid(obj), matchVersion(version)) : and(matchGuid(obj), or(matchVersion(version), not(matchStates(states))))));
 		final Document update = new Document(ImmutableMap.<String, Object>of("$set", parseObject(obj, overrideActive),
 				"$currentDate", new Document(LVL_LAST_MODIFIED_FIELD, true),
@@ -351,7 +347,9 @@ public enum MongoConnector implements Closeable2 {
 		final MutableObject<Document> __active = new MutableObject<>();
 		// found and deactivate all versions of the specified object in the database
 		final SettableFuture<Void> deactivateFuture = SettableFuture.create();
-		BsonDocument update = new BsonDocument("$unset", new BsonDocument(LVL_IS_ACTIVE_FIELD, new BsonString("")));
+		BsonDocument update = new BsonDocument("$unset", new BsonDocument(newArrayList(
+				new BsonElement(LVL_SPARSE_IS_ACTIVE_FIELD, new BsonString("")), 
+				new BsonElement(LVL_DENSE_IS_ACTIVE_FIELD, new BsonString("")))));
 		final UpdateOptions options = new UpdateOptions().upsert(false);
 		dbcol.updateMany(matchGuid(lvlId), update, options, new SingleResultCallback<UpdateResult>() {
 			@Override
@@ -361,7 +359,9 @@ public enum MongoConnector implements Closeable2 {
 		});
 		// set the new active version
 		final SettableFuture<Void> setActiveFuture = SettableFuture.create();
-		update = new BsonDocument("$set", new BsonDocument(LVL_IS_ACTIVE_FIELD, new BsonString(lvlId)));
+		update = new BsonDocument("$set", new BsonDocument(newArrayList(
+				new BsonElement(LVL_SPARSE_IS_ACTIVE_FIELD, new BsonString(lvlId)),
+				new BsonElement(LVL_DENSE_IS_ACTIVE_FIELD, new BsonString(lvlId)))));
 		final FindOneAndUpdateOptions options2 = new FindOneAndUpdateOptions().sort(orderBy(descending(LVL_LAST_MODIFIED_FIELD)))
 				.returnDocument(AFTER)
 				.upsert(false);
@@ -403,8 +403,8 @@ public enum MongoConnector implements Closeable2 {
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
 		final SettableFuture<LvlObject> future = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);
-		dbcol.find(matchActive(obj)).modifiers(new BsonDocument("$hint", ACTIVE_VERSION_HINT))
-		.sort(LAST_MODIFIED_SORT_DESC).first(new SingleResultCallback<Document>() {
+		dbcol.find(matchActive(obj)).modifiers(new BsonDocument("$hint", IS_ACTIVE_SPARSE_HINT)).sort(LAST_MODIFIED_SORT_DESC)
+		.first(new SingleResultCallback<Document>() {
 			@Override
 			public void onResult(final Document result, final Throwable t) {
 				if (t == null) {					
@@ -422,7 +422,7 @@ public enum MongoConnector implements Closeable2 {
 
 	/**
 	 * Finds active elements in a collection. Since <tt>hint</tt> and <tt>text</tt> are mutually exclusive in a query expression, the sparse index will be 
-	 * included only when no text search is involved in the query.
+	 * included only when no text search is involved in the query. Otherwise, the text index will be used.
 	 * @see <a href="http://docs.mongodb.org/manual/reference/method/cursor.hint/#behavior">mongoDB -- cursor.hint()</a>
 	 */
 	public <T extends LvlObject> ListenableFuture<List<T>> findActive(final LvlCollection<T> collection, final Class<T> type, final int start, 
@@ -465,7 +465,7 @@ public enum MongoConnector implements Closeable2 {
 				}
 			}
 		}
-		final List<Bson> filterList = newArrayList(not(new BsonDocument(LVL_IS_ACTIVE_FIELD, BsonNull.VALUE)));
+		final List<Bson> filterList = newArrayList(not(new BsonDocument(!isText ? LVL_SPARSE_IS_ACTIVE_FIELD : LVL_DENSE_IS_ACTIVE_FIELD, BsonNull.VALUE)));
 		if (excludedStates != null && !excludedStates.isEmpty()) filterList.add(not(matchStates(excludedStates)));
 		if (!filterFields.isEmpty()) filterList.add(LOGICAL_AND.equals(filters.getType()) ? and(filterFields) : or(filterFields));		
 		final List<Bson> projectionFields = newArrayList();
@@ -501,7 +501,7 @@ public enum MongoConnector implements Closeable2 {
 		final SettableFuture<Void> findFuture = SettableFuture.create();
 		final FindIterable<Document> iterable = dbcol
 				.find(and(filterList))
-				.modifiers(!isText ? new BsonDocument("$hint", ACTIVE_VERSION_HINT) : new BsonDocument())
+				.modifiers(!isText ? new BsonDocument("$hint", IS_ACTIVE_SPARSE_HINT) : new BsonDocument())
 				.projection(fields(projectionFields))
 				.sort(orderBy(sortFields))
 				.skip(start)
@@ -545,7 +545,7 @@ public enum MongoConnector implements Closeable2 {
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
 		final SettableFuture<Boolean> future = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);
-		final Bson filter = (includeVersions ? matchGuid(obj) : and(matchGuid(obj), matchActive(obj)));
+		final Bson filter = (includeVersions ? matchGuid(obj) : matchActive2(obj));
 		dbcol.deleteMany(filter, new SingleResultCallback<DeleteResult>() {
 			@Override
 			public void onResult(final DeleteResult result, final Throwable t) {
@@ -560,6 +560,9 @@ public enum MongoConnector implements Closeable2 {
 				} else future.setException(t);
 			}
 		});
+		
+		 // TODO : select new active
+		
 		if (deleteReferences) {
 			// cascade delete
 			// TODO
@@ -577,11 +580,11 @@ public enum MongoConnector implements Closeable2 {
 	private <T extends LvlObject> ListenableFuture<Long> totalCount(final MongoCollection<Document> dbcol, final boolean onlyActive, 
 			final @Nullable List<String> excludedStates) {
 		final SettableFuture<Long> countFuture = SettableFuture.create();
-		final Bson activeFilter = (onlyActive ? not(new BsonDocument(LVL_IS_ACTIVE_FIELD, BsonNull.VALUE)) : null);
+		final Bson activeFilter = (onlyActive ? not(new BsonDocument(LVL_SPARSE_IS_ACTIVE_FIELD, BsonNull.VALUE)) : null);
 		final Bson statesFilter = (excludedStates != null && !excludedStates.isEmpty()) ? not(matchStates(excludedStates)) : null;
 		final Bson filter = (activeFilter != null && statesFilter != null) ? and(activeFilter, statesFilter) 
 				: (activeFilter != null ? activeFilter : (statesFilter != null ? statesFilter : new BsonDocument()));
-		final CountOptions options = new CountOptions().hint(ACTIVE_VERSION_HINT);
+		final CountOptions options = new CountOptions().hint(IS_ACTIVE_SPARSE_HINT);
 		dbcol.count(filter, options, new SingleResultCallback<Long>() {
 			@Override
 			public void onResult(final Long result, final Throwable t) {
@@ -597,22 +600,25 @@ public enum MongoConnector implements Closeable2 {
 	 */
 	public <T extends LvlObject> ListenableFuture<FeatureCollection> fetchNear(final LvlCollection<T> collection, final Class<T> type, final double longitude, 
 			final double latitude, final double minDistance, final double maxDistance, final @Nullable List<String> excludedStates) {
-		final SettableFuture<FeatureCollection> future = SettableFuture.create(); // TODO : adding the Id to the point would serve to avoid this
+		final SettableFuture<FeatureCollection> future = SettableFuture.create();
 		final FeatureCollection features = FeatureCollection.builder().crs(Crs.builder().wgs84().build()).build();
 		final MongoCollection<Document> dbcol = getCollection(collection);
+		// prepare query
+		final List<Document> statements = newArrayList(new Document(LVL_DENSE_IS_ACTIVE_FIELD, new BsonDocument("$ne", BsonNull.VALUE)));
+		if ((excludedStates != null && !excludedStates.isEmpty())) statements.add(new Document(LVL_STATE_FIELD, 
+				new Document("$not", new Document("$in", excludedStates))));
+		final Document query = (statements.size() > 1 ? new Document("$and", statements) : statements.get(0));
+		// prepare geolocation query
 		final Document geoNear = new Document("$geoNear", new Document(ImmutableMap.<String, Object>builder()
 				.put("spherical", true)
 				.put("num", new BsonInt32(Integer.MAX_VALUE))
 				.put("maxDistance", maxDistance)
+				.put("query", query)
 				.put("near", new Document("type", "Point").append("coordinates", new BsonArray(newArrayList(new BsonDouble(longitude), new BsonDouble(latitude)))))
 				.put("distanceField", "_dist.calculated")
 				.build()));
-		final Bson project = new SimplePipelineStage("$project", fields(include(LVL_GUID_FIELD, LVL_IS_ACTIVE_FIELD, LVL_STATE_FIELD,
-				LVL_LOCATION_FIELD, "_dist")));
-		final Bson statesFilter = (excludedStates != null && !excludedStates.isEmpty()) ? not(in(LVL_STATE_FIELD, excludedStates)) 
-				: new BsonDocument();
-		final Bson match = new SimplePipelineStage("$match", and(not(new BsonDocument(LVL_IS_ACTIVE_FIELD, BsonNull.VALUE)), statesFilter,
-				gte("_dist.calculated", new BsonDouble(minDistance))));
+		final Bson project = new SimplePipelineStage("$project", fields(include(LVL_GUID_FIELD, LVL_LOCATION_FIELD, "_dist")));
+		final Bson match = new SimplePipelineStage("$match", gte("_dist.calculated", new BsonDouble(minDistance)));
 		final AggregateIterable<Document> iterable = dbcol.aggregate(newArrayList(geoNear, project, match));
 		iterable.forEach(new Block<Document>() {
 			@Override
@@ -642,7 +648,7 @@ public enum MongoConnector implements Closeable2 {
 	 * annotated with the GUID of the corresponding element.
 	 */
 	public <T extends LvlObject> ListenableFuture<FeatureCollection> fetchWithin(final LvlCollection<T> collection, final Class<T> type, final Polygon polygon, 
-			final @Nullable List<String> excludedStates) { // TODO : only active
+			final @Nullable List<String> excludedStates) {
 		checkArgument(polygon != null, "Uninitialized polygon");
 		String payload = null;
 		try {
@@ -655,10 +661,11 @@ public enum MongoConnector implements Closeable2 {
 		final MongoCollection<Document> dbcol = getCollection(collection);		
 		final Document geoWithin = new Document(LVL_LOCATION_FIELD, new Document(ImmutableMap.<String, Object>of("$geoWithin", 
 				new Document("$geometry", Document.parse(payload)))));
+		final Bson activeFilter = not(new BsonDocument(LVL_SPARSE_IS_ACTIVE_FIELD, BsonNull.VALUE));
 		final Bson statesFilter = (excludedStates != null && !excludedStates.isEmpty()) ? not(matchStates(excludedStates)) : new BsonDocument();		
 		final FindIterable<Document> iterable = dbcol
-				.find(and(geoWithin, statesFilter))
-				.modifiers(new BsonDocument("$hint", ACTIVE_VERSION_HINT))
+				.find(and(geoWithin, activeFilter, statesFilter))
+				.modifiers(new BsonDocument("$hint", IS_ACTIVE_SPARSE_HINT))
 				.projection(fields(include(LVL_GUID_FIELD, LVL_LOCATION_FIELD)));
 		iterable.forEach(new Block<Document>() {
 			@Override
@@ -700,7 +707,7 @@ public enum MongoConnector implements Closeable2 {
 		final Bson filter = (statesFilter != null ? and(typeaheadFilter, statesFilter) : typeaheadFilter);
 		final FindIterable<Document> iterable = dbcol
 				.find(filter)
-				.modifiers(new BsonDocument("$hint", ACTIVE_VERSION_HINT))
+				.modifiers(new BsonDocument("$hint", IS_ACTIVE_SPARSE_HINT))
 				.projection(fields(include(field2)))
 				.sort(orderBy(ascending(field2)))
 				.limit(size2);
@@ -795,7 +802,7 @@ public enum MongoConnector implements Closeable2 {
 	private Bson matchGuid(final LvlObject obj) {
 		return matchGuid(obj.getLvlId());
 	}
-	
+
 	private Bson matchGuid(final String lvlId) {
 		return eq(LVL_GUID_FIELD, lvlId);
 	}
@@ -805,12 +812,16 @@ public enum MongoConnector implements Closeable2 {
 	}
 
 	private Bson matchActive(final LvlObject obj) {
-		return eq(LVL_IS_ACTIVE_FIELD, obj.getLvlId());
+		return eq(LVL_SPARSE_IS_ACTIVE_FIELD, obj.getLvlId());
+	}
+
+	private Bson matchActive2(final LvlObject obj) {
+		return eq(LVL_DENSE_IS_ACTIVE_FIELD, obj.getLvlId());
 	}
 
 	private Bson matchStates(final List<String> states) {
 		return in(LVL_STATE_FIELD, states);
-	}	
+	}
 
 	private <T extends LvlObject> MongoCollection<Document> getCollection(final LvlObject obj) {
 		checkArgument(obj != null, "Uninitialized object");
@@ -831,13 +842,17 @@ public enum MongoConnector implements Closeable2 {
 	private <T extends LvlObject> Document parseObject(final LvlObject obj, final boolean overrideActive) {
 		checkArgument(obj != null, "Uninitialized object");
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
-		if (overrideActive) obj.setIsActive(obj.getLvlId());		
+		if (overrideActive) {
+			obj.setIsActive(obj.getLvlId());
+			obj.setIsActive2(obj.getLvlId());
+		}
 		final Document doc = Document.parse(obj.toJson());
 		doc.remove(LVL_LAST_MODIFIED_FIELD);
 		if (!overrideActive) {
-			doc.remove(LVL_IS_ACTIVE_FIELD);
+			doc.remove(LVL_SPARSE_IS_ACTIVE_FIELD);
+			doc.remove(LVL_DENSE_IS_ACTIVE_FIELD);
 			doc.remove(LVL_VERSION_FIELD);
-		}		
+		}
 		return doc;
 	}
 
@@ -865,7 +880,7 @@ public enum MongoConnector implements Closeable2 {
 
 	private static final ObjectMapper JSON_MAPPER_COPY = JSON_MAPPER.copy().registerModule(JACKSON_MODULE).addHandler(DOC_DESERIALIZATION_PROBLEM_HANDLER);
 
-	private static final BsonDocument ACTIVE_VERSION_HINT = new BsonDocument(LVL_IS_ACTIVE_FIELD, new BsonInt32(1));
+	private static final BsonDocument IS_ACTIVE_SPARSE_HINT = new BsonDocument(LVL_SPARSE_IS_ACTIVE_FIELD, new BsonInt32(1));
 	private static final Bson LAST_MODIFIED_SORT_DESC = orderBy(descending(LVL_LAST_MODIFIED_FIELD));
 
 	private static class SimplePipelineStage implements Bson {

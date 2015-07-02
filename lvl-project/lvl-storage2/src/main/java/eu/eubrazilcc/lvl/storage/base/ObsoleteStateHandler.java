@@ -22,8 +22,8 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.DRAFT;
-import static eu.eubrazilcc.lvl.storage.base.LvlObjectState.RELEASE;
+import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
+import static eu.eubrazilcc.lvl.storage.base.ObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -32,7 +32,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  * Behavior corresponding to the obsolete state.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ObsoleteStateHandler<T extends LvlObject> extends LvlObjectStateHandler<T> {
+public class ObsoleteStateHandler<T extends LvlObject> extends ObjectStateHandler<T> {
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {

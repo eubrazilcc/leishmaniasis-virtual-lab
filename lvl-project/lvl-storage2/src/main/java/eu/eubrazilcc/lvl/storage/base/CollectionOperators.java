@@ -22,21 +22,18 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
-import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
-
-import com.google.common.util.concurrent.ListenableFuture;
-
 /**
- * Behavior corresponding to the draft state.
+ * Facilitates common operations with collection operators, like creating new instances.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DraftStateHandler<T extends LvlObject> extends ObjectStateHandler<T> {
+public final class CollectionOperators {
 
-	@Override
-	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		if (obj.getState() == null) obj.setState(DRAFT);
-		return MONGODB_CONN.saveActive(obj, DRAFT.name());
-	}	
+	public static <T extends LvlObject> AllCollectionOperator<T> allOperator(final LvlCollection<T> lvlCol) {
+		return new AllCollectionOperator<>(lvlCol);
+	}
+
+	public static <T extends LvlObject> ReleasesCollectionOperator<T> releasesOperator(final LvlCollection<T> lvlCol) {
+		return new ReleasesCollectionOperator<>(lvlCol);
+	}
 
 }

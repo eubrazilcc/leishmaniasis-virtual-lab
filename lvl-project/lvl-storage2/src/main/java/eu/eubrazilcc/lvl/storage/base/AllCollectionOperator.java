@@ -22,24 +22,23 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 /**
- * Possible object states.
+ * Operates on all elements of a collection, no matter their state.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum LvlObjectState {
+public class AllCollectionOperator<T extends LvlObject> extends CollectionOperatorImpl<T> {
 
-	DRAFT(100),    //              (create) ->    draft
-	RELEASE(200),  // draft ->   (approval) ->  release
-	OBSOLETE(300); // *any* -> (invalidate) -> obsolete
-	
-	private int intState;
-	
-	private LvlObjectState(final int intState) {
-		this.intState = intState;
+	public AllCollectionOperator(final LvlCollection<T> lvlCol) {
+		super(lvlCol, null);
 	}
 
-	public int getIntState() {
-		return intState;
+	@Override
+	public String toString() {
+		return toStringHelper(this)
+				.add(CollectionOperator.class.getSimpleName(), super.toString())				
+				.toString();
 	}
 	
 }

@@ -22,21 +22,24 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
-import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
-
-import com.google.common.util.concurrent.ListenableFuture;
-
 /**
- * Behavior corresponding to the draft state.
+ * Possible object states.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DraftStateHandler<T extends LvlObject> extends ObjectStateHandler<T> {
+public enum ObjectState {
 
-	@Override
-	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		if (obj.getState() == null) obj.setState(DRAFT);
-		return MONGODB_CONN.saveActive(obj, DRAFT.name());
-	}	
+	DRAFT(100),    //              (create) ->    draft
+	RELEASE(200),  // draft ->   (approval) ->  release
+	OBSOLETE(300); // *any* -> (invalidate) -> obsolete
+	
+	private int intState;
+	
+	private ObjectState(final int intState) {
+		this.intState = intState;
+	}
 
+	public int getIntState() {
+		return intState;
+	}
+	
 }
