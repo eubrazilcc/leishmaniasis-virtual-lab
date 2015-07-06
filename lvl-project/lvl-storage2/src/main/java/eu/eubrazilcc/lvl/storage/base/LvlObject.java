@@ -277,6 +277,10 @@ public abstract class LvlObject implements Linkable {
 	public ListenableFuture<Boolean> delete(final DeleteOptions... options) {
 		return stateHandler.delete(this, options);
 	}
+	
+	public ListenableFuture<List<LvlObject>> versions() {
+		return stateHandler.versions(this);
+	}
 
 	/**
 	 * Returns a String containing the attributes of each element loaded in the current view.

@@ -524,6 +524,32 @@ public enum MongoConnector implements Closeable2 {
 		});
 		return future;
 	}
+	
+	public <T extends LvlObject> ListenableFuture<List<LvlObject>> findVersions(final LvlObject obj, final Class<T> type) {
+		checkArgument(obj != null && obj.getClass().isAssignableFrom(type), "Uninitialized or invalid object type");
+		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
+		final SettableFuture<List<LvlObject>> future = SettableFuture.create();
+		final MongoCollection<Document> dbcol = getCollection(obj);
+		final List<LvlObject> versions = newArrayList();
+		final FindIterable<Document> iterable = dbcol.find(matchGuid(obj.getLvlId())).sort(descending(LVL_LAST_MODIFIED_FIELD));
+		iterable.forEach(new Block<Document>() {
+			@Override
+			public void apply(final Document doc) {
+				try {					
+					versions.add(parseDocument(doc, type));
+				} catch (Exception e) {
+					LOGGER.error("Failed to parse result, [collection='" + obj.getCollection() + "', objectId='" 
+							+ doc.get("_id", ObjectId.class).toHexString() + "']", e);
+				}
+			}
+		}, new SingleResultCallback<Void>() {
+			@Override
+			public void onResult(final Void result, final Throwable t) {
+				if (t == null) future.set(versions); else future.setException(t);
+			}
+		});
+		return future;
+	}
 
 	public <T extends LvlObject> ListenableFuture<Boolean> delete(final T obj, final boolean includeVersions, final boolean deleteReferences) {
 		checkArgument(obj != null, "Uninitialized or invalid object");

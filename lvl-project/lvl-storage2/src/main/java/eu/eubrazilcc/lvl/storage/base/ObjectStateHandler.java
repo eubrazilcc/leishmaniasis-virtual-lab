@@ -82,11 +82,8 @@ public abstract class ObjectStateHandler<T extends LvlObject> {
 				!optList.contains(ON_DELETE_NO_ACTION) && optList.contains(ON_DELETE_CASCADE));
 	}
 
-	public ListenableFuture<List<T>> versions(final T obj) {
-		
-		
-		// TODO
-		return null;
+	public ListenableFuture<List<LvlObject>> versions(final T obj) {
+		return MONGODB_CONN.findVersions(obj, obj.getClass());
 	}
 
 }

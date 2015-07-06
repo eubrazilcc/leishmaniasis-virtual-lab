@@ -76,6 +76,7 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.storage.base.CollectionOperator;
+import eu.eubrazilcc.lvl.storage.base.LvlObject;
 import eu.eubrazilcc.lvl.storage.base.ObjectState;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionStats;
 
@@ -360,7 +361,7 @@ public class CitationCollectionTest {
 			final List<String> values = op.typeahead(LVL_GUID_FIELD, "ion_", 10).get(TIMEOUT, SECONDS);
 			assertThat("typeahead values are not null", values, notNullValue());
 			assertThat("typeahead values are not empty", values.isEmpty(), equalTo(scenario.numItems() == 0));
-			assertThat("number of typeahead values coincides with expected", values.size(), equalTo(scenario.numItems()));			
+			assertThat("number of typeahead values coincides with expected", values.size(), equalTo(scenario.numItems()));
 			// Uncomment for additional output
 			System.out.println(" >> Typeahead:\n" + objectToJson(values, JSON_PRETTY_PRINTER));
 
@@ -514,6 +515,23 @@ public class CitationCollectionTest {
 				}
 			}
 		}
+
+		// list all available versions
+		System.out.println(" >> List versions: " + rs.toString());
+		ds.citation2 = Citation.builder().lvlId(ID_0).build();
+		final List<LvlObject> versions = ds.citation2.versions().get(TIMEOUT, SECONDS);
+		assertThat("versions are not null", versions, notNullValue());
+		// TODO assertThat("number of versions coincides with expected", versions.size(), equalTo());
+		
+		// TODO
+		System.out.println(" >> Versions2 (GUID=" + ds.citation2.getLvlId() + "): " + rs.toString() + ", versions=" + versions.size());
+		// TODO
+
+		
+		// TODO
+
+		// Uncomment for additional output
+		System.out.println(" >> Versions (GUID=" + ds.citation2.getLvlId() + "):\n" + objectToJson(versions, JSON_PRETTY_PRINTER));
 
 		if (testUpdate) {
 			// update the citation
