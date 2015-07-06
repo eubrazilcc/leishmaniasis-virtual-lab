@@ -69,7 +69,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
  */
 @JsonIgnoreProperties({ "page", "perPage", "query", "sort", "order", "pageFirstEntry", "totalPages" })
 public abstract class LvlCollection<T extends LvlObject> implements Linkable, CollectionOperator<T> {
-
+	
 	@JsonIgnore
 	protected final Logger logger;
 	@JsonIgnore

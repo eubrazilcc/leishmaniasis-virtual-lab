@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.storage.mongodb;
 
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.base.Splitter.on;
@@ -30,6 +31,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.util.concurrent.Futures.addCallback;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.successfulAsList;
+import static com.google.common.util.concurrent.Futures.transform;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
 import static com.mongodb.ReadPreference.nearest;
 import static com.mongodb.WriteConcern.ACKNOWLEDGED;
@@ -52,13 +54,14 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static com.mongodb.client.model.Sorts.ascending;
 import static com.mongodb.client.model.Sorts.descending;
 import static com.mongodb.client.model.Sorts.orderBy;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_DENSE_IS_ACTIVE_FIELD;
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_SPARSE_IS_ACTIVE_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LAST_MODIFIED_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LOCATION_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_SPARSE_IS_ACTIVE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_STATE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_VERSION_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.randomVersion;
@@ -78,13 +81,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.mutable.MutableLong;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonDouble;
@@ -109,8 +112,10 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.SettableFuture;
 import com.mongodb.Block;
 import com.mongodb.MongoCredential;
@@ -134,6 +139,7 @@ import com.mongodb.connection.ClusterSettings;
 
 import eu.eubrazilcc.lvl.core.BaseFile;
 import eu.eubrazilcc.lvl.core.Closeable2;
+import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
 import eu.eubrazilcc.lvl.core.geojson.Crs;
 import eu.eubrazilcc.lvl.core.geojson.Feature;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
@@ -262,8 +268,14 @@ public enum MongoConnector implements Closeable2 {
 		// insert the object in the collection as a new version
 		final ListenableFuture<Void> insertFuture = save(obj, false, allowedTransitions);
 		// set the new active version to the latest modified record
-		final SettableFuture<Void> activeFuture = SettableFuture.create();
-		final ListenableFuture<Document> setActiveFuture = activateLastModified(getCollection(obj), obj.getLvlId());
+		final ListenableFuture<Document> setActiveFuture = transform(insertFuture, new AsyncFunction<Void, Document>() {
+			@Override
+			public ListenableFuture<Document> apply(final Void insertResult) throws Exception {				
+				return activateLastModified(getCollection(obj), obj.getLvlId());
+			}			
+		}, TASK_RUNNER.executor());
+		// create response
+		final SettableFuture<Void> future = SettableFuture.create();
 		addCallback(setActiveFuture, new FutureCallback<Document>() {
 			@Override
 			public void onSuccess(final Document result) {
@@ -274,27 +286,13 @@ public enum MongoConnector implements Closeable2 {
 						LOGGER.info("The later modification '" + activeVersion + "' is the new active version instead of this '" + thisVersion 
 								+ "' [collection= " + obj.getCollection() + ", lvlId=" + obj.getLvlId() + "]");
 					}
-					activeFuture.set(null);
-				} else activeFuture.setException(new LvlObjectWriteException("No record was selected as the new active version"));
-			}
-			@Override
-			public void onFailure(final Throwable t) {
-				activeFuture.setException(t);
-			}
-		});
-		// combine the results, failing immediately if any of the futures fails
-		final SettableFuture<Void> future = SettableFuture.create();
-		@SuppressWarnings("unchecked")
-		final ListenableFuture<List<Void>> concatenated = allAsList(insertFuture, activeFuture);
-		addCallback(concatenated, new FutureCallback<List<Void>>() {
-			@Override
-			public void onSuccess(final List<Void> result) {				
-				future.set(null);
+					future.set(null);
+				} else future.setException(new LvlObjectWriteException("No record was selected as the new active version"));
 			}
 			@Override
 			public void onFailure(final Throwable t) {
 				future.setException(t);
-			}			
+			}
 		});
 		return future;
 	}
@@ -344,10 +342,9 @@ public enum MongoConnector implements Closeable2 {
 	}
 
 	private <T extends LvlObject> ListenableFuture<Document> activateLastModified(final MongoCollection<Document> dbcol, final String lvlId) {
-		final MutableObject<Document> __active = new MutableObject<>();
 		// found and deactivate all versions of the specified object in the database
 		final SettableFuture<Void> deactivateFuture = SettableFuture.create();
-		BsonDocument update = new BsonDocument("$unset", new BsonDocument(newArrayList(
+		final BsonDocument update = new BsonDocument("$unset", new BsonDocument(newArrayList(
 				new BsonElement(LVL_SPARSE_IS_ACTIVE_FIELD, new BsonString("")), 
 				new BsonElement(LVL_DENSE_IS_ACTIVE_FIELD, new BsonString("")))));
 		final UpdateOptions options = new UpdateOptions().upsert(false);
@@ -358,37 +355,25 @@ public enum MongoConnector implements Closeable2 {
 			}
 		});
 		// set the new active version
-		final SettableFuture<Void> setActiveFuture = SettableFuture.create();
-		update = new BsonDocument("$set", new BsonDocument(newArrayList(
-				new BsonElement(LVL_SPARSE_IS_ACTIVE_FIELD, new BsonString(lvlId)),
-				new BsonElement(LVL_DENSE_IS_ACTIVE_FIELD, new BsonString(lvlId)))));
-		final FindOneAndUpdateOptions options2 = new FindOneAndUpdateOptions().sort(orderBy(descending(LVL_LAST_MODIFIED_FIELD)))
-				.returnDocument(AFTER)
-				.upsert(false);
-		dbcol.findOneAndUpdate(matchGuid(lvlId), update, options2, new SingleResultCallback<Document>() {
+		return transform(deactivateFuture, new AsyncFunction<Void, Document>() {
 			@Override
-			public void onResult(final Document result, final Throwable t) {
-				if (t == null) {
-					__active.setValue(result);
-					setActiveFuture.set(null);
-				} else setActiveFuture.setException(t);
+			public ListenableFuture<Document> apply(final Void deactivateResult) throws Exception {				
+				final SettableFuture<Document> future = SettableFuture.create();
+				final BsonDocument update = new BsonDocument("$set", new BsonDocument(newArrayList(
+						new BsonElement(LVL_SPARSE_IS_ACTIVE_FIELD, new BsonString(lvlId)),
+						new BsonElement(LVL_DENSE_IS_ACTIVE_FIELD, new BsonString(lvlId)))));
+				final FindOneAndUpdateOptions options2 = new FindOneAndUpdateOptions().sort(orderBy(descending(LVL_LAST_MODIFIED_FIELD)))
+						.returnDocument(AFTER)
+						.upsert(false);
+				dbcol.findOneAndUpdate(matchGuid(lvlId), update, options2, new SingleResultCallback<Document>() {
+					@Override
+					public void onResult(final Document result, final Throwable t) {
+						if (t == null) future.set(result); else future.setException(t);
+					}
+				});
+				return future;
 			}
-		});
-		// combine the results, failing immediately if any of the futures fails
-		final SettableFuture<Document> future = SettableFuture.create();
-		@SuppressWarnings("unchecked")
-		final ListenableFuture<List<Void>> concatenated = allAsList(deactivateFuture, setActiveFuture);
-		addCallback(concatenated, new FutureCallback<List<Void>>() {
-			@Override
-			public void onSuccess(final List<Void> result) {				
-				future.set(__active.getValue());
-			}
-			@Override
-			public void onFailure(final Throwable t) {
-				future.setException(t);
-			}			
-		});
-		return future;
+		}, TASK_RUNNER.executor());		
 	}
 
 	/**
@@ -543,31 +528,72 @@ public enum MongoConnector implements Closeable2 {
 	public <T extends LvlObject> ListenableFuture<Boolean> delete(final T obj, final boolean includeVersions, final boolean deleteReferences) {
 		checkArgument(obj != null, "Uninitialized or invalid object");
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
-		final SettableFuture<Boolean> future = SettableFuture.create();
-		final MongoCollection<Document> dbcol = getCollection(obj);
+		final SettableFuture<Boolean> deleteFuture = SettableFuture.create();
+		final MongoCollection<Document> dbcol = getCollection(obj);		
+		// find and delete records from the database
 		final Bson filter = (includeVersions ? matchGuid(obj) : matchActive2(obj));
 		dbcol.deleteMany(filter, new SingleResultCallback<DeleteResult>() {
 			@Override
 			public void onResult(final DeleteResult result, final Throwable t) {
 				if (t == null) {
 					if (result.getDeletedCount() < 1l) {
-						future.set(false);
-					} else if (result.getDeletedCount() == 1l || includeVersions) {			
-						future.set(true);						
+						deleteFuture.set(false);
+					} else if (result.getDeletedCount() == 1l || includeVersions) {
+						// cascade delete											
+						if (deleteReferences) {
+							class DeleteTask extends CancellableTask<Void> {
+								public DeleteTask() {
+									super(null);
+									this.task = ListenableFutureTask.create(new Callable<Void>() {
+										@Override
+										public Void call() throws Exception {
+											deleteReferences(obj.getReferences());
+											return null;
+										}										
+									});
+								}
+							}
+							TASK_RUNNER.execute(new DeleteTask()); 
+						}
+						deleteFuture.set(true);
 					} else {
-						future.setException(new IllegalStateException("Multiple records were deleted: " + result.getDeletedCount()));
+						deleteFuture.setException(new IllegalStateException("Multiple records were deleted: " + result.getDeletedCount()));
 					}
-				} else future.setException(t);
+				} else deleteFuture.setException(t);
 			}
 		});
-		
-		 // TODO : select new active
-		
-		if (deleteReferences) {
-			// cascade delete
-			// TODO
+		// set the new active version to the latest modified record		
+		return transform(deleteFuture, new AsyncFunction<Boolean, Boolean>() {
+			@Override
+			public ListenableFuture<Boolean> apply(final Boolean deleteResult) throws Exception {
+				final SettableFuture<Boolean> activeFuture = SettableFuture.create();
+				if (fromNullable(deleteResult).or(false) && includeVersions) { 
+					addCallback(activateLastModified(getCollection(obj), obj.getLvlId()), new FutureCallback<Document>() {
+						@Override
+						public void onSuccess(final Document result) {
+							if (LOGGER.isTraceEnabled()) {
+								if (result != null) LOGGER.trace("The new active version is '" + result.getString(LVL_VERSION_FIELD) + "' [collection= " 
+										+ obj.getCollection() + ", lvlId=" + obj.getLvlId() + "]");					
+								else LOGGER.trace("No record was selected as the new active version [collection= " 
+										+ obj.getCollection() + ", lvlId=" + obj.getLvlId() + "]");
+							}
+							activeFuture.set(true);
+						}
+						@Override
+						public void onFailure(final Throwable t) {
+							activeFuture.setException(t);
+						}
+					});
+				} else activeFuture.set(true);
+				return activeFuture;
+			}			
+		}, TASK_RUNNER.executor());			
+	}
+
+	private void deleteReferences(final Map<String, List<String>> references) {		
+		if (references != null) {
+			// TODO : retrieve 
 		}
-		return future;
 	}
 
 	/**

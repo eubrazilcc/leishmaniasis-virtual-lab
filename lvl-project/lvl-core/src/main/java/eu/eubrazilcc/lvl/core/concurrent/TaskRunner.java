@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,9 +49,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import eu.eubrazilcc.lvl.core.Closeable2;
 
 /**
- * Runs tasks in a pool of threads that must be disposed as part of the application termination. Tasks
- * are submitted to the pool of threads for execution and a {@link ListenableFuture} is returned to the
- * caller.
+ * Runs tasks in a pool of threads that must be disposed as part of the application termination. Tasks are submitted to the pool of threads 
+ * for execution and a {@link ListenableFuture} is returned to the caller.
  * @author Erik Torres <ertorser@upv.es>
  * @see <a href="https://code.google.com/p/guava-libraries/wiki/ListenableFutureExplained">ListenableFutureExplained</a>
  */
@@ -100,6 +100,10 @@ public enum TaskRunner implements Closeable2 {
 		checkState(shouldRun.get(), "Task runner uninitialized");
 		checkArgument(task != null, "Uninitialized task");
 		runner.execute(task.getTask());
+	}
+	
+	public Executor executor() {
+		return runner;
 	}
 
 	@Override

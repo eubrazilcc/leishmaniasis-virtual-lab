@@ -83,7 +83,9 @@ public abstract class ObjectStateHandler<T extends LvlObject> {
 	}
 
 	public ListenableFuture<List<T>> versions(final T obj) {
-		// TODO Auto-generated method stub
+		
+		
+		// TODO
 		return null;
 	}
 

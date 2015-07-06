@@ -59,6 +59,7 @@ import static org.junit.Assert.fail;
 import static org.junit.runners.MethodSorters.NAME_ASCENDING;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -66,6 +67,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
@@ -515,7 +517,7 @@ public class CitationCollectionTest {
 
 		if (testUpdate) {
 			// update the citation
-			System.out.println(" >> Update the citation");
+			System.out.println(" >> Update the citation: " + rs.toString());
 			final Date lastModified = ds.citation0.getLastModified();
 			ds.citation0.getLvl().getCited().add("NEW_SEQ");
 			ds.citation0.save().get(TIMEOUT, SECONDS);
@@ -523,7 +525,7 @@ public class CitationCollectionTest {
 			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));
 
 			// find after update
-			System.out.println(" >> Find after update");
+			System.out.println(" >> Find after update: " + rs.toString());
 			ds.citation2 = Citation.builder().lvlId(ID_0).build();
 			ds.citation2.fetch().get(TIMEOUT, SECONDS);
 			assertThat("fetched citation (after update) coincides with expected", ds.citation2, equalTo(ds.citation0));
@@ -532,7 +534,7 @@ public class CitationCollectionTest {
 		}
 
 		// remove
-		System.out.println(" >> Remove");
+		System.out.println(" >> Remove: " + rs.toString());
 		ds.citation1.delete().get(TIMEOUT, SECONDS);			
 		long totalCount = ds.citations.totalCount().get(TIMEOUT, SECONDS).longValue();			
 		assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(1l));
@@ -589,12 +591,6 @@ public class CitationCollectionTest {
 				op.fetch(start, size, null, null, null).get(TIMEOUT, SECONDS);
 				if (op.collection().size() != 0) {					
 					assertThat("number of fetched elements coincides with expected", op.collection().size(), allOf(greaterThanOrEqualTo(1), lessThanOrEqualTo(size)));
-					
-					// TODO
-					System.err.println("\n\n >> PAGINATION: " + scenario.toString() + "\ntotalCount=" + op.collection().getTotalCount()
-							+ ", expected=" + scenario.numItems(stateCount, 1) + "\n" + op.collection().toJson(JSON_PRETTY_PRINTER) + "\n");
-					// TODO
-					
 					assertThat("total number of fetched elements coincides with expected", op.collection().getTotalCount(), equalTo(scenario.numItems(stateCount, 1)));
 					System.out.println("Paging: first item " + start + ", showing " + op.collection().size() + " of " + op.collection().getTotalCount() + " items\n"
 							+ "Items: " + join(op.collection().ids(), ", "));
@@ -604,7 +600,7 @@ public class CitationCollectionTest {
 		}
 
 		// delete all the elements inserted in the previous test (pagination)
-		System.out.println(" >> Delete all the elements inserted in the previous test (pagination)");
+		System.out.println(" >> Delete all the elements inserted in the previous test (pagination): " + rs.toString());
 		for (int i = 0; i < ids.size(); i++) {
 			Citation.builder().lvlId(ids.get(i)).build().delete().get(TIMEOUT, SECONDS);
 		}
@@ -612,14 +608,14 @@ public class CitationCollectionTest {
 		assertThat("number of fetched elements coincides with expected", count, equalTo(1));			
 
 		// collect statistics about the collection
-		System.out.println(" >> Collect statistics about the collection");
+		System.out.println(" >> Collect statistics about the collection: " + rs.toString());
 		final ListenableFuture<MongoCollectionStats> statsFuture = ds.citations.stats();
 		final MongoCollectionStats stats = statsFuture.get(TIMEOUT, SECONDS);
 		assertThat("collection statistics are not null", stats, notNullValue());
 		System.out.println(" >> Collection statistics:\n" + objectToJson(stats, JSON_PRETTY_PRINTER));
 
 		// clean-up the last element from the database
-		System.out.println(" >> Clean-up the last element from the database");
+		System.out.println(" >> Clean-up the last element from the database: " + rs.toString());
 		ds.citation0.delete().get(TIMEOUT, SECONDS);
 		totalCount = ds.citations.totalCount().get(TIMEOUT, SECONDS).longValue();			
 		assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(0l));
@@ -659,6 +655,7 @@ public class CitationCollectionTest {
 				.pubmed(article0)
 				.location(bcnPoint)
 				.state(DRAFT)
+				.references(Maps.<String, List<String>>newHashMap(ImmutableMap.of("sequences", newArrayList("lvl:sandflies:SEQ_0", "lvl:sandflies:SEQ_1"))))
 				.build(); // TODO : include provenance
 
 		private final Citation citation1 = Citation.builder()
@@ -685,6 +682,10 @@ public class CitationCollectionTest {
 
 		public Resultset(final TestScenario[] scenarios) {
 			this.scenarios = scenarios;
+		}
+
+		public String toString() {
+			return Arrays.toString(scenarios);
 		}
 
 	}

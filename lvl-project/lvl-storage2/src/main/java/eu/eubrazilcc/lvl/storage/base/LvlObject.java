@@ -214,7 +214,7 @@ public abstract class LvlObject implements Linkable {
 	public void setIsActive(final String isActive) {
 		this.isActive = isActive;
 	}
-	
+
 	public String getIsActive2() {
 		return isActive2;
 	}
@@ -228,7 +228,11 @@ public abstract class LvlObject implements Linkable {
 	}
 
 	public void setReferences(final Map<String, List<String>> references) {
-		this.references = references;
+		if (references != null) {
+			this.references = newHashMap(references);
+		} else {
+			this.references.clear();
+		}
 	}
 
 	public String getUrlSafeNamespace() {
@@ -407,6 +411,11 @@ public abstract class LvlObject implements Linkable {
 
 		public B state(final @Nullable ObjectState state) {
 			instance.setState(state);
+			return builder;
+		}
+
+		public B references(final @Nullable Map<String, List<String>> references) {
+			instance.setReferences(references);
 			return builder;
 		}
 

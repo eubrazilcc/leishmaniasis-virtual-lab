@@ -45,7 +45,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
  * @author Erik Torres <ertorser@upv.es>
  * @param <V> - The result type returned by this {@link CancellableTask}'s get methods.
  */
-public class CancellableTask<V> {
+public abstract class CancellableTask<V> {
 
 	public static final Range<Double> PROGRESS_RANGE = closed(0.0d, 100.0d);
 	public static final String DEFAULT_PUUID = "00000000-0000-0000-0000-000000000000";
