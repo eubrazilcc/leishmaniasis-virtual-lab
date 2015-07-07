@@ -36,7 +36,7 @@ public class ObsoleteStateHandler<T extends LvlObject> extends ObjectStateHandle
 
 	@Override
 	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		return MONGODB_CONN.saveActive(obj, DRAFT.name(), RELEASE.name());
+		return MONGODB_CONN.saveAsVersion(obj, DRAFT.name(), RELEASE.name());
 	}
 
 }

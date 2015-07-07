@@ -62,6 +62,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -168,6 +169,7 @@ public class CitationCollectionTest {
 			}
 
 			// operate on the test data-set
+			ds.versions.put(ID_0, 2);
 			final Resultset rs = new Resultset(new TestScenario[]{
 					new TestScenario("TestRelease", TestState.ALL, new ObjectState[] { RELEASE, DRAFT }),
 					new TestScenario("TestRelease", TestState.RELEASES, new ObjectState[] { RELEASE, DRAFT })
@@ -205,11 +207,11 @@ public class CitationCollectionTest {
 			ds.citation0.invalidate().save().get(TIMEOUT, SECONDS);
 			assertThat("saved Id is not empty", trim(ds.citation0.getDbId()), allOf(notNullValue(), not(equalTo(""))));
 			assertThat("saved version is not empty", trim(ds.citation0.getVersion()), allOf(notNullValue(), not(equalTo(""))));
-			assertThat("saved Id coincides with expected", ds.citation0.getDbId(), equalTo(dbId));
+			assertThat("saved Id is different in the new version", ds.citation0.getDbId(), not(equalTo(dbId)));
 			assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
-			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));			
+			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));
 			// Uncomment for additional output
-			System.out.println(" >> Saved citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));
+			System.out.println(" >> Saved citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));			
 
 			// find citation after invalidation
 			ds.citation2 = Citation.builder().lvlId(ID_0).build();
@@ -230,6 +232,7 @@ public class CitationCollectionTest {
 			}
 
 			// operate on the test data-set
+			ds.versions.put(ID_0, 2);
 			final Resultset rs = new Resultset(new TestScenario[]{
 					new TestScenario("TestObsolete", TestState.ALL, new ObjectState[] { OBSOLETE, DRAFT }),
 					new TestScenario("TestObsolete", TestState.RELEASES, new ObjectState[] { OBSOLETE, DRAFT })
@@ -247,9 +250,102 @@ public class CitationCollectionTest {
 		}
 	}
 
+	/**
+	 * Tests creation, modification and search of objects that go through the complete life-cycle.
+	 */
 	@Test
-	public void test04JsonMapping() {
-		System.out.println("CitationCollectionTest.test04JsonMapping()");
+	public void test04CompleteLifeCycle() {
+		try {
+			System.out.println("CitationCollectionTest.test04CompleteLifeCycle()");
+
+			// create test data
+			final TestDataset ds = new TestDataset(false);			
+
+			// insert test data-set into the database
+			insertTestDatasets(ds);
+
+			// approve and save the release to the database			
+			Date lastModified = ds.citation0.getLastModified();
+			String dbId = ds.citation0.getDbId();
+			ds.citation0.approve().save().get(TIMEOUT, SECONDS);
+			assertThat("saved Id is not empty", trim(ds.citation0.getDbId()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved version is not empty", trim(ds.citation0.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved Id is different in the new version", ds.citation0.getDbId(), not(equalTo(dbId)));
+			assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
+			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));			
+			// Uncomment for additional output
+			System.out.println(" >> Saved citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));
+
+			// find citation after update
+			ds.citation2 = Citation.builder().lvlId(ID_0).build();
+			ds.citation2.fetch().get(TIMEOUT, SECONDS);			
+			assertThat("fetched citation (after update) coincides with expected", ds.citation2, equalTo(ds.citation0));
+			// Uncomment for additional output
+			System.out.println(" >> Fetched citation (after update, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
+
+			// saving a draft after a release should fail
+			try {
+				ds.citation2.setState(DRAFT);
+				ds.citation2.save().get(TIMEOUT, SECONDS);
+				fail("Expected exception due to unsupported behavior");
+			} catch (Exception expected) {
+				assertThat("exception cause is not null", expected.getCause(), notNullValue());
+				assertThat("exception cause coincides with expected", expected.getCause() instanceof UnsupportedOperationException, equalTo(true));				
+				System.out.println("Expected exception caught: " + expected.getCause().getMessage());
+			}
+
+			// invalidate and save the object to the database			
+			lastModified = ds.citation0.getLastModified();
+			dbId = ds.citation0.getDbId();
+			ds.citation0.invalidate().save().get(TIMEOUT, SECONDS);
+			assertThat("saved Id is not empty", trim(ds.citation0.getDbId()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved version is not empty", trim(ds.citation0.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved Id is different in the new version", ds.citation0.getDbId(), not(equalTo(dbId)));
+			assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
+			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));
+			// Uncomment for additional output
+			System.out.println(" >> Saved citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));			
+
+			// find citation after invalidation
+			ds.citation2 = Citation.builder().lvlId(ID_0).build();
+			ds.citation2.fetch().get(TIMEOUT, SECONDS);			
+			assertThat("fetched citation (after invalidation) coincides with expected", ds.citation2, equalTo(ds.citation0));
+			// Uncomment for additional output
+			System.out.println(" >> Fetched citation (after invalidation, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
+
+			// saving a draft after invalidation should fail
+			try {
+				ds.citation2.setState(DRAFT);
+				ds.citation2.save().get(TIMEOUT, SECONDS);
+				fail("Expected exception due to unsupported behavior");
+			} catch (Exception expected) {
+				assertThat("exception cause is not null", expected.getCause(), notNullValue());
+				assertThat("exception cause coincides with expected", expected.getCause() instanceof UnsupportedOperationException, equalTo(true));				
+				System.out.println("Expected exception caught: " + expected.getCause().getMessage());
+			}
+
+			// operate on the test data-set
+			ds.versions.put(ID_0, 3);
+			final Resultset rs = new Resultset(new TestScenario[]{
+					new TestScenario("TestLifecycle", TestState.ALL, new ObjectState[] { OBSOLETE, DRAFT }),
+					new TestScenario("TestLifecycle", TestState.RELEASES, new ObjectState[] { OBSOLETE, DRAFT })
+			});
+			operateOnTestDatasets(ds, rs, false);
+
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			fail("CitationCollectionTest.test04CompleteLifeCycle() failed: " + e.getMessage());
+		} finally {
+			try {
+				new Citations().drop().get(TIMEOUT, SECONDS);
+			} catch (Exception ignore) { }
+			System.out.println("CitationCollectionTest.test04CompleteLifeCycle() has finished");
+		}
+	}
+
+	@Test
+	public void test05JsonMapping() {
+		System.out.println("CitationCollectionTest.test05JsonMapping()");
 		try {
 			// create test data-set
 			final TestDataset ds = new TestDataset(false);
@@ -275,12 +371,12 @@ public class CitationCollectionTest {
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			fail("CitationCollectionTest.test04JsonMapping() failed: " + e.getMessage());
+			fail("CitationCollectionTest.test05JsonMapping() failed: " + e.getMessage());
 		} finally {
 			try {
 				new Citations().drop().get(TIMEOUT, SECONDS);
 			} catch (Exception ignore) { }
-			System.out.println("CitationCollectionTest.test04JsonMapping() has finished");
+			System.out.println("CitationCollectionTest.test05JsonMapping() has finished");
 		}
 	}
 
@@ -521,17 +617,10 @@ public class CitationCollectionTest {
 		ds.citation2 = Citation.builder().lvlId(ID_0).build();
 		final List<LvlObject> versions = ds.citation2.versions().get(TIMEOUT, SECONDS);
 		assertThat("versions are not null", versions, notNullValue());
-		// TODO assertThat("number of versions coincides with expected", versions.size(), equalTo());
-		
-		// TODO
-		System.out.println(" >> Versions2 (GUID=" + ds.citation2.getLvlId() + "): " + rs.toString() + ", versions=" + versions.size());
-		// TODO
-
-		
-		// TODO
-
+		assertThat("number of versions coincides with expected", versions.size(), equalTo(ds.versions.get(ID_0)));
 		// Uncomment for additional output
-		System.out.println(" >> Versions (GUID=" + ds.citation2.getLvlId() + "):\n" + objectToJson(versions, JSON_PRETTY_PRINTER));
+		System.out.println(" >> Versions (GUID=" + ds.citation2.getLvlId() + "): " + rs.toString() + ", count=" + versions.size() 
+				+ "\n" + objectToJson(versions, JSON_PRETTY_PRINTER));
 
 		if (testUpdate) {
 			// update the citation
@@ -684,14 +773,15 @@ public class CitationCollectionTest {
 
 		private Citation citation2 = null;
 		private final Citations citations = new Citations();
+		
+		private Map<String, Integer> versions = Maps.newHashMap(ImmutableMap.of(ID_0, 1, ID_1, 1));
 
 		public TestDataset(final boolean verbose) throws IOException {
 			if (verbose) {
 				/* Uncomment for additional output */
 				System.out.println(" >> Original PubMed article:\n" + prettyPrint(PUBMED_XMLB.typeToXml(article0)));
 			}
-		}
-
+		}		
 	}
 
 	private static class Resultset {
@@ -699,7 +789,7 @@ public class CitationCollectionTest {
 		private TestScenario[] scenarios;
 
 		public Resultset(final TestScenario[] scenarios) {
-			this.scenarios = scenarios;
+			this.scenarios = scenarios;			
 		}
 
 		public String toString() {

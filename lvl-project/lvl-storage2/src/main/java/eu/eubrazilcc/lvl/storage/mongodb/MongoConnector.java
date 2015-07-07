@@ -618,7 +618,7 @@ public enum MongoConnector implements Closeable2 {
 
 	private void deleteReferences(final Map<String, List<String>> references) {		
 		if (references != null) {
-			// TODO : retrieve 
+			// TODO : retrieve object from database and invoke delete
 		}
 	}
 
