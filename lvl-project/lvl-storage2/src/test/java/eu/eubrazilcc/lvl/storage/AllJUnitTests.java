@@ -23,7 +23,7 @@
 package eu.eubrazilcc.lvl.storage;
 
 import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
-import static eu.eubrazilcc.lvl.storage.mock.CloserServiceMock.CLOSER_SERVICE_MOCK;
+import static eu.eubrazilcc.lvl.storage.mock.LightCloserServiceMock.LIGHT_CLOSER_SERVICE_MOCK;
 import static org.apache.commons.io.FilenameUtils.concat;
 
 import java.io.File;
@@ -37,18 +37,18 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 /**
- * Groups the integration tests for their execution.
+ * Groups the unit tests for their execution.
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
-@SuiteClasses({ CitationCollectionTest.class })
-public class AllIntegrationTests {
+@SuiteClasses({ ProvenanceTest.class })
+public class AllJUnitTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";
 
 	@BeforeClass
 	public static void setup() {
-		System.out.println("AllIntegrationTests.setup()");
+		System.out.println("AllJUnitTests.setup()");
 		final URL anchorURL = AllIntegrationTests.class.getClassLoader().getResource(ANCHOR_FILENAME);
 		File anchorFile = null;
 		try {
@@ -71,12 +71,12 @@ public class AllIntegrationTests {
 		// load logging bridges
 		LOG_MANAGER.preload();
 		// system pre-loading
-		CLOSER_SERVICE_MOCK.preload();
+		LIGHT_CLOSER_SERVICE_MOCK.preload();
 	}
 
 	@AfterClass
 	public static void release() {
-		CLOSER_SERVICE_MOCK.close();
+		LIGHT_CLOSER_SERVICE_MOCK.close();
 	}
 
 	public static String TEST_RESOURCES_PATH;
