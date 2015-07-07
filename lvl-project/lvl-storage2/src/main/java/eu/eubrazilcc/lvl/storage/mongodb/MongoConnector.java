@@ -553,7 +553,7 @@ public enum MongoConnector implements Closeable2 {
 
 	public <T extends LvlObject> ListenableFuture<Boolean> delete(final T obj, final boolean includeVersions, final boolean deleteReferences) {
 		checkArgument(obj != null, "Uninitialized or invalid object");
-		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
+		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");		
 		final SettableFuture<Boolean> deleteFuture = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);		
 		// find and delete records from the database
@@ -593,7 +593,7 @@ public enum MongoConnector implements Closeable2 {
 			@Override
 			public ListenableFuture<Boolean> apply(final Boolean deleteResult) throws Exception {
 				final SettableFuture<Boolean> activeFuture = SettableFuture.create();
-				if (fromNullable(deleteResult).or(false) && includeVersions) { 
+				if (fromNullable(deleteResult).or(false) && !includeVersions) {
 					addCallback(activateLastModified(getCollection(obj), obj.getLvlId()), new FutureCallback<Document>() {
 						@Override
 						public void onSuccess(final Document result) {

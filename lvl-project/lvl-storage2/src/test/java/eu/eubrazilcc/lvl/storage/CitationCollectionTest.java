@@ -42,6 +42,8 @@ import static eu.eubrazilcc.lvl.storage.base.ObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
+import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.DELETE_ALL;
+import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.ON_DELETE_CASCADE;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -343,6 +345,9 @@ public class CitationCollectionTest {
 		}
 	}
 
+	/**
+	 * Test JSON mapping using the global object mapper.
+	 */
 	@Test
 	public void test05JsonMapping() {
 		System.out.println("CitationCollectionTest.test05JsonMapping()");
@@ -615,7 +620,7 @@ public class CitationCollectionTest {
 		// list all available versions
 		System.out.println(" >> List versions: " + rs.toString());
 		ds.citation2 = Citation.builder().lvlId(ID_0).build();
-		final List<LvlObject> versions = ds.citation2.versions().get(TIMEOUT, SECONDS);
+		List<LvlObject> versions = ds.citation2.versions().get(TIMEOUT, SECONDS);
 		assertThat("versions are not null", versions, notNullValue());
 		assertThat("number of versions coincides with expected", versions.size(), equalTo(ds.versions.get(ID_0)));
 		// Uncomment for additional output
@@ -639,12 +644,6 @@ public class CitationCollectionTest {
 			// Uncomment for additional output
 			System.out.println(" >> Fetched citation (after update, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
 		}
-
-		// remove
-		System.out.println(" >> Remove: " + rs.toString());
-		ds.citation1.delete().get(TIMEOUT, SECONDS);			
-		long totalCount = ds.citations.totalCount().get(TIMEOUT, SECONDS).longValue();			
-		assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(1l));
 
 		// pagination
 		final List<String> ids = newArrayList();
@@ -698,7 +697,7 @@ public class CitationCollectionTest {
 				op.fetch(start, size, null, null, null).get(TIMEOUT, SECONDS);
 				if (op.collection().size() != 0) {					
 					assertThat("number of fetched elements coincides with expected", op.collection().size(), allOf(greaterThanOrEqualTo(1), lessThanOrEqualTo(size)));
-					assertThat("total number of fetched elements coincides with expected", op.collection().getTotalCount(), equalTo(scenario.numItems(stateCount, 1)));
+					assertThat("total number of fetched elements coincides with expected", op.collection().getTotalCount(), equalTo(scenario.numItems(stateCount)));
 					System.out.println("Paging: first item " + start + ", showing " + op.collection().size() + " of " + op.collection().getTotalCount() + " items\n"
 							+ "Items: " + join(op.collection().ids(), ", "));
 				}
@@ -706,13 +705,31 @@ public class CitationCollectionTest {
 			} while (!op.collection().getElements().isEmpty());
 		}
 
-		// delete all the elements inserted in the previous test (pagination)
+		// delete all the elements inserted for pagination test
 		System.out.println(" >> Delete all the elements inserted in the previous test (pagination): " + rs.toString());
 		for (int i = 0; i < ids.size(); i++) {
 			Citation.builder().lvlId(ids.get(i)).build().delete().get(TIMEOUT, SECONDS);
 		}
 		count = ds.citations.fetch(0, Integer.MAX_VALUE, null, null, null).get(TIMEOUT, SECONDS);
-		assertThat("number of fetched elements coincides with expected", count, equalTo(1));			
+		assertThat("number of fetched elements coincides with expected", count, equalTo(2));
+
+		// remove active version (last modified version)
+		System.out.println(" >> Remove last modified version: " + rs.toString());
+		ds.citation0.delete().get(TIMEOUT, SECONDS);
+		long totalCount = ds.citations.totalCount().get(TIMEOUT, SECONDS).longValue();
+		assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(ds.versions.get(ID_0) > 1 ? 2l : 1l));
+		
+		// get versions after removing the active version
+		ds.citation2 = Citation.builder().lvlId(ID_0).build();
+		versions = ds.citation2.versions().get(TIMEOUT, SECONDS);
+		assertThat("versions are not null", versions, notNullValue());
+		assertThat("number of versions coincides with expected", versions.size(), equalTo(ds.versions.get(ID_0) - 1));		
+
+		// remove all with cascade delete
+		System.out.println(" >> Remove: " + rs.toString());
+		ds.citation0.delete(DELETE_ALL, ON_DELETE_CASCADE).get(TIMEOUT, SECONDS);
+		totalCount = ds.citations.totalCount().get(TIMEOUT, SECONDS).longValue();			
+		assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(1l));
 
 		// collect statistics about the collection
 		System.out.println(" >> Collect statistics about the collection: " + rs.toString());
@@ -723,7 +740,7 @@ public class CitationCollectionTest {
 
 		// clean-up the last element from the database
 		System.out.println(" >> Clean-up the last element from the database: " + rs.toString());
-		ds.citation0.delete().get(TIMEOUT, SECONDS);
+		ds.citation1.delete().get(TIMEOUT, SECONDS);
 		totalCount = ds.citations.totalCount().get(TIMEOUT, SECONDS).longValue();			
 		assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(0l));
 
@@ -773,7 +790,7 @@ public class CitationCollectionTest {
 
 		private Citation citation2 = null;
 		private final Citations citations = new Citations();
-		
+
 		private Map<String, Integer> versions = Maps.newHashMap(ImmutableMap.of(ID_0, 1, ID_1, 1));
 
 		public TestDataset(final boolean verbose) throws IOException {
