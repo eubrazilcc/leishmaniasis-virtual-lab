@@ -40,8 +40,8 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openprovenance.prov.model.Document;
 
@@ -58,82 +58,62 @@ public class ProvenanceTest {
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
 			ProvenanceTest.class.getSimpleName() + "_")); // + TODO random(8, true, true)));
 
-	@Before
-	public void setUp() {
+	@BeforeClass
+	public static void setUp() {
 		deleteQuietly(TEST_OUTPUT_DIR);
 		TEST_OUTPUT_DIR.mkdirs();
 	}
 
-	@After
-	public void cleanUp() throws IOException {
+	@AfterClass
+	public static void cleanUp() throws IOException {
 		// TODO deleteQuietly(TEST_OUTPUT_DIR);		
 	}
 
 	@Test
-	public void test() {
+	public void testCitationProv() {
 		try {
 			System.out.println("ProvenanceTest.test()");
 
 			// create test dataset
-			final Point point = Point.builder().coordinates(LngLatAlt.builder().longitude(2.0d).latitude(1.0d).build()).build();
 			final User user1 = User.builder().userid("user1").build();
 
-			// test provenance of sequence imported from external data source
+			// citation imported from external data source (no coordinates provided)
+			String testId = "prov-citation-pm";
 			Document prov = newProvDocument();
 			assertThat("prov document is not null", prov, notNullValue());
 			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
 			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
-			addObjectImportProv(prov, newGenBankSequence("ACCN:U49845", "sandflies"), "lvl.gb.U49845", newGeocoding(point));
-			File file = new File(TEST_OUTPUT_DIR, "prov1.json");
-			provToFile(prov, file.getCanonicalPath());
-			assertThat("prov JSON file exists", file.exists(), equalTo(true));
-			assertThat("prov JSON file is not empty", file.length() > 0l, equalTo(true));
-			file = new File(TEST_OUTPUT_DIR, "prov1.svg");
-			provToFile(prov, file.getCanonicalPath());
-			assertThat("prov SVG file exists", file.exists(), equalTo(true));
-			assertThat("prov SVG file is not empty", file.length() > 0l, equalTo(true));
-
-			// test provenance of citation imported from external data source
-			prov = newProvDocument();
-			assertThat("prov document is not null", prov, notNullValue());
-			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
-			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
 			addObjectImportProv(prov, newPubMedArticle("PMID:26148331"), "lvl.pm.26148331", null);
-			file = new File(TEST_OUTPUT_DIR, "prov2.json");
+			File file = new File(TEST_OUTPUT_DIR, testId + ".json");
 			provToFile(prov, file.getCanonicalPath());
 			assertThat("prov JSON file exists", file.exists(), equalTo(true));
 			assertThat("prov JSON file is not empty", file.length() > 0l, equalTo(true));
-			file = new File(TEST_OUTPUT_DIR, "prov2.svg");
+			file = new File(TEST_OUTPUT_DIR, testId + ".svg");
 			provToFile(prov, file.getCanonicalPath());
 			assertThat("prov SVG file exists", file.exists(), equalTo(true));
 			assertThat("prov SVG file is not empty", file.length() > 0l, equalTo(true));
 
-			// test provenance of user created sequence
+			// user created citation
+			testId = "prov-citation-ur";
 			prov = newProvDocument();
 			assertThat("prov document is not null", prov, notNullValue());
 			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
 			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
 			addUserCreatedProv(prov, user1, "lvl.ur.SEQ_2");
-			file = new File(TEST_OUTPUT_DIR, "prov3.json");
+			file = new File(TEST_OUTPUT_DIR, testId + ".json");
 			provToFile(prov, file.getCanonicalPath());
 			assertThat("prov JSON file exists", file.exists(), equalTo(true));
 			assertThat("prov JSON file is not empty", file.length() > 0l, equalTo(true));
-			file = new File(TEST_OUTPUT_DIR, "prov3.svg");
+			file = new File(TEST_OUTPUT_DIR, testId + ".svg");
 			provToFile(prov, file.getCanonicalPath());
 			assertThat("prov SVG file exists", file.exists(), equalTo(true));
 			assertThat("prov SVG file is not empty", file.length() > 0l, equalTo(true));
 
 
 
-			/* TODO
-			// test sequence provenance
-			final Point point = Point.builder().coordinates(LngLatAlt.builder().longitude(2.0d).latitude(1.0d).build()).build();
-			final SequenceProv sequenceProv = new SequenceProv();
-			final Document doc1 = sequenceProv.importFromGenbank("ACCN:U49845", point, "LVL:GB:U49845-draft1");
-			sequenceProv.exportToFile(doc1, new File(TEST_OUTPUT_DIR, "prov1.json").getCanonicalPath());
-			sequenceProv.exportToFile(doc1, new File(TEST_OUTPUT_DIR, "prov1.svg").getCanonicalPath());
 
-			// TODO
+
+			/* TODO			
 
 			// modify sequence draft
 			final Document doc2 = sequenceProv.modifySequenceDraft("LVL:GB:U49845-draft1", User.builder().userid("user1").build(), "LVL:GB:U49845-draft2");
@@ -159,6 +139,57 @@ public class ProvenanceTest {
 			fail("ProvenanceTest.test() failed: " + e.getMessage());
 		} finally {
 			System.out.println("ProvenanceTest.test() has finished");
+		}
+	}
+
+	@Test
+	public void testSequenceProv() {
+		try {
+			System.out.println("ProvenanceTest.testSequenceProv()");
+
+			// create test dataset
+			final Point point = Point.builder().coordinates(LngLatAlt.builder().longitude(2.0d).latitude(1.0d).build()).build();
+			final User user1 = User.builder().userid("user1").build();
+
+			// sequence imported from external data source
+			String testId = "prov-sequence-gb";
+			Document prov = newProvDocument();
+			assertThat("prov document is not null", prov, notNullValue());
+			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
+			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
+			addObjectImportProv(prov, newGenBankSequence("ACCN:U49845", "sandflies"), "lvl.gb.U49845", newGeocoding(point));
+			File file = new File(TEST_OUTPUT_DIR, testId + ".json");
+			provToFile(prov, file.getCanonicalPath());
+			assertThat("prov JSON file exists", file.exists(), equalTo(true));
+			assertThat("prov JSON file is not empty", file.length() > 0l, equalTo(true));
+			file = new File(TEST_OUTPUT_DIR, testId + ".svg");
+			provToFile(prov, file.getCanonicalPath());
+			assertThat("prov SVG file exists", file.exists(), equalTo(true));
+			assertThat("prov SVG file is not empty", file.length() > 0l, equalTo(true));
+
+			// user created sequence
+			testId = "prov-sequence-ur";
+			prov = newProvDocument();
+			assertThat("prov document is not null", prov, notNullValue());
+			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
+			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
+			addUserCreatedProv(prov, user1, "lvl.ur.SEQ_2");
+			file = new File(TEST_OUTPUT_DIR, testId + ".json");
+			provToFile(prov, file.getCanonicalPath());
+			assertThat("prov JSON file exists", file.exists(), equalTo(true));
+			assertThat("prov JSON file is not empty", file.length() > 0l, equalTo(true));
+			file = new File(TEST_OUTPUT_DIR, testId + ".svg");
+			provToFile(prov, file.getCanonicalPath());
+			assertThat("prov SVG file exists", file.exists(), equalTo(true));
+			assertThat("prov SVG file is not empty", file.length() > 0l, equalTo(true));
+
+			// TODO
+
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			fail("ProvenanceTest.testSequenceProv() failed: " + e.getMessage());
+		} finally {
+			System.out.println("ProvenanceTest.testSequenceProv() has finished");
 		}
 	}
 
