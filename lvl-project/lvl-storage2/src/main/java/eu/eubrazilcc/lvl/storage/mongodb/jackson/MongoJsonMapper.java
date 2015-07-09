@@ -39,6 +39,7 @@ public final class MongoJsonMapper {
 
 	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 	static {
+		// JSON_MAPPER.getFactory().setCharacterEscapes(new MongoJsonCharacterEscapes());
 		// apply general configuration
 		JSON_MAPPER.setSerializationInclusion(Include.NON_NULL);
 		JSON_MAPPER.setSerializationInclusion(Include.NON_EMPTY);

@@ -53,6 +53,8 @@ import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -61,6 +63,8 @@ import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.storage.Linkable;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
+import eu.eubrazilcc.lvl.storage.prov.jackson.ProvDocumentDeserializer;
+import eu.eubrazilcc.lvl.storage.prov.jackson.ProvDocumentSerializer;
 
 /**
  * Classes should extend this class to support common features of the LeishVL, such as geolocalization (an optional GeoJSON point can be
@@ -94,8 +98,9 @@ public abstract class LvlObject implements Linkable {
 	private String lvlId; // globally unique identifier
 	private String version; // version identifier
 
-	private Optional<Point> location = absent(); // (optional) geospatial location
-	private Optional<Document> provenance = absent(); // (optional) provenance
+	private Optional<Point> location = absent(); // (optional) geospatial location	
+	@JsonSerialize(using = ProvDocumentSerializer.class) @JsonDeserialize(using = ProvDocumentDeserializer.class)	
+	private Optional<Document> provenance = absent(); // (optional) provenance	
 	private Optional<ObjectState> state = absent(); // (optional) state
 
 	private Date lastModified; // last modification date
@@ -177,7 +182,7 @@ public abstract class LvlObject implements Linkable {
 
 	public void setProvenance(final @Nullable Document provenance) {
 		this.provenance = fromNullable(provenance);
-	}	
+	}
 
 	public ObjectState getState() {
 		return state.orNull();
@@ -277,7 +282,7 @@ public abstract class LvlObject implements Linkable {
 	public ListenableFuture<Boolean> delete(final DeleteOptions... options) {
 		return stateHandler.delete(this, options);
 	}
-	
+
 	public ListenableFuture<List<LvlObject>> versions() {
 		return stateHandler.versions(this);
 	}

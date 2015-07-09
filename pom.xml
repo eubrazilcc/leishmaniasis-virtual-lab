@@ -46,7 +46,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<avro.version>1.7.7</avro.version>
 		<mongodb.driver.version>2.13.1</mongodb.driver.version>
 		<activemq.version>5.11.1</activemq.version>
-		<opm.prov.version>0.6.1</opm.prov.version>
+		<opm.prov.version>0.6.2</opm.prov.version>
 		<antlr4.version>4.5</antlr4.version>
 		<e-science-central.version>3.1-SNAPSHOT</e-science-central.version>
 	</properties>
@@ -344,7 +344,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>org.openprovenance.prov</groupId>
 				<artifactId>prov-interop</artifactId>
 				<version>${opm.prov.version}</version>
-			</dependency>			
+			</dependency>
 			
 			<!-- The ANTLR 4 Runtime -->
 			

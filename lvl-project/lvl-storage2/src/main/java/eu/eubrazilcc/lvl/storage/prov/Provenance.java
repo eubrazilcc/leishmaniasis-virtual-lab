@@ -42,6 +42,8 @@ import org.openprovenance.prov.model.ProvFactory;
 import org.openprovenance.prov.model.QualifiedName;
 import org.openprovenance.prov.model.Type;
 
+import com.google.common.collect.Lists;
+
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.storage.security.User;
 
@@ -100,6 +102,10 @@ public enum Provenance {
 		return type("prov", "Bundle");
 	}
 
+	public Type collectionType() {
+		return type("prov", "Collection");
+	}
+
 	public Type softwareAgentType() {
 		return type("prov", "SoftwareAgent");
 	}
@@ -153,7 +159,7 @@ public enum Provenance {
 		} catch (MalformedURLException ignore) { }
 		return urlAttr(url2);
 	}
-	
+
 	public Attribute urlAttr(final URL url) {
 		return (Attribute) PROVENANCE.factory().newOther(PROVENANCE.qn("url"), url, PROVENANCE.factory().getName().XSD_ANY_URI);
 	}
@@ -191,7 +197,7 @@ public enum Provenance {
 				PROVENANCE.softwareAgentType(),
 				PROVENANCE.classAttr(clazz)
 		}));
-	}	
+	}
 
 	/* Entities */
 
@@ -206,6 +212,10 @@ public enum Provenance {
 	public Entity entity(final String prefix, final String entity, final @Nullable Collection<Attribute> attrs) {
 		final QualifiedName qn = PROVENANCE.qn(prefix, entity);
 		return PROVENANCE.factory().newEntity(qn, attrs);
-	}	
+	}
+
+	public Entity collection(final String collection) {
+		return PROVENANCE.factory().newEntity(qn(collection), Lists.<Attribute>newArrayList(collectionType()));		
+	}
 
 }

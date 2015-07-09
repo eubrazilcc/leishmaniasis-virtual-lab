@@ -44,6 +44,9 @@ import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectTo
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
 import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.DELETE_ALL;
 import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.ON_DELETE_CASCADE;
+import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newObjectImportProv;
+import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newPubMedArticle;
+import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newGeocoding;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -773,14 +776,16 @@ public class CitationCollectionTest {
 						.withArticle(PUBMED_XML_FACTORY.createArticle().withPubModel("Electronic-Print").withArticleTitle("Rocket science rocks").withJournal(PUBMED_XML_FACTORY.createJournal().withTitle("Journal of Awesomeness")).withAbstract(PUBMED_XML_FACTORY.createAbstract().withAbstractText("It rocks! There is no much to say.")).withAuthorList(PUBMED_XML_FACTORY.createAuthorList().withAuthor(PUBMED_XML_FACTORY.createAuthor().withLastNameOrForeNameOrInitialsOrSuffixOrNameIDOrCollectiveName("Jane Doe"))).withPublicationTypeList(PUBMED_XML_FACTORY.createPublicationTypeList().withPublicationType(PUBMED_XML_FACTORY.createPublicationType().withvalue("Journal Article"))).withLanguage(PUBMED_XML_FACTORY.createLanguage().withvalue("eng")).withArticleDate(PUBMED_XML_FACTORY.createArticleDate().withYear(PUBMED_XML_FACTORY.createYear().withvalue("2014")))));
 
 		// create citations
+		String pmid = article0.getMedlineCitation().getPMID().getvalue();
 		private final Citation citation0 = Citation.builder()
 				.lvlId(ID_0)
 				.lvl(LvlCitation.builder().cited(newArrayList("SEQ_0", "SEQ_1")).build())
 				.pubmed(article0)
 				.location(bcnPoint)
 				.state(DRAFT)
-				.references(Maps.<String, List<String>>newHashMap(ImmutableMap.of("sequences", newArrayList("lvl:sandflies:SEQ_0", "lvl:sandflies:SEQ_1"))))
-				.build(); // TODO : include provenance
+				.provenance(newObjectImportProv(newPubMedArticle("PMID|" + pmid), "lvl|pm|" + pmid, newGeocoding(bcnPoint)))
+				.references(Maps.<String, List<String>>newHashMap(ImmutableMap.of("sequences", newArrayList("lvl|sf|gb|SEQ_0", "lvl|sf|gb|SEQ_1"))))
+				.build();
 
 		private final Citation citation1 = Citation.builder()
 				.lvlId(ID_1)
