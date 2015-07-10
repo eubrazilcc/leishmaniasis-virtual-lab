@@ -35,6 +35,8 @@ import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_AND;
 import static eu.eubrazilcc.lvl.storage.Filters.LogicalType.LOGICAL_OR;
 import static eu.eubrazilcc.lvl.storage.base.CollectionOperators.allOperator;
 import static eu.eubrazilcc.lvl.storage.base.CollectionOperators.releasesOperator;
+import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.DELETE_ALL;
+import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.ON_DELETE_CASCADE;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.OBSOLETE;
@@ -42,13 +44,12 @@ import static eu.eubrazilcc.lvl.storage.base.ObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
-import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.DELETE_ALL;
-import static eu.eubrazilcc.lvl.storage.base.DeleteOptions.ON_DELETE_CASCADE;
+import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newGeocoding;
 import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newObjectImportProv;
 import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newPubMedArticle;
-import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newGeocoding;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -85,6 +86,7 @@ import eu.eubrazilcc.lvl.storage.base.CollectionOperator;
 import eu.eubrazilcc.lvl.storage.base.LvlObject;
 import eu.eubrazilcc.lvl.storage.base.ObjectState;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionStats;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Tests {@link Citation} collection in the database.
@@ -146,21 +148,21 @@ public class CitationCollectionTest {
 			// approve and save the release to the database			
 			final Date lastModified = ds.citation0.getLastModified();
 			final String dbId = ds.citation0.getDbId();
-			ds.citation0.approve().save().get(TIMEOUT, SECONDS);
+			ds.citation0.approve().save(ds.user0).get(TIMEOUT, SECONDS);
 			assertThat("saved Id is not empty", trim(ds.citation0.getDbId()), allOf(notNullValue(), not(equalTo(""))));
 			assertThat("saved version is not empty", trim(ds.citation0.getVersion()), allOf(notNullValue(), not(equalTo(""))));
 			assertThat("saved Id is different in the new version", ds.citation0.getDbId(), not(equalTo(dbId)));
 			assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
 			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));			
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Saved citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));
 
 			// find citation after update
 			ds.citation2 = Citation.builder().lvlId(ID_0).build();
 			ds.citation2.fetch().get(TIMEOUT, SECONDS);			
 			assertThat("fetched citation (after update) coincides with expected", ds.citation2, equalTo(ds.citation0));
-			// Uncomment for additional output
-			System.out.println(" >> Fetched citation (after update, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
+			// uncomment for additional output
+			System.out.println(" >> Fetched citation (after approval, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
 
 			// saving a draft after a release should fail
 			try {
@@ -172,9 +174,28 @@ public class CitationCollectionTest {
 				assertThat("exception cause coincides with expected", expected.getCause() instanceof UnsupportedOperationException, equalTo(true));				
 				System.out.println("Expected exception caught: " + expected.getCause().getMessage());
 			}
+			
+			// new release
+			final Date lastModified2 = ds.citation0.getLastModified();
+			final String dbId2 = ds.citation0.getDbId();
+			ds.citation0.save(ds.user0).get(TIMEOUT, SECONDS);
+			assertThat("saved Id is not empty", trim(ds.citation0.getDbId()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved version is not empty", trim(ds.citation0.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+			assertThat("saved Id is different in the new version", ds.citation0.getDbId(), not(equalTo(dbId2)));
+			assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
+			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified2), equalTo(true));			
+			// uncomment for additional output
+			System.out.println(" >> Saved citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));
 
+			// find citation after update
+			ds.citation2 = Citation.builder().lvlId(ID_0).build();
+			ds.citation2.fetch().get(TIMEOUT, SECONDS);			
+			assertThat("fetched citation (after update) coincides with expected", ds.citation2, equalTo(ds.citation0));
+			// uncomment for additional output
+			System.out.println(" >> Fetched citation (after new release, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
+			
 			// operate on the test data-set
-			ds.versions.put(ID_0, 2);
+			ds.versions.put(ID_0, 3);
 			final Resultset rs = new Resultset(new TestScenario[]{
 					new TestScenario("TestRelease", TestState.ALL, new ObjectState[] { RELEASE, DRAFT }),
 					new TestScenario("TestRelease", TestState.RELEASES, new ObjectState[] { RELEASE, DRAFT })
@@ -209,20 +230,20 @@ public class CitationCollectionTest {
 			// invalidate and save the object to the database			
 			final Date lastModified = ds.citation0.getLastModified();
 			final String dbId = ds.citation0.getDbId();
-			ds.citation0.invalidate().save().get(TIMEOUT, SECONDS);
+			ds.citation0.invalidate().save(ds.user1).get(TIMEOUT, SECONDS);
 			assertThat("saved Id is not empty", trim(ds.citation0.getDbId()), allOf(notNullValue(), not(equalTo(""))));
 			assertThat("saved version is not empty", trim(ds.citation0.getVersion()), allOf(notNullValue(), not(equalTo(""))));
 			assertThat("saved Id is different in the new version", ds.citation0.getDbId(), not(equalTo(dbId)));
 			assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
 			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Saved citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));			
 
 			// find citation after invalidation
 			ds.citation2 = Citation.builder().lvlId(ID_0).build();
 			ds.citation2.fetch().get(TIMEOUT, SECONDS);			
 			assertThat("fetched citation (after invalidation) coincides with expected", ds.citation2, equalTo(ds.citation0));
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Fetched citation (after invalidation, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
 
 			// saving a draft after invalidation should fail
@@ -278,14 +299,14 @@ public class CitationCollectionTest {
 			assertThat("saved Id is different in the new version", ds.citation0.getDbId(), not(equalTo(dbId)));
 			assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
 			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));			
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Saved citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));
 
 			// find citation after update
 			ds.citation2 = Citation.builder().lvlId(ID_0).build();
 			ds.citation2.fetch().get(TIMEOUT, SECONDS);			
 			assertThat("fetched citation (after update) coincides with expected", ds.citation2, equalTo(ds.citation0));
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Fetched citation (after update, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
 
 			// saving a draft after a release should fail
@@ -308,14 +329,14 @@ public class CitationCollectionTest {
 			assertThat("saved Id is different in the new version", ds.citation0.getDbId(), not(equalTo(dbId)));
 			assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
 			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Saved citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));			
 
 			// find citation after invalidation
 			ds.citation2 = Citation.builder().lvlId(ID_0).build();
 			ds.citation2.fetch().get(TIMEOUT, SECONDS);			
 			assertThat("fetched citation (after invalidation) coincides with expected", ds.citation2, equalTo(ds.citation0));
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Fetched citation (after invalidation, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
 
 			// saving a draft after invalidation should fail
@@ -392,24 +413,24 @@ public class CitationCollectionTest {
 		// insert new citation in the database
 		ds.citation0.save().get(TIMEOUT, SECONDS);
 		assertThat("inserted Id is not empty", trim(ds.citation0.getDbId()), allOf(notNullValue(), not(equalTo(""))));
-		assertThat("inserted version is not empty", trim(ds.citation0.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+		assertThat("inserted version is empty", isBlank(ds.citation0.getVersion()), equalTo(true));
 		assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
-		/* Uncomment for additional output */
+		// uncomment for additional output
 		System.out.println(" >> Inserted citation (" + ds.citation0.getDbId() + "):\n" + ds.citation0.toJson(JSON_PRETTY_PRINTER));
 
 		// find citation by global id
 		ds.citation2 = Citation.builder().lvlId(ID_0).build();
 		ds.citation2.fetch().get(TIMEOUT, SECONDS);
 		assertThat("fetched citation coincides with expected", ds.citation2, equalTo(ds.citation0));
-		/* Uncomment for additional output */
+		// uncomment for additional output
 		System.out.println(" >> Fetched citation (" + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
 
 		// insert a second citation in the database
 		ds.citation1.save().get(TIMEOUT, SECONDS);
 		assertThat("inserted Id is not empty", trim(ds.citation1.getDbId()), allOf(notNullValue(), not(equalTo(""))));
-		assertThat("inserted version is not empty", trim(ds.citation1.getVersion()), allOf(notNullValue(), not(equalTo(""))));
+		assertThat("inserted version is empty", isBlank(ds.citation1.getVersion()), equalTo(true));
 		assertThat("last modified field is not null", ds.citation1.getLastModified(), notNullValue());
-		/* Uncomment for additional output */
+		// uncomment for additional output
 		System.out.println(" >> Inserted citation (" + ds.citation1.getDbId() + "):\n" + ds.citation1.toJson(JSON_PRETTY_PRINTER));
 
 		System.out.println("CitationCollectionTest.insertTestDatasets() has finished");
@@ -439,7 +460,7 @@ public class CitationCollectionTest {
 			assertThat("feature collection list is not null", features.getFeatures(), notNullValue());
 			assertThat("feature collection list is not empty", features.getFeatures().isEmpty(), equalTo(scenario.numItems() == 0));
 			assertThat("number of features coincides with expected", features.getFeatures().size(), equalTo(scenario.numItems()));
-			/* Uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Feature collection (geoNear):\n" + objectToJson(features, JSON_PRETTY_PRINTER));
 
 			features = op.getNear(ds.vlcPoint, 303000.0d, 305000.0d).get(TIMEOUT, SECONDS);
@@ -447,7 +468,7 @@ public class CitationCollectionTest {
 			assertThat("feature collection list is not null", features.getFeatures(), notNullValue());
 			assertThat("feature collection list is not empty", features.getFeatures().isEmpty(), equalTo(scenario.numItems(1) == 0));
 			assertThat("number of features coincides with expected", features.getFeatures().size(), equalTo(scenario.numItems(1)));
-			/* Uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Feature collection (geoNear):\n" + objectToJson(features, JSON_PRETTY_PRINTER));
 
 			// find elements within a polygon
@@ -457,7 +478,7 @@ public class CitationCollectionTest {
 			assertThat("feature collection list is not null", features.getFeatures(), notNullValue());
 			assertThat("feature collection list is not empty", features.getFeatures().isEmpty(), equalTo(scenario.numItems() == 0));
 			assertThat("number of features coincides with expected", features.getFeatures().size(), equalTo(scenario.numItems()));			
-			/* Uncomment for additional output */
+			// uncomment for additional output
 			System.out.println(" >> Feature collection (getWithin):\n" + objectToJson(features, JSON_PRETTY_PRINTER));
 
 			// type ahead
@@ -466,7 +487,7 @@ public class CitationCollectionTest {
 			assertThat("typeahead values are not null", values, notNullValue());
 			assertThat("typeahead values are not empty", values.isEmpty(), equalTo(scenario.numItems() == 0));
 			assertThat("number of typeahead values coincides with expected", values.size(), equalTo(scenario.numItems()));
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Typeahead:\n" + objectToJson(values, JSON_PRETTY_PRINTER));
 
 			// list with all properties
@@ -474,7 +495,7 @@ public class CitationCollectionTest {
 			count = op.fetch(0, Integer.MAX_VALUE, null, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements coincides with expected", count, equalTo(scenario.numItems()));
 			assertThat("number of fetched elements coincides with expected", op.collection().size(), equalTo(count));
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Fetched citations:\n" + op.collection().toJson(JSON_PRETTY_PRINTER));
 
 			// list with filters (equal)
@@ -564,8 +585,9 @@ public class CitationCollectionTest {
 			if (count > 0) {
 				assertThat("original article details were filtered from database response", op.collection().get(0).getPubmed().getMedlineCitation()
 						.getArticle().getAbstract(), nullValue());
+				assertThat("provenance was filtered from database response", op.collection().get(0).getProvenance(), nullValue());
 			}
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Fetched citations (with projection):\n" + op.collection().toJson(JSON_PRETTY_PRINTER));			
 
 			// list with sorting
@@ -626,7 +648,7 @@ public class CitationCollectionTest {
 		List<LvlObject> versions = ds.citation2.versions().get(TIMEOUT, SECONDS);
 		assertThat("versions are not null", versions, notNullValue());
 		assertThat("number of versions coincides with expected", versions.size(), equalTo(ds.versions.get(ID_0)));
-		// Uncomment for additional output
+		// uncomment for additional output
 		System.out.println(" >> Versions (GUID=" + ds.citation2.getLvlId() + "): " + rs.toString() + ", count=" + versions.size() 
 				+ "\n" + objectToJson(versions, JSON_PRETTY_PRINTER));
 
@@ -634,8 +656,8 @@ public class CitationCollectionTest {
 			// update the citation
 			System.out.println(" >> Update the citation: " + rs.toString());
 			final Date lastModified = ds.citation0.getLastModified();
-			ds.citation0.getLvl().getCited().add("NEW_SEQ");
-			ds.citation0.save().get(TIMEOUT, SECONDS);
+			ds.citation0.getLvl().getCited().add("NEW_SEQ");			
+			ds.citation0.save(ds.user0).get(TIMEOUT, SECONDS);
 			assertThat("last modified field is not null", ds.citation0.getLastModified(), notNullValue());
 			assertThat("updated last modified value is in the future", ds.citation0.getLastModified().after(lastModified), equalTo(true));
 
@@ -644,7 +666,7 @@ public class CitationCollectionTest {
 			ds.citation2 = Citation.builder().lvlId(ID_0).build();
 			ds.citation2.fetch().get(TIMEOUT, SECONDS);
 			assertThat("fetched citation (after update) coincides with expected", ds.citation2, equalTo(ds.citation0));
-			// Uncomment for additional output
+			// uncomment for additional output
 			System.out.println(" >> Fetched citation (after update, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
 		}
 
@@ -721,7 +743,7 @@ public class CitationCollectionTest {
 		ds.citation0.delete().get(TIMEOUT, SECONDS);
 		long totalCount = ds.citations.totalCount().get(TIMEOUT, SECONDS).longValue();
 		assertThat("number of elements stored in the database coincides with expected", totalCount, equalTo(ds.versions.get(ID_0) > 1 ? 2l : 1l));
-		
+
 		// get versions after removing the active version
 		ds.citation2 = Citation.builder().lvlId(ID_0).build();
 		versions = ds.citation2.versions().get(TIMEOUT, SECONDS);
@@ -751,6 +773,10 @@ public class CitationCollectionTest {
 	}
 
 	private static class TestDataset {
+		// create users
+		private final User user0 = User.builder().userid("user0").build();
+		private final User user1 = User.builder().userid("user1").build();
+
 		// create geographic objects		
 		private final Point bcnPoint = Point.builder().coordinates(LngLatAlt.builder().coordinates( 2.1734034999999494d, 41.3850639d).build()).build();
 		private final Point madPoint = Point.builder().coordinates(LngLatAlt.builder().coordinates(-3.7037901999999576d, 40.4167754d).build()).build();
@@ -783,8 +809,8 @@ public class CitationCollectionTest {
 				.pubmed(article0)
 				.location(bcnPoint)
 				.state(DRAFT)
-				.provenance(newObjectImportProv(newPubMedArticle("PMID|" + pmid0), "lvl|pm|" + pmid0, newGeocoding(bcnPoint)))
-				.references(Maps.<String, List<String>>newHashMap(ImmutableMap.of("sequences", newArrayList("lvl|sf|gb|SEQ_0", "lvl|sf|gb|SEQ_1"))))
+				.provenance(newObjectImportProv(newPubMedArticle("PMID|" + pmid0), "lvl|ci|ur|" + ID_0, newGeocoding(bcnPoint)))
+				.references(Maps.<String, List<String>>newHashMap(ImmutableMap.of("sequences", newArrayList("lvl|sf|gb|SEQ_0", "lvl|le|gb|SEQ_1"))))
 				.build();
 
 		private final Citation citation1 = Citation.builder()
@@ -800,7 +826,7 @@ public class CitationCollectionTest {
 
 		public TestDataset(final boolean verbose) throws IOException {
 			if (verbose) {
-				/* Uncomment for additional output */
+				// uncomment for additional output
 				System.out.println(" >> Original PubMed article:\n" + prettyPrint(PUBMED_XMLB.typeToXml(article0)));
 			}
 		}		

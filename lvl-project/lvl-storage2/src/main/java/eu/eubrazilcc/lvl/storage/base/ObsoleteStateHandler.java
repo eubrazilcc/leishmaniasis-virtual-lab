@@ -22,11 +22,17 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.randomVersion;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newObsoleteProv;
+
+import javax.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
+
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Behavior corresponding to the obsolete state.
@@ -35,8 +41,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 public class ObsoleteStateHandler<T extends LvlObject> extends ObjectStateHandler<T> {
 
 	@Override
-	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		return MONGODB_CONN.saveAsVersion(obj, DRAFT.name(), RELEASE.name());
+	public ListenableFuture<Void> save(final T obj, final @Nullable User user, final SaveOptions... options) {		
+		if (user != null) obj.setProvenance(newObsoleteProv(user, obj.getLvlId()));
+		return MONGODB_CONN.saveAsVersion(randomVersion(), obj, DRAFT.name(), RELEASE.name());
 	}
 
 }

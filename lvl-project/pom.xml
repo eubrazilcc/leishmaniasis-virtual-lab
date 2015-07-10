@@ -90,7 +90,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<maven-war-plugin.version>2.6</maven-war-plugin.version>
 		<tomcat7-maven-plugin.version>2.2</tomcat7-maven-plugin.version>
 		<embedmongo-maven-plugin.version>0.1.12</embedmongo-maven-plugin.version>
-		<embedmongo-maven-plugin.mongodb.version>3.0.3</embedmongo-maven-plugin.mongodb.version>
+		<embedmongo-maven-plugin.mongodb.version>3.0.4</embedmongo-maven-plugin.mongodb.version>
 		<embedmongo-maven-plugin.download.path>https://fastdl.mongodb.org/</embedmongo-maven-plugin.download.path>
 		<!-- TODO <embedmongo-maven-plugin.download.path>http://lvl.i3m.upv.es/filestorage/mongodb/</embedmongo-maven-plugin.download.path> -->
 	</properties>

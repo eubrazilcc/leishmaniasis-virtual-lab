@@ -24,8 +24,13 @@ package eu.eubrazilcc.lvl.storage.base;
 
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.addEditProv;
+
+import javax.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
+
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Behavior corresponding to the draft state.
@@ -34,8 +39,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 public class DraftStateHandler<T extends LvlObject> extends ObjectStateHandler<T> {
 
 	@Override
-	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
+	public ListenableFuture<Void> save(final T obj, final @Nullable User user, final SaveOptions... options) {
 		if (obj.getState() == null) obj.setState(DRAFT);
+		if (user != null && obj.getProvenance() != null) addEditProv(obj.getProvenance(), user, obj.getLvlId());
 		return MONGODB_CONN.saveActive(obj, DRAFT.name());
 	}	
 

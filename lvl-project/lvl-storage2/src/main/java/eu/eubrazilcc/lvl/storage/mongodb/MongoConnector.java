@@ -64,7 +64,6 @@ import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LOCATION_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_SPARSE_IS_ACTIVE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_STATE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_VERSION_FIELD;
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.randomVersion;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static java.lang.Integer.parseInt;
 import static java.util.Arrays.asList;
@@ -254,19 +253,21 @@ public enum MongoConnector implements Closeable2 {
 	 * @return a future which result indicates that the operation is successfully completed, or an exception when the method fails.
 	 */
 	public <T extends LvlObject> ListenableFuture<Void> saveActive(final T obj, final String... allowedTransitions) {		
-		return save(obj, true, allowedTransitions);
+		return save(null, obj, allowedTransitions);
 	}
 
 	/**
 	 * Saves the specified object to the database, creating a new version. After the object is saved, this method will select the latest
 	 * modified record as the new active version. In case that the saved object is not the latest modified, this method will not fail.
+	 * @param version - new version to assign
 	 * @param obj - object to save
 	 * @param allowedTransitions - transitions between states
 	 * @return a future which result indicates that the operation is successfully completed, or an exception when the method fails.
 	 */
-	public <T extends LvlObject> ListenableFuture<Void> saveAsVersion(final T obj, final String... allowedTransitions) {
+	public <T extends LvlObject> ListenableFuture<Void> saveAsVersion(final String version, final T obj, final String... allowedTransitions) {
+		checkArgument(isNotBlank(version), "New object version cannot be empty");
 		// insert the object in the collection as a new version
-		final ListenableFuture<Void> insertFuture = save(obj, false, allowedTransitions);
+		final ListenableFuture<Void> insertFuture = save(version, obj, allowedTransitions);
 		// set the new active version to the latest modified record
 		final ListenableFuture<Document> setActiveFuture = transform(insertFuture, new AsyncFunction<Void, Document>() {
 			@Override
@@ -303,15 +304,16 @@ public enum MongoConnector implements Closeable2 {
 	 * provide support for index hints, this method will always use an index, like in the following example:</b></p>
 	 * <p>Using to match the active objects {@link #matchActive(LvlObject)} will not use the sparse index. Therefore, the following filter 
 	 * {@link #matchActive(LvlObject)} is preferred which includes a search on the alternative index.</p>
+	 * @param version - set to a value different to <tt>null</tt> to override the active version of the object
 	 * @param obj - object to save
-	 * @param overrideActive - set to <tt>true</tt> to override the active version of the object
 	 * @param allowedTransitions - transitions between states
 	 * @return a future which result indicates that the operation is successfully completed, or an exception when the method fails.
 	 */
-	private <T extends LvlObject> ListenableFuture<Void> save(final T obj, final boolean overrideActive, final String... allowedTransitions) {
+	private <T extends LvlObject> ListenableFuture<Void> save(final @Nullable String version, final T obj, final String... allowedTransitions) {
 		final SettableFuture<Void> future = SettableFuture.create();
 		final MongoCollection<Document> dbcol = getCollection(obj);
-		final String version = randomVersion();
+		final String version2 = trimToNull(version);
+		final boolean overrideActive = (version2 == null);
 		final List<String> states = (allowedTransitions != null ? asList(allowedTransitions) : Collections.<String>emptyList());
 		// prepare query statement
 		final Bson filter = (overrideActive ? (states.isEmpty() ? matchActive2(obj) : and(matchActive2(obj), matchStates(states))) 

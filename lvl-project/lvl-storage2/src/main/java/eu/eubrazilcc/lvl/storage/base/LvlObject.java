@@ -65,6 +65,7 @@ import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
 import eu.eubrazilcc.lvl.storage.prov.jackson.ProvDocumentDeserializer;
 import eu.eubrazilcc.lvl.storage.prov.jackson.ProvDocumentSerializer;
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Classes should extend this class to support common features of the LeishVL, such as geolocalization (an optional GeoJSON point can be
@@ -262,7 +263,17 @@ public abstract class LvlObject implements Linkable {
 	 * @return a future.
 	 */
 	public ListenableFuture<Void> save(final SaveOptions... options) {
-		return stateHandler.save(this, options);
+		return save(null, options);
+	}
+	
+	/**
+	 * Inserts or update an element in the database.
+	 * @param user - identity of the user who is responsible for editing this object
+	 * @param options - operation options
+	 * @return a future.
+	 */
+	public ListenableFuture<Void> save(final @Nullable User user, final SaveOptions... options) {
+		return stateHandler.save(this, user, options);
 	}
 
 	/**
@@ -356,7 +367,7 @@ public abstract class LvlObject implements Linkable {
 	}
 
 	/* Fluent API */
-
+	
 	/**
 	 * Sets the status to {@link ObjectState.RELEASE}.
 	 * @return a reference to this class.

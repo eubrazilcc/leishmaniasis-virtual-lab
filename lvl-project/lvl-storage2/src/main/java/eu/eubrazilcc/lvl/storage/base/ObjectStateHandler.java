@@ -41,13 +41,15 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
+import eu.eubrazilcc.lvl.storage.security.User;
+
 /**
  * Provides different behaviors for different object states.
  * @author Erik Torres <ertorser@upv.es>
  */
 public abstract class ObjectStateHandler<T extends LvlObject> {
 
-	public abstract ListenableFuture<Void> save(T obj, SaveOptions... options);
+	public abstract ListenableFuture<Void> save(T obj, User user, SaveOptions... options);
 
 	public ListenableFuture<Void> fetch(final T obj, final FetchOptions... options) {
 		final LvlObject __obj = obj;

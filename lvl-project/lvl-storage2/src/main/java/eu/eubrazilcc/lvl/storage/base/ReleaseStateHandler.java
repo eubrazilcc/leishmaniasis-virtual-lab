@@ -22,11 +22,18 @@
 
 package eu.eubrazilcc.lvl.storage.base;
 
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.randomVersion;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.RELEASE;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newReleaseProv;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import javax.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
+
+import eu.eubrazilcc.lvl.storage.security.User;
 
 /**
  * Behavior corresponding to the release state.
@@ -35,8 +42,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 public class ReleaseStateHandler<T extends LvlObject> extends ObjectStateHandler<T> {
 
 	@Override
-	public ListenableFuture<Void> save(final T obj, final SaveOptions... options) {
-		return MONGODB_CONN.saveAsVersion(obj, DRAFT.name(), RELEASE.name());
+	public ListenableFuture<Void> save(final T obj, final @Nullable User user, final SaveOptions... options) {		
+		final String newVersion = randomVersion();
+		if (user != null) obj.setProvenance(newReleaseProv(user, obj.getLvlId(), isNotBlank(obj.getVersion()) ? "|" + obj.getVersion() : "", "|" + newVersion));
+		return MONGODB_CONN.saveAsVersion(newVersion, obj, DRAFT.name(), RELEASE.name());
 	}
 
 }
