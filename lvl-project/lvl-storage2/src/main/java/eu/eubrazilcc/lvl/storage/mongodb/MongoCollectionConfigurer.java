@@ -25,15 +25,17 @@ package eu.eubrazilcc.lvl.storage.mongodb;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.toMap;
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
+import static com.google.common.hash.Hashing.murmur3_32;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_DENSE_IS_ACTIVE_FIELD;
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_SPARSE_IS_ACTIVE_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LAST_MODIFIED_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LOCATION_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_NAMESPACE_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_SPARSE_IS_ACTIVE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_STATE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_VERSION_FIELD;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
+import static java.lang.Math.pow;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -47,6 +49,7 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.UnsignedLong;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
@@ -210,6 +213,27 @@ public class MongoCollectionConfigurer {
 	public static IndexModel sparseIndexModelWithUniqueConstraint(final String field, final boolean descending) {
 		checkArgument(isNotBlank(field), "Uninitialized or invalid field");
 		return new IndexModel(new Document(field, descending ? -1 : 1), new IndexOptions().background(true).sparse(true).unique(true));
+	}
+
+	/**
+	 * Computes a hash and projects it to a fixed number of buckets.
+	 * @param e - the input for which the hash will be computed
+	 * @param buckets - desired number of buckets
+	 * @return the bucket where the input is assigned.
+	 * @see <a href="http://stats.stackexchange.com/a/70884">How to uniformly project a hash to a fixed number of buckets</a>
+	 */
+	public static int hash2bucket(final String e, final int buckets) {
+		checkArgument(isNotBlank(e), "Uninitialized or invalid string");
+		checkArgument(buckets > 0l, "Invalid number of buckets");
+		// compute 32-bit hash using MurmurHash3 function
+		final int hash = murmur3_32(1301081).newHasher().putBytes(e.getBytes()).hash().asInt();
+		// convert computed hash to unsigned integer and cast to double
+		final double unsignedHash = UnsignedLong.valueOf(hash & 0xffffffffL).doubleValue();		
+		final double projection = unsignedHash / pow(2.0d, 32.0d);
+		for (int i = 0; i < buckets; i++) {		
+			if (((i / (double)buckets) <= projection) && ((i + 1) / (double)buckets > projection)) return i + 1;
+		}
+		return buckets;
 	}
 
 }

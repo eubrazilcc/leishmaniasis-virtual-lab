@@ -1,0 +1,36 @@
+{
+	"namespace" : "eu.eubrazilcc.lvl.storage.avro.messages",
+	"type" : "record",
+	"name" : "FetchConfig",
+	"fields" : [
+		{
+			"name" : "ids",
+			"type" : [ "null", { "type" : "array", "name" : "idsType", "items": { "name" : "id", "type": "string" } } ],
+			"default" : null
+		},
+		{
+			"name" : "history",
+			"type" : [ "null", { "type" : "record", "name" : "QueryHistory", "fields" : [ { "name" : "webEnv", "type" : "string" }, { "name" : "queryKey", "type" : "string" } ] } ],
+			"default" : null
+		},
+		{
+			"name" : "start",
+			"type" : "int",
+			"default" : 0
+		},
+		{
+			"name" : "maximum",
+			"type" : "int",
+			"default" : 1
+		},
+		{
+			"name" : "outputDir",
+			"type" : "string"
+		},
+		{
+			"name" : "format",
+			"type" : [ "null", "string" ],
+			"default" : null
+		}
+	]
+}

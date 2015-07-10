@@ -32,6 +32,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		</encoder>
 	</appender>
 
+	<logger name="eu.eubrazilcc.lvl.storage.actor" level="DEBUG" />
 	<logger name="eu.eubrazilcc.lvl" level="TRACE" />
 	<!-- <logger name="org.apache.shiro" level="TRACE"/> -->
 	<logger name="org.apache.activemq" level="WARN"/>
