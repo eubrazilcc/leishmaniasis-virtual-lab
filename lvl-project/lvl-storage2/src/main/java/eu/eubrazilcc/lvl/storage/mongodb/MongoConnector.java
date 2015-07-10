@@ -151,7 +151,6 @@ import eu.eubrazilcc.lvl.storage.LvlObjectWriteException;
 import eu.eubrazilcc.lvl.storage.base.LvlCollection;
 import eu.eubrazilcc.lvl.storage.base.LvlObject;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDateDeserializer;
-import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
 
 /**
  * Data connector based on mongoDB. Access to file collections is provided through the GridFS specification. While other objects
@@ -525,7 +524,7 @@ public enum MongoConnector implements Closeable2 {
 		});
 		return future;
 	}
-	
+
 	public <T extends LvlObject> ListenableFuture<List<LvlObject>> findVersions(final LvlObject obj, final Class<T> type) {
 		checkArgument(obj != null && obj.getClass().isAssignableFrom(type), "Uninitialized or invalid object type");
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
@@ -893,12 +892,7 @@ public enum MongoConnector implements Closeable2 {
 	}
 
 	private <T extends LvlObject> Document parseObject(final LvlObject obj, final boolean overrideActive) {
-		checkArgument(obj != null, "Uninitialized object");
-		
-		// TODO
-		System.err.println("\n\n >> HERE_MONGO:\n" + obj.toJson(MongoJsonOptions.JSON_PRETTY_PRINTER) + "\n");
-		// TODO
-		
+		checkArgument(obj != null, "Uninitialized object");		
 		checkArgument(isNotBlank(obj.getLvlId()), "Uninitialized or invalid primary key value");
 		if (overrideActive) {
 			obj.setIsActive(obj.getLvlId());

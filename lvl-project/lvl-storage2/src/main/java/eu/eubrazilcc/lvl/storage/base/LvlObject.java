@@ -312,7 +312,7 @@ public abstract class LvlObject implements Linkable {
 				&& Objects.equals(lvlId, other.lvlId)
 				&& Objects.equals(version, other.version)
 				&& Objects.equals(location.orNull(), other.location.orNull())
-				&& Objects.equals(provenance.orNull(), other.provenance.orNull())
+				&& (provenance.isPresent() == other.provenance.isPresent())
 				&& Objects.equals(state.orNull(), other.state.orNull())
 				&& Objects.equals(lastModified, other.lastModified)
 				&& Objects.equals(isActive, other.isActive)

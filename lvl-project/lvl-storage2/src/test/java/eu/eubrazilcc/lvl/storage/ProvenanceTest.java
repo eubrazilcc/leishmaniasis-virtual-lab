@@ -87,7 +87,7 @@ public class ProvenanceTest {
 
 			// citation imported from external data source (no coordinates provided)
 			String testId = "prov-citation-pm-draft1";			
-			Document prov = newObjectImportProv(newPubMedArticle("PMID:26148331"), "lvl.pm.26148331", null);
+			Document prov = newObjectImportProv(newPubMedArticle("PMID|26148331"), "lvl|pm|26148331", null);
 			assertThat("prov document is not null", prov, notNullValue());
 			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
 			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
@@ -103,7 +103,7 @@ public class ProvenanceTest {
 
 			// draft modification
 			testId = "prov-citation-pm-draft2";
-			addEditProv(prov, user1, "lvl.pm.26148331");
+			addEditProv(prov, user1, "lvl|pm|26148331");
 			file = new File(TEST_OUTPUT_DIR, testId + ".json");
 			provToFile(prov, file.getCanonicalPath());
 			assertThat("prov JSON file exists", file.exists(), equalTo(true));
@@ -114,7 +114,7 @@ public class ProvenanceTest {
 			assertThat("prov SVG file is not empty", file.length() > 0l, equalTo(true));
 
 			testId = "prov-citation-pm-draft3";
-			addEditProv(prov, user2, "lvl.pm.26148331");
+			addEditProv(prov, user2, "lvl|pm|26148331");
 			file = new File(TEST_OUTPUT_DIR, testId + ".json");
 			provToFile(prov, file.getCanonicalPath());
 			assertThat("prov JSON file exists", file.exists(), equalTo(true));
@@ -126,7 +126,7 @@ public class ProvenanceTest {
 
 			// new release
 			testId = "prov-citation-pm-rel1";
-			prov = newReleaseProv(user1, "lvl.pm.26148331", "", "-rel1");
+			prov = newReleaseProv(user1, "lvl|pm|26148331", "", "-rel1");
 			assertThat("prov document is not null", prov, notNullValue());
 			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
 			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
@@ -141,7 +141,7 @@ public class ProvenanceTest {
 			history.add(prov);
 
 			testId = "prov-citation-pm-rel2";
-			prov = newReleaseProv(user1, "lvl.pm.26148331", "-rel1", "-rel2");
+			prov = newReleaseProv(user1, "lvl|pm|26148331", "-rel1", "-rel2");
 			assertThat("prov document is not null", prov, notNullValue());
 			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
 			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
@@ -157,7 +157,7 @@ public class ProvenanceTest {
 
 			// record invalidation
 			testId = "prov-citation-pm-inv";
-			prov = newObsoleteProv(user1, "lvl.pm.26148331");
+			prov = newObsoleteProv(user1, "lvl|pm|26148331");
 			assertThat("prov document is not null", prov, notNullValue());
 			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
 			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
@@ -185,7 +185,7 @@ public class ProvenanceTest {
 
 			// user created citation
 			testId = "prov-citation-ur";
-			prov = newCustomObjectProv(user1, "lvl.ur.MY_CIT");
+			prov = newCustomObjectProv(user1, "lvl|ur|MY_CIT");
 			assertThat("prov document is not null", prov, notNullValue());
 			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
 			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
@@ -217,7 +217,7 @@ public class ProvenanceTest {
 
 			// sequence imported from external data source
 			String testId = "prov-sequence-gb-draft1";			
-			Document prov = newObjectImportProv(newGenBankSequence("ACCN:U49845", "sandflies"), "lvl.gb.U49845", newGeocoding(point));
+			Document prov = newObjectImportProv(newGenBankSequence("ACCN|U49845", "sandflies"), "lvl|sf|gb|U49845", newGeocoding(point));
 			assertThat("prov document is not null", prov, notNullValue());
 			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
 			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));
@@ -232,7 +232,7 @@ public class ProvenanceTest {
 
 			// user created sequence
 			testId = "prov-sequence-ur";
-			prov = newCustomObjectProv(user1, "lvl.ur.MY_SEQ");
+			prov = newCustomObjectProv(user1, "lvl|sf|ur|MY_SEQ");
 			assertThat("prov document is not null", prov, notNullValue());
 			assertThat("prov bundle is not null", prov.getStatementOrBundle(), notNullValue());
 			assertThat("prov bundle is not empty", prov.getStatementOrBundle().isEmpty(), equalTo(false));

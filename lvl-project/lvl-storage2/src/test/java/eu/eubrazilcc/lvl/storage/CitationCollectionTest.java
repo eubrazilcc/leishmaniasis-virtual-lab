@@ -776,14 +776,14 @@ public class CitationCollectionTest {
 						.withArticle(PUBMED_XML_FACTORY.createArticle().withPubModel("Electronic-Print").withArticleTitle("Rocket science rocks").withJournal(PUBMED_XML_FACTORY.createJournal().withTitle("Journal of Awesomeness")).withAbstract(PUBMED_XML_FACTORY.createAbstract().withAbstractText("It rocks! There is no much to say.")).withAuthorList(PUBMED_XML_FACTORY.createAuthorList().withAuthor(PUBMED_XML_FACTORY.createAuthor().withLastNameOrForeNameOrInitialsOrSuffixOrNameIDOrCollectiveName("Jane Doe"))).withPublicationTypeList(PUBMED_XML_FACTORY.createPublicationTypeList().withPublicationType(PUBMED_XML_FACTORY.createPublicationType().withvalue("Journal Article"))).withLanguage(PUBMED_XML_FACTORY.createLanguage().withvalue("eng")).withArticleDate(PUBMED_XML_FACTORY.createArticleDate().withYear(PUBMED_XML_FACTORY.createYear().withvalue("2014")))));
 
 		// create citations
-		String pmid = article0.getMedlineCitation().getPMID().getvalue();
+		private final String pmid0 = article0.getMedlineCitation().getPMID().getvalue();
 		private final Citation citation0 = Citation.builder()
 				.lvlId(ID_0)
 				.lvl(LvlCitation.builder().cited(newArrayList("SEQ_0", "SEQ_1")).build())
 				.pubmed(article0)
 				.location(bcnPoint)
 				.state(DRAFT)
-				.provenance(newObjectImportProv(newPubMedArticle("PMID|" + pmid), "lvl|pm|" + pmid, newGeocoding(bcnPoint)))
+				.provenance(newObjectImportProv(newPubMedArticle("PMID|" + pmid0), "lvl|pm|" + pmid0, newGeocoding(bcnPoint)))
 				.references(Maps.<String, List<String>>newHashMap(ImmutableMap.of("sequences", newArrayList("lvl|sf|gb|SEQ_0", "lvl|sf|gb|SEQ_1"))))
 				.build();
 

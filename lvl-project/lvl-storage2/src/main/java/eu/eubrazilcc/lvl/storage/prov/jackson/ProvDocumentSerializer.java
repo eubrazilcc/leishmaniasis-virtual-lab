@@ -63,17 +63,13 @@ public final class ProvDocumentSerializer extends StdSerializer<Document> {
 		if (value == null) jgen.writeNull();
 		else {
 			try (final ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-
-				/* TODO
+				// export W3C PROV document to JSON using the interoperability framework
 				new InteropFramework().writeDocument(os, JSON, value);
-				jgen.writeRawValue(new SerializedString(unescapeJava(DOLLAR_PATTERN.matcher(os.toString(UTF_8.name())).replaceAll(DOLLAR_REPLACEMENT))));
-				 */
-
-				new InteropFramework().writeDocument(os, JSON, value);
+				// escape mongoDB special characters
 				final String json = unescapeJava(DOLLAR_PATTERN.matcher(os.toString(UTF_8.name())).replaceAll(DOLLAR_REPLACEMENT));
+				// read "raw" object with Jackson parser and write the created object to the JSON generator
 				final Map<?, ?> map = JSON_MAPPER.getFactory().createParser(json).readValueAs(Map.class);
 				jgen.writeObject(map);	
-
 			}
 		}
 	}	
