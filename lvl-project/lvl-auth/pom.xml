@@ -126,13 +126,9 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
+			<version>${mongodb.driver.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- TODO <dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver</artifactId>
-			<scope>provided</scope>
-		</dependency> -->
 		
 		<!-- JavaMail API -->
 		<dependency>

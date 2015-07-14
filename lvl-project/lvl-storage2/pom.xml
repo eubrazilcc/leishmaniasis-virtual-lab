@@ -64,7 +64,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver-async</artifactId>
-			<version>3.0.2</version>
+			<version>${mongodb2.driver.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency> <!-- legacy driver, needed to support GridFS -->
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+			<version>${mongodb2.driver.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		

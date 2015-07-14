@@ -30,6 +30,6 @@ package eu.eubrazilcc.lvl.storage.base;
  */
 public enum SaveOptions {
 
-	// none, so far
+	SAVE_OVERRIDING
 
 }

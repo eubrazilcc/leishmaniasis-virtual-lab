@@ -319,7 +319,7 @@ public abstract class LvlObject implements Linkable {
 			return false;
 		}
 		final LvlObject other = LvlObject.class.cast(obj);		
-		return Objects.equals(namespace, other.namespace)
+		return Objects.equals(namespace.orNull(), other.namespace.orNull())
 				&& Objects.equals(lvlId, other.lvlId)
 				&& Objects.equals(version, other.version)
 				&& Objects.equals(location.orNull(), other.location.orNull())

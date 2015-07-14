@@ -45,6 +45,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<akka.version>2.3.11</akka.version>
 		<avro.version>1.7.7</avro.version>
 		<mongodb.driver.version>2.13.1</mongodb.driver.version>
+		<mongodb2.driver.version>3.0.2</mongodb2.driver.version>
 		<activemq.version>5.11.1</activemq.version>
 		<opm.prov.version>0.6.2</opm.prov.version>
 		<antlr4.version>4.5</antlr4.version>
@@ -283,13 +284,13 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			
 			<!-- MongoDB Java driver -->
 			
-			<dependency>
+			<!-- TODO <dependency> OLD
 				<groupId>org.mongodb</groupId>
 				<artifactId>mongo-java-driver</artifactId>
 				<version>${mongodb.driver.version}</version>
 			</dependency>
 			
-			<!-- TODO <dependency>
+			<dependency> NEW
 				<groupId>org.mongodb</groupId>
 				<artifactId>mongodb-driver</artifactId>
 				<version>3.0.0</version>

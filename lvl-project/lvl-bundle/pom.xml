@@ -41,11 +41,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
-		</dependency>
-		<!-- TODO <dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver</artifactId>
-		</dependency> -->
+			<version>${mongodb.driver.version}</version>
+		</dependency>		
 	</dependencies>
 
 	<build>
