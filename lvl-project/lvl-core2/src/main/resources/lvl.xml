@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- 
+Copyright 2014-2015 EUBrazilCC (EU‐Brazil Cloud Connect)
+
+Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+the European Commission - subsequent versions of the EUPL (the "Licence");
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+  http://ec.europa.eu/idabc/eupl
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and 
+limitations under the Licence.
+
+This product combines work with different licenses. See the "NOTICE" text
+file for details on the various modules and licenses.
+The "NOTICE" text file is part of the distribution. Any derivative works
+that you distribute must include a readable copy of the "NOTICE" text file.
+-->
+
+<!-- =============================================================== -->
+<!-- Configure the Leishmaniasis Virtual Laboratory (LVL)            -->
+<!--                                                                 -->
+<!-- Documentation of this file format can be found at:              -->
+<!-- http://lvl.i3m.upv.es/apidoc/#configuration                     -->
+<!--                                                                 -->
+<!-- Additional configuration files can be loaded from:              -->
+<!-- $LVL_HOME/etc/                                                  -->
+<!-- =============================================================== -->
+
+<config>
+
+	<!-- The top of the directory tree under which the service's configuration, 
+		supporting libraries and applications are kept (ensure that this directory 
+		is writable by the user that LVL runs as). $HOME can be used to identify 
+		the path to the home directory of the current user, and $TMP to identify 
+		the path to the system temporary directory. Temporary directory is preferable 
+		when your application uses sensitive data -->
+	<lvl-root>/opt/lvl</lvl-root>
+
+	<!-- Storage configuration -->
+	<storage>
+	
+		<!-- The performance of certain applications may be improved by using a 
+		    local cache (ensure that this directory is writable by the user that 
+		    LVL runs as). Temporary directory is preferable when your application 
+		    uses sensitive data -->
+		<local-cache>$TMP/.lvl/cache</local-cache>
+		
+		<!-- The base directory where the static HTTP resources are located -->
+		<htdocs>${lvl-root}/htdocs</htdocs>
+		
+		<!-- Storage usage restrictions -->
+		<limits>
+			
+			<!-- Maximum number of KB that users can upload to the storage in a single object -->
+			<max-user-uploaded-file-size>2048</max-user-uploaded-file-size> <!-- 2 MB -->
+			
+		</limits>
+
+	</storage>
+
+	<!-- Database back-end configuration -->
+	<database>
+	
+		<!-- The name of the database -->
+		<name>lvldb</name>
+		
+		<!-- Optional user identity to access the database. If undefined, anonymous
+			access is performed -->
+		<!-- <credentials>		
+			<username>myUserName</username>			
+			<password>myPassword</password>		
+		</credentials> -->
+		
+		<!-- Optional list of database servers, specified with the format: 
+			'hostname:port'. If undefined, 'localhost:27017' is used -->
+		<!-- <hosts>		
+			<host>localhost:27017</host>
+			<host>localhost:27019</host>
+		</hosts> -->
+	
+	</database>
+	
+	<!-- Message broker configuration -->
+	<messaging>
+			
+		<!-- Service broker configuration -->
+		<broker>
+			<!-- Deploy a message broker within the LVL. Otherwise, an external broker should be provided -->
+			<embedded>true</embedded>
+		</broker>
+	
+		<!-- Optional list of message brokers, specified with the format: 
+			'hostname:port'. If undefined, 'localhost:61616' is used -->
+		<!-- <hosts>		
+			<host>localhost:61616</host>
+			<host>lvl.i3m.upv.es:61616</host>
+		</hosts> -->
+		
+		<!-- Use this endpoint to register new service instances -->
+		<!-- <registration>
+			<endpoint>http://lvl.i3m.upv.es/lvl-service/rest/v1/broker</endpoint>			
+		</registration> -->
+	
+	</messaging>
+	
+	<!-- Email configuration -->
+	<smtp>
+	
+		<!-- Optional SMTP host and port. If undefined, 'localhost:25' is used -->
+		<!-- <host>localhost</host>
+		<port>25</port> -->
+		
+		<!-- Optional e-mails for support and notification (no-reply). If undefined,
+			example.com domain is used -->		
+		<!-- <support-email>support@example.com</support-email>
+		<noreply-email>noreply@example.com</noreply-email> -->
+	
+	</smtp>
+	
+	<!-- Portal configuration -->
+	<portal>
+	
+		<!-- Optional endpoint where the LVL portal is listening for incoming 
+			connections. If undefined, the services will use their own URI -->
+		<!-- <endpoint>https://localhost/</endpoint> -->		
+	
+	</portal>
+	
+	<!-- Workflow manager configuration -->
+	<workflow>
+	
+		<!-- Endpoint where the workflow manager is listening for incoming requests -->
+		<endpoint>
+			<hostname>eubrazilcc-esc.i3m.upv.es</hostname>		
+			<port>443</port>		
+			<secure>true</secure>		
+		</endpoint>
+		
+		<!-- User identity to access the workflow manager -->
+		<credentials>		
+			<username>lvl-portal</username>			
+			<password>eubccLVL</password>		
+		</credentials>
+	
+	</workflow>
+	
+	<!-- Utility tools -->
+	<tools>
+	
+		<!-- Scripts -->
+		<scripts>
+			<phylo-tree>${lvl-root}/bin/tree-generator.py</phylo-tree>
+		</scripts>
+		
+		<!-- X server configuration -->
+		<xserver>
+			<!-- Use Xvfb (X virtual framebuffer) -->
+			<use-xvfb>false</use-xvfb>
+		</xserver>
+	
+	</tools>
+
+</config>

@@ -52,7 +52,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<!-- LVL modules -->
 		<dependency>
 			<groupId>eu.eubrazilcc.lvl</groupId>
-			<artifactId>lvl-core</artifactId>
+			<artifactId>lvl-core2</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>eu.eubrazilcc.lvl</groupId>

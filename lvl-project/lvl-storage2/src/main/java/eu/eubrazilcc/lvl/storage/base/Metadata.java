@@ -32,6 +32,7 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -50,6 +51,8 @@ public class Metadata {
 
 	private Optional<String> namespace = absent(); // (optional) namespace
 	private String filename;
+	private Optional<String> openAccessLink = absent(); // (optional) openaccess link
+	private Optional<Date> openAccessDate = absent(); // (optional) openaccess date
 
 	private Map<String, Object> others = newHashMap();
 
@@ -74,6 +77,23 @@ public class Metadata {
 	public void setFilename(final String filename) {
 		this.filename = trimToEmpty(filename);
 		setUrlSafeFilename(urlEncodeUtf8(this.filename));
+	}
+
+	public @Nullable String getOpenAccessLink() {
+		return openAccessLink.orNull();
+	}
+
+	public void setOpenAccessLink(final @Nullable String openAccessLink) {
+		this.openAccessLink = fromNullable(openAccessLink);
+		setOpenAccessDate(new Date());
+	}
+
+	public @Nullable Date getOpenAccessDate() {
+		return openAccessDate.orNull();
+	}
+
+	public void setOpenAccessDate(final @Nullable Date openAccessDate) {
+		this.openAccessDate = fromNullable(openAccessDate);
 	}
 
 	public Map<String, Object> getOthers() {
@@ -122,6 +142,8 @@ public class Metadata {
 		};
 		return Objects.equals(namespace.orNull(), other.namespace.orNull())
 				&& Objects.equals(filename, other.filename)
+				&& Objects.equals(openAccessLink.orNull(), other.openAccessLink.orNull())
+				&& Objects.equals(openAccessDate.orNull(), other.openAccessDate.orNull())
 				&& ((others == null && other.others == null) || difference(others, other.others, equivalence).areEqual());
 	}
 
@@ -135,6 +157,8 @@ public class Metadata {
 		return toStringHelper(this)
 				.add("namespace", namespace.orNull())
 				.add("filename", filename)
+				.add("openAccessLink", openAccessLink.orNull())
+				.add("openAccessDate", openAccessDate.orNull())
 				.add("others", others)
 				.toString();
 	}
@@ -149,13 +173,23 @@ public class Metadata {
 
 		private final Metadata instance = new Metadata();
 
+		public Builder namespace(final String namespace) {
+			instance.setNamespace(namespace);
+			return this;
+		}
+
 		public Builder filename(final String filename) {
 			instance.setFilename(filename);
 			return this;
 		}
 
-		public Builder namespace(final String namespace) {
-			instance.setNamespace(namespace);
+		public Builder openAccessLink(final String openAccessLink) {
+			instance.setOpenAccessLink(openAccessLink);
+			return this;
+		}
+
+		public Builder openAccessDate(final Date openAccessDate) {
+			instance.setOpenAccessDate(openAccessDate);
 			return this;
 		}
 

@@ -40,9 +40,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.storage.base.LvlFile;
+import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListSerializer;
 
 /**
  * Represents a single object or a collection of objects that is backed to a file in the application's database.
@@ -62,7 +62,7 @@ public class Dataset extends LvlFile {
 	private List<Link> links; // HATEOAS links
 
 	public Dataset() {
-		super(null, getLogger(Dataset.class));
+		super(getLogger(Dataset.class));
 	}
 
 	@Override	

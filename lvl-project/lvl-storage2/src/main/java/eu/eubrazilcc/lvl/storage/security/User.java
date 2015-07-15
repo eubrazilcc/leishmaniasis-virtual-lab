@@ -58,17 +58,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import eu.eubrazilcc.lvl.core.Linkable;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+import eu.eubrazilcc.lvl.storage.Linkable;
 import eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModification;
+import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListSerializer;
 
 /**
  * Provides user information (profile). Jackson annotations are included to serialize this class to XML and JSON.
  * Also includes the identity provider and the identifier assigned in the provider.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class User implements Serializable, Linkable<User> {
+public class User implements Serializable, Linkable {
 
 	private static final long serialVersionUID = -8320525767063830149L;	
 
@@ -260,16 +260,6 @@ public class User implements Serializable, Linkable<User> {
 			return false;
 		}
 		final User other = User.class.cast(obj);
-		return Objects.equals(links, other.links)
-				&& Objects.equals(pictureUrl, other.pictureUrl)
-				&& equalsIgnoringVolatile(other);
-	}
-
-	@Override
-	public boolean equalsIgnoringVolatile(final User other) {
-		if (other == null) {
-			return false;
-		}
 		return Objects.equals(provider, other.provider)
 				&& Objects.equals(userid, other.userid)
 				&& Objects.equals(password, other.password)

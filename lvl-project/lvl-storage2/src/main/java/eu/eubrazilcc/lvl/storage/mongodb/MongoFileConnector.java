@@ -28,7 +28,9 @@ import static com.google.common.base.Predicates.notNull;
 import static com.google.common.base.Splitter.on;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.util.concurrent.Futures.addCallback;
 import static com.mongodb.MongoCredential.createMongoCRCredential;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer.hash2bucket;
@@ -44,6 +46,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -55,9 +58,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.SettableFuture;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
@@ -70,8 +78,12 @@ import com.mongodb.gridfs.GridFSInputFile;
 import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
+import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
+import eu.eubrazilcc.lvl.storage.LvlObjectNotFoundException;
 import eu.eubrazilcc.lvl.storage.base.LvlFile;
 import eu.eubrazilcc.lvl.storage.base.Metadata;
+import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedGridFSFile;
+import eu.eubrazilcc.lvl.storage.mongodb.cache.GridFSFilePersistingCache;
 
 /**
  * File connector based on mongoDB. <strong>Note </strong> that this class uses the legacy mongoDB driver, which should be updated when GridFS
@@ -87,6 +99,8 @@ public enum MongoFileConnector implements Closeable2 {
 
 	public static final int NUM_BUCKETS = 16;
 	private static final String BUCKETS_PADDING = "%02d";
+
+	private final GridFSFilePersistingCache gfsPersistingCache = new GridFSFilePersistingCache();
 
 	private Lock mutex = new ReentrantLock();
 	private MongoClient __client = null;
@@ -138,55 +152,111 @@ public enum MongoFileConnector implements Closeable2 {
 		}
 	}
 
-	public <T extends LvlFile> void saveFile(final T obj, final File srcFile, final boolean override) {
-		checkArgument(srcFile != null && srcFile.isFile() && srcFile.canRead(), "Uninitialized or invalid input file");
-		try {				
-			saveFile(obj, srcFile);
-		} catch (DuplicateKeyException dke) {
-			if (override) {				
-				try {
-					removeFile(obj);
-					saveFile(obj, srcFile);
-				} catch (Exception e) {
-					throw new IllegalStateException("Failed to save file", e);
-				}
-			} else throw new IllegalStateException("Failed to save file", dke);
-		} catch (Exception e) {
-			throw new IllegalStateException("Failed to save file", e);				
-		}
+	public <T extends LvlFile> ListenableFuture<Void> saveFile(final T obj, final File srcFile, final boolean override) {
+		checkArgument(srcFile != null && srcFile.isFile() && srcFile.canRead(), "Uninitialized or invalid input file");		
+		return (override ? deleteAndSave(obj, srcFile) : saveFile(obj, srcFile));		
 	}
 
-	private <T extends LvlFile> void saveFile(final T obj, final File srcFile) throws IOException {
-		final Connection conn = Connection.newBucket(client(), obj);		
-		final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));		
-		// save file to the database
-		final GridFSInputFile gfsFile = gridFS.createFile(srcFile);
-		gfsFile.setFilename(conn.filename);
-		gfsFile.setContentType(mimeType(srcFile));				
-		gfsFile.setMetaData(fromMetadata(obj.getMetadata()));
-		gfsFile.save();
-		// update object
-		obj.setId(ObjectId.class.cast(gfsFile.getId()).toString());
-		obj.setLength(gfsFile.getLength());
-		obj.setChunkSize(gfsFile.getChunkSize());
-		obj.setUploadDate(gfsFile.getUploadDate());
-		obj.setMd5(gfsFile.getMD5());
-		obj.setFilename(gfsFile.getFilename());		
-		obj.setContentType(gfsFile.getContentType());
+	private <T extends LvlFile> ListenableFuture<Void> deleteAndSave(final T obj, final File srcFile) {
+		final SettableFuture<Void> future = SettableFuture.create();		
+		final ListenableFuture<Void> deleteFuture = removeFile(obj);
+		addCallback(deleteFuture, new FutureCallback<Void>() {
+			@Override
+			public void onSuccess(final Void result) {				
+				final ListenableFuture<Void> saveFuture = saveFile(obj, srcFile);
+				addCallback(saveFuture, new FutureCallback<Void>() {
+					public void onSuccess(final Void result) {
+						future.set(result);
+					}
+					public void onFailure(final Throwable t) {
+						future.setException(t);
+					}
+				});
+			}
+			@Override
+			public void onFailure(final Throwable t) {
+				future.setException(t);
+			}			
+		});
+		return future;
 	}
 
-	public <T extends LvlFile> T fetchFile(final LvlFile obj, final Class<T> type) {
+	private <T extends LvlFile> ListenableFuture<Void> saveFile(final T obj, final File srcFile) {		
+		final CancellableTask<Void> task = new MongoTask<Void>(ListenableFutureTask.create(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				final Connection conn = Connection.newBucket(client(), obj);		
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				obj.getConfigurer().prepareFiles(gridFS.getBucketName());
+				// save file to the database
+				final GridFSInputFile gfsFile = gridFS.createFile(srcFile);
+				gfsFile.setFilename(conn.filename);
+				gfsFile.setContentType(mimeType(srcFile));				
+				gfsFile.setMetaData(fromMetadata(obj.getMetadata()));
+				gfsFile.save();
+				// update object
+				obj.setId(ObjectId.class.cast(gfsFile.getId()).toString());
+				obj.setLength(gfsFile.getLength());
+				obj.setChunkSize(gfsFile.getChunkSize());
+				obj.setUploadDate(gfsFile.getUploadDate());
+				obj.setMd5(gfsFile.getMD5());
+				obj.setFilename(gfsFile.getFilename());		
+				obj.setContentType(gfsFile.getContentType());
+				return null;
+			}
+		}));
+		TASK_RUNNER.execute(task);
+		return task.getTask();
+	}
+
+	public <T extends LvlFile> ListenableFuture<LvlFile> fetchFile(final LvlFile obj, final Class<T> type) {
 		checkArgument(obj != null && obj.getClass().isAssignableFrom(type), "Uninitialized or invalid object type");
-		final Connection conn = Connection.newBucket(client(), obj);		
-		final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
-		final GridFSDBFile gfsFile = gridFS.findOne(conn.filename);
-		T result = null;
-		try {
-			result = parseGridFSDBFile(gfsFile, type);
-		} catch (Exception e) {
-			throw new IllegalStateException("Failed to fetch file", e);
-		}
-		return result;
+		final CancellableTask<LvlFile> task = new MongoTask<LvlFile>(ListenableFutureTask.create(new Callable<LvlFile>() {
+			@Override
+			public LvlFile call() throws Exception {
+				final Connection conn = Connection.newBucket(client(), obj);		
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				final GridFSDBFile gfsFile = gridFS.findOne(conn.filename);
+				if (gfsFile == null) throw new LvlObjectNotFoundException("Object not found");
+				T result = null;
+				try {
+					result = parseGridFSDBFile(gfsFile, type);
+					CachedGridFSFile cachedFile = gfsPersistingCache.getIfPresent(gfsFile.getFilename());
+					if (cachedFile != null) {
+						if (!cachedFile.getMd5().equals(gfsFile.getMD5())) {
+							cachedFile = gfsPersistingCache.update(gfsFile);
+						}
+					} else {
+						cachedFile = gfsPersistingCache.put(gfsFile);
+					}
+					result.setOutfile(new File(cachedFile.getCachedFilename()));
+				} catch (Exception e) {
+					throw new IllegalStateException("Failed to fetch file [bucket=" + gridFS.getBucketName() + ", filename=" + conn.filename + "]", e);
+				}	
+				return result;
+			}
+		}));
+		TASK_RUNNER.execute(task);
+		return task.getTask();		
+	}
+
+	/**
+	 * Checks whether or not the specified file exists in the database, returning <tt>true</tt> only when the file exists in the 
+	 * specified namespace.
+	 * @param obj - file object to be searched for in the database
+	 * @return
+	 */
+	public <T extends LvlFile> ListenableFuture<Boolean> fileExists(final T obj) {
+		final CancellableTask<Boolean> task = new MongoTask<Boolean>(ListenableFutureTask.create(new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				final Connection conn = Connection.newBucket(client(), obj);		
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				return gridFS.findOne(conn.filename) != null;
+			}
+		}));
+		TASK_RUNNER.execute(task);
+		return task.getTask();
 	}
 
 	/**
@@ -194,78 +264,72 @@ public enum MongoFileConnector implements Closeable2 {
 	 * @param namespace - (optional) name space where the file was stored under. When nothing specified, the default bucket is used
 	 * @param filename - filename to be removed from the database
 	 */
-	public <T extends LvlFile> void removeFile(final T obj) {
-		final Connection conn = Connection.newBucket(client(), obj);
-		final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
-		gridFS.remove(conn.filename);
+	public <T extends LvlFile> ListenableFuture<Void> removeFile(final T obj) {
+		final CancellableTask<Void> task = new MongoTask<Void>(ListenableFutureTask.create(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				final Connection conn = Connection.newBucket(client(), obj);
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				gridFS.remove(conn.filename);
+				return null;
+			}
+		}));
+		TASK_RUNNER.execute(task);
+		return task.getTask();
 	}
 
+	public <T extends LvlFile> ListenableFuture<Void> updateMetadata(final T obj) {
+		final CancellableTask<Void> task = new MongoTask<Void>(ListenableFutureTask.create(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				final Connection conn = Connection.newBucket(client(), obj);
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				final GridFSDBFile gfsFile = gridFS.findOne(conn.filename);
+				if (gfsFile == null) throw new LvlObjectNotFoundException("Object not found");
+				gfsFile.setMetaData(fromMetadata(obj.getMetadata()));
+				gfsFile.save();
+				// update object
+				obj.setId(ObjectId.class.cast(gfsFile.getId()).toString());
+				obj.setLength(gfsFile.getLength());
+				obj.setChunkSize(gfsFile.getChunkSize());
+				obj.setUploadDate(gfsFile.getUploadDate());
+				obj.setMd5(gfsFile.getMD5());
+				obj.setFilename(gfsFile.getFilename());		
+				obj.setContentType(gfsFile.getContentType());
+				return null;
+			}
+		}));
+		TASK_RUNNER.execute(task);
+		return task.getTask();		
+	}
+
+	public <T extends LvlFile> ListenableFuture<List<String>> typeaheadFile(final T obj, final String query, final int size) {
+		final CancellableTask<List<String>> task = new MongoTask<List<String>>(ListenableFutureTask.create(new Callable<List<String>>() {
+			@Override
+			public List<String> call() throws Exception {
+				final Connection conn = Connection.newBucketNoFilename(client(), obj);		
+				checkArgument(isNotBlank(query), "Uninitialized or invalid query");
+				final String query2 = query.trim();
+				final List<String> list = newArrayList();
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				final DBCursor cursor = gridFS.getFileList(new BasicDBObject("filename", new BasicDBObject("$regex", query2).append("$options", "i")), 
+						new BasicDBObject("filename", 1));
+				cursor.skip(0).limit(size);
+				try {
+					while (cursor.hasNext()) {
+						list.add(((GridFSDBFile) cursor.next()).getFilename());
+					}
+				} finally {
+					cursor.close();
+				}		
+				return list;
+			}
+		}));
+		TASK_RUNNER.execute(task);
+		return task.getTask();
+	}
 
 	/* TODO
-
-
-
-
-	/**
-	 * Gets the version of the <tt>filename</tt> labeled with the {@link #FILE_VERSION_PROP} property.
-	 * @param gridfs - GridFS client
-	 * @param filename - filename to be searched for in the database
-	 * @return
-	 *
-	private GridFSDBFile getLatestVersion(final GridFS gridfs, final String filename) {
-		return gridfs.findOne(new BasicDBObject(FILE_VERSION_PROP, filename.trim()));
-	}
-
-	/**
-	 * Gets the version of the <tt>filename</tt> with the latest uploaded date.
-	 * @param gridfs - GridFS client
-	 * @param filename - filename to be searched for in the database
-	 * @return the version of the file identified by the provided filename with the latest uploaded date. 
-	 *
-	private GridFSDBFile getLatestUploadedFile(final GridFS gridfs, final String filename) {
-		return getFirst(gridfs.find(filename.trim(), new BasicDBObject("uploadDate", -1)), null);
-	}
-
-	/**
-	 * Restores the latest version of a file in the database.
-	 * @param gridfs - GridFS client
-	 * @param filename - filename to be searched for in the database
-	 *
-	private void restoreLatestVersion(final GridFS gridfs, final String filename) {
-		try {
-			final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gridfs, filename);
-			if (latestUploadedVersion != null) {
-				if (latestUploadedVersion.getMetaData() == null) {
-					latestUploadedVersion.setMetaData(new BasicDBObject());
-				}
-				latestUploadedVersion.getMetaData().put(IS_LATEST_VERSION_ATTR, filename);				
-				latestUploadedVersion.save();
-			}
-		} catch (Exception ignore) {
-			LOGGER.error("Failed to restore latest version namespace=" + gridfs.getBucketName() + ", filename=" + filename);
-		}
-	}
-
-	public void updateMetadata(final @Nullable String namespace, final String filename, final @Nullable DBObject metadata) {
-		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		final String namespace2 = trimToEmpty(namespace);
-		final String filename2 = filename.trim();
-		final DBObject metadata2 = metadata != null ? metadata : new BasicDBObject();
-		metadata2.put(IS_LATEST_VERSION_ATTR, filename2);
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
-		try {
-			final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
-			checkState(latestUploadedVersion != null, "File not found");
-			latestUploadedVersion.setMetaData(metadata2);								
-			latestUploadedVersion.save();
-		} catch (IllegalStateException ise) {
-			throw ise;
-		} catch (Exception e) {
-			LOGGER.error("Failed to update latest metadata version in namespace=" + gfsNs.getBucketName() 
-					+ ", filename=" + filename, e);
-		}
-	}
 
 	public String createOpenAccessLink(final @Nullable String namespace, final String filename) {
 		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
@@ -364,21 +428,7 @@ public enum MongoFileConnector implements Closeable2 {
 			}
 		}
 		return fileWrapper;		
-	}
-
-	/**
-	 * Checks whether or not the specified file exists in the database, returning <tt>true</tt> only when the file exists in the 
-	 * specified namespace.
-	 * @param namespace - (optional) name space to be searched for in the database. When nothing specified, the default bucket is used
-	 * @param filename - filename to be searched for in the database
-	 * @return
-	 *
-	public boolean fileExists(final @Nullable String namespace, final String filename) {
-		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-		return gfsNs.findOne(filename.trim()) != null;
-	}
+	}	
 
 	/**
 	 * Lists all the files in the specified name space. Only latest versions are included in the list.
@@ -430,87 +480,7 @@ public enum MongoFileConnector implements Closeable2 {
 		return list;
 	}
 
-	/**
-	 * Lists all the versions of the specified file.
-	 * @param namespace - (optional) name space to be searched for files. When nothing specified, the default bucket is used
-	 * @param filename - filename to be searched for in the database
-	 * @param sortCriteria - objects in the collection are sorted with this criteria
-	 * @param start - starting index
-	 * @param size - maximum number of objects returned
-	 * @param count - (optional) is updated with the number of objects in the database
-	 * @return a view of the versions stored of the specified file that contains the specified range.
-	 *
-	public List<GridFSDBFile> listFileVersions(final @Nullable String namespace, final String filename, final DBObject sortCriteria, final int start, 
-			final int size, final @Nullable MutableLong count) {
-		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		final List<GridFSDBFile> list = newArrayList();
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
-		final DBCursor cursor = gfsNs.getFileList(new BasicDBObject("filename", filename.trim()), sortCriteria);
-		cursor.skip(start).limit(size);
-		try {
-			while (cursor.hasNext()) {
-				list.add((GridFSDBFile) cursor.next());
-			}
-		} finally {
-			cursor.close();
-		}
-		if (count != null) {				
-			count.setValue(cursor.count());
-		}
-		return list;		
-	}
 
-	/**
-	 * Removes a file (with all its versions) from the specified name space.
-	 * @param namespace - (optional) name space where the file was stored under. When nothing specified, the default bucket is used
-	 * @param filename - filename to be removed from the database
-	 *
-	public void removeFile(final @Nullable String namespace, final String filename) {
-		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-		gfsNs.remove(filename);
-	}
-
-	/**
-	 * Deletes the latest version from the database. When a previous version exists for the file in the specified namespace, the latest
-	 * uploaded version will be the new latest version.
-	 * @param namespace - (optional) name space where the file was stored under. When nothing specified, the default bucket is used
-	 * @param filename - filename to be removed from the database
-	 *
-	public void undoLatestVersion(final @Nullable String namespace, final String filename) {
-		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		final String filename2 = filename.trim();
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-		try {
-			// remove latest version from the database				
-			gfsNs.remove(new BasicDBObject(FILE_VERSION_PROP, filename2));
-		} finally {
-			// enforce versioning property by always restoring the latest version in the database
-			restoreLatestVersion(gfsNs, filename2);
-		}
-	}
-
-	public List<String> typeaheadFile(final @Nullable String namespace, final String query, final int size) {
-		checkArgument(isNotBlank(query), "Uninitialized or invalid query");
-		final String query2 = query.trim();
-		final List<String> list = newArrayList();
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);		
-		final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)).append(
-				"filename", new BasicDBObject("$regex", query2).append("$options", "i")), new BasicDBObject("filename", 1));
-		cursor.skip(0).limit(size);
-		try {
-			while (cursor.hasNext()) {
-				list.add(((GridFSDBFile) cursor.next()).getFilename());
-			}
-		} finally {
-			cursor.close();
-		}		
-		return list;
-	}	
 
 	/**
 	 * Counts the files stored in the specified name space.
@@ -627,6 +597,11 @@ public enum MongoFileConnector implements Closeable2 {
 			final String filename = getBucketFilename(obj);
 			return new Connection(db, bucket, filename);
 		}
+		public static <T extends LvlFile> Connection newBucketNoFilename(final MongoClient client, final T obj) {
+			final DB db = client.getDB(CONFIG_MANAGER.getDbName());
+			final String bucket = getBucket(obj).orNull();
+			return new Connection(db, bucket, null);
+		}
 		private static <T extends LvlFile> Optional<String> getBucket(final T obj) {
 			checkArgument(obj != null && obj.getMetadata() != null, "Uninitialized or invalid file object");
 			String bucket = null, namespace = null;
@@ -644,6 +619,13 @@ public enum MongoFileConnector implements Closeable2 {
 				filename = namespace + ":" + filename;
 			}
 			return filename;
+		}
+	}
+
+	private static class MongoTask<T> extends CancellableTask<T> {
+		public MongoTask(final ListenableFutureTask<T> task) {
+			super(null);
+			this.task = task;
 		}
 	}
 

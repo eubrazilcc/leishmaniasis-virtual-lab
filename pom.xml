@@ -407,6 +407,18 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			
 			<dependency>
 				<groupId>eu.eubrazilcc.lvl</groupId>
+				<artifactId>lvl-core2</artifactId>
+				<version>${lvl.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>eu.eubrazilcc.lvl</groupId>
+				<artifactId>lvl-storage2</artifactId>
+				<version>${lvl.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>eu.eubrazilcc.lvl</groupId>
 				<artifactId>lvl-service</artifactId>
 				<version>${lvl.version}</version>
 			</dependency>

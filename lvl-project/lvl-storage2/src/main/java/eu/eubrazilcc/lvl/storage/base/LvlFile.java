@@ -26,6 +26,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.util.concurrent.Futures.addCallback;
 import static eu.eubrazilcc.lvl.storage.base.SaveOptions.SAVE_OVERRIDING;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoFileConnector.MONGODB_FILE_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
@@ -51,9 +52,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 import eu.eubrazilcc.lvl.storage.Linkable;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer;
+import eu.eubrazilcc.lvl.storage.mongodb.MongoFilesConfigurer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
 
 /**
@@ -65,7 +69,7 @@ public abstract class LvlFile extends LvlBaseFile implements Linkable {
 	@JsonIgnore
 	protected final Logger logger;
 	@JsonIgnore
-	private final MongoCollectionConfigurer configurer;
+	private final MongoFilesConfigurer configurer;
 
 	/**
 	 * Additional property (not part of the GridFS specification) that can be used to store a copy of the object in a file, avoiding
@@ -76,12 +80,16 @@ public abstract class LvlFile extends LvlBaseFile implements Linkable {
 
 	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.<String>of("logger", "configurer", "urlSafeNamespace", "urlSafeFilename");
 
-	public LvlFile(final MongoCollectionConfigurer configurer, final Logger logger) {
+	public LvlFile(final Logger logger) {
+		this(new MongoFilesConfigurer(), logger);
+	}
+
+	public LvlFile(final MongoFilesConfigurer configurer, final Logger logger) {
 		this.configurer = configurer;
 		this.logger = logger;
 	}
 
-	public MongoCollectionConfigurer getConfigurer() {
+	public MongoFilesConfigurer getConfigurer() {
 		return configurer;
 	}
 
@@ -129,18 +137,39 @@ public abstract class LvlFile extends LvlBaseFile implements Linkable {
 				.toString();
 	}
 
-	public void save(final File srcFile, final SaveOptions... options) {
+	public ListenableFuture<Void> save(final File srcFile, final SaveOptions... options) {		
 		final List<SaveOptions> optList = (options != null ? asList(options) : Collections.<SaveOptions>emptyList());
-		MONGODB_FILE_CONN.saveFile(this, srcFile, optList.contains(SAVE_OVERRIDING));
+		return MONGODB_FILE_CONN.saveFile(this, srcFile, optList.contains(SAVE_OVERRIDING));
 	}
 
-	public void fetch() {
-		final LvlFile result = MONGODB_FILE_CONN.fetchFile(this, this.getClass());
-		try {
-			copyProperties(result, this);
-		} catch (IllegalAccessException | InvocationTargetException e) {
-			throw new IllegalStateException("Failed to copy object properties", e);
-		}
+	public ListenableFuture<Void> updateMetadata() {
+		return MONGODB_FILE_CONN.updateMetadata(this);
+	}
+
+	public ListenableFuture<Void> fetch() {
+		final SettableFuture<Void> future = SettableFuture.create();
+		final LvlFile __file = this;
+		final ListenableFuture<LvlFile> fetchFuture = MONGODB_FILE_CONN.fetchFile(this, this.getClass());
+		addCallback(fetchFuture, new FutureCallback<LvlFile>() {
+			@Override
+			public void onSuccess(final LvlFile result) {
+				try {
+					copyProperties(result, __file);					
+					future.set(null);
+				} catch (IllegalAccessException | InvocationTargetException e) {
+					future.setException(e);
+				}
+			}
+			@Override
+			public void onFailure(final Throwable t) {
+				future.setException(t);
+			}
+		});
+		return future;
+	}
+
+	public ListenableFuture<Boolean> exists() {
+		return MONGODB_FILE_CONN.fileExists(this);
 	}
 
 	/* Utility methods */

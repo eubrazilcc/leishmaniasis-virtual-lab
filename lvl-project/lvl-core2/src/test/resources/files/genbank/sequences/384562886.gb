@@ -1,0 +1,73 @@
+LOCUS       JQ790522                2069 bp    DNA     linear   INV 06-DEC-2012
+DEFINITION  Phlebotomus kiangsuensis isolate Mongar-4 18S ribosomal RNA gene,
+            partial sequence.
+ACCESSION   JQ790522
+VERSION     JQ790522.1  GI:384562886
+KEYWORDS    .
+SOURCE      Phlebotomus kiangsuensis
+  ORGANISM  Phlebotomus kiangsuensis
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Endopterygota; Diptera; Nematocera;
+            Psychodoidea; Psychodidae; Phlebotomus; Phlebotomus.
+REFERENCE   1  (bases 1 to 2069)
+  AUTHORS   Yangzom,T., Cruz,I., Bern,C., Argaw,D., den Boer,M., Velez,I.D.,
+            Bhattacharya,S.K., Molina,R. and Alvar,J.
+  TITLE     Endemic Transmission of Visceral Leishmaniasis in Bhutan
+  JOURNAL   Am. J. Trop. Med. Hyg. 87 (6), 1028-1037 (2012)
+   PUBMED   23091191
+REFERENCE   2  (bases 1 to 2069)
+  AUTHORS   Yangzom,T., Cruz,I., Bern,C., den Boer,M., Velez,I.D.,
+            Bhattacharya,S., Molina,R. and Alvar,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (15-MAR-2012) WHO Collaborating Centre for Leishmaniasis,
+            Servicio de Parasitologia, Centro Nacional de Microbiologia,
+            Instituto de Salud Carlos III, Ctra. Majadahonda-Pozuelo, km2,
+            Majadahonda, Madrid 28220, Spain
+FEATURES             Location/Qualifiers
+     source          1..2069
+                     /organism="Phlebotomus kiangsuensis"
+                     /mol_type="genomic DNA"
+                     /isolate="Mongar-4"
+                     /db_xref="taxon:1175443"
+                     /sex="female"
+                     /country="Bhutan"
+                     /collection_date="Mar-2011"
+     rRNA            <1..>2069
+                     /product="18S ribosomal RNA"
+ORIGIN      
+        1 tgccagtagt tatatgcttg tctcaaagat taagccatgc atgtctaagt acaaactgtt
+       61 attatagtga aaccgcaaaa ggctcagtac aacagctatc atttatttga tcaattaaaa
+      121 cagttacttg gataactgtg gtaattccag agctaataca tgcaaacaac atgaatcatt
+      181 cgcagcaatg tggattgaga catgtgctct tattagactt taaaaccaat atcctcactt
+      241 cggtgtgggt ttgttttaga tgaatctgga taattatggc tgatcgcatg gtctctgcac
+      301 cggcgataga tcattcaaat gtctgcccta tcaactattg atggtagtat agtggactac
+      361 catggttgca acgggtaacg gggaatcagg gttcgattcc ggagagggag cctgagaaac
+      421 ggctaccaca tctaaggaag gcagcaggcg cgtaaattac ccaatcccgg cacggggagg
+      481 tagtgacgaa aaataacaat acaggactca catccgaggc cctgtaattg gaatgagtac
+      541 acgttaaatc ttttaacaag taacaattgg agggcaagtc tggtgccagc agccgcggta
+      601 attccagctc caatagcgta tattaaagtt gttgcggtta aaacgttcgt agttgaattt
+      661 gtgtcccaca cgggtaatgc acccaagtgc gggttttgca ttacttgttg catgtgtatg
+      721 ttcactgtaa aaggtggcgt atgtgtgtga ctttaagtgt gacggatgtt ttaccggtga
+      781 gggaaacggc cttctaatgt atatgtgttc ttatgggcca tatattattg ttggtacgcc
+      841 ccttatgtgt aacccacttt ggtgctcttt accgagtgcc actgtgggcc ggtacagtta
+      901 ctttgaacaa attagagtgc tcaaagcagg ctaaatttaa tgaaagttaa aacgcctgaa
+      961 tatattttgc atggaataat ggaataggac ctctgttcta ttttcaattg gttttataga
+     1021 gatccaagag gtaatgatta atagaagcag ttgggggcat tagtattacg aggcgagagg
+     1081 tgaaattcgt agaccctcgt aagactgact taagcgaaag catttgccaa ggatgttttc
+     1141 attaatcaag aacgaaagtt agaggatcga aggcgatcag ataccgccct agttctaacc
+     1201 ataaacgatg ccagctagca attggatgta gctacttata ccaggctcat tcagtcgctt
+     1261 tccgggaaac caaagctttt gggctccggg ggaagtatgg ttgcaaagct gaaacttaaa
+     1321 ggaattgacg gaagggcacc accaggagtg gagcctgcgg cttaatttga ctcaacacgg
+     1381 gaaaacttac caggtccgaa cataaatgag taagacagat tgatagctct ttctcgaatc
+     1441 tatgggtggt ggtgcatggc cgttcttagt tcgtggagtg atttgtctgg ttaattccga
+     1501 taacgaacga gactcaaacg cctttaaata gatgcttgca ggactatggc gctgaaatca
+     1561 tgtatattcc acttattgga ttggtttcgg cctttctgat ttgtggcttt atgcatgatg
+     1621 gagctatacc tgtttggttt gtcttaagag gacactttgc ttcttaaatg gacaaaatgc
+     1681 gtctagcatt aatgagattg agcaataaca ggtctgtgat gcccttagat gtcctgggct
+     1741 gcacgcgcgc tacaatgaag gtatcaatgt gttttatcct tgaccgagag gtatgggtaa
+     1801 acattgaacc accttcgtgg ttgggattgt ggactgtaac tgttcacatg aacccggaat
+     1861 tcccagtaag tgtgagtcat aagcttgcat tgattacgtc cctgcccttt gtacacaccg
+     1921 cccgtcgcta ctactgatga attgtttagt gaggtctctg gacgtgtgct actaattgcc
+     1981 ctatatgggt gatttggtac gctacaccga agttgaccga acttgattat ttagaggaag
+     2041 taaaagtcgt aacaaggttt ccgtaggtg
+//

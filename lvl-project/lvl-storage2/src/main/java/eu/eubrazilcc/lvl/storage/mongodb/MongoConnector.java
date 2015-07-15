@@ -136,7 +136,6 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.connection.ClusterSettings;
 
-import eu.eubrazilcc.lvl.core.BaseFile;
 import eu.eubrazilcc.lvl.core.Closeable2;
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
 import eu.eubrazilcc.lvl.core.geojson.Crs;

@@ -255,10 +255,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<module>lvl-test</module>
 		<module>lvl-core</module>
 		<module>lvl-storage</module>
+		<module>lvl-core2</module>
 		<module>lvl-storage2</module>
 		<module>lvl-auth</module>
 		<module>lvl-service</module>
-		<module>lvl-bundle</module>		
+		<module>lvl-bundle</module>
 	</modules>
 
 </project>

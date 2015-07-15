@@ -44,11 +44,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableList;
 
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.storage.base.LvlObject;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer;
+import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListSerializer;
 
 /**
  * Represents a publication citation, including the original PubMed article and additional annotations provided by the LeishVL users.

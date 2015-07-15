@@ -23,7 +23,8 @@
 package eu.eubrazilcc.lvl.storage;
 
 /**
- * An exception indicating that the searched object was not found.
+ * An exception indicating that the requested object was not found in the database. This exception should be thrown when the client expects a valid
+ * object and <tt>null</tt> is not an acceptable value.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class LvlObjectNotFoundException extends LvlException {

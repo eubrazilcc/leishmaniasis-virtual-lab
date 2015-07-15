@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+Copyright 2014-2015 EUBrazilCC (EU‐Brazil Cloud Connect)
+
+Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+the European Commission - subsequent versions of the EUPL (the "Licence");
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+  http://ec.europa.eu/idabc/eupl
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and 
+limitations under the Licence.
+
+This product combines work with different licenses. See the "NOTICE" text
+file for details on the various modules and licenses.
+The "NOTICE" text file is part of the distribution. Any derivative works
+that you distribute must include a readable copy of the "NOTICE" text file.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>eu.eubrazilcc.lvl</groupId>
+		<artifactId>lvl-project</artifactId>
+		<version>0.3.0</version>
+		<relativePath>..</relativePath>
+	</parent>
+	
+	<artifactId>lvl-core2</artifactId>
+	<name>lvl-core2</name>
+	<description>LVL core types and components</description>
+	<url>http://eubrazilcloudconnect.eu/</url>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.glassfish.jersey</groupId>
+				<artifactId>jersey-bom</artifactId>
+				<version>${jersey.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
+	<dependencies>
+		<!-- LVL modules -->		
+		<dependency>
+			<groupId>eu.eubrazilcc.lvl</groupId>
+			<artifactId>lvl-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	
+		<!-- Apache commons -->
+		<dependency> <!-- needed by auto-generated JAXB binding classes -->
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+		</dependency>
+		<dependency> <!-- needed by commons-configuration -->
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-exec</artifactId>
+		</dependency>
+
+		<!-- HTTP client -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>fluent-hc</artifactId>
+		</dependency>
+
+		<!-- Guava: Google Core Libraries for Java -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		<dependency> <!-- JSR305 Annotations -->
+			<groupId>com.google.code.findbugs</groupId>
+			<artifactId>jsr305</artifactId>
+		</dependency>
+
+		<!-- Apache Tika -->
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+		</dependency>		
+		
+		<!-- Java API for Google Geocoding API v3 -->
+		<dependency>
+			<groupId>com.google.code.geocoder-java</groupId>
+			<artifactId>geocoder-java</artifactId>
+		</dependency>
+		
+		<!-- Transitively includes Jackson JSON processor from Jersey. Jackson must be 
+			provided in production (e.g. with Jersey) -->
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		
+		<!-- Logback and SLF4J logging framework -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+	
+	<profiles>
+		<!-- Generate XML binding classes -->
+		<profile>
+			<id>generate</id>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<!-- Do not generate XML binding classes from Eclipse to prevent version system to update the version of the library -->
+						<plugin>
+							<groupId>org.eclipse.m2e</groupId>
+							<artifactId>lifecycle-mapping</artifactId>
+							<version>${m2e.lifecycle-mapping.version}</version>
+							<configuration>
+								<lifecycleMappingMetadata>
+									<pluginExecutions>
+										<pluginExecution>
+											<pluginExecutionFilter>
+												<groupId>org.jvnet.jaxb2.maven2</groupId>
+												<artifactId>maven-jaxb2-plugin</artifactId>
+												<versionRange>[${maven-jaxb2-plugin.version},)</versionRange>
+												<goals>
+													<goal>generate</goal>
+												</goals>
+											</pluginExecutionFilter>
+											<action>
+												<ignore />
+											</action>
+										</pluginExecution>
+									</pluginExecutions>
+								</lifecycleMappingMetadata>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			
+				<plugins>			
+					<!-- Generate sources -->
+					<plugin>
+						<groupId>org.jvnet.jaxb2.maven2</groupId>
+						<artifactId>maven-jaxb2-plugin</artifactId>
+						<version>${maven-jaxb2-plugin.version}</version>
+						<dependencies>					
+							<dependency>
+								<groupId>org.jvnet.jaxb2_commons</groupId>
+								<artifactId>jaxb2-commons-lang</artifactId>
+								<version>${maven-jaxb2-plugin.jaxb2-commons-lang.version}</version>
+							</dependency>
+							<dependency>
+								<groupId>org.jvnet.jaxb2_commons</groupId>
+								<artifactId>jaxb2-fluent-api</artifactId>
+								<version>${maven-jaxb2-plugin.jaxb2-fluent-api.version}</version>
+							</dependency>
+						</dependencies>
+						<executions>
+							<execution>
+								<id>jaxb2-esearch</id>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+								<configuration>
+									<schemaDirectory>${project.basedir}/src/main/dtd/esearch</schemaDirectory>
+									<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+									<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.esearch</generatePackage>							
+									<extension>true</extension>
+									<episode>false</episode>
+									<schemaLanguage>DTD</schemaLanguage>
+									<schemaIncludes>
+										<schemaInclude>*.dtd</schemaInclude>
+							    	</schemaIncludes>
+							    	<markGenerated>true</markGenerated>
+							    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
+							    	<cleanPackageDirectories>true</cleanPackageDirectories>
+							    	<verbose>false</verbose>
+							    	<args>
+							    		<arg>-Xfluent-api</arg>
+							    		<arg>-Xcommons-lang</arg>
+		          					</args>
+								</configuration>
+							</execution>					
+							<execution>
+								<id>jaxb2-GBSeq</id>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+								<configuration>
+									<schemaDirectory>${project.basedir}/src/main/dtd/genbank</schemaDirectory>
+									<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+									<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.gb</generatePackage>
+									<extension>true</extension>							
+									<episode>false</episode>							
+									<schemaLanguage>DTD</schemaLanguage>
+									<schemaIncludes>
+										<schemaInclude>NCBI_GBSeq.dtd</schemaInclude>
+							    	</schemaIncludes>
+							    	<markGenerated>true</markGenerated>
+							    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
+							    	<cleanPackageDirectories>true</cleanPackageDirectories>
+							    	<verbose>false</verbose>
+							    	<args>
+							    		<arg>-Xfluent-api</arg>
+							    		<arg>-Xcommons-lang</arg>
+		          					</args>
+								</configuration>
+							</execution>
+							<execution>
+								<id>jaxb2-pubmed</id>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+								<configuration>
+									<schemaDirectory>${project.basedir}/src/main/dtd/pubmed</schemaDirectory>
+									<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+									<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.pubmed</generatePackage>
+									<extension>true</extension>							
+									<episode>false</episode>							
+									<schemaLanguage>DTD</schemaLanguage>
+									<schemaIncludes>
+										<schemaInclude>pubmed_100101.dtd</schemaInclude>
+							    	</schemaIncludes>
+							    	<markGenerated>true</markGenerated>
+							    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
+							    	<cleanPackageDirectories>true</cleanPackageDirectories>
+							    	<verbose>false</verbose>
+							    	<args>
+							    		<arg>-Xfluent-api</arg>
+							    		<arg>-Xcommons-lang</arg>
+		          					</args>
+								</configuration>
+							</execution>
+							<execution>
+								<id>jaxb2-taxonomy</id>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+								<configuration>
+									<schemaDirectory>${project.basedir}/src/main/dtd/taxonomy</schemaDirectory>
+									<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+									<generatePackage>eu.eubrazilcc.lvl.core.xml.ncbi.taxonomy</generatePackage>
+									<extension>true</extension>							
+									<episode>false</episode>							
+									<schemaLanguage>DTD</schemaLanguage>
+									<schemaIncludes>
+										<schemaInclude>taxon.dtd</schemaInclude>
+							    	</schemaIncludes>
+							    	<markGenerated>true</markGenerated>
+							    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
+							    	<cleanPackageDirectories>true</cleanPackageDirectories>
+							    	<verbose>false</verbose>
+							    	<args>
+							    		<arg>-Xfluent-api</arg>
+							    		<arg>-Xcommons-lang</arg>
+		          					</args>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>			
+				</plugins>
+			</build>
+		</profile>
+		
+		<!-- Build -->
+		<profile>
+			<id>build</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<!-- Build -->
+					<plugin>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>${maven-compiler-plugin.version}</version>
+						<inherited>true</inherited>
+						<configuration>
+							<source>${maven.compiler.source}</source>
+							<target>${maven.compiler.target}</target>
+						</configuration>
+					</plugin>
+					<!-- Test -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>${maven-surefire-plugin.version}</version>
+						<configuration>
+							<argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC</argLine>
+							<!-- Configure tests to go through the JUnit test suite -->
+							<includes>
+								<include>**/AllTests.java</include>
+							</includes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+	
+</project>
