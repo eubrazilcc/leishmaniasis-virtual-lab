@@ -20,30 +20,13 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.base;
+package eu.eubrazilcc.lvl.storage.mongodb.client;
 
-import static eu.eubrazilcc.lvl.storage.base.LvlObject.randomVersion;
-import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
-import static eu.eubrazilcc.lvl.storage.base.ObjectState.RELEASE;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
-import static eu.eubrazilcc.lvl.storage.prov.ProvFactory.newObsoleteProv;
-
-import javax.annotation.Nullable;
-
-import com.google.common.util.concurrent.ListenableFuture;
-
-import eu.eubrazilcc.lvl.storage.security.User;
+import java.io.Closeable;
 
 /**
- * Behavior corresponding to the obsolete state.
- * @author Erik Torres <ertorser@upv.es>
+ * MongoDB client.
  */
-public class ObsoleteStateHandler<T extends LvlObject> extends ObjectStateHandler<T> {
-
-	@Override
-	public ListenableFuture<Void> save(final T obj, final @Nullable User user, final SaveOptions... options) {		
-		if (user != null) obj.setProvenance(newObsoleteProv(user, obj.getLvlId()));
-		return MONGODB_CONN.client().saveAsVersion(randomVersion(), obj, DRAFT.name(), RELEASE.name());
-	}
+public interface MongoClient2 extends Closeable {
 
 }

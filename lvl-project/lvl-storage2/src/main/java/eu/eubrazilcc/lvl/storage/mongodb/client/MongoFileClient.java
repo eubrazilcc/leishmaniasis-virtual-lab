@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.mongodb;
+package eu.eubrazilcc.lvl.storage.mongodb.client;
 
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -46,8 +46,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +84,6 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.Closeable2;
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
 import eu.eubrazilcc.lvl.storage.Filter;
 import eu.eubrazilcc.lvl.storage.Filters;
@@ -95,6 +92,7 @@ import eu.eubrazilcc.lvl.storage.base.LvlFile;
 import eu.eubrazilcc.lvl.storage.base.LvlFiles;
 import eu.eubrazilcc.lvl.storage.base.Metadata;
 import eu.eubrazilcc.lvl.storage.base.Metadata.OpenAccess;
+import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionStats;
 import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedGridFSFile;
 import eu.eubrazilcc.lvl.storage.mongodb.cache.GridFSFilePersistingCache;
 
@@ -104,11 +102,9 @@ import eu.eubrazilcc.lvl.storage.mongodb.cache.GridFSFilePersistingCache;
  * @author Erik Torres <ertorser@upv.es>
  */
 @Deprecated
-public enum MongoFileConnector implements Closeable2 {
+public class MongoFileClient implements MongoClient2 {
 
-	MONGODB_FILE_CONN;
-
-	private static final Logger LOGGER = getLogger(MongoFileConnector.class);
+	private static final Logger LOGGER = getLogger(MongoFileClient.class);
 
 	public static final int NUM_BUCKETS = 16;
 	private static final String BUCKETS_PADDING = "%02d";
@@ -555,14 +551,6 @@ public enum MongoFileConnector implements Closeable2 {
 	}
 
 	/* General methods */
-
-	@Override
-	public void setup(final Collection<URL> urls) { }
-
-	@Override
-	public void preload() {
-		LOGGER.info("mongoDB file connector initialized successfully");
-	}
 
 	@Override
 	public void close() throws IOException {

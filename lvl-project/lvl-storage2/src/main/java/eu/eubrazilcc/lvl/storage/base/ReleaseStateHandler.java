@@ -45,7 +45,7 @@ public class ReleaseStateHandler<T extends LvlObject> extends ObjectStateHandler
 	public ListenableFuture<Void> save(final T obj, final @Nullable User user, final SaveOptions... options) {		
 		final String newVersion = randomVersion();
 		if (user != null) obj.setProvenance(newReleaseProv(user, obj.getLvlId(), isNotBlank(obj.getVersion()) ? "|" + obj.getVersion() : "", "|" + newVersion));
-		return MONGODB_CONN.saveAsVersion(newVersion, obj, DRAFT.name(), RELEASE.name());
+		return MONGODB_CONN.client().saveAsVersion(newVersion, obj, DRAFT.name(), RELEASE.name());
 	}
 
 }

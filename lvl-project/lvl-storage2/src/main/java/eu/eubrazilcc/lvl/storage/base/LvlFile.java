@@ -28,7 +28,7 @@ import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.util.concurrent.Futures.addCallback;
 import static eu.eubrazilcc.lvl.storage.base.SaveOptions.SAVE_OVERRIDING;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoFileConnector.MONGODB_FILE_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -135,25 +135,25 @@ public abstract class LvlFile extends LvlBaseFile implements Linkable {
 
 	public ListenableFuture<Void> save(final File srcFile, final SaveOptions... options) {		
 		final List<SaveOptions> optList = (options != null ? asList(options) : Collections.<SaveOptions>emptyList());
-		return MONGODB_FILE_CONN.saveFile(this, srcFile, optList.contains(SAVE_OVERRIDING));
+		return MONGODB_CONN.fsClient().saveFile(this, srcFile, optList.contains(SAVE_OVERRIDING));
 	}
 
 	public ListenableFuture<Void> updateMetadata() {
-		return MONGODB_FILE_CONN.updateMetadata(this);
+		return MONGODB_CONN.fsClient().updateMetadata(this);
 	}
 
 	public ListenableFuture<Void> createOpenAccessLink() {		
-		return MONGODB_FILE_CONN.createOpenAccessLink(this);
+		return MONGODB_CONN.fsClient().createOpenAccessLink(this);
 	}
 
 	public ListenableFuture<Void> removeOpenAccessLink() {
-		return MONGODB_FILE_CONN.removeOpenAccessLink(this);
+		return MONGODB_CONN.fsClient().removeOpenAccessLink(this);
 	}
 
 	public ListenableFuture<Void> fetch() {
 		final SettableFuture<Void> future = SettableFuture.create();
 		final LvlFile __file = this;
-		final ListenableFuture<LvlFile> fetchFuture = MONGODB_FILE_CONN.fetchFile(this, this.getClass());
+		final ListenableFuture<LvlFile> fetchFuture = MONGODB_CONN.fsClient().fetchFile(this, this.getClass());
 		addCallback(fetchFuture, new FutureCallback<LvlFile>() {
 			@Override
 			public void onSuccess(final LvlFile result) {
@@ -173,13 +173,13 @@ public abstract class LvlFile extends LvlBaseFile implements Linkable {
 	}	
 
 	public ListenableFuture<Boolean> exists() {
-		return MONGODB_FILE_CONN.fileExists(this);
+		return MONGODB_CONN.fsClient().fileExists(this);
 	}
 
 	public ListenableFuture<Void> fetchOpenAccess() {
 		final SettableFuture<Void> future = SettableFuture.create();
 		final LvlFile __file = this;
-		final ListenableFuture<LvlFile> fetchFuture = MONGODB_FILE_CONN.fetchOpenAccessFile(this, this.getClass());
+		final ListenableFuture<LvlFile> fetchFuture = MONGODB_CONN.fsClient().fetchOpenAccessFile(this, this.getClass());
 		addCallback(fetchFuture, new FutureCallback<LvlFile>() {
 			@Override
 			public void onSuccess(final LvlFile result) {
@@ -197,9 +197,9 @@ public abstract class LvlFile extends LvlBaseFile implements Linkable {
 		});
 		return future;
 	}
-	
+
 	public ListenableFuture<Boolean> delete(final DeleteOptions... options) {
-		return MONGODB_FILE_CONN.removeFile(this);
+		return MONGODB_CONN.fsClient().removeFile(this);
 	}
 
 	/* Utility methods */

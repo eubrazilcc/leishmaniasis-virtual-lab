@@ -58,7 +58,7 @@ public class MongoFilesConfigurer {
 		if (!configured) {
 			/* create indexes: 1) enforce isolation property: each bucket has its own index where the filenames are unique;
 			 * 2) create index to operate on metadata filename; and 3) create index to operate on open access links. */
-			final ListenableFuture<List<String>> future = MONGODB_CONN.createIndexes(bucket + ".files", newArrayList(indexModel("filename"), 
+			final ListenableFuture<List<String>> future = MONGODB_CONN.client().createIndexes(bucket + ".files", newArrayList(indexModel("filename"), 
 					nonUniqueIndexModel("uploadDate", true), nonUniqueIndexModel("metadata.filename", false), 
 					nonUniqueIndexModel("metadata.openAccess.secret", false)));
 			try {

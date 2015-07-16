@@ -90,7 +90,7 @@ public class MongoCollectionConfigurer {
 		if (shouldRun) {			
 			// create indexes
 			if (indexes != null && !indexes.isEmpty()) {
-				final ListenableFuture<List<String>> future = MONGODB_CONN.createIndexes(collection, indexes);
+				final ListenableFuture<List<String>> future = MONGODB_CONN.client().createIndexes(collection, indexes);
 				try {
 					future.get(TIMEOUT, SECONDS);
 					LOGGER.info("Collection configured: " + collection);

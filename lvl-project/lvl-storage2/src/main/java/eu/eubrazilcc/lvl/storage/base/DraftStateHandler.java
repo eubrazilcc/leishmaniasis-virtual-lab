@@ -42,7 +42,7 @@ public class DraftStateHandler<T extends LvlObject> extends ObjectStateHandler<T
 	public ListenableFuture<Void> save(final T obj, final @Nullable User user, final SaveOptions... options) {
 		if (obj.getState() == null) obj.setState(DRAFT);
 		if (user != null && obj.getProvenance() != null) addEditProv(obj.getProvenance(), user, obj.getLvlId());
-		return MONGODB_CONN.saveActive(obj, DRAFT.name());
+		return MONGODB_CONN.client().saveActive(obj, DRAFT.name());
 	}	
 
 }

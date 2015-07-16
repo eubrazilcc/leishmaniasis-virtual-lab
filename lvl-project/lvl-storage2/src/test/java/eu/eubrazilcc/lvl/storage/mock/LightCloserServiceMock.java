@@ -24,7 +24,6 @@ package eu.eubrazilcc.lvl.storage.mock;
 
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 
 import java.io.Closeable;
 import java.util.LinkedList;
@@ -52,10 +51,7 @@ public enum LightCloserServiceMock implements CloserServiceIf {
 	public void preload() {		
 		// load default configuration and register it for closing
 		CONFIG_MANAGER.preload();
-		register(CONFIG_MANAGER);
-		// load MongoDB connector and register it for closing
-		MONGODB_CONN.preload();
-		register(MONGODB_CONN);
+		register(CONFIG_MANAGER);		
 		// load task runner
 		TASK_RUNNER.preload();
 		register(TASK_RUNNER);

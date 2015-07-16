@@ -53,7 +53,7 @@ public abstract class ObjectStateHandler<T extends LvlObject> {
 
 	public ListenableFuture<Void> fetch(final T obj, final FetchOptions... options) {
 		final LvlObject __obj = obj;
-		final ListenableFuture<LvlObject> findFuture = MONGODB_CONN.findActive(obj, obj.getClass());
+		final ListenableFuture<LvlObject> findFuture = MONGODB_CONN.client().findActive(obj, obj.getClass());
 		final SettableFuture<Void> foundFuture = SettableFuture.create();
 		addCallback(findFuture, new FutureCallback<LvlObject>() {
 			@Override
@@ -80,12 +80,12 @@ public abstract class ObjectStateHandler<T extends LvlObject> {
 
 	public ListenableFuture<Boolean> delete(final T obj, final DeleteOptions... options) {
 		final List<DeleteOptions> optList = (options != null ? asList(options) : Collections.<DeleteOptions>emptyList());
-		return MONGODB_CONN.delete(obj, !optList.contains(DELETE_ACTIVE) && optList.contains(DELETE_ALL), 
+		return MONGODB_CONN.client().delete(obj, !optList.contains(DELETE_ACTIVE) && optList.contains(DELETE_ALL), 
 				!optList.contains(ON_DELETE_NO_ACTION) && optList.contains(ON_DELETE_CASCADE));
 	}
 
 	public ListenableFuture<List<LvlObject>> versions(final T obj) {
-		return MONGODB_CONN.findVersions(obj, obj.getClass());
+		return MONGODB_CONN.client().findVersions(obj, obj.getClass());
 	}
 
 }

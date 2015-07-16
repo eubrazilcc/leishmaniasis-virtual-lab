@@ -66,7 +66,7 @@ public abstract class CollectionOperatorImpl<T extends LvlObject> implements Col
 	public ListenableFuture<Integer> fetch(final int start, final int size, final @Nullable Filters filters, final @Nullable Map<String, Boolean> sorting, 
 			final @Nullable Map<String, Boolean> projections) {
 		final MutableLong totalCount = new MutableLong(0l);
-		final ListenableFuture<List<T>> findFuture = MONGODB_CONN.findActive(lvlCol, lvlCol.getType(), start, size, filters, sorting, projections, totalCount, 
+		final ListenableFuture<List<T>> findFuture = MONGODB_CONN.client().findActive(lvlCol, lvlCol.getType(), start, size, filters, sorting, projections, totalCount, 
 				excludedStates.orNull());
 		final SettableFuture<Integer> countFuture = SettableFuture.create();
 		addCallback(findFuture, new FutureCallback<List<T>>() {
@@ -91,33 +91,33 @@ public abstract class CollectionOperatorImpl<T extends LvlObject> implements Col
 
 	@Override
 	public ListenableFuture<FeatureCollection> getNear(final Point point, final double minDistance, final double maxDistance) {
-		return MONGODB_CONN.fetchNear(lvlCol, lvlCol.getType(), point.getCoordinates().getLongitude(), point.getCoordinates().getLatitude(), 
+		return MONGODB_CONN.client().fetchNear(lvlCol, lvlCol.getType(), point.getCoordinates().getLongitude(), point.getCoordinates().getLatitude(), 
 				minDistance, maxDistance, excludedStates.orNull());
 	}
 
 	@Override
 	public ListenableFuture<FeatureCollection> getWithin(final Polygon polygon) {
-		return MONGODB_CONN.fetchWithin(lvlCol, lvlCol.getType(), polygon, excludedStates.orNull());
+		return MONGODB_CONN.client().fetchWithin(lvlCol, lvlCol.getType(), polygon, excludedStates.orNull());
 	}
 
 	@Override
 	public ListenableFuture<Long> totalCount() {
-		return MONGODB_CONN.totalCount(lvlCol, excludedStates.orNull());		
+		return MONGODB_CONN.client().totalCount(lvlCol, excludedStates.orNull());		
 	}
 
 	@Override
 	public ListenableFuture<List<String>> typeahead(final String field, final String query, final int size) {
-		return MONGODB_CONN.typeahead(lvlCol, lvlCol.getType(), field, query, size, excludedStates.orNull());
+		return MONGODB_CONN.client().typeahead(lvlCol, lvlCol.getType(), field, query, size, excludedStates.orNull());
 	}
 
 	@Override
 	public ListenableFuture<MongoCollectionStats> stats() {
-		return MONGODB_CONN.stats(lvlCol);
+		return MONGODB_CONN.client().stats(lvlCol);
 	}
 
 	@Override
 	public ListenableFuture<Void> drop() {
-		return MONGODB_CONN.drop(lvlCol);
+		return MONGODB_CONN.client().drop(lvlCol);
 	}
 	
 	@Override

@@ -31,7 +31,7 @@ import static com.google.common.util.concurrent.Futures.transform;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.firstEntryOf;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.totalPages;
-import static eu.eubrazilcc.lvl.storage.mongodb.MongoFileConnector.MONGODB_FILE_CONN;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static java.lang.Math.max;
 
@@ -117,7 +117,7 @@ public abstract class LvlFiles<T extends LvlFile> implements Linkable {
 
 	public ListenableFuture<Integer> fetch(final int start, final int size, final @Nullable Filters filters, final @Nullable Map<String, Boolean> sorting) {
 		final MutableLong totalCount = new MutableLong(0l);
-		final ListenableFuture<List<T>> findFuture = MONGODB_FILE_CONN.fetchFiles(this, type, start, size, filters, sorting, totalCount);
+		final ListenableFuture<List<T>> findFuture = MONGODB_CONN.fsClient().fetchFiles(this, type, start, size, filters, sorting, totalCount);
 		final SettableFuture<Integer> countFuture = SettableFuture.create();
 		addCallback(findFuture, new FutureCallback<List<T>>() {
 			@Override
@@ -141,7 +141,7 @@ public abstract class LvlFiles<T extends LvlFile> implements Linkable {
 
 	public ListenableFuture<Integer> fetchOpenAccess(final int start, final int size, final @Nullable Map<String, Boolean> sorting) {
 		final MutableLong totalCount = new MutableLong(0l);
-		final ListenableFuture<List<T>> findFuture = MONGODB_FILE_CONN.findOpenAccess(this, type, start, size, sorting, totalCount);
+		final ListenableFuture<List<T>> findFuture = MONGODB_CONN.fsClient().findOpenAccess(this, type, start, size, sorting, totalCount);
 		final SettableFuture<Integer> countFuture = SettableFuture.create();
 		addCallback(findFuture, new FutureCallback<List<T>>() {
 			@Override
@@ -164,15 +164,15 @@ public abstract class LvlFiles<T extends LvlFile> implements Linkable {
 	}
 
 	public ListenableFuture<Long> totalCount() {
-		return MONGODB_FILE_CONN.totalCount(this);
+		return MONGODB_CONN.fsClient().totalCount(this);
 	}
 
 	public ListenableFuture<List<String>> typeahead(final String query, final int size) {
-		return MONGODB_FILE_CONN.typeaheadFile(this, query, size);
+		return MONGODB_CONN.fsClient().typeaheadFile(this, query, size);
 	}
 
 	public ListenableFuture<MongoCollectionStats> stats() {
-		return MONGODB_FILE_CONN.statsFiles(this);
+		return MONGODB_CONN.fsClient().statsFiles(this);
 	}
 
 	/* Operate on the elements loaded in the current view */
