@@ -26,17 +26,23 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.util.concurrent.Futures.addCallback;
+import static com.google.common.util.concurrent.Futures.transform;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.firstEntryOf;
 import static eu.eubrazilcc.lvl.core.util.PaginationUtils.totalPages;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoFileConnector.MONGODB_FILE_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static java.lang.Math.max;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Link;
 
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -45,11 +51,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
+import eu.eubrazilcc.lvl.storage.Filters;
 import eu.eubrazilcc.lvl.storage.Linkable;
+import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionStats;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoFilesConfigurer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions;
 
@@ -104,16 +114,66 @@ public abstract class LvlFiles<T extends LvlFile> implements Linkable {
 	}
 
 	/* Database operations */
-	
-	public ListenableFuture<List<String>> typeahead(final String query, final int size) {
-		final SettableFuture<List<String>> future = SettableFuture.create();
-		
-		
-		// TODO
-		return future;
+
+	public ListenableFuture<Integer> fetch(final int start, final int size, final @Nullable Filters filters, final @Nullable Map<String, Boolean> sorting) {
+		final MutableLong totalCount = new MutableLong(0l);
+		final ListenableFuture<List<T>> findFuture = MONGODB_FILE_CONN.fetchFiles(this, type, start, size, filters, sorting, totalCount);
+		final SettableFuture<Integer> countFuture = SettableFuture.create();
+		addCallback(findFuture, new FutureCallback<List<T>>() {
+			@Override
+			public void onSuccess(final List<T> result) {
+				setElements(result);
+				setTotalCount(totalCount.getValue().intValue());
+				countFuture.set(result != null ? result.size() : 0);
+			}
+			@Override
+			public void onFailure(final Throwable t) {				
+				countFuture.setException(t);
+			}
+		});
+		return transform(findFuture, new AsyncFunction<List<T>, Integer>() {
+			@Override
+			public ListenableFuture<Integer> apply(final List<T> input) throws Exception {				
+				return countFuture;
+			}
+		});
 	}
 
-	// TODO
+	public ListenableFuture<Integer> fetchOpenAccess(final int start, final int size, final @Nullable Map<String, Boolean> sorting) {
+		final MutableLong totalCount = new MutableLong(0l);
+		final ListenableFuture<List<T>> findFuture = MONGODB_FILE_CONN.findOpenAccess(this, type, start, size, sorting, totalCount);
+		final SettableFuture<Integer> countFuture = SettableFuture.create();
+		addCallback(findFuture, new FutureCallback<List<T>>() {
+			@Override
+			public void onSuccess(final List<T> result) {
+				setElements(result);
+				setTotalCount(totalCount.getValue().intValue());
+				countFuture.set(result != null ? result.size() : 0);
+			}
+			@Override
+			public void onFailure(final Throwable t) {				
+				countFuture.setException(t);
+			}
+		});
+		return transform(findFuture, new AsyncFunction<List<T>, Integer>() {
+			@Override
+			public ListenableFuture<Integer> apply(final List<T> input) throws Exception {				
+				return countFuture;
+			}
+		});
+	}
+
+	public ListenableFuture<Long> totalCount() {
+		return MONGODB_FILE_CONN.totalCount(this);
+	}
+
+	public ListenableFuture<List<String>> typeahead(final String query, final int size) {
+		return MONGODB_FILE_CONN.typeaheadFile(this, query, size);
+	}
+
+	public ListenableFuture<MongoCollectionStats> stats() {
+		return MONGODB_FILE_CONN.statsFiles(this);
+	}
 
 	/* Operate on the elements loaded in the current view */
 
@@ -134,6 +194,15 @@ public abstract class LvlFiles<T extends LvlFile> implements Linkable {
 			@Override
 			public String apply(final T input) {
 				return input.getId();
+			}
+		}).filter(notNull()).toList();
+	}
+
+	public List<String> filenames() {
+		return from(elements != null ? elements : Collections.<T>emptyList()).transform(new Function<T, String>() {
+			@Override
+			public String apply(final T input) {
+				return input.getMetadata().getFilename();
 			}
 		}).filter(notNull()).toList();
 	}

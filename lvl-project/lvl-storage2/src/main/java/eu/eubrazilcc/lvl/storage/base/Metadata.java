@@ -25,23 +25,26 @@ package eu.eubrazilcc.lvl.storage.base;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Optional.absent;
 import static com.google.common.base.Optional.fromNullable;
-import static com.google.common.collect.Iterables.elementsEqual;
-import static com.google.common.collect.Maps.difference;
 import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Equivalence;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
+import eu.eubrazilcc.lvl.core.util.CollectionUtils;
 
 /**
  * Stores metadata for files.
@@ -49,12 +52,15 @@ import com.google.common.collect.Maps;
  */
 public class Metadata {
 
-	private Optional<String> namespace = absent(); // (optional) namespace
+	private Optional<String> namespace = absent(); // (optional) namespace	
 	private String filename;
-	private Optional<String> openAccessLink = absent(); // (optional) openaccess link
-	private Optional<Date> openAccessDate = absent(); // (optional) openaccess date
 
-	private Map<String, Object> others = newHashMap();
+	private Optional<String> description = absent(); // (optional) description
+	private Set<String> tags = newHashSet(); // tag annotations
+
+	private Optional<OpenAccess> openAccess = absent(); // (optional) open-access link	
+
+	private Map<String, Object> others = newHashMap();	
 
 	@JsonIgnore
 	private String urlSafeNamespace;
@@ -68,7 +74,7 @@ public class Metadata {
 	public void setNamespace(final @Nullable String namespace) {
 		this.namespace = fromNullable(trimToNull(namespace));
 		setUrlSafeNamespace(urlEncodeUtf8(this.namespace.or("")));
-	}
+	}	
 
 	public String getFilename() {
 		return filename;
@@ -77,23 +83,30 @@ public class Metadata {
 	public void setFilename(final String filename) {
 		this.filename = trimToEmpty(filename);
 		setUrlSafeFilename(urlEncodeUtf8(this.filename));
+	}	
+
+	public @Nullable String getDescription() {
+		return description.orNull();
 	}
 
-	public @Nullable String getOpenAccessLink() {
-		return openAccessLink.orNull();
+	public void setDescription(final String description) {
+		this.description = fromNullable(trim(description));
 	}
 
-	public void setOpenAccessLink(final @Nullable String openAccessLink) {
-		this.openAccessLink = fromNullable(openAccessLink);
-		setOpenAccessDate(new Date());
+	public Set<String> getTags() {
+		return tags;
 	}
 
-	public @Nullable Date getOpenAccessDate() {
-		return openAccessDate.orNull();
+	public void setTags(final Set<String> tags) {
+		this.tags = (tags != null ? Sets.<String>newHashSet(tags) : Sets.<String>newHashSet());
+	}	
+
+	public @Nullable OpenAccess getOpenAccess() {
+		return openAccess.orNull();
 	}
 
-	public void setOpenAccessDate(final @Nullable Date openAccessDate) {
-		this.openAccessDate = fromNullable(openAccessDate);
+	public void setOpenAccess(final @Nullable OpenAccess openAccess) {
+		this.openAccess = fromNullable(openAccess);
 	}
 
 	public Map<String, Object> getOthers() {
@@ -101,7 +114,7 @@ public class Metadata {
 	}
 
 	public void setOthers(final Map<String, Object> others) {
-		this.others = others;
+		this.others = (others != null ? Maps.<String, Object>newHashMap(others) : Maps.<String, Object>newHashMap());
 	}
 
 	public String getUrlSafeNamespace() {
@@ -125,31 +138,18 @@ public class Metadata {
 		if (obj == null || !(obj instanceof Metadata)) {
 			return false;
 		}
-		final Metadata other = Metadata.class.cast(obj);
-		final Equivalence<Object> equivalence = new Equivalence<Object>() {
-			@Override
-			protected boolean doEquivalent(final Object a, final Object b) {
-				if (a instanceof Iterable && b instanceof Iterable) {
-					return elementsEqual((Iterable<?>)a, (Iterable<?>)b);
-				} else if (a instanceof Map && b instanceof Map) {
-					return difference((Map<?, ?>)a, (Map<?, ?>)b, this).areEqual();
-				} else return a.equals(b);					
-			}
-			@Override
-			protected int doHash(final Object t) {
-				return t.hashCode();
-			}
-		};
-		return Objects.equals(namespace.orNull(), other.namespace.orNull())
+		final Metadata other = Metadata.class.cast(obj);		
+		return Objects.equals(namespace.orNull(), other.namespace.orNull())				
 				&& Objects.equals(filename, other.filename)
-				&& Objects.equals(openAccessLink.orNull(), other.openAccessLink.orNull())
-				&& Objects.equals(openAccessDate.orNull(), other.openAccessDate.orNull())
-				&& ((others == null && other.others == null) || difference(others, other.others, equivalence).areEqual());
+				&& Objects.equals(description.orNull(), other.description.orNull())
+				&& Objects.equals(tags, other.tags)
+				&& Objects.equals(openAccess.orNull(), other.openAccess.orNull())				
+				&& CollectionUtils.equals(others, other.others);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(namespace, filename, others);
+		return Objects.hash(namespace, filename, description, tags, openAccess, others);
 	}
 
 	@Override
@@ -157,10 +157,94 @@ public class Metadata {
 		return toStringHelper(this)
 				.add("namespace", namespace.orNull())
 				.add("filename", filename)
-				.add("openAccessLink", openAccessLink.orNull())
-				.add("openAccessDate", openAccessDate.orNull())
+				.add("description", description.orNull())
+				.add("tags", tags)
+				.add("openAccess", openAccess.orNull())
 				.add("others", others)
 				.toString();
+	}
+
+	/* Inner classes */
+
+	public static class OpenAccess {
+
+		private Integer bucket;	
+		private String secret;
+		private Date date;
+
+		public Integer getBucket() {
+			return bucket;
+		}
+		public void setBucket(final Integer bucket) {
+			this.bucket = bucket;
+		}
+		public String getSecret() {
+			return secret;
+		}
+		public void setSecret(final String secret) {
+			this.secret = secret;			
+		}
+		public Date getDate() {
+			return date;
+		}
+		public void setDate(final Date date) {
+			this.date = date;
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (obj == null || !(obj instanceof OpenAccess)) {
+				return false;
+			}
+			final OpenAccess other = OpenAccess.class.cast(obj);		
+			return Objects.equals(bucket, other.bucket)				
+					&& Objects.equals(secret, other.secret)
+					&& Objects.equals(date, other.date);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(bucket, secret, date);
+		}
+
+		@Override
+		public String toString() {
+			return toStringHelper(this)
+					.add("bucket", bucket)
+					.add("secret", secret)
+					.add("date", date)
+					.toString();
+		}
+		
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		public static class Builder {
+			
+			private final OpenAccess instance = new OpenAccess();
+			
+			public Builder bucket(final Integer bucket) {
+				instance.setBucket(bucket);
+				return this;
+			}
+			
+			public Builder date(final Date date) {
+				instance.setDate(date);
+				return this;
+			}
+			
+			public Builder secret(final String secret) {
+				instance.setSecret(secret);
+				return this;
+			}
+			
+			public OpenAccess build() {
+				return instance;
+			}
+			
+		}
+
 	}
 
 	/* Fluent API */
@@ -183,13 +267,18 @@ public class Metadata {
 			return this;
 		}
 
-		public Builder openAccessLink(final String openAccessLink) {
-			instance.setOpenAccessLink(openAccessLink);
+		public Builder description(final String description) {
+			instance.setDescription(description);
 			return this;
 		}
 
-		public Builder openAccessDate(final Date openAccessDate) {
-			instance.setOpenAccessDate(openAccessDate);
+		public Builder tags(final Set<String> tags) {
+			instance.setTags(tags);
+			return this;
+		}
+
+		public Builder openAccess(final OpenAccess openAccess) {
+			instance.setOpenAccess(openAccess);
 			return this;
 		}
 

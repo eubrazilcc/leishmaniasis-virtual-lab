@@ -25,6 +25,8 @@ package eu.eubrazilcc.lvl.core.util;
 import static com.google.common.base.Joiner.on;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
+import static com.google.common.collect.Iterables.elementsEqual;
+import static com.google.common.collect.Maps.difference;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +34,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.base.Equivalence;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner.MapJoiner;
 
@@ -53,6 +56,24 @@ public final class CollectionUtils {
 	public static <K, V> String mapToString(final Map<K, V> map) {	
 		final MapJoiner mapJoiner = on(',').withKeyValueSeparator("=");
 		return mapJoiner.join(map != null ? map : new HashMap<K, V>());
+	}
+
+	public static <K, V> boolean equals(final Map<K, V> left, final Map<K, V> right) {
+		final Equivalence<Object> equivalence = new Equivalence<Object>() {
+			@Override
+			protected boolean doEquivalent(final Object a, final Object b) {
+				if (a instanceof Iterable && b instanceof Iterable) {
+					return elementsEqual((Iterable<?>)a, (Iterable<?>)b);
+				} else if (a instanceof Map && b instanceof Map) {
+					return difference((Map<?, ?>)a, (Map<?, ?>)b, this).areEqual();
+				} else return a.equals(b);					
+			}
+			@Override
+			protected int doHash(final Object t) {
+				return t.hashCode();
+			}
+		};
+		return ((left == null && right == null) || difference(left, right, equivalence).areEqual());
 	}
 
 }

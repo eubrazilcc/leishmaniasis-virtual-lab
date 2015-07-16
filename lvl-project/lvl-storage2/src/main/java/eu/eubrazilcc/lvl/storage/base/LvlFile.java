@@ -80,10 +80,6 @@ public abstract class LvlFile extends LvlBaseFile implements Linkable {
 
 	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.<String>of("logger", "configurer", "urlSafeNamespace", "urlSafeFilename");
 
-	public LvlFile(final Logger logger) {
-		this(new MongoFilesConfigurer(), logger);
-	}
-
 	public LvlFile(final MongoFilesConfigurer configurer, final Logger logger) {
 		this.configurer = configurer;
 		this.logger = logger;
@@ -146,6 +142,14 @@ public abstract class LvlFile extends LvlBaseFile implements Linkable {
 		return MONGODB_FILE_CONN.updateMetadata(this);
 	}
 
+	public ListenableFuture<Void> createOpenAccessLink() {		
+		return MONGODB_FILE_CONN.createOpenAccessLink(this);
+	}
+
+	public ListenableFuture<Void> removeOpenAccessLink() {
+		return MONGODB_FILE_CONN.removeOpenAccessLink(this);
+	}
+
 	public ListenableFuture<Void> fetch() {
 		final SettableFuture<Void> future = SettableFuture.create();
 		final LvlFile __file = this;
@@ -166,10 +170,36 @@ public abstract class LvlFile extends LvlBaseFile implements Linkable {
 			}
 		});
 		return future;
-	}
+	}	
 
 	public ListenableFuture<Boolean> exists() {
 		return MONGODB_FILE_CONN.fileExists(this);
+	}
+
+	public ListenableFuture<Void> fetchOpenAccess() {
+		final SettableFuture<Void> future = SettableFuture.create();
+		final LvlFile __file = this;
+		final ListenableFuture<LvlFile> fetchFuture = MONGODB_FILE_CONN.fetchOpenAccessFile(this, this.getClass());
+		addCallback(fetchFuture, new FutureCallback<LvlFile>() {
+			@Override
+			public void onSuccess(final LvlFile result) {
+				try {
+					copyProperties(result, __file);					
+					future.set(null);
+				} catch (IllegalAccessException | InvocationTargetException e) {
+					future.setException(e);
+				}
+			}
+			@Override
+			public void onFailure(final Throwable t) {
+				future.setException(t);
+			}
+		});
+		return future;
+	}
+	
+	public ListenableFuture<Boolean> delete(final DeleteOptions... options) {
+		return MONGODB_FILE_CONN.removeFile(this);
 	}
 
 	/* Utility methods */

@@ -32,7 +32,7 @@ import java.util.Objects;
  */
 public class Filter {
 
-	private String fieldName;	
+	private String fieldName;
 	private String value;
 	private FilterType type;
 
@@ -91,7 +91,8 @@ public class Filter {
 		FILTER_COMPARE,
 		FILTER_NOT,
 		FILTER_REGEX,
-		FILTER_TEXT
+		FILTER_TEXT,
+		FILTER_EXISTS
 	}
 
 	/* Fluent API */

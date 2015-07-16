@@ -33,11 +33,14 @@ import static com.mongodb.MongoCredential.createMongoCRCredential;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
+import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_EXISTS;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionConfigurer.hash2bucket;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
+import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang.RandomStringUtils.random;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -45,11 +48,16 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 
@@ -64,6 +72,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.SettableFuture;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
+import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
@@ -79,9 +88,13 @@ import com.mongodb.util.JSON;
 
 import eu.eubrazilcc.lvl.core.Closeable2;
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
+import eu.eubrazilcc.lvl.storage.Filter;
+import eu.eubrazilcc.lvl.storage.Filters;
 import eu.eubrazilcc.lvl.storage.LvlObjectNotFoundException;
 import eu.eubrazilcc.lvl.storage.base.LvlFile;
+import eu.eubrazilcc.lvl.storage.base.LvlFiles;
 import eu.eubrazilcc.lvl.storage.base.Metadata;
+import eu.eubrazilcc.lvl.storage.base.Metadata.OpenAccess;
 import eu.eubrazilcc.lvl.storage.mongodb.cache.CachedGridFSFile;
 import eu.eubrazilcc.lvl.storage.mongodb.cache.GridFSFilePersistingCache;
 
@@ -159,10 +172,10 @@ public enum MongoFileConnector implements Closeable2 {
 
 	private <T extends LvlFile> ListenableFuture<Void> deleteAndSave(final T obj, final File srcFile) {
 		final SettableFuture<Void> future = SettableFuture.create();		
-		final ListenableFuture<Void> deleteFuture = removeFile(obj);
-		addCallback(deleteFuture, new FutureCallback<Void>() {
+		final ListenableFuture<Boolean> deleteFuture = removeFile(obj);
+		addCallback(deleteFuture, new FutureCallback<Boolean>() {
 			@Override
-			public void onSuccess(final Void result) {				
+			public void onSuccess(final Boolean result) {
 				final ListenableFuture<Void> saveFuture = saveFile(obj, srcFile);
 				addCallback(saveFuture, new FutureCallback<Void>() {
 					public void onSuccess(final Void result) {
@@ -259,19 +272,61 @@ public enum MongoFileConnector implements Closeable2 {
 		return task.getTask();
 	}
 
+	public <T extends LvlFile> ListenableFuture<List<T>> fetchFiles(final LvlFiles<T> files, final Class<T> type, final int start, final int size, 
+			final @Nullable Filters filters, final @Nullable Map<String, Boolean> sorting, final @Nullable MutableLong totalCount) {
+		final SettableFuture<List<T>> future = SettableFuture.create();
+		final List<T> list = newArrayList();
+		final CancellableTask<Void> task = new MongoTask<Void>(ListenableFutureTask.create(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				// parse input parameters
+				final BasicDBObject filterFields = parseFilters(filters);
+				final BasicDBObject sortFields = parseSorting(sorting);
+				// operate on the bucket
+				final Connection conn = Connection.newBucket(client(), files);
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				final DBCursor cursor = gridFS.getFileList(filterFields, sortFields);
+				cursor.skip(start).limit(size);
+				try {
+					while (cursor.hasNext()) {
+						list.add(parseGridFSDBFile((GridFSDBFile) cursor.next(), type));
+					}
+				} finally {
+					cursor.close();
+				}
+				if (totalCount != null) {				
+					totalCount.setValue(cursor.count());
+				}
+				return null;
+			}
+		}));
+		addCallback(task.getTask(), new FutureCallback<Void>() {
+			@Override
+			public void onSuccess(final Void result) {
+				future.set(list);
+			}
+			@Override
+			public void onFailure(final Throwable t) {
+				future.setException(t);
+			}
+		});
+		TASK_RUNNER.execute(task);
+		return future;
+	}
+
 	/**
 	 * Removes a file from the database.
 	 * @param namespace - (optional) name space where the file was stored under. When nothing specified, the default bucket is used
 	 * @param filename - filename to be removed from the database
 	 */
-	public <T extends LvlFile> ListenableFuture<Void> removeFile(final T obj) {
-		final CancellableTask<Void> task = new MongoTask<Void>(ListenableFutureTask.create(new Callable<Void>() {
+	public <T extends LvlFile> ListenableFuture<Boolean> removeFile(final T obj) {
+		final CancellableTask<Boolean> task = new MongoTask<Boolean>(ListenableFutureTask.create(new Callable<Boolean>() {
 			@Override
-			public Void call() throws Exception {
+			public Boolean call() throws Exception {
 				final Connection conn = Connection.newBucket(client(), obj);
 				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
 				gridFS.remove(conn.filename);
-				return null;
+				return true;
 			}
 		}));
 		TASK_RUNNER.execute(task);
@@ -300,24 +355,81 @@ public enum MongoFileConnector implements Closeable2 {
 			}
 		}));
 		TASK_RUNNER.execute(task);
+		return task.getTask();
+	}
+
+	public <T extends LvlFile> ListenableFuture<Void> createOpenAccessLink(final T obj) {
+		checkArgument(obj != null && obj.getMetadata() != null, "Uninitialized or invalid file object");
+		final OpenAccess openAccess = OpenAccess.builder()
+				.bucket(Connection.getBucketNumber(obj).orNull())
+				.secret(random(16, "abcdefghijklmnopqrstuvwxyz0123456789"))
+				.date(new Date())
+				.build();
+		obj.getMetadata().setOpenAccess(openAccess);
+		return updateMetadata(obj);
+	}
+
+	public <T extends LvlFile> ListenableFuture<Void> removeOpenAccessLink(final T obj) {
+		checkArgument(obj != null && obj.getMetadata() != null, "Uninitialized or invalid file object");
+		obj.getMetadata().setOpenAccess(null);
+		return updateMetadata(obj);
+	}
+
+	public <T extends LvlFile> ListenableFuture<List<T>> findOpenAccess(final LvlFiles<T> files, final Class<T> type, final int start, 
+			final int size, final @Nullable Map<String, Boolean> sorting, final @Nullable MutableLong totalCount) {
+		final Filters filters = Filters.builder()
+				.filters(newArrayList(Filter.builder().fieldName("metadata.openAccess.secret").type(FILTER_EXISTS).value("true").build()))
+				.build();
+		return fetchFiles(files, type, start, size, filters, sorting, totalCount);		
+	}
+
+	public <T extends LvlFile> ListenableFuture<LvlFile> fetchOpenAccessFile(final LvlFile obj, final Class<T> type) {
+		checkArgument(obj != null && obj.getClass().isAssignableFrom(type), "Uninitialized or invalid object type");
+		final CancellableTask<LvlFile> task = new MongoTask<LvlFile>(ListenableFutureTask.create(new Callable<LvlFile>() {
+			@Override
+			public LvlFile call() throws Exception {
+				final Connection conn = Connection.newBucketOpenAccess(client(), obj);
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				final GridFSDBFile gfsFile = gridFS.findOne(new BasicDBObject("metadata.filename", conn.filename).append("metadata.openAccess.secret", conn.secret));
+				if (gfsFile == null) throw new LvlObjectNotFoundException("Object not found");
+				T result = null;
+				try {
+					result = parseGridFSDBFile(gfsFile, type);
+					CachedGridFSFile cachedFile = gfsPersistingCache.getIfPresent(gfsFile.getFilename());
+					if (cachedFile != null) {
+						if (!cachedFile.getMd5().equals(gfsFile.getMD5())) {
+							cachedFile = gfsPersistingCache.update(gfsFile);
+						}
+					} else {
+						cachedFile = gfsPersistingCache.put(gfsFile);
+					}
+					result.setOutfile(new File(cachedFile.getCachedFilename()));
+				} catch (Exception e) {
+					throw new IllegalStateException("Failed to fetch open access file [bucket=" + gridFS.getBucketName() + ", filename=" + conn.filename 
+							+ ", secret=" + conn.secret + "]", e);
+				}
+				return result;
+			}
+		}));
+		TASK_RUNNER.execute(task);
 		return task.getTask();		
 	}
 
-	public <T extends LvlFile> ListenableFuture<List<String>> typeaheadFile(final T obj, final String query, final int size) {
+	public <T extends LvlFile> ListenableFuture<List<String>> typeaheadFile(final LvlFiles<T> files, final String query, final int size) {
 		final CancellableTask<List<String>> task = new MongoTask<List<String>>(ListenableFutureTask.create(new Callable<List<String>>() {
 			@Override
 			public List<String> call() throws Exception {
-				final Connection conn = Connection.newBucketNoFilename(client(), obj);		
+				final Connection conn = Connection.newBucket(client(), files);
 				checkArgument(isNotBlank(query), "Uninitialized or invalid query");
 				final String query2 = query.trim();
 				final List<String> list = newArrayList();
 				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
-				final DBCursor cursor = gridFS.getFileList(new BasicDBObject("filename", new BasicDBObject("$regex", query2).append("$options", "i")), 
+				final DBCursor cursor = gridFS.getFileList(new BasicDBObject("metadata.filename", new BasicDBObject("$regex", query2).append("$options", "i")), 
 						new BasicDBObject("filename", 1));
 				cursor.skip(0).limit(size);
 				try {
 					while (cursor.hasNext()) {
-						list.add(((GridFSDBFile) cursor.next()).getFilename());
+						list.add((String)((GridFSDBFile) cursor.next()).getMetaData().get("filename"));
 					}
 				} finally {
 					cursor.close();
@@ -329,189 +441,38 @@ public enum MongoFileConnector implements Closeable2 {
 		return task.getTask();
 	}
 
-	/* TODO
-
-	public String createOpenAccessLink(final @Nullable String namespace, final String filename) {
-		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		final String namespace2 = trimToEmpty(namespace);
-		final String filename2 = filename.trim();
-		final String secret = random(32, "abcdefghijklmnopqrstuvwxyz0123456789");
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);
-		try {
-			final GridFSDBFile latestUploadedVersion = getLatestUploadedFile(gfsNs, filename2);
-			checkState(latestUploadedVersion != null, "File not found");
-			if (latestUploadedVersion.getMetaData() == null) {
-				latestUploadedVersion.setMetaData(new BasicDBObject());
+	public <T extends LvlFile> ListenableFuture<Long> totalCount(final LvlFiles<T> files) {
+		final CancellableTask<Long> task = new MongoTask<Long>(ListenableFutureTask.create(new Callable<Long>() {
+			@Override
+			public Long call() throws Exception {
+				final Connection conn = Connection.newBucket(client(), files);
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				return conn.db.getCollection(gridFS.getBucketName() + ".files").count();
 			}
-			latestUploadedVersion.getMetaData().put(OPEN_ACCESS_LINK_ATTR, secret);
-			latestUploadedVersion.getMetaData().put(OPEN_ACCESS_DATE_ATTR, JSON.parse(JSON_MAPPER.writeValueAsString(new Date())));
-			latestUploadedVersion.save();
-		} catch (IllegalStateException ise) {
-			throw ise;
-		} catch (Exception e) {
-			LOGGER.error("Failed to create open access link in latest file version in namespace=" + gfsNs.getBucketName() 
-					+ ", filename=" + filename, e);
-		}
-		return secret;
+		}));
+		TASK_RUNNER.execute(task);
+		return task.getTask();
 	}
 
-	public void removeOpenAccessLink(final @Nullable String namespace, final String filename) {
-		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		final String namespace2 = trimToEmpty(namespace);
-		final String filename2 = filename.trim();
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace2) ? new GridFS(db, namespace2) : new GridFS(db);			
-		final List<GridFSDBFile> files = gfsNs.find(new BasicDBObject("filename", filename2).append(FILE_OPEN_ACCESS_LINK_PROP, 
-				new BasicDBObject("$exists", true)), new BasicDBObject("uploadDate", -1));
-		for (final GridFSDBFile file : files) {
-			if (file.getMetaData() != null) {
-				file.getMetaData().removeField(OPEN_ACCESS_LINK_ATTR);
-				file.getMetaData().removeField(OPEN_ACCESS_DATE_ATTR);
-				file.save();
-			}
-		}
-		/* ideally we want to use a cursor here, but the save() operation fails
-			final DBCursor cursor = gfsNs.getFileList(new BasicDBObject("filename", filename2).append(FILE_OPEN_ACCESS_LINK_PROP, 
-					new BasicDBObject("$exists", true)));
-			try {
-				while (cursor.hasNext()) {
-					final GridFSDBFile file = (GridFSDBFile) cursor.next();
-					if (file.getMetaData() != null) {
-						file.getMetaData().removeField(OPEN_ACCESS_LINK_ATTR);
-						file.getMetaData().removeField(OPEN_ACCESS_DATE_ATTR); // this fails
-						file.save();
-					}
+	public <T extends LvlFile> ListenableFuture<MongoCollectionStats> statsFiles(final LvlFiles<T> files) {
+		final CancellableTask<MongoCollectionStats> task = new MongoTask<MongoCollectionStats>(ListenableFutureTask.create(new Callable<MongoCollectionStats>() {
+			@Override
+			public MongoCollectionStats call() throws Exception {
+				final Connection conn = Connection.newBucket(client(), files);
+				final GridFS gridFS = (conn.bucket != null ? new GridFS(conn.db, conn.bucket) : new GridFS(conn.db));
+				final DBCollection dbcol = conn.db.getCollection(gridFS.getBucketName() + ".files");
+				final MongoCollectionStats stats = new MongoCollectionStats(dbcol.getName());
+				final List<DBObject> indexes = dbcol.getIndexInfo();
+				for (final DBObject idx : indexes) {
+					stats.getIndexes().add(idx.toString());
 				}
-			} finally {
-				cursor.close();
-			} *
-	}
-
-	/**
-	 * Reads a file object from the current database. The file is identified by the original filename stored in the database and the 
-	 * name space under the file was stored. When several versions exist of the same file, the latest version will be retrieved.
-	 * @param namespace - (optional) name space to be searched for in the database. When nothing specified, the default bucket is used
-	 * @param filename - filename to be searched for in the database
-	 * @param output - file where the output will be saved, this file must exists and must be writable
-	 *
-	public GridFSDBFile readFile(final @Nullable String namespace, final String filename) {
-		checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);			
-		return getLatestVersion(gfsNs, filename);
-	}
-
-	public GridFSDBFileWrapper readOpenAccessFile(final String secret) {
-		checkArgument(isNotBlank(secret), "Uninitialized or invalid secret");
-		final String secret2 = secret.trim();
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		GridFSDBFileWrapper fileWrapper = null;
-		final Set<String> collections = db.getCollectionNames();
-		final Iterator<String> it = collections.iterator();
-		while (it.hasNext() && fileWrapper == null) {
-			final String collection = it.next();
-			if (collection.endsWith("." + GRIDFS_FILES_COLLECTION)) {
-				final String[] tokens = Splitter.on('.')
-						.omitEmptyStrings()
-						.trimResults()
-						.splitToList(collection)
-						.toArray(new String[2]);
-				if (tokens.length >= 2) {
-					final String namespace = tokens[tokens.length - 2];
-					final GridFS gfsNs = new GridFS(db, namespace);
-					final GridFSDBFile file = gfsNs.findOne(new BasicDBObject(FILE_OPEN_ACCESS_LINK_PROP, secret2));
-					if (file != null) {
-						fileWrapper = new GridFSDBFileWrapper(namespace, file);
-					}
-				}
+				stats.setCount(dbcol.getCount());
+				return stats;
 			}
-		}
-		return fileWrapper;		
-	}	
-
-	/**
-	 * Lists all the files in the specified name space. Only latest versions are included in the list.
-	 * @param namespace - (optional) name space to be searched for files. When nothing specified, the default bucket is used
-	 * @param sortCriteria - objects in the collection are sorted with this criteria
-	 * @param start - starting index
-	 * @param size - maximum number of objects returned
-	 * @param count - (optional) is updated with the number of objects in the database
-	 * @return a view of the files stored under the specified name space that contains the specified range.
-	 *
-	public List<GridFSDBFile> listFiles(final @Nullable String namespace, final DBObject sortCriteria, final int start, final int size, 
-			final @Nullable MutableLong count) {
-		final List<GridFSDBFile> list = newArrayList();
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-		final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)), sortCriteria);
-		cursor.skip(start).limit(size);
-		try {
-			while (cursor.hasNext()) {
-				list.add((GridFSDBFile) cursor.next());
-			}
-		} finally {
-			cursor.close();
-		}
-		if (count != null) {				
-			count.setValue(cursor.count());
-		}
-		return list;			
+		}));
+		TASK_RUNNER.execute(task);
+		return task.getTask();
 	}
-
-	public List<GridFSDBFile> listFileOpenAccess(final @Nullable String namespace, final DBObject sortCriteria, final int start, final int size, 
-			final @Nullable MutableLong count) {
-		final List<GridFSDBFile> list = newArrayList();
-		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-		final GridFS gfsNs = isNotBlank(namespace) ? new GridFS(db, namespace.trim()) : new GridFS(db);
-		final DBCursor cursor = gfsNs.getFileList(new BasicDBObject(FILE_VERSION_PROP, new BasicDBObject("$exists", true)).append(
-				FILE_OPEN_ACCESS_LINK_PROP, new BasicDBObject("$exists", true)), sortCriteria);
-		cursor.skip(start).limit(size);
-		try {
-			while (cursor.hasNext()) {
-				list.add((GridFSDBFile) cursor.next());
-			}
-		} finally {
-			cursor.close();
-		}
-		if (count != null) {				
-			count.setValue(cursor.count());
-		}
-		return list;
-	}
-
-
-
-	/**
-	 * Counts the files stored in the specified name space.
-	 * @param namespace - (optional) name space whose files are counted
-	 * @return the number of objects stored in the collection
-	 *
-	public long countFiles(final @Nullable String namespace) {
-		String namespace2 = trimToNull(namespace);
-		if (namespace2 == null) {
-			final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-			final GridFS gfsNs = new GridFS(db);
-			namespace2 = gfsNs.getBucketName();
-		}
-		return count(namespace2 + "." + GRIDFS_FILES_COLLECTION);		
-	}
-
-	/**
-	 * Writes statistics about a files name space to the specified output stream.
-	 * @param os - the output stream to write the statistics to
-	 * @param namespace - (optional) name space from which the statistics are collected
-	 * @throws IOException - If an I/O error occurred
-	 *
-	public void statsFiles(final OutputStream os, final @Nullable String namespace) throws IOException {
-		String namespace2 = trimToNull(namespace);
-		if (namespace2 == null) {
-			final DB db = client().getDB(CONFIG_MANAGER.getDbName());
-			final GridFS gfsNs = new GridFS(db);
-			namespace2 = gfsNs.getBucketName();
-		}
-		stats(os, namespace2 + "." + GRIDFS_FILES_COLLECTION);
-	} */
 
 	/* Helper methods */
 
@@ -556,6 +517,43 @@ public enum MongoFileConnector implements Closeable2 {
 		return metadata;
 	}
 
+	private BasicDBObject parseFilters(final @Nullable Filters filters) {
+		final ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
+		if (filters != null && filters.getFilters() != null && !filters.getFilters().isEmpty()) {
+			String field = null;
+			for (final Filter filter : filters.getFilters()) {
+				if (isNotBlank(field = trimToNull(filter.getFieldName()))) {
+					switch (filter.getType()) {
+					case FILTER_EXISTS:
+						builder.put(field, new BasicDBObject("$exists", parseBoolean(filter.getValue())));
+						break;
+					default:
+						throw new UnsupportedOperationException("Currently unsupported filter type: " + filter.getType());
+					}
+				}
+			}
+		}
+		return new BasicDBObject(builder.build());
+	}
+
+	private BasicDBObject parseSorting(final @Nullable Map<String, Boolean> sorting) {
+		final ImmutableMap.Builder<String, Integer> builder = new ImmutableMap.Builder<>();
+		if (sorting != null && !sorting.isEmpty()) {
+			String field = null;
+			boolean descending;
+			for (final Map.Entry<String, Boolean> entry : sorting.entrySet()) {				
+				if (isNotBlank(field = trimToNull(entry.getKey()))) {
+					descending = entry.getValue() != null && entry.getValue().booleanValue();
+					builder.put(field, descending ? -1 : 1);
+				}
+			}
+		} else {
+			// insertion order
+			builder.put("uploadDate", -1);
+		}		
+		return new BasicDBObject(builder.build());
+	}
+
 	/* General methods */
 
 	@Override
@@ -585,22 +583,40 @@ public enum MongoFileConnector implements Closeable2 {
 	private static class Connection {
 		private final DB db;
 		private final String bucket;
-		private final String filename;		
-		public Connection(final DB db, final String bucket, final String filename) {
+		private final String filename;
+		private final String secret;
+		public Connection(final DB db, final String bucket, final String filename, final String secret) {
 			this.db = db;
 			this.bucket = bucket;
 			this.filename = filename;
+			this.secret = secret;
 		}
 		public static <T extends LvlFile> Connection newBucket(final MongoClient client, final T obj) {
 			final DB db = client.getDB(CONFIG_MANAGER.getDbName());
 			final String bucket = getBucket(obj).orNull();
 			final String filename = getBucketFilename(obj);
-			return new Connection(db, bucket, filename);
+			return new Connection(db, bucket, filename, null);
 		}
-		public static <T extends LvlFile> Connection newBucketNoFilename(final MongoClient client, final T obj) {
+		public static <T extends LvlFile> Connection newBucket(final MongoClient client, final LvlFiles<T> files) {
 			final DB db = client.getDB(CONFIG_MANAGER.getDbName());
-			final String bucket = getBucket(obj).orNull();
-			return new Connection(db, bucket, null);
+			final String bucket = getBucket(files).orNull();
+			return new Connection(db, bucket, null, null);
+		}
+		public static <T extends LvlFile> Connection newBucketOpenAccess(final MongoClient client, final T obj) {
+			final DB db = client.getDB(CONFIG_MANAGER.getDbName());
+			final String bucket = getOpenAccessBucket(obj);
+			final String filename = getBucketFilename(obj, false);
+			final String secret = getOpenAccessSecret(obj);
+			return new Connection(db, bucket, filename, secret);
+		}
+		private static <T extends LvlFile> Optional<Integer> getBucketNumber(final T obj) {
+			checkArgument(obj != null && obj.getMetadata() != null, "Uninitialized or invalid file object");
+			Integer bucket = null;
+			String namespace = null;
+			if (isNotBlank(namespace = trimToNull(obj.getMetadata().getNamespace()))) {
+				bucket = hash2bucket(namespace, NUM_BUCKETS);
+			}
+			return fromNullable(bucket);
 		}
 		private static <T extends LvlFile> Optional<String> getBucket(final T obj) {
 			checkArgument(obj != null && obj.getMetadata() != null, "Uninitialized or invalid file object");
@@ -610,15 +626,40 @@ public enum MongoFileConnector implements Closeable2 {
 			}
 			return fromNullable(bucket);
 		}
+		private static <T extends LvlFile> Optional<String> getBucket(final LvlFiles<T> files) {			
+			checkArgument(files != null, "Uninitialized or invalid files");
+			String bucket = null, namespace = null;
+			if (isNotBlank(namespace = trimToNull(files.getNamespace()))) {
+				bucket = "fs_" + String.format(BUCKETS_PADDING, hash2bucket(namespace, NUM_BUCKETS));
+			}
+			return fromNullable(bucket);
+		}
 		private static <T extends LvlFile> String getBucketFilename(final T obj) {
+			return getBucketFilename(obj, true);
+		}
+		private static <T extends LvlFile> String getBucketFilename(final T obj, final boolean addNamespace) {
 			checkArgument(obj != null && obj.getMetadata() != null, "Uninitialized or invalid file object");
 			String filename = null;
 			checkArgument(isNotBlank(filename = trimToNull(obj.getMetadata().getFilename())), "Uninitialized or invalid file object");
-			String namespace = null;
-			if (isNotBlank(namespace = trimToNull(obj.getMetadata().getNamespace()))) {
-				filename = namespace + ":" + filename;
+			if (addNamespace) {
+				String namespace = null;
+				if (isNotBlank(namespace = trimToNull(obj.getMetadata().getNamespace()))) {
+					filename = namespace + ":" + filename;
+				}
 			}
 			return filename;
+		}
+		private static <T extends LvlFile> String getOpenAccessBucket(final T obj) {
+			checkArgument(obj != null && obj.getMetadata() != null && obj.getMetadata().getOpenAccess() != null, "Uninitialized or invalid file object");
+			Integer bucket = null;
+			checkArgument((bucket = obj.getMetadata().getOpenAccess().getBucket()) != null, "Uninitialized or invalid file object");
+			return "fs_" + String.format(BUCKETS_PADDING, bucket);
+		}
+		private static <T extends LvlFile> String getOpenAccessSecret(final T obj) {
+			checkArgument(obj != null && obj.getMetadata() != null && obj.getMetadata().getOpenAccess() != null, "Uninitialized or invalid file object");
+			String secret = null;
+			checkArgument(isNotBlank(secret = trimToNull(obj.getMetadata().getOpenAccess().getSecret())), "Uninitialized or invalid file object");
+			return secret;
 		}
 	}
 

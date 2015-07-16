@@ -56,10 +56,11 @@ public class MongoFilesConfigurer {
 		checkArgument(isNotBlank(bucket), "Uninitialized or invalid bucket");
 		final boolean configured = buckets.contains(bucket);
 		if (!configured) {
-			/* two indexes: 1) enforce isolation property: each bucket has its own index where the filenames are unique; and
-			   2) create an index to operate on open access links */
-			final ListenableFuture<List<String>> future = MONGODB_CONN.createIndexes(bucket + ".files", 
-					newArrayList(indexModel("filename"), nonUniqueIndexModel("metadata.openAccessLink", false)));
+			/* create indexes: 1) enforce isolation property: each bucket has its own index where the filenames are unique;
+			 * 2) create index to operate on metadata filename; and 3) create index to operate on open access links. */
+			final ListenableFuture<List<String>> future = MONGODB_CONN.createIndexes(bucket + ".files", newArrayList(indexModel("filename"), 
+					nonUniqueIndexModel("uploadDate", true), nonUniqueIndexModel("metadata.filename", false), 
+					nonUniqueIndexModel("metadata.openAccess.secret", false)));
 			try {
 				future.get(TIMEOUT, SECONDS);
 				buckets.add(bucket);

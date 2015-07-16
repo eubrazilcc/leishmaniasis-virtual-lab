@@ -22,9 +22,11 @@
 
 package eu.eubrazilcc.lvl.storage;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -40,35 +42,48 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import eu.eubrazilcc.lvl.storage.base.LvlFile;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoFilesConfigurer;
+import eu.eubrazilcc.lvl.storage.base.LvlFiles;
 import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListSerializer;
 
 /**
- * Represents a single object or a collection of objects that is backed to a file in the application's database.
+ * Wraps a collection of {@link Dataset}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class Dataset extends LvlFile {
+public class Datasets extends LvlFiles<Dataset> {
 
-	public static final MongoFilesConfigurer CONFIGURER = new MongoFilesConfigurer();
-	
 	@InjectLinks({
-		@InjectLink(value="datasets/objects/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={
-				@Binding(name="urlSafeNamespace", value="${instance.metadata.urlSafeNamespace}"),
-				@Binding(name="urlSafeFilename", value="${instance.metadata.urlSafeFilename}")
-		})
+		@InjectLink(value="/datasets/objects", method="getDatasets", bindings={
+				@Binding(name="page", value="${instance.page - 1}"),
+				@Binding(name="per_page", value="${instance.perPage}")
+		}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
+		@InjectLink(value="/datasets/objects", method="getDatasets", bindings={
+				@Binding(name="page", value="${0}"),
+				@Binding(name="per_page", value="${instance.perPage}")
+		}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
+		@InjectLink(value="/datasets/objects", method="getDatasets", bindings={
+				@Binding(name="page", value="${instance.page + 1}"),
+				@Binding(name="per_page", value="${instance.perPage}")
+		}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
+		@InjectLink(value="/datasets/objects", method="getDatasets", bindings={
+				@Binding(name="page", value="${instance.totalPages - 1}"),
+				@Binding(name="per_page", value="${instance.perPage}")
+		}, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}")
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
 
-	public Dataset() {
-		super(CONFIGURER, getLogger(Dataset.class));
+	public Datasets() {
+		this(null);
 	}
 
-	@Override	
+	public Datasets(final String namespace) {
+		super(namespace, Dataset.class, Dataset.CONFIGURER, getLogger(Dataset.class));
+	}
+
+	@Override
 	public List<Link> getLinks() {
 		return links;
 	}
@@ -78,42 +93,21 @@ public class Dataset extends LvlFile {
 		this.links = (links != null ? newArrayList(links) : null);		
 	}
 
-	@Override
-	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof Dataset)) {
-			return false;
-		}
-		final Dataset other = Dataset.class.cast(obj);
-		return super.equals((LvlFile)other);		
-	}
-
-	@Override
-	public int hashCode() {
-		return super.hashCode();
-	}
-
-	@Override
-	public String toString() {
-		return toStringHelper(this)
-				.add(LvlFile.class.getSimpleName(), super.toString())				
-				.toString();
-	}
-
-	/* Fluent API */
-
 	public static Builder builder() {
 		return new Builder();
 	}
 
-	public static class Builder extends LvlFile.Builder<Dataset, Builder> {
+	public static class Builder {
 
-		public Builder() {
-			super(new Dataset());
-			setBuilder(this);
+		private String namespace = null;
+
+		public Builder namespace(final String namespace) {
+			this.namespace = namespace;
+			return this;
 		}
 
-		public Dataset build() {
-			return instance;
+		public Datasets build() {
+			return new Datasets(namespace);
 		}
 
 	}
