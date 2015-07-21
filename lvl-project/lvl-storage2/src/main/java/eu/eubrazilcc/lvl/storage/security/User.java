@@ -25,16 +25,10 @@ package eu.eubrazilcc.lvl.storage.security;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.isEmpty;
-import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.LVL_IDENTITY_PROVIDER;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.defaultIdentityProvider;
-import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModificationType.GRANTED;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModificationType.REMOVED;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
@@ -42,48 +36,22 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Link;
-
-import org.glassfish.jersey.linking.Binding;
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.InjectLinks;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import eu.eubrazilcc.lvl.storage.Linkable;
 import eu.eubrazilcc.lvl.storage.security.PermissionHistory.PermissionModification;
-import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListDeserializer;
-import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListSerializer;
 
 /**
- * Provides user information (profile). Jackson annotations are included to serialize this class to XML and JSON.
- * Also includes the identity provider and the identifier assigned in the provider.
+ * Provides user information (profile).
  * @author Erik Torres <ertorser@upv.es>
  */
-public class User implements Serializable, Linkable {
+public class User implements Serializable {
 
-	private static final long serialVersionUID = -8320525767063830149L;	
-
-	@InjectLinks({
-		@InjectLink(value="users/{urlSafeOwnerId}", rel=SELF, type=APPLICATION_JSON, bindings={
-				@Binding(name="urlSafeOwnerId", value="${instance.urlSafeOwnerId}")
-		})
-	})
-	@JsonSerialize(using = LinkListSerializer.class)
-	@JsonDeserialize(using = LinkListDeserializer.class)
-	@JsonProperty("links")
-	private List<Link> links;        // HATEOAS links
-
-	@JsonIgnore
-	private String urlSafeOwnerId;   // identity
+	private static final long serialVersionUID = 3134362067201756025L;
 
 	private String pictureUrl;       // URL to user's picture
 
@@ -106,107 +74,106 @@ public class User implements Serializable, Linkable {
 		setProvider(LVL_IDENTITY_PROVIDER);
 	}
 
-	@Override
-	public List<Link> getLinks() {
-		return links;
-	}
-
-	@Override
-	public void setLinks(final List<Link> links) {
-		if (links != null) {
-			this.links = newArrayList(links);
-		} else {
-			this.links = null;
-		}
-	}
-
-	public String getUrlSafeOwnerId() {
-		return urlSafeOwnerId;
-	}
-
-	public void setUrlSafeOwnerId(final String urlSafeOwnerId) {
-		this.urlSafeOwnerId = urlSafeOwnerId;
-	}
-
 	public String getPictureUrl() {
 		return pictureUrl;
 	}
+
 	public void setPictureUrl(final String pictureUrl) {
 		this.pictureUrl = pictureUrl;
-	}	
+	}
+
 	public String getProvider() {
 		return provider;
 	}
+
 	public void setProvider(final String provider) {
-		this.provider = provider;
-		setUrlSafeOwnerId(urlEncodeUtf8(toResourceOwnerId(defaultIfBlank(this.provider, LVL_IDENTITY_PROVIDER).trim(), 
-				defaultIfBlank(this.userid, "userid").trim())));
+		this.provider = provider;		
 	}
+
 	public String getUserid() {
 		return userid;
 	}
+
 	public void setUserid(final String userid) {
-		this.userid = userid;
-		setUrlSafeOwnerId(urlEncodeUtf8(toResourceOwnerId(defaultIfBlank(this.provider, LVL_IDENTITY_PROVIDER).trim(), 
-				defaultIfBlank(this.userid, "userid").trim())));
+		this.userid = userid;		
 	}
+
 	public String getPassword() {
 		return password;
 	}
+
 	public void setPassword(final String password) {
 		this.password = password;
 	}
+
 	public String getSalt() {
 		return salt;
 	}
+
 	public void setSalt(final String salt) {
 		this.salt = salt;
 	}
+
 	public String getEmail() {
 		return email;
 	}
+
 	public void setEmail(final String email) {
 		this.email = email;
-	}	
+	}
+
 	public String getFirstname() {
 		return firstname;
 	}
+
 	public void setFirstname(final String firstname) {
 		this.firstname = firstname;
 	}
+
 	public String getLastname() {
 		return lastname;
 	}
+
 	public void setLastname(final String lastname) {
 		this.lastname = lastname;
 	}
+
 	public Set<String> getRoles() {
 		return roles;
 	}
+
 	public void setRoles(final Set<String> roles) {
 		this.roles = roles;
 	}
+
 	public Set<String> getPermissions() {
 		return permissions;
 	}
+
 	public void setPermissions(final Set<String> permissions) {
 		this.permissions = permissions;
-	}	
+	}
+
 	public String getIndustry() {
 		return industry;
 	}
+
 	public void setIndustry(final String industry) {
 		this.industry = industry;
 	}
+
 	public Set<String> getPositions() {
 		return positions;
 	}
+
 	public void setPositions(final Set<String> positions) {
 		this.positions = positions;
 	}
+
 	public PermissionHistory getPermissionHistory() {
 		return permissionHistory;
 	}
+
 	public void setPermissionHistory(final PermissionHistory permissionHistory) {
 		this.permissionHistory = permissionHistory;
 	}
@@ -260,18 +227,24 @@ public class User implements Serializable, Linkable {
 			return false;
 		}
 		final User other = User.class.cast(obj);
-		return Objects.equals(provider, other.provider)
-				&& Objects.equals(userid, other.userid)
-				&& Objects.equals(password, other.password)
+		return Objects.equals(password, other.password)
 				&& Objects.equals(salt, other.salt)
-				&& Objects.equals(email, other.email)
-				&& Objects.equals(firstname, other.firstname)
-				&& Objects.equals(lastname, other.lastname)
-				&& Objects.equals(roles, other.roles)
-				&& Objects.equals(permissions, other.permissions)
-				&& Objects.equals(industry, other.industry)
-				&& Objects.equals(positions, other.positions)
-				&& Objects.equals(permissionHistory, other.permissionHistory);
+				&& equalsToUnprotected(other);
+	}
+
+	/**
+	 * Ignores password and salt fields when comparing two instances of this class. Use this method when comparing an instance of this class that contains
+	 * an unprotected password (password in plain text and no salt) with a protected one (hashed password with a valid salt).
+	 * @param other - the instance to be compared to.
+	 * @return {@code true} if all the attributes of both instances coincide in value with the sole exception of those considered part of the password. 
+	 *        Otherwise, {@code false}.
+	 */
+	public boolean equalsToUnprotected(final User other) {
+		if (other == null) {
+			return false;
+		}
+		return Objects.equals(pictureUrl, other.pictureUrl)
+				&& equalsToAnonymous(other);
 	}
 
 	/**
@@ -295,53 +268,14 @@ public class User implements Serializable, Linkable {
 				&& Objects.equals(permissionHistory, other.permissionHistory);
 	}
 
-	/**
-	 * Ignores password and salt fields when comparing two instances of this class. Use this method when comparing an instance of this class that contains
-	 * an unprotected password (password in plain text and no salt) with a protected one (hashed password with a valid salt).
-	 * @param other - the instance to be compared to.
-	 * @return {@code true} if all the attributes of both instances coincide in value with the sole exception of those considered part of the password. 
-	 *        Otherwise, {@code false}.
-	 */
-	public boolean equalsToUnprotected(final User other) {
-		if (other == null) {
-			return false;
-		}
-		return Objects.equals(links, other.links)
-				&& Objects.equals(pictureUrl, other.pictureUrl)
-				&& equalsToUnprotectedIgnoringVolatile(other);
-	}
-
-	/**
-	 * Ignores password, salt and volatile fields when comparing two instances of this class.
-	 * @param other - the instance to be compared to.
-	 * @return {@code true} if all the attributes of both instances coincide in value with the sole exception of those considered part of the password
-	 *        and the volatile ones. Otherwise, {@code false}.
-	 */
-	public boolean equalsToUnprotectedIgnoringVolatile(final User other) {
-		if (other == null) {
-			return false;
-		}
-		return Objects.equals(provider, other.provider)
-				&& Objects.equals(userid, other.userid)
-				&& Objects.equals(email, other.email)										
-				&& Objects.equals(firstname, other.firstname)
-				&& Objects.equals(lastname, other.lastname)
-				&& Objects.equals(roles, other.roles)
-				&& Objects.equals(permissions, other.permissions)
-				&& Objects.equals(industry, other.industry)
-				&& Objects.equals(positions, other.positions)
-				&& Objects.equals(permissionHistory, other.permissionHistory);
-	}
-
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, pictureUrl, provider, userid, password, salt, email, firstname, lastname, roles, permissions, permissionHistory);
+		return Objects.hash(pictureUrl, provider, userid, password, salt, email, firstname, lastname, roles, permissions, permissionHistory);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
-				.add("link", links)
 				.add("pictureUrl", pictureUrl)							
 				.add("provider", provider)
 				.add("userid", userid)
@@ -374,11 +308,6 @@ public class User implements Serializable, Linkable {
 			instance.setPermissions(new HashSet<String>());
 			instance.setPositions(new HashSet<String>());
 			instance.setPermissionHistory(new PermissionHistory());
-		}
-
-		public Builder links(final List<Link> links) {
-			instance.setLinks(links);
-			return this;
 		}
 
 		public Builder pictureUrl(final String pictureUrl) {
@@ -474,56 +403,6 @@ public class User implements Serializable, Linkable {
 			return instance;
 		}
 
-	}
-
-	/**
-	 * Performs a deep copy of the input instance.
-	 * @param original - the original instance to be copied.
-	 * @return a deep copy of the input instance.
-	 */
-	public static final User copyOf(final User original) {
-		User copy = null;
-		if (original != null) {
-			final Builder builder = builder()
-					.pictureUrl(original.pictureUrl)
-					.provider(original.provider)
-					.userid(original.userid)
-					.password(original.password)
-					.email(original.email);
-			if (original.getLinks() != null) {
-				final List<Link> linksCopy = newArrayList();
-				for (final Link link : original.getLinks()) {
-					linksCopy.add(Link.fromLink(link).build());					
-				}
-				builder.links(linksCopy);
-			}
-			if (isNotBlank(original.salt)) {
-				builder.salt(original.salt);
-			}
-			if (original.roles != null && !original.roles.isEmpty()) {
-				builder.roles(original.roles);
-			}
-			if (original.permissions != null && !original.permissions.isEmpty()) {
-				builder.permissions(original.permissions);
-			}
-			if (original.permissionHistory != null) {
-				builder.permissionHistory(original.permissionHistory);
-			}
-			if (isNotBlank(original.firstname)) {
-				builder.firstname(original.firstname);
-			}
-			if (isNotBlank(original.lastname)) {
-				builder.lastname(original.lastname);
-			}
-			if (isNotBlank(original.industry)) {
-				builder.industry(original.industry);
-			}
-			if (original.positions != null && !original.positions.isEmpty()) {
-				builder.positions(original.positions);
-			}
-			return builder.build();
-		}
-		return copy;
 	}
 
 }

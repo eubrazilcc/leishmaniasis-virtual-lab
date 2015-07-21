@@ -20,14 +20,16 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.storage.mongodb;
+package eu.eubrazilcc.lvl.storage.base;
 
 /**
- * Default properties for mongoDB.
+ * Default properties for storage system.
  * @author Erik Torres <ertorser@upv.es>
  */
-public interface MongoDefaults {
+public interface StorageDefaults {
 
+	public static final long TIMEOUT = 5l;
+	
 	public static int TYPEAHEAD_MAX_ITEMS = 10;
 	
 }

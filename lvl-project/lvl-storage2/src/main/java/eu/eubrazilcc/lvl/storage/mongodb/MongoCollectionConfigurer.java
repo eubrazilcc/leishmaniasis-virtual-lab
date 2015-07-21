@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.toMap;
 import static com.google.common.hash.Hashing.murmur3_32;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_DENSE_IS_ACTIVE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_LAST_MODIFIED_FIELD;
@@ -34,6 +35,7 @@ import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_NAMESPACE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_SPARSE_IS_ACTIVE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_STATE_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_VERSION_FIELD;
+import static eu.eubrazilcc.lvl.storage.base.StorageDefaults.TIMEOUT;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoConnector.MONGODB_CONN;
 import static java.lang.Math.pow;
 import static java.util.Arrays.asList;
@@ -42,6 +44,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bson.Document;
@@ -62,14 +65,18 @@ public class MongoCollectionConfigurer {
 
 	private static final Logger LOGGER = getLogger(MongoCollectionConfigurer.class);
 
-	public static final long TIMEOUT = 5l;
-
 	private final String collection;
 	private final List<IndexModel> indexes = newArrayList();
+
+	private final Callable<?> preload;
 
 	private final AtomicBoolean isConfigured = new AtomicBoolean(false);
 
 	public MongoCollectionConfigurer(final String collection, final boolean geoIndex, final List<IndexModel> moreIndexes) {
+		this(collection, geoIndex, moreIndexes, null);
+	}
+
+	public MongoCollectionConfigurer(final String collection, final boolean geoIndex, final List<IndexModel> moreIndexes, final Callable<?> preload) {
 		this.collection = collection;
 		// common indexes
 		indexes.add(nonUniqueIndexModel(LVL_NAMESPACE_FIELD, false));
@@ -83,6 +90,8 @@ public class MongoCollectionConfigurer {
 		if (geoIndex) indexes.add(geospatialIndexModel(LVL_LOCATION_FIELD));
 		// other indexes
 		if (moreIndexes != null) indexes.addAll(moreIndexes);
+		// preload operations
+		this.preload = preload;
 	}
 
 	public void prepareCollection() {
@@ -97,6 +106,16 @@ public class MongoCollectionConfigurer {
 				} catch (Exception e) {
 					LOGGER.info("Failed to configure collection: " + collection, e);
 				}				
+			}
+			// run preload operations
+			if (preload != null) {
+				final ListenableFuture<?> future = TASK_RUNNER.submit(preload);
+				try {					
+					future.get(TIMEOUT, SECONDS);
+					LOGGER.info("Preload operation executed: " + collection);
+				} catch (Exception e) {
+					LOGGER.info("Failed to execute preload operations: " + collection, e);
+				}
 			}
 		}
 	}

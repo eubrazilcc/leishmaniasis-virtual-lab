@@ -260,6 +260,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<module>lvl-auth</module>
 		<module>lvl-service</module>
 		<module>lvl-bundle</module>
+		<module>lvl-auth2</module>
 	</modules>
 
 </project>

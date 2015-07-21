@@ -30,6 +30,7 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.taxonomy.Taxon;
 
 /**
  * NCBI taxonomy XML binding helper.
+ * @author Erik Torres <ertorser@upv.es>
  */
 public class TaxonomyXmlBinder extends XmlBinder {
 

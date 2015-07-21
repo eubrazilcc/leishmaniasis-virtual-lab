@@ -41,7 +41,8 @@ import org.junit.runners.Suite.SuiteClasses;
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
-@SuiteClasses({ CitationCollectionTest.class, DatasetCollectionTest.class })
+// TODO @SuiteClasses({ ActiveMQConnectorTest.class, ResourceOwnerCollectionTest.class, CitationCollectionTest.class, DatasetCollectionTest.class })
+@SuiteClasses({ ResourceOwnerCollectionTest.class })
 public class AllIntegrationTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

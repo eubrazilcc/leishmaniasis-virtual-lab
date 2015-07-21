@@ -145,8 +145,8 @@ import eu.eubrazilcc.lvl.storage.LvlObjectNotFoundException;
 import eu.eubrazilcc.lvl.storage.LvlObjectWriteException;
 import eu.eubrazilcc.lvl.storage.base.LvlCollection;
 import eu.eubrazilcc.lvl.storage.base.LvlObject;
+import eu.eubrazilcc.lvl.storage.base.StorageDefaults;
 import eu.eubrazilcc.lvl.storage.mongodb.MongoCollectionStats;
-import eu.eubrazilcc.lvl.storage.mongodb.MongoDefaults;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDateDeserializer;
 
 /**
@@ -746,7 +746,7 @@ public class MongoTraceableObjectClient implements MongoClient2 {
 		String field2 = null, query2 = null;
 		checkArgument(isNotBlank(field2 = trimToNull(field)), "Uninitialized or invalid field");
 		checkArgument(isNotBlank(query2 = trimToNull(query)), "Uninitialized or invalid query");
-		final int size2 = size > 0 ? size : MongoDefaults.TYPEAHEAD_MAX_ITEMS;
+		final int size2 = size > 0 ? size : StorageDefaults.TYPEAHEAD_MAX_ITEMS;
 		final SettableFuture<List<String>> future = SettableFuture.create();
 		final List<String> values = newArrayList();
 		final MongoCollection<Document> dbcol = getCollection(collection);

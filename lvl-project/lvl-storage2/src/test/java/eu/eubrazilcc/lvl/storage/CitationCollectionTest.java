@@ -27,7 +27,10 @@ import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.XmlHelper.prettyPrint;
-import static eu.eubrazilcc.lvl.storage.Citation.PUBMED_KEY;
+import static eu.eubrazilcc.lvl.storage.Citation.PUBMED_ABSTRACT;
+import static eu.eubrazilcc.lvl.storage.Citation.PUBMED_PMID;
+import static eu.eubrazilcc.lvl.storage.Citation.PUBMED_TITLE;
+import static eu.eubrazilcc.lvl.storage.Citation.PUBMED_YEAR;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_COMPARE;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_REGEX;
 import static eu.eubrazilcc.lvl.storage.Filter.FilterType.FILTER_TEXT;
@@ -41,6 +44,7 @@ import static eu.eubrazilcc.lvl.storage.base.LvlObject.LVL_GUID_FIELD;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.DRAFT;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.OBSOLETE;
 import static eu.eubrazilcc.lvl.storage.base.ObjectState.RELEASE;
+import static eu.eubrazilcc.lvl.storage.base.StorageDefaults.TIMEOUT;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonMapper.objectToJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoJsonOptions.JSON_PRETTY_PRINTER;
@@ -94,8 +98,6 @@ import eu.eubrazilcc.lvl.storage.security.User;
  */
 @FixMethodOrder(NAME_ASCENDING)
 public class CitationCollectionTest {
-
-	public static final long TIMEOUT = 5l;
 
 	public static final String ID_0 = "CITATION_0";
 	public static final String ID_1 = "CITATION_1";
@@ -174,7 +176,7 @@ public class CitationCollectionTest {
 				assertThat("exception cause coincides with expected", expected.getCause() instanceof UnsupportedOperationException, equalTo(true));				
 				System.out.println("Expected exception caught: " + expected.getCause().getMessage());
 			}
-			
+
 			// new release
 			final Date lastModified2 = ds.citation0.getLastModified();
 			final String dbId2 = ds.citation0.getDbId();
@@ -193,7 +195,7 @@ public class CitationCollectionTest {
 			assertThat("fetched citation (after update) coincides with expected", ds.citation2, equalTo(ds.citation0));
 			// uncomment for additional output
 			System.out.println(" >> Fetched citation (after new release, " + ds.citation2.getDbId() + "):\n" + ds.citation2.toJson(JSON_PRETTY_PRINTER));
-			
+
 			// operate on the test data-set
 			ds.versions.put(ID_0, 3);
 			final Resultset rs = new Resultset(new TestScenario[]{
@@ -501,7 +503,7 @@ public class CitationCollectionTest {
 			// list with filters (equal)
 			System.out.println(" >> List with filters (equal): " + scenario.toString());
 			Filters filters = Filters.builder()
-					.filters(newArrayList(Filter.builder().type(FILTER_COMPARE).fieldName(PUBMED_KEY).value("=EFGH5678").build()))
+					.filters(newArrayList(Filter.builder().type(FILTER_COMPARE).fieldName(PUBMED_PMID).value("=EFGH5678").build()))
 					.build();
 			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(scenario.numItems(1)));
@@ -525,7 +527,7 @@ public class CitationCollectionTest {
 			// list with filters (text)
 			System.out.println(" >> List with filters (text): " + scenario.toString());
 			filters = Filters.builder()
-					.filters(newArrayList(Filter.builder().type(FILTER_TEXT).fieldName("pubmed.medlineCitation.article.articleTitle").value("ROCK").build()))
+					.filters(newArrayList(Filter.builder().type(FILTER_TEXT).fieldName(PUBMED_TITLE).value("ROCK").build()))
 					.build();
 			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(scenario.numItems(0)));
@@ -537,7 +539,7 @@ public class CitationCollectionTest {
 			// list with filters (compare)
 			System.out.println(" >> List with filters (compare): " + scenario.toString());
 			filters = Filters.builder()
-					.filters(newArrayList(Filter.builder().type(FILTER_COMPARE).fieldName("pubmed.medlineCitation.dateCreated.year.value").value(">=2015").build()))
+					.filters(newArrayList(Filter.builder().type(FILTER_COMPARE).fieldName(PUBMED_YEAR).value(">=2015").build()))
 					.build();
 			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with filter) coincides with expected", count, equalTo(scenario.numItems(1)));
@@ -549,7 +551,7 @@ public class CitationCollectionTest {
 			// list with filters (logical AND)
 			System.out.println(" >> List with filters (logical AND): " + scenario.toString());
 			filters = Filters.builder()
-					.filters(newArrayList(Filter.builder().type(FILTER_TEXT).fieldName("pubmed.medlineCitation.article.abstract.abstractText").value("paper").build(), Filter.builder().type(FILTER_COMPARE).fieldName("pubmed.medlineCitation.pmid.value").value("= EFGH5678  ").build()))
+					.filters(newArrayList(Filter.builder().type(FILTER_TEXT).fieldName(PUBMED_ABSTRACT).value("paper").build(), Filter.builder().type(FILTER_COMPARE).fieldName(PUBMED_PMID).value("= EFGH5678  ").build()))
 					.type(LOGICAL_AND)
 					.build();
 			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
@@ -562,7 +564,7 @@ public class CitationCollectionTest {
 			// list with filters (logical OR)
 			System.out.println(" >> List with filters (logical OR): " + scenario.toString());
 			filters = Filters.builder()
-					.filters(newArrayList(Filter.builder().type(FILTER_COMPARE).fieldName("pubmed.medlineCitation.pmid.value").value("= ABCD1234").build(), Filter.builder().type(FILTER_COMPARE).fieldName("pubmed.medlineCitation.pmid.value").value(" = EFGH5678").build()))
+					.filters(newArrayList(Filter.builder().type(FILTER_COMPARE).fieldName(PUBMED_PMID).value("= ABCD1234").build(), Filter.builder().type(FILTER_COMPARE).fieldName(PUBMED_PMID).value(" = EFGH5678").build()))
 					.type(LOGICAL_OR)
 					.build();
 			count = op.fetch(0, Integer.MAX_VALUE, filters, null, null).get(TIMEOUT, SECONDS);
@@ -577,8 +579,8 @@ public class CitationCollectionTest {
 					.put("lvlId", true)
 					.put("location", true)
 					.put("status", true)
-					.put("pubmed.medlineCitation.article.articleTitle", true)
-					.put("pubmed.medlineCitation.pmid.value", true)
+					.put(PUBMED_TITLE, true)
+					.put(PUBMED_PMID, true)
 					.build()).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with projection) coincides with expected", count, equalTo(scenario.numItems()));
 			assertThat("number of fetched elements (with projection) coincides with expected", op.collection().size(), equalTo(count));
@@ -606,7 +608,7 @@ public class CitationCollectionTest {
 				}
 			}
 
-			count = op.fetch(0, Integer.MAX_VALUE, null, ImmutableMap.of(PUBMED_KEY, false), null).get(TIMEOUT, SECONDS);
+			count = op.fetch(0, Integer.MAX_VALUE, null, ImmutableMap.of(PUBMED_PMID, false), null).get(TIMEOUT, SECONDS);
 			assertThat("number of fetched elements (with sorting) coincides with expected", count, equalTo(scenario.numItems()));
 			assertThat("number of fetched elements (with sorting) coincides with expected", op.collection().size(), equalTo(count));
 			if (count > 0) {

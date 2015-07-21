@@ -56,13 +56,16 @@ import eu.eubrazilcc.lvl.storage.ws.rs.jackson.LinkListSerializer;
  */
 public class Citation extends LvlObject {
 
-	public static final String COLLECTION  = "citations";	
-	public static final String PUBMED_KEY  = "pubmed.medlineCitation.pmid.value";
+	public static final String COLLECTION      = "citations";	
+	public static final String PUBMED_PMID     = "pubmed.medlineCitation.pmid.value";
+	public static final String PUBMED_TITLE    = "pubmed.medlineCitation.article.articleTitle";
+	public static final String PUBMED_ABSTRACT = "pubmed.medlineCitation.article.abstract.abstractText";
+	public static final String PUBMED_YEAR     = "pubmed.medlineCitation.dateCreated.year.value";
 
 	public static final MongoCollectionConfigurer CONFIGURER = new MongoCollectionConfigurer(COLLECTION, true, newArrayList(
-			nonUniqueIndexModel(PUBMED_KEY, false),
-			textIndexModel(ImmutableList.of("pubmed.medlineCitation.article.articleTitle", 
-					"pubmed.medlineCitation.article.abstract.abstractText"), COLLECTION)));
+			nonUniqueIndexModel(PUBMED_PMID, false),
+			nonUniqueIndexModel(PUBMED_YEAR, false),
+			textIndexModel(ImmutableList.of(PUBMED_TITLE, PUBMED_ABSTRACT), COLLECTION)));
 
 	@InjectLinks({
 		@InjectLink(value="citations/{id}", rel=SELF, type=APPLICATION_JSON, bindings={

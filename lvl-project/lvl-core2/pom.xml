@@ -110,7 +110,14 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
-		</dependency>		
+		</dependency>
+		
+		<!-- Java Servlet API 3.0 -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
 		
 		<!-- Java API for Google Geocoding API v3 -->
 		<dependency>
@@ -287,6 +294,31 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 									<schemaLanguage>DTD</schemaLanguage>
 									<schemaIncludes>
 										<schemaInclude>taxon.dtd</schemaInclude>
+							    	</schemaIncludes>
+							    	<markGenerated>true</markGenerated>
+							    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
+							    	<cleanPackageDirectories>true</cleanPackageDirectories>
+							    	<verbose>false</verbose>
+							    	<args>
+							    		<arg>-Xfluent-api</arg>
+							    		<arg>-Xcommons-lang</arg>
+		          					</args>
+								</configuration>
+							</execution>
+							<execution>
+								<id>jaxb2-tapir</id>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+								<configuration>
+									<schemaDirectory>${project.basedir}/src/main/schema/tapir</schemaDirectory>
+									<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+									<generatePackage>eu.eubrazilcc.lvl.core.xml.tdwg.tapir</generatePackage>
+									<extension>true</extension>
+									<episode>false</episode>
+									<schemaLanguage>XMLSCHEMA</schemaLanguage>
+									<schemaIncludes>
+										<schemaInclude>tdwg_tapir.xsd</schemaInclude>
 							    	</schemaIncludes>
 							    	<markGenerated>true</markGenerated>
 							    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->

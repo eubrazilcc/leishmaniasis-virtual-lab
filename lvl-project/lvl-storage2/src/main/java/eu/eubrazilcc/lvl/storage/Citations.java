@@ -79,7 +79,7 @@ public class Citations extends LvlCollection<Citation> {
 		super(Citation.COLLECTION, Citation.class, Citation.CONFIGURER, getLogger(Citations.class));
 	}
 
-	@Override	
+	@Override
 	public List<Link> getLinks() {
 		return links;
 	}
