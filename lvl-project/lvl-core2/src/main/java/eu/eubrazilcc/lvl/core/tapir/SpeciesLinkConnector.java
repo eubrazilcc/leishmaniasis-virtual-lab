@@ -36,9 +36,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
+
 import org.slf4j.Logger;
+import org.xml.sax.SAXException;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager.TapirCollection;
+import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecordSet;
 import eu.eubrazilcc.lvl.core.xml.tdwg.tapir.ResponseType;
 
 /**
@@ -75,6 +80,18 @@ public class SpeciesLinkConnector extends TapirClient {
 			LOGGER.error("Failed to obtain the number of elements in the collection: " + collection, e);
 		}		
 		return count;
+	}
+
+	public SimpleDarwinRecordSet fetch(final String collection, final int start, final int limit) {
+		SimpleDarwinRecordSet dwcSet = null;
+		final Entry<String, String> entry = getCollection(collection);
+		try {
+			dwcSet = fetchDarwinCore(tapir.getUrl().toString(), tapir.getOutputModel(), 
+					parseFilter(tapir.getFilter(), entry.getValue()), tapir.getOrderby(), start, limit);
+		} catch (URISyntaxException | IOException | XPathExpressionException | SAXException | ParserConfigurationException e) {
+			LOGGER.error("Failed to fetch elements from collection: " + collection, e);
+		}
+		return dwcSet;
 	}
 
 	private Entry<String, String> getCollection(final String collection) {		

@@ -22,8 +22,16 @@
 
 package eu.eubrazilcc.lvl.core;
 
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.DEFAULT_LOCATION;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getDarwinCoreSets;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getTapirResponses;
+import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.TapirXmlBinder.TAPIR_XMLB;
+import static eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.TEST_CONFIG_DIR;
+import static java.io.File.separator;
+import static org.apache.commons.io.FilenameUtils.concat;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,29 +39,21 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.fail;
 import static org.junit.runners.MethodSorters.NAME_ASCENDING;
-import static org.apache.http.entity.ContentType.APPLICATION_XML;
-import static org.apache.http.entity.ContentType.TEXT_XML;
-import static org.apache.http.entity.ContentType.getOrDefault;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.File;
+import java.util.Collection;
 import java.util.Set;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.protocol.HTTP;
 import org.junit.FixMethodOrder;
+import org.junit.Rule;
 import org.junit.Test;
 
-import eu.eubrazilcc.lvl.core.http.client.HttpClientProvider;
 import eu.eubrazilcc.lvl.core.tapir.SpeciesLinkConnector;
+import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecordSet;
 import eu.eubrazilcc.lvl.core.xml.tdwg.tapir.ResponseType;
+import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule;
+import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.ConditionalIgnore;
+import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.IgnoreCondition;
 
 /**
  * Test TAPIR access protocol for information retrieval.
@@ -62,12 +62,33 @@ import eu.eubrazilcc.lvl.core.xml.tdwg.tapir.ResponseType;
 @FixMethodOrder(NAME_ASCENDING)
 public class TapirTest {
 
+	@Rule
+	public ConditionalIgnoreRule rule = new ConditionalIgnoreRule();
+
 	@Test
 	public void test01XmlBinding() {
 		System.out.println("TapirTest.test01XmlBinding()");
 		try {
+			// test parsing TAPIR XML responses
+			Collection<File> files = getTapirResponses();
+			for (final File file : files) {
+				System.out.println(" >> TAPIR response XML file: " + file.getCanonicalPath());
+				final ResponseType response = TAPIR_XMLB.typeFromFile(file);
+				assertThat("TAPIR response is not null", response, notNullValue());
+				final boolean isInventory = response.getInventory() != null;
+				final boolean isSearch = response.getSearch() != null;				
+				assertThat("TAPIR response content is not empty", isInventory || isSearch, equalTo(true));		
+			}
 
-			// TODO
+			// test parsing DarwinCore XML records
+			files = getDarwinCoreSets();
+			for (final File file : files) {
+				System.out.println(" >> DarwinCore set XML file: " + file.getCanonicalPath());
+				final SimpleDarwinRecordSet dwcSet = DWC_XMLB.typeFromFile(file);
+				assertThat("DwC set is not null", dwcSet, notNullValue());
+				assertThat("DwC records are not empty", dwcSet.getSimpleDarwinRecord(), allOf(notNullValue(), not(empty())));
+				assertThat("DwC contains at least one record", dwcSet.getSimpleDarwinRecord().size(), greaterThan(0));
+			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("TapirTest.test01XmlBinding() failed: " + e.getMessage());
@@ -77,9 +98,11 @@ public class TapirTest {
 	}
 
 	@Test
+	@ConditionalIgnore(condition=EnableSpeciesLinkTestIsFound.class)
 	public void test02splink() {
 		System.out.println("TapirTest.test02splink()");
 		try {
+			// test speciesLink connector
 			try (final SpeciesLinkConnector splink = new SpeciesLinkConnector()) {
 				final Set<String> collections = splink.collectionNames();
 				assertThat("collections is not null or empty", collections, allOf(notNullValue(), not(empty())));
@@ -89,61 +112,34 @@ public class TapirTest {
 					assertThat("collection contains at least one element", count, greaterThan(0l));
 					// uncomment for additional output
 					System.out.println(" >> speciesLink collection '" + collection + "' count: " + count);
-					
+
 					// test collection fetching
-					
+					final SimpleDarwinRecordSet dwcSet = splink.fetch(collection, 0, 1);
+					assertThat("DwC set is not null", dwcSet, notNullValue());
+					assertThat("DwC records are not empty", dwcSet.getSimpleDarwinRecord(), allOf(notNullValue(), not(empty())));
+					assertThat("DwC number of records coincides with expected", dwcSet.getSimpleDarwinRecord().size(), equalTo(1));
+					// uncomment for additional output
+					System.out.println(" >> speciesLink collection '" + collection + "' fetched (start:0, limit:1):\n" + DWC_XMLB.typeToXml(dwcSet));
 				}
 			}
-
-
-			final URIBuilder uriBuilder = new URIBuilder("http://tapir.cria.org.br/tapirlink/tapir.php/specieslink");
-			uriBuilder.addParameter("op", "search");
-			uriBuilder.addParameter("start", "0");
-			uriBuilder.addParameter("limit", "1000");
-			uriBuilder.addParameter("model", "http://rs.tdwg.org/tapir/cs/dwc/terms/2009-09-23/template/dwc_simple.xml");
-			uriBuilder.addParameter("filter", "http://rs.tdwg.org/dwc/dwcore/CollectionCode equals \"FIOCRUZ-CLIOC\"");
-			uriBuilder.addParameter("orderby", "http://rs.tdwg.org/dwc/dwcore/CatalogNumber");
-			final String url = uriBuilder.build().toString();			
-
-			final HttpClientProvider httpClient = HttpClientProvider.create();
-			final ResponseType response = httpClient.request(url).get().handleResponse(new ResponseHandler<ResponseType>() {
-				@Override
-				public ResponseType handleResponse(final HttpResponse response) throws ClientProtocolException, IOException {
-					final StatusLine statusLine = response.getStatusLine();
-					final HttpEntity entity = response.getEntity();
-					if (statusLine.getStatusCode() >= 300) {
-						throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
-					}
-					if (entity == null) {
-						throw new ClientProtocolException("Response contains no content");
-					}
-					final ContentType contentType = getOrDefault(entity);
-					final String mimeType = contentType.getMimeType();
-					if (!mimeType.equals(APPLICATION_XML.getMimeType()) && !mimeType.equals(TEXT_XML.getMimeType())) {
-						throw new ClientProtocolException("Unexpected content type:" + contentType);
-					}
-					Charset charset = contentType.getCharset();
-					if (charset == null) {
-						charset = HTTP.DEF_CONTENT_CHARSET;
-					}					
-					return TAPIR_XMLB.typeFromInputStream(entity.getContent());
-				}
-			}, false);
-			assertThat("response is not null", response, notNullValue());
-
-
-			System.err.println("\n\n >> HERE: " + TAPIR_XMLB.typeToXml(response) + "\n");
-
-
-			// TODO
-
-
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("TapirTest.test02splink() failed: " + e.getMessage());
 		} finally {			
 			System.out.println("TapirTest.test02splink() has finished");
 		}
+	}
+
+	/**
+	 * Checks whether a flag file is available in the local filesystem.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public class EnableSpeciesLinkTestIsFound implements IgnoreCondition {
+		private final File file = new File(concat(DEFAULT_LOCATION, TEST_CONFIG_DIR + separator + "splink.test"));
+		@Override
+		public boolean isSatisfied() {			
+			return !file.canRead();
+		}		
 	}
 
 }

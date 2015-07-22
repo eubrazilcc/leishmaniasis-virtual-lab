@@ -53,9 +53,10 @@ public class TestUtils {
 	public static final String TAXONOMY_FOLDER = "taxonomy";
 	public static final String TAXONOMY_SETS_FOLDER = TAXONOMY_FOLDER + separator + "sets";
 
+	public static final String DWC_FOLDER = "dwc";
+	public static final String DWC_SETS_FOLDER = DWC_FOLDER + separator + "sets";
+	
 	public static final String TAPIR_FOLDER = "tapir";
-	public static final String TAPIR_REQUESTS_FOLDER = TAPIR_FOLDER + separator + "requests";
-	public static final String TAPIR_SEARCH_TEMPLATES_FOLDER = TAPIR_FOLDER + separator + "search_tpls";
 	public static final String TAPIR_RESPONSES_FOLDER = TAPIR_FOLDER + separator + "responses";
 
 	public static final String PHYLOGENETIC_FOLDER = "phylogenetic";
@@ -106,20 +107,15 @@ public class TestUtils {
 		return listFiles(dir, new String[] { "xml" }, false);
 	}
 
-	public static Collection<File> getTapirRequests() {
-		final File dir = new File(concat(TEST_RESOURCES_PATH, TAPIR_REQUESTS_FOLDER));
-		return listFiles(dir, new String[] { "xml" }, false);
-	}
-
-	public static Collection<File> getTapirSearchTemplates() {
-		final File dir = new File(concat(TEST_RESOURCES_PATH, TAPIR_SEARCH_TEMPLATES_FOLDER));
-		return listFiles(dir, new String[] { "xml" }, false);
-	}
-
 	public static Collection<File> getTapirResponses() {
 		final File dir = new File(concat(TEST_RESOURCES_PATH, TAPIR_RESPONSES_FOLDER));
 		return listFiles(dir, new String[] { "xml" }, false);
-	}	
+	}
+	
+	public static Collection<File> getDarwinCoreSets() {
+		final File dir = new File(concat(TEST_RESOURCES_PATH, DWC_SETS_FOLDER));
+		return listFiles(dir, new String[] { "xml" }, false);
+	}
 
 	public static Collection<File> getGeoJsonFiles() {
 		final File dir = new File(concat(TEST_RESOURCES_PATH, GEOJSON_FOLDER));

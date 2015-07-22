@@ -167,9 +167,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	
 	<!-- import collections from speciesLink using the TAPIR protocol -->
 	<speciesLink>
-		<tapirlink>http://tapir.cria.org.br/tapirlink/tapir.php/specieslink</tapirlink>		
-		<!-- Simple Darwin core: http://rs.tdwg.org/tapir/cs/dwc/terms/2009-09-23/template/dwc_simple.xml -->
-		<output-model>http://rs.tdwg.org/tapir/cs/dwc/1.4/model/dw_core_geo_cur.xml</output-model>
+		<tapirlink>http://tapir.cria.org.br/tapirlink/tapir.php/specieslink</tapirlink>
+		<output-model>http://rs.tdwg.org/tapir/cs/dwc/terms/2009-09-23/template/dwc_simple.xml</output-model>
 		<concept>http://rs.tdwg.org/dwc/dwcore/CollectionCode</concept>
 		<filter>http://rs.tdwg.org/dwc/dwcore/CollectionCode equals "$COLLECTION"</filter>
 		<orderby>http://rs.tdwg.org/dwc/dwcore/CatalogNumber</orderby>

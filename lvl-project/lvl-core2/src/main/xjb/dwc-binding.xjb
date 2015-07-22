@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<jxb:bindings xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jxb="http://java.sun.com/xml/ns/jaxb" version="2.0">
+	<jxb:bindings schemaLocation="../schema/dwc/dc.xsd" node="/xs:schema">
+		<!-- Resolve duplicate type name conflicts -->
+		<jxb:bindings node="//xs:element[@name='any']">
+			<jxb:class name="Any2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='title']">
+			<jxb:class name="Title2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='creator']">
+			<jxb:class name="Creator2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='subject']">
+			<jxb:class name="Subject2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='description']">
+			<jxb:class name="Description2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='publisher']">
+			<jxb:class name="Publisher2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='contributor']">
+			<jxb:class name="Contributor2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='date']">
+			<jxb:class name="Date2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='type']">
+			<jxb:class name="Type2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='format']">
+			<jxb:class name="Format2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='identifier']">
+			<jxb:class name="Identifier2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='source']">
+			<jxb:class name="Source2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='language']">
+			<jxb:class name="Language2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='relation']">
+			<jxb:class name="Relation2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='coverage']">
+			<jxb:class name="Coverage2" />
+		</jxb:bindings>
+		<jxb:bindings node="//xs:element[@name='rights']">
+			<jxb:class name="Rights2" />
+		</jxb:bindings>
+	</jxb:bindings>	
+</jxb:bindings>

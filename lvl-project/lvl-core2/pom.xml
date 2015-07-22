@@ -330,6 +330,35 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		          					</args>
 								</configuration>
 							</execution>
+							<execution>
+								<id>jaxb2-dwc</id>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+								<configuration>								
+									<bindingDirectory>${project.basedir}/src/main/xjb</bindingDirectory>
+									<bindingIncludes>
+										<include>dwc-binding.xjb</include>
+									</bindingIncludes>								
+									<schemaDirectory>${project.basedir}/src/main/schema/dwc</schemaDirectory>
+									<generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+									<generatePackage>eu.eubrazilcc.lvl.core.xml.tdwg.dwc</generatePackage>
+									<extension>true</extension>
+									<episode>false</episode>
+									<schemaLanguage>XMLSCHEMA</schemaLanguage>
+									<schemaIncludes>
+										<schemaInclude>tdwg_dwc_simple.xsd</schemaInclude>
+							    	</schemaIncludes>
+							    	<markGenerated>true</markGenerated>
+							    	<removeOldOutput>false</removeOldOutput> <!-- Setting this to true can delete your source files -->
+							    	<cleanPackageDirectories>true</cleanPackageDirectories>
+							    	<verbose>false</verbose>
+							    	<args>
+							    		<arg>-Xfluent-api</arg>
+							    		<arg>-Xcommons-lang</arg>
+		          					</args>
+								</configuration>
+							</execution>
 						</executions>
 					</plugin>			
 				</plugins>

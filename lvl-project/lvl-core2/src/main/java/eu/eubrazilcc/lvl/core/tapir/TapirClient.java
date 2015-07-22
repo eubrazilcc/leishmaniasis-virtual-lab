@@ -22,14 +22,26 @@
 
 package eu.eubrazilcc.lvl.core.tapir;
 
+import static eu.eubrazilcc.lvl.core.util.XmlUtils.nodeToString;
+import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.TapirXmlBinder.TAPIR_XMLB;
+import static javax.xml.xpath.XPathConstants.NODE;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 import static org.apache.http.entity.ContentType.TEXT_XML;
 import static org.apache.http.entity.ContentType.getOrDefault;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.Scanner;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -40,8 +52,12 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.protocol.HTTP;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 import eu.eubrazilcc.lvl.core.http.client.HttpClientProvider;
+import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecordSet;
 import eu.eubrazilcc.lvl.core.xml.tdwg.tapir.ResponseType;
 
 /**
@@ -52,6 +68,9 @@ import eu.eubrazilcc.lvl.core.xml.tdwg.tapir.ResponseType;
 public abstract class TapirClient implements AutoCloseable {
 
 	public static final String COLLECTION_VAR = "\\$COLLECTION";
+	public static final String XPATH_TO_DWCSET = "/*[local-name()=\"response\"]"
+			+ "/*[local-name()=\"search\"]"
+			+ "/*[local-name()=\"SimpleDarwinRecordSet\"]";
 
 	private final HttpClientProvider httpClient = HttpClientProvider.create();
 
@@ -90,7 +109,7 @@ public abstract class TapirClient implements AutoCloseable {
 		}, false);
 	}
 
-	protected ResponseType fetch(final String url, final String outputModel, final String filter, final String orderby, final int start, 
+	private String fetch(final String url, final String outputModel, final String filter, final String orderby, final int start, 
 			final int limit) throws URISyntaxException, IOException {
 		final URIBuilder uriBuilder = new URIBuilder(url);
 		uriBuilder.addParameter("op", "search");
@@ -100,9 +119,9 @@ public abstract class TapirClient implements AutoCloseable {
 		uriBuilder.addParameter("filter", filter);
 		uriBuilder.addParameter("orderby", orderby);
 		final String url2 = uriBuilder.build().toString();
-		return httpClient.request(url2).get().handleResponse(new ResponseHandler<ResponseType>() {
+		return httpClient.request(url2).get().handleResponse(new ResponseHandler<String>() {
 			@Override
-			public ResponseType handleResponse(final HttpResponse response) throws ClientProtocolException, IOException {
+			public String handleResponse(final HttpResponse response) throws ClientProtocolException, IOException {
 				final StatusLine statusLine = response.getStatusLine();
 				final HttpEntity entity = response.getEntity();
 				if (statusLine.getStatusCode() >= 300) {
@@ -119,10 +138,31 @@ public abstract class TapirClient implements AutoCloseable {
 				Charset charset = contentType.getCharset();
 				if (charset == null) {
 					charset = HTTP.DEF_CONTENT_CHARSET;
-				}					
-				return TAPIR_XMLB.typeFromInputStream(entity.getContent());
+				}				
+				try (final Scanner scanner = new Scanner(entity.getContent(), "UTF-8")) {
+					return scanner.useDelimiter("\\A").next(); 
+				}
 			}
 		}, false);
+	}
+
+	protected ResponseType fetchResponse(final String url, final String outputModel, final String filter, final String orderby, final int start, 
+			final int limit) throws URISyntaxException, IOException {					
+		return TAPIR_XMLB.typeFromXml(fetch(url, outputModel, filter, orderby, start, limit));			
+	}
+
+	protected SimpleDarwinRecordSet fetchDarwinCore(final String url, final String outputModel, final String filter, final String orderby, final int start, 
+			final int limit) throws URISyntaxException, IOException, XPathExpressionException, SAXException, ParserConfigurationException {
+		// fetch response from server
+		final String response = fetch(url, outputModel, filter, orderby, start, limit);
+		// parse server response
+		final Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(response.getBytes()));		
+		// extract DarwinCore from server response
+		final XPath xPath = XPathFactory.newInstance().newXPath();
+		final XPathExpression xPathExpression = xPath.compile(XPATH_TO_DWCSET);
+		final Node node = (Node) xPathExpression.evaluate(document, NODE);		
+		final String payload = nodeToString(node);		
+		return DWC_XMLB.typeFromXml(payload);
 	}
 
 	protected String parseFilter(final String filter, final String collection) {
