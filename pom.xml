@@ -42,7 +42,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<org.apache.httpcomponents.version>4.4.1</org.apache.httpcomponents.version> <!-- in case of using BioJava, versions must coincide (3.0.8 uses 4.3.1) -->
 		<org.apache.oltu.oauth2.version>1.0.0</org.apache.oltu.oauth2.version>
 		<org.apache.shiro.version>1.2.3</org.apache.shiro.version>
-		<akka.version>2.3.11</akka.version>
+		<akka.version>2.3.12</akka.version>
 		<avro.version>1.7.7</avro.version>
 		<mongodb.driver.version>2.13.1</mongodb.driver.version>
 		<mongodb2.driver.version>3.0.2</mongodb2.driver.version>
