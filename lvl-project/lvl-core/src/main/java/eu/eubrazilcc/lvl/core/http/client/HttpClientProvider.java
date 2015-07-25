@@ -28,8 +28,6 @@ import static com.google.common.io.Files.asByteSink;
 import static java.util.Collections.synchronizedList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
-import static org.apache.http.entity.ContentType.APPLICATION_OCTET_STREAM;
-import static org.apache.http.entity.ContentType.TEXT_XML;
 import static org.apache.http.entity.ContentType.getOrDefault;
 
 import java.io.File;
@@ -40,6 +38,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 import org.apache.http.Consts;
 import org.apache.http.HeaderElement;
@@ -224,7 +224,7 @@ public class HttpClientProvider implements AutoCloseable {
 			}
 		}
 
-		public void saveContent(final File outfile, final boolean isolated) throws IOException {
+		public void saveContent(final File outfile, final @Nullable List<String> validTypes, final boolean isolated) throws IOException {
 			handleResponse(new ResponseHandler<Void>() {
 				@Override
 				public Void handleResponse(final HttpResponse response) throws IOException {
@@ -238,7 +238,7 @@ public class HttpClientProvider implements AutoCloseable {
 					}
 					final ContentType contentType = getOrDefault(entity);
 					final String mimeType = contentType.getMimeType();
-					if (!mimeType.equals(APPLICATION_OCTET_STREAM.getMimeType()) && !mimeType.equals(TEXT_XML.getMimeType())) {
+					if (validTypes != null && !validTypes.contains(mimeType)) {
 						throw new ClientProtocolException("Unexpected content type: " + contentType);
 					}
 					Charset charset = contentType.getCharset();

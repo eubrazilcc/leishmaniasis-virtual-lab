@@ -60,8 +60,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	</scm>
 
 	<properties>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -260,8 +260,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<module>lvl-auth</module>
 		<module>lvl-auth2</module>
 		<module>lvl-service</module>
-		<module>lvl-service2</module>
-		<module>lvl-bundle</module>			
+		<module>lvl-bundle</module>
+		<module>lvl-drive</module>
 	</modules>
 
 </project>

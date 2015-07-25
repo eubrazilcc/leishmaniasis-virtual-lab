@@ -113,7 +113,7 @@ public class SseSubscriptionHttpHeaders implements HttpHeaders {
 
 	@Override
 	public MultivaluedMap<String, String> getRequestHeaders() {
-		return new MultivaluedHashMap<>(headers);
+		return new MultivaluedHashMap<String, String>(headers);
 	}
 	
 	public static HttpHeaders ssehHttpHeaders(final String token) {

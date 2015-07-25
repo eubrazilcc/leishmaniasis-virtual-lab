@@ -44,6 +44,7 @@ import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
+import static org.apache.http.entity.ContentType.TEXT_PLAIN;
 import static org.apache.http.entity.ContentType.TEXT_XML;
 import static org.apache.http.entity.ContentType.getOrDefault;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -278,7 +279,8 @@ public final class EntrezHelper implements AutoCloseable {
 		final File tmpFile = createTempFile("gb-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
 		LOGGER.trace("Fetching " + ids.size() + " files from GenBank, retstart=" + retstart + ", retmax=" + retmax + ", file=" + tmpFile.getPath());
-		httpClient.request(EFETCH_BASE_URI).post().bodyForm(efetchForm(NUCLEOTIDE_DB, idsParam, retstart, retmax, "xml").build()).saveContent(tmpFile, true);		
+		httpClient.request(EFETCH_BASE_URI).post().bodyForm(efetchForm(NUCLEOTIDE_DB, idsParam, retstart, retmax, "xml").build())
+		.saveContent(tmpFile, newArrayList(TEXT_XML.getMimeType(), APPLICATION_XML.getMimeType()), true);		
 		final ListenableFuture<String[]> future = TASK_RUNNER.submit(new Callable<String[]>() {
 			@Override
 			public String[] call() throws Exception {
@@ -324,7 +326,8 @@ public final class EntrezHelper implements AutoCloseable {
 		final File tmpFile = createTempFile("gb-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
 		LOGGER.trace("Fetching " + ids.size() + " files from GenBank, retstart=" + retstart + ", retmax=" + retmax + ", file=" + tmpFile.getPath());
-		httpClient.request(EFETCH_BASE_URI).post().bodyForm(efetchForm(NUCLEOTIDE_DB, idsParam, retstart, retmax, "text").build()).saveContent(tmpFile, true);		
+		httpClient.request(EFETCH_BASE_URI).post().bodyForm(efetchForm(NUCLEOTIDE_DB, idsParam, retstart, retmax, "text").build())
+		.saveContent(tmpFile, newArrayList(TEXT_PLAIN.getMimeType()), true);		
 		// go over the file extracting the sequences
 		final ListenableFuture<String[]> future = TASK_RUNNER.submit(new Callable<String[]>() {
 			@Override
@@ -388,7 +391,8 @@ public final class EntrezHelper implements AutoCloseable {
 		final File tmpFile = createTempFile("pm-", ".tmp", directory);
 		final String idsParam = Joiner.on(",").skipNulls().join(ids);
 		LOGGER.trace("Fetching " + ids.size() + " files from PubMed, retstart=" + retstart + ", retmax=" + retmax + ", file=" + tmpFile.getPath());		
-		httpClient.request(EFETCH_BASE_URI).post().bodyForm(efetchForm(PUBMED_DB, idsParam, retstart, retmax, "xml").build()).saveContent(tmpFile, true);
+		httpClient.request(EFETCH_BASE_URI).post().bodyForm(efetchForm(PUBMED_DB, idsParam, retstart, retmax, "xml").build())
+		.saveContent(tmpFile, newArrayList(TEXT_XML.getMimeType(), APPLICATION_XML.getMimeType()), true);
 		final ListenableFuture<String[]> future = TASK_RUNNER.submit(new Callable<String[]>() {
 			@Override
 			public String[] call() throws Exception {
