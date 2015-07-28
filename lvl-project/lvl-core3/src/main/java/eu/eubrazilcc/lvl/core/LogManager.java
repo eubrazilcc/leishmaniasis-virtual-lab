@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.drive;
+package eu.eubrazilcc.lvl.core;
 
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.slf4j.bridge.SLF4JBridgeHandler.install;

@@ -27,6 +27,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.fail;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -46,8 +47,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import eu.eubrazilcc.lvl.microservices.LvlDaemon;
+
 /**
- * Tests {@link DriveDaemon}.
+ * Tests {@link AppDaemon}.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class DriveDaemonTest {
@@ -58,7 +61,7 @@ public class DriveDaemonTest {
 
 	@Before
 	public void setUp() throws Exception {
-		daemon = new DriveDaemon();
+		daemon = new AppDaemon();
 		daemon.init(new DaemonContext() {			
 			@Override
 			public DaemonController getController() {
@@ -84,11 +87,16 @@ public class DriveDaemonTest {
 	public void test() {
 		System.out.println("DriveDaemonTest.test()");
 		try {
+			// test index page
+			String payload = getHtml("");
+			// uncomment for additional output
+			System.out.println(" >> Response: " + abbreviate(payload, 64));
+
 			// test get dataset
-			String payload = get("datasets/~/21");
+			payload = getJson("rest/v1/datasets/~/21");
 			// uncomment for additional output
 			System.out.println(" >> Response: " + payload);
-			
+
 
 			// TODO
 
@@ -98,14 +106,22 @@ public class DriveDaemonTest {
 		} finally {
 			System.out.println("DriveDaemonTest.test() has finished");
 		}
-	}	
-	
-	private String get(final String resource) throws URISyntaxException, IOException {
+	}
+
+	private String getHtml(final String path) throws URISyntaxException, IOException {
+		return get(path, "text/html");
+	}
+
+	private String getJson(final String path) throws URISyntaxException, IOException {
+		return get(path, "application/json");		
+	}
+
+	private String get(final String path, final String mimeType) throws URISyntaxException, IOException {
 		String payload = null;
-		final URIBuilder uriBuilder = new URIBuilder(uri + resource);
+		final URIBuilder uriBuilder = new URIBuilder(uri + path);
 		final Response response = Request.Get(uriBuilder.build())
 				.version(HttpVersion.HTTP_1_1)
-				.addHeader("Accept", "application/json")
+				.addHeader("Accept", mimeType)
 				.execute();
 		assertThat("response is not null", response, notNullValue());
 		HttpResponse httpResponse = response.returnResponse();

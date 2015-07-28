@@ -22,18 +22,23 @@
 
 package eu.eubrazilcc.lvl.drive;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.Runtime.getRuntime;
 
 import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.daemon.DaemonContext;
+import org.apache.commons.daemon.DaemonController;
 import org.apache.commons.daemon.DaemonInitException;
 
 import com.google.common.util.concurrent.ServiceManager;
 
+import eu.eubrazilcc.lvl.microservices.LvlDaemon;
+import eu.eubrazilcc.lvl.microservices.VertxService;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
@@ -42,10 +47,39 @@ import io.vertx.core.json.JsonObject;
  * Driver daemon.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DriveDaemon extends LvlDaemon {
+public class AppDaemon extends LvlDaemon {
 
-	public DriveDaemon() {
-		super(DriveDaemon.class);		
+	public AppDaemon() {
+		super(AppDaemon.class);		
+	}
+
+	public static void main(final String[] args) throws Exception {
+		final AppDaemon daemon = new AppDaemon();
+		getRuntime().addShutdownHook(new Thread() {
+			public void run() {				
+				try {
+					daemon.stop();
+				} catch (Exception e) {
+					System.err.println("Failed to stop application: " + e.getMessage());
+				}
+				try {
+					daemon.destroy();
+				} catch (Exception e) {
+					System.err.println("Failed to stop application: " + e.getMessage());
+				}
+			}
+		});
+		daemon.init(new DaemonContext() {			
+			@Override
+			public DaemonController getController() {
+				return null;
+			}			
+			@Override
+			public String[] getArguments() {
+				return args;
+			}
+		});
+		daemon.start();
 	}
 
 	@Override
@@ -69,7 +103,7 @@ public class DriveDaemon extends LvlDaemon {
 		final DeploymentOptions deploymentOptions = new DeploymentOptions()				
 				.setInstances(config.getInt("leishvl.http.instances"))
 				.setConfig(new JsonObject(verticleConfig));
-		serviceManager = new ServiceManager(newHashSet(new VertxService(vertxOptions, deploymentOptions)));
+		serviceManager = new ServiceManager(newHashSet(new VertxService(newArrayList(DriveRestServer.class), vertxOptions, deploymentOptions)));
 
 		super.init(daemonContext);
 	}

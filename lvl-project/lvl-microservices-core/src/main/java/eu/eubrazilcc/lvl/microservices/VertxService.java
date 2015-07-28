@@ -20,9 +20,8 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.drive;
+package eu.eubrazilcc.lvl.microservices;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Optional.ofNullable;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -42,7 +41,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 
 /**
- * Driver service.
+ * Vert.x service.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class VertxService extends AbstractIdleService {
@@ -54,9 +53,10 @@ public class VertxService extends AbstractIdleService {
 
 	private Vertx vertx;
 
-	private List<Class<?>> verticles = newArrayList(DriveRestServer.class);
+	private final List<Class<?>> verticles;	
 
-	public VertxService(final @Nullable VertxOptions vertxOptions, final @Nullable DeploymentOptions deploymentOptions) {
+	public VertxService(final List<Class<?>> verticles, final @Nullable VertxOptions vertxOptions, final @Nullable DeploymentOptions deploymentOptions) {
+		this.verticles = verticles;
 		this.vertxOptions = ofNullable(vertxOptions).orElse(new VertxOptions());
 		this.deploymentOptions = ofNullable(deploymentOptions).orElse(new DeploymentOptions());
 	}
@@ -69,7 +69,7 @@ public class VertxService extends AbstractIdleService {
 					@Override
 					public void handle(final AsyncResult<String> result) {
 						if (result != null && result.succeeded()) LOGGER.info("New verticle deployed: [type=" + verticle.getSimpleName() 
-							+ ", id=" + result.result() + "].");
+						+ ", id=" + result.result() + "].");
 						else LOGGER.error("Failed to deploy verticle: " + result.result(), result.cause());
 					}
 				});
@@ -80,9 +80,7 @@ public class VertxService extends AbstractIdleService {
 				if (res.succeeded()) {
 					vertx = res.result();					
 					runner.accept(vertx);
-				} else {
-					res.cause().printStackTrace();
-				}
+				} else LOGGER.error("Failed to start Vert.x system.", res.cause());
 			});
 		} else {
 			vertx = Vertx.vertx(vertxOptions);

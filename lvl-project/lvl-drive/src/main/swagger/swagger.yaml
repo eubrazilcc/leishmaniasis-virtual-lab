@@ -1,0 +1,76 @@
+swagger: '2.0'
+
+info:
+  title: Leishmaniasis Virtual Laboratory (LeishVL) - Drive RESTful Web service
+  description: "LeishVL user's data storage."
+  termsOfService: 'http://lvl.i3m.upv.es/#terms'
+  contact:
+    name: LeishVL support
+    url: http://lvl.i3m.upv.es/#support
+    email: leishvl@i3m.upv.es
+  license:
+    name: European Union Public Licence (EUPL)
+    url: https://joinup.ec.europa.eu/software/page/eupl
+  version: '1.0.0'
+  
+schemes:
+  - http
+  - https
+  
+basePath: /rest/v1
+
+produces:
+  - application/json
+
+parameters:
+  namespace:
+    name: namespace
+    in: path
+    description: Namespace.
+    type: string
+  dataset-id:
+    name: dataset-id
+    in: path
+    description: Unique dataset identifier representing a specific dataset.
+    type: string
+    format: uuid
+  
+paths:
+  /datasets/{namespace}/{dataset-id}:
+    parameters:
+      - $ref: '#/parameters/namespace'
+      - $ref: '#/parameters/dataset-id'
+  /datasets:
+    get:
+      summary: Finds datasets by ID within the given namespace
+      description: Returns `Datasets` based on **namespace** and **ID**.
+      tags:
+        - Datasets
+      responses:
+        200:
+          description: A dataset
+          schema:
+            $ref: '#/definitions/Dataset'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  Dataset:
+    properties:
+      namespace:
+        type: string
+        description: The namespace where the dataset represented by this object is registered.
+      dataset-id:
+        type: string
+        description: Unique identifier representing a specific dataset for a given namespace.
+  Error:
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string

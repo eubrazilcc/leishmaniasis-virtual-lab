@@ -20,11 +20,11 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.drive;
+package eu.eubrazilcc.lvl.microservices;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.typesafe.config.ConfigRenderOptions.concise;
-import static eu.eubrazilcc.lvl.drive.LogManager.LOG_MANAGER;
+import static eu.eubrazilcc.lvl.core.LogManager.LOG_MANAGER;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
