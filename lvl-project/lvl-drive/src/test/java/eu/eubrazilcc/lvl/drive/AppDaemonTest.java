@@ -53,7 +53,7 @@ import eu.eubrazilcc.lvl.microservices.LvlDaemon;
  * Tests {@link AppDaemon}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DriveDaemonTest {
+public class AppDaemonTest {
 
 	private int port = 8080;
 	private String uri;
@@ -73,7 +73,7 @@ public class DriveDaemonTest {
 			}
 		});
 		daemon.start();
-		daemon.awaitHealthy(5, TimeUnit.SECONDS);
+		daemon.awaitHealthy(10, TimeUnit.SECONDS);
 		uri = "http://localhost:" + port + "/";
 	}
 
@@ -85,14 +85,14 @@ public class DriveDaemonTest {
 
 	@Test
 	public void test() {
-		System.out.println("DriveDaemonTest.test()");
+		System.out.println("AppDaemonTest.test()");
 		try {
 			// test index page
 			String payload = getHtml("");
 			// uncomment for additional output
 			System.out.println(" >> Response: " + abbreviate(payload, 64));
 
-			// test get dataset
+			// test get object
 			payload = getJson("rest/v1/datasets/~/21");
 			// uncomment for additional output
 			System.out.println(" >> Response: " + payload);
@@ -102,9 +102,9 @@ public class DriveDaemonTest {
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			fail("DriveDaemonTest.test() failed: " + e.getMessage());
+			fail("AppDaemonTest.test() failed: " + e.getMessage());
 		} finally {
-			System.out.println("DriveDaemonTest.test() has finished");
+			System.out.println("AppDaemonTest.test() has finished");
 		}
 	}
 

@@ -95,7 +95,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						<configuration>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>eu.eubrazilcc.lvl.drive.DriveDaemon</mainClass>
+									<mainClass>eu.eubrazilcc.lvl.drive.AppDaemon</mainClass>
 								</transformer>
 							</transformers>
 							<outputFile>${project.build.directory}/${project.artifactId}-${project.version}-uber.jar</outputFile>

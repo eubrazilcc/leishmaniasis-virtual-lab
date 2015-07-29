@@ -26,6 +26,10 @@ import static java.util.Optional.ofNullable;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -75,16 +79,26 @@ public class VertxService extends AbstractIdleService {
 				});
 			}
 		};
-		if (vertxOptions.isClustered()) {
+		final CompletableFuture<Void> future = new CompletableFuture<>();		
+		if (vertxOptions.isClustered()) {			
 			Vertx.clusteredVertx(vertxOptions, res -> {
 				if (res.succeeded()) {
-					vertx = res.result();					
+					vertx = res.result();
 					runner.accept(vertx);
 				} else LOGGER.error("Failed to start Vert.x system.", res.cause());
+				future.complete(null);
 			});
 		} else {
 			vertx = Vertx.vertx(vertxOptions);
 			runner.accept(vertx);
+			future.complete(null);
+		}
+		try {
+			future.get(30, TimeUnit.SECONDS);
+		} catch (InterruptedException | TimeoutException ignore) {
+			// silently ignored
+		} catch (ExecutionException e) {
+			throw (e.getCause() instanceof Exception ? (Exception)e.getCause() : e);
 		}
 	}
 

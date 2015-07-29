@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.drive;
+package eu.eubrazilcc.lvl.collection;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

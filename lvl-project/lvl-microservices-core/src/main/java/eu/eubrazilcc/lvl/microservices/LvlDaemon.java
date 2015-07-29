@@ -31,6 +31,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -48,6 +49,7 @@ import org.apache.commons.daemon.DaemonInitException;
 import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.ServiceManager;
+import com.google.common.util.concurrent.ServiceManager.Listener;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigParseOptions;
@@ -94,7 +96,14 @@ public abstract class LvlDaemon implements Daemon {
 
 	@Override
 	public void start() throws Exception {
-		daemonThread.start();		
+		daemonThread.start();
+		serviceManager.addListener(new Listener() {
+			@Override
+			public void healthy() {
+				final double startupTime = serviceManager.startupTimes().entrySet().stream().mapToDouble(Map.Entry::getValue).sum();
+				logger.info("Services started in: " + ((long)startupTime/1000l) + " seconds.");
+			}
+		});
 		serviceManager.startAsync();
 	}
 

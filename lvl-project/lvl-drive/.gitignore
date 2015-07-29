@@ -1,1 +1,3 @@
 /target/
+/.vertx/
+/file-uploads/

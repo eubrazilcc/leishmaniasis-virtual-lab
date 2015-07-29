@@ -61,9 +61,10 @@ APP_DIR=$(dirname $SCRIPT_DIR)
 APP_CONFIG=${APP_DIR}/etc
 APP_JARFILE=${APP_DIR}/lib/java/${APP_NAME}-${APP_VERSION}-uber.jar
 APP_DAEMON_CLASS="eu.eubrazilcc.lvl.${APP_SUFIX}.AppDaemon"
-APP_OUT_FILE=${APP_DIR}/var/run/${APP_NAME}/${APP_NAME}.out
-APP_ERR_FILE=${APP_DIR}/var/run/${APP_NAME}/${APP_NAME}.err
-APP_PID_FILE=${APP_DIR}/var/run/${APP_NAME}/${APP_NAME}.pid
+APP_WORKING_DIR=${APP_DIR}/var/run/${APP_NAME}/
+APP_OUT_FILE=${APP_WORKING_DIR}/${APP_NAME}.out
+APP_ERR_FILE=${APP_WORKING_DIR}/${APP_NAME}.err
+APP_PID_FILE=${APP_WORKING_DIR}/${APP_NAME}.pid
 
 JSVC_EXEC="/usr/bin/jsvc"
 
@@ -122,13 +123,18 @@ start_exec()
 
   # run with jsvc
   if [ -z "$RUN_JAVA_DRY" ]; then
+    mkdir -p ${APP_WORKING_DIR} ;
+    if [ ! -d ${APP_WORKING_DIR} ]; then
+        echo "error in working directory creation: ${APP_WORKING_DIR}" ;
+        exit 2 ;
+    fi
     $JSVC_EXEC -jvm server -cp $APP_JARFILE -home $JAVA_HOME -cwd ${APP_DIR}/var/run/${APP_NAME}/ -outfile $APP_OUT_FILE -errfile $APP_ERR_FILE -pidfile $APP_PID_FILE $RUN_JAVA_OPTS $APP_DAEMON_CLASS $APP_RUN_ARGS
   fi
 }
 
 stop_exec()
 {
-  $JSVC_EXEC -jvm server -cp $APP_JARFILE -home $JAVA_HOME -cwd ${APP_DIR}/var/run/${APP_NAME}/ -outfile $APP_OUT_FILE -errfile $APP_ERR_FILE -pidfile $APP_PID_FILE -stop $APP_DAEMON_CLASS  
+  $JSVC_EXEC -jvm server -cp $APP_JARFILE -home $JAVA_HOME -cwd ${APP_WORKING_DIR} -outfile $APP_OUT_FILE -errfile $APP_ERR_FILE -pidfile $APP_PID_FILE -stop $APP_DAEMON_CLASS  
 }
 
 status_exec()

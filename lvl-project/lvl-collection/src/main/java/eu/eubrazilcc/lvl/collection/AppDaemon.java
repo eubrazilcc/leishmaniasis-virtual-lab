@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.drive;
+package eu.eubrazilcc.lvl.collection;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
@@ -104,7 +104,7 @@ public class AppDaemon extends LvlDaemon {
 		final DeploymentOptions deploymentOptions = new DeploymentOptions()				
 				.setInstances(config.getInt("leishvl.http.instances"))
 				.setConfig(new JsonObject(verticleConfig));
-		serviceManager = new ServiceManager(newHashSet(new VertxService(newArrayList(DriveRestServer.class), vertxOptions, deploymentOptions)));
+		serviceManager = new ServiceManager(newHashSet(new VertxService(newArrayList(CollectionRestServer.class), vertxOptions, deploymentOptions)));
 
 		super.init(daemonContext);
 	}

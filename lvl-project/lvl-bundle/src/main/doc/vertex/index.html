@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Installing LeishVL microservices</title>
+</head>
+<body>
+	<h1>Installing LeishVL microservices</h1>
+	
+	<h2>Install Java 8</h2>
+	
+	<p>
+		Install OpenJDK 8 from your distribution's repository. In Ubuntu 14.04 Java 8 is not available, but you can always install from a
+		Personal Package Archive (PPA): <a href="https://launchpad.net/~openjdk-r/+archive/ubuntu/ppa" target="_blank">OpenJDK builds PPA</a>.
+	</p>
+	<p>
+		Run the following command to add the PPA to your sources list:
+	</p>
+	<code>
+		sudo add-apt-repository ppa:openjdk-r/ppa
+	</code>
+	<p>
+		If <code>add-apt-repository</code> is not available in your system (it's not available in Ubuntu Server editions), then create the
+		file <code>/etc/apt/sources.list.d/openjdk-r-ppa-trusty.list</code> and add the following lines to the created file: 		
+	</p>
+	<code>
+		deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main <br>
+		# deb-src http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main
+	</code>
+	<p>
+		Update your system and install Java 8:
+	</p>
+	<code>
+		sudo apt-get update
+	</code> 
+	<p>
+		Note: if you don't use the command <code>add-apt-repository</code>, then you may need to add the key of the PPA to your system:
+	</p>
+	<code>
+		sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EB9B1D8886F44E2A
+	</code>
+	<p>
+		Install the JRE:
+	</p>
+	<code>
+		sudo apt-get install openjdk-8-jre
+	</code>
+	<p>
+		Verify your Java version:
+	</p>
+	<code>
+		java -version
+	</code>
+	<pre>
+openjdk version "1.8.0_45-internal"
+OpenJDK Runtime Environment (build 1.8.0_45-internal-b14)
+OpenJDK 64-Bit Server VM (build 25.45-b02, mixed mode)</pre>
+	<p>
+		Finally, install <code>jsvc</code> for launching Java applications as daemons:
+	</p>
+	<code>
+		sudo apt-get install jsvc
+	</code>
+	<p>
+		Verify your <code>jsvc</code> version:
+	</p>
+	<code>
+		jsvc -version
+	</code>
+	<pre>
+No class specified
+Cannot parse command line arguments</pre>
+
+	<h2>Install mongoDB (3.0.x)</h2>
+	
+	<p>
+		Follow the instructions from: <a href="http://docs.mongodb.org/master/tutorial/install-mongodb-on-ubuntu/" target="_blank">Install MongoDB on Ubuntu</a>.
+	</p>
+	<p>
+		You may also need to <a href="http://docs.mongodb.org/manual/tutorial/transparent-huge-pages/" target="_blank">Disable Transparent Huge Pages (THP)</a>
+		in your Linux system.
+	</p>
+	<p>
+		Note: in Ubuntu 14.04, you can use <code>update-grub2</code> to update GRUB after modifying your configuration.
+	</p>
+	<p>
+		Additionally, to avoid the defrag warning you may need to perform the following steps:
+	</p>
+	<ol>
+		<li>Open <code>/etc/init/mongod.conf</code> file.</li>
+		<li>Add the lines below immediately after <code>chown $DEAMONUSER /var/run/mongodb.pid</code> and before <code>end script</code>.</li>
+		<li>Restart mongod (<code>service mongod restart</code>).</li>
+	</ol>
+	<p>
+		These are the lines to add to <code>/etc/init/mongod.conf</code>:
+	</p>
+	<pre>
+if test -f /sys/kernel/mm/transparent_hugepage/defrag; then
+  echo never > /sys/kernel/mm/transparent_hugepage/defrag
+fi</pre>
+
+	<h2>Install LeishVL microservices</h2>
+	
+	<p>Create the LeishVL directory tree and apply the needed permissions:</p>
+	
+	<code>
+		mkdir -p /opt/leishvl/{bin,etc,htdocs,lib/java,var/log,var/run} <br>
+		chown -R leishvl.leishvl /opt/leishvl
+	</code>
+	
+	<p>
+		Copy the uber JAR containing the microservice to the directory <code>/opt/leishvl/lib/java</code> and modify the script <code>jsvc_exec.sh</code>
+		to start/stop the microservice.
+	</p>
+	
+</body>
+</html>

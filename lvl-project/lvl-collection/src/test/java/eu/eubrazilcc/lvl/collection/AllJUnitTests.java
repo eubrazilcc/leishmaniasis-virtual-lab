@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.drive;
+package eu.eubrazilcc.lvl.collection;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -29,21 +29,21 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 /**
- * Groups the integration tests for their execution.
+ * Groups the unit tests for their execution.
  * @author Erik Torres <ertorser@upv.es>
  */
 @RunWith(Suite.class)
-@SuiteClasses({ AppDaemonTest.class })
-public class AllIntegrationTests {
+@SuiteClasses({ })
+public class AllJUnitTests {
 
 	@BeforeClass
 	public static void setup() {
-		System.out.println("AllIntegrationTests.setup()");
+		System.out.println("AllJUnitTests.setup()");		
 	}
 
 	@AfterClass
 	public static void release() {
-		System.out.println("AllIntegrationTests.release()");
+		System.out.println("AllJUnitTests.release()");
 	}
 
 }

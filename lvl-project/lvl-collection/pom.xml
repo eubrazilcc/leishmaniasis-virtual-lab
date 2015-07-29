@@ -81,6 +81,28 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 					</includes>
 				</configuration>				
 			</plugin>
+			<!-- Package application into executable JAR -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>${maven-shade-plugin.version}</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>eu.eubrazilcc.lvl.collection.AppDaemon</mainClass>
+								</transformer>
+							</transformers>
+							<outputFile>${project.build.directory}/${project.artifactId}-${project.version}-uber.jar</outputFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 	
