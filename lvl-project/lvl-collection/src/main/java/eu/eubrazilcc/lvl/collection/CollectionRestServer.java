@@ -27,6 +27,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import org.slf4j.Logger;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
@@ -72,6 +73,11 @@ public class CollectionRestServer extends AbstractVerticle {
 		final int port = context.config().getInteger("http.port", 8080);		
 		vertx.createHttpServer().requestHandler(router::accept).listen(port);
 		LOGGER.trace("New instance created: [id=" + context.deploymentID() + "].");
+		
+		// TODO
+		final EventBus eb = vertx.eventBus();
+	    eb.consumer("news-feed", message -> System.out.println("\n\nReceived news: " + message.body() + "\n"));
+		// TODO
 	}
 
 	private void handleGetSandflies(final RoutingContext routingContext) {

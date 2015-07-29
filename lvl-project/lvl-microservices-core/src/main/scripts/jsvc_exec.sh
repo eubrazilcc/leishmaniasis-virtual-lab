@@ -59,12 +59,14 @@ APP_VERSION=0.3.0
 APP_NAME=lvl-${APP_SUFIX}
 APP_DIR=$(dirname $SCRIPT_DIR)
 APP_CONFIG=${APP_DIR}/etc
-APP_JARFILE=${APP_DIR}/lib/java/${APP_NAME}-${APP_VERSION}-uber.jar
+APP_JARFILE=${APP_DIR}/lib/leishvl-${APP_VERSION}/${APP_NAME}-${APP_VERSION}-uber.jar
 APP_DAEMON_CLASS="eu.eubrazilcc.lvl.${APP_SUFIX}.AppDaemon"
 APP_WORKING_DIR=${APP_DIR}/var/run/${APP_NAME}/
 APP_OUT_FILE=${APP_WORKING_DIR}/${APP_NAME}.out
 APP_ERR_FILE=${APP_WORKING_DIR}/${APP_NAME}.err
 APP_PID_FILE=${APP_WORKING_DIR}/${APP_NAME}.pid
+
+VERTX_JARFILES="${APP_DIR}/lib/vert.x-3.0.0/lib/*"
 
 JSVC_EXEC="/usr/bin/jsvc"
 
@@ -114,11 +116,11 @@ start_exec()
   RUN_JAVA_DRY=${RUN_JAVA_DRY:=} # Do not execute when is not empty, but just print
 
   RUN_JAVA_OPTS="$RUN_JAVA_OPTS -Dlogback.configurationFile=${APP_CONFIG}/logback.xml"
-  APP_RUN_ARGS=""
+  APP_RUN_ARGS="-c ${APP_CONFIG}/application.conf"
 
   # display full Java command
   if [ -n "$RUN_JAVA_DRY" ]; then
-    echo "$JSVC_EXEC -jvm server -cp $APP_JARFILE -home $JAVA_HOME -cwd ${APP_DIR}/var/run/${APP_NAME}/ -outfile $APP_OUT_FILE -errfile $APP_ERR_FILE -pidfile $APP_PID_FILE $RUN_JAVA_OPTS $APP_DAEMON_CLASS $APP_RUN_ARGS"
+    echo "$JSVC_EXEC -jvm server -cp $VERTX_JARFILES:$APP_JARFILE -home $JAVA_HOME -cwd ${APP_DIR}/var/run/${APP_NAME}/ -outfile $APP_OUT_FILE -errfile $APP_ERR_FILE -pidfile $APP_PID_FILE $RUN_JAVA_OPTS $APP_DAEMON_CLASS $APP_RUN_ARGS"
   fi
 
   # run with jsvc
@@ -128,13 +130,13 @@ start_exec()
         echo "error in working directory creation: ${APP_WORKING_DIR}" ;
         exit 2 ;
     fi
-    $JSVC_EXEC -jvm server -cp $APP_JARFILE -home $JAVA_HOME -cwd ${APP_DIR}/var/run/${APP_NAME}/ -outfile $APP_OUT_FILE -errfile $APP_ERR_FILE -pidfile $APP_PID_FILE $RUN_JAVA_OPTS $APP_DAEMON_CLASS $APP_RUN_ARGS
+    $JSVC_EXEC -jvm server -cp $VERTX_JARFILES:$APP_JARFILE -home $JAVA_HOME -cwd ${APP_DIR}/var/run/${APP_NAME}/ -outfile $APP_OUT_FILE -errfile $APP_ERR_FILE -pidfile $APP_PID_FILE $RUN_JAVA_OPTS $APP_DAEMON_CLASS $APP_RUN_ARGS
   fi
 }
 
 stop_exec()
 {
-  $JSVC_EXEC -jvm server -cp $APP_JARFILE -home $JAVA_HOME -cwd ${APP_WORKING_DIR} -outfile $APP_OUT_FILE -errfile $APP_ERR_FILE -pidfile $APP_PID_FILE -stop $APP_DAEMON_CLASS  
+  $JSVC_EXEC -jvm server -cp $VERTX_JARFILES:$APP_JARFILE -home $JAVA_HOME -cwd ${APP_WORKING_DIR} -outfile $APP_OUT_FILE -errfile $APP_ERR_FILE -pidfile $APP_PID_FILE -stop $APP_DAEMON_CLASS  
 }
 
 status_exec()

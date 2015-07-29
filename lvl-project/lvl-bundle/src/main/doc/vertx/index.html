@@ -99,19 +99,34 @@ if test -f /sys/kernel/mm/transparent_hugepage/defrag; then
   echo never > /sys/kernel/mm/transparent_hugepage/defrag
 fi</pre>
 
-	<h2>Install LeishVL microservices</h2>
+	<h2>Install LeishVL microservices (0.3.0)</h2>
 	
 	<p>Create the LeishVL directory tree and apply the needed permissions:</p>
 	
 	<code>
-		mkdir -p /opt/leishvl/{bin,etc,htdocs,lib/java,var/log,var/run} <br>
+		mkdir -p /opt/leishvl/{bin,etc,htdocs,lib/leishvl-0.3.0,var/log,var/run} <br>
 		chown -R leishvl.leishvl /opt/leishvl
 	</code>
 	
 	<p>
-		Copy the uber JAR containing the microservice to the directory <code>/opt/leishvl/lib/java</code> and modify the script <code>jsvc_exec.sh</code>
+		Copy the uber JAR containing the microservice to the directory <code>/opt/leishvl/lib/leishvl-0.3.0</code> and modify the script <code>jsvc_exec.sh</code>
 		to start/stop the microservice.
 	</p>
+	
+	<h2>Install Vert.x (3.0.x)</h2>
+	
+	<p>
+		Download the latest binary distribution from Bintray:
+	</p>
+	
+	<code>wget https://bintray.com/artifact/download/vertx/downloads/vert.x-3.0.0-full.tar.gz</code>
+	
+	<p>
+		Extract the distribution to <code>/opt/leishvl/lib/</code>. For example, version <mark>3.0.0</mark>
+		will produce the following directory:
+	</p>
+	
+	<code>/opt/leishvl/lib/vert.x-3.0.0/</code>
 	
 </body>
 </html>

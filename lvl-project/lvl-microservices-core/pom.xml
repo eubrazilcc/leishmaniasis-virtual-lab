@@ -66,29 +66,9 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<!-- Vert.x open-source event-driven application framework and toolkit that runs on the JVM -->
 		<dependency>
 			<groupId>io.vertx</groupId>
-			<artifactId>vertx-auth-shiro</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-sockjs</artifactId>
+			<artifactId>vertx-core</artifactId>
+			<scope>provided</scope>
 		</dependency>		
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-mail-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-hazelcast</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-unit</artifactId>
-			<scope>test</scope>
-		</dependency>
 		
 		<!-- Javassist (JAVA programming ASSISTant) class library for editing bytecodes in Java -->
 		<dependency>

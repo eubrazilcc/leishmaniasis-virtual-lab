@@ -27,6 +27,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import org.slf4j.Logger;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
@@ -102,6 +103,11 @@ public class DriveRestServer extends AbstractVerticle {
 	}
 
 	private void handlePostDataset(final RoutingContext routingContext) {
+		// TODO
+		
+		// TODO
+		final EventBus eb = vertx.eventBus();
+		eb.send("news-feed", "New dataset created.");
 		// TODO
 		
 		final HttpServerResponse response = routingContext.response();
