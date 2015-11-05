@@ -1,12 +1,12 @@
-# Leishmaniasis-Virtual-Lab - [v0.2.0](http://lvl.i3m.upv.es/doc/#installation)
+# Leishmaniasis-Virtual-Lab - [v0.3.0](http://lvl.i3m.upv.es/doc/#installation)
 
 [http://lvl.i3m.upv.es](http://lvl.i3m.upv.es) - The Leishmaniasis Virtual Laboratory: an open, collaborative environment for research in leishmaniasis.
 
-![Screenshot - Home Page](screenshots/screenshot-home.png)
+![Screenshot - Home Page](screenshots/screenshot-homes.png)
 
-![Screenshot - Sequence Collection](screenshots/screenshot-collection.png)
+![Screenshot - Sequence Collection](screenshots/screenshot-collections.png)
 
-![Screenshot - Georeferenced maps](screenshots/screenshot-geo.png)
+![Screenshot - Georeferenced maps](screenshots/screenshot-geos.png)
 
 ## Endpoints
 
