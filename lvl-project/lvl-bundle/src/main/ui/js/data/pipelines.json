@@ -8,5 +8,15 @@
 				"folderId" : "4568"
 			}
 		]
+	},
+	{ 
+		"id" : "workflows-eubcc-ml_pipeline-1.0",
+		"stable" : "7713",
+		"parameters" : [ ]
+	},
+	{ 
+		"id" : "workflows-eubcc-mp_pipeline-1.0",
+		"stable" : "7712",
+		"parameters" : [ ]
 	}
 ]
