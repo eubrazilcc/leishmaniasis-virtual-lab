@@ -42,7 +42,7 @@ import org.junit.runners.Suite.SuiteClasses;
  */
 @RunWith(Suite.class)
 // TODO @SuiteClasses({ ActiveMQConnectorTest.class, ResourceOwnerCollectionTest.class, CitationCollectionTest.class, DatasetCollectionTest.class })
-@SuiteClasses({ ResourceOwnerCollectionTest.class })
+@SuiteClasses({ CitationCollectionTest.class })
 public class AllIntegrationTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

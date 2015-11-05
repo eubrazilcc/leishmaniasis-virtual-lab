@@ -41,7 +41,7 @@ ertorser@regab:~$ mkdir TEMP
 ertorser@regab:~$ cd TEMP/
 
 ertorser@regab:~/TEMP$ clear ; rm -rf /home/ertorser/TEMP/ui/ ; \
-cp -r ~/Workspace/eclipse-jee-luna/leishmaniasis-virtual-lab/lvl-project/lvl-bundle/src/main/ui/ /home/ertorser/TEMP/
+cp -r ~/Workspace/eclipse-jee-mars/leishmaniasis-virtual-lab/lvl-project/lvl-bundle/src/main/ui/ /home/ertorser/TEMP/
 
 ertorser@regab:~/TEMP/ui$ r.js -o build.js
 
