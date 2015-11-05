@@ -2,11 +2,11 @@
 
 [http://lvl.i3m.upv.es](http://lvl.i3m.upv.es) - The Leishmaniasis Virtual Laboratory: an open, collaborative environment for research in leishmaniasis.
 
-![Screenshot - Home Page](screenshots/screenshot-homes.png)
+![Screenshot - Home Page](screenshots/screenshot-home2.png)
 
-![Screenshot - Sequence Collection](screenshots/screenshot-collections.png)
+![Screenshot - Sequence Collection](screenshots/screenshot-collection2.png)
 
-![Screenshot - Georeferenced maps](screenshots/screenshot-geos.png)
+![Screenshot - Georeferenced maps](screenshots/screenshot-geo2.png)
 
 ## Endpoints
 
