@@ -11,12 +11,12 @@
 	},
 	{ 
 		"id" : "workflows-eubcc-ml_pipeline-1.0",
-		"stable" : "7713",
+		"stable" : "7908",
 		"parameters" : [ ]
 	},
 	{ 
 		"id" : "workflows-eubcc-mp_pipeline-1.0",
-		"stable" : "7712",
+		"stable" : "7909",
 		"parameters" : [ ]
 	}
 ]

@@ -50,14 +50,12 @@ define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/propertie
 		},
 		getUserLocation : function(callback, error) {
 			if ('function' === typeof callback) {
-				$.ajax('https://freegeoip.net/json/').done(function(location) {
+				$.ajax({ url: 'https://freegeoip.net/json/' }, { timeout: 4000 }).done(function(location) {
 					callback(location);
 				}).fail(function(jqXHR, textStatus) {
-					if ('function' === typeof error) {
-						error(textStatus);
-					} else {
-						console.log('Failed to get user location', textStatus);
-					}
+					callback({ longitude: -0.3762881000000107, latitude: 39.4699075});
+					if ('function' === typeof error) error(textStatus);
+					else console.log('Failed to get user location: ', textStatus);
 				});
 			}
 		},

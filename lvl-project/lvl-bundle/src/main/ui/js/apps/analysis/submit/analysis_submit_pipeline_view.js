@@ -14,7 +14,7 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 				this.$el.addClass('form-group');
 				if (this.model.get('name') === 'HTTPGet-RequestHeaders') {
 					this.$el.addClass('hidden');
-				} else if (this.model.get('name') === 'SequenceURL' || this.model.get('name') === 'Sequence URL') {
+				} else if (this.model.get('name') === 'SequenceURL') {
 					this.$el.find('input.form-control').attr({
 						'data-provide' : 'typeahead',
 						'autocomplete' : 'off'
@@ -116,7 +116,6 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 					case 'HTTPGet-RequestHeaders':
 						value = 'Authorization: Bearer ' + Lvl.config.authorizationToken()
 						break;
-					case 'Sequence URL':
 					case 'SequenceURL':
 						value = Lvl.config.get('service.url') + '/datasets/objects/~/' + encodeURIComponent(formData[param.get('name')]) + '/download'
 						break;
