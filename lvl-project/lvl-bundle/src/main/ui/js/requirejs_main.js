@@ -34,6 +34,8 @@ requirejs.config({
 		'openlayers' : 'vendor/ol.min', // 0.3.4
 		/* Filesize.js */
 		'filesize' : 'vendor/filesize.min', // 3.1.2
+		/* FileSaver.js */
+		'FileSaver' : 'vendor/FileSaver.min', // 1.1.20151003
 		/* Chance.js */
 		'chance' : 'vendor/chance.min', // 0.7.4 (removed map line from JS library to avoid unavailable map error)
 		/* Moment.js */
@@ -71,6 +73,9 @@ requirejs.config({
 		},
 		'backgrid-filter' : {
 			deps : [ 'backgrid' ]
+		},
+		'FileSaver' : {
+			exports : 'saveAs'
 		}
 	},
 	callback : function() {

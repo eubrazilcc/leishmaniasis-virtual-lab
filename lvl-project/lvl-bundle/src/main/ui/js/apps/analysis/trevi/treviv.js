@@ -26,9 +26,19 @@ define([ 'app', 'tpl!apps/analysis/trevi/tpls/trevi', 'entities/workflow_run', '
 				}, '500', 'swing');
 			},
 			events : {
+				'click a#btn-export' : 'exportTree',
 				'click a#btn-zoom-in' : 'zoomInTree',
 				'click a#btn-zoom-out' : 'zoomOutTree',
 				'click a#btn-restore' : 'restoreTree'
+			},
+			exportTree : function(e) {
+				e.preventDefault();
+				var self = this;				
+				var svg = self.$el.find('#svg-container svg:first').parent().html();
+				var filename = self.$el.find('a#btn-export').attr('data-filename');
+				require([ 'FileSaver' ], function(saveAs) {
+					saveAs(new Blob([svg], { type: 'application/svg+xml'}), filename);					
+				});
 			},
 			zoomInTree : function(e) {
 				e.preventDefault();
