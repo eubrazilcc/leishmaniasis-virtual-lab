@@ -138,8 +138,8 @@ define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/propertie
 			var token = this.authorizationToken();
 			return (token !== null ? 'access_token=' + encodeURIComponent(token) : null);
 		},
-		redirectUri : function() {
-			return this.get('auth') + '/linkedin/callback';
+		redirectUri : function() {			
+			return this.get('auth.url') + '/linkedin/callback';
 		},
 		linkedInAuthEndpoint : function(state) {
 			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.props.getProperty('linkedin', 'api_key')

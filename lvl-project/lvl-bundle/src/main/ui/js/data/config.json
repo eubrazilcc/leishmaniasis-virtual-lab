@@ -4,7 +4,7 @@
 		"properties" : [
 			{
 				"name" : "url",
-				"value" : "http://dedalo.i3m.upv.es"
+				"value" : "http://lvl.i3m.upv.es"
 			},
 			{
 				"name" : "api_version",
