@@ -1,5 +1,9 @@
 # Leishmaniasis-Virtual-Lab - [v0.3.0](http://lvl.i3m.upv.es/doc/#installation)
 
+## Master Build Status
+
+<a href='https://travis-ci.org/eubrazilcc/leishmaniasis-virtual-lab/builds'><img src='https://api.travis-ci.org/eubrazilcc/leishmaniasis-virtual-lab.svg'></a>
+
 [http://lvl.i3m.upv.es](http://lvl.i3m.upv.es) - The Leishmaniasis Virtual Laboratory: an open, collaborative environment for research in leishmaniasis.
 
 ![Screenshot - Home Page](screenshots/screenshot-home3.png)

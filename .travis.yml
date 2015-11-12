@@ -3,6 +3,12 @@ language: java
 jdk:
   - oraclejdk8
 
+sudo: false
+
+cache:
+  directories:
+  - $HOME/.m2
+
 before_install:
   - mvn install:install-file -Dfile=pom.xml -DpomFile=pom.xml
   - mvn clean install -pl lvl-project
