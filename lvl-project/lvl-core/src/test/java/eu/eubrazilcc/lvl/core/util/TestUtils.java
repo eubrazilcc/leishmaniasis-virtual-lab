@@ -41,6 +41,8 @@ import java.util.List;
 public class TestUtils {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";
+	
+	public static final String FASTA_FOLDER = "fasta";
 
 	public static final String GENBANK_FOLDER = "genbank";
 	public static final String GB_SETS_FOLDER = GENBANK_FOLDER + separator + "sets";
@@ -69,6 +71,11 @@ public class TestUtils {
 			anchorFile = new File(System.getProperty("user.dir"));
 		}
 		RESOURCES_FOLDER = anchorFile.getParent();
+	}
+	
+	public static Collection<File> getFastaFiles() {
+		final File dir = new File(concat(TEST_RESOURCES_PATH, FASTA_FOLDER));		
+		return listFiles(dir, new String[] { "fasta", "fas" }, false);
 	}
 
 	public static Collection<File> getGenBankFlatFiles() {

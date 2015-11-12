@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +42,7 @@ import java.util.regex.Pattern;
  */
 public class FastaReader {
 
-	public static final int MAX_LINE_LENGTH = 120;
+	private static final int MAX_LINE_LENGTH = Integer.MAX_VALUE;
 
 	public static final Pattern COMMENT = compile("^[>|;].*");
 	public static final Pattern NA_CODE = compile("^[ACGTURYKMSWBDHVNX\\-]+$", CASE_INSENSITIVE);
@@ -65,11 +66,13 @@ public class FastaReader {
 				} else {
 					// process sequences
 					if (type == null) type = getType(line);
-					checkState(line.length() <= MAX_LINE_LENGTH && checkType(line, type));
-					if (sb == null) sb = new StringBuilder();
-					sb.append(line);					
+					if (isNotBlank(line)) {
+						checkState(line.length() <= MAX_LINE_LENGTH && checkType(line, type));
+						if (sb == null) sb = new StringBuilder();
+						sb.append(line);
+					}
 					last = "fragment";
-				}				
+				}
 			}
 		}
 		if ("fragment".equals(last) && sb != null) {
