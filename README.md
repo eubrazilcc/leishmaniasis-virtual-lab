@@ -1,7 +1,5 @@
 # Leishmaniasis-Virtual-Lab - [v0.3.0](http://lvl.i3m.upv.es/doc/#installation)
 
-|travis-status|_
-
 [http://lvl.i3m.upv.es](http://lvl.i3m.upv.es) - The Leishmaniasis Virtual Laboratory: an open, collaborative environment for research in leishmaniasis.
 
 ![Screenshot - Home Page](screenshots/screenshot-home3.png)

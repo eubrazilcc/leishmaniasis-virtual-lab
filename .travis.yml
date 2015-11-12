@@ -1,0 +1,6 @@
+language: java
+
+before_install:
+  - mvn install:install-file -Dfile=pom.xml -DpomFile=pom.xml
+  - mvn clean install -pl lvl-project
+
