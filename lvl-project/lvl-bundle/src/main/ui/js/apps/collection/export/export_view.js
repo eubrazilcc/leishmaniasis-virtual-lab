@@ -16,7 +16,7 @@ define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'ch
 				}
 			},
 			initialize : function(options) {
-				this.data_source = options.data_source || 'sandflies';
+				this.data_source = options.data_source || 'sandflies';				
 			},
 			events : {
 				'click button#export-btn' : 'exportDataset'

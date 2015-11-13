@@ -4,7 +4,7 @@
 
 define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/collection/browse/tpls/toolbar_browse', 'tpl!common/search/tpls/search_term',
 		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/sequence', 'entities/saved_search', 'pace',
-		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, BrowseTpl,
+		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter', 'common/ext/backgrid_ext' ], function(Lvl, BrowseTpl,
 		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, SequenceEntity, SavedSearchEntity, pace, mapCn) {
 	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
@@ -194,7 +194,7 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 			},
 			exportFile : function(e, data) {
 				e.preventDefault();
-				var selectedModels = e.data.view.grid.getSelectedModels();
+				var selectedModels = e.data.view.grid.getAllSelectedIds();
 				if (selectedModels && selectedModels.length > 0) {
 					$('#lvl-floating-menu').hide('fast');
 					e.data.view.trigger('sequences:file:export', e.data.view.collection.data_source, selectedModels);
@@ -203,7 +203,7 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 					require([ 'common/growl' ], function(createGrowl) {
 						createGrowl('No sequences selected', 'Select at least one sequence to be exported', false);
 					});
-				}
+				}				
 			},
 			deselectAll : function(e) {
 				e.preventDefault();

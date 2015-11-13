@@ -8,6 +8,7 @@ sudo: false
 cache:
   directories:
   - $HOME/.m2
+  - $HOME/.embedmongo
 
 before_install:
   - mvn install:install-file -Dfile=pom.xml -DpomFile=pom.xml
