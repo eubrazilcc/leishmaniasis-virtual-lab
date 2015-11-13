@@ -24,48 +24,46 @@ package eu.eubrazilcc.lvl.service.io;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.FluentIterable.from;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
-import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.Format.GB_SEQ_XML;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
-import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.toFasta;
 import static eu.eubrazilcc.lvl.core.io.FastaReader.readFasta;
+import static eu.eubrazilcc.lvl.core.io.FastaWriter.writeFasta;
 import static eu.eubrazilcc.lvl.core.io.FileCompressor.gzip;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.isTextFile;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XML_FACTORY;
-import static eu.eubrazilcc.lvl.service.io.NcbiObjectWriter.openGenBankFile;
 import static eu.eubrazilcc.lvl.storage.dao.SequenceDAOHelper.fromString;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.Files.delete;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
+import static java.nio.file.Files.move;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+import static java.nio.file.Paths.get;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.REQUEST_ENTITY_TOO_LARGE;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.getBaseName;
-import static org.apache.commons.io.FilenameUtils.getName;
-import static org.apache.commons.io.IOUtils.copy;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.DirectoryNotEmptyException;
-import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
 
 import org.slf4j.Logger;
-
-import com.google.common.base.Function;
 
 import eu.eubrazilcc.lvl.core.Dataset;
 import eu.eubrazilcc.lvl.core.Metadata;
@@ -193,94 +191,78 @@ public final class DatasetWriter {
 		return checked;
 	}
 
-	private static File sequence2dataset(final Dataset dataset) {
+	private static File sequence2dataset(final Dataset dataset) {		
 		final Metadata metadata = dataset.getMetadata();
 		final String filter = isNotBlank(metadata.getTarget().getFilter()) ? metadata.getTarget().getFilter().trim().toLowerCase() : EXPORT_DEFAULT;
-		File outfile = null;
-		if (EXPORT_DEFAULT.equals(filter) || EXPORT_FASTA.equals(filter)) {
-			final String compression = getCompression(metadata.getTarget().getCompression());
-			final List<File> files = from(metadata.getTarget().getIds()).transform(new Function<String, File>() {
-				@Override
-				public File apply(final String id) {
-					final SequenceDAO<? extends Sequence> dao = fromString(metadata.getTarget().getCollection());
-					final Sequence sequence = dao.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
-					checkState(sequence != null, "Sequence not found: " + id);
-					return openGenBankFile(sequence, GB_SEQ_XML);
-				}
-			}).toList();
-			try {				
-				final File baseOutputDir = new File(CONFIG_MANAGER.getLocalCacheDir(), DatasetWriter.class.getSimpleName());
-				baseOutputDir.mkdirs();				
-				final File outputDir = createTempDirectory(baseOutputDir.toPath(), "dataset-").toFile();
-				if (EXPORT_FASTA.equals(filter)) {
-					if (files.size() == 1) {
-						outfile = writeFastaSequence(files.get(0), outputDir, compression);						
-					} else {
-						outfile = writeFastaSequences(files, outputDir, compression);
+		checkState(EXPORT_DEFAULT.equals(filter) || EXPORT_FASTA.equals(filter), "Unsupported filter: " + filter);
+		final String extension = EXPORT_DEFAULT.equals(filter) ? "xml" : "fasta";
+		final File outfile = createOutputFile(metadata.getTarget().getIds(), extension);
+		final String compression = getCompression(metadata.getTarget().getCompression());
+		try (final FileWriter fw = new FileWriter(outfile, true)) {
+			final int count = metadata.getTarget().getIds().size();
+			if (EXPORT_FASTA.equals(filter)) {
+				LOGGER.trace(new StringBuffer("Writing ").append(count).append(" FASTA sequence(s) to '")
+						.append(outfile.getAbsolutePath()).append("'").toString());
+				metadata.getTarget().getIds().stream().forEachOrdered(id -> {
+					final Sequence sequence = fetchSequence(metadata.getTarget().getCollection(), id);
+					try (final ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+						writeFasta(os, sequence.getSequence());
+						fw.append(new String(os.toByteArray(), UTF_8.name()));
+					} catch (IOException e2) {
+						throw new IllegalStateException("Failed to write FASTA sequence [id=" + id + "]", e2);
 					}
-					dataset.getMetadata().getTags().add("fasta");
+				});
+				dataset.getMetadata().getTags().add("fasta");
+			} else {
+				LOGGER.trace(new StringBuffer("Writing ").append(count).append(" NCBI sequence(s) to '")
+						.append(outfile.getAbsolutePath()).append("'").toString());
+				if (count == 1) {
+					final Sequence sequence = fetchSequence(metadata.getTarget().getCollection(), 
+							metadata.getTarget().getIds().iterator().next());
+					GBSEQ_XMLB.typeToFile(sequence.getSequence(), outfile);
 				} else {
-					if (files.size() == 1) {
-						outfile = writeGbXmlSequence(files.get(0), outputDir, compression);
-					} else {
-						outfile = writeGbXmlSequences(files, outputDir, compression);
-					}
-					dataset.getMetadata().getTags().add("ncbi_xml");
+					final GBSet set = GBSEQ_XML_FACTORY.createGBSet();
+					metadata.getTarget().getIds().stream().forEachOrdered(id -> {
+						final Sequence sequence = fetchSequence(metadata.getTarget().getCollection(), id);
+						set.getGBSeq().add(sequence.getSequence());
+					});
+					GBSEQ_XMLB.typeToFile(set, outfile);
 				}
+				dataset.getMetadata().getTags().add("ncbi_xml");
+			}
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to write sequence(s) to file", e);
+		}
+		// file compression
+		if (GZIP.equals(compression)) {
+			try {
+				final String outfilename = outfile.getCanonicalPath();
+				final String gzFilename = gzip(outfilename);
+				move(get(gzFilename), get(outfilename), REPLACE_EXISTING);
 			} catch (IOException e) {
-				throw new IllegalStateException("Failed to copy sequence", e);
-			}	
-		} else {
-			throw new IllegalArgumentException("Unsupported filter: " + metadata.getTarget().getFilter());
+				throw new IllegalStateException("Failed to apply file compression", e);
+			}
 		}
 		return outfile;
 	}
 
-	private static File writeFastaSequence(final File inFile, final File outDir, final String compression) throws IOException {		
-		final File outFile = new File(outDir, getBaseName(inFile.getCanonicalPath()) + ".fasta" + (compression.equals(GZIP) ? ".gz" : ""));
-		LOGGER.trace("Writing FASTA sequence from '" + inFile.getCanonicalPath() + "' to '" + outFile.getCanonicalPath() + "'");
-		toFasta(inFile, outFile.getCanonicalPath(), compression.equals(GZIP));
-		return outFile;
+	private static File createOutputFile(final Set<String> ids, final String ext) {
+		try {
+			final File baseOutputDir = new File(CONFIG_MANAGER.getLocalCacheDir(), DatasetWriter.class.getSimpleName());
+			baseOutputDir.mkdirs();
+			final File outDir = createTempDirectory(baseOutputDir.toPath(), "dataset-").toFile();
+			return new File(outDir, new StringBuffer(ids.size() == 1 ? ids.iterator().next() : "sequences")
+					.append(".").append(ext).toString());
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to create output file", e);
+		}
 	}
 
-	private static File writeFastaSequences(final List<File> files, final File outDir, final String compression) throws IOException {
-		final File outFile = new File(outDir, "sequences.fasta" + (compression.equals(GZIP) ? ".gz" : ""));
-		LOGGER.trace("Writing a bulk of FASTA sequences to '" + outFile.getCanonicalPath() + "'");
-		toFasta(files, outFile.getCanonicalPath(), compression.equals(GZIP));
-		return outFile;
-	}
-
-	private static File writeGbXmlSequence(final File inFile, final File outDir, final String compression) throws IOException {		
-		final File outFile = new File(outDir, getName(inFile.getCanonicalPath()));
-		String outFilename = outFile.getCanonicalPath();		
-		LOGGER.trace("Writing NCBI sequence from '" + inFile.getCanonicalPath() + "' to '" + outFile.getCanonicalPath() + "'");
-		outFile.getParentFile().mkdirs();
-		try (final FileInputStream fin = new FileInputStream(inFile); final FileOutputStream fos = new FileOutputStream(outFile)) {			
-			copy(fin, fos);
-		}
-		if (compression.equals(GZIP)) {
-			outFilename = gzip(outFile.getCanonicalPath());
-			outFile.delete();
-		}
-		return new File(outFilename);
-	}
-
-	private static File writeGbXmlSequences(final List<File> files, final File outDir, final String compression) throws IOException {
-		final File outFile = new File(outDir, "sequences.xml");
-		String outFilename = outFile.getCanonicalPath();
-		LOGGER.trace("Writing a bulk of NCBI sequences to '" + outFile.getCanonicalPath());
-		final GBSet set = GBSEQ_XML_FACTORY.createGBSet();
-		for (final File file : files) {
-			final GBSeq sequence = getSequence(file);
-			set.getGBSeq().add(sequence);
-		}
-		outFile.getParentFile().mkdirs();
-		GBSEQ_XMLB.typeToFile(set, outFile);
-		if (compression.equals(GZIP)) {
-			outFilename = gzip(outFile.getCanonicalPath());
-			outFile.delete();
-		}
-		return new File(outFilename);
+	private static final Sequence fetchSequence(final String collection, final String id) {
+		final SequenceDAO<? extends Sequence> dao = fromString(collection);
+		final Sequence sequence = dao.find(SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG));
+		checkState(sequence != null, "Sequence not found: " + id);
+		return sequence;
 	}
 
 	public static void unsetDataset(final Dataset dataset) {

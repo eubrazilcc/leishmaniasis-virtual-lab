@@ -49,11 +49,13 @@ public class GbSeqXmlHelper {
 	/**
 	 * Converts the specified file, which is expected to contain a valid sequence in GenBank Sequence XML format, to FASTA and
 	 * writes the produced FASTA to the filesystem. Optionally, the output file can be compressed with GZIP.
+	 * @deprecated Unsafe use of collection of files.
 	 * @param file - a file containing a valid sequence in GenBank Sequence XML format
 	 * @param filename - the file where the FASTA output will be written
 	 * @param compressed - setting this parameter to {@code true} will cause the FASTA output file to be compressed with GZIP
 	 * @throws IOException when an exception occurs on converting the file to FASTA
 	 */
+	@Deprecated
 	public static void toFasta(final File file, final String filename, final boolean compressed) throws IOException {
 		checkArgument(file != null, "Uninitialized file");
 		toFasta(of(file), filename, compressed);
@@ -62,11 +64,13 @@ public class GbSeqXmlHelper {
 	/**
 	 * Converts a collection of files, which are expected to contain valid sequences in GenBank Sequence XML format, to FASTA and
 	 * writes the produced FASTA to the filesystem. Optionally, the output file can be compressed with GZIP.
+	 * @deprecated Unsafe use of collection of files.
 	 * @param files - a collection of files, each containing a valid sequence in GenBank Sequence XML format
 	 * @param filename - the file where the FASTA output will be written
 	 * @param compressed - setting this parameter to {@code true} will cause the FASTA output file to be compressed with GZIP
 	 * @throws IOException when an exception occurs on converting the file to FASTA
 	 */
+	@Deprecated
 	public static void toFasta(final Collection<File> files, final String filename, final boolean compressed) throws IOException {
 		checkArgument(files != null && !files.isEmpty(), "Uninitialized files collection");		
 		final File outfile = new File(filename);

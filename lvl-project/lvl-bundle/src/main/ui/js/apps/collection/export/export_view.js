@@ -19,7 +19,7 @@ define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'ch
 				this.data_source = options.data_source || 'sandflies';				
 			},
 			events : {
-				'click button#export-btn' : 'exportDataset'
+				'click button#export_export-btn' : 'exportDataset'
 			},
 			exportDataset : function(e) {
 				e.preventDefault();
@@ -39,7 +39,7 @@ define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'ch
 				};
 				// submit request to LVL server
 				var self = this;
-				$('#export-btn').attr('disabled', 'disabled');
+				$('#export_export-btn').attr('disabled', 'disabled');
 				var jqxhr = $.ajax({
 					type : 'POST',
 					contentType : 'application/json',
