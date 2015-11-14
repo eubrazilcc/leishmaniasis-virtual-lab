@@ -30,6 +30,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
+import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.formattedQuery;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
@@ -37,11 +38,16 @@ import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearb
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.SEQUENCE_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.ORIGINAL_SEQUENCE_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
+import static java.util.Optional.ofNullable;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -74,6 +80,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
+import eu.eubrazilcc.lvl.core.Identifiers;
 import eu.eubrazilcc.lvl.core.Paginable;
 import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.Sequence;
@@ -127,6 +134,7 @@ public final class SandflySequenceResource {
 				.sort(sort)
 				.order(order)
 				.query(q)
+				.hash(computeHash(q, sort))
 				.build();
 		// get sequences from database
 		final MutableLong count = new MutableLong(0l);
@@ -141,6 +149,25 @@ public final class SandflySequenceResource {
 		final List<FormattedQueryParam> formattedQuery = formattedQuery(filter, Sequence.class);
 		paginable.setFormattedQuery(formattedQuery);
 		return paginable;
+	}
+
+	@GET	
+	@Produces(APPLICATION_JSON)
+	@Path("project/identifiers")
+	public Identifiers getIdentifiers(final @QueryParam("q") @DefaultValue("") String q,			
+			final @QueryParam("sort") @DefaultValue("") String sort,
+			final @QueryParam("order") @DefaultValue("asc") String order,
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:public:*:view");
+		// get sequences from database
+		final ImmutableMap<String, String> filter = parseQuery(q);
+		final Sorting sorting = parseSorting(sort, order);		
+		final List<Sandfly> sequences = SANDFLY_DAO.list(0, Integer.MAX_VALUE, filter, sorting, ImmutableMap.of("sandfly.id", true), null);
+		// process and return to the caller
+		final Set<String> ids = ofNullable(sequences).orElse(Collections.<Sandfly>emptyList()).stream().map(s -> {
+			return s != null ? s.getId() : null;
+		}).filter(Objects::nonNull).collect(Collectors.toSet());
+		return Identifiers.builder().hash(computeHash(q, sort)).identifiers(ids).build();
 	}
 
 	@GET
@@ -279,32 +306,32 @@ public final class SandflySequenceResource {
 
 		@InjectLinks({
 			@InjectLink(resource=SandflySequenceResource.class, method="getSequences", bindings={
-				@Binding(name="page", value="${instance.page - 1}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="q", value="${instance.query}")
+					@Binding(name="page", value="${instance.page - 1}"),
+					@Binding(name="per_page", value="${instance.perPage}"),
+					@Binding(name="sort", value="${instance.sort}"),
+					@Binding(name="order", value="${instance.order}"),
+					@Binding(name="q", value="${instance.query}")
 			}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
 			@InjectLink(resource=SandflySequenceResource.class, method="getSequences", bindings={
-				@Binding(name="page", value="${0}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="q", value="${instance.query}")
+					@Binding(name="page", value="${0}"),
+					@Binding(name="per_page", value="${instance.perPage}"),
+					@Binding(name="sort", value="${instance.sort}"),
+					@Binding(name="order", value="${instance.order}"),
+					@Binding(name="q", value="${instance.query}")
 			}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
 			@InjectLink(resource=SandflySequenceResource.class, method="getSequences", bindings={
-				@Binding(name="page", value="${instance.page + 1}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="q", value="${instance.query}")
+					@Binding(name="page", value="${instance.page + 1}"),
+					@Binding(name="per_page", value="${instance.perPage}"),
+					@Binding(name="sort", value="${instance.sort}"),
+					@Binding(name="order", value="${instance.order}"),
+					@Binding(name="q", value="${instance.query}")
 			}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
 			@InjectLink(resource=SandflySequenceResource.class, method="getSequences", bindings={
-				@Binding(name="page", value="${instance.totalPages - 1}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="q", value="${instance.query}")
+					@Binding(name="page", value="${instance.totalPages - 1}"),
+					@Binding(name="per_page", value="${instance.perPage}"),
+					@Binding(name="sort", value="${instance.sort}"),
+					@Binding(name="order", value="${instance.order}"),
+					@Binding(name="q", value="${instance.query}")
 			}, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}")
 		})
 		@JsonSerialize(using = LinkListSerializer.class)
@@ -373,6 +400,11 @@ public final class SandflySequenceResource {
 
 			public SequencesBuilder totalCount(final int totalCount) {
 				instance.setTotalCount(totalCount);
+				return this;
+			}
+
+			public SequencesBuilder hash(final String hash) {
+				instance.setHash(hash);
 				return this;
 			}
 

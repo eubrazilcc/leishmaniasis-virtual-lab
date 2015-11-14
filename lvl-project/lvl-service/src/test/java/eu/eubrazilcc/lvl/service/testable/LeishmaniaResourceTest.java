@@ -32,7 +32,10 @@ import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -44,11 +47,13 @@ import javax.ws.rs.core.Response;
 import org.apache.http.client.fluent.Request;
 
 import eu.eubrazilcc.lvl.core.DataSource;
+import eu.eubrazilcc.lvl.core.Identifiers;
 import eu.eubrazilcc.lvl.core.Leishmania;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.service.rest.LeishmaniaSequenceResource;
+import eu.eubrazilcc.lvl.service.rest.LeishmaniaSequenceResource.Sequences;
 import eu.eubrazilcc.lvl.storage.SequenceKey;
 import eu.eubrazilcc.lvl.test.TestContext;
 import eu.eubrazilcc.lvl.test.Testable;
@@ -108,6 +113,31 @@ public class LeishmaniaResourceTest extends Testable {
 		System.out.println(" >> Get leishmania response JAX-RS object: " + response);
 		System.out.println(" >> Get leishmania HTTP headers: " + response.getStringHeaders());
 
+		// test get leishmania (Java object)
+		Sequences leishmanias = testCtxt.target().path(path.value()).request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
+				.get(Sequences.class);
+		assertThat("Get leishmanias result is not null", leishmanias, notNullValue());
+		assertThat("Get leishmanias list is not null", leishmanias.getElements(), notNullValue());
+		assertThat("Get leishmanias list is not empty", !leishmanias.getElements().isEmpty());
+		assertThat("Get leishmanias items count coincide with list size", leishmanias.getElements().size(), equalTo(leishmanias.getTotalCount()));
+		// uncomment for additional output			
+		System.out.println(" >> Get leishmanias result: " + leishmanias.toString());
+
+		// test get identifiers
+		final Identifiers identifiers = testCtxt.target().path(path.value()).path("project/identifiers")
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
+				.get(Identifiers.class);
+		assertThat("Get identifiers result is not null", identifiers, notNullValue());
+		assertThat("Get identifiers hash is correct", trim(identifiers.getHash()), allOf(notNullValue(), not(equalTo(""))));
+		assertThat("Get identifiers list is not null", identifiers.getIdentifiers(), notNullValue());
+		assertThat("Get identifiers list is not empty", !identifiers.getIdentifiers().isEmpty());
+		assertThat("Get identifiers items count coincide with list size", identifiers.getIdentifiers().size(), 
+				equalTo(leishmanias.getTotalCount()));
+		// uncomment for additional output			
+		System.out.println(" >> Get identifiers result: " + identifiers.toString());
+
 		// test leishmania pagination (JSON encoded)
 		final int perPage = 2;
 		response = testCtxt.target().path(path.value())
@@ -121,7 +151,7 @@ public class LeishmaniaResourceTest extends Testable {
 		payload = response.readEntity(String.class);
 		assertThat("Paginate leishmania first page response entity is not null", payload, notNullValue());
 		assertThat("Paginate leishmania first page response entity is not empty", isNotBlank(payload));			
-		final LeishmaniaSequenceResource.Sequences leishmanias = testCtxt.jsonMapper().readValue(payload, LeishmaniaSequenceResource.Sequences.class);			
+		leishmanias = testCtxt.jsonMapper().readValue(payload, LeishmaniaSequenceResource.Sequences.class);			
 		assertThat("Paginate leishmania first page result is not null", leishmanias, notNullValue());
 		assertThat("Paginate leishmania first page list is not null", leishmanias.getElements(), notNullValue());
 		assertThat("Paginate leishmania first page list is not empty", !leishmanias.getElements().isEmpty());

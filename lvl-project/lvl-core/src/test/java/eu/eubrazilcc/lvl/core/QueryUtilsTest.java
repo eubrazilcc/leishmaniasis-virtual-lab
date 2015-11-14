@@ -24,10 +24,13 @@ package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.mapToString;
+import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.formattedQuery;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -196,6 +199,17 @@ public class QueryUtilsTest {
 		} finally {			
 			System.out.println("QueryUtilsTest.test() has finished");
 		}
+	}
+
+	@Test
+	public void testHash() {
+		final String query = "full-text search term keyword1:value1 keyword2:\"value2\"";
+		final String sort = "field1=asc";
+		final String hash = computeHash(query, sort);
+		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
+		/* uncomment for additional output */
+		System.out.println(" >> INPUT  --> query: " + query + ", sort: " + sort + "<--");
+		System.out.println(" >> OUTPUT --> hash: " + hash + "<--");
 	}
 
 }

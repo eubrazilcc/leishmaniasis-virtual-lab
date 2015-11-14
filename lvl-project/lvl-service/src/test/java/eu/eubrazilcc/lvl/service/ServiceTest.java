@@ -252,10 +252,10 @@ public class ServiceTest {
 
 			// test saved search resource
 			new SavedSearchResourceTest(testCtxt).runTest();
-			
+
 			// test issues resource
 			new IssuesResourceTest(testCtxt).runTest();
-			
+
 			// test subscription request resource
 			new SubscriptionRequestResourceTest(testCtxt).runTest();
 

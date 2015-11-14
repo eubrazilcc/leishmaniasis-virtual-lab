@@ -38,7 +38,10 @@ import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -51,6 +54,7 @@ import javax.ws.rs.core.Response;
 import org.apache.http.client.fluent.Request;
 
 import eu.eubrazilcc.lvl.core.DataSource;
+import eu.eubrazilcc.lvl.core.Identifiers;
 import eu.eubrazilcc.lvl.core.Sandfly;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
@@ -135,6 +139,20 @@ public class SandflyResourceTest extends Testable {
 		assertThat("Get sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
 		// uncomment for additional output			
 		System.out.println(" >> Get sandflies result: " + sandflies.toString());
+
+		// test get identifiers
+		final Identifiers identifiers = testCtxt.target().path(path.value()).path("project/identifiers")
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
+				.get(Identifiers.class);
+		assertThat("Get identifiers result is not null", identifiers, notNullValue());
+		assertThat("Get identifiers hash is correct", trim(identifiers.getHash()), allOf(notNullValue(), not(equalTo(""))));
+		assertThat("Get identifiers list is not null", identifiers.getIdentifiers(), notNullValue());
+		assertThat("Get identifiers list is not empty", !identifiers.getIdentifiers().isEmpty());
+		assertThat("Get identifiers items count coincide with list size", identifiers.getIdentifiers().size(), 
+				equalTo(sandflies.getTotalCount()));
+		// uncomment for additional output			
+		System.out.println(" >> Get identifiers result: " + identifiers.toString());
 
 		// test sandfly pagination (JSON encoded)
 		final int perPage = 2;

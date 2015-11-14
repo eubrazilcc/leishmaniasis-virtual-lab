@@ -26,9 +26,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.transformEntries;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.normalizeSpace;
-import static org.apache.commons.lang.StringUtils.remove;
+import static com.google.common.hash.Hashing.murmur3_32;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.normalizeSpace;
+import static org.apache.commons.lang3.StringUtils.remove;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -103,6 +105,12 @@ public final class QueryUtils {
 						.build();
 			}
 		}).values());
+	}
+
+	public static String computeHash(final String query, final String sort) {
+		final String key = new StringBuffer(normalizeSpace(trimToEmpty(query)))
+				.append(normalizeSpace(trimToEmpty(sort))).toString();
+		return murmur3_32(1312301).newHasher().putBytes(key.getBytes()).hash().toString();		
 	}
 
 	private static String[] extractKeyword(final String str) {

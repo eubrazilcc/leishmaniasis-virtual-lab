@@ -116,7 +116,8 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 			initialize : function() {
 				this.data_source = this.collection.data_source || 'sandflies';
 				this.listenTo(this.collection, 'request', this.displaySpinner);
-				this.listenTo(this.collection, 'sync error', this.removeSpinner);
+				this.listenTo(this.collection, 'sync error', this.removeSpinner);				
+				this.listenTo(this.collection, 'backgrid:select-all', this.selectAllHandler);
 				this.grid = new Backgrid.Grid({
 					columns : [ {
 						name : '',
@@ -183,6 +184,15 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 					}
 				});
 			},
+			selectAllHandler : function(data, checked) {
+				var _self = this;
+				
+				// TODO
+				console.log('SELECT-ALL: count=' + _self.grid.getAllSelectedIds().length + ', checked=' + JSON.stringify(checked));
+				// TODO
+				
+				
+			},
 			events : {
 				'click a[data-search-term]' : 'resetSearchTerms',
 				'submit form#lvl-add-search-term-form' : 'addSearchTerm',
@@ -190,7 +200,7 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
 				'click a[data-country-code2]' : 'filterByCountry',
-				'click a[data-seq_id]' : 'showSequenceRecord'
+				'click a[data-seq_id]' : 'showSequenceRecord'				
 			},
 			exportFile : function(e, data) {
 				e.preventDefault();

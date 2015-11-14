@@ -427,7 +427,7 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 		}
 
 		// TODO
-		System.err.println("\n\n >> QUERY: " + (query != null ? query.toString() : "NULL") + "\n");
+		// System.err.println("\n\n >> QUERY: " + (query != null ? query.toString() : "NULL") + "\n");
 		// TODO
 
 		return query;

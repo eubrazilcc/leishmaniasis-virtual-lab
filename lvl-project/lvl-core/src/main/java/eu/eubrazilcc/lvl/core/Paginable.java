@@ -57,6 +57,8 @@ public abstract class Paginable<T> {
 	private int pageFirstEntry; // first entry of the current page
 	private int totalPages; // total number of pages
 	private int totalCount; // total number of elements
+	
+	private String hash; // hash computed from the query parameters
 
 	private List<T> elements = newArrayList(); // elements of the current page
 
@@ -145,6 +147,14 @@ public abstract class Paginable<T> {
 		this.totalCount = totalCount;
 		setTotalPages(totalPages(this.totalCount, this.perPage));
 	}
+	
+	public String getHash() {
+		return hash;
+	}
+
+	public void setHash(final String hash) {
+		this.hash = hash;
+	}
 
 	public List<T> getElements() {
 		return elements;
@@ -171,6 +181,7 @@ public abstract class Paginable<T> {
 				.add("pageFirstEntry", pageFirstEntry)
 				.add("totalPages", totalPages)
 				.add("totalCount", totalCount)
+				.add("hash", hash)
 				.add("elements", collectionToString(elements))
 				.add("links", links != null ? collectionToString(links) : null)
 				.toString();
