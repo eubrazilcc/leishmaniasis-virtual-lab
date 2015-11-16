@@ -1,6 +1,0 @@
-{
-	"namespace" : "eu.eubrazilcc.lvl.storage.avro.messages",
-	"type" : "enum",
-	"name" : "ImportDataCommand",
-	"symbols" : [ "MANAGER_RUN", "IMPORTER_RUN" ]
-}

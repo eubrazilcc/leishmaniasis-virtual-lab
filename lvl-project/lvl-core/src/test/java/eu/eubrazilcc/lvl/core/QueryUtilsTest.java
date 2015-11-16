@@ -203,12 +203,31 @@ public class QueryUtilsTest {
 
 	@Test
 	public void testHash() {
-		final String query = "full-text search term keyword1:value1 keyword2:\"value2\"";
-		final String sort = "field1=asc";
-		final String hash = computeHash(query, sort);
+		// test hash computation using query and sort
+		String query = "full-text search term keyword1:value1 keyword2:\"value2\"";
+		String sort = "field1=asc";
+		String hash = computeHash(query, sort);
 		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
 		/* uncomment for additional output */
 		System.out.println(" >> INPUT  --> query: " + query + ", sort: " + sort + "<--");
+		System.out.println(" >> OUTPUT --> hash: " + hash + "<--");
+
+		// test hash computation using query
+		query = "full-text search term keyword1:value1 keyword2:\"value2\"";
+		sort = null;
+		hash = computeHash(query, sort);
+		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
+		/* uncomment for additional output */
+		System.out.println(" >> INPUT  --> query: " + query + ", sort: NULL<--");
+		System.out.println(" >> OUTPUT --> hash: " + hash + "<--");
+
+		// test hash computation with empty query
+		query = "";
+		sort = null;
+		hash = computeHash(query, sort);
+		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
+		/* uncomment for additional output */
+		System.out.println(" >> INPUT  --> query: " + query + ", sort: NULL<--");
 		System.out.println(" >> OUTPUT --> hash: " + hash + "<--");
 	}
 

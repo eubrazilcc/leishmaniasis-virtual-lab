@@ -30,7 +30,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -38,6 +37,8 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 
 import java.net.URI;
 
@@ -83,7 +84,7 @@ public class LeishmaniaResourceTest extends Testable {
 		SequenceKey sequenceKey = SequenceKey.builder()
 				.dataSource(leishmania.getDataSource())
 				.accession(leishmania.getAccession())
-				.build();			
+				.build();
 		Response response = testCtxt.target().path(path.value()).request()
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.post(entity(leishmania, APPLICATION_JSON));			
@@ -91,8 +92,7 @@ public class LeishmaniaResourceTest extends Testable {
 		assertThat("Create new leishmania response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 		assertThat("Create new leishmania response is not empty", response.getEntity(), notNullValue());
 		String payload = response.readEntity(String.class);
-		assertThat("Create new leishmania response entity is not null", payload, notNullValue());
-		assertThat("Create new leishmania response entity is empty", isBlank(payload));
+		assertThat("Create new leishmania response entity is empty", trim(payload), allOf(notNullValue(), equalTo("")));
 		// uncomment for additional output			
 		System.out.println(" >> Create new leishmania response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Create new leishmania response JAX-RS object: " + response);
@@ -106,8 +106,7 @@ public class LeishmaniaResourceTest extends Testable {
 		assertThat("Get leishmania response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
 		assertThat("Get leishmania response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Get leishmania response entity is not null", payload, notNullValue());
-		assertThat("Get leishmania response entity is not empty", isNotBlank(payload));
+		assertThat("Get leishmania response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));
 		// uncomment for additional output			
 		System.out.println(" >> Get leishmania response body (JSON): " + payload);
 		System.out.println(" >> Get leishmania response JAX-RS object: " + response);
@@ -118,9 +117,7 @@ public class LeishmaniaResourceTest extends Testable {
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Sequences.class);
 		assertThat("Get leishmanias result is not null", leishmanias, notNullValue());
-		assertThat("Get leishmanias list is not null", leishmanias.getElements(), notNullValue());
-		assertThat("Get leishmanias list is not empty", !leishmanias.getElements().isEmpty());
-		assertThat("Get leishmanias items count coincide with list size", leishmanias.getElements().size(), equalTo(leishmanias.getTotalCount()));
+		assertThat("Get leishmanias list coincides with expected", leishmanias.getElements(), allOf(notNullValue(), not(empty()), hasSize(leishmanias.getTotalCount())));
 		// uncomment for additional output			
 		System.out.println(" >> Get leishmanias result: " + leishmanias.toString());
 
@@ -131,10 +128,7 @@ public class LeishmaniaResourceTest extends Testable {
 				.get(Identifiers.class);
 		assertThat("Get identifiers result is not null", identifiers, notNullValue());
 		assertThat("Get identifiers hash is correct", trim(identifiers.getHash()), allOf(notNullValue(), not(equalTo(""))));
-		assertThat("Get identifiers list is not null", identifiers.getIdentifiers(), notNullValue());
-		assertThat("Get identifiers list is not empty", !identifiers.getIdentifiers().isEmpty());
-		assertThat("Get identifiers items count coincide with list size", identifiers.getIdentifiers().size(), 
-				equalTo(leishmanias.getTotalCount()));
+		assertThat("Get identifiers list coincides with expected", identifiers.getIdentifiers(), allOf(notNullValue(), not(empty()), hasSize(leishmanias.getTotalCount())));		
 		// uncomment for additional output			
 		System.out.println(" >> Get identifiers result: " + identifiers.toString());
 
@@ -149,14 +143,11 @@ public class LeishmaniaResourceTest extends Testable {
 		assertThat("Paginate leishmania first page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
 		assertThat("Paginate leishmania first page response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Paginate leishmania first page response entity is not null", payload, notNullValue());
-		assertThat("Paginate leishmania first page response entity is not empty", isNotBlank(payload));			
+		assertThat("Paginate leishmania first page response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));			
 		leishmanias = testCtxt.jsonMapper().readValue(payload, LeishmaniaSequenceResource.Sequences.class);			
 		assertThat("Paginate leishmania first page result is not null", leishmanias, notNullValue());
-		assertThat("Paginate leishmania first page list is not null", leishmanias.getElements(), notNullValue());
-		assertThat("Paginate leishmania first page list is not empty", !leishmanias.getElements().isEmpty());
-		assertThat("Paginate leishmania first page items count coincide with page size", leishmanias.getElements().size(), 
-				equalTo(min(perPage, leishmanias.getTotalCount())));
+		assertThat("Paginate leishmania first page list conincides with expected", leishmanias.getElements(), allOf(notNullValue(), not(empty()), 
+				hasSize(min(perPage, leishmanias.getTotalCount()))));		
 		// uncomment for additional output			
 		System.out.println(" >> Paginate leishmanias first page response body (JSON): " + payload);
 
@@ -170,8 +161,7 @@ public class LeishmaniaResourceTest extends Testable {
 		assertThat("Update leishmania response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 		assertThat("Update leishmania response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Update leishmania response entity is not null", payload, notNullValue());
-		assertThat("Update leishmania response entity is empty", isBlank(payload));
+		assertThat("Update leishmania response entity is empty", trim(payload), allOf(notNullValue(), equalTo("")));
 		// uncomment for additional output			
 		System.out.println(" >> Update leishmania response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Update leishmania response JAX-RS object: " + response);
@@ -202,8 +192,7 @@ public class LeishmaniaResourceTest extends Testable {
 		System.out.println(" >> Get nearby leishmania result (plain): " + response2);
 		FeatureCollection featCol = testCtxt.jsonMapper().readValue(response2, FeatureCollection.class);
 		assertThat("Get nearby leishmania result (plain) is not null", featCol, notNullValue());
-		assertThat("Get nearby leishmania (plain) list is not null", featCol.getFeatures(), notNullValue());
-		assertThat("Get nearby leishmania (plain) list is not empty", featCol.getFeatures().size() > 0);
+		assertThat("Get nearby leishmania (plain) list is not empty",  featCol.getFeatures(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output
 		System.out.println(" >> Get nearby leishmania result (plain): " + featCol.toString());
 
@@ -216,8 +205,7 @@ public class LeishmaniaResourceTest extends Testable {
 		assertThat("Delete leishmania response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 		assertThat("Delete leishmania response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Delete leishmania response entity is not null", payload, notNullValue());
-		assertThat("Delete leishmania response entity is empty", isBlank(payload));
+		assertThat("Delete leishmania response entity is empty", trim(payload), allOf(notNullValue(), equalTo("")));
 		// uncomment for additional output			
 		System.out.println(" >> Delete leishmania response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete leishmania response JAX-RS object: " + response);

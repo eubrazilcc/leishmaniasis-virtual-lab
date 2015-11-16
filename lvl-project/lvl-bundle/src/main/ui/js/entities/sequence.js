@@ -76,6 +76,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 			parseState : function(resp, queryParams, state, options) {
 				// set additional properties before returning to caller
 				this.formattedQuery = resp.formattedQuery;
+				this.lvlOpHash = resp.hash;
 				return {
 					totalRecords : resp.totalCount
 				};

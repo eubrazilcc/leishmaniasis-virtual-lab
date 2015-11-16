@@ -36,14 +36,14 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 
 import java.net.URI;
 
@@ -107,8 +107,7 @@ public class SandflyResourceTest extends Testable {
 		assertThat("Create new sandfly response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 		assertThat("Create new sandfly response is not empty", response.getEntity(), notNullValue());
 		String payload = response.readEntity(String.class);
-		assertThat("Create new sandfly response entity is not null", payload, notNullValue());
-		assertThat("Create new sandfly response entity is empty", isBlank(payload));
+		assertThat("Create new sandfly response entity is empty", trim(payload), allOf(notNullValue(), equalTo("")));
 		// uncomment for additional output			
 		System.out.println(" >> Create new sandfly response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Create new sandfly response JAX-RS object: " + response);
@@ -122,8 +121,7 @@ public class SandflyResourceTest extends Testable {
 		assertThat("Get sandflies response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
 		assertThat("Get sandflies response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Get sandflies response entity is not null", payload, notNullValue());
-		assertThat("Get sandflies response entity is not empty", isNotBlank(payload));
+		assertThat("Get sandflies response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));
 		// uncomment for additional output			
 		System.out.println(" >> Get sandflies response body (JSON): " + payload);
 		System.out.println(" >> Get sandflies response JAX-RS object: " + response);
@@ -134,9 +132,7 @@ public class SandflyResourceTest extends Testable {
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Sequences.class);
 		assertThat("Get sandflies result is not null", sandflies, notNullValue());
-		assertThat("Get sandflies list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Get sandflies list is not empty", !sandflies.getElements().isEmpty());
-		assertThat("Get sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
+		assertThat("Get sandflies list coincides with expected", sandflies.getElements(), allOf(notNullValue(), not(empty()), hasSize(sandflies.getTotalCount())));
 		// uncomment for additional output			
 		System.out.println(" >> Get sandflies result: " + sandflies.toString());
 
@@ -147,10 +143,7 @@ public class SandflyResourceTest extends Testable {
 				.get(Identifiers.class);
 		assertThat("Get identifiers result is not null", identifiers, notNullValue());
 		assertThat("Get identifiers hash is correct", trim(identifiers.getHash()), allOf(notNullValue(), not(equalTo(""))));
-		assertThat("Get identifiers list is not null", identifiers.getIdentifiers(), notNullValue());
-		assertThat("Get identifiers list is not empty", !identifiers.getIdentifiers().isEmpty());
-		assertThat("Get identifiers items count coincide with list size", identifiers.getIdentifiers().size(), 
-				equalTo(sandflies.getTotalCount()));
+		assertThat("Get identifiers list coincides with expected", identifiers.getIdentifiers(), allOf(notNullValue(), not(empty()), hasSize(sandflies.getTotalCount())));		
 		// uncomment for additional output			
 		System.out.println(" >> Get identifiers result: " + identifiers.toString());
 
@@ -165,20 +158,15 @@ public class SandflyResourceTest extends Testable {
 		assertThat("Paginate sandflies first page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
 		assertThat("Paginate sandflies first page response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Paginate sandflies first page response entity is not null", payload, notNullValue());
-		assertThat("Paginate sandflies first page response entity is not empty", isNotBlank(payload));			
-		sandflies = testCtxt.jsonMapper().readValue(payload, Sequences.class);			
+		assertThat("Paginate sandflies first page response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));			
+		sandflies = testCtxt.jsonMapper().readValue(payload, Sequences.class);
 		assertThat("Paginate sandflies first page result is not null", sandflies, notNullValue());
-		assertThat("Paginate sandflies first page list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Paginate sandflies first page list is not empty", !sandflies.getElements().isEmpty());
-		assertThat("Paginate sandflies first page items count coincide with page size", sandflies.getElements().size(), 
-				equalTo(min(perPage, sandflies.getTotalCount())));
+		assertThat("Paginate sandflies first page list coincides with expected", sandflies.getElements(), allOf(notNullValue(), not(empty()), 
+				hasSize(min(perPage, sandflies.getTotalCount()))));		
 		// uncomment for additional output			
 		System.out.println(" >> Paginate sandflies first page response body (JSON): " + payload);
 
-		assertThat("Paginate sandflies first page links is not null", sandflies.getLinks(), notNullValue());
-		assertThat("Paginate sandflies first page links is not empty", !sandflies.getLinks().isEmpty());
-		assertThat("Paginate sandflies first page links count coincide with expected", sandflies.getLinks().size(), equalTo(2));
+		assertThat("Paginate sandflies first page links coincides with expected", sandflies.getLinks(), allOf(notNullValue(), not(empty()), hasSize(2)));		
 		Link lastLink = null;
 		for (int i = 0; i < sandflies.getLinks().size() && lastLink == null; i++) {
 			final Link link = sandflies.getLinks().get(i);
@@ -198,18 +186,14 @@ public class SandflyResourceTest extends Testable {
 		assertThat("Paginate sandflies last page response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
 		assertThat("Paginate sandflies last page response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Paginate sandflies last page response entity is not null", payload, notNullValue());
-		assertThat("Paginate sandflies last page response entity is not empty", isNotBlank(payload));			
-		sandflies = testCtxt.jsonMapper().readValue(payload, Sequences.class);			
+		assertThat("Paginate sandflies last page response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));
+		sandflies = testCtxt.jsonMapper().readValue(payload, Sequences.class);
 		assertThat("Paginate sandflies last page result is not null", sandflies, notNullValue());
-		assertThat("Paginate sandflies last page list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Paginate sandflies last page list is not empty", !sandflies.getElements().isEmpty());
+		assertThat("Paginate sandflies last page list is not empty", sandflies.getElements(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output			
 		System.out.println(" >> Paginate sandflies last page response body (JSON): " + payload);
 
-		assertThat("Paginate sandflies last page links is not null", sandflies.getLinks(), notNullValue());
-		assertThat("Paginate sandflies last page links is not empty", !sandflies.getLinks().isEmpty());
-		assertThat("Paginate sandflies last page links count coincide with expected", sandflies.getLinks().size(), equalTo(2));
+		assertThat("Paginate sandflies last page links coincide with expected", sandflies.getLinks(), allOf(notNullValue(), not(empty()), hasSize(2)));
 
 		// test get sandflies pagination (Java object)
 		sandflies = testCtxt.target().path(path.value())
@@ -218,16 +202,12 @@ public class SandflyResourceTest extends Testable {
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Sequences.class);
 		assertThat("Paginate sandflies first page result is not null", sandflies, notNullValue());
-		assertThat("Paginate sandflies first page list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Paginate sandflies first page list is not empty", !sandflies.getElements().isEmpty());
-		assertThat("Paginate sandflies first page items count coincide with list size", sandflies.getElements().size(), 
-				equalTo(min(perPage, sandflies.getTotalCount())));
+		assertThat("Paginate sandflies first page list coincides with expected", sandflies.getElements(), allOf(notNullValue(), not(empty()), 
+				hasSize(min(perPage, sandflies.getTotalCount()))));		
 		// uncomment for additional output			
 		System.out.println(" >> Paginate sandflies first page result: " + sandflies.toString());
 
-		assertThat("Paginate sandflies first page links is not null", sandflies.getLinks(), notNullValue());
-		assertThat("Paginate sandflies first page links is not empty", !sandflies.getLinks().isEmpty());
-		assertThat("Paginate sandflies first page links count coincide with expected", sandflies.getLinks().size(), equalTo(2));
+		assertThat("Paginate sandflies first page links coincide with expected", sandflies.getLinks(), allOf(notNullValue(), not(empty()), hasSize(2)));
 		lastLink = null;
 		for (int i = 0; i < sandflies.getLinks().size() && lastLink == null; i++) {
 			final Link link = sandflies.getLinks().get(i);
@@ -244,14 +224,11 @@ public class SandflyResourceTest extends Testable {
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Sequences.class);
 		assertThat("Paginate sandflies last page result is not null", sandflies, notNullValue());
-		assertThat("Paginate sandflies last page list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Paginate sandflies last page list is not empty", !sandflies.getElements().isEmpty());
+		assertThat("Paginate sandflies last page list is not empty", sandflies.getElements(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output			
 		System.out.println(" >> Paginate sandflies last page result: " + sandflies.toString());
 
-		assertThat("Paginate sandflies last page links is not null", sandflies.getLinks(), notNullValue());
-		assertThat("Paginate sandflies last page links is not empty", !sandflies.getLinks().isEmpty());
-		assertThat("Paginate sandflies last page links count coincide with expected", sandflies.getLinks().size(), equalTo(2));
+		assertThat("Paginate sandflies last page links coincide with expected", sandflies.getLinks(), allOf(notNullValue(), not(empty()), hasSize(2)));
 
 		// test get sandflies applying a full-text search filter
 		sandflies = testCtxt.target().path(path.value())
@@ -260,10 +237,8 @@ public class SandflyResourceTest extends Testable {
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Sequences.class);
 		assertThat("Search sandflies result is not null", sandflies, notNullValue());
-		assertThat("Search sandflies list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Search sandflies list is not empty", !sandflies.getElements().isEmpty());
-		assertThat("Search sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
-		assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(3));
+		assertThat("Search sandflies list coincides with expected", sandflies.getElements(), allOf(notNullValue(), not(empty()), 
+				hasSize(sandflies.getTotalCount()), hasSize(3)));
 		// uncomment for additional output			
 		System.out.println(" >> Search sandflies result: " + sandflies.toString());
 
@@ -274,10 +249,8 @@ public class SandflyResourceTest extends Testable {
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Sequences.class);
 		assertThat("Search sandflies result is not null", sandflies, notNullValue());
-		assertThat("Search sandflies list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Search sandflies list is not empty", !sandflies.getElements().isEmpty());
-		assertThat("Search sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
-		assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(1));
+		assertThat("Search sandflies list coincides with expected", sandflies.getElements(), allOf(notNullValue(), not(empty()), 
+				hasSize(sandflies.getTotalCount()), hasSize(1)));	
 		// uncomment for additional output			
 		System.out.println(" >> Search sandflies result: " + sandflies.toString());
 
@@ -288,10 +261,8 @@ public class SandflyResourceTest extends Testable {
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Sequences.class);
 		assertThat("Search sandflies result is not null", sandflies, notNullValue());
-		assertThat("Search sandflies list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Search sandflies list is not empty", !sandflies.getElements().isEmpty());
-		assertThat("Search sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
-		assertThat("Search sandflies coincides result with expected", sandflies.getElements().size(), equalTo(4));
+		assertThat("Search sandflies list coincides with expected", sandflies.getElements(), allOf(notNullValue(), not(empty()), 
+				hasSize(sandflies.getTotalCount()), hasSize(4)));		
 		// uncomment for additional output			
 		System.out.println(" >> Search sandflies result: " + sandflies.toString());
 
@@ -306,14 +277,11 @@ public class SandflyResourceTest extends Testable {
 		assertThat("Search sandflies (JSON encoded) response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
 		assertThat("Search sandflies (JSON encoded) response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Search sandflies (JSON encoded) response entity is not null", payload, notNullValue());
-		assertThat("Search sandflies (JSON encoded) response entity is not empty", isNotBlank(payload));			
-		sandflies = testCtxt.jsonMapper().readValue(payload, Sequences.class);			
+		assertThat("Search sandflies (JSON encoded) response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));		
+		sandflies = testCtxt.jsonMapper().readValue(payload, Sequences.class);
 		assertThat("Search sandflies (JSON encoded) result is not null", sandflies, notNullValue());
-		assertThat("Search sandflies (JSON encoded) list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Search sandflies (JSON encoded) list is not empty", !sandflies.getElements().isEmpty());
-		assertThat("Search sandflies (JSON encoded) items count coincide with page size", sandflies.getElements().size(), 
-				equalTo(min(perPage, sandflies.getTotalCount())));
+		assertThat("Search sandflies (JSON encoded) items coincide with expected", sandflies.getElements(), allOf(notNullValue(), not(empty()), 
+				hasSize(min(perPage, sandflies.getTotalCount()))));
 		// uncomment for additional output			
 		System.out.println(" >> Search sandflies response body (JSON): " + payload);
 
@@ -325,9 +293,7 @@ public class SandflyResourceTest extends Testable {
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Sequences.class);
 		assertThat("Sorted sandflies result is not null", sandflies, notNullValue());
-		assertThat("Sorted sandflies list is not null", sandflies.getElements(), notNullValue());
-		assertThat("Sorted sandflies list is not empty", !sandflies.getElements().isEmpty());
-		assertThat("Sorted sandflies items count coincide with list size", sandflies.getElements().size(), equalTo(sandflies.getTotalCount()));
+		assertThat("Sorted sandflies items coincide with expected", sandflies.getElements(), allOf(notNullValue(), not(empty()), hasSize(sandflies.getTotalCount())));		
 		String last = "-1";
 		for (final Sandfly seq : sandflies.getElements()) {
 			assertThat("Sandflies are properly sorted", seq.getAccession().compareTo(last) > 0);
@@ -367,8 +333,7 @@ public class SandflyResourceTest extends Testable {
 		assertThat("Update sandfly response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 		assertThat("Update sandfly response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Update sandfly response entity is not null", payload, notNullValue());
-		assertThat("Update sandfly response entity is empty", isBlank(payload));
+		assertThat("Update sandfly response entity is empty", trim(payload), allOf(notNullValue(), equalTo("")));		
 		// uncomment for additional output			
 		System.out.println(" >> Update sandfly response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Update sandfly response JAX-RS object: " + response);
@@ -391,8 +356,7 @@ public class SandflyResourceTest extends Testable {
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(FeatureCollection.class);
 		assertThat("Get nearby sandflies result is not null", featCol, notNullValue());
-		assertThat("Get nearby sandflies list is not null", featCol.getFeatures(), notNullValue());
-		assertThat("Get nearby sandflies list is not empty", featCol.getFeatures().size() > 0);
+		assertThat("Get nearby sandflies list is not empty", featCol.getFeatures(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output			
 		System.out.println(" >> Get nearby sandflies result: " + featCol.toString());
 
@@ -405,14 +369,12 @@ public class SandflyResourceTest extends Testable {
 				.execute()
 				.returnContent()
 				.asString();
-		assertThat("Get nearby sandflies result (plain) is not null", response2, notNullValue());
-		assertThat("Get nearby sandflies result (plain) is not empty", isNotBlank(response2));
+		assertThat("Get nearby sandflies result (plain) is not empty", trim(response2), allOf(notNullValue(), not(equalTo(""))));
 		// uncomment for additional output
 		System.out.println(" >> Get nearby sandflies result (plain): " + response2);
 		featCol = testCtxt.jsonMapper().readValue(response2, FeatureCollection.class);
 		assertThat("Get nearby sandflies result (plain) is not null", featCol, notNullValue());
-		assertThat("Get nearby sandflies (plain) list is not null", featCol.getFeatures(), notNullValue());
-		assertThat("Get nearby sandflies (plain) list is not empty", featCol.getFeatures().size() > 0);
+		assertThat("Get nearby sandflies (plain) list is not empty", featCol.getFeatures(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output
 		System.out.println(" >> Get nearby sandflies result (plain): " + featCol.toString());
 
@@ -426,14 +388,12 @@ public class SandflyResourceTest extends Testable {
 				.execute()
 				.returnContent()
 				.asString();
-		assertThat("Get nearby sandflies result (plain + query token) is not null", response2, notNullValue());
-		assertThat("Get nearby sandflies result (plain + query token) is not empty", isNotBlank(response2));
+		assertThat("Get nearby sandflies result (plain + query token) is not empty", trim(response2), allOf(notNullValue(), not(equalTo(""))));		
 		// uncomment for additional output
 		System.out.println(" >> Get nearby sandflies result (plain + query token): " + response2);
 		featCol = testCtxt.jsonMapper().readValue(response2, FeatureCollection.class);
 		assertThat("Get nearby sandflies result (plain + query token) is not null", featCol, notNullValue());
-		assertThat("Get nearby sandflies (plain + query token) list is not null", featCol.getFeatures(), notNullValue());
-		assertThat("Get nearby sandflies (plain + query token) list is not empty", featCol.getFeatures().size() > 0);
+		assertThat("Get nearby sandflies (plain + query token) list is not empty", featCol.getFeatures(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output
 		System.out.println(" >> Get nearby sandflies result (plain + query token): " + featCol.toString());
 
@@ -446,9 +406,8 @@ public class SandflyResourceTest extends Testable {
 		assertThat("Delete sandfly response is NO_CONTENT", response.getStatus(), equalTo(NO_CONTENT.getStatusCode()));
 		assertThat("Delete sandfly response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Delete sandfly response entity is not null", payload, notNullValue());
-		assertThat("Delete sandfly response entity is empty", isBlank(payload));
-		// uncomment for additional output			
+		assertThat("Delete sandfly response entity is empty", trim(payload), allOf(notNullValue(), equalTo("")));		
+		// uncomment for additional output
 		System.out.println(" >> Delete sandfly response body (JSON), empty is OK: " + payload);
 		System.out.println(" >> Delete sandfly response JAX-RS object: " + response);
 		System.out.println(" >> Delete sandfly HTTP headers: " + response.getStringHeaders());

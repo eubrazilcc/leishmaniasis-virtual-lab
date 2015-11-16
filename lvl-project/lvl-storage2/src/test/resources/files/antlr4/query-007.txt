@@ -1,1 +1,0 @@
-(FOO > 115 AND (BAR = 1 OR BAR != 2))

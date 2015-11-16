@@ -134,7 +134,7 @@ public final class LeishmaniaSequenceResource {
 				.sort(sort)
 				.order(order)
 				.query(q)
-				.hash(computeHash(q, sort))
+				.hash(computeHash(q, null))
 				.build();
 		// get sequences from database
 		final MutableLong count = new MutableLong(0l);
@@ -167,7 +167,7 @@ public final class LeishmaniaSequenceResource {
 		final Set<String> ids = ofNullable(sequences).orElse(Collections.<Leishmania>emptyList()).stream().map(s -> {
 			return s != null ? s.getId() : null;
 		}).filter(Objects::nonNull).collect(Collectors.toSet());
-		return Identifiers.builder().hash(computeHash(q, sort)).identifiers(ids).build();
+		return Identifiers.builder().hash(computeHash(q, null)).identifiers(ids).build();
 	}
 
 	@GET

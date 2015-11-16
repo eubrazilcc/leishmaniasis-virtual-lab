@@ -1,1 +1,0 @@
-Phlebotomus AND "Gene Name":COI AND (Length > 600 AND Length < 10000)

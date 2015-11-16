@@ -182,6 +182,15 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 					} else {
 						$('#lvl-search-terms').hide('fast');
 					}
+					
+					// TODO
+					console.log('HASH: ', self.collection.lvlOpHash);					
+					console.log('QUERY: ', $('form.backgrid-filter:first').find('input:first').val());
+					
+					// TODO : sort
+					
+					// TODO
+					
 				});
 			},
 			selectAllHandler : function(data, checked) {

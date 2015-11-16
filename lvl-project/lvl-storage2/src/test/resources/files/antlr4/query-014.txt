@@ -1,1 +1,0 @@
-SIMSEQ(species:"Phlebotomus papatasi") > 90

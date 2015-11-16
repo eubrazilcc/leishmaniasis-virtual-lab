@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps.EntryTransformer;
@@ -107,7 +109,7 @@ public final class QueryUtils {
 		}).values());
 	}
 
-	public static String computeHash(final String query, final String sort) {
+	public static String computeHash(final String query, final @Nullable String sort) {
 		final String key = new StringBuffer(normalizeSpace(trimToEmpty(query)))
 				.append(normalizeSpace(trimToEmpty(sort))).toString();
 		return murmur3_32(1312301).newHasher().putBytes(key.getBytes()).hash().toString();		
