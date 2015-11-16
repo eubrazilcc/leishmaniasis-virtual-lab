@@ -3,9 +3,9 @@
  */
 
 define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/collection/browse/tpls/toolbar_browse', 'tpl!common/search/tpls/search_term',
-		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/sequence', 'entities/saved_search', 'pace',
+		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/sequence', 'entities/saved_search', 'entities/identifier', 'pace',
 		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter', 'common/ext/backgrid_ext' ], function(Lvl, BrowseTpl,
-		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, SequenceEntity, SavedSearchEntity, pace, mapCn) {
+		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, SequenceEntity, SavedSearchEntity, IdentifierEntity, pace, mapCn) {
 	Lvl.module('CollectionApp.Browse.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
@@ -149,58 +149,66 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 				pace.restart();
 				$('#grid-container').fadeTo('fast', 0.4);
 			},
-			removeSpinner : function() {
+			removeSpinner : function(reset) {
 				pace.stop();
-				var self = this;
-				$('#grid-container').fadeTo('fast', 1);
-				$('html,body').animate({
-					scrollTop : 0
-				}, '500', 'swing', function() {
-					// reset search terms
-					var searchCont = $('#lvl-search-terms-container');
-					searchCont.empty();
-					// setup search terms from server response
-					if (self.collection.formattedQuery && self.collection.formattedQuery.length > 0) {
-						var i = 1;
-						_.each(self.collection.formattedQuery, function(item) {
+				var self = this;				
+				$('#grid-container').fadeTo('fast', 1);				
+				if (typeof reset === 'boolean' ? reset : true) {					
+					$('html,body').animate({
+						scrollTop : 0
+					}, '500', 'swing', function() {
+						// reset search terms
+						var searchCont = $('#lvl-search-terms-container');
+						searchCont.empty();
+						// setup search terms from server response
+						if (self.collection.formattedQuery && self.collection.formattedQuery.length > 0) {
+							var i = 1;
+							_.each(self.collection.formattedQuery, function(item) {
+								searchCont.append(SearchTermTpl({
+									sterm_id : 'sterm_' + (i++),
+									sterm_text : item['term'],
+									sterm_icon : Boolean(item['valid']) ? 'label-success' : 'label-warning',
+									sterm_title : 'Remove'
+								}));
+							});
 							searchCont.append(SearchTermTpl({
-								sterm_id : 'sterm_' + (i++),
-								sterm_text : item['term'],
-								sterm_icon : Boolean(item['valid']) ? 'label-success' : 'label-warning',
-								sterm_title : 'Remove'
+								sterm_id : 'sterm_-1',
+								sterm_text : 'clear all',
+								sterm_icon : 'label-danger',
+								sterm_title : 'Remove All'
 							}));
+							searchCont.append(AddSearchTermTpl({}));
+							searchCont.append(SaveSearchTpl({}));
+							$('#lvl-search-terms').show('fast');
+						} else {
+							$('#lvl-search-terms').hide('fast');
+						}					
+					});
+				}
+			},			
+			selectAllHandler : function(data, checked) {				
+				var self = this;
+				if (checked === true) {
+					self.displaySpinner();
+					var identifierModel = new IdentifierEntity.Identifier({
+						'dataSource' : self.collection.data_source,
+						'queryParam' : $('form.backgrid-filter:first').find('input:first').val()
+					});
+					identifierModel.oauth2_token = Lvl.config.authorizationToken();
+					identifierModel.fetch({
+						reset : true
+					}).done(function() {						
+						if (identifierModel.get('hash') === self.collection.lvlOpHash) {
+							self.grid.addSelectedIds(identifierModel.get('identifiers'));
+						}
+					}).fail(function() {
+						require([ 'common/growl' ], function(createGrowl) {
+							createGrowl('Operation failed', 'Cannot select all sequences at this time. Please try again later.', false);
 						});
-						searchCont.append(SearchTermTpl({
-							sterm_id : 'sterm_-1',
-							sterm_text : 'clear all',
-							sterm_icon : 'label-danger',
-							sterm_title : 'Remove All'
-						}));
-						searchCont.append(AddSearchTermTpl({}));
-						searchCont.append(SaveSearchTpl({}));
-						$('#lvl-search-terms').show('fast');
-					} else {
-						$('#lvl-search-terms').hide('fast');
-					}
-					
-					// TODO
-					console.log('HASH: ', self.collection.lvlOpHash);					
-					console.log('QUERY: ', $('form.backgrid-filter:first').find('input:first').val());
-					
-					// TODO : sort
-					
-					// TODO
-					
-				});
-			},
-			selectAllHandler : function(data, checked) {
-				var _self = this;
-				
-				// TODO
-				console.log('SELECT-ALL: count=' + _self.grid.getAllSelectedIds().length + ', checked=' + JSON.stringify(checked));
-				// TODO
-				
-				
+					}).always(function() {
+						self.removeSpinner(false);
+					});
+				} else self.grid.deselectAll();
 			},
 			events : {
 				'click a[data-search-term]' : 'resetSearchTerms',
@@ -213,21 +221,28 @@ define([ 'app', 'tpl!apps/collection/browse/tpls/collection_browse', 'tpl!apps/c
 			},
 			exportFile : function(e, data) {
 				e.preventDefault();
-				var selectedModels = e.data.view.grid.getAllSelectedIds();
+				var selectedModels = e.data.view.grid.getAllSelectedIds();				
 				if (selectedModels && selectedModels.length > 0) {
-					$('#lvl-floating-menu').hide('fast');
-					e.data.view.trigger('sequences:file:export', e.data.view.collection.data_source, selectedModels);
+					if (selectedModels.length <= 1000) { // limit to 1000 sequences
+						$('#lvl-floating-menu').hide('fast');
+						e.data.view.trigger('sequences:file:export', e.data.view.collection.data_source, selectedModels);
+					} else {
+						$('#lvl-floating-menu').hide('0');
+						require([ 'common/growl' ], function(createGrowl) {
+							createGrowl('Export size limit reached', 'Export tool is currently limited to 1000 sequences.', false);
+						});
+					}				
 				} else {
 					$('#lvl-floating-menu').hide('0');
 					require([ 'common/growl' ], function(createGrowl) {
 						createGrowl('No sequences selected', 'Select at least one sequence to be exported', false);
 					});
-				}				
+				}
 			},
 			deselectAll : function(e) {
 				e.preventDefault();
 				$('#lvl-floating-menu').hide('fast');
-				e.data.grid.clearSelectedModels();
+				$('.select-all-header-cell > input:first').prop('checked', false).change();				
 			},
 			searchSequences : function(search) {
 				var backgridFilter = $('form.backgrid-filter:first');

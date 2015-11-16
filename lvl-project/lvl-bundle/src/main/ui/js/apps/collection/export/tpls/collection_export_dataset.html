@@ -9,14 +9,7 @@
 		<div class="modal-body">
 			<form role="form">
             	<fieldset>
-	            	<legend>A dataset will be created with the following sequences:</legend>	            
-	            	<div class="form-group">
-	            		<ul class="list-inline">
-							<% _.each(items, function(item){ %>
-				  			<li><%= item.id %></li>
-	            			<% }); %>
-	            		</ul>
-	            	</div>
+	            	<legend>A new dataset will be created with <%= sequencesCount %> sequences.</legend>	            	
 	            	<div class="form-group">
 	            		<label for="filename_input">Name:</label>
 	            		<input type="text" class="form-control" id="filename_input" name="filename_input" placeholder="Enter filename" value="<%= defaultFilename() %>">

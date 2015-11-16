@@ -15,6 +15,11 @@ define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'ch
 					});
 				}
 			},
+			serializeData: function() {
+				return {
+					'sequencesCount' : this.collection.length
+				};
+			},
 			initialize : function(options) {
 				this.data_source = options.data_source || 'sandflies';				
 			},
