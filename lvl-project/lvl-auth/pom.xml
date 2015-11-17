@@ -27,7 +27,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<parent>
 		<groupId>eu.eubrazilcc.lvl</groupId>
 		<artifactId>lvl-project</artifactId>
-		<version>0.3.0</version>
+		<version>0.8.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	
@@ -126,7 +126,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
-			<version>${mongodb.driver.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		

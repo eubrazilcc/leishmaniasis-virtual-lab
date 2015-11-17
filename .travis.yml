@@ -18,3 +18,6 @@ before_install:
   - sudo chown -R `whoami`.`whoami` /opt/lvl/var/log/lvl
   - mvn install:install-file -Dfile=pom.xml -DpomFile=pom.xml
   - mvn clean install -pl lvl-project
+
+after_success:
+  - mvn clean cobertura:cobertura coveralls:report

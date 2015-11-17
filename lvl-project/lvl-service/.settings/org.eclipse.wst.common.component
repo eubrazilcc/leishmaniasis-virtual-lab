@@ -4,10 +4,10 @@
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
-        <dependent-module archiveName="lvl-storage-0.3.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/lvl-storage/lvl-storage">
+        <dependent-module archiveName="lvl-storage-0.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/lvl-storage/lvl-storage">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="lvl-core-0.3.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/lvl-core/lvl-core">
+        <dependent-module archiveName="lvl-core-0.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/lvl-core/lvl-core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="context-root" value="lvl-service"/>

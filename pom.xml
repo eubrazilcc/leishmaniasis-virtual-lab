@@ -26,7 +26,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
 	<groupId>eu.eubrazilcc.lvl</groupId>
 	<artifactId>leishmaniasis-virtual-lab</artifactId>
-	<version>0.3.0</version>
+	<version>0.8.0</version>
 	<packaging>pom</packaging>
 
 	<name>leishmaniasis-virtual-laboratory - BOM</name>
@@ -345,17 +345,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			
 			<!-- MongoDB Java driver -->
 			
-			<!-- TODO <dependency> OLD
+			<dependency>
 				<groupId>org.mongodb</groupId>
 				<artifactId>mongo-java-driver</artifactId>
 				<version>${mongodb.driver.version}</version>
 			</dependency>
-			
-			<dependency> NEW
-				<groupId>org.mongodb</groupId>
-				<artifactId>mongodb-driver</artifactId>
-				<version>3.0.0</version>
-			</dependency> -->
 			
 			<!-- Apache ActiveMQ: open source message broker -->
 			
@@ -464,20 +458,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>eu.eubrazilcc.lvl</groupId>
 				<artifactId>lvl-storage</artifactId>
 				<version>${lvl.version}</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>eu.eubrazilcc.lvl</groupId>
-				<artifactId>lvl-core2</artifactId>
-				<version>${lvl.version}</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>eu.eubrazilcc.lvl</groupId>
-				<artifactId>lvl-storage2</artifactId>
-				<version>${lvl.version}</version>
-			</dependency>
-			
+			</dependency>			
+						
 			<dependency>
 				<groupId>eu.eubrazilcc.lvl</groupId>
 				<artifactId>lvl-service</artifactId>
@@ -488,22 +470,63 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>eu.eubrazilcc.lvl</groupId>
 				<artifactId>lvl-auth</artifactId>
 				<version>${lvl.version}</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>eu.eubrazilcc.lvl</groupId>
-				<artifactId>lvl-core3</artifactId>
-				<version>${lvl.version}</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>eu.eubrazilcc.lvl</groupId>
-				<artifactId>lvl-microservices-core</artifactId>
-				<version>${lvl.version}</version>
-			</dependency>
+			</dependency>			
 
 		</dependencies>
 	</dependencyManagement>
+	
+	<build>
+		<pluginManagement>
+			<plugins>
+				<!-- Cobertura: creates code coverage reports -->
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>cobertura-maven-plugin</artifactId>
+					<version>2.7</version>
+					<configuration>
+						<format>xml</format>
+						<maxmem>256m</maxmem>
+						<aggregate>true</aggregate>
+						<quiet>true</quiet>
+						<instrumentation>
+							<ignores>
+								<ignore>eu.eubrazilcc.lvl.core.xml.ncbi.esearch.*</ignore>
+								<ignore>eu.eubrazilcc.lvl.core.xml.ncbi.gb.*</ignore>
+								<ignore>eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.*</ignore>
+								<ignore>eu.eubrazilcc.lvl.core.xml.ncbi.taxonomy.*</ignore>
+								<ignore>eu.eubrazilcc.lvl.storage.ql.antlr4.*</ignore>
+								<ignore>eu.eubrazilcc.lvl.service.avro.messages.*</ignore>
+							</ignores>
+							<excludes>
+								<exclude>eu/eubrazilcc/lvl/core/xml/ncbi/esearch/**/*.class</exclude>
+								<exclude>eu/eubrazilcc/lvl/core/xml/ncbi/gb/**/*.class</exclude>
+								<exclude>eu/eubrazilcc/lvl/core/xml/ncbi/pubmed/**/*.class</exclude>
+								<exclude>eu/eubrazilcc/lvl/core/xml/ncbi/taxonomy/**/*.class</exclude>
+								<exclude>eu/eubrazilcc/lvl/storage/ql/antlr4/**/*.class</exclude>
+								<exclude>eu/eubrazilcc/lvl/service/avro/messages/**/*.class</exclude>
+							</excludes>
+						</instrumentation>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+			<!-- Cobertura: creates code coverage reports -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>				
+			</plugin>
+			<!-- Submit code coverage reports to Coveralls web service -->
+			<plugin>
+				<groupId>org.eluder.coveralls</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>4.0.0</version>
+				<!-- <configuration>
+					<repoToken>yourcoverallsprojectrepositorytoken</repoToken>
+				</configuration> -->
+			</plugin>
+		</plugins>
+	</build>
 
 	<modules>
 		<module>lvl-project</module>

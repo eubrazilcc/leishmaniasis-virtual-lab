@@ -2,15 +2,18 @@
 
 [http://lvl.i3m.upv.es](http://lvl.i3m.upv.es) - The Leishmaniasis Virtual Laboratory: an open, collaborative environment for research in leishmaniasis.
 
+## Master Build Status
+
+[![Build Status](https://api.travis-ci.org/eubrazilcc/leishmaniasis-virtual-lab.svg)](https://travis-ci.org/eubrazilcc/leishmaniasis-virtual-lab/builds)
+[![Coverage Status](https://coveralls.io/repos/eubrazilcc/leishmaniasis-virtual-lab/badge.svg?branch=master&service=github)](https://coveralls.io/github/eubrazilcc/leishmaniasis-virtual-lab?branch=master)
+
+## Screenshots
+
 ![Screenshot - Home Page](screenshots/screenshot-home3.png)
 
 ![Screenshot - Sequence Collection](screenshots/screenshot-collection3.png)
 
 ![Screenshot - Georeferenced maps](screenshots/screenshot-geo3.png)
-
-## Master Build Status
-
-<a href='https://travis-ci.org/eubrazilcc/leishmaniasis-virtual-lab/builds'><img src='https://api.travis-ci.org/eubrazilcc/leishmaniasis-virtual-lab.svg'></a>
 
 ## Endpoints
 
