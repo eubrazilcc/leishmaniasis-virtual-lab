@@ -2,13 +2,11 @@
   <div class="col-md-12">
     <form class="form-inline" id="map-toolbar">
       <fieldset>
-        <div class="form-group">
-          <label class="control-label">Layers: &nbsp;</label>
-          <input type="checkbox" id="opts_map_types_heatmap"> Heatmap &nbsp;          
-        </div>
-        <div class="form-group">
-          <input type="checkbox" id="opts_map_types_vectormap"> Vector map
-        </div>
+      	<div class="form-group">
+      		<label class="control-label">Layers: &nbsp;</label>     	
+      		<input type="radio" name="opts_map_types" value="male" id="opts_map_types_heatmap" checked> Heatmap &nbsp;
+      		<input type="radio" name="opts_map_types" value="female" id="opts_map_types_vectormap"> Vector map
+      	</div>      
       </fieldset>
     </form>
   </div>

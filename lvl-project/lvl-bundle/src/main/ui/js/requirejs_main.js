@@ -10,49 +10,49 @@ requirejs.config({
 		/* jQuery JavaScript library */
 		'jquery' : '//code.jquery.com/jquery-2.1.4.min', // 2.1.4
 		'spin' : 'vendor/spin.min', // 2.1.0
-		'jquery.spin' : 'vendor/jquery.spin.min', // 2.1.0
+		'jquery.spin' : 'vendor/jquery.spin.min', // 2.3.2
 		/* Boostrap front-end framework */
-		'bootstrap' : '//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min', // 3.3.4
+		'bootstrap' : '//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min', // 3.3.5
 		'bootstrapvalidator' : 'vendor/bootstrapValidator.min', // 0.5.3 (0.6.2 is commercial)
-		'bootstrap3-typeahead' : 'vendor/bootstrap3-typeahead.min',
+		'bootstrap3-typeahead' : 'vendor/bootstrap3-typeahead.min', // 3.1.0
 		/* Backbone + Marionette MVC framework */
 		'underscore' : 'vendor/underscore-min', // 1.8.3
-		'backbone' : 'vendor/backbone-min', // 1.2
-		'marionette' : 'vendor/backbone.marionette.min', // 2.4.1
+		'backbone' : 'vendor/backbone-min', // 1.2.3
+		'marionette' : 'vendor/backbone.marionette.min', // 2.4.3
 		/* Useful backbone plug-ins */
 		'routefilter' : 'vendor/backbone.routefilter.min', // 0.2.0
-		'backbone.syphon' : 'vendor/backbone.syphon.min', // 0.6.0
+		'backbone.syphon' : 'vendor/backbone.syphon.min', // 0.6.3
 		'backbone.picky' : 'vendor/backbone.picky.min', // 0.2.0
 		'backbone.paginator' : 'vendor/backbone.paginator.min', // 2.0.0
 		'backbone.oauth2' : 'plugins/backbone.oauth2',
 		/* Data grid based on Backbone */
 		'backgrid' : 'vendor/backgrid.min', // 0.3.5
-		'backgrid-paginator' : 'vendor/backgrid-paginator.min',
-		'backgrid-select-all' : 'vendor/backgrid-select-all.min',
-		'backgrid-filter' : 'vendor/backgrid-filter.min',
+		'backgrid-paginator' : 'vendor/backgrid-paginator.min', // 0.3.5
+		'backgrid-select-all' : 'vendor/backgrid-select-all.min', // 0.3.5
+		'backgrid-filter' : 'vendor/backgrid-filter.min', // 0.3.5
 		/* OpenLayers */
-		'openlayers' : 'vendor/ol.min', // 0.3.4
+		'openlayers' : 'vendor/ol.min', // 3.11.1
 		/* Filesize.js */
 		'filesize' : 'vendor/filesize.min', // 3.1.2
 		/* FileSaver.js */
 		'FileSaver' : 'vendor/FileSaver.min', // 1.1.20151003
 		/* Chance.js */
-		'chance' : 'vendor/chance.min', // 0.7.4 (removed map line from JS library to avoid unavailable map error)
+		'chance' : 'vendor/chance.min', // 0.8.0
 		/* Moment.js */
-		'moment' : 'vendor/moment.min', // 2.10.3
+		'moment' : 'vendor/moment.min', // 2.10.6
 		/* Pace */
 		'pace' : 'vendor/pace.min', // 1.0.0
 		/* qTip2 */
-		'imagesloaded' : 'vendor/imagesloaded.pkgd.min', // 3.1.8
+		'imagesloaded' : 'vendor/imagesloaded.pkgd.min', // 3.2.0
 		'qtip' : 'vendor/jquery.qtip.min', // 2.2.1
 		/* Chart.js */
 		'chartjs' : 'vendor/Chart.min', // 1.0.2
 		/* Hopscotch */
-		'hopscotch' : 'vendor/hopscotch.min', // 0.2.4
+		'hopscotch' : 'vendor/hopscotch.min', // 0.2.5
 		/* SVG pan and zoom */
 		'jquery.panzoom' : 'vendor/jquery.panzoom.min', // 2.0.5
 		/* Add support for underscore templates */
-		'text' : 'vendor/text.min', // 2.0.12
+		'text' : 'vendor/text.min', // 2.0.14
 		'tpl' : 'vendor/tpl.min', // 0.0.2
 		/* Wait for the DOM is ready */
 		'domReady' : 'vendor/domReady.min' // 2.0.1

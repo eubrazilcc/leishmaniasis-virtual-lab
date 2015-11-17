@@ -96,15 +96,15 @@ define([ 'app', 'tpl!apps/collection/map/tpls/collection_map' ], function(Lvl, M
 					var styleCache = {};
 
 					var vectorLayer = new ol.layer.Vector({
-						/* TODO source : new ol.source.Vector({
+						source : new ol.source.Vector({
 							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&' + Lvl.config.authorizationQuery(),
 							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
-						}), */
-						source : new ol.source.GeoJSON({
+						}),
+						/* TODO source : new ol.source.GeoJSON({
 							projection : 'EPSG:3857',
 							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&'
 									+ Lvl.config.authorizationQuery()
-						}),
+						}), */
 						style : function(feature, resolution) {
 							var text = resolution < 5000 ? feature.get('count') : '';
 							if (!styleCache[text]) {
@@ -116,16 +116,16 @@ define([ 'app', 'tpl!apps/collection/map/tpls/collection_map' ], function(Lvl, M
 					});
 
 					var heatmapLayer = new ol.layer.Heatmap({
-						/* TODO source : new ol.source.Vector({
+						source : new ol.source.Vector({
 							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&' + Lvl.config.authorizationQuery(),
 							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
-						}), */
-						source : new ol.source.GeoJSON({
+						}),
+						/* TODO source : new ol.source.GeoJSON({
 							extractStyles : false,
 							projection : 'EPSG:3857',
 							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&'
 									+ Lvl.config.authorizationQuery()
-						}),
+						}), */
 						radius : 5
 					});
 
@@ -206,10 +206,40 @@ define([ 'app', 'tpl!apps/collection/map/tpls/collection_map' ], function(Lvl, M
 						}),
 						ol3Logo : false
 					});
-					new ol.dom.Input($('#opts_map_types_heatmap')[0]).bindTo('checked', tonerRaster, 'visible');
-					new ol.dom.Input($('#opts_map_types_heatmap')[0]).bindTo('checked', heatmapLayer, 'visible');
-					new ol.dom.Input($('#opts_map_types_vectormap')[0]).bindTo('checked', osmRaster, 'visible');
-					new ol.dom.Input($('#opts_map_types_vectormap')[0]).bindTo('checked', vectorLayer, 'visible');
+					var radio1 = $('#opts_map_types_heatmap')[0];
+					radio1.addEventListener('change', function() {
+						var checked = this.checked;						
+						if (checked !== tonerRaster.getVisible()) {
+							tonerRaster.setVisible(checked);
+							heatmapLayer.setVisible(checked);
+							osmRaster.setVisible(!checked);
+							vectorLayer.setVisible(!checked);
+						}
+					});
+					tonerRaster.on('change:visible', function() {
+						var visible = this.getVisible();
+						if (visible !== radio1.checked) {
+							radio1.checked = visible;
+							radio2.checked = !visible;
+						}
+					});
+					var radio2 = $('#opts_map_types_vectormap')[0];
+					radio2.addEventListener('change', function() {
+						var checked = this.checked;
+						if (checked !== osmRaster.getVisible()) {
+							osmRaster.setVisible(checked);
+							vectorLayer.setVisible(checked);
+							tonerRaster.setVisible(!checked);
+							heatmapLayer.setVisible(!checked);
+						}
+					});
+					osmRaster.on('change:visible', function() {
+						var visible = this.getVisible();
+						if (visible !== radio2.checked) {
+							radio1.checked = !visible;
+							radio2.checked = visible;
+						}
+					});					
 
 					// add popup
 					var createSeqLinks = function(name) {
