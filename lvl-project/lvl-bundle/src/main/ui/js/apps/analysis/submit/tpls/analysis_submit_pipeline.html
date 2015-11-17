@@ -6,9 +6,48 @@
 			</button>
 			<h4 class="modal-title" id="myModalLabel">Run pipeline</h4>
 		</div>
-		<div class="modal-body">		
-			<form id="lvl-wf-params" role="form"></form>
-			<a id="alert" href=""></a>
+		<div class="modal-body">
+			<div class="hidden">
+				<ul class="nav nav-tabs" role="tablist" id="tabList">
+					<li role="presentation" class="active"><a href="#params" aria-controls="params" role="tab" data-toggle="tab">Paramenters</a></li>
+					<li role="presentation"><a href="#upload" aria-controls="upload" role="tab" data-toggle="tab">Upload</a></li>
+					<li role="presentation"><a href="#confirm-upload" aria-controls="confirm-upload" role="tab" data-toggle="tab">Confirm upload</a></li>
+				</ul>
+			</div>
+			<div class="tab-content">
+    			<div role="tabpanel" class="tab-pane fade in active" id="params">
+    				<form id="lvl-wf-params" role="form"></form>
+					<a id="alert" href=""></a>
+    			</div>
+    			<div role="tabpanel" class="tab-pane fade" id="upload">
+    				<form role="form" id="lvl-wf-upload-dataset" autocomplete="off" novalidate="novalidate">
+	    				<fieldset>
+	    					<legend>Upload a file from your computer</legend>	            	            
+	    					<div class="form-group">
+	    						<label for="filename_input">Name (optional):</label>
+	    						<input type="text" class="form-control" id="filename_input" name="filename_input" placeholder="Enter filename">
+	    					</div>
+	    					<div class="form-group">
+	    						<label for="description_input">Description (optional):</label>
+	    						<input type="text" class="form-control" id="description_input" name="description_input" placeholder="Enter description">
+	    					</div>
+	    					<div class="form-group">
+	    						<label for="file_input" class="control-label">File<sup class="text-danger" title="Required">*</sup>:</label>
+	    						<input type="file" class="form-control" id="file_input" name="file_input" accept=".txt,.xml,.fas,.fasta,.fna,.ffn,.faa,.frn,text/*">
+	    					</div>
+	    					<button class="btn btn-default back-to-params" type="button"><i class="fa fa-arrow-left fw"></i> Parameters</button>
+	    					<button class="btn btn-primary upload-form-button" type="button">Upload</button>
+	    				</fieldset>
+    				</form>    			
+    			</div>
+    			<div role="tabpanel" class="tab-pane fade" id="confirm-upload">
+    				<h3 class="text-danger">Dataset overwriting</h3>
+    				<p>This action will overwrite/replace an existing dataset. Are you sure?</p>
+    				<p>Dataset: <span class="text-danger" id="uploadFilename"></span></p>
+    				<button class="btn btn-default back-to-params" type="button"><i class="fa fa-arrow-left fw"></i> Parameters</button>
+    				<button class="btn btn-danger confirm-upload-button" type="button">Replace</button>
+    			</div>
+    		</div>
 		</div>
 		<div class="modal-footer">
 			<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
