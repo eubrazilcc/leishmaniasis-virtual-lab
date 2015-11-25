@@ -1,0 +1,35 @@
+    _ _         _     _  __     ___     __ _ _
+   / / |    ___(_)___| |_\ \   / / |    \ \ \ \
+  / /| |   / _ \ / __| '_ \ \ / /| |     \ \ \ \
+ ( ( | |__|  __/ \__ \ | | \ V / | |___   ) ) ) )
+  \ \|_____\___|_|___/_| |_|\_/  |_____| / / / /
+ ==\_\==================================/_/_/_/
+ :: Leishmaniasis Virtual Laboratory ::
+
+/* TEAM */
+Erik Torres Serrano:
+Twitter: @ertorser
+Email: ertorser@upv.es
+Country: Valencia, Spain
+
+Jacek Cala:
+Email: jacek.cala@newcastle.ac.uk
+Country: Newcastle, UK
+
+Andres Tomás:
+Email: antodo@upv.es
+Country: Valencia, Spain
+
+/* THANKS */
+FIOCRUZ (http://portal.fiocruz.br)
+ISCIII (http://www.isciii.es)
+CRIA (http://www.cria.org.br)
+Newcastle University (http://www.ncl.ac.uk)
+UPV (http://www.upv.es)
+GRyCAP (http://www.grycap.upv.es)
+
+/* SITE */
+Last update: 2015/11/19
+Standards: HTML5, CSS3
+Components: Bootstrap, jQuery, Backbone.js, Marionette.js
+Software: Eclipse IDE

@@ -59,7 +59,8 @@ define([ 'app', 'tpl!apps/analysis/runs_item/tpls/analysis_runs_item', 'entities
 			},
 			events : {				
 				'click a[data-open]' : 'openRun',
-				'click a#refresh-btn' : 'refreshRun'
+				'click a#refresh-btn' : 'refreshRun',
+				'click a#stop-btn' : 'stopRun'
 			},
 			openRun : function(e) {
 				e.preventDefault();
@@ -72,6 +73,36 @@ define([ 'app', 'tpl!apps/analysis/runs_item/tpls/analysis_runs_item', 'entities
 				e.preventDefault();
 				var self = this;
 				self.updateModel();
+			},
+			stopRun : function(e) {
+				e.preventDefault();
+				var self = this;
+				require([ 'common/confirm' ], function(confirmDialog) {
+					confirmDialog('Confirm cancellation', 'This action will cancel the pipeline execution. Are you sure?', function() {
+						var jqxhr = $.ajax({
+							type : 'PUT',
+							contentType : 'application/json',
+							crossDomain : true,
+							url : Lvl.config.get('service.url') + '/pipelines/runs/~/' + self.model.get('id') + '/cancel',
+							data : JSON.stringify({}),
+							headers : Lvl.config.authorizationHeader()
+						}).done(function(data, textStatus, request) {
+							require([ 'common/growl' ], function(createGrowl) {
+								var anchor = $('<a>', {
+									href : request.getResponseHeader('Location')
+								})[0];
+								var id = anchor.pathname.substring(anchor.pathname.lastIndexOf('/') + 1);
+								createGrowl('Pipeline cancelled: ' + self.model.get('id'), false);
+							});
+						}).fail(function() {
+							require([ 'common/alert' ], function(alertDialog) {
+								alertDialog('Error', 'Failed to cancel the molecular pipeline in the LVL service.');
+							});
+						});
+					}, {
+						btn_text : 'Stop execution'
+					});
+				});
 			},
 			onDestroy : function() {
 				this.terminateTimer();

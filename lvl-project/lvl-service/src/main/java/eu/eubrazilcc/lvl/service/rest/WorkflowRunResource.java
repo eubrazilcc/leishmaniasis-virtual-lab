@@ -229,13 +229,29 @@ public final class WorkflowRunResource {
 		}
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":" + id2 + ":edit");		
 		// get from database
-		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id);
+		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id2);
 		if (run == null) {
 			throw new WebApplicationException("Element not found", NOT_FOUND);
 		}
 		// update
 		WORKFLOW_RUN_DAO.update(update);
 	}
+	
+	@PUT
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}/cancel")
+	@Consumes(APPLICATION_JSON)
+	public void cancelWorkflowRun(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final WorkflowRun update, 
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);		
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("pipelines:runs:" + ns2permission(namespace2) + ":" + id2 + ":edit");		
+		// get from database
+		final WorkflowRun run = WORKFLOW_RUN_DAO.find(id2);
+		if (run == null) {
+			throw new WebApplicationException("Element not found", NOT_FOUND);
+		}
+		// cancel
+		ESCENTRAL_CONN.cancelExecution(run.getInvocationId());
+	}	
 
 	@DELETE
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")

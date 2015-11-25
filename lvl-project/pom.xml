@@ -26,7 +26,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<parent>
 		<groupId>eu.eubrazilcc.lvl</groupId>
 		<artifactId>leishmaniasis-virtual-lab</artifactId>
-		<version>0.8.0</version>
+		<version>0.8.1</version>
 		<relativePath>..</relativePath>
 	</parent>
 
@@ -51,13 +51,27 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<name>EUBrazilCC (EU‐Brazil Cloud Connect) Consortium</name>
 		<url>http://eubrazilcloudconnect.eu/</url>
 	</organization>
-
+	
 	<scm>
-		<connection>scm:svn:http://127.0.0.1/svn/lvl</connection>
-		<developerConnection>scm:svn:https://127.0.0.1/svn/lvl</developerConnection>
-		<tag>HEAD</tag>
-		<url>http://127.0.0.1/websvn/lvl</url>
+		<url>https://github.com/eubrazilcc/leishmaniasis-virtual-lab</url>
+		<connection>scm:git:git://github.com/eubrazilcc/leishmaniasis-virtual-lab.git</connection>
+		<developerConnection>scm:git:git@github.com:eubrazilcc/leishmaniasis-virtual-lab.git</developerConnection>
 	</scm>
+
+	<developers>
+		<developer>
+			<email>etorres@upv.es</email>
+			<name>Erik Torres</name>
+			<url>https://github.com/etorres</url>
+			<id>etorres</id>
+		</developer>
+		<developer>
+			<email>antodo@upv.es</email>
+			<name>Andres Tomas</name>
+			<url>https://github.com/antodo</url>
+			<id>antodo</id>
+		</developer>
+	</developers>
 
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>

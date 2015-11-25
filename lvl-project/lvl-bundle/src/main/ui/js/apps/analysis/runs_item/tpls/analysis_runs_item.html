@@ -11,7 +11,7 @@
     <div class="panel panel-default">
       <div class="panel-body">
         <h6>Invocation Id: <span style="color:#7F8C8D"><%= id %></span></h6>
-        <p>&nbsp;</p>
+        <p><a href="#" id="stop-btn" class="btn btn-default btn-sm <% if (status && (status.status === 'Finished' || status.status === 'ExecutionError' || status.status === 'Unknown')) { %>hidden<% } else { %>&nbsp;<% } %>" role="button">Stop</a>&nbsp;</p>
     	<h6>Progress: <span style="color:#7F8C8D"><% if (status) { %><%= status.completeness %><% } else { %><% print('0') %><% } %>%</span></h6>
     	<div class="progress">
 	      <div class="progress-bar progress-bar-<%= statusClass() %>" role="progressbar" aria-valuenow="<% if (status) { %><%= status.completeness %><% } else { %><% print('0') %><% } %>%" aria-valuemin="0" aria-valuemax="100" style="width: <% if (status) { %><%= status.completeness %><% } else { %><% print('0') %><% } %>%;">
