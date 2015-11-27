@@ -34,26 +34,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
 
-import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.JAXBIntrospector;
 import javax.xml.bind.Marshaller;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Source;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.stream.StreamSource;
 
 import org.slf4j.Logger;
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
 
 /**
  * Provides a template for implementing XML binding classes.
@@ -100,7 +91,7 @@ public abstract class XmlBinder {
 	@SuppressWarnings("unchecked")
 	public <T> T typeFromXml(final String payload) throws IOException {
 		try (final StringReader reader = new StringReader(payload)) {
-			return (T) getValue(context.createUnmarshaller().unmarshal(getSource(reader)));
+			return (T) getValue(context.createUnmarshaller().unmarshal(reader));
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
@@ -121,17 +112,17 @@ public abstract class XmlBinder {
 
 	@SuppressWarnings("unchecked")
 	public <T> T typeFromFile(final File file) throws IOException {
-		try (final FileReader reader = new FileReader(file)) {			
-			return (T) getValue(context.createUnmarshaller().unmarshal(getSource(reader)));
+		try (final FileReader reader = new FileReader(file)) {
+			return (T) getValue(context.createUnmarshaller().unmarshal(reader));
 		} catch (JAXBException e) {
 			throw new IOException(e);
-		}
+		}		
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T typeFromInputStream(final InputStream is) throws IOException {
 		try (final InputStreamReader reader = new InputStreamReader(is)) {
-			return (T) getValue(context.createUnmarshaller().unmarshal(getSource(reader)));
+			return (T) getValue(context.createUnmarshaller().unmarshal(reader));
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
@@ -148,21 +139,6 @@ public abstract class XmlBinder {
 		} catch (JAXBException e) {
 			throw new IOException(e);
 		}		
-	}
-
-	private Source getSource(final Reader reader) {
-		Source source = null;
-		try {
-			final SAXParserFactory spf = SAXParserFactory.newInstance();
-			spf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-			final SAXParser saxParser = spf.newSAXParser();
-			saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "file,http");
-			final XMLReader xmlReader = saxParser.getXMLReader();
-			source = new SAXSource(xmlReader, new InputSource(reader));
-		} catch (Exception e) {
-			source = new StreamSource(reader);
-		}		
-		return source;
 	}
 
 }

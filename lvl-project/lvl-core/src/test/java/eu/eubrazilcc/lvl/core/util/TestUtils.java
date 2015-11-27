@@ -41,7 +41,7 @@ import java.util.List;
 public class TestUtils {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";
-	
+
 	public static final String FASTA_FOLDER = "fasta";
 
 	public static final String GENBANK_FOLDER = "genbank";
@@ -54,6 +54,12 @@ public class TestUtils {
 
 	public static final String TAXONOMY_FOLDER = "taxonomy";
 	public static final String TAXONOMY_SETS_FOLDER = TAXONOMY_FOLDER + separator + "sets";
+
+	public static final String DWC_FOLDER = "dwc";
+	public static final String DWC_SETS_FOLDER = DWC_FOLDER + separator + "sets";
+
+	public static final String TAPIR_FOLDER = "tapir";
+	public static final String TAPIR_RESPONSES_FOLDER = TAPIR_FOLDER + separator + "responses";
 
 	public static final String PHYLOGENETIC_FOLDER = "phylogenetic";
 	public static final String PHYLOGENETIC_TREE_FOLDER = PHYLOGENETIC_FOLDER + separator + "tree";
@@ -72,7 +78,7 @@ public class TestUtils {
 		}
 		RESOURCES_FOLDER = anchorFile.getParent();
 	}
-	
+
 	public static Collection<File> getFastaFiles() {
 		final File dir = new File(concat(TEST_RESOURCES_PATH, FASTA_FOLDER));		
 		return listFiles(dir, new String[] { "fasta", "fas" }, false);
@@ -105,6 +111,16 @@ public class TestUtils {
 
 	public static Collection<File> getTaxonomyXMLSetFiles() {
 		final File dir = new File(concat(TEST_RESOURCES_PATH, TAXONOMY_SETS_FOLDER));
+		return listFiles(dir, new String[] { "xml" }, false);
+	}
+
+	public static Collection<File> getTapirResponses() {
+		final File dir = new File(concat(TEST_RESOURCES_PATH, TAPIR_RESPONSES_FOLDER));
+		return listFiles(dir, new String[] { "xml" }, false);
+	}
+
+	public static Collection<File> getDarwinCoreSets() {
+		final File dir = new File(concat(TEST_RESOURCES_PATH, DWC_SETS_FOLDER));
 		return listFiles(dir, new String[] { "xml" }, false);
 	}
 

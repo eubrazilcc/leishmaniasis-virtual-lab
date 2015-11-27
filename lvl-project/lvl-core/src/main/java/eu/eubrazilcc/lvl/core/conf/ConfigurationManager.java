@@ -32,6 +32,7 @@ import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Maps.newTreeMap;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.parseURL;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -195,9 +196,13 @@ public enum ConfigurationManager implements Closeable2 {
 	public String getPhyloTreeToolPath() {
 		return configuration().getPhyloTreeToolPath().or("");
 	}
-	
+
 	public boolean isUseXvfb() {
 		return configuration().isUseXvfb();
+	}
+
+	public @Nullable TapirCollection getSpeciesLink() {
+		return configuration().getSpeciesLink().orNull();
 	}
 
 	public String getLinkedInAPIKey() {
@@ -293,6 +298,7 @@ public enum ConfigurationManager implements Closeable2 {
 							configuration.setThrowExceptionOnMissing(false);
 							final String phyloTreeToolPath = getPath("tools.scripts.phylo-tree", configuration, foundNameList, null);
 							final boolean useXvfb = getBoolean("tools.xserver.use-xvfb", configuration, foundNameList, false);
+							final TapirCollection speciesLink = getTapirCollection("speciesLink", configuration, foundNameList, null);
 							final String linkedInAPIKey = getString("authz-server.linkedin.api-key", configuration, foundNameList, null); 
 							final String linkedInSecretKey = getString("authz-server.linkedin.secret-key", configuration, foundNameList, null);
 							final String googleAPIKey = getString("rest-service.google.api-key", configuration, foundNameList, null);
@@ -310,7 +316,7 @@ public enum ConfigurationManager implements Closeable2 {
 							}
 							dont_use = new Configuration(rootDir, localCacheDir, htdocsDir, maxUserUploadedFileSize, dbName, dbUsername, dbPassword, dbHosts, 
 									brokerEmbedded, messageBrokers, smtpHost, smtpPort, smtpSupportEmail, smtpNoreplyEmail, portalEndpoint, 
-									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, phyloTreeToolPath, useXvfb, linkedInAPIKey, linkedInSecretKey, 
+									wfHostname, wfSecure, wfPort, wfUsername, wfPasswd, phyloTreeToolPath, useXvfb, speciesLink, linkedInAPIKey, linkedInSecretKey, 
 									googleAPIKey, othersMap);
 							LOGGER.info(dont_use.toString());
 						} else {
@@ -398,6 +404,25 @@ public enum ConfigurationManager implements Closeable2 {
 		}).filter(and(notNull(), contains(pattern))).toList();		
 	}
 
+	private static @Nullable TapirCollection getTapirCollection(final String name, final CombinedConfiguration configuration, 
+			final List<String> foundNameList, final @Nullable TapirCollection defaultValue) {
+		foundNameList.add(name);
+		final URL url = getUrl(name + ".tapirlink", configuration, foundNameList, null);
+		final String outputModel = getString(name + ".output-model", configuration, foundNameList, null);
+		final String concept = getString(name + ".concept", configuration, foundNameList, null);
+		final String filter = getString(name + ".filter", configuration, foundNameList, null);
+		final String orderby = getString(name + ".orderby", configuration, foundNameList, null);
+		final List<String> collections = getStringList(name + ".collections.collection", Pattern.compile("^[\\w]+:[\\w-]+$"), configuration, foundNameList, null);
+		final Map<String, String> collectionsMap = newHashMap();
+		if (collections != null) {
+			for (final String collection : collections) {
+				final String[] tokens = collection.split(":", 2);
+				collectionsMap.put(tokens[0], tokens[1]);
+			}
+		}
+		return new TapirCollection(url, outputModel, concept, filter, orderby, collectionsMap);
+	}
+
 	private static String subsEnvVars(final String path, final boolean ensureWriting) {
 		String substituted = path;
 		if (path != null && path.trim().length() > 0) {
@@ -441,6 +466,7 @@ public enum ConfigurationManager implements Closeable2 {
 		private final Optional<String> wfPasswd;
 		private final Optional<String> phyloTreeToolPath;
 		private final boolean useXvfb;
+		private final Optional<TapirCollection> speciesLink;
 		// authorization server configuration
 		private final Optional<String> linkedInAPIKey;
 		private final Optional<String> linkedInSecretKey;
@@ -455,6 +481,7 @@ public enum ConfigurationManager implements Closeable2 {
 				final @Nullable String portalEndpoint,
 				final @Nullable String wfHostname, final boolean wfSecure, final int wfPort, final @Nullable String wfUsername, final @Nullable String wfPasswd,
 				final @Nullable String phyloTreeToolPath, final boolean useXvfb,
+				final @Nullable TapirCollection speciesLink,
 				final @Nullable String linkedInAPIKey, final @Nullable String linkedInSecretKey,
 				final @Nullable String googleAPIKey,
 				final @Nullable Map<String, String> othersMap) {
@@ -481,6 +508,7 @@ public enum ConfigurationManager implements Closeable2 {
 			this.wfPasswd = fromNullable(trimToNull(wfPasswd));
 			this.phyloTreeToolPath = fromNullable(phyloTreeToolPath);
 			this.useXvfb = useXvfb;
+			this.speciesLink = fromNullable(speciesLink);
 			this.linkedInAPIKey = fromNullable(trimToNull(linkedInAPIKey));
 			this.linkedInSecretKey = fromNullable(trimToNull(linkedInSecretKey));
 			this.googleAPIKey = fromNullable(trimToNull(googleAPIKey));
@@ -555,6 +583,9 @@ public enum ConfigurationManager implements Closeable2 {
 		public boolean isUseXvfb() {
 			return useXvfb;
 		}
+		public Optional<TapirCollection> getSpeciesLink() {
+			return speciesLink;
+		}
 		public Optional<String> getLinkedInAPIKey() {
 			return linkedInAPIKey;
 		}
@@ -600,6 +631,7 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("wfPasswd", wfPasswd.orNull())
 					.add("phyloTreeToolPath", phyloTreeToolPath.orNull())
 					.add("useXvfb", useXvfb)
+					.add("speciesLink", speciesLink.orNull())
 					.add("linkedInAPIKey", linkedInAPIKey.orNull())
 					.add("linkedInSecretKey", linkedInSecretKey.orNull())
 					.add("googleAPIKey", googleAPIKey.orNull())
@@ -629,6 +661,61 @@ public enum ConfigurationManager implements Closeable2 {
 				}
 			}
 			return str; 
+		}
+	}
+
+	public static class TapirCollection {
+		private final URL url;
+		private final String outputModel; // URL or alias
+		private final String concept;
+		private final String filter;
+		private final String orderby;
+		private final Map<String, String> collections;
+
+		public TapirCollection(final URL url, final String outputModel, final String concept, final String filter, final String orderby, 
+				final Map<String, String> collections) {
+			this.url = url;
+			this.outputModel = outputModel;
+			this.concept = concept;
+			this.filter = filter;
+			this.orderby = orderby;
+			this.collections = collections;
+		}
+
+		public URL getUrl() {
+			return url;
+		}
+
+		public String getOutputModel() {
+			return outputModel;
+		}
+
+		public String getConcept() {
+			return concept;
+		}
+
+		public String getFilter() {
+			return filter;
+		}
+
+		public String getOrderby() {
+			return orderby;
+		}
+
+		public Map<String, String> getCollections() {
+			return collections;
+		}
+
+		@Override
+		public String toString() {
+			return toStringHelper(this)
+					.add("url", url)
+					.add("outputModel", outputModel)
+					.add("concept", concept)
+					.add("filter", filter)
+					.add("orderby", orderby)
+					.add("collections", collections)
+					.toString();
 		}
 	}
 

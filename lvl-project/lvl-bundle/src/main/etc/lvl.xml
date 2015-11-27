@@ -165,4 +165,17 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	
 	</tools>
 	
+	<!-- import collections from speciesLink using the TAPIR protocol -->
+	<speciesLink>
+		<tapirlink>http://tapir.cria.org.br/tapirlink/tapir.php/specieslink</tapirlink>
+		<output-model>http://rs.tdwg.org/tapir/cs/dwc/terms/2009-09-23/template/dwc_simple.xml</output-model>
+		<concept>http://rs.tdwg.org/dwc/dwcore/CollectionCode</concept>
+		<filter>http://rs.tdwg.org/dwc/dwcore/CollectionCode equals "$COLLECTION"</filter>
+		<orderby>http://rs.tdwg.org/dwc/dwcore/CatalogNumber</orderby>
+		<collections>
+			<collection>clioc:FIOCRUZ-CLIOC</collection>
+			<collection>colfleb:FIOCRUZ-COLFLEB</collection>
+		</collections>
+	</speciesLink>
+	
 </config>

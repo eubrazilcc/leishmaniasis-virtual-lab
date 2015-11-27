@@ -47,7 +47,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({ LogManagerTest.class, ConcurrencyTest.class, JsonMappingTest.class, GeoJsonBindingTest.class, GeocodingTest.class, 
 	Wgs84CalculatorTest.class, NCBIXmlBindingTest.class, MimeUtilsTest.class, UrlUtilsTest.class, NetworkingUtilsTest.class,
 	DataSourceTest.class, NamingUtilsTest.class, FileCompressorTest.class, EntrezTest.class, FastaReaderTest.class, GbFlatFileTest.class, 
-	GbSeqXmlFileTest.class, FormValidationTest.class, DisjointSetTest.class, LocalizableAnalyzerTest.class, QueryUtilsTest.class, 
+	GbSeqXmlFileTest.class, TapirTest.class, FormValidationTest.class, DisjointSetTest.class, LocalizableAnalyzerTest.class, QueryUtilsTest.class, 
 	SortUtilsTest.class, SimpleStatTest.class, TrustedHttpsClientTest.class, PhyloTreeCreatorTest.class, ConfigurationTest.class })
 public class AllTests {
 
