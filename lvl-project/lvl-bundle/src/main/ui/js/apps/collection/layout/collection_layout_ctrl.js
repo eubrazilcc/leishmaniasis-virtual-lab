@@ -27,6 +27,12 @@ define([ 'app', 'apps/collection/layout/collection_layout_view' ], function(Lvl,
 				case 'stats':
 					require([ 'apps/collection/stats/collection_stats_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
 					break;
+				case 'unseq':
+					require([ 'apps/collection/unseq/collection_unseq_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
+					break;
+				case 'pending':
+					require([ 'apps/collection/pending/collection_pending_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
+					break;
 				case 'submit':
 					require([ 'apps/collection/submit/collection_submit_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
 					break;

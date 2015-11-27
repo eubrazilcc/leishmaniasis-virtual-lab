@@ -28,7 +28,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 			},
 			showCollection : function(section, subsection) {
 				section = (section || 'browse').toLowerCase();
-				if (section === 'browse') {
+				if (section === 'browse' || section === 'unseq' || section === 'pending') {
 					subsection = (subsection || 'sandflies').toLowerCase();
 					Lvl.navigate('collection/' + section + '/' + subsection, {
 						trigger : false,

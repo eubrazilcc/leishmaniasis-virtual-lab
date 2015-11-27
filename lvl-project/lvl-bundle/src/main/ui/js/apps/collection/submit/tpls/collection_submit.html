@@ -1,6 +1,58 @@
-  <h3>Sequence submission</h3>
-  <p class="lead">Submission tools coming soon. Stay tuned!</p>  
-  <h1>&nbsp;</h1>
-  <h1>&nbsp;</h1>
-  <h1>&nbsp;</h1>
-  <h1>&nbsp;</h1>
+<div class="row">
+	<div class="col-xs-12">
+		<h3>Submit new sequence</h3>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-6 col-xs-12">
+		<form class="form-horizontal">
+			<fieldset>
+				<legend>Sequence: <%= pendingId() %></legend>
+				<div class="form-group">
+					<label for="inputDefinition" class="col-lg-3 control-label">Definition</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputDefinition"
+							placeholder="Species name, gene name, is partial sequence?">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputOrganism" class="col-lg-3 control-label">Organism</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputOrganism"
+							placeholder="Source organism">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputGene" class="col-lg-3 control-label">Gene</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputGene"
+							placeholder="Source gene">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputLongitude" class="col-lg-3 control-label">Location</label>
+					<div class="col-lg-4">
+						<input type="text" class="form-control" id="inputLongitude"
+							placeholder="Longitude">
+					</div>					
+					<div class="col-lg-4">
+						<input type="text" class="form-control" id="inputLatitude"
+							placeholder="Latitude">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputOrigin" class="col-lg-3 control-label">Origin</label>
+					<div class="col-lg-9">
+						<textarea class="form-control" rows="3" id="inputOrigin" 
+							placeholder="Paste your DNA sequence here"></textarea>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-lg-9 col-lg-offset-3">
+						<button type="submit" class="btn btn-primary">Submit</button>
+					</div>
+				</div>
+			</fieldset>
+		</form>
+	</div>
+</div>
