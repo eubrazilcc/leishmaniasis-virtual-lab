@@ -83,7 +83,7 @@ public final class GbSeqXmlBinder extends XmlBinder {
 	public static final GbSeqXmlBinder GBSEQ_XMLB = new GbSeqXmlBinder();
 
 	private GbSeqXmlBinder() {
-		super(SUPPORTED_CLASSES);
+		super(SUPPORTED_CLASSES, true);
 	}
 
 	@Override

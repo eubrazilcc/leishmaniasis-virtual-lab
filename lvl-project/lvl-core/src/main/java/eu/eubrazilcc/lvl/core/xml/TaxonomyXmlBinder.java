@@ -43,7 +43,7 @@ public class TaxonomyXmlBinder extends XmlBinder {
 	public static final TaxonomyXmlBinder TAXONOMY_XMLB = new TaxonomyXmlBinder();
 
 	private TaxonomyXmlBinder() {
-		super(SUPPORTED_CLASSES);
+		super(SUPPORTED_CLASSES, true);
 	}
 
 	@Override

@@ -56,7 +56,7 @@ public class PubMedXmlBinder extends XmlBinder {
 	public static final PubMedXmlBinder PUBMED_XMLB = new PubMedXmlBinder();
 
 	private PubMedXmlBinder() {
-		super(SUPPORTED_CLASSES);
+		super(SUPPORTED_CLASSES, true);
 	}
 
 	@Override

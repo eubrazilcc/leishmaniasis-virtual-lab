@@ -56,7 +56,7 @@ public class ESearchXmlBinder extends XmlBinder {
 	public static final ESearchXmlBinder ESEARCH_XMLB = new ESearchXmlBinder();
 
 	private ESearchXmlBinder() {
-		super(SUPPORTED_CLASSES);
+		super(SUPPORTED_CLASSES, true);
 	}
 
 	@Override
