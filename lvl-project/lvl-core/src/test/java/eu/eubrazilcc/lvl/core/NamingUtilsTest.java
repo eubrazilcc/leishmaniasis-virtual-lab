@@ -23,6 +23,10 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
+import static eu.eubrazilcc.lvl.core.DataSource.CLIOC_SHORT;
+import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
+import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB_SHORT;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK_SHORT;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
@@ -30,17 +34,20 @@ import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.NO_NAME;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeIds;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeSampleIds;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeSeqIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.splitIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toAsciiSafeName;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toId;
 import static org.apache.commons.lang.StringUtils.countMatches;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -139,7 +146,7 @@ public class NamingUtilsTest {
 			}
 
 			// test sequence Ids merging using long notation
-			String mergedIds = mergeIds(sequences, NOTATION_LONG);
+			String mergedIds = mergeSeqIds(sequences, NOTATION_LONG);
 			assertThat("merged Ids is not null", mergedIds, notNullValue());
 			assertThat("merged Ids is not empty", isNotBlank(mergedIds), equalTo(true));
 			assertThat("merged Ids number of fragment separators coincides with expected", 
@@ -166,7 +173,7 @@ public class NamingUtilsTest {
 			System.out.println(" >> split Ids (using long notation): " + idsList);
 
 			// test sequence Ids merging using short notation			
-			mergedIds = mergeIds(sequences, NOTATION_SHORT);
+			mergedIds = mergeSeqIds(sequences, NOTATION_SHORT);
 			assertThat("merged Ids is not null", mergedIds, notNullValue());
 			assertThat("merged Ids is not empty", isNotBlank(mergedIds), equalTo(true));
 			assertThat("merged Ids number of fragment separators coincides with expected", 
@@ -191,7 +198,7 @@ public class NamingUtilsTest {
 			}
 			/* uncomment for additional output */
 			System.out.println(" >> split Ids (using long notation): " + idsList);
-			
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("NamingUtilsTest.test() failed: " + e.getMessage());
@@ -200,11 +207,142 @@ public class NamingUtilsTest {
 		}
 	}
 
+	@Test
+	public void test2() {
+		System.out.println("NamingUtilsTest.test2()");
+		try {
+			// create sequence dataset
+			final List<Sample> samples = newArrayList();
+			for (int i = 0; i < 5; i++) {
+				if (i%2 == 0) {
+					samples.add(ColflebSample.builder()
+							.collectionId(COLFLEB)
+							.catalogNumber("0" + i + "/75")
+							.build());
+				} else {
+					samples.add(CliocSample.builder()
+							.collectionId(CLIOC)
+							.catalogNumber("IOCL 000" + i)
+							.build());
+				}				
+			}
+
+			// test sample identifier creation (using long notation)
+			String collectionId = samples.get(0).getCollectionId();
+			String catalogNumber = samples.get(0).getCatalogNumber();
+			String sampleId = toId(collectionId, catalogNumber, NOTATION_LONG);
+			assertThat("sample Id is not null", sampleId, notNullValue());
+			assertThat("sample Id is not empty", isNotBlank(sampleId), equalTo(true));
+			assertThat("sample Id coincides with expected", sampleId, 
+					equalTo(COLFLEB + ID_FRAGMENT_SEPARATOR + catalogNumber));
+
+			// test sample identifier creation (using short notation)
+			collectionId = samples.get(1).getCollectionId();
+			catalogNumber = samples.get(1).getCatalogNumber();
+			sampleId = toId(collectionId, catalogNumber, NOTATION_SHORT);
+			assertThat("sample Id is not null", sampleId, notNullValue());
+			assertThat("sample Id is not empty", isNotBlank(sampleId), equalTo(true));
+			assertThat("sample Id coincides with expected", sampleId, 
+					equalTo(CLIOC_SHORT + ID_FRAGMENT_SEPARATOR + catalogNumber));
+
+			// test sample identifier creation (using long notation and sample class)
+			Sample sample = samples.get(2);
+			sampleId = toId(sample, NOTATION_LONG);
+			assertThat("sample Id is not null", sampleId, notNullValue());
+			assertThat("sample Id is not empty", isNotBlank(sampleId), equalTo(true));
+			assertThat("sample Id coincides with expected", sampleId, 
+					equalTo(COLFLEB + ID_FRAGMENT_SEPARATOR + sample.getCatalogNumber()));
+
+			// test sample identifier creation (using short notation and sample class)
+			sample = samples.get(3);
+			sampleId = toId(sample, NOTATION_SHORT);
+			assertThat("sample Id is not null", sampleId, notNullValue());
+			assertThat("sample Id is not empty", isNotBlank(sampleId), equalTo(true));
+			assertThat("sample Id coincides with expected", sampleId, 
+					equalTo(CLIOC_SHORT + ID_FRAGMENT_SEPARATOR + sample.getCatalogNumber()));
+
+			// test sample Ids splitting
+			List<String> idsList = splitIds("fcf:051/75,fcf:072/78,fcf:051/75,fcl:IOCL 0001,fcl:IOCL 0001,fcl:IOCL 0002");
+			assertThat("split Ids is not null", idsList, notNullValue());
+			assertThat("split Ids is not empty", idsList.isEmpty(), equalTo(false));
+			assertThat("number of split Ids coincides with expected", idsList.size(), equalTo(4));
+			for (int i = 0; i < idsList.size(); i++) {
+				String current = idsList.get(i);
+				final List<String> copy = new ArrayList<String>(idsList);
+				assertThat("current element is eliminated from the copy list of split Ids", copy.remove(current));
+				assertThat("the list of split Ids contains no duplicated elements", copy, not(hasItem(current)));
+			}
+
+			// test sample Ids merging using long notation
+			String mergedIds = mergeSampleIds(samples, NOTATION_LONG);
+			assertThat("merged Ids is not null", mergedIds, notNullValue());
+			assertThat("merged Ids is not empty", isNotBlank(mergedIds), equalTo(true));
+			assertThat("merged Ids number of fragment separators coincides with expected", 
+					countMatches(mergedIds, String.valueOf(ID_FRAGMENT_SEPARATOR)), 
+					equalTo(samples.size()));
+			assertThat("merged Ids number of ids separators coincides with expected", 
+					countMatches(mergedIds, String.valueOf(URI_ID_SEPARATOR)), 
+					equalTo(samples.size() - 1));
+			assertThat("merged Ids number of data sources coincides with expected",
+					countMatches(mergedIds, String.valueOf(COLFLEB)) + countMatches(mergedIds, String.valueOf(CLIOC)), 
+					equalTo(samples.size()));
+			/* uncomment for additional output */
+			System.out.println(" >> merged Ids (using long notation): " + mergedIds);
+
+			// test sample Ids splitting using long notation
+			idsList = splitIds(mergedIds);
+			assertThat("split Ids is not null", idsList, notNullValue());
+			assertThat("split Ids is not empty", idsList.isEmpty(), equalTo(false));
+			assertThat("number of split Ids coincides with expected", idsList.size(), equalTo(samples.size()));
+			for (final String id : idsList) {
+				validate(id, COLFLEB, CLIOC);
+			}
+			/* uncomment for additional output */
+			System.out.println(" >> split Ids (using long notation): " + idsList);
+
+			// test sample Ids merging using short notation
+			mergedIds = mergeSampleIds(samples, NOTATION_SHORT);
+			assertThat("merged Ids is not null", mergedIds, notNullValue());
+			assertThat("merged Ids is not empty", isNotBlank(mergedIds), equalTo(true));
+			assertThat("merged Ids number of fragment separators coincides with expected", 
+					countMatches(mergedIds, String.valueOf(ID_FRAGMENT_SEPARATOR)), 
+					equalTo(samples.size()));
+			assertThat("merged Ids number of ids separators coincides with expected", 
+					countMatches(mergedIds, String.valueOf(URI_ID_SEPARATOR)), 
+					equalTo(samples.size() - 1));
+			assertThat("merged Ids number of data sources coincides with expected", 
+					countMatches(mergedIds, String.valueOf(COLFLEB_SHORT)) + countMatches(mergedIds, String.valueOf(CLIOC_SHORT)),
+					equalTo(samples.size()));
+			/* uncomment for additional output */
+			System.out.println(" >> merged Ids (using short notation): " + mergedIds);
+
+			// test sample Ids splitting using short notation
+			idsList = splitIds(mergedIds);
+			assertThat("split Ids is not null", idsList, notNullValue());
+			assertThat("split Ids is not empty", idsList.isEmpty(), equalTo(false));
+			assertThat("number of split Ids coincides with expected", idsList.size(), equalTo(samples.size()));
+			for (final String id : idsList) {
+				validate(id, COLFLEB_SHORT, CLIOC_SHORT);
+			}
+			/* uncomment for additional output */
+			System.out.println(" >> split Ids (using long notation): " + idsList);
+		} finally {
+			System.out.println("NamingUtilsTest.test2() has finished");
+		}
+	}
+
 	private static void validate(final String id, final String dataSource) {
 		assertThat("split Id is not null", id, notNullValue());
 		assertThat("split Id is not empty", isNotBlank(id), equalTo(true));
 		assertThat("split Id coincides with expected", id.startsWith(dataSource + ID_FRAGMENT_SEPARATOR), 
 				equalTo(true));
+	}
+
+	private static void validate(final String id, final String collection1, final String collection2) {
+		assertThat("split Id is not null", id, notNullValue());
+		assertThat("split Id is not empty", isNotBlank(id), equalTo(true));
+		assertThat("split Id coincides with expected", id, anyOf(startsWith(collection1 + ID_FRAGMENT_SEPARATOR), 
+				startsWith(collection2 + ID_FRAGMENT_SEPARATOR)));
 	}
 
 }

@@ -40,12 +40,18 @@ public final class DataSource {
 	public static final String GENBANK = "GenBank";
 	public static final String PUBMED = "PubMed";
 	public static final String LEISHVL = "LeishVL";
+	
+	public static final String COLFLEB = "Fiocruz-COLFLEB";
+	public static final String CLIOC = "Fiocruz-CLIOC";
 
 	/* Short notation */
 	
 	public static final String GENBANK_SHORT = "gb";
 	public static final String PUBMED_SHORT = "pm";
 	public static final String LEISHVL_SHORT = "lvl";
+	
+	public static final String COLFLEB_SHORT = "fcf";
+	public static final String CLIOC_SHORT = "fcl";
 
 	/**
 	 * Converts from the specified notation to short notation.
@@ -67,6 +73,10 @@ public final class DataSource {
 				shortenedDataSource = PUBMED_SHORT;
 			} else if (LEISHVL.equalsIgnoreCase(trimmedDataSource)) {
 				shortenedDataSource = LEISHVL_SHORT;
+			} else if (COLFLEB.equalsIgnoreCase(trimmedDataSource)) {
+				shortenedDataSource = COLFLEB_SHORT;
+			} else if (CLIOC.equalsIgnoreCase(trimmedDataSource)) {
+				shortenedDataSource = CLIOC_SHORT;
 			}
 			break;
 		default:
@@ -93,6 +103,10 @@ public final class DataSource {
 			shortenedDataSource = PUBMED_SHORT;
 		} else if (LEISHVL.equalsIgnoreCase(trimmedDataSource) || LEISHVL_SHORT.equalsIgnoreCase(trimmedDataSource)) {
 			shortenedDataSource = LEISHVL_SHORT;
+		} else if (COLFLEB.equalsIgnoreCase(trimmedDataSource) || COLFLEB_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+			shortenedDataSource = COLFLEB_SHORT;
+		} else if (CLIOC.equalsIgnoreCase(trimmedDataSource) || CLIOC_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+			shortenedDataSource = CLIOC_SHORT;
 		}
 		checkState(isNotBlank(shortenedDataSource), "The specified data source cannot be found");
 		return shortenedDataSource;
@@ -118,6 +132,10 @@ public final class DataSource {
 				expandedDataSource = PUBMED;
 			} else if (LEISHVL_SHORT.equalsIgnoreCase(trimmedDataSource)) {
 				expandedDataSource = LEISHVL;
+			} else if (COLFLEB_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+				expandedDataSource = COLFLEB;
+			} else if (CLIOC_SHORT.equalsIgnoreCase(trimmedDataSource)) {
+				expandedDataSource = CLIOC;
 			}
 			break;
 		default:
@@ -144,6 +162,10 @@ public final class DataSource {
 			expandedDataSource = PUBMED;
 		} else if (LEISHVL_SHORT.equalsIgnoreCase(trimmedDataSource) || LEISHVL.equalsIgnoreCase(trimmedDataSource)) {
 			expandedDataSource = LEISHVL;
+		} else if (COLFLEB_SHORT.equalsIgnoreCase(trimmedDataSource) || COLFLEB.equalsIgnoreCase(trimmedDataSource)) {
+			expandedDataSource = COLFLEB;
+		} else if (CLIOC_SHORT.equalsIgnoreCase(trimmedDataSource) || CLIOC.equalsIgnoreCase(trimmedDataSource)) {
+			expandedDataSource = CLIOC;
 		}
 		checkState(isNotBlank(expandedDataSource), "The specified data source cannot be found");
 		return expandedDataSource;

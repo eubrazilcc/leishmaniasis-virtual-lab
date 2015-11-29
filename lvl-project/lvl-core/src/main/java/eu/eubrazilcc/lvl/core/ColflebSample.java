@@ -1,0 +1,128 @@
+/*
+ * Copyright 2014-2015 EUBrazilCC (EU‐Brazil Cloud Connect)
+ * 
+ * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by 
+ * the European Commission - subsequent versions of the EUPL (the "Licence");
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ * 
+ *   http://ec.europa.eu/idabc/eupl
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and 
+ * limitations under the Licence.
+ * 
+ * This product combines work with different licenses. See the "NOTICE" text
+ * file for details on the various modules and licenses.
+ * The "NOTICE" text file is part of the distribution. Any derivative works
+ * that you distribute must include a readable copy of the "NOTICE" text file.
+ */
+
+package eu.eubrazilcc.lvl.core;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
+import java.util.List;
+import java.util.Objects;
+
+import javax.ws.rs.core.Link;
+
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
+import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+
+/**
+ * Stores COLFLEB sample.
+ * @author Erik Torres <ertorser@upv.es>
+ */
+public class ColflebSample extends Sample implements Linkable<ColflebSample> {
+
+	@InjectLinks({
+		@InjectLink(value="colfleb/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.id}")})
+	})
+	@JsonSerialize(using = LinkListSerializer.class)
+	@JsonDeserialize(using = LinkListDeserializer.class)
+	@JsonProperty("links")
+	private List<Link> links; // HATEOAS links
+
+	@Override
+	public List<Link> getLinks() {
+		return links;
+	}
+
+	@Override
+	public void setLinks(final List<Link> links) {
+		if (links != null) {
+			this.links = newArrayList(links);
+		} else {
+			this.links = null;
+		}
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (obj == null || !(obj instanceof ColflebSample)) {
+			return false;
+		}
+		final ColflebSample other = ColflebSample.class.cast(obj);
+		return Objects.equals(links, other.links)
+				&& equalsIgnoringVolatile(other);
+	}
+
+	@Override
+	public boolean equalsIgnoringVolatile(final ColflebSample other) {
+		if (other == null) {
+			return false;
+		}
+		return super.equals((Sample)other);
+	}
+
+	@Override
+	public int hashCode() {
+		return super.hashCode() + Objects.hash(links);
+	}
+
+	@Override
+	public String toString() {
+		return toStringHelper(this)
+				.add("Sample", super.toString())
+				.add("links", links)
+				.toString();
+	}
+
+	/* Fluent API */
+
+	public static ColflebSampleBuilder builder() {
+		return new ColflebSampleBuilder();
+	}
+
+	public static class ColflebSampleBuilder extends Builder<ColflebSample> {
+
+		public ColflebSampleBuilder() {
+			super(ColflebSample.class);
+		}
+
+		public ColflebSampleBuilder links(final List<Link> links) {
+			instance.setLinks(links);
+			return this;
+		}
+
+		public ColflebSample build() {
+			return instance;
+		}
+
+	}
+
+}

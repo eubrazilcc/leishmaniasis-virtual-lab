@@ -25,20 +25,30 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
+import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
+import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
 import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.TestUtils.getDarwinCoreSets;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLFiles;
+import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Locale;
@@ -56,6 +66,8 @@ import eu.eubrazilcc.lvl.core.support.Issue;
 import eu.eubrazilcc.lvl.core.support.IssueStatus;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
+import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
+import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecordSet;
 
 /**
  * Tests JSON mapping capabilities.
@@ -73,6 +85,8 @@ public class JsonMappingTest {
 			final Link seqLink = Link.fromUri(UriBuilder.fromUri("http://localhost/sanfly").path("gb:ABC12345678").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
 			final Link refLink = Link.fromUri(UriBuilder.fromUri("http://localhost/paper").path("ADGJ87950").build())
+					.rel(SELF).type(APPLICATION_JSON).build();
+			final Link sampleLink = Link.fromUri(UriBuilder.fromUri("http://localhost/sample").path("sample:IOC 123").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
 
 			final Point point = Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build();
@@ -120,6 +134,40 @@ public class JsonMappingTest {
 					.article(article)
 					.build();
 			assertThat("reference is not null", reference, notNullValue());
+
+			File sampleFile = getDarwinCoreSets().stream().filter(file -> {
+				return file.getAbsolutePath().contains("colfleb");
+			}).findFirst().get();
+			assertThat("COLFLEB file is not null", sampleFile, notNullValue());
+			SimpleDarwinRecordSet dwcSet = DWC_XMLB.typeFromFile(sampleFile);
+			assertThat("COLFLEB DwC set is not null", dwcSet, notNullValue());
+			assertThat("COLFLEB DwC records are not empty", dwcSet.getSimpleDarwinRecord(), allOf(notNullValue(), not(empty())));
+			assertThat("COLFLEB DwC contains at least one record", dwcSet.getSimpleDarwinRecord().size(), greaterThan(0));
+			SimpleDarwinRecord sample = dwcSet.getSimpleDarwinRecord().iterator().next();
+			assertThat("COLFLEB sample is not null", sample, notNullValue());
+
+			final ColflebSample colflebSample = ColflebSample.builder()
+					.collectionId(COLFLEB)
+					.catalogNumber(trim(sample.getCatalogNumber()))
+					.sample(sample)
+					.build();
+
+			sampleFile = getDarwinCoreSets().stream().filter(file -> {
+				return file.getAbsolutePath().contains("clioc");
+			}).findFirst().get();
+			assertThat("CLIOC file is not null", sampleFile, notNullValue());
+			dwcSet = DWC_XMLB.typeFromFile(sampleFile);
+			assertThat("CLIOC DwC set is not null", dwcSet, notNullValue());
+			assertThat("CLIOC DwC records are not empty", dwcSet.getSimpleDarwinRecord(), allOf(notNullValue(), not(empty())));
+			assertThat("CLIOC DwC contains at least one record", dwcSet.getSimpleDarwinRecord().size(), greaterThan(0));
+			sample = dwcSet.getSimpleDarwinRecord().iterator().next();
+			assertThat("CLIOC sample is not null", sample, notNullValue());
+
+			final CliocSample cliocSample = CliocSample.builder()
+					.collectionId(CLIOC)
+					.catalogNumber(trim(sample.getCatalogNumber()))
+					.sample(sample)
+					.build();
 
 			final Target target = Target.builder()
 					.type("sequence")
@@ -173,7 +221,7 @@ public class JsonMappingTest {
 					.saved(new Date())
 					.search(newHashSet(FormattedQueryParam.builder().term("country:spain").valid(true).build(),
 							FormattedQueryParam.builder().term("sequence").build()))
-							.build();
+					.build();
 			assertThat("saved search is not null", savedSearch, notNullValue());
 
 			final Issue issue = Issue.builder()
@@ -213,6 +261,20 @@ public class JsonMappingTest {
 			// test references with links
 			reference.setLinks(newArrayList(refLink));
 			testReference(reference);
+			
+			// test COLFLEB samples with no links
+			testColflebSample(colflebSample);
+			
+			// test COLFLEB samples with links
+			colflebSample.setLinks(newArrayList(sampleLink));
+			testColflebSample(colflebSample);
+			
+			// test CLIOC samples with no links
+			testCliocSample(cliocSample);
+			
+			// test CLIOC samples with links
+			cliocSample.setLinks(newArrayList(sampleLink));
+			testCliocSample(cliocSample);
 
 			// test dataset with no links
 			testDataset(dataset);
@@ -325,6 +387,34 @@ public class JsonMappingTest {
 		final Reference reference2 = JSON_MAPPER.readValue(payload, Reference.class);
 		assertThat("deserialized reference is not null", reference2, notNullValue());
 		assertThat("deserialized reference coincides with expected", reference2, equalTo(reference));
+	}
+	
+	private void testColflebSample(final ColflebSample sample) throws IOException {
+		// test sample JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(sample);
+		assertThat("serialized sample is not null", payload, notNullValue());
+		assertThat("serialized sample is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized sample (JSON): " + payload);
+
+		// test leishmania JSON deserialization
+		final ColflebSample sample2 = JSON_MAPPER.readValue(payload, ColflebSample.class);
+		assertThat("deserialized sample is not null", sample2, notNullValue());
+		assertThat("deserialized sample coincides with expected", sample2, equalTo(sample));
+	}
+	
+	private void testCliocSample(final CliocSample sample) throws IOException {
+		// test sample JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(sample);
+		assertThat("serialized sample is not null", payload, notNullValue());
+		assertThat("serialized sample is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		System.out.println(" >> Serialized sample (JSON): " + payload);
+
+		// test leishmania JSON deserialization
+		final CliocSample sample2 = JSON_MAPPER.readValue(payload, CliocSample.class);
+		assertThat("deserialized sample is not null", sample2, notNullValue());
+		assertThat("deserialized sample coincides with expected", sample2, equalTo(sample));
 	}
 
 	private void testDataset(final Dataset dataset) throws IOException {

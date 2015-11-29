@@ -29,6 +29,10 @@ import static eu.eubrazilcc.lvl.core.DataSource.LEISHVL;
 import static eu.eubrazilcc.lvl.core.DataSource.LEISHVL_SHORT;
 import static eu.eubrazilcc.lvl.core.DataSource.PUBMED;
 import static eu.eubrazilcc.lvl.core.DataSource.PUBMED_SHORT;
+import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
+import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB_SHORT;
+import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
+import static eu.eubrazilcc.lvl.core.DataSource.CLIOC_SHORT;
 import static eu.eubrazilcc.lvl.core.DataSource.toLongNotation;
 import static eu.eubrazilcc.lvl.core.DataSource.toShortNotation;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
@@ -56,12 +60,17 @@ public class DataSourceTest {
 		System.out.println("DataSourceTest.test()");
 		try {
 			// create test datasets
-			final ImmutableMap<String, String> testDataset1 = of(GENBANK_SHORT, GENBANK, PUBMED_SHORT, PUBMED, LEISHVL_SHORT, LEISHVL);
-			final ImmutableMap<String, String> testDataset2 = of(GENBANK, GENBANK_SHORT, PUBMED, PUBMED_SHORT, GENBANK_SHORT, GENBANK_SHORT, 
-					PUBMED_SHORT, PUBMED_SHORT, LEISHVL, LEISHVL_SHORT);
+			final ImmutableMap<String, String> testDataset1 = of(GENBANK_SHORT, GENBANK, PUBMED_SHORT, PUBMED, LEISHVL_SHORT, LEISHVL,
+					COLFLEB_SHORT, COLFLEB, CLIOC_SHORT, CLIOC);
 			ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+			builder.put(GENBANK, GENBANK_SHORT); builder.put(PUBMED, PUBMED_SHORT); builder.put(GENBANK_SHORT, GENBANK_SHORT); 
+			builder.put(PUBMED_SHORT, PUBMED_SHORT); builder.put(LEISHVL, LEISHVL_SHORT); builder.put(COLFLEB, COLFLEB_SHORT);
+			builder.put(CLIOC, CLIOC_SHORT); builder.put(CLIOC_SHORT, CLIOC_SHORT);
+			final ImmutableMap<String, String> testDataset2 = builder.build();			
+			builder = ImmutableMap.builder();
 			builder.put(GENBANK_SHORT, GENBANK); builder.put(PUBMED_SHORT, PUBMED); builder.put(LEISHVL_SHORT, LEISHVL);
 			builder.put(GENBANK, GENBANK); builder.put(PUBMED, PUBMED); builder.put(LEISHVL, LEISHVL);
+			builder.put(COLFLEB_SHORT, COLFLEB); builder.put(CLIOC_SHORT, CLIOC);
 			final ImmutableMap<String, String> testDataset3 = builder.build();			
 			
 			// test conversion from long to short notation

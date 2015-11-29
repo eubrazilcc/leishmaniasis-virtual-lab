@@ -46,6 +46,7 @@ import com.google.common.base.Splitter;
 
 import eu.eubrazilcc.lvl.core.DataSource.Notation;
 import eu.eubrazilcc.lvl.core.Localizable;
+import eu.eubrazilcc.lvl.core.Sample;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.geojson.GeoJsonObject;
 
@@ -92,11 +93,28 @@ public final class NamingUtils {
 	 * @param notation - (optional) the notation to be used with the sequence data source.
 	 * @return an string with the merged sequence identifier.
 	 */
-	public static String mergeIds(final Collection<Sequence> sequences, final @Nullable Notation notation) {
+	public static String mergeSeqIds(final Collection<Sequence> sequences, final @Nullable Notation notation) {
 		return Joiner.on(URI_ID_SEPARATOR).skipNulls().join(from(sequences).transform(new Function<Sequence, String>() {
 			@Override
 			public String apply(final Sequence sequence) {
 				return toId(sequence, notation);
+			}
+		}).filter(notNull()).toList());
+	}
+	
+	/**
+	 * Iterates over a collection of samples and merges their sample identifiers. A sample identifier is composed
+	 * by the collection Id and the catalog number. Those fragments are joint with the {@link NamingUtils#ID_FRAGMENT_SEPARATOR}.
+	 * Sample identifiers are separated by the {@link NamingUtils#URI_ID_SEPARATOR}.
+	 * @param samples - the samples to be processed to extract and merge their sample identifiers.
+	 * @param notation - (optional) the notation to be used with the sample collection Id.
+	 * @return an string with the merged sample identifier.
+	 */
+	public static String mergeSampleIds(final Collection<Sample> samples, final @Nullable Notation notation) {
+		return Joiner.on(URI_ID_SEPARATOR).skipNulls().join(from(samples).transform(new Function<Sample, String>() {
+			@Override
+			public String apply(final Sample sample) {
+				return toId(sample, notation);
 			}
 		}).filter(notNull()).toList());
 	}
@@ -112,7 +130,7 @@ public final class NamingUtils {
 			public String apply(final String input) {			
 				return input;
 			}
-		}).filter(notNull()).toList();
+		}).filter(notNull()).toSet().asList();
 	}
 
 	/**
@@ -141,6 +159,19 @@ public final class NamingUtils {
 	public static String toId(final String dataSource, final String accession, final @Nullable Notation notation) {
 		final String dataSource2 = NOTATION_SHORT.equals(notation) ? toShortNotation(dataSource, NOTATION_LONG) : dataSource;
 		return dataSource2 + ID_FRAGMENT_SEPARATOR + accession;
+	}
+	
+	/**
+	 * Creates an identifier that uniquely identifies the sample in the LVL. This identifier 
+	 * is computed from the collection Id and the catalog number. This method uses the default
+	 * character {@link NamingUtils#ID_FRAGMENT_SEPARATOR} to separate these particles in the 
+	 * created identifier.
+	 * @param sample - the sample to create the identifier for.
+	 * @param notation - the notation to be used when creating the identifier.
+	 * @return an identifier that uniquely identifies the sample in the LVL.
+	 */
+	public static String toId(final Sample sample, final @Nullable Notation notation) {
+		return toId(sample.getCollectionId(), sample.getCatalogNumber(), notation);
 	}
 
 	public static String urlEncodeUtf8(final String str) {
