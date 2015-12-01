@@ -33,7 +33,12 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -51,6 +56,7 @@ import org.w3c.dom.Document;
 public final class XmlHelper {
 
 	private static final Logger LOGGER = getLogger(XmlHelper.class);
+	private static DatatypeFactory dtf = null;
 
 	/**
 	 * Obtains a String representation of a XML document, omitting the XML declaration.
@@ -108,6 +114,23 @@ public final class XmlHelper {
 			LOGGER.warn("Failed to convert DOM document to String", e);
 		}
 		return docStr;
+	}
+
+	public static XMLGregorianCalendar yearAsXMLGregorianCalendar(final int year) {
+		final GregorianCalendar gc = new GregorianCalendar();
+		gc.set(Calendar.YEAR, year);
+		return getDatatypeFactory().newXMLGregorianCalendar(gc);
+	}
+
+	private static DatatypeFactory getDatatypeFactory() {
+		if (dtf == null) {
+			try {
+				dtf = DatatypeFactory.newInstance();
+			} catch (DatatypeConfigurationException e) {
+				throw new IllegalStateException("Failed to create data type factory", e);
+			}
+		}
+		return dtf;
 	}
 
 }

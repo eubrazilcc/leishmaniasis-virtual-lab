@@ -27,6 +27,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XML_FACTORY;
+import static eu.eubrazilcc.lvl.core.xml.XmlHelper.yearAsXMLGregorianCalendar;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaSampleDAO.LEISHMANIA_SAMPLE_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaSampleDAO.ORIGINAL_SAMPLE_KEY;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.toJson;
@@ -42,19 +43,14 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
 import javax.ws.rs.core.Link;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.apache.commons.lang.mutable.MutableLong;
-import org.junit.BeforeClass;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -76,15 +72,8 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
  */
 public class LeishmaniaSampleCollectionTest extends LeishvlTestCase {
 
-	private static DatatypeFactory dtf;	
-
 	public LeishmaniaSampleCollectionTest() {
 		super(true);
-	}
-
-	@BeforeClass
-	public static void setup() throws Exception {
-		dtf = DatatypeFactory.newInstance();
 	}
 
 	@Test
@@ -398,12 +387,6 @@ public class LeishmaniaSampleCollectionTest extends LeishvlTestCase {
 		} finally {			
 			System.out.println("LeishmaniaSampleCollectionTest.test() has finished");
 		}
-	}
-
-	private static XMLGregorianCalendar yearAsXMLGregorianCalendar(final int year) {
-		final GregorianCalendar gc = new GregorianCalendar();
-		gc.set(Calendar.YEAR, year);
-		return dtf.newXMLGregorianCalendar(gc);
 	}
 
 }

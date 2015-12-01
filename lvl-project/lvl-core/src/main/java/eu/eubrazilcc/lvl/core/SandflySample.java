@@ -25,7 +25,9 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import java.util.List;
 import java.util.Objects;
@@ -36,6 +38,7 @@ import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -50,12 +53,15 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 public class SandflySample extends Sample implements Linkable<SandflySample> {
 
 	@InjectLinks({
-		@InjectLink(value="sandfly-sample/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.id}")})
+		@InjectLink(value="samples/sandfly/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="urlSafeId", value="${instance.urlSafeId}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
+
+	@JsonIgnore
+	private String urlSafeId;
 
 	@Override
 	public List<Link> getLinks() {
@@ -69,6 +75,20 @@ public class SandflySample extends Sample implements Linkable<SandflySample> {
 		} else {
 			this.links = null;
 		}
+	}
+
+	public String getUrlSafeId() {
+		return urlSafeId;
+	}
+
+	public void setUrlSafeId(final String urlSafeId) {
+		this.urlSafeId = urlSafeId;
+	}
+
+	@Override
+	public void setId(final String id) {
+		super.setId(id);
+		setUrlSafeId(urlEncodeUtf8(trimToEmpty(id)));
 	}
 
 	@Override

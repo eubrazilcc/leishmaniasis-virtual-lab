@@ -28,7 +28,7 @@ import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWN
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
 import static eu.eubrazilcc.lvl.storage.security.UserAnonymizer.AnonymizationLevel.HARD;
 import static eu.eubrazilcc.lvl.storage.security.UserAnonymizer.AnonymizationLevel.NONE;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.List;
 
@@ -51,7 +51,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.oauth2.Users;

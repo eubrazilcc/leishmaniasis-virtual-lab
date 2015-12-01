@@ -33,7 +33,7 @@ import static org.junit.Assert.fail;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;

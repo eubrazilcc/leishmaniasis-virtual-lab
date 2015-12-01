@@ -29,7 +29,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 
 import com.google.common.collect.ImmutableMap;
 

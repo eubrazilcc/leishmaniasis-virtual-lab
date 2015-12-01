@@ -22,10 +22,9 @@
 
 package eu.eubrazilcc.lvl.storage.dao;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
-import static com.mongodb.util.JSON.parse;
-import static eu.eubrazilcc.lvl.core.SimpleStat.normalizeStats;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
@@ -38,9 +37,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
@@ -57,47 +54,41 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.LeishmaniaSample;
-import eu.eubrazilcc.lvl.core.SimpleStat;
+import eu.eubrazilcc.lvl.core.PendingSequence;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
 import eu.eubrazilcc.lvl.storage.InvalidFilterParseException;
 import eu.eubrazilcc.lvl.storage.InvalidSortParseException;
-import eu.eubrazilcc.lvl.storage.SampleKey;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdDeserializer;
 import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore;
 
 /**
- * {@link LeishmaniaSample} DAO that manages the collection of CLIOC samples in the database.
+ * {@link PendingSequence} DAO.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
+public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequence> {
 
-	LEISHMANIA_SAMPLE_DAO;
+	PENDING_SEQ_DAO;
 
-	private final static Logger LOGGER = getLogger(LeishmaniaSampleDAO.class);	
+	private final static Logger LOGGER = getLogger(PendingSequenceDAO.class);
 
-	public static final String COLLECTION        = "leishmaniaSamples";
-	public static final String DB_PREFIX         = "leishmaniaSample.";
-	public static final String PRIMARY_KEY_PART1 = DB_PREFIX + "collectionId";
-	public static final String PRIMARY_KEY_PART2 = DB_PREFIX + "catalogNumber";
-	public static final String GEOLOCATION_KEY   = DB_PREFIX + "location";
+	public static final String COLLECTION    = "pendingSequences";
+	public static final String DB_PREFIX     = "pendingSequence.";
+	public static final String PRIMARY_KEY   = DB_PREFIX + "id";
+	public static final String NAMESPACE_KEY = DB_PREFIX + "namespace";
 
 	public static final String ORIGINAL_SAMPLE_KEY = DB_PREFIX + "sample";
 
-	private LeishmaniaSampleDAO() {
-		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);		
-		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
-		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".year", COLLECTION, false);
+	private PendingSequenceDAO() {
+		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
+		MONGODB_CONN.createNonUniqueIndex(NAMESPACE_KEY, COLLECTION, false);
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
-				DB_PREFIX + "collectionId",
-				DB_PREFIX + "catalogNumber",
 				ORIGINAL_SAMPLE_KEY + ".recordedBy",
 				ORIGINAL_SAMPLE_KEY + ".stateProvince",
 				ORIGINAL_SAMPLE_KEY + ".county",
@@ -111,63 +102,74 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 				ORIGINAL_SAMPLE_KEY + ".genus",
 				ORIGINAL_SAMPLE_KEY + ".specificEpithet"),
 				COLLECTION);
-		MONGODB_CONN.createNonUniqueIndex(PRIMARY_KEY_PART1, COLLECTION, false);
-		MONGODB_CONN.createSparseIndex(GEOLOCATION_KEY, COLLECTION, false);
-	}	
+	}
 
 	@Override
-	public WriteResult<LeishmaniaSample> insert(final LeishmaniaSample sample) {
+	public WriteResult<PendingSequence> insert(final PendingSequence pendingSeq) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<LeishmaniaSample> store = startStore(sample);
+		final LinkableTransientStore<PendingSequence> store = startStore(pendingSeq);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return new WriteResult.Builder<LeishmaniaSample>().id(id).build();
+		return new WriteResult.Builder<PendingSequence>().id(id).build();
 	}
 
 	@Override
-	public WriteResult<LeishmaniaSample> insert(final LeishmaniaSample sample, final boolean ignoreDuplicates) {
+	public WriteResult<PendingSequence> insert(final PendingSequence pendingSeq, final boolean ignoreDuplicates) {
 		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
-	public LeishmaniaSample update(final LeishmaniaSample sample) {
+	public PendingSequence update(final PendingSequence pendingSeq) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<LeishmaniaSample> store = startStore(sample);
+		final LinkableTransientStore<PendingSequence> store = startStore(pendingSeq);
 		final DBObject obj = map(store);
-		MONGODB_CONN.update(obj, key(SampleKey.builder()
-				.collectionId(sample.getCollectionId())
-				.catalogNumber(sample.getCatalogNumber())
-				.build()), COLLECTION);
+		MONGODB_CONN.update(obj, key(pendingSeq.getId()), COLLECTION);
 		// restore transient fields
 		store.restore();
 		return null;
 	}
 
 	@Override
-	public void delete(final SampleKey sampleKey) {
-		MONGODB_CONN.remove(key(sampleKey), COLLECTION);
+	public void delete(final String id) {
+		MONGODB_CONN.remove(key(id), COLLECTION);
 	}
 
 	@Override
-	public List<LeishmaniaSample> findAll() {
-		return list(0, Integer.MAX_VALUE, null, null, null, null);
+	public List<PendingSequence> findAll() {
+		return findAll(null);
 	}
 
 	@Override
-	public LeishmaniaSample find(final SampleKey sampleKey) {
-		final BasicDBObject obj = MONGODB_CONN.get(key(sampleKey), COLLECTION);
+	public List<PendingSequence> findAll(final String user) {
+		return list(0, Integer.MAX_VALUE, null, null, null, null, user);
+	}
+
+	@Override
+	public PendingSequence find(final String path) {	
+		return find(path, null);
+	}
+
+	@Override
+	public PendingSequence find(final String path, final String user) {
+		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(path, user) : key(path), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
-	public List<LeishmaniaSample> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+	public List<PendingSequence> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
+		return list(start, size, filter, sorting, projection, count, null);
+	}	
+
+	@Override
+	public List<PendingSequence> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String user) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
 		try {
-			query = buildQuery(filter);
+			query = buildQuery(filter, user);
 		} catch (InvalidFilterParseException e) {
 			LOGGER.warn("Discarding operation after an invalid filter was found: " + e.getMessage());
 			return newArrayList();
@@ -181,9 +183,9 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 			return newArrayList();
 		}
 		// execute the query in the database
-		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, LeishmaniaSample>() {
+		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, PendingSequence>() {
 			@Override
-			public LeishmaniaSample apply(final BasicDBObject obj) {				
+			public PendingSequence apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);
 			}
 		});
@@ -200,24 +202,23 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 	}
 
 	@Override
-	public List<LeishmaniaSample> getNear(final Point point, final double maxDistance) {
-		final List<LeishmaniaSample> samples = newArrayList();
-		final BasicDBList list = MONGODB_CONN.geoNear(COLLECTION, point.getCoordinates().getLongitude(), 
-				point.getCoordinates().getLatitude(), maxDistance);
-		for (int i = 0; i < list.size(); i++) {
-			samples.add(parseObject(list.get(i)));
-		}
-		return samples;
+	public List<PendingSequence> getNear(final Point point, final double maxDistance) {
+		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<LeishmaniaSample> geoWithin(final Polygon polygon) {
-		return transform(MONGODB_CONN.geoWithin(GEOLOCATION_KEY, COLLECTION, polygon), new Function<BasicDBObject, LeishmaniaSample>() {
-			@Override
-			public LeishmaniaSample apply(final BasicDBObject obj) {
-				return parseBasicDBObject(obj);
-			}
-		});
+	public List<PendingSequence> getNear(final Point point, final double maxDistance, final String user) {
+		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
+	}
+
+	@Override
+	public List<PendingSequence> geoWithin(final Polygon polygon) {
+		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
+	}
+
+	@Override
+	public List<PendingSequence> geoWithin(final Polygon polygon, final String user) {
+		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
@@ -225,62 +226,19 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 		MONGODB_CONN.stats(os, COLLECTION);
 	}
 
-	public Map<String, List<SimpleStat>> collectionStats() {
-		final Map<String, List<SimpleStat>> stats = new Hashtable<String, List<SimpleStat>>();
-		// count samples per collection
-		final List<SimpleStat> srcStats = newArrayList();		
-		Iterable<DBObject> results = MONGODB_CONN.dataSourceStats(COLLECTION, DB_PREFIX);		
-		for (final DBObject result : results) {
-			srcStats.add(SimpleStat.builder()
-					.label((String)((DBObject)result.get("_id")).get(DB_PREFIX + "collectionId"))
-					.value((Integer)result.get("number"))
-					.build());
-		}
-		stats.put(COLLECTION + ".collection", normalizeStats(srcStats));
-		// total number of samples
-		final long totalCount = MONGODB_CONN.count(COLLECTION);
-		// count georeferred samples
-		final List<SimpleStat> gisStats = newArrayList();		
-		final int georefCount = MONGODB_CONN.countGeoreferred(COLLECTION, DB_PREFIX, new BasicDBObject(DB_PREFIX + "sample", 0));
-		gisStats.add(SimpleStat.builder()
-				.label("Yes")
-				.value(georefCount)
-				.build());
-		gisStats.add(SimpleStat.builder()
-				.label("No")
-				.value((int)totalCount - georefCount)
-				.build());
-		stats.put(COLLECTION + ".gis", normalizeStats(gisStats));
-		/* TODO
-		// count collections per gene
-		final List<SimpleStat> geneStats = newArrayList();		
-		results = MONGODB_CONN.geneStats(COLLECTION, DB_PREFIX);		
-		for (final DBObject result : results) {
-			geneStats.add(SimpleStat.builder()
-					.label((String)((DBObject)result.get("_id")).get(DB_PREFIX + "gene"))
-					.value((Integer)result.get("number"))
-					.build());
-		}
-		stats.put(COLLECTION + ".gene", normalizeStats(geneStats)); */
-		return stats;
+	private BasicDBObject key(final String key) {
+		return new BasicDBObject(PRIMARY_KEY, key);		
 	}
 
-	private BasicDBObject key(final SampleKey key) {
-		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, key.getCollectionId(), 
-				PRIMARY_KEY_PART2, key.getCatalogNumber()));
+	private BasicDBObject compositeKey(final String path, final String submitter) {
+		return new BasicDBObject(of(PRIMARY_KEY, path, NAMESPACE_KEY, submitter));
 	}
 
 	private BasicDBObject sortCriteria(final @Nullable Sorting sorting) throws InvalidSortParseException {
 		if (sorting != null) {			
 			String field = null;
 			// sortable fields
-			if ("collection".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "collectionId";
-			} else if ("catalogNumber".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "catalogNumber";				
-			} else if ("locale".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "locale";
-			} else if ("year".equalsIgnoreCase(sorting.getField())) {
+			if ("year".equalsIgnoreCase(sorting.getField())) {
 				field = ORIGINAL_SAMPLE_KEY + ".year";				
 			} else if ("country".equalsIgnoreCase(sorting.getField())) {
 				field = ORIGINAL_SAMPLE_KEY + ".country";
@@ -312,17 +270,18 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 			}				
 		}
 		// insertion order
-		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, 1, PRIMARY_KEY_PART2, 1));
+		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY, 1));
 	}
 
-	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter) throws InvalidFilterParseException {
+	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter, final @Nullable String user) 
+			throws InvalidFilterParseException {
 		BasicDBObject query = null;
 		if (filter != null) {
 			for (final Entry<String, String> entry : filter.entrySet()) {
 				query = parseFilter(entry.getKey(), entry.getValue(), query);
 			}
 		}
-		return query;
+		return isNotBlank(user) ? query.append(NAMESPACE_KEY, user) : query;
 	}
 
 	private BasicDBObject parseFilter(final String parameter, final String expression, final BasicDBObject query) throws InvalidFilterParseException {
@@ -330,13 +289,7 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 		if (isNotBlank(parameter) && isNotBlank(expression)) {
 			String field = null;
 			// keyword matching search
-			if ("collection".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "collectionId";				
-			} else if ("catalogNumber".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "catalogNumber";
-			} else if ("locale".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "locale";
-			} else if ("year".equalsIgnoreCase(parameter)) {
+			if ("year".equalsIgnoreCase(parameter)) {
 				field = ORIGINAL_SAMPLE_KEY + ".year";				
 			} else if ("country".equalsIgnoreCase(parameter)) {
 				field = ORIGINAL_SAMPLE_KEY + ".country";
@@ -350,23 +303,7 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 				field = ORIGINAL_SAMPLE_KEY + ".specificEpithet";				
 			}
 			if (isNotBlank(field)) {
-				if ("catalogNumber".equalsIgnoreCase(parameter)) {
-					// convert the expression to upper case and compare for exact matching
-					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toUpperCase());
-				} else if ("locale".equalsIgnoreCase(parameter)) {					
-					if (compile("[a-z]{2}").matcher(expression).matches()) {
-						// search the language part of the locale
-						final Pattern regex = compile("(" + expression.toLowerCase() + ")([_]{1}[A-Z]{2}){0,1}");
-						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);
-					} else if (compile("_[A-Z]{2}").matcher(expression).matches()) {
-						// search the country part of the locale
-						final Pattern regex = compile("([a-z]{2}){0,1}(" + expression.toUpperCase() + ")");
-						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, regex);						
-					} else {
-						// exact match
-						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
-					}
-				} else if ("year".equalsIgnoreCase(parameter)) {
+				if ("year".equalsIgnoreCase(parameter)) {
 					// comparison operator
 					query2 = mongoNumeriComparison(field, expression);
 				} else {
@@ -394,66 +331,61 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 				}
 			}
 		}
-		return query2;		
+		return query2;
 	}
 
-	private LeishmaniaSample parseBasicDBObject(final BasicDBObject obj) {
-		return map(obj).getLeishmaniaSample();
+	private PendingSequence parseBasicDBObject(final BasicDBObject obj) {
+		return map(obj).getPendingSequence();
 	}
 
-	private LeishmaniaSample parseBasicDBObjectOrNull(final BasicDBObject obj) {
-		LeishmaniaSample sample = null;
+	private PendingSequence parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		PendingSequence pendingSeq = null;
 		if (obj != null) {
-			final LeishmaniaSampleEntity entity = map(obj);
+			final PendingSequenceEntity entity = map(obj);
 			if (entity != null) {
-				sample = entity.getLeishmaniaSample();
+				pendingSeq = entity.getPendingSequence();
 			}
 		}
-		return sample;
+		return pendingSeq;
 	}
 
-	private LeishmaniaSample parseObject(final Object obj) {
-		final BasicDBObject obj2 = (BasicDBObject) obj;
-		return map((BasicDBObject) obj2.get("obj")).getLeishmaniaSample();
-	}
-
-	private DBObject map(final LinkableTransientStore<LeishmaniaSample> store) {
+	private DBObject map(final LinkableTransientStore<PendingSequence> store) {
 		DBObject obj = null;
 		try {
-			obj = (DBObject) parse(JSON_MAPPER.writeValueAsString(new LeishmaniaSampleEntity(store.purge())));
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new PendingSequenceEntity(store.purge())));
 		} catch (JsonProcessingException e) {
-			LOGGER.error("Failed to write sample to DB object", e);
+			LOGGER.error("Failed to write saved search to DB object", e);
 		}
 		return obj;
-	}
+	}	
 
-	private LeishmaniaSampleEntity map(final BasicDBObject obj) {
-		LeishmaniaSampleEntity entity = null;
+	private PendingSequenceEntity map(final BasicDBObject obj) {
+		PendingSequenceEntity entity = null;
 		try {
-			entity = JSON_MAPPER.readValue(obj.toString(), LeishmaniaSampleEntity.class);
+			entity = JSON_MAPPER.readValue(obj.toString(), PendingSequenceEntity.class);		
 		} catch (IOException e) {
-			LOGGER.error("Failed to read sample from DB object", e);
+			LOGGER.error("Failed to read saved search from DB object", e);
 		}
 		return entity;
-	}
+	}	
 
 	/**
-	 * {@link LeishmaniaSample} entity.
+	 * {@link PendingSequence} entity.
 	 * @author Erik Torres <ertorser@upv.es>
-	 */
-	public static class LeishmaniaSampleEntity {
+	 */	
+	public static class PendingSequenceEntity {
 
 		@JsonSerialize(using = ObjectIdSerializer.class)
 		@JsonDeserialize(using = ObjectIdDeserializer.class)
 		@JsonProperty("_id")
 		private ObjectId id;
 
-		private LeishmaniaSample leishmaniaSample;
+		private PendingSequence pendingSequence;
 
-		public LeishmaniaSampleEntity() { }
+		public PendingSequenceEntity() { }
 
-		public LeishmaniaSampleEntity(final LeishmaniaSample sample) {
-			setLeishmaniaSample(sample);
+		public PendingSequenceEntity(final PendingSequence pendingSequence) {
+			setPendingSequence(pendingSequence);
 		}
 
 		public ObjectId getId() {
@@ -464,12 +396,12 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 			this.id = id;
 		}
 
-		public LeishmaniaSample getLeishmaniaSample() {
-			return leishmaniaSample;
+		public PendingSequence getPendingSequence() {
+			return pendingSequence;
 		}
 
-		public void setLeishmaniaSample(final LeishmaniaSample leishmaniaSample) {
-			this.leishmaniaSample = leishmaniaSample;
+		public void setPendingSequence(final PendingSequence pendingSequence) {
+			this.pendingSequence = pendingSequence;
 		}
 
 	}

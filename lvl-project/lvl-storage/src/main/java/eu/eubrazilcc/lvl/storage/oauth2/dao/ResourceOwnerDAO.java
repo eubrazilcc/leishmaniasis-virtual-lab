@@ -44,8 +44,8 @@ import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.datasetSharePe
 import static eu.eubrazilcc.lvl.storage.security.PermissionHistory.latestModification;
 import static eu.eubrazilcc.lvl.storage.security.shiro.CryptProvider.hashAndSaltPassword;
 import static eu.eubrazilcc.lvl.storage.transform.UserTransientStore.startStore;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.trimToNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -58,7 +58,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 

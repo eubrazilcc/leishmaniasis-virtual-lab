@@ -28,7 +28,7 @@ import static eu.eubrazilcc.lvl.storage.dao.NotificationDAO.NOTIFICATION_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.ADMIN_USER;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.ADMIN_ROLE;
 import static java.util.Collections.shuffle;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -36,7 +36,7 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.Notification;

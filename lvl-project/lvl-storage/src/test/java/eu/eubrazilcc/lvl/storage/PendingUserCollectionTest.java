@@ -27,7 +27,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.PENDING_USER_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.PendingUserDAO.updatePassword;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -38,7 +38,7 @@ import java.util.List;
 
 import javax.ws.rs.core.Link;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;

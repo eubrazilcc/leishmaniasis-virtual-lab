@@ -24,7 +24,7 @@ package eu.eubrazilcc.lvl.storage;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.storage.support.dao.IssueDAO.ISSUE_DAO;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,7 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.support.Issue;

@@ -46,7 +46,7 @@ import java.util.Set;
 
 import javax.ws.rs.core.Link;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;

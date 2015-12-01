@@ -29,7 +29,7 @@ import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWN
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.assertValidResourceOwnerId;
 import static eu.eubrazilcc.lvl.storage.security.IdentityProviderHelper.toResourceOwnerId;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.hasRole;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Comparator;
@@ -39,7 +39,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.FutureCallback;

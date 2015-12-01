@@ -26,7 +26,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.storage.dao.LvlInstanceDAO.GEOLOCATION_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.LvlInstanceDAO.INSTANCE_DAO;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -36,7 +36,7 @@ import static org.junit.Assert.fail;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;

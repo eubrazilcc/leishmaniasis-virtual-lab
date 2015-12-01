@@ -27,6 +27,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XML_FACTORY;
+import static eu.eubrazilcc.lvl.core.xml.XmlHelper.yearAsXMLGregorianCalendar;
 import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.ORIGINAL_SAMPLE_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.SANDFLY_SAMPLE_DAO;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.toJson;
@@ -43,19 +44,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.math.BigInteger;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
 import javax.ws.rs.core.Link;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.apache.commons.lang.mutable.MutableLong;
-import org.junit.BeforeClass;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -77,15 +73,8 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
  */
 public class SandflySampleCollectionTest extends LeishvlTestCase {
 
-	private static DatatypeFactory dtf;	
-
 	public SandflySampleCollectionTest() {
 		super(true);
-	}
-
-	@BeforeClass
-	public static void setup() throws Exception {
-		dtf = DatatypeFactory.newInstance();
 	}
 
 	@Test
@@ -328,7 +317,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 			sandflySamples = SANDFLY_SAMPLE_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandflySample is not null", sandflySamples, notNullValue());
 			assertThat("number of filtered sandflySample coincides with expected", sandflySamples.size(), equalTo(1));
-			
+
 			// filter: full-text search
 			filter = of("text", "an example");
 			sandflySamples = SANDFLY_SAMPLE_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
@@ -405,12 +394,6 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 		} finally {			
 			System.out.println("SandflySampleCollectionTest.test() has finished");
 		}
-	}
-
-	private static XMLGregorianCalendar yearAsXMLGregorianCalendar(final int year) {
-		final GregorianCalendar gc = new GregorianCalendar();
-		gc.set(Calendar.YEAR, year);
-		return dtf.newXMLGregorianCalendar(gc);
 	}
 
 }
