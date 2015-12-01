@@ -90,7 +90,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 
 	@Test
 	public void test() {
-		System.out.println("ColflebCollectionTest.test()");
+		System.out.println("SandflySampleCollectionTest.test()");
 		try {
 			// create sample
 			final SimpleDarwinRecord sample = DWC_XML_FACTORY.createSimpleDarwinRecord()
@@ -140,7 +140,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 			+ ", record=" + toJson(sandflySample, JSON_PRETTY_PRINTER));
 
 			// find all
-			List<SandflySample> all = SANDFLY_SAMPLE_DAO.findAll();
+			final List<SandflySample> all = SANDFLY_SAMPLE_DAO.findAll();
 			printMsg(" >> ALL\n" + toJson(all, JSON_PRETTY_PRINTER));
 
 			// find
@@ -254,6 +254,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 						.withBasisOfRecord("S")
 						.withOccurrenceID(Integer.toString(i))
 						.withCatalogNumber(Integer.toString(i) + "/15")
+						.withYear(yearAsXMLGregorianCalendar(1975 + i))
 						.withRecordNumber(Integer.toString(i) + "/15")
 						.withStateProvince("This is an example");
 				final Point location = i%2 == 0 ? Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build() : null;
@@ -262,7 +263,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 						.catalogNumber(sample3.getCatalogNumber())													
 						.locale(i%2 != 0 ? Locale.ENGLISH : Locale.FRANCE)
 						.location(location)
-						.sample(sample3)						
+						.sample(sample3)
 						.build();
 				ids.add(sandflySample3.getCatalogNumber());
 				SANDFLY_SAMPLE_DAO.insert(sandflySample3);
@@ -400,9 +401,9 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			fail("ColflebCollectionTest.test() failed: " + e.getMessage());
+			fail("SandflySampleCollectionTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("ColflebCollectionTest.test() has finished");
+			System.out.println("SandflySampleCollectionTest.test() has finished");
 		}
 	}
 

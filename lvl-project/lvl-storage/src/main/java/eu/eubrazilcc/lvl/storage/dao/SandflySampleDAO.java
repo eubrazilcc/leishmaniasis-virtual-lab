@@ -277,11 +277,21 @@ public enum SandflySampleDAO implements SampleDAO<SandflySample> {
 			if ("collection".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "collectionId";
 			} else if ("catalogNumber".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "catalogNumber";			
+				field = DB_PREFIX + "catalogNumber";				
 			} else if ("locale".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "locale";
 			} else if ("year".equalsIgnoreCase(sorting.getField())) {
-				field = ORIGINAL_SAMPLE_KEY + ".year";
+				field = ORIGINAL_SAMPLE_KEY + ".year";				
+			} else if ("country".equalsIgnoreCase(sorting.getField())) {
+				field = ORIGINAL_SAMPLE_KEY + ".country";
+			} else if ("province".equalsIgnoreCase(sorting.getField())) {
+				field = ORIGINAL_SAMPLE_KEY + ".stateProvince";
+			} else if ("county".equalsIgnoreCase(sorting.getField())) {
+				field = ORIGINAL_SAMPLE_KEY + ".county";
+			} else if ("locality".equalsIgnoreCase(sorting.getField())) {
+				field = ORIGINAL_SAMPLE_KEY + ".locality";
+			} else if ("epithet".equalsIgnoreCase(sorting.getField())) {
+				field = ORIGINAL_SAMPLE_KEY + ".specificEpithet";				
 			}
 			if (isNotBlank(field)) {
 				int order = 1;
@@ -327,7 +337,17 @@ public enum SandflySampleDAO implements SampleDAO<SandflySample> {
 			} else if ("locale".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "locale";
 			} else if ("year".equalsIgnoreCase(parameter)) {
-				field = ORIGINAL_SAMPLE_KEY + ".year";
+				field = ORIGINAL_SAMPLE_KEY + ".year";				
+			} else if ("country".equalsIgnoreCase(parameter)) {
+				field = ORIGINAL_SAMPLE_KEY + ".country";
+			} else if ("province".equalsIgnoreCase(parameter)) {
+				field = ORIGINAL_SAMPLE_KEY + ".stateProvince";
+			} else if ("county".equalsIgnoreCase(parameter)) {
+				field = ORIGINAL_SAMPLE_KEY + ".county";
+			} else if ("locality".equalsIgnoreCase(parameter)) {
+				field = ORIGINAL_SAMPLE_KEY + ".locality";
+			} else if ("epithet".equalsIgnoreCase(parameter)) {
+				field = ORIGINAL_SAMPLE_KEY + ".specificEpithet";				
 			}
 			if (isNotBlank(field)) {
 				if ("catalogNumber".equalsIgnoreCase(parameter)) {
