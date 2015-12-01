@@ -44,13 +44,13 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Stores CLIOC sample.
+ * Stores Sandfly sample.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class CliocSample extends Sample implements Linkable<CliocSample> {
+public class SandflySample extends Sample implements Linkable<SandflySample> {
 
 	@InjectLinks({
-		@InjectLink(value="clioc/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.id}")})
+		@InjectLink(value="sandfly-sample/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.id}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
@@ -73,16 +73,16 @@ public class CliocSample extends Sample implements Linkable<CliocSample> {
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof CliocSample)) {
+		if (obj == null || !(obj instanceof SandflySample)) {
 			return false;
 		}
-		final CliocSample other = CliocSample.class.cast(obj);
+		final SandflySample other = SandflySample.class.cast(obj);
 		return Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final CliocSample other) {
+	public boolean equalsIgnoringVolatile(final SandflySample other) {
 		if (other == null) {
 			return false;
 		}
@@ -104,22 +104,22 @@ public class CliocSample extends Sample implements Linkable<CliocSample> {
 
 	/* Fluent API */
 
-	public static CliocSampleBuilder builder() {
-		return new CliocSampleBuilder();
+	public static SandflySampleBuilder builder() {
+		return new SandflySampleBuilder();
 	}
 
-	public static class CliocSampleBuilder extends Builder<CliocSample> {
+	public static class SandflySampleBuilder extends Builder<SandflySample> {
 
-		public CliocSampleBuilder() {
-			super(CliocSample.class);
+		public SandflySampleBuilder() {
+			super(SandflySample.class);
 		}
 
-		public CliocSampleBuilder links(final List<Link> links) {
+		public SandflySampleBuilder links(final List<Link> links) {
 			instance.setLinks(links);
 			return this;
 		}
 
-		public CliocSample build() {
+		public SandflySample build() {
 			return instance;
 		}
 

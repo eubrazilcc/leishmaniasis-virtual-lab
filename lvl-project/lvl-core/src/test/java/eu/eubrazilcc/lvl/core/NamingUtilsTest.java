@@ -215,12 +215,12 @@ public class NamingUtilsTest {
 			final List<Sample> samples = newArrayList();
 			for (int i = 0; i < 5; i++) {
 				if (i%2 == 0) {
-					samples.add(ColflebSample.builder()
+					samples.add(SandflySample.builder()
 							.collectionId(COLFLEB)
 							.catalogNumber("0" + i + "/75")
 							.build());
 				} else {
-					samples.add(CliocSample.builder()
+					samples.add(LeishmaniaSample.builder()
 							.collectionId(CLIOC)
 							.catalogNumber("IOCL 000" + i)
 							.build());

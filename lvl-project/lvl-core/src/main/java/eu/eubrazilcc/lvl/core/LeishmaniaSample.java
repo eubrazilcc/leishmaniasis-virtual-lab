@@ -44,13 +44,13 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Stores COLFLEB sample.
+ * Stores Leishmania sample.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ColflebSample extends Sample implements Linkable<ColflebSample> {
+public class LeishmaniaSample extends Sample implements Linkable<LeishmaniaSample> {
 
 	@InjectLinks({
-		@InjectLink(value="colfleb/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.id}")})
+		@InjectLink(value="leishmania-sample/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.id}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
@@ -73,16 +73,16 @@ public class ColflebSample extends Sample implements Linkable<ColflebSample> {
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof ColflebSample)) {
+		if (obj == null || !(obj instanceof LeishmaniaSample)) {
 			return false;
 		}
-		final ColflebSample other = ColflebSample.class.cast(obj);
+		final LeishmaniaSample other = LeishmaniaSample.class.cast(obj);
 		return Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final ColflebSample other) {
+	public boolean equalsIgnoringVolatile(final LeishmaniaSample other) {
 		if (other == null) {
 			return false;
 		}
@@ -104,22 +104,22 @@ public class ColflebSample extends Sample implements Linkable<ColflebSample> {
 
 	/* Fluent API */
 
-	public static ColflebSampleBuilder builder() {
-		return new ColflebSampleBuilder();
+	public static LeishmaniaSampleBuilder builder() {
+		return new LeishmaniaSampleBuilder();
 	}
 
-	public static class ColflebSampleBuilder extends Builder<ColflebSample> {
+	public static class LeishmaniaSampleBuilder extends Builder<LeishmaniaSample> {
 
-		public ColflebSampleBuilder() {
-			super(ColflebSample.class);
+		public LeishmaniaSampleBuilder() {
+			super(LeishmaniaSample.class);
 		}
 
-		public ColflebSampleBuilder links(final List<Link> links) {
+		public LeishmaniaSampleBuilder links(final List<Link> links) {
 			instance.setLinks(links);
 			return this;
 		}
 
-		public ColflebSample build() {
+		public LeishmaniaSample build() {
 			return instance;
 		}
 

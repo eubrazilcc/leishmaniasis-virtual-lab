@@ -146,7 +146,7 @@ public class JsonMappingTest {
 			SimpleDarwinRecord sample = dwcSet.getSimpleDarwinRecord().iterator().next();
 			assertThat("COLFLEB sample is not null", sample, notNullValue());
 
-			final ColflebSample colflebSample = ColflebSample.builder()
+			final SandflySample colflebSample = SandflySample.builder()
 					.collectionId(COLFLEB)
 					.catalogNumber(trim(sample.getCatalogNumber()))
 					.sample(sample)
@@ -163,7 +163,7 @@ public class JsonMappingTest {
 			sample = dwcSet.getSimpleDarwinRecord().iterator().next();
 			assertThat("CLIOC sample is not null", sample, notNullValue());
 
-			final CliocSample cliocSample = CliocSample.builder()
+			final LeishmaniaSample cliocSample = LeishmaniaSample.builder()
 					.collectionId(CLIOC)
 					.catalogNumber(trim(sample.getCatalogNumber()))
 					.sample(sample)
@@ -389,7 +389,7 @@ public class JsonMappingTest {
 		assertThat("deserialized reference coincides with expected", reference2, equalTo(reference));
 	}
 	
-	private void testColflebSample(final ColflebSample sample) throws IOException {
+	private void testColflebSample(final SandflySample sample) throws IOException {
 		// test sample JSON serialization
 		final String payload = JSON_MAPPER.writeValueAsString(sample);
 		assertThat("serialized sample is not null", payload, notNullValue());
@@ -398,12 +398,12 @@ public class JsonMappingTest {
 		System.out.println(" >> Serialized sample (JSON): " + payload);
 
 		// test leishmania JSON deserialization
-		final ColflebSample sample2 = JSON_MAPPER.readValue(payload, ColflebSample.class);
+		final SandflySample sample2 = JSON_MAPPER.readValue(payload, SandflySample.class);
 		assertThat("deserialized sample is not null", sample2, notNullValue());
 		assertThat("deserialized sample coincides with expected", sample2, equalTo(sample));
 	}
 	
-	private void testCliocSample(final CliocSample sample) throws IOException {
+	private void testCliocSample(final LeishmaniaSample sample) throws IOException {
 		// test sample JSON serialization
 		final String payload = JSON_MAPPER.writeValueAsString(sample);
 		assertThat("serialized sample is not null", payload, notNullValue());
@@ -412,7 +412,7 @@ public class JsonMappingTest {
 		System.out.println(" >> Serialized sample (JSON): " + payload);
 
 		// test leishmania JSON deserialization
-		final CliocSample sample2 = JSON_MAPPER.readValue(payload, CliocSample.class);
+		final LeishmaniaSample sample2 = JSON_MAPPER.readValue(payload, LeishmaniaSample.class);
 		assertThat("deserialized sample is not null", sample2, notNullValue());
 		assertThat("deserialized sample coincides with expected", sample2, equalTo(sample));
 	}

@@ -22,14 +22,10 @@
 
 package eu.eubrazilcc.lvl.storage.dao;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Predicates.notNull;
-import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
 import static eu.eubrazilcc.lvl.core.SimpleStat.normalizeStats;
-import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
@@ -65,8 +61,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-import eu.eubrazilcc.lvl.core.ColflebSample;
-import eu.eubrazilcc.lvl.core.Localizable;
+import eu.eubrazilcc.lvl.core.SandflySample;
 import eu.eubrazilcc.lvl.core.SimpleStat;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
@@ -79,54 +74,67 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore;
 
 /**
- * {@link ColflebSample} DAO that manages the collection of COLFLEB samples in the database.
+ * {@link SandflySample} DAO that manages the collection of sanfly samples in the database.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
+public enum SandflySampleDAO implements SampleDAO<SandflySample> {
 
-	COLFLEB_DAO;
+	SANDFLY_SAMPLE_DAO;
 
-	private final static Logger LOGGER = getLogger(ColflebSampleDAO.class);	
+	private final static Logger LOGGER = getLogger(SandflySampleDAO.class);	
 
-	public static final String COLLECTION        = "colfleb";
-	public static final String DB_PREFIX         = "colfleb.";
+	public static final String COLLECTION        = "sandflySamples";
+	public static final String DB_PREFIX         = "sandflySample.";
 	public static final String PRIMARY_KEY_PART1 = DB_PREFIX + "collectionId";
 	public static final String PRIMARY_KEY_PART2 = DB_PREFIX + "catalogNumber";
 	public static final String GEOLOCATION_KEY   = DB_PREFIX + "location";
 
 	public static final String ORIGINAL_SAMPLE_KEY = DB_PREFIX + "sample";
 
-	private ColflebSampleDAO() {
-		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
+	private SandflySampleDAO() {
+		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);		
 		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
+		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".year", COLLECTION, false);
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
-				DB_PREFIX + "collectionId", 
-				DB_PREFIX + "catalogNumber"),
+				DB_PREFIX + "collectionId",
+				DB_PREFIX + "catalogNumber",
+				ORIGINAL_SAMPLE_KEY + ".recordedBy",
+				ORIGINAL_SAMPLE_KEY + ".stateProvince",
+				ORIGINAL_SAMPLE_KEY + ".county",
+				ORIGINAL_SAMPLE_KEY + ".locality",
+				ORIGINAL_SAMPLE_KEY + ".identifiedBy",
+				ORIGINAL_SAMPLE_KEY + ".scientificName",
+				ORIGINAL_SAMPLE_KEY + ".phylum",
+				ORIGINAL_SAMPLE_KEY + ".clazz",
+				ORIGINAL_SAMPLE_KEY + ".order",
+				ORIGINAL_SAMPLE_KEY + ".family",
+				ORIGINAL_SAMPLE_KEY + ".genus",
+				ORIGINAL_SAMPLE_KEY + ".specificEpithet"),
 				COLLECTION);
 		MONGODB_CONN.createNonUniqueIndex(PRIMARY_KEY_PART1, COLLECTION, false);
 		MONGODB_CONN.createSparseIndex(GEOLOCATION_KEY, COLLECTION, false);
-	}
+	}	
 
 	@Override
-	public WriteResult<ColflebSample> insert(final ColflebSample sample) {
+	public WriteResult<SandflySample> insert(final SandflySample sample) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<ColflebSample> store = startStore(sample);
+		final LinkableTransientStore<SandflySample> store = startStore(sample);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return new WriteResult.Builder<ColflebSample>().id(id).build();
+		return new WriteResult.Builder<SandflySample>().id(id).build();
 	}
 
 	@Override
-	public WriteResult<ColflebSample> insert(final ColflebSample sample, final boolean ignoreDuplicates) {
+	public WriteResult<SandflySample> insert(final SandflySample sample, final boolean ignoreDuplicates) {
 		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
-	public ColflebSample update(final ColflebSample sample) {
+	public SandflySample update(final SandflySample sample) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<ColflebSample> store = startStore(sample);
+		final LinkableTransientStore<SandflySample> store = startStore(sample);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(SampleKey.builder()
 				.collectionId(sample.getCollectionId())
@@ -143,18 +151,18 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 	}
 
 	@Override
-	public List<ColflebSample> findAll() {
+	public List<SandflySample> findAll() {
 		return list(0, Integer.MAX_VALUE, null, null, null, null);
 	}
 
 	@Override
-	public ColflebSample find(final SampleKey sampleKey) {
+	public SandflySample find(final SampleKey sampleKey) {
 		final BasicDBObject obj = MONGODB_CONN.get(key(sampleKey), COLLECTION);
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
-	public List<ColflebSample> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+	public List<SandflySample> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
@@ -173,9 +181,9 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 			return newArrayList();
 		}
 		// execute the query in the database
-		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, ColflebSample>() {
+		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, SandflySample>() {
 			@Override
-			public ColflebSample apply(final BasicDBObject obj) {				
+			public SandflySample apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);
 			}
 		});
@@ -192,8 +200,8 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 	}
 
 	@Override
-	public List<ColflebSample> getNear(final Point point, final double maxDistance) {
-		final List<ColflebSample> samples = newArrayList();
+	public List<SandflySample> getNear(final Point point, final double maxDistance) {
+		final List<SandflySample> samples = newArrayList();
 		final BasicDBList list = MONGODB_CONN.geoNear(COLLECTION, point.getCoordinates().getLongitude(), 
 				point.getCoordinates().getLatitude(), maxDistance);
 		for (int i = 0; i < list.size(); i++) {
@@ -203,10 +211,10 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 	}
 
 	@Override
-	public List<ColflebSample> geoWithin(final Polygon polygon) {
-		return transform(MONGODB_CONN.geoWithin(GEOLOCATION_KEY, COLLECTION, polygon), new Function<BasicDBObject, ColflebSample>() {
+	public List<SandflySample> geoWithin(final Polygon polygon) {
+		return transform(MONGODB_CONN.geoWithin(GEOLOCATION_KEY, COLLECTION, polygon), new Function<BasicDBObject, SandflySample>() {
 			@Override
-			public ColflebSample apply(final BasicDBObject obj) {
+			public SandflySample apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
 			}
 		});
@@ -217,124 +225,23 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 		MONGODB_CONN.stats(os, COLLECTION);
 	}
 
-	/**
-	 * Gets the list of publication references included within samples in the COLLECTION, assigning to each reference the location of the sample 
-	 * where the reference is included.
-	 * @return the list of publication references included within samples in the COLLECTION, annotated with geospatial locations obtained from the
-	 *         the samples where the reference is included.
-	 */
-	public List<Localizable<Point>> getReferenceLocations() {
-		final List<Localizable<Point>> localizables = newArrayList();		
-		// filter samples where PubMed Ids is not null
-		final DBObject query = new BasicDBObject(DB_PREFIX + "pmids", new BasicDBObject("$ne", null));
-		final List<BasicDBObject> results = MONGODB_CONN.mapReduce(COLLECTION, emitReferencesFn(), reduceReferencesFn(), query);
-		transformReferenceLocations(localizables, results);
-		return localizables;
-	}
-
-	/**
-	 * Specialization of the method {@link ColflebSampleDAO#getReferenceLocations()} that filters the samples that are within the specified distance 
-	 * from the center point prior retrieving the references from the COLLECTION.
-	 * @param point - longitude, latitude pair represented in WGS84 coordinate reference system (CRS)
-	 * @param maxDistance - limits the results to those elements that fall within the specified distance (in meters) from the center point
-	 * @return the list of publication references included within samples in the COLLECTION, annotated with geospatial locations obtained from the
-	 *         the samples where the reference is included.
-	 */
-	public List<Localizable<Point>> getReferenceLocations(final Point point, final double maxDistance) {
-		final List<Localizable<Point>> localizables = newArrayList();		
-		// filter samples by proximity to a center point
-		final List<BasicDBObject> results = MONGODB_CONN.mapReduce(COLLECTION, GEOLOCATION_KEY, emitReferencesFn(), reduceReferencesFn(), 
-				point.getCoordinates().getLongitude(), point.getCoordinates().getLatitude(), maxDistance);
-		transformReferenceLocations(localizables, results);
-		return localizables;		
-	}
-
-	private static String emitReferencesFn() {
-		return "function() {"
-				+ "    for (var i in this." + DB_PREFIX + "pmids) {"
-				+ "      key = { pmid: this." + DB_PREFIX + "pmids[i] };"
-				+ "      value = { locations: [ this." + DB_PREFIX + "location ] };"
-				+ "      emit(key, value);"
-				+ "    }"
-				+ "  }";
-	}
-
-	private static String reduceReferencesFn() {
-		return "function(key, values) {"
-				+ "    var result = { locations: [] };"
-				+ "    values.forEach(function(value) {"
-				+ "      result.locations = value.locations.concat(result.locations);"
-				+ "    });"
-				+ "    return result;"
-				+ "  }";
-	}
-
-	private void transformReferenceLocations(final List<Localizable<Point>> localizables, final List<BasicDBObject> results) {
-		final List<InnerReference> innerRefs = from(results).transform(new Function<BasicDBObject, InnerReference>() {
-			@Override
-			public InnerReference apply(final BasicDBObject obj) {
-				InnerReference reference = null;
-				try {
-					reference = JSON_MAPPER.readValue(obj.toString(), InnerReference.class);
-				} catch (IOException e) {
-					LOGGER.error("Failed to read inner reference from DB object", e);
-				}				
-				return reference;
-			}			
-		}).filter(notNull()).toList();
-		for (final InnerReference ref : innerRefs) {
-			for (final Point point : ref.getValue().getLocations()) {
-				localizables.add(new Localizable<Point>() {
-					private final String tag = ref.get_id().getPmid();
-					private final Point location = point;
-					@Override
-					public Point getLocation() {
-						return location;
-					}
-					@Override
-					public void setLocation(final Point location) {
-						throw new UnsupportedOperationException("Modifiable location is not supported in this class");
-					}
-					@Override
-					public String getTag() {
-						return tag;
-					}
-					@Override
-					public String toString() {
-						return toStringHelper(this)
-								.add("tag", tag)
-								.add("location", location)
-								.toString();
-					}
-				});
-			}
-		}
-	}
-
-	/**
-	 * Other possible queries include:<br>
-	 * > db.sandflies.distinct("sandfly.dataSource")<br>
-	 * [ "GenBank" ]<br>
-	 * > db.sandflies.find({ }, { "sandfly.sequence" : 0 }).count()<br>
-	 * 34179<br>
-	 */
 	public Map<String, List<SimpleStat>> collectionStats() {
 		final Map<String, List<SimpleStat>> stats = new Hashtable<String, List<SimpleStat>>();
-		// count sequences per source
+		// count samples per collection
 		final List<SimpleStat> srcStats = newArrayList();		
 		Iterable<DBObject> results = MONGODB_CONN.dataSourceStats(COLLECTION, DB_PREFIX);		
 		for (final DBObject result : results) {
 			srcStats.add(SimpleStat.builder()
-					.label((String)((DBObject)result.get("_id")).get(DB_PREFIX + "dataSource"))
+					.label((String)((DBObject)result.get("_id")).get(DB_PREFIX + "collectionId"))
 					.value((Integer)result.get("number"))
 					.build());
 		}
-		stats.put(COLLECTION + ".source", normalizeStats(srcStats));
-		// total number of sequences
+		stats.put(COLLECTION + ".collection", normalizeStats(srcStats));
+		// total number of samples
 		final long totalCount = MONGODB_CONN.count(COLLECTION);
-		// count georeferred sequences
+		// count georeferred samples
 		final List<SimpleStat> gisStats = newArrayList();		
-		final int georefCount = MONGODB_CONN.countGeoreferred(COLLECTION, DB_PREFIX, new BasicDBObject(DB_PREFIX + "sequence", 0));
+		final int georefCount = MONGODB_CONN.countGeoreferred(COLLECTION, DB_PREFIX, new BasicDBObject(DB_PREFIX + "sample", 0));
 		gisStats.add(SimpleStat.builder()
 				.label("Yes")
 				.value(georefCount)
@@ -344,7 +251,8 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 				.value((int)totalCount - georefCount)
 				.build());
 		stats.put(COLLECTION + ".gis", normalizeStats(gisStats));
-		// count sequences per gene
+		/* TODO
+		// count collections per gene
 		final List<SimpleStat> geneStats = newArrayList();		
 		results = MONGODB_CONN.geneStats(COLLECTION, DB_PREFIX);		
 		for (final DBObject result : results) {
@@ -353,35 +261,27 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 					.value((Integer)result.get("number"))
 					.build());
 		}
-		stats.put(COLLECTION + ".gene", normalizeStats(geneStats));
+		stats.put(COLLECTION + ".gene", normalizeStats(geneStats)); */
 		return stats;
 	}
 
 	private BasicDBObject key(final SampleKey key) {
 		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY_PART1, key.getCollectionId(), 
-				PRIMARY_KEY_PART2, key.getCatalogNumber()));		
+				PRIMARY_KEY_PART2, key.getCatalogNumber()));
 	}
 
 	private BasicDBObject sortCriteria(final @Nullable Sorting sorting) throws InvalidSortParseException {
 		if (sorting != null) {			
 			String field = null;
 			// sortable fields
-			if ("dataSource".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "dataSource";				
-			} else if ("definition".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "definition";
-			} else if ("accession".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "accession";
-			} else if ("length".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "length";
-			} else if ("gene".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "gene";
-			} else if ("organism".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "organism";
-			} else if ("countryFeature".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "countryFeature";
+			if ("collection".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "collectionId";
+			} else if ("catalogNumber".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "catalogNumber";			
 			} else if ("locale".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "locale";
+			} else if ("year".equalsIgnoreCase(sorting.getField())) {
+				field = ORIGINAL_SAMPLE_KEY + ".year";
 			}
 			if (isNotBlank(field)) {
 				int order = 1;
@@ -420,25 +320,17 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 		if (isNotBlank(parameter) && isNotBlank(expression)) {
 			String field = null;
 			// keyword matching search
-			if ("source".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "dataSource";				
-			} else if ("definition".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "definition";
-			} else if ("accession".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "accession";
-			} else if ("length".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "length";
-			} else if ("gene".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "gene";
-			} else if ("organism".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "organism";
-			} else if ("country".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "countryFeature";
+			if ("collection".equalsIgnoreCase(parameter)) {
+				field = DB_PREFIX + "collectionId";				
+			} else if ("catalogNumber".equalsIgnoreCase(parameter)) {
+				field = DB_PREFIX + "catalogNumber";
 			} else if ("locale".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "locale";
+			} else if ("year".equalsIgnoreCase(parameter)) {
+				field = ORIGINAL_SAMPLE_KEY + ".year";
 			}
 			if (isNotBlank(field)) {
-				if ("accession".equalsIgnoreCase(parameter)) {
+				if ("catalogNumber".equalsIgnoreCase(parameter)) {
 					// convert the expression to upper case and compare for exact matching
 					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toUpperCase());
 				} else if ("locale".equalsIgnoreCase(parameter)) {					
@@ -454,7 +346,7 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 						// exact match
 						query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
 					}
-				} else if ("length".equalsIgnoreCase(parameter)) {
+				} else if ("year".equalsIgnoreCase(parameter)) {
 					// comparison operator
 					query2 = mongoNumeriComparison(field, expression);
 				} else {
@@ -485,40 +377,40 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 		return query2;		
 	}
 
-	private ColflebSample parseBasicDBObject(final BasicDBObject obj) {
-		return map(obj).getColflebSample();
+	private SandflySample parseBasicDBObject(final BasicDBObject obj) {
+		return map(obj).getSandflySample();
 	}
 
-	private ColflebSample parseBasicDBObjectOrNull(final BasicDBObject obj) {
-		ColflebSample sample = null;
+	private SandflySample parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		SandflySample sample = null;
 		if (obj != null) {
-			final ColflebSampleEntity entity = map(obj);
+			final SandflySampleEntity entity = map(obj);
 			if (entity != null) {
-				sample = entity.getColflebSample();
+				sample = entity.getSandflySample();
 			}
 		}
 		return sample;
 	}
 
-	private ColflebSample parseObject(final Object obj) {
+	private SandflySample parseObject(final Object obj) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
-		return map((BasicDBObject) obj2.get("obj")).getColflebSample();
+		return map((BasicDBObject) obj2.get("obj")).getSandflySample();
 	}
 
-	private DBObject map(final LinkableTransientStore<ColflebSample> store) {
+	private DBObject map(final LinkableTransientStore<SandflySample> store) {
 		DBObject obj = null;
 		try {
-			obj = (DBObject) parse(JSON_MAPPER.writeValueAsString(new ColflebSampleEntity(store.purge())));
+			obj = (DBObject) parse(JSON_MAPPER.writeValueAsString(new SandflySampleEntity(store.purge())));
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Failed to write sample to DB object", e);
 		}
 		return obj;
 	}
 
-	private ColflebSampleEntity map(final BasicDBObject obj) {
-		ColflebSampleEntity entity = null;
+	private SandflySampleEntity map(final BasicDBObject obj) {
+		SandflySampleEntity entity = null;
 		try {
-			entity = JSON_MAPPER.readValue(obj.toString(), ColflebSampleEntity.class);
+			entity = JSON_MAPPER.readValue(obj.toString(), SandflySampleEntity.class);
 		} catch (IOException e) {
 			LOGGER.error("Failed to read sample from DB object", e);
 		}
@@ -526,22 +418,22 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 	}
 
 	/**
-	 * ColflebSample entity.
+	 * {@link SandflySample} entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	public static class ColflebSampleEntity {
+	public static class SandflySampleEntity {
 
 		@JsonSerialize(using = ObjectIdSerializer.class)
 		@JsonDeserialize(using = ObjectIdDeserializer.class)
 		@JsonProperty("_id")
 		private ObjectId id;
 
-		private ColflebSample sample;
+		private SandflySample sandflySample;
 
-		public ColflebSampleEntity() { }
+		public SandflySampleEntity() { }
 
-		public ColflebSampleEntity(final ColflebSample sample) {
-			setColflebSample(sample);
+		public SandflySampleEntity(final SandflySample sample) {
+			setSandflySample(sample);
 		}
 
 		public ObjectId getId() {
@@ -552,86 +444,13 @@ public enum ColflebSampleDAO implements SampleDAO<ColflebSample> {
 			this.id = id;
 		}
 
-		public ColflebSample getColflebSample() {
-			return sample;
+		public SandflySample getSandflySample() {
+			return sandflySample;
 		}
 
-		public void setColflebSample(final ColflebSample sample) {
-			this.sample = sample;
+		public void setSandflySample(final SandflySample sandflySample) {
+			this.sandflySample = sandflySample;
 		}
-
-	}
-
-	public static class InnerReference {
-
-		private Id _id;
-		private Value value;
-
-		public Id get_id() {
-			return _id;
-		}
-
-		public void set_id(final Id _id) {
-			this._id = _id;
-		}
-
-		public Value getValue() {
-			return value;
-		}
-
-		public void setValue(final Value value) {
-			this.value = value;
-		}
-
-		@Override
-		public String toString() {
-			return toStringHelper(this)
-					.add("_id", _id)
-					.add("value", value)
-					.toString();
-		}
-
-		public static class Id {
-
-			private String pmid;
-
-			public String getPmid() {
-				return pmid;
-			}
-
-			public void setPmid(final String pmid) {
-				this.pmid = pmid;
-			}
-
-			@Override
-			public String toString() {
-				return toStringHelper(this)
-						.add("pmid", pmid)
-						.toString();
-			}
-
-		}
-
-		public static class Value {
-
-			private List<Point> locations;
-
-			public List<Point> getLocations() {
-				return locations;
-			}
-
-			public void setLocations(final List<Point> locations) {
-				this.locations = locations;
-			}			
-
-			@Override
-			public String toString() {
-				return toStringHelper(this)
-						.add("locations", collectionToString(locations))
-						.toString();
-			}
-
-		}		
 
 	}
 

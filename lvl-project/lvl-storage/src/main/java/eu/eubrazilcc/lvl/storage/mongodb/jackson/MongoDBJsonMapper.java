@@ -22,7 +22,14 @@
 
 package eu.eubrazilcc.lvl.storage.mongodb.jackson;
 
+import static java.util.Arrays.asList;
+import static java.util.Optional.ofNullable;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import org.slf4j.Logger;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -31,11 +38,36 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public final class MongoDBJsonMapper {
 
+	public static final Logger LOGGER = getLogger(MongoDBJsonMapper.class);
+
 	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 	static {
 		// apply general configuration
 		JSON_MAPPER.setSerializationInclusion(Include.NON_NULL);
 		JSON_MAPPER.setSerializationInclusion(Include.NON_DEFAULT);
+	}
+
+	public static String toJson(final Object obj, final JsonOptions... options) {
+		String payload = "";
+		try {
+			final boolean pretty = asList(ofNullable(options)
+					.orElse(new JsonOptions[]{}))
+					.contains(JsonOptions.JSON_PRETTY_PRINTER);
+			payload = !pretty ? JSON_MAPPER.writeValueAsString(obj) : JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+		} catch (final JsonProcessingException e) {
+			LOGGER.error("Failed to export object to JSON", e);
+		}
+		return payload;
+	}
+
+	/**
+	 * Object mapper options.
+	 * @author Erik Torres <ertorser@upv.es>
+	 */
+	public enum JsonOptions {
+
+		JSON_PRETTY_PRINTER
+
 	}
 
 }

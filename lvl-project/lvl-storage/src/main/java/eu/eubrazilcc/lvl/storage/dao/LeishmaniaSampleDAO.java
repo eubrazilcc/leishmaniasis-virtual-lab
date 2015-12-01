@@ -65,7 +65,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-import eu.eubrazilcc.lvl.core.CliocSample;
+import eu.eubrazilcc.lvl.core.LeishmaniaSample;
 import eu.eubrazilcc.lvl.core.Localizable;
 import eu.eubrazilcc.lvl.core.SimpleStat;
 import eu.eubrazilcc.lvl.core.Sorting;
@@ -79,24 +79,24 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore;
 
 /**
- * {@link CliocSample} DAO that manages the collection of CLIOC samples in the database.
+ * {@link LeishmaniaSample} DAO that manages the collection of CLIOC samples in the database.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum CliocSampleDAO implements SampleDAO<CliocSample> {
+public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 
-	CLIOC_DAO;
+	LEISHMANIA_SAMPLE_DAO;
 
-	private final static Logger LOGGER = getLogger(CliocSampleDAO.class);	
+	private final static Logger LOGGER = getLogger(LeishmaniaSampleDAO.class);	
 
-	public static final String COLLECTION        = "clioc";
-	public static final String DB_PREFIX         = "clioc.";
+	public static final String COLLECTION        = "leishmaniaSamples";
+	public static final String DB_PREFIX         = "leishmaniaSample.";
 	public static final String PRIMARY_KEY_PART1 = DB_PREFIX + "collectionId";
 	public static final String PRIMARY_KEY_PART2 = DB_PREFIX + "catalogNumber";
 	public static final String GEOLOCATION_KEY   = DB_PREFIX + "location";
 
 	public static final String ORIGINAL_SAMPLE_KEY = DB_PREFIX + "sample";
 
-	private CliocSampleDAO() {
+	private LeishmaniaSampleDAO() {
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);
 		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
@@ -108,25 +108,25 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 	}
 
 	@Override
-	public WriteResult<CliocSample> insert(final CliocSample sample) {
+	public WriteResult<LeishmaniaSample> insert(final LeishmaniaSample sample) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<CliocSample> store = startStore(sample);
+		final LinkableTransientStore<LeishmaniaSample> store = startStore(sample);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return new WriteResult.Builder<CliocSample>().id(id).build();
+		return new WriteResult.Builder<LeishmaniaSample>().id(id).build();
 	}
 
 	@Override
-	public WriteResult<CliocSample> insert(final CliocSample sample, final boolean ignoreDuplicates) {
+	public WriteResult<LeishmaniaSample> insert(final LeishmaniaSample sample, final boolean ignoreDuplicates) {
 		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
-	public CliocSample update(final CliocSample sample) {
+	public LeishmaniaSample update(final LeishmaniaSample sample) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<CliocSample> store = startStore(sample);
+		final LinkableTransientStore<LeishmaniaSample> store = startStore(sample);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(SampleKey.builder()
 				.collectionId(sample.getCollectionId())
@@ -143,18 +143,18 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 	}
 
 	@Override
-	public List<CliocSample> findAll() {
+	public List<LeishmaniaSample> findAll() {
 		return list(0, Integer.MAX_VALUE, null, null, null, null);
 	}
 
 	@Override
-	public CliocSample find(final SampleKey sampleKey) {
+	public LeishmaniaSample find(final SampleKey sampleKey) {
 		final BasicDBObject obj = MONGODB_CONN.get(key(sampleKey), COLLECTION);
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
-	public List<CliocSample> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+	public List<LeishmaniaSample> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
@@ -173,9 +173,9 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 			return newArrayList();
 		}
 		// execute the query in the database
-		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, CliocSample>() {
+		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, LeishmaniaSample>() {
 			@Override
-			public CliocSample apply(final BasicDBObject obj) {				
+			public LeishmaniaSample apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);
 			}
 		});
@@ -192,8 +192,8 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 	}
 
 	@Override
-	public List<CliocSample> getNear(final Point point, final double maxDistance) {
-		final List<CliocSample> samples = newArrayList();
+	public List<LeishmaniaSample> getNear(final Point point, final double maxDistance) {
+		final List<LeishmaniaSample> samples = newArrayList();
 		final BasicDBList list = MONGODB_CONN.geoNear(COLLECTION, point.getCoordinates().getLongitude(), 
 				point.getCoordinates().getLatitude(), maxDistance);
 		for (int i = 0; i < list.size(); i++) {
@@ -203,10 +203,10 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 	}
 
 	@Override
-	public List<CliocSample> geoWithin(final Polygon polygon) {
-		return transform(MONGODB_CONN.geoWithin(GEOLOCATION_KEY, COLLECTION, polygon), new Function<BasicDBObject, CliocSample>() {
+	public List<LeishmaniaSample> geoWithin(final Polygon polygon) {
+		return transform(MONGODB_CONN.geoWithin(GEOLOCATION_KEY, COLLECTION, polygon), new Function<BasicDBObject, LeishmaniaSample>() {
 			@Override
-			public CliocSample apply(final BasicDBObject obj) {
+			public LeishmaniaSample apply(final BasicDBObject obj) {
 				return parseBasicDBObject(obj);
 			}
 		});
@@ -233,7 +233,7 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 	}
 
 	/**
-	 * Specialization of the method {@link CliocSampleDAO#getReferenceLocations()} that filters the samples that are within the specified distance 
+	 * Specialization of the method {@link LeishmaniaSampleDAO#getReferenceLocations()} that filters the samples that are within the specified distance 
 	 * from the center point prior retrieving the references from the COLLECTION.
 	 * @param point - longitude, latitude pair represented in WGS84 coordinate reference system (CRS)
 	 * @param maxDistance - limits the results to those elements that fall within the specified distance (in meters) from the center point
@@ -485,12 +485,12 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 		return query2;		
 	}
 
-	private CliocSample parseBasicDBObject(final BasicDBObject obj) {
+	private LeishmaniaSample parseBasicDBObject(final BasicDBObject obj) {
 		return map(obj).getCliocSample();
 	}
 
-	private CliocSample parseBasicDBObjectOrNull(final BasicDBObject obj) {
-		CliocSample sample = null;
+	private LeishmaniaSample parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		LeishmaniaSample sample = null;
 		if (obj != null) {
 			final CliocSampleEntity entity = map(obj);
 			if (entity != null) {
@@ -500,12 +500,12 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 		return sample;
 	}
 
-	private CliocSample parseObject(final Object obj) {
+	private LeishmaniaSample parseObject(final Object obj) {
 		final BasicDBObject obj2 = (BasicDBObject) obj;
 		return map((BasicDBObject) obj2.get("obj")).getCliocSample();
 	}
 
-	private DBObject map(final LinkableTransientStore<CliocSample> store) {
+	private DBObject map(final LinkableTransientStore<LeishmaniaSample> store) {
 		DBObject obj = null;
 		try {
 			obj = (DBObject) parse(JSON_MAPPER.writeValueAsString(new CliocSampleEntity(store.purge())));
@@ -536,11 +536,11 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 		@JsonProperty("_id")
 		private ObjectId id;
 
-		private CliocSample sample;
+		private LeishmaniaSample sample;
 
 		public CliocSampleEntity() { }
 
-		public CliocSampleEntity(final CliocSample sample) {
+		public CliocSampleEntity(final LeishmaniaSample sample) {
 			setCliocSample(sample);
 		}
 
@@ -552,11 +552,11 @@ public enum CliocSampleDAO implements SampleDAO<CliocSample> {
 			this.id = id;
 		}
 
-		public CliocSample getCliocSample() {
+		public LeishmaniaSample getCliocSample() {
 			return sample;
 		}
 
-		public void setCliocSample(final CliocSample sample) {
+		public void setCliocSample(final LeishmaniaSample sample) {
 			this.sample = sample;
 		}
 
