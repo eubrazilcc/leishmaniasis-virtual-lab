@@ -27,7 +27,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
 import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
-import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
+import static eu.eubrazilcc.lvl.core.CollectionNames.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getDarwinCoreSets;
@@ -86,7 +86,7 @@ public class JsonMappingTest {
 					.rel(SELF).type(APPLICATION_JSON).build();
 			final Link refLink = Link.fromUri(UriBuilder.fromUri("http://localhost/paper").path("ADGJ87950").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
-			final Link sampleLink = Link.fromUri(UriBuilder.fromUri("http://localhost/sample").path("sample:IOC 123").build())
+			final Link sampleLink = Link.fromUri(UriBuilder.fromUri("http://localhost/sample").path("sample:IOCL 123").build())
 					.rel(SELF).type(APPLICATION_JSON).build();
 
 			final Point point = Point.builder().coordinates(LngLatAlt.builder().coordinates(-122.913837d, 38.081473d).build()).build();

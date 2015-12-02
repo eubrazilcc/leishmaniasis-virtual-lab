@@ -147,7 +147,7 @@ public final class NamingUtils {
 	}
 
 	/**
-	 * Creates an identifier that uniquely identifies the sequence in the LVL. This identifier 
+	 * Creates an identifier that uniquely identifies the sequence/sample in the LVL. This identifier 
 	 * is computed from the data source and the accession fields. This method uses the default
 	 * character {@link NamingUtils#ID_FRAGMENT_SEPARATOR} to separate these particles in the 
 	 * created identifier.

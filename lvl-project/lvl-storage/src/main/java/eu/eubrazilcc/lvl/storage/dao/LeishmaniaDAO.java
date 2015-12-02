@@ -28,6 +28,7 @@ import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
+import static eu.eubrazilcc.lvl.core.CollectionNames.LEISHMANIA_COLLECTION;
 import static eu.eubrazilcc.lvl.core.SimpleStat.normalizeStats;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
@@ -90,7 +91,7 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 
 	private final static Logger LOGGER = getLogger(LeishmaniaDAO.class);	
 
-	public static final String COLLECTION        = "leishmania";
+	public static final String COLLECTION        = LEISHMANIA_COLLECTION;
 	public static final String DB_PREFIX         = "leishmania.";
 	public static final String PRIMARY_KEY_PART1 = DB_PREFIX + "dataSource";
 	public static final String PRIMARY_KEY_PART2 = DB_PREFIX + "accession";
@@ -190,7 +191,7 @@ public enum LeishmaniaDAO implements SequenceDAO<Leishmania> {
 			}
 		});
 	}
-	
+
 	@Override
 	public List<String> typeahead(final String field, final String query, final int size) {
 		throw new UnsupportedOperationException("Typeahead searches are not currently supported in this class");

@@ -119,7 +119,7 @@ public class Sample implements Localizable<Point> {
 				&& Objects.equals(catalogNumber, other.catalogNumber)
 				&& Objects.equals(location, other.location)
 				&& Objects.equals(locale, other.locale);
-		// sequence
+		// sample
 	}
 
 	@Override
@@ -140,7 +140,7 @@ public class Sample implements Localizable<Point> {
 	}
 
 	private void updateId() {
-		id = collectionId != null && isNotBlank(catalogNumber) ? toId(collectionId, catalogNumber, NOTATION_SHORT) : null;
+		setId(isNotBlank(collectionId) && isNotBlank(catalogNumber) ? toId(collectionId, catalogNumber, NOTATION_SHORT) : null);
 	}
 
 	/* Fluent API */

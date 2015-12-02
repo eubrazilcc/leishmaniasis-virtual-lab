@@ -34,7 +34,7 @@ import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.formattedQuery;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
-import static eu.eubrazilcc.lvl.service.cache.SequenceGeolocationCache.findNearbySandfly;
+import static eu.eubrazilcc.lvl.service.cache.GeolocationCache.findNearbySandflySequences;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.SEQUENCE_ID_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.ORIGINAL_SEQUENCE_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
@@ -255,7 +255,7 @@ public final class SandflySequenceResource {
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:sandflies:public:*:view");
-		return findNearbySandfly(Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), 
+		return findNearbySandflySequences(Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), 
 				maxDistance, group, heatmap);
 		/* // get from database
 		final List<Sequence> sequences = SEQUENCE_DAO.getNear(Point.builder()

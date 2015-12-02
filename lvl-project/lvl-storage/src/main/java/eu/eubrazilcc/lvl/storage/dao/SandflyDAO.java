@@ -28,6 +28,7 @@ import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
+import static eu.eubrazilcc.lvl.core.CollectionNames.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.SimpleStat.normalizeStats;
 import static eu.eubrazilcc.lvl.core.util.CollectionUtils.collectionToString;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
@@ -89,7 +90,7 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 
 	private final static Logger LOGGER = getLogger(SandflyDAO.class);	
 
-	public static final String COLLECTION        = "sandflies";
+	public static final String COLLECTION        = SANDFLY_COLLECTION;
 	public static final String DB_PREFIX         = "sandfly.";
 	public static final String PRIMARY_KEY_PART1 = DB_PREFIX + "dataSource";
 	public static final String PRIMARY_KEY_PART2 = DB_PREFIX + "accession";
@@ -189,7 +190,7 @@ public enum SandflyDAO implements SequenceDAO<Sandfly> {
 			}
 		});
 	}
-	
+
 	@Override
 	public List<String> typeahead(final String field, final String query, final int size) {
 		throw new UnsupportedOperationException("Typeahead searches are not currently supported in this class");

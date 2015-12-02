@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
+import static eu.eubrazilcc.lvl.core.CollectionNames.SANDFLY_SAMPLES_COLLECTION;
 import static eu.eubrazilcc.lvl.core.SimpleStat.normalizeStats;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
@@ -83,7 +84,7 @@ public enum SandflySampleDAO implements SampleDAO<SandflySample> {
 
 	private final static Logger LOGGER = getLogger(SandflySampleDAO.class);	
 
-	public static final String COLLECTION        = "sandflySamples";
+	public static final String COLLECTION        = SANDFLY_SAMPLES_COLLECTION;
 	public static final String DB_PREFIX         = "sandflySample.";
 	public static final String PRIMARY_KEY_PART1 = DB_PREFIX + "collectionId";
 	public static final String PRIMARY_KEY_PART2 = DB_PREFIX + "catalogNumber";

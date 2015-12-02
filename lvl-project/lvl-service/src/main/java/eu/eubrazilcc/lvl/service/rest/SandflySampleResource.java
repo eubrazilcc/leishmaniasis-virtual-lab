@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_LONG;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
@@ -34,10 +35,11 @@ import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.formattedQuery;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
-import static eu.eubrazilcc.lvl.service.cache.GeolocationCache.findNearbyLeishmaniaSequences;
-import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.SEQUENCE_ID_PATTERN;
-import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
-import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.ORIGINAL_SEQUENCE_KEY;
+import static eu.eubrazilcc.lvl.service.cache.GeolocationCache.findNearbySandflySamples;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
+import static eu.eubrazilcc.lvl.storage.SampleKey.Builder.NUMBER_YEAR_PATTERN;
+import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.ORIGINAL_SAMPLE_KEY;
+import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.SANDFLY_SAMPLE_DAO;
 import static java.util.Optional.ofNullable;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -81,9 +83,9 @@ import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
 import eu.eubrazilcc.lvl.core.Identifiers;
-import eu.eubrazilcc.lvl.core.Leishmania;
 import eu.eubrazilcc.lvl.core.Paginable;
-import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.Sample;
+import eu.eubrazilcc.lvl.core.SandflySample;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
@@ -91,44 +93,31 @@ import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
-import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
-import eu.eubrazilcc.lvl.storage.SequenceKey;
+import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
+import eu.eubrazilcc.lvl.storage.SampleKey;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
- * Leishmania sequences resource. Since a sequence is uniquely identified by the combination of the data source and the accession (i.e. GenBank, U49845), 
- * this class uses the reserved character ':' allowed in an URI segment to delimit or dereference the sequence identifier. Short and long notation
- * of data source are accepted (GenBank or gb). This resource converts the data source to the long notation (used to store the sequence in the
- * database) before calling a method of the database. For example, the following URIs are valid and identifies the same sequence mentioned before:
- * <ul>
- * <li>https://localhost/webapp/sequences/GenBank:U49845</li>
- * <li>https://localhost/webapp/sequences/gb:U49845</li>
- * </ul>
- * Identifiers that don't follow this convention will be rejected by this server with an HTTP Error 400 (Bad request). Original sequence is deliberately 
- * excluded from the {@link #getSequences(int, int, String, String, String, UriInfo, HttpServletRequest, HttpHeaders) listing method}
- * response to reduce document sizes on large fetches, which should decrease memory consumption as well as bandwidth,
- * making document retrieval faster.
+ * Sandfly samples resource.
  * @author Erik Torres <ertorser@upv.es>
- * @see {@link Leishmania} class
- * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.3">RFC3986 - Uniform Resource Identifier (URI): Generic Syntax; Section 3.3 - Path</a>
  */
-@Path("/sequences/leishmania")
-public final class LeishmaniaSequenceResource {
+@Path("/samples/sandflies")
+public class SandflySampleResource {
 
-	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sequence (leishmania) Resource";
+	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Sample (sandflies) Resource";
 
-	protected final static Logger LOGGER = getLogger(LeishmaniaSequenceResource.class);
+	protected final static Logger LOGGER = getLogger(SandflySampleResource.class);
 
 	@GET
 	@Produces(APPLICATION_JSON)
-	public Sequences getSequences(final @QueryParam("page") @DefaultValue("0") int page,
+	public Samples getSamples(final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @QueryParam("q") @DefaultValue("") String q,			
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:public:*:view");
-		final Sequences paginable = Sequences.start()
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:public:*:view");
+		final Samples paginable = Samples.start()
 				.page(page)
 				.perPage(per_page)
 				.sort(sort)
@@ -136,117 +125,121 @@ public final class LeishmaniaSequenceResource {
 				.query(q)
 				.hash(computeHash(q, null))
 				.build();
-		// get sequences from database
+		// get samples from database
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Leishmania> sequences = LEISHMANIA_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
-				ImmutableMap.of(ORIGINAL_SEQUENCE_KEY, false), count);
-		paginable.setElements(sequences);
+		final List<SandflySample> samples = SANDFLY_SAMPLE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
+				ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), count);
+		paginable.setElements(samples);
+		paginable.getExcludedFields().add(ORIGINAL_SAMPLE_KEY);
 		// set additional output and return to the caller
-		final int totalEntries = sequences.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
+		final int totalEntries = samples.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);
-		final List<FormattedQueryParam> formattedQuery = formattedQuery(filter, Sequence.class);
+		final List<FormattedQueryParam> formattedQuery = formattedQuery(filter, Sample.class);
 		paginable.setFormattedQuery(formattedQuery);
 		return paginable;
 	}
 
-	@GET	
+	@GET
 	@Produces(APPLICATION_JSON)
 	@Path("project/identifiers")
 	public Identifiers getIdentifiers(final @QueryParam("q") @DefaultValue("") String q,			
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:public:*:view");
-		// get sequences from database
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:public:*:view");
+		// get samples from database
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);		
-		final List<Leishmania> sequences = LEISHMANIA_DAO.list(0, Integer.MAX_VALUE, filter, sorting, ImmutableMap.of("leishmania.id", true), null);
+		final List<SandflySample> samples = SANDFLY_SAMPLE_DAO.list(0, Integer.MAX_VALUE, filter, sorting, 
+				ImmutableMap.of("sandflySample.collectionId", true, "sandflySample.catalogNumber", true), null);
 		// process and return to the caller
-		final Set<String> ids = ofNullable(sequences).orElse(Collections.<Leishmania>emptyList()).stream().map(s -> {
+		final Set<String> ids = ofNullable(samples).orElse(Collections.<SandflySample>emptyList()).stream().map(s -> {
 			return s != null ? s.getId() : null;
 		}).filter(Objects::nonNull).collect(Collectors.toSet());
 		return Identifiers.builder().hash(computeHash(q, null)).identifiers(ids).build();
 	}
 
 	@GET
-	@Path("{id: " + SEQUENCE_ID_PATTERN + "}")
+	@Path("{id: " + US_ASCII_PRINTABLE_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public Leishmania getSequence(final @PathParam("id") String id, final @Context UriInfo uriInfo,
+	public SandflySample getSample(final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {		
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:public:*:view");
+		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:public:*:view");
 		// get from database
-		final Leishmania sequence = LEISHMANIA_DAO.find(sequenceKey);
-		if (sequence == null) {
+		final SandflySample sample = SANDFLY_SAMPLE_DAO.find(sampleKey);
+		if (sample == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
-		return sequence;
+		return sample;
 	}
 
 	@POST
 	@Consumes(APPLICATION_JSON)
-	public Response createSequence(final Leishmania sequence, final @Context UriInfo uriInfo,
+	public Response createSample(final SandflySample sample, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:*:*:create");
-		if (sequence == null || isBlank(sequence.getAccession())) {
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:*:*:create");
+		if (sample == null || isBlank(sample.getCatalogNumber())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}		
-		// create sequence in the database
-		LEISHMANIA_DAO.insert(sequence);
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sequence.getAccession());		
+		}
+		// annotate the sample with possible missing fields
+		sample.setCollectionId(COLFLEB);
+		// create sample in the database
+		SANDFLY_SAMPLE_DAO.insert(sample);
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sample.getCatalogNumber());		
 		return Response.created(uriBuilder.build()).build();
 	}
 
 	@PUT
-	@Path("{id: " + SEQUENCE_ID_PATTERN + "}")
+	@Path("{id: " + US_ASCII_PRINTABLE_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public void updateSequence(final @PathParam("id") String id, final Leishmania update,
+	public void updateSample(final @PathParam("id") String id, final SandflySample update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}		
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
-		if (sequenceKey == null || !sequenceKey.getDataSource().equals(update.getDataSource()) 
-				|| !sequenceKey.getAccession().equals(update.getAccession())) {
+		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		if (sampleKey == null || !sampleKey.getCollectionId().equals(update.getCollectionId()) 
+				|| !sampleKey.getCatalogNumber().equals(update.getCatalogNumber())) {
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:*:*:edit");
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:*:*:edit");
 		// get from database
-		final Leishmania current = LEISHMANIA_DAO.find(sequenceKey);
+		final SandflySample current = SANDFLY_SAMPLE_DAO.find(sampleKey);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// update
-		LEISHMANIA_DAO.update(update);			
+		SANDFLY_SAMPLE_DAO.update(update);			
 	}
 
 	@DELETE
-	@Path("{id: " + SEQUENCE_ID_PATTERN + "}")
-	public void deleteSequence(final @PathParam("id") String id, final @Context HttpServletRequest request, 
+	@Path("{id: " + US_ASCII_PRINTABLE_PATTERN + "}")
+	public void deleteSample(final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {		
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:*:*:edit");
+		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:*:*:edit");
 		// get from database
-		final Leishmania current = LEISHMANIA_DAO.find(sequenceKey);
+		final SandflySample current = SANDFLY_SAMPLE_DAO.find(sampleKey);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// delete
-		LEISHMANIA_DAO.delete(sequenceKey);
+		SANDFLY_SAMPLE_DAO.delete(sampleKey);
 	}
 
 	@GET
 	@Path("nearby/{longitude}/{latitude}")
 	@Produces(APPLICATION_JSON)
-	public FeatureCollection findNearbySequences(final @PathParam("longitude") double longitude, 
+	public FeatureCollection findNearbySamples(final @PathParam("longitude") double longitude, 
 			final @PathParam("latitude") double latitude, 
 			final @QueryParam("maxDistance") @DefaultValue("1000.0d") double maxDistance, 
 			final @QueryParam("group") @DefaultValue("true") boolean group,
@@ -254,79 +247,62 @@ public final class LeishmaniaSequenceResource {
 			final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:public:*:view");
-		return findNearbyLeishmaniaSequences(Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), 
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:public:*:view");
+		return findNearbySandflySamples(Point.builder().coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build()).build(), 
 				maxDistance, group, heatmap);
-		/* // get from database
-		final List<Sequence> sequences = LEISHMANIA_DAO.getNear(Point.builder()
-				.coordinates(LngLatAlt.builder().coordinates(longitude, latitude).build())
-				.build(), maxDistance);
-		// transform to improve visualization
-		return SequenceAnalyzer.toFeatureCollection(sequences, Crs.builder().wgs84().build(), group, heatmap); */		
 	}
 
 	@GET
-	@Path("{id: " + SEQUENCE_ID_PATTERN + "}/export/gb/xml")
+	@Path("{id: " + US_ASCII_PRINTABLE_PATTERN + "}/export/dwc/xml")
 	@Produces(APPLICATION_JSON)
-	public GBSeq exportSequenceXml(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+	public SimpleDarwinRecord exportSampleXml(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final SequenceKey sequenceKey = SequenceKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NOTATION_LONG);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:leishmania:public:*:view");
+		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:public:*:view");
 		// get from database
-		final Sequence sequence = LEISHMANIA_DAO.find(sequenceKey);
-		if (sequence == null) {
+		final Sample sample = SANDFLY_SAMPLE_DAO.find(sampleKey);
+		if (sample == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}		
-		final GBSeq gbSeq = sequence.getSequence();		
-		if (gbSeq == null) {
+		final SimpleDarwinRecord dwcSample = sample.getSample();
+		if (dwcSample == null) {
 			throw new WebApplicationException("Unable to complete the operation", Response.Status.INTERNAL_SERVER_ERROR);
 		}
-		return gbSeq;
-	}
-
-	@GET
-	@Path("{id: " + SEQUENCE_ID_PATTERN + "}/export/gb/text")
-	@Produces(APPLICATION_JSON)
-	public String exportSequenceText(final @PathParam("id") String id, final @Context UriInfo uriInfo, 
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final GBSeq gbSeq = exportSequenceXml(id, uriInfo, request, headers);
-		// transform to plain text format
-		// TODO
-		return null;
+		return dwcSample;
 	}
 
 	/**
-	 * Wraps a collection of {@link Leishmania}.
+	 * Wraps a collection of {@link SandflySample}.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	public static class Sequences extends Paginable<Leishmania> {		
+	public static class Samples extends Paginable<SandflySample> {		
 
 		@InjectLinks({
-			@InjectLink(resource=LeishmaniaSequenceResource.class, method="getSequences", bindings={
+			@InjectLink(resource=SandflySequenceResource.class, method="getSamples", bindings={
 					@Binding(name="page", value="${instance.page - 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=LeishmaniaSequenceResource.class, method="getSequences", bindings={
+			@InjectLink(resource=SandflySequenceResource.class, method="getSamples", bindings={
 					@Binding(name="page", value="${0}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=LeishmaniaSequenceResource.class, method="getSequences", bindings={
+			@InjectLink(resource=SandflySequenceResource.class, method="getSamples", bindings={
 					@Binding(name="page", value="${instance.page + 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-			@InjectLink(resource=LeishmaniaSequenceResource.class, method="getSequences", bindings={
+			@InjectLink(resource=SandflySequenceResource.class, method="getSamples", bindings={
 					@Binding(name="page", value="${instance.totalPages - 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
@@ -360,60 +336,60 @@ public final class LeishmaniaSequenceResource {
 					.toString();
 		}
 
-		public static SequencesBuilder start() {
-			return new SequencesBuilder();
+		public static SamplesBuilder start() {
+			return new SamplesBuilder();
 		}
 
-		public static class SequencesBuilder {
+		public static class SamplesBuilder {
 
-			private final Sequences instance = new Sequences();
+			private final Samples instance = new Samples();
 
-			public SequencesBuilder page(final int page) {
+			public SamplesBuilder page(final int page) {
 				instance.setPage(page);
 				return this;
 			}
 
-			public SequencesBuilder perPage(final int perPage) {
+			public SamplesBuilder perPage(final int perPage) {
 				instance.setPerPage(perPage);
 				return this;
 			}
 
-			public SequencesBuilder sort(final String sort) {
+			public SamplesBuilder sort(final String sort) {
 				instance.setSort(sort);
 				return this;
 			}
 
-			public SequencesBuilder order(final String order) {
+			public SamplesBuilder order(final String order) {
 				instance.setOrder(order);
 				return this;
 			}
 
-			public SequencesBuilder query(final String query) {
+			public SamplesBuilder query(final String query) {
 				instance.setQuery(query);
 				return this;
 			}
 
-			public SequencesBuilder formattedQuery(final List<FormattedQueryParam> formattedQuery) {
+			public SamplesBuilder formattedQuery(final List<FormattedQueryParam> formattedQuery) {
 				instance.setFormattedQuery(formattedQuery);
 				return this;
 			}
 
-			public SequencesBuilder totalCount(final int totalCount) {
+			public SamplesBuilder totalCount(final int totalCount) {
 				instance.setTotalCount(totalCount);
 				return this;
 			}
 
-			public SequencesBuilder hash(final String hash) {
+			public SamplesBuilder hash(final String hash) {
 				instance.setHash(hash);
 				return this;
 			}
 
-			public SequencesBuilder sequences(final List<Leishmania> sequences) {
-				instance.setElements(sequences);
+			public SamplesBuilder samples(final List<SandflySample> samples) {
+				instance.setElements(samples);
 				return this;			
 			}
 
-			public Sequences build() {
+			public Samples build() {
 				return instance;
 			}
 

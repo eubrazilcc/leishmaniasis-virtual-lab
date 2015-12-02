@@ -53,7 +53,7 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 public class SandflySample extends Sample implements Linkable<SandflySample> {
 
 	@InjectLinks({
-		@InjectLink(value="samples/sandfly/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="urlSafeId", value="${instance.urlSafeId}")})
+		@InjectLink(value="samples/sandflies/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="urlSafeId", value="${instance.urlSafeId}")})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)

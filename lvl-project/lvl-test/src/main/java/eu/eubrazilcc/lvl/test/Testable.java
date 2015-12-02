@@ -26,14 +26,19 @@ package eu.eubrazilcc.lvl.test;
  * Provides a common interface to inject a context in a test.
  * @author Erik Torres <ertorser@upv.es>
  */
-public abstract class Testable {
+public abstract class Testable extends LeishvlTestCase {
 
 	protected final TestContext testCtxt;
 	private final Class<?> implementingClass;
 
 	public Testable(final TestContext testCtxt, final Class<?> implementingClass) {
+		this(testCtxt, implementingClass, false);
+	}
+	
+	public Testable(final TestContext testCtxt, final Class<?> implementingClass, final boolean verbose) {
+		super(verbose);
 		this.testCtxt = testCtxt;
-		this.implementingClass = implementingClass;
+		this.implementingClass = implementingClass;		
 	}
 
 	protected void setUp() {

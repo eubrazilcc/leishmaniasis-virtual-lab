@@ -24,7 +24,7 @@ package eu.eubrazilcc.lvl.service.testable;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.net.MediaType.parse;
-import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
+import static eu.eubrazilcc.lvl.core.CollectionNames.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper.getSequence;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;

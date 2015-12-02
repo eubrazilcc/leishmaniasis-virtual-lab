@@ -68,6 +68,8 @@ public class LeishVirtLabApplication extends Application {
 		// create LVL resources
 		instances.add(new SandflySequenceResource());
 		instances.add(new LeishmaniaSequenceResource());
+		instances.add(new SandflySampleResource());
+		instances.add(new LeishmaniaSampleResource());
 		instances.add(new CitationResource());
 		instances.add(new WorkflowDefinitionResource());
 		instances.add(new WorkflowRunResource());

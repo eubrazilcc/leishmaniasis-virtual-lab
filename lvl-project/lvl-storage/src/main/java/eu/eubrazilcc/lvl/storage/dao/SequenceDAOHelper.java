@@ -24,8 +24,8 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static eu.eubrazilcc.lvl.core.SequenceCollection.LEISHMANIA_COLLECTION;
-import static eu.eubrazilcc.lvl.core.SequenceCollection.SANDFLY_COLLECTION;
+import static eu.eubrazilcc.lvl.core.CollectionNames.LEISHMANIA_COLLECTION;
+import static eu.eubrazilcc.lvl.core.CollectionNames.SANDFLY_COLLECTION;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
 import static org.apache.commons.lang.StringUtils.isNotBlank;

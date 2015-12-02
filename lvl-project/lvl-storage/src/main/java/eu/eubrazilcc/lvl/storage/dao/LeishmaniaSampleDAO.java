@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.mongodb.util.JSON.parse;
+import static eu.eubrazilcc.lvl.core.CollectionNames.LEISHMANIA_SAMPLES_COLLECTION;
 import static eu.eubrazilcc.lvl.core.SimpleStat.normalizeStats;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
@@ -83,7 +84,7 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 
 	private final static Logger LOGGER = getLogger(LeishmaniaSampleDAO.class);	
 
-	public static final String COLLECTION        = "leishmaniaSamples";
+	public static final String COLLECTION        = LEISHMANIA_SAMPLES_COLLECTION;
 	public static final String DB_PREFIX         = "leishmaniaSample.";
 	public static final String PRIMARY_KEY_PART1 = DB_PREFIX + "collectionId";
 	public static final String PRIMARY_KEY_PART2 = DB_PREFIX + "catalogNumber";

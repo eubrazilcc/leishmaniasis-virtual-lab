@@ -29,30 +29,30 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import eu.eubrazilcc.lvl.core.Sequence;
+import eu.eubrazilcc.lvl.core.Sample;
 import eu.eubrazilcc.lvl.core.geojson.Crs;
 import eu.eubrazilcc.lvl.core.geojson.FeatureCollection;
 
 /**
- * Processes a collection of {@link Sequence} items and analyzes them using different criteria such as geospatial location.
+ * Processes a collection of {@link Sample} items and analyzes them using different criteria such as geospatial location.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SequenceAnalyzer {
+public class SampleAnalyzer {
 
 	/**
 	 * Wrapper method to {@link LocalizableAnalyzer#toFeatureCollection(List, Crs, boolean, boolean)} that provides a specialized version
-	 * to handle a collection of sequences as input.
-	 * @param sequences - sequences to convert to features
+	 * to handle a collection of samples as input.
+	 * @param samples - samples to convert to features
 	 * @param crs - coordinate reference system (CRS) of the input items
 	 * @param group - setting this to {@code true} will cause that all the items that share the same location will be grouped in a single feature
 	 * @param heatmap - setting this to {@code true} will cause that the groups of items that share the same location will be reorganized for 
 	 *                  better display in a map (items visualization in a heat-maps will improve considerably)
 	 * @return the input items prepared for export and display using GeoJSON format.
 	 */
-	public static <T extends Sequence> FeatureCollection seq2FeatCol(final List<T> sequences, final Crs crs, 
+	public static <T extends Sample> FeatureCollection sample2FeatCol(final List<T> samples, final Crs crs, 
 			final boolean group, final boolean heatmap) {
-		checkArgument(sequences != null, "Uninitialized list of sequences");
-		return LocalizableAnalyzer.toFeatureCollection(sequences.stream().map(identity())
+		checkArgument(samples != null, "Uninitialized list of sequences");
+		return LocalizableAnalyzer.toFeatureCollection(samples.stream().map(identity())
 				.filter(Objects::nonNull).collect(Collectors.toList()), crs, group, heatmap);		
 	}
 

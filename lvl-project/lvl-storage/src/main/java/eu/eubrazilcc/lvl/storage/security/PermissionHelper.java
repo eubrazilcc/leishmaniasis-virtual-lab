@@ -77,7 +77,7 @@ public final class PermissionHelper {
 	public static final char PERMISSION_LEVEL_SEPARATOR = ':';
 	public static final char PERMISSION_VALUE_SEPARATOR = ',';
 
-	public static final int NUMBER_OF_PERMISSIONS_GRANTED_TO_REGULAR_USERS = 13;
+	public static final int NUMBER_OF_PERMISSIONS_GRANTED_TO_REGULAR_USERS = 14;
 
 	/**
 	 * Permissions granted to the users with the role {@link #ADMIN_ROLE}.
@@ -97,6 +97,7 @@ public final class PermissionHelper {
 	public static final String defaultPermissions() {
 		return on(PERMISSIONS_SEPARATOR).skipNulls().join(
 				"sequences:*:public:*:view",
+				"samples:*:public:*:view",
 				"citations:*:public:*:view",
 				"pipelines:*:public:*:view",
 				"datasets:*:public:*:view");

@@ -95,7 +95,7 @@ public class SequenceKey {
 	 */
 	public String toId() {
 		return NamingUtils.toId(dataSource, accession, NOTATION_SHORT);		
-	}	
+	}
 
 	/* Fluent API */
 
