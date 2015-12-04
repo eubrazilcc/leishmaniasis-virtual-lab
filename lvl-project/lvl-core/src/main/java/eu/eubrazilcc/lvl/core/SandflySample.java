@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.core;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.escapeUrlPathSegment;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
@@ -88,7 +89,7 @@ public class SandflySample extends Sample implements Linkable<SandflySample> {
 	@Override
 	public void setId(final String id) {
 		super.setId(id);
-		setUrlSafeId(urlEncodeUtf8(trimToEmpty(id)));
+		setUrlSafeId(urlEncodeUtf8(escapeUrlPathSegment(trimToEmpty(id))));
 	}
 
 	@Override

@@ -31,6 +31,8 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.unescapeUrlPathSegment;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlDecodeUtf8;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.formattedQuery;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
@@ -165,11 +167,12 @@ public class SandflySampleResource {
 	@Path("{id: " + US_ASCII_PRINTABLE_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public SandflySample getSample(final @PathParam("id") String id, final @Context UriInfo uriInfo,
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {		
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		final String id2 = urlDecodeUtf8(unescapeUrlPathSegment(id));
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:public:*:view");
 		// get from database
 		final SandflySample sample = SANDFLY_SAMPLE_DAO.find(sampleKey);
@@ -191,7 +194,7 @@ public class SandflySampleResource {
 		sample.setCollectionId(COLFLEB);
 		// create sample in the database
 		SANDFLY_SAMPLE_DAO.insert(sample);
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sample.getCatalogNumber());		
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sample.getUrlSafeId());		
 		return Response.created(uriBuilder.build()).build();
 	}
 
@@ -202,8 +205,9 @@ public class SandflySampleResource {
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}		
-		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		}
+		final String id2 = urlDecodeUtf8(unescapeUrlPathSegment(id));
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
 		if (sampleKey == null || !sampleKey.getCollectionId().equals(update.getCollectionId()) 
 				|| !sampleKey.getCatalogNumber().equals(update.getCatalogNumber())) {
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
@@ -225,7 +229,8 @@ public class SandflySampleResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		final String id2 = urlDecodeUtf8(unescapeUrlPathSegment(id));
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:*:*:edit");
 		// get from database
 		final SandflySample current = SANDFLY_SAMPLE_DAO.find(sampleKey);
@@ -260,7 +265,8 @@ public class SandflySampleResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		final String id2 = urlDecodeUtf8(unescapeUrlPathSegment(id));
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:public:*:view");
 		// get from database
 		final Sample sample = SANDFLY_SAMPLE_DAO.find(sampleKey);
@@ -281,28 +287,28 @@ public class SandflySampleResource {
 	public static class Samples extends Paginable<SandflySample> {		
 
 		@InjectLinks({
-			@InjectLink(resource=SandflySequenceResource.class, method="getSamples", bindings={
+			@InjectLink(resource=SandflySampleResource.class, method="getSamples", bindings={
 					@Binding(name="page", value="${instance.page - 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=SandflySequenceResource.class, method="getSamples", bindings={
+			@InjectLink(resource=SandflySampleResource.class, method="getSamples", bindings={
 					@Binding(name="page", value="${0}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=SandflySequenceResource.class, method="getSamples", bindings={
+			@InjectLink(resource=SandflySampleResource.class, method="getSamples", bindings={
 					@Binding(name="page", value="${instance.page + 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-			@InjectLink(resource=SandflySequenceResource.class, method="getSamples", bindings={
+			@InjectLink(resource=SandflySampleResource.class, method="getSamples", bindings={
 					@Binding(name="page", value="${instance.totalPages - 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),

@@ -99,6 +99,7 @@ public enum SandflySampleDAO implements SampleDAO<SandflySample> {
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
 				DB_PREFIX + "collectionId",
 				DB_PREFIX + "catalogNumber",
+				ORIGINAL_SAMPLE_KEY + ".institutionCode",
 				ORIGINAL_SAMPLE_KEY + ".recordedBy",
 				ORIGINAL_SAMPLE_KEY + ".stateProvince",
 				ORIGINAL_SAMPLE_KEY + ".county",
@@ -278,7 +279,7 @@ public enum SandflySampleDAO implements SampleDAO<SandflySample> {
 			if ("collection".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "collectionId";
 			} else if ("catalogNumber".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "catalogNumber";				
+				field = DB_PREFIX + "catalogNumber";
 			} else if ("locale".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "locale";
 			} else if ("year".equalsIgnoreCase(sorting.getField())) {

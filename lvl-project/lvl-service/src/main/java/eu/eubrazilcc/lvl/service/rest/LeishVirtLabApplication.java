@@ -24,7 +24,6 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.conf.LogManager.LOG_MANAGER;
 import static eu.eubrazilcc.lvl.service.SingletonService.LVL_SERVICE;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -42,6 +41,7 @@ import org.glassfish.jersey.media.sse.SseFeature;
 import org.slf4j.Logger;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSet;
 
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.service.rest.interceptors.GZIPWriterInterceptor;
@@ -57,39 +57,44 @@ public class LeishVirtLabApplication extends Application {
 
 	public static final String SERVICE_NAME = ConfigurationManager.LVL_NAME + " RESTful Web service";
 
-	final Set<Class<?>> classes = newHashSet();
-	final Set<Object> instances = newHashSet();
+	private final Set<Class<?>> classes;	
+	private final Set<Object> instances;
 
-	public LeishVirtLabApplication() {		
+	public LeishVirtLabApplication() {
 		// load logging bridges
 		LOG_MANAGER.preload();
 		// start service
 		LVL_SERVICE.service();
 		// create LVL resources
-		instances.add(new SandflySequenceResource());
-		instances.add(new LeishmaniaSequenceResource());
-		instances.add(new SandflySampleResource());
-		instances.add(new LeishmaniaSampleResource());
-		instances.add(new CitationResource());
-		instances.add(new WorkflowDefinitionResource());
-		instances.add(new WorkflowRunResource());
-		instances.add(new TaskResource());
-		instances.add(new DatasetResource());
-		instances.add(new DatasetShareResource());
-		instances.add(new DatasetOpenAccessResource());
-		instances.add(new PublicResource());
-		instances.add(new NotificationResource());
-		instances.add(new LvlInstanceResource());
-		instances.add(new SavedSearchResource());
-		instances.add(new IssueResource());
-		instances.add(new SubscriptionRequestResource());
+		instances = new ImmutableSet.Builder<Object>()
+				.add(new SandflySequenceResource())
+				.add(new LeishmaniaSequenceResource())
+				.add(new PendingSequenceResource())
+				.add(new SandflySampleResource())
+				.add(new LeishmaniaSampleResource())
+				.add(new CitationResource())
+				.add(new WorkflowDefinitionResource())
+				.add(new WorkflowRunResource())
+				.add(new TaskResource())
+				.add(new DatasetResource())
+				.add(new DatasetShareResource())
+				.add(new DatasetOpenAccessResource())
+				.add(new PublicResource())
+				.add(new NotificationResource())
+				.add(new LvlInstanceResource())
+				.add(new SavedSearchResource())
+				.add(new IssueResource())
+				.add(new SubscriptionRequestResource())				
+				.build();
 		// add additional JAX-RS providers
-		classes.add(MapperProvider.class);
-		classes.add(JacksonFeature.class);
-		classes.add(SseFeature.class);
-		classes.add(MultiPartFeature.class);
-		classes.add(DeclarativeLinkingFeature.class);
-		classes.add(GZIPWriterInterceptor.class);
+		classes = new ImmutableSet.Builder<Class<?>>()
+				.add(MapperProvider.class)
+				.add(JacksonFeature.class)
+				.add(SseFeature.class)
+				.add(MultiPartFeature.class)
+				.add(DeclarativeLinkingFeature.class)
+				.add(GZIPWriterInterceptor.class)
+				.build();
 		LOGGER.info(SERVICE_NAME + " initialized successfully, registered resources: " + objectsClassNames(instances));
 	}
 

@@ -24,7 +24,6 @@ package eu.eubrazilcc.lvl.service.testable;
 
 import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XML_FACTORY;
@@ -41,6 +40,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -138,17 +138,23 @@ public class SandflySampleResourceTest extends Testable {
 		System.out.println(" >> Create new sandfly sample response JAX-RS object: " + response);
 		System.out.println(" >> Create new sandfly sample HTTP headers: " + response.getStringHeaders());
 
+		URI locationUri = new URI((String)response.getHeaders().get("Location").get(0));
+		assertThat("Created location is not null", locationUri, notNullValue());
+		assertThat("Created location path is not empty", trim(locationUri.getPath()), allOf(notNullValue(), not(equalTo(""))));
+		String sampleId = getName(locationUri.toURL().getPath());
+		assertThat("Created Id is not empty", trim(sampleId), allOf(notNullValue(), not(equalTo(""))));
+
 		// test get sandfly sample by Id
-		SandflySample sample2 = testCtxt.target().path(path.value()).path(urlEncodeUtf8(sampleKey.toId()))
+		SandflySample sample2 = testCtxt.target().path(path.value()).path(sampleId)
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
-				.get(SandflySample.class); // TODO
-		assertThat("Get sandfly sample by catalog number after update result is not null", sample2, notNullValue());
-		assertThat("Get sandfly sample by catalog number after update coincides with expected", sample2.equalsIgnoringVolatile(sample));
+				.get(SandflySample.class);
+		assertThat("Get sandfly sample by catalog number result is not null", sample2, notNullValue());
+		assertThat("Get sandfly sample by catalog number coincides with expected", sample2.equalsIgnoringVolatile(sample));
 		// uncomment for additional output
-		System.out.println(" >> Get sandfly sample by catalog number after update result: " + sample2.toString());
+		System.out.println(" >> Get sandfly sample by catalog number result: " + sample2.toString());
 
-		// create a large dataset to test complex operations
+		// create a larger dataset to test complex operations
 		final int numItems = 3;
 		for (int i = 0; i < numItems; i++) {
 			final SimpleDarwinRecord dwc2 = DWC_XML_FACTORY.createSimpleDarwinRecord()
@@ -173,10 +179,6 @@ public class SandflySampleResourceTest extends Testable {
 			testCtxt.target().path(path.value()).request().header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 			.post(entity(sample3, APPLICATION_JSON));
 		}
-
-
-		// TODO
-
 
 		// test get sandfly samples (JSON encoded)
 		response = testCtxt.target().path(path.value()).request(APPLICATION_JSON)
@@ -212,7 +214,7 @@ public class SandflySampleResourceTest extends Testable {
 		// uncomment for additional output
 		printMsg(" >> Get identifiers result: " + toJson(identifiers, JSON_PRETTY_PRINTER));
 
-		// test sandfly sample pagination (JSON encoded) // TODO
+		// test sandfly sample pagination (JSON encoded)
 		final int perPage = 2;
 		response = testCtxt.target().path(path.value())
 				.queryParam("per_page", perPage)
@@ -297,7 +299,7 @@ public class SandflySampleResourceTest extends Testable {
 
 		// test get sandfly samples applying a full-text search filter
 		samples = testCtxt.target().path(path.value())
-				.queryParam("q", "papatasi")
+				.queryParam("q", "example")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Samples.class);
@@ -309,7 +311,7 @@ public class SandflySampleResourceTest extends Testable {
 
 		// test get sandfly samples applying a keyword matching filter
 		samples = testCtxt.target().path(path.value())
-				.queryParam("q", "accession:JP553239")
+				.queryParam("q", "catalogNumber:" + sampleKey.getCatalogNumber())
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Samples.class);
@@ -321,20 +323,20 @@ public class SandflySampleResourceTest extends Testable {
 
 		// test get sandfly samples applying a full-text search combined with a keyword matching filter
 		samples = testCtxt.target().path(path.value())
-				.queryParam("q", "source:GenBank Phlebotomus")
+				.queryParam("q", "collection:" + sampleKey.getCollectionId() + " Fiocruz")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Samples.class);
 		assertThat("Search sandfly samples result is not null", samples, notNullValue());
 		assertThat("Search sandfly samples list coincides with expected", samples.getElements(), allOf(notNullValue(), not(empty()), 
-				hasSize(samples.getTotalCount()), hasSize(4)));		
+				hasSize(samples.getTotalCount()), hasSize(4)));
 		// uncomment for additional output			
 		System.out.println(" >> Search sandfly samples result: " + samples.toString());
 
 		// test get sandfly samples applying a full-text search combined with a keyword matching filter (JSON encoded)
 		response = testCtxt.target().path(path.value())
 				.queryParam("per_page", perPage)
-				.queryParam("q", "source:GenBank Phlebotomus")
+				.queryParam("q", "collection:" + sampleKey.getCollectionId() + " Fiocruz")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get();
@@ -347,12 +349,12 @@ public class SandflySampleResourceTest extends Testable {
 		assertThat("Search sandfly samples (JSON encoded) result is not null", samples, notNullValue());
 		assertThat("Search sandfly samples (JSON encoded) items coincide with expected", samples.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(min(perPage, samples.getTotalCount()))));
-		// uncomment for additional output			
+		// uncomment for additional output
 		System.out.println(" >> Search sandfly samples response body (JSON): " + payload);
 
 		// test get sandfly samples sorted by catalog number
 		samples = testCtxt.target().path(path.value())
-				.queryParam("sort", "accession")
+				.queryParam("sort", "catalogNumber")
 				.queryParam("order", "asc")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
@@ -368,7 +370,7 @@ public class SandflySampleResourceTest extends Testable {
 		System.out.println(" >> Sorted sandfly samples result: " + samples.toString());
 
 		// test get sandfly sample by collection Id + catalog number
-		sample2 = testCtxt.target().path(path.value()).path(sampleKey.toId())
+		sample2 = testCtxt.target().path(path.value()).path(sampleKey.toId(true))
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(SandflySample.class);
@@ -379,18 +381,18 @@ public class SandflySampleResourceTest extends Testable {
 
 		// test export sandfly sample
 		final SimpleDarwinRecord dwc2 = testCtxt.target().path(path.value())
-				.path(sampleKey.toId())
+				.path(sampleKey.toId(true))
 				.path("export/dwc/xml")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
 				.get(SimpleDarwinRecord.class);
 		assertThat("Export sandfly sample result is not null", dwc2, notNullValue());
 		// uncomment for additional output
-		System.out.println(" >> Export sandfly sample result: " + dwc2.toString());
+		printMsg(" >> Export sandfly sample result: " + toJson(dwc2, JSON_PRETTY_PRINTER));
 
 		// test update sandfly sample
 		sample.setLocale(new Locale("es", "ES"));
-		response = testCtxt.target().path(path.value()).path(sampleKey.toId())
+		response = testCtxt.target().path(path.value()).path(sampleKey.toId(true))
 				.request()
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.put(entity(sample, APPLICATION_JSON));
@@ -405,7 +407,7 @@ public class SandflySampleResourceTest extends Testable {
 		System.out.println(" >> Update sandfly sample HTTP headers: " + response.getStringHeaders());
 
 		// test get sandfly sample by Id after update
-		sample2 = testCtxt.target().path(path.value()).path(sampleKey.toId())
+		sample2 = testCtxt.target().path(path.value()).path(sampleKey.toId(true))
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(SandflySample.class);
@@ -463,7 +465,7 @@ public class SandflySampleResourceTest extends Testable {
 		System.out.println(" >> Get nearby sandfly samples result (plain + query token): " + featCol.toString());
 
 		// test delete sandfly sample
-		response = testCtxt.target().path(path.value()).path(sampleKey.toId())
+		response = testCtxt.target().path(path.value()).path(sampleKey.toId(true))
 				.request()
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.delete();

@@ -30,6 +30,7 @@ import static eu.eubrazilcc.lvl.core.DataSource.toLongNotation;
 import static eu.eubrazilcc.lvl.core.DataSource.toShortNotation;
 import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.escapeUrlPathSegment;
 
 import java.util.List;
 import java.util.Objects;
@@ -86,15 +87,20 @@ public class SampleKey {
 				.toString();
 	}
 	
+	public String toId() {
+		return toId(false);
+	}
+	
 	/**
 	 * Creates an identifier that uniquely identifies the sample in the LVL. This identifier 
 	 * is computed from the collection Id and the catalog number fields. This method uses the 
 	 * default character {@link NamingUtils#ID_FRAGMENT_SEPARATOR} to separate these particles 
 	 * in the created identifier and the default notation {@link DataSource.Notation#NOTATION_SHORT}.
+	 * @param escape - escape URL path segment
 	 * @return an identifier that uniquely identifies the sequence in the LVL.
 	 */
-	public String toId() {
-		return NamingUtils.toId(collectionId, catalogNumber, NOTATION_SHORT);		
+	public String toId(final boolean escape) {		
+		return NamingUtils.toId(collectionId, escape ? escapeUrlPathSegment(catalogNumber) : catalogNumber, NOTATION_SHORT);		
 	}
 
 	/* Fluent API */
@@ -105,7 +111,7 @@ public class SampleKey {
 
 	public static class Builder {
 		
-		public static final String IOCL_PATTERN = "IOCL([ \\t]|%20)[0-9]+";
+		public static final String IOCL_PATTERN = "IOCL([ \\t]|%20|\\+)[0-9]+";
 		public static final String NUMBER_YEAR_PATTERN = "[0-9]+(/|%2f|%2F)[0-9]+";
 
 		private final SampleKey instance = new SampleKey();

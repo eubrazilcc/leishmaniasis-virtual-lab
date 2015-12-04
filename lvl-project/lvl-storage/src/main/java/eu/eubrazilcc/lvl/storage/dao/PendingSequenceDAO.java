@@ -275,13 +275,13 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 
 	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter, final @Nullable String user) 
 			throws InvalidFilterParseException {
-		BasicDBObject query = null;
+		BasicDBObject query = null;		
 		if (filter != null) {
 			for (final Entry<String, String> entry : filter.entrySet()) {
 				query = parseFilter(entry.getKey(), entry.getValue(), query);
 			}
-		}
-		return isNotBlank(user) ? query.append(NAMESPACE_KEY, user) : query;
+		}		
+		return isNotBlank(user) ? (query != null ? query : new BasicDBObject()).append(NAMESPACE_KEY, user) : query;
 	}
 
 	private BasicDBObject parseFilter(final String parameter, final String expression, final BasicDBObject query) throws InvalidFilterParseException {

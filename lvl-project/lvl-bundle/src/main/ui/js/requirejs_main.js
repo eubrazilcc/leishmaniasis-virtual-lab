@@ -82,6 +82,7 @@ requirejs.config({
 		require([ 'jquery' ], function() {
 			// tell jQuery to watch for any 401, 403 or 404 errors and handle them appropriately
 			$.ajaxSetup({
+				cache : false,
 				statusCode : {
 					401 : function() {
 						window.location.replace('#login/home/unauthenticated');

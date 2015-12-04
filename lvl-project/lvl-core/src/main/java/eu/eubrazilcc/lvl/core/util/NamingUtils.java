@@ -31,18 +31,28 @@ import static java.lang.String.valueOf;
 import static java.net.URLDecoder.decode;
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.escape.ArrayBasedEscaperMap;
+import com.google.common.escape.ArrayBasedUnicodeEscaper;
 
 import eu.eubrazilcc.lvl.core.DataSource.Notation;
 import eu.eubrazilcc.lvl.core.Localizable;
@@ -101,7 +111,7 @@ public final class NamingUtils {
 			}
 		}).filter(notNull()).toList());
 	}
-	
+
 	/**
 	 * Iterates over a collection of samples and merges their sample identifiers. A sample identifier is composed
 	 * by the collection Id and the catalog number. Those fragments are joint with the {@link NamingUtils#ID_FRAGMENT_SEPARATOR}.
@@ -160,7 +170,7 @@ public final class NamingUtils {
 		final String dataSource2 = NOTATION_SHORT.equals(notation) ? toShortNotation(dataSource, NOTATION_LONG) : dataSource;
 		return dataSource2 + ID_FRAGMENT_SEPARATOR + accession;
 	}
-	
+
 	/**
 	 * Creates an identifier that uniquely identifies the sample in the LVL. This identifier 
 	 * is computed from the collection Id and the catalog number. This method uses the default
@@ -188,6 +198,63 @@ public final class NamingUtils {
 			decoded = decode(str, UTF_8.name());
 		} catch (UnsupportedEncodingException ignore) { }
 		return decoded;
+	}
+
+	public static String escapeUrlPathSegment(final @Nullable String segment) {
+		if (segment == null) return null;
+		return new UrlPathSegmentEscaper().escape(segment);
+	}
+
+	public static String unescapeUrlPathSegment(final @Nullable String segment) {
+		if (segment == null) return null;
+		return new UrlPathSegmentEscaper().unescape(segment);
+	}	
+
+	/**
+	 * Escapes/unescapes URL path segments.
+	 * @author Erik Torres <ertorser@upv.es>
+	 * @see <a href="https://url.spec.whatwg.org/#syntax-url-path-segment">URL path segment</a>
+	 */
+	public static final class UrlPathSegmentEscaper extends ArrayBasedUnicodeEscaper {
+
+		private static final ArrayBasedEscaperMap REPLACEMENT_MAP = ArrayBasedEscaperMap.create(createReplacementMap());
+
+		// Replacement pattern: $g-glyph!
+		private static final Pattern ESCAPED_PATTERN = Pattern.compile("(.*)(\\$g-[a-zA-Z\\-]+\\!)(.*)");
+
+		protected UrlPathSegmentEscaper() {
+			super(REPLACEMENT_MAP, 32, 126, null);
+		}
+
+		@Override
+		protected char[] escapeUnsafe(final int cp) {
+			return null;
+		}
+
+		public static final Map<Character, String> createReplacementMap() {
+			return ImmutableMap.of('/', "$g-forward-slash!", '?', "$g-question-mark!");
+		}
+
+		public String unescape(final @Nullable String segment) {
+			if (segment == null) return null;
+			final StringBuilder sb = new StringBuilder();
+			final Matcher matcher = ESCAPED_PATTERN.matcher(trim(segment));
+			if (matcher.find()) {
+				final int count = matcher.groupCount();
+				final Set<Entry<Character, String>> replacementMap = createReplacementMap().entrySet();
+				for (int i = 1; i <= count; i++) {					
+					final String group = matcher.group(i);
+					if (isNotBlank(group)) {
+						final Optional<Entry<Character, String>> replacement = replacementMap.stream().filter(e -> {
+							return group.contains(e.getValue());
+						}).findFirst();						
+						sb.append(replacement.isPresent() ? group.replace(replacement.get().getValue(), replacement.get().getKey().toString()) : group);
+					}
+				}
+			} else sb.append(segment);
+			return sb.toString();
+		}
+
 	}
 
 }

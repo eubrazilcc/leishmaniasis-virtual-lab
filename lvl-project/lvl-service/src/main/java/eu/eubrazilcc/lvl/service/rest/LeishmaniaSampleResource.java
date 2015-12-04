@@ -31,6 +31,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlDecodeUtf8;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.formattedQuery;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
@@ -127,7 +128,7 @@ public class LeishmaniaSampleResource {
 				.build();
 		// get samples from database
 		final MutableLong count = new MutableLong(0l);
-		final ImmutableMap<String, String> filter = parseQuery(q);
+		final ImmutableMap<String, String> filter = parseQuery(q);		
 		final Sorting sorting = parseSorting(sort, order);
 		final List<LeishmaniaSample> samples = LEISHMANIA_SAMPLE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
 				ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), count);
@@ -169,7 +170,8 @@ public class LeishmaniaSampleResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, IOCL_PATTERN, NOTATION_LONG);
+		final String id2 = urlDecodeUtf8(id);
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, IOCL_PATTERN, NOTATION_LONG);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:leishmania:public:*:view");
 		// get from database
 		final LeishmaniaSample sample = LEISHMANIA_SAMPLE_DAO.find(sampleKey);
@@ -191,7 +193,7 @@ public class LeishmaniaSampleResource {
 		sample.setCollectionId(CLIOC);
 		// create sample in the database
 		LEISHMANIA_SAMPLE_DAO.insert(sample);
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sample.getCatalogNumber());		
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(sample.getUrlSafeId());		
 		return Response.created(uriBuilder.build()).build();
 	}
 
@@ -202,8 +204,9 @@ public class LeishmaniaSampleResource {
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}		
-		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, IOCL_PATTERN, NOTATION_LONG);
+		}
+		final String id2 = urlDecodeUtf8(id);
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, IOCL_PATTERN, NOTATION_LONG);
 		if (sampleKey == null || !sampleKey.getCollectionId().equals(update.getCollectionId()) 
 				|| !sampleKey.getCatalogNumber().equals(update.getCatalogNumber())) {
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
@@ -225,7 +228,8 @@ public class LeishmaniaSampleResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, IOCL_PATTERN, NOTATION_LONG);
+		final String id2 = urlDecodeUtf8(id);
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, IOCL_PATTERN, NOTATION_LONG);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:leishmania:*:*:edit");
 		// get from database
 		final LeishmaniaSample current = LEISHMANIA_SAMPLE_DAO.find(sampleKey);
@@ -260,7 +264,8 @@ public class LeishmaniaSampleResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final SampleKey sampleKey = SampleKey.builder().parse(id, ID_FRAGMENT_SEPARATOR, IOCL_PATTERN, NOTATION_LONG);
+		final String id2 = urlDecodeUtf8(id);
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, IOCL_PATTERN, NOTATION_LONG);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:leishmania:public:*:view");
 		// get from database
 		final Sample sample = LEISHMANIA_SAMPLE_DAO.find(sampleKey);

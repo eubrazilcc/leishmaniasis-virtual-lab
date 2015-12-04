@@ -24,7 +24,6 @@ package eu.eubrazilcc.lvl.service.testable;
 
 import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XML_FACTORY;
@@ -41,6 +40,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -78,7 +78,7 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class LeishmaniaSampleResourceTest extends Testable {
 
 	public LeishmaniaSampleResourceTest(final TestContext testCtxt) {
-		super(testCtxt, LeishmaniaSampleResourceTest.class);
+		super(testCtxt, LeishmaniaSampleResourceTest.class);		
 	}
 
 	@Override
@@ -130,21 +130,27 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		String payload = response.readEntity(String.class);
 		assertThat("Create new leishmania sample response entity is empty", trim(payload), allOf(notNullValue(), equalTo("")));
 		// uncomment for additional output			
-		System.out.println(" >> Create new leishmania sample response body (JSON), empty is OK: " + payload);
-		System.out.println(" >> Create new leishmania sample response JAX-RS object: " + response);
-		System.out.println(" >> Create new leishmania sample HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Create new leishmania sample response body (JSON), empty is OK: " + payload);
+		printMsg(" >> Create new leishmania sample response JAX-RS object: " + response);
+		printMsg(" >> Create new leishmania sample HTTP headers: " + response.getStringHeaders());
+
+		URI locationUri = new URI((String)response.getHeaders().get("Location").get(0));
+		assertThat("Created location is not null", locationUri, notNullValue());
+		assertThat("Created location path is not empty", trim(locationUri.getPath()), allOf(notNullValue(), not(equalTo(""))));
+		String sampleId = getName(locationUri.toURL().getPath());
+		assertThat("Created Id is not empty", trim(sampleId), allOf(notNullValue(), not(equalTo(""))));
 
 		// test get leishmania sample by Id
-		LeishmaniaSample sample2 = testCtxt.target().path(path.value()).path(urlEncodeUtf8(sampleKey.toId()))
+		LeishmaniaSample sample2 = testCtxt.target().path(path.value()).path(sampleId)
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(LeishmaniaSample.class);
-		assertThat("Get leishmania sample by catalog number after update result is not null", sample2, notNullValue());
-		assertThat("Get leishmania sample by catalog number after update coincides with expected", sample2.equalsIgnoringVolatile(sample));
+		assertThat("Get leishmania sample by catalog number result is not null", sample2, notNullValue());
+		assertThat("Get leishmania sample by catalog number coincides with expected", sample2.equalsIgnoringVolatile(sample));
 		// uncomment for additional output
-		System.out.println(" >> Get leishmania sample by catalog number after update result: " + sample2.toString());
+		printMsg(" >> Get leishmania sample by catalog number result: " + sample2.toString());
 
-		// create a large dataset to test complex operations
+		// create a larger dataset to test complex operations
 		final int numItems = 3;
 		for (int i = 0; i < numItems; i++) {
 			final SimpleDarwinRecord dwc2 = DWC_XML_FACTORY.createSimpleDarwinRecord()
@@ -154,7 +160,7 @@ public class LeishmaniaSampleResourceTest extends Testable {
 					.withCollectionCode("Fiocruz-CLIOC")
 					.withBasisOfRecord("L")
 					.withOccurrenceID(Integer.toString(i))
-					.withCatalogNumber("IOCL 000" + Integer.toString(i))
+					.withCatalogNumber("IOCL X00" + Integer.toString(i))
 					.withYear(yearAsXMLGregorianCalendar(1975 + i))
 					.withRecordNumber("IOCL 000" + Integer.toString(i))
 					.withStateProvince("This is an example");
@@ -170,12 +176,6 @@ public class LeishmaniaSampleResourceTest extends Testable {
 			.post(entity(sample3, APPLICATION_JSON));
 		}
 
-
-
-		// TODO
-
-
-
 		// test get leishmania samples (JSON encoded)
 		response = testCtxt.target().path(path.value()).request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
@@ -186,9 +186,9 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		payload = response.readEntity(String.class);
 		assertThat("Get leishmania samples response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));
 		// uncomment for additional output			
-		System.out.println(" >> Get leishmania samples response body (JSON): " + payload);
-		System.out.println(" >> Get leishmania samples response JAX-RS object: " + response);
-		System.out.println(" >> Get leishmania samples HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Get leishmania samples response body (JSON): " + payload);
+		printMsg(" >> Get leishmania samples response JAX-RS object: " + response);
+		printMsg(" >> Get leishmania samples HTTP headers: " + response.getStringHeaders());
 
 		// test get leishmania samples (Java object)
 		Samples samples = testCtxt.target().path(path.value()).request(APPLICATION_JSON)
@@ -227,7 +227,7 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		assertThat("Paginate leishmania samples first page list coincides with expected", samples.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(min(perPage, samples.getTotalCount()))));		
 		// uncomment for additional output			
-		System.out.println(" >> Paginate leishmania samples first page response body (JSON): " + payload);
+		printMsg(" >> Paginate leishmania samples first page response body (JSON): " + payload);
 
 		assertThat("Paginate leishmania samples first page links coincides with expected", samples.getLinks(), allOf(notNullValue(), not(empty()), hasSize(2)));		
 		Link lastLink = null;
@@ -254,7 +254,7 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		assertThat("Paginate leishmania samples last page result is not null", samples, notNullValue());
 		assertThat("Paginate leishmania samples last page list is not empty", samples.getElements(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output			
-		System.out.println(" >> Paginate leishmania samples last page response body (JSON): " + payload);
+		printMsg(" >> Paginate leishmania samples last page response body (JSON): " + payload);
 
 		assertThat("Paginate leishmania samples last page links coincide with expected", samples.getLinks(), allOf(notNullValue(), not(empty()), hasSize(2)));
 
@@ -267,8 +267,8 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		assertThat("Paginate leishmania samples first page result is not null", samples, notNullValue());
 		assertThat("Paginate leishmania samples first page list coincides with expected", samples.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(min(perPage, samples.getTotalCount()))));		
-		// uncomment for additional output			
-		System.out.println(" >> Paginate leishmania samples first page result: " + samples.toString());
+		// uncomment for additional output
+		printMsg(" >> Paginate leishmania samples first page result: " + toJson(samples, JSON_PRETTY_PRINTER));
 
 		assertThat("Paginate leishmania samples first page links coincide with expected", samples.getLinks(), allOf(notNullValue(), not(empty()), hasSize(2)));
 		lastLink = null;
@@ -288,51 +288,52 @@ public class LeishmaniaSampleResourceTest extends Testable {
 				.get(Samples.class);
 		assertThat("Paginate leishmania samples last page result is not null", samples, notNullValue());
 		assertThat("Paginate leishmania samples last page list is not empty", samples.getElements(), allOf(notNullValue(), not(empty())));		
-		// uncomment for additional output			
-		System.out.println(" >> Paginate leishmania samples last page result: " + samples.toString());
+		// uncomment for additional output
+		printMsg(" >> Paginate leishmania samples last page result: " + toJson(samples, JSON_PRETTY_PRINTER));
 
 		assertThat("Paginate leishmania samples last page links coincide with expected", samples.getLinks(), allOf(notNullValue(), not(empty()), hasSize(2)));
 
 		// test get leishmania samples applying a full-text search filter
 		samples = testCtxt.target().path(path.value())
-				.queryParam("q", "papatasi")
+				.queryParam("q", "example")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Samples.class);
-		assertThat("Search leishmania samples result is not null", samples, notNullValue());
+		assertThat("Search leishmania samples result is not null", samples, notNullValue());		
+
 		assertThat("Search leishmania samples list coincides with expected", samples.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(samples.getTotalCount()), hasSize(3)));
-		// uncomment for additional output			
-		System.out.println(" >> Search leishmania samples result: " + samples.toString());
+		// uncomment for additional output
+		printMsg(" >> Search leishmania samples result: " + toJson(samples, JSON_PRETTY_PRINTER));
 
 		// test get leishmania samples applying a keyword matching filter
 		samples = testCtxt.target().path(path.value())
-				.queryParam("q", "accession:JP553239")
+				.queryParam("q", "catalogNumber:\"" + sampleKey.getCatalogNumber() + "\"")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Samples.class);
 		assertThat("Search leishmania samples result is not null", samples, notNullValue());
 		assertThat("Search leishmania samples list coincides with expected", samples.getElements(), allOf(notNullValue(), not(empty()), 
-				hasSize(samples.getTotalCount()), hasSize(1)));	
-		// uncomment for additional output			
-		System.out.println(" >> Search leishmania samples result: " + samples.toString());
+				hasSize(samples.getTotalCount()), hasSize(1)));
+		// uncomment for additional output
+		printMsg(" >> Search leishmania samples result: " + toJson(samples, JSON_PRETTY_PRINTER));
 
 		// test get leishmania samples applying a full-text search combined with a keyword matching filter
 		samples = testCtxt.target().path(path.value())
-				.queryParam("q", "source:GenBank Phlebotomus")
+				.queryParam("q", "collection:" + sampleKey.getCollectionId() + " Fiocruz")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Samples.class);
 		assertThat("Search leishmania samples result is not null", samples, notNullValue());
 		assertThat("Search leishmania samples list coincides with expected", samples.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(samples.getTotalCount()), hasSize(4)));		
-		// uncomment for additional output			
-		System.out.println(" >> Search leishmania samples result: " + samples.toString());
+		// uncomment for additional output
+		printMsg(" >> Search leishmania samples result: " + toJson(samples, JSON_PRETTY_PRINTER));
 
 		// test get leishmania samples applying a full-text search combined with a keyword matching filter (JSON encoded)
 		response = testCtxt.target().path(path.value())
 				.queryParam("per_page", perPage)
-				.queryParam("q", "source:GenBank Phlebotomus")
+				.queryParam("q", "collection:" + sampleKey.getCollectionId() + " Fiocruz")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get();
@@ -346,11 +347,11 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		assertThat("Search leishmania samples (JSON encoded) items coincide with expected", samples.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(min(perPage, samples.getTotalCount()))));
 		// uncomment for additional output			
-		System.out.println(" >> Search leishmania samples response body (JSON): " + payload);
+		printMsg(" >> Search leishmania samples response body (JSON): " + payload);
 
 		// test get leishmania samples sorted by catalog number
 		samples = testCtxt.target().path(path.value())
-				.queryParam("sort", "accession")
+				.queryParam("sort", "catalogNumber")
 				.queryParam("order", "asc")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
@@ -363,7 +364,7 @@ public class LeishmaniaSampleResourceTest extends Testable {
 			last = s.getCatalogNumber();
 		}
 		// uncomment for additional output			
-		System.out.println(" >> Sorted leishmania samples result: " + samples.toString());
+		printMsg(" >> Sorted leishmania samples result: " + samples.toString());
 
 		// test get leishmania sample by collection Id + catalog number
 		sample2 = testCtxt.target().path(path.value()).path(sampleKey.toId())
@@ -373,7 +374,7 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		assertThat("Get leishmania sample by catalog number result is not null", sample2, notNullValue());
 		assertThat("Get leishmania sample by catalog number coincides with expected", sample2.equalsIgnoringVolatile(sample));
 		// uncomment for additional output
-		System.out.println(" >> Get leishmania sample by catalog number result: " + sample2.toString());
+		printMsg(" >> Get leishmania sample by catalog number result: " + sample2.toString());
 
 		// test export leishmania sample
 		final SimpleDarwinRecord dwc2 = testCtxt.target().path(path.value())
@@ -384,7 +385,7 @@ public class LeishmaniaSampleResourceTest extends Testable {
 				.get(SimpleDarwinRecord.class);
 		assertThat("Export leishmania sample result is not null", dwc2, notNullValue());
 		// uncomment for additional output
-		System.out.println(" >> Export leishmania sample result: " + dwc2.toString());
+		printMsg(" >> Export leishmania sample result: " + dwc2.toString());
 
 		// test update leishmania sample
 		sample.setLocale(new Locale("es", "ES"));
@@ -398,9 +399,9 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		payload = response.readEntity(String.class);
 		assertThat("Update leishmania sample response entity is empty", trim(payload), allOf(notNullValue(), equalTo("")));		
 		// uncomment for additional output			
-		System.out.println(" >> Update leishmania sample response body (JSON), empty is OK: " + payload);
-		System.out.println(" >> Update leishmania sample response JAX-RS object: " + response);
-		System.out.println(" >> Update leishmania sample HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Update leishmania sample response body (JSON), empty is OK: " + payload);
+		printMsg(" >> Update leishmania sample response JAX-RS object: " + response);
+		printMsg(" >> Update leishmania sample HTTP headers: " + response.getStringHeaders());
 
 		// test get leishmania sample by catalog number after update
 		sample2 = testCtxt.target().path(path.value()).path(sampleKey.toId())
@@ -410,7 +411,7 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		assertThat("Get leishmania sample by catalog number after update result is not null", sample2, notNullValue());
 		assertThat("Get leishmania sample by catalog number after update coincides with expected", sample2.equalsIgnoringVolatile(sample));
 		// uncomment for additional output
-		System.out.println(" >> Get leishmania sample by catalog number after update result: " + sample2.toString());			
+		printMsg(" >> Get leishmania sample by catalog number after update result: " + sample2.toString());			
 
 		// test find leishmania samples near to a location
 		FeatureCollection featCol = testCtxt.target().path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
@@ -421,7 +422,7 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		assertThat("Get nearby leishmania samples result is not null", featCol, notNullValue());
 		assertThat("Get nearby leishmania samples list is not empty", featCol.getFeatures(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output			
-		System.out.println(" >> Get nearby leishmania samples result: " + featCol.toString());
+		printMsg(" >> Get nearby leishmania samples result: " + featCol.toString());
 
 		// test find leishmania samples near to a location (using plain REST, no Jersey client)
 		URI uri = testCtxt.target().path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
@@ -434,12 +435,12 @@ public class LeishmaniaSampleResourceTest extends Testable {
 				.asString();
 		assertThat("Get nearby leishmania samples result (plain) is not empty", trim(response2), allOf(notNullValue(), not(equalTo(""))));
 		// uncomment for additional output
-		System.out.println(" >> Get nearby leishmania samples result (plain): " + response2);
+		printMsg(" >> Get nearby leishmania samples result (plain): " + response2);
 		featCol = testCtxt.jsonMapper().readValue(response2, FeatureCollection.class);
 		assertThat("Get nearby leishmania samples result (plain) is not null", featCol, notNullValue());
 		assertThat("Get nearby leishmania samples (plain) list is not empty", featCol.getFeatures(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output
-		System.out.println(" >> Get nearby leishmania samples result (plain): " + featCol.toString());
+		printMsg(" >> Get nearby leishmania samples result (plain): " + featCol.toString());
 
 		// test find leishmania samples near to a location (using plain REST, no Jersey client, and query style authz token)
 		uri = testCtxt.target().path(path.value()).path("nearby").path("1.216666667").path("3.416666667")
@@ -453,12 +454,12 @@ public class LeishmaniaSampleResourceTest extends Testable {
 				.asString();
 		assertThat("Get nearby leishmania samples result (plain + query token) is not empty", trim(response2), allOf(notNullValue(), not(equalTo(""))));		
 		// uncomment for additional output
-		System.out.println(" >> Get nearby leishmania samples result (plain + query token): " + response2);
+		printMsg(" >> Get nearby leishmania samples result (plain + query token): " + response2);
 		featCol = testCtxt.jsonMapper().readValue(response2, FeatureCollection.class);
 		assertThat("Get nearby leishmania samples result (plain + query token) is not null", featCol, notNullValue());
 		assertThat("Get nearby leishmania samples (plain + query token) list is not empty", featCol.getFeatures(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output
-		System.out.println(" >> Get nearby leishmania samples result (plain + query token): " + featCol.toString());
+		printMsg(" >> Get nearby leishmania samples result (plain + query token): " + featCol.toString());
 
 		// test delete leishmania sample
 		response = testCtxt.target().path(path.value()).path(sampleKey.toId())
@@ -471,9 +472,9 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		payload = response.readEntity(String.class);
 		assertThat("Delete leishmania sample response entity is empty", trim(payload), allOf(notNullValue(), equalTo("")));		
 		// uncomment for additional output
-		System.out.println(" >> Delete leishmania sample response body (JSON), empty is OK: " + payload);
-		System.out.println(" >> Delete leishmania sample response JAX-RS object: " + response);
-		System.out.println(" >> Delete leishmania sample HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Delete leishmania sample response body (JSON), empty is OK: " + payload);
+		printMsg(" >> Delete leishmania sample response JAX-RS object: " + response);
+		printMsg(" >> Delete leishmania sample HTTP headers: " + response.getStringHeaders());
 	}
 
 }

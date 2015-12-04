@@ -75,8 +75,11 @@ import eu.eubrazilcc.lvl.service.testable.DatasetResourceTest;
 import eu.eubrazilcc.lvl.service.testable.DatasetShareResourceTest;
 import eu.eubrazilcc.lvl.service.testable.IssuesResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaResourceTest;
+import eu.eubrazilcc.lvl.service.testable.LeishmaniaSampleResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LvlInstanceResourceTest;
+import eu.eubrazilcc.lvl.service.testable.PendingSequenceResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflyResourceTest;
+import eu.eubrazilcc.lvl.service.testable.SandflySampleResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SavedSearchResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SubscriptionRequestResourceTest;
 import eu.eubrazilcc.lvl.service.testable.TaskResourceTest;
@@ -226,7 +229,7 @@ public class ServiceTest {
 					"user2", new TestCredential(ownerId2, TOKEN_USER2), 
 					"user3", new TestCredential(ownerId3, TOKEN_USER3)));
 
-			// test task resource
+			/* TODO // test task resource
 			new TaskResourceTest(testCtxt).runTest();
 
 			// test sand-flies resource
@@ -237,8 +240,17 @@ public class ServiceTest {
 
 			// test dataset resource
 			new DatasetResourceTest(testCtxt).runTest();
+			
+			// test sand-fly samples resource
+			new SandflySampleResourceTest(testCtxt).runTest();
+			
+			// test leishmania samples resource
+			new LeishmaniaSampleResourceTest(testCtxt).runTest(); */
+			
+			// test pending sequences resource
+			new PendingSequenceResourceTest(testCtxt).runTest();
 
-			// test shared dataset resource
+			/* TODO // test shared dataset resource
 			new DatasetShareResourceTest(testCtxt).runTest();
 
 			// test dataset open access resource
@@ -257,7 +269,7 @@ public class ServiceTest {
 			new IssuesResourceTest(testCtxt).runTest();
 
 			// test subscription request resource
-			new SubscriptionRequestResourceTest(testCtxt).runTest();
+			new SubscriptionRequestResourceTest(testCtxt).runTest(); */
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

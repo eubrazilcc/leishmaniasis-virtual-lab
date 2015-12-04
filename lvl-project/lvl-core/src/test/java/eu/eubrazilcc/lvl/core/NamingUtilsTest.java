@@ -35,16 +35,20 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.NO_NAME;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeSampleIds;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.escapeUrlPathSegment;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.unescapeUrlPathSegment;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeSeqIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.splitIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toAsciiSafeName;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toId;
-import static org.apache.commons.lang.StringUtils.countMatches;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.countMatches;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -53,15 +57,24 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableMap;
+
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests naming utilities.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class NamingUtilsTest {
+public class NamingUtilsTest extends LeishvlTestCase {
 
+	public NamingUtilsTest() {
+		super(true);
+	}
+	
 	@Test
 	public void test() {
 		System.out.println("NamingUtilsTest.test()");
@@ -329,6 +342,37 @@ public class NamingUtilsTest {
 		} finally {
 			System.out.println("NamingUtilsTest.test2() has finished");
 		}
+	}
+	
+	@Test
+	public void test3() {
+		// create test dataset
+		final Map<String, String> segments = new ImmutableMap.Builder<String, String>()
+				.put("IOCL 0001", "IOCL 0001")
+				.put("051/75", "051$g-forward-slash!75")
+				.put("x?y", "x$g-question-mark!y")
+				.put("/", "$g-forward-slash!")
+				.put("?", "$g-question-mark!")
+				.put("hello?", "hello$g-question-mark!")
+				.put("?hello", "$g-question-mark!hello")
+				.put("123?hello/456", "123$g-question-mark!hello$g-forward-slash!456")
+				.put("056/75", "056$g-forward-slash!75")
+				.put("356", "356")
+				.put("g-forward-slash!", "g-forward-slash!")
+				.put("$g-question-mark", "$g-question-mark")
+				.build();
+		
+		segments.entrySet().stream().forEach(e -> {
+			// escape URL path segment
+			final String escaped = escapeUrlPathSegment(e.getKey());			
+			assertThat("escaped segment coincides with expected", trim(escaped), allOf(notNullValue(), equalTo(e.getValue())));
+			printMsg("URL path segment: '" + e.getKey() + "' was successfully escaped: '" + escaped + "'");
+			
+			// unescape URL path segment
+			final String unescaped = unescapeUrlPathSegment(e.getValue());
+			assertThat("unescaped segment coincides with expected", trim(unescaped), allOf(notNullValue(), equalTo(e.getKey())));			
+			printMsg("URL path segment: '" + e.getValue() + "' was successfully unescaped: '" + unescaped + "'");
+		});		
 	}
 
 	private static void validate(final String id, final String dataSource) {

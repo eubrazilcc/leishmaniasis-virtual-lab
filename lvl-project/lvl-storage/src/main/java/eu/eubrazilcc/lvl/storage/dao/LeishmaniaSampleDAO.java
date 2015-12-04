@@ -99,6 +99,7 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
 				DB_PREFIX + "collectionId",
 				DB_PREFIX + "catalogNumber",
+				ORIGINAL_SAMPLE_KEY + ".institutionCode",
 				ORIGINAL_SAMPLE_KEY + ".recordedBy",
 				ORIGINAL_SAMPLE_KEY + ".stateProvince",
 				ORIGINAL_SAMPLE_KEY + ".county",
