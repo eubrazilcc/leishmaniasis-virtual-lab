@@ -95,7 +95,9 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 	private LeishmaniaSampleDAO() {
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);		
 		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
-		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".year", COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".year", COLLECTION, false);		
+		MONGODB_CONN.createNonUniqueIndex(PRIMARY_KEY_PART1, COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(PRIMARY_KEY_PART2, COLLECTION, false);
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
 				DB_PREFIX + "collectionId",
 				DB_PREFIX + "catalogNumber",
@@ -279,7 +281,7 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 			if ("collection".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "collectionId";
 			} else if ("catalogNumber".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "catalogNumber";				
+				field = DB_PREFIX + "catalogNumber";
 			} else if ("locale".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "locale";
 			} else if ("year".equalsIgnoreCase(sorting.getField())) {

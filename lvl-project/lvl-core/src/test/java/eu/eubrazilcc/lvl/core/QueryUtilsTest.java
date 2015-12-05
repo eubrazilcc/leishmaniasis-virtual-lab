@@ -37,6 +37,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.fail;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -66,15 +67,21 @@ public class QueryUtilsTest {
 			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// keyword matching search
-			query = "keyword:value";
-			filter = parseQuery(query);
-			assertThat("filter is not null", filter, notNullValue());
-			assertThat("number of search terms coincides with expected", filter.size(), equalTo(1));
-			assertThat("keyword search term is not null", filter.get("keyword"), notNullValue());
-			assertThat("keyword search term coincides with expected", filter.get("keyword"), equalTo("value"));			
-			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			Map<String, Pair<String, String>> queries = new ImmutableMap.Builder<String, Pair<String, String>>()
+					.put("keyword:value", Pair.of("keyword", "value"))
+					.put("keyword:\"value\"", Pair.of("keyword", "value"))
+					.put("catalogNumber:\"9f9c5951-d147-461d-9dc9-469443023d65\"", Pair.of("catalogNumber", "9f9c5951-d147-461d-9dc9-469443023d65"))
+					.build();
+			for (final Map.Entry<String, Pair<String, String>> e : queries.entrySet()) {
+				filter = parseQuery(e.getKey());
+				assertThat("filter is not null", filter, notNullValue());
+				assertThat("number of search terms coincides with expected", filter.size(), equalTo(1));
+				assertThat("keyword search term is not null", filter.get(e.getValue().key), notNullValue());
+				assertThat("keyword search term coincides with expected", filter.get(e.getValue().key), equalTo(e.getValue().value));			
+				/* uncomment for additional output */
+				System.out.println(" >> QUERY -->" + e.getKey() + "<--");
+				System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			}
 
 			// combined full-text and keyword matching search
 			query = "full-text search term keyword:value";

@@ -96,6 +96,8 @@ public enum SandflySampleDAO implements SampleDAO<SandflySample> {
 		MONGODB_CONN.createIndex(ImmutableList.of(PRIMARY_KEY_PART1, PRIMARY_KEY_PART2), COLLECTION);		
 		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
 		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".year", COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(PRIMARY_KEY_PART1, COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(PRIMARY_KEY_PART2, COLLECTION, false);
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
 				DB_PREFIX + "collectionId",
 				DB_PREFIX + "catalogNumber",

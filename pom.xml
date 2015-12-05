@@ -44,9 +44,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<org.apache.shiro.version>1.2.3</org.apache.shiro.version>
 		<akka.version>2.3.12</akka.version>
 		<avro.version>1.7.7</avro.version>
-		<vertx.version>3.0.0</vertx.version>
 		<mongodb.driver.version>2.13.1</mongodb.driver.version>
-		<mongodb2.driver.version>3.0.2</mongodb2.driver.version>
 		<activemq.version>5.11.1</activemq.version>
 		<opm.prov.version>0.6.2</opm.prov.version>
 		<antlr4.version>4.5</antlr4.version>
@@ -215,44 +213,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>com.typesafe.akka</groupId>
 				<artifactId>akka-slf4j_2.11</artifactId>
 				<version>${akka.version}</version>
-			</dependency>
-			
-			<!-- Vert.x open-source event-driven application framework and toolkit that runs on the JVM -->
-						
-			<dependency>
-				<groupId>io.vertx</groupId>
-				<artifactId>vertx-core</artifactId>
-				<version>${vertx.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.vertx</groupId>
-				<artifactId>vertx-auth-shiro</artifactId>
-				<version>${vertx.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.vertx</groupId>
-				<artifactId>vertx-web</artifactId>
-				<version>${vertx.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.vertx</groupId>
-				<artifactId>vertx-sockjs</artifactId>
-				<version>${vertx.version}-milestone2</version>
-			</dependency>		
-			<dependency>
-				<groupId>io.vertx</groupId>
-				<artifactId>vertx-mail-client</artifactId>
-				<version>${vertx.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.vertx</groupId>
-				<artifactId>vertx-hazelcast</artifactId>
-				<version>${vertx.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.vertx</groupId>
-				<artifactId>vertx-unit</artifactId>
-				<version>${vertx.version}</version>
 			</dependency>
 		
 			<!-- Javassist (JAVA programming ASSISTant) class library for editing bytecodes in Java -->

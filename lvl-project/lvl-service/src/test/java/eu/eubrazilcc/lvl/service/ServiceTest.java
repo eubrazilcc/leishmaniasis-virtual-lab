@@ -229,7 +229,7 @@ public class ServiceTest {
 					"user2", new TestCredential(ownerId2, TOKEN_USER2), 
 					"user3", new TestCredential(ownerId3, TOKEN_USER3)));
 
-			/* TODO // test task resource
+			// test task resource
 			new TaskResourceTest(testCtxt).runTest();
 
 			// test sand-flies resource
@@ -245,12 +245,12 @@ public class ServiceTest {
 			new SandflySampleResourceTest(testCtxt).runTest();
 			
 			// test leishmania samples resource
-			new LeishmaniaSampleResourceTest(testCtxt).runTest(); */
+			new LeishmaniaSampleResourceTest(testCtxt).runTest();
 			
 			// test pending sequences resource
 			new PendingSequenceResourceTest(testCtxt).runTest();
 
-			/* TODO // test shared dataset resource
+			// test shared dataset resource
 			new DatasetShareResourceTest(testCtxt).runTest();
 
 			// test dataset open access resource
@@ -269,7 +269,7 @@ public class ServiceTest {
 			new IssuesResourceTest(testCtxt).runTest();
 
 			// test subscription request resource
-			new SubscriptionRequestResourceTest(testCtxt).runTest(); */
+			new SubscriptionRequestResourceTest(testCtxt).runTest();
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

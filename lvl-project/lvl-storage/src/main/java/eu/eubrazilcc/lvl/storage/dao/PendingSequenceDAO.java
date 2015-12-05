@@ -25,6 +25,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.core.CollectionNames.PENDING_SEQ_COLLECTION;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
@@ -78,7 +79,7 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 
 	private final static Logger LOGGER = getLogger(PendingSequenceDAO.class);
 
-	public static final String COLLECTION    = "pendingSequences";
+	public static final String COLLECTION    = PENDING_SEQ_COLLECTION;
 	public static final String DB_PREFIX     = "pendingSequence.";
 	public static final String PRIMARY_KEY   = DB_PREFIX + "id";
 	public static final String NAMESPACE_KEY = DB_PREFIX + "namespace";
@@ -88,6 +89,8 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 	private PendingSequenceDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		MONGODB_CONN.createNonUniqueIndex(NAMESPACE_KEY, COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".collectionCode", COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".catalogNumber", COLLECTION, false);
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
 				ORIGINAL_SAMPLE_KEY + ".recordedBy",
 				ORIGINAL_SAMPLE_KEY + ".stateProvince",
@@ -238,7 +241,11 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 		if (sorting != null) {			
 			String field = null;
 			// sortable fields
-			if ("year".equalsIgnoreCase(sorting.getField())) {
+			if ("collection".equalsIgnoreCase(sorting.getField())) {
+				field = ORIGINAL_SAMPLE_KEY + ".collectionCode";
+			} else if ("catalogNumber".equalsIgnoreCase(sorting.getField())) {
+				field = ORIGINAL_SAMPLE_KEY + ".catalogNumber";
+			} else if ("year".equalsIgnoreCase(sorting.getField())) {
 				field = ORIGINAL_SAMPLE_KEY + ".year";				
 			} else if ("country".equalsIgnoreCase(sorting.getField())) {
 				field = ORIGINAL_SAMPLE_KEY + ".country";
@@ -289,7 +296,11 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 		if (isNotBlank(parameter) && isNotBlank(expression)) {
 			String field = null;
 			// keyword matching search
-			if ("year".equalsIgnoreCase(parameter)) {
+			if ("collection".equalsIgnoreCase(parameter)) {
+				field = ORIGINAL_SAMPLE_KEY + ".collectionCode";
+			} else if ("catalogNumber".equalsIgnoreCase(parameter)) {
+				field = ORIGINAL_SAMPLE_KEY + ".catalogNumber";
+			} else if ("year".equalsIgnoreCase(parameter)) {
 				field = ORIGINAL_SAMPLE_KEY + ".year";				
 			} else if ("country".equalsIgnoreCase(parameter)) {
 				field = ORIGINAL_SAMPLE_KEY + ".country";
@@ -303,7 +314,10 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 				field = ORIGINAL_SAMPLE_KEY + ".specificEpithet";				
 			}
 			if (isNotBlank(field)) {
-				if ("year".equalsIgnoreCase(parameter)) {
+				if ("catalogNumber".equalsIgnoreCase(parameter)) {
+					// convert the expression to lower case and compare for exact matching
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toLowerCase());
+				} else if ("year".equalsIgnoreCase(parameter)) {
 					// comparison operator
 					query2 = mongoNumeriComparison(field, expression);
 				} else {

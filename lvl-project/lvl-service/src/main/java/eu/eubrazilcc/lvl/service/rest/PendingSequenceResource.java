@@ -37,7 +37,7 @@ import static eu.eubrazilcc.lvl.core.xml.XmlHelper.yearAsXMLGregorianCalendar;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
-import static eu.eubrazilcc.lvl.storage.dao.PendingSequenceDAO.ORIGINAL_SAMPLE_KEY;
+import static eu.eubrazilcc.lvl.storage.dao.PendingSequenceDAO.DB_PREFIX;
 import static eu.eubrazilcc.lvl.storage.dao.PendingSequenceDAO.PENDING_SEQ_DAO;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -131,9 +131,9 @@ public class PendingSequenceResource {
 		final ImmutableMap<String, String> filter = parseQuery(q);		
 		final Sorting sorting = parseSorting(sort, order);
 		final List<PendingSequence> pendingSeqs = PENDING_SEQ_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
-				ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), count, ownerid);
+				ImmutableMap.of(DB_PREFIX + "sequence", false), count, ownerid);
 		paginable.setElements(pendingSeqs);
-		paginable.getExcludedFields().add(ORIGINAL_SAMPLE_KEY);
+		paginable.getExcludedFields().add(DB_PREFIX + "sequence");
 		// set total count and return to the caller
 		final int totalEntries = pendingSeqs.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);

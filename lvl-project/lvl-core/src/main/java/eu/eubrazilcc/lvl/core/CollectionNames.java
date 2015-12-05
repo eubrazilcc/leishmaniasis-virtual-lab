@@ -36,4 +36,7 @@ public class CollectionNames {
  	public static final String SANDFLY_SAMPLES_COLLECTION = "sandflySamples";
     public static final String LEISHMANIA_SAMPLES_COLLECTION = "leishmaniaSamples";
 	
+    // user collections
+    public static final String PENDING_SEQ_COLLECTION = "pendingSequences";
+    
 }

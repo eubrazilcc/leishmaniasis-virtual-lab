@@ -37,6 +37,7 @@ import static java.lang.Math.min;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.io.FilenameUtils.getName;
@@ -57,7 +58,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
-import eu.eubrazilcc.lvl.core.LeishmaniaSample;
 import eu.eubrazilcc.lvl.core.PendingSequence;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
 import eu.eubrazilcc.lvl.service.rest.PendingSequenceResource;
@@ -106,26 +106,26 @@ public class PendingSequenceResourceTest extends Testable {
 				.request()
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
 				.post(entity(pendingSeq, APPLICATION_JSON));			
-		assertThat("Create new search response is not null", response, notNullValue());
-		assertThat("Create new search response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-		assertThat("Create new search response is not empty", response.getEntity(), notNullValue());
+		assertThat("Create new pending sequence response is not null", response, notNullValue());
+		assertThat("Create new pending sequence response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+		assertThat("Create new pending sequence response is not empty", response.getEntity(), notNullValue());
 		String payload = response.readEntity(String.class);
-		assertThat("Create new search response entity is not null", payload, notNullValue());
-		assertThat("Create new search response entity is empty", isBlank(payload));
+		assertThat("Create new pending sequence response entity is not null", payload, notNullValue());
+		assertThat("Create new pending sequence response entity is empty", isBlank(payload));
 		// uncomment for additional output			
-		printMsg(" >> Create new search response body (JSON), empty is OK: " + payload);
-		printMsg(" >> Create new search response JAX-RS object: " + response);
-		printMsg(" >> Create new search HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Create new pending sequence response body (JSON), empty is OK: " + payload);
+		printMsg(" >> Create new pending sequence response JAX-RS object: " + response);
+		printMsg(" >> Create new pending sequence HTTP headers: " + response.getStringHeaders());
 
 		URI location = new URI((String)response.getHeaders().get("Location").get(0));
-		assertThat("Create search location is not null", location, notNullValue());
-		assertThat("Create search path is not empty", isNotBlank(location.getPath()), equalTo(true));
+		assertThat("Create pending response location is not null", location, notNullValue());
+		assertThat("Create pending response path is not empty", isNotBlank(location.getPath()), equalTo(true));
 
 		final String pendingSeqId = getName(location.toURL().getPath());
-		assertThat("Created search Id is not null", pendingSeqId, notNullValue());
-		assertThat("Created search Id is not empty", isNotBlank(pendingSeqId), equalTo(true));
+		assertThat("Created pending response Id is not null", pendingSeqId, notNullValue());
+		assertThat("Created pending response Id is not empty", isNotBlank(pendingSeqId), equalTo(true));
 		pendingSeq.setId(pendingSeqId);
-		pendingSeq.setNamespace(testCtxt.ownerid("user1"));
+		pendingSeq.setNamespace(testCtxt.ownerid("user1"));		
 
 		// test get pending sequence by Id (Java object)
 		PendingSequence pendingSeq2 = testCtxt.target().path(path.value())
@@ -139,7 +139,7 @@ public class PendingSequenceResourceTest extends Testable {
 		pendingSeq.setSample(pendingSeq2.getSample());
 		assertThat("Get pending sequence by Id coincides with expected", pendingSeq2.equalsIgnoringVolatile(pendingSeq));
 		// uncomment for additional output
-		printMsg(" >> Get pending sequence by Id result: " + pendingSeq2.toString());
+		printMsg(" >> Get pending sequence by Id result: " + toJson(pendingSeq2, JSON_PRETTY_PRINTER));
 
 		// create a larger dataset to test complex operations
 		final int numItems = 3;
@@ -148,13 +148,18 @@ public class PendingSequenceResourceTest extends Testable {
 					.withInstitutionCode("ISCIII-WHO-CCL")
 					.withCollectionCode("ISCIII-Leishmaniasis-collection")
 					.withCountry("Spain")
+					.withLocality("This is an example")
 					.withScientificName("Leishmania infantum");					
 			final PendingSequence pendingSeq3 = PendingSequence.builder()
 					.sample(dwc2)
 					.sequence("GCGAAGA")
 					.build();
-			testCtxt.target().path(path.value()).request().header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-			.post(entity(pendingSeq3, APPLICATION_JSON));
+			response = testCtxt.target().path(path.value())
+					.path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
+					.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
+					.post(entity(pendingSeq3, APPLICATION_JSON));
+			assertThat("Create new pending sequence response is not null", response, notNullValue());
+			assertThat("Create new pending sequence response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 		}
 
 		// test list all pending sequences (JSON encoded)
@@ -184,20 +189,19 @@ public class PendingSequenceResourceTest extends Testable {
 		assertThat("Get pending sequences list coincides with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), hasSize(pendingSeqs.getTotalCount())));
 		// uncomment for additional output
 		printMsg(" >> Get pending sequences result: " + toJson(pendingSeqs, JSON_PRETTY_PRINTER));
-
-
-
-
-
-
-
-
-
-
+		
+		// access from an unauthorized user must fail
+		response = testCtxt.target().path(path.value())
+				.path(urlEncodeUtf8(testCtxt.ownerid("user1")))
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user2")))
+				.get();
+		assertThat("Unauthorized get pending sequence response is not null", response, notNullValue());
+		assertThat("Unauthorized get pending sequence response is UNAUTHORIZED", response.getStatus(), equalTo(UNAUTHORIZED.getStatusCode()));		
 
 		// test pending sequence pagination (JSON encoded)
 		final int perPage = 2;
-		response = testCtxt.target().path(path.value())
+		response = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS))
 				.queryParam("per_page", perPage)
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
@@ -245,6 +249,7 @@ public class PendingSequenceResourceTest extends Testable {
 
 		// test get pending sequences pagination (Java object)
 		pendingSeqs = testCtxt.target().path(path.value())
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 				.queryParam("per_page", perPage)
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
@@ -280,6 +285,7 @@ public class PendingSequenceResourceTest extends Testable {
 
 		// test get pending sequences applying a full-text search filter
 		pendingSeqs = testCtxt.target().path(path.value())
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 				.queryParam("q", "example")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
@@ -293,7 +299,8 @@ public class PendingSequenceResourceTest extends Testable {
 
 		// test get pending sequences applying a keyword matching filter
 		pendingSeqs = testCtxt.target().path(path.value())
-				.queryParam("q", "catalogNumber:\"" + sampleKey.getCatalogNumber() + "\"")
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
+				.queryParam("q", "catalogNumber:\"" + pendingSeq.getSample().getCatalogNumber() + "\"")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
 				.get(PendingSequences.class);
@@ -305,7 +312,8 @@ public class PendingSequenceResourceTest extends Testable {
 
 		// test get pending sequences applying a full-text search combined with a keyword matching filter
 		pendingSeqs = testCtxt.target().path(path.value())
-				.queryParam("q", "collection:" + sampleKey.getCollectionId() + " Fiocruz")
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
+				.queryParam("q", "collection:" + pendingSeq.getSample().getCollectionCode())
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
 				.get(PendingSequences.class);
@@ -317,8 +325,9 @@ public class PendingSequenceResourceTest extends Testable {
 
 		// test get pending sequences applying a full-text search combined with a keyword matching filter (JSON encoded)
 		response = testCtxt.target().path(path.value())
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 				.queryParam("per_page", perPage)
-				.queryParam("q", "collection:" + sampleKey.getCollectionId() + " Fiocruz")
+				.queryParam("q", "collection:" + pendingSeq.getSample().getCollectionCode())
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
 				.get();
@@ -336,6 +345,7 @@ public class PendingSequenceResourceTest extends Testable {
 
 		// test get pending sequences sorted by catalog number
 		pendingSeqs = testCtxt.target().path(path.value())
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
 				.queryParam("sort", "catalogNumber")
 				.queryParam("order", "asc")
 				.request(APPLICATION_JSON)
@@ -344,35 +354,25 @@ public class PendingSequenceResourceTest extends Testable {
 		assertThat("Sorted pending sequences result is not null", pendingSeqs, notNullValue());
 		assertThat("Sorted pending sequences items coincide with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), hasSize(pendingSeqs.getTotalCount())));		
 		String last = "-1";
-		for (final LeishmaniaSample s : pendingSeqs.getElements()) {
-			assertThat("Leishmania pendingSeqs are properly sorted", s.getCatalogNumber().compareTo(last) > 0);
-			last = s.getCatalogNumber();
+		for (final PendingSequence s : pendingSeqs.getElements()) {
+			assertThat("PendingSeqs are properly sorted", s.getSample().getCatalogNumber().compareTo(last) > 0);
+			last = s.getSample().getCatalogNumber();
 		}
 		// uncomment for additional output			
-		printMsg(" >> Sorted pending sequences result: " + pendingSeqs.toString());
+		printMsg(" >> Sorted pending sequences result: " + toJson(pendingSeqs, JSON_PRETTY_PRINTER));
 
-		// test get pending sequence by collection Id + catalog number
-		sample2 = testCtxt.target().path(path.value()).path(sampleKey.toId())
+		// test get pending sequence by Id
+	 	pendingSeq2 = testCtxt.target().path(path.value())
+	 			.path(urlEncodeUtf8(LVL_DEFAULT_NS)).path(pendingSeq.getId())	 			
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(LeishmaniaSample.class);
-		assertThat("Get pending sequence by catalog number result is not null", sample2, notNullValue());
-		assertThat("Get pending sequence by catalog number coincides with expected", sample2.equalsIgnoringVolatile(sample));
+				.get(PendingSequence.class);
+		assertThat("Get pending sequence by catalog number result is not null", pendingSeq2, notNullValue());
+		assertThat("Get pending sequence by catalog number coincides with expected", pendingSeq2.equalsIgnoringVolatile(pendingSeq));
 		// uncomment for additional output
-		printMsg(" >> Get pending sequence by catalog number result: " + sample2.toString());
+		printMsg(" >> Get pending sequence by catalog number result: " + toJson(pendingSeq2, JSON_PRETTY_PRINTER));
 
-
-
-
-
-
-
-
-
-
-
-
-		// test update pending sequence // TODO
+		// test update pending sequence
 		pendingSeq.getSample().setCollectionID("123");
 		response = testCtxt.target().path(path.value())
 				.path(urlEncodeUtf8(testCtxt.ownerid("user1")))
@@ -401,7 +401,7 @@ public class PendingSequenceResourceTest extends Testable {
 		assertThat("Get pending sequence by Id after update result is not null", pendingSeq2, notNullValue());
 		assertThat("Get pending sequence by Id after update coincides with expected", pendingSeq2.equalsIgnoringVolatile(pendingSeq));
 		// uncomment for additional output
-		printMsg(" >> Get pending sequence by Id after update result: " + pendingSeq2.toString());
+		printMsg(" >> Get pending sequence by Id after update result: " + toJson(pendingSeq2, JSON_PRETTY_PRINTER));
 
 		// test delete pending sequence
 		response = testCtxt.target().path(path.value())
