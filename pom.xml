@@ -26,7 +26,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 
 	<groupId>eu.eubrazilcc.lvl</groupId>
 	<artifactId>leishmaniasis-virtual-lab</artifactId>
-	<version>0.9.1</version>
+	<version>0.9.2</version>
 	<packaging>pom</packaging>
 
 	<name>leishmaniasis-virtual-laboratory - BOM</name>
@@ -288,19 +288,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<artifactId>javax.mail</artifactId>
 				<version>${javamail.version}</version>
 			</dependency>
-						
+			
 			<dependency> <!-- The SMTP protocol provider -->
 				<groupId>com.sun.mail</groupId>
 				<artifactId>smtp</artifactId>
 				<version>${javamail.version}</version>
-			</dependency>
-
-			<!-- Joda Time: Date and time library to replace JDK date handling -->
-
-			<dependency>
-				<groupId>joda-time</groupId>
-				<artifactId>joda-time</artifactId>
-				<version>2.7</version>
 			</dependency>
 			
 			<!-- MongoDB Java driver -->

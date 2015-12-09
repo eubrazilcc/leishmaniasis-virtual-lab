@@ -1,6 +1,5 @@
 /**
- * RequireJS module that defines the routes of the sub-application:
- * e-compendium.
+ * RequireJS module that defines the routes of the sub-application: e-compendium.
  */
 
 define([ 'app', 'routefilter' ], function(Lvl) {
@@ -27,14 +26,14 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				return true;
 			},
 			showECompendium : function(section) {
-				section = (section || 'browse').toLowerCase();
-				if (section === 'browse') {
+				section = (section || 'citations').toLowerCase();				
+				if (section === 'citations') {
 					Lvl.navigate('e-compendium/' + section, {
 						trigger : false,
 						replace : true
 					});
 					Lvl.execute('e-compendium:set:active', section);
-				} else if (section === 'map' || section === 'stats' || section === 'submit') {
+				} else if (section === 'pending' || section === 'submit') {
 					Lvl.execute('e-compendium:set:active', section);
 				} else {
 					Lvl.navigate('not-found', {

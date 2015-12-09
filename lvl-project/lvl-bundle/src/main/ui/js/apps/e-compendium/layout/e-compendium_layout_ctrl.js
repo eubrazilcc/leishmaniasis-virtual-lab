@@ -20,19 +20,16 @@ define([ 'app', 'apps/e-compendium/layout/e-compendium_layout_view' ], function(
 					Lvl.mainRegion.show(view);
 					return SectionController.showSection();
 				};
-				switch (section) {
-				case 'map':
-					require([ 'apps/e-compendium/map/e-compendium_map_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
-					break;
-				case 'stats':
-					require([ 'apps/e-compendium/stats/e-compendium_stats_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
+				switch (section) {				
+				case 'pending':
+					require([ 'apps/e-compendium/pending/e-compendium_pending_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
 					break;
 				case 'submit':
 					require([ 'apps/e-compendium/submit/e-compendium_submit_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
 					break;
-				case 'browse':
+				case 'citations':
 				default:
-					require([ 'apps/e-compendium/browse/e-compendium_browse_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
+					require([ 'apps/e-compendium/citations/e-compendium_citations_ctrl', 'apps/e-compendium/layout/entities/tablinks' ], controller);
 					break;
 				}
 			}

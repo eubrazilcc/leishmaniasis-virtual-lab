@@ -79,6 +79,16 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				text : 'Ecological Niche Modelling'
 			}, {
 				id : 7,
+				href : '/#maps',
+				icon : 'fa-map',
+				text : 'Maps'
+			}, {
+				id : 8,
+				href : '/#statistics',
+				icon : 'fa-bar-chart-o',
+				text : 'Statistics'
+			}, {
+				id : 9,
 				href : '/#drive',
 				icon : 'fa-hdd-o',
 				text : 'Drive'
@@ -87,12 +97,12 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		var iniSettingsLinks = function() {
 			Entities.settingsLinks = new Entities.NavigationCollection([ {
-				id : 9,
+				id : 10,
 				href : '/#saved-items',
 				icon : 'fa-archive',
 				text : 'Saved Items'
 			}, {
-				id : 10,
+				id : 11,
 				href : '/#settings',
 				icon : 'fa-cog',
 				text : 'Settings'
@@ -110,12 +120,12 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		var iniAboutLinks = function() {
 			Entities.aboutLinks = new Entities.NavigationCollection([ {
-				id : 14,
+				id : 15,
 				href : '/#about/project',
 				icon : 'fa-group',
 				text : 'Project'
 			}, {
-				id : 15,
+				id : 16,
 				href : '/#about/key-features',
 				icon : 'fa-key',
 				text : 'Key Features'
@@ -124,17 +134,17 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		var iniDocumentationLinks = function() {
 			Entities.documentationLinks = new Entities.NavigationCollection([ {
-				id : 17,
+				id : 18,
 				href : '/#doc/screencasts',
 				icon : 'fa-video-camera',
 				text : 'Screencasts'
 			}, {
-				id : 18,
+				id : 19,
 				href : '/#doc/presentations',
 				icon : 'fa-desktop',
 				text : 'Presentations'
 			}, {
-				id : 19,
+				id : 20,
 				href : '/#doc/publications',
 				icon : 'fa-file-text-o',
 				text : 'Publications'
@@ -143,7 +153,7 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		var iniSupportLinks = function() {
 			Entities.supportLinks = new Entities.NavigationCollection([ {
-				id : 21,
+				id : 22,
 				href : '/#support/mailing-list',
 				icon : 'fa-envelope-o',
 				text : 'Mailing list'
@@ -152,22 +162,22 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 
 		var iniSoftwareLinks = function() {
 			Entities.softwareLinks = new Entities.NavigationCollection([ {
-				id : 23,
+				id : 24,
 				href : '/#software/releases',
 				icon : 'fa-bullhorn',
 				text : 'Releases'
 			}, {
-				id : 24,
+				id : 25,
 				href : '/#software/downloads',
 				icon : 'fa-download',
 				text : 'Downloads'
 			}, {
-				id : 25,
+				id : 26,
 				href : '/#software/development',
 				icon : 'fa-github-alt',
 				text : 'Development'
 			}, {
-				id : 26,
+				id : 27,
 				href : '/apidoc/',
 				icon : 'fa-book',
 				text : 'API Documentation',

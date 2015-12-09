@@ -27,15 +27,15 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				return true;
 			},
 			showCollection : function(section, subsection) {
-				section = (section || 'browse').toLowerCase();
-				if (section === 'browse' || section === 'unseq' || section === 'pending') {
+				section = (section || 'sequences').toLowerCase();
+				if (section === 'sequences' || section === 'samples' || section === 'pending') {
 					subsection = (subsection || 'sandflies').toLowerCase();
 					Lvl.navigate('collection/' + section + '/' + subsection, {
 						trigger : false,
 						replace : true
 					});
 					Lvl.execute('collection:set:active', section, subsection);
-				} else if (section === 'map' || section === 'stats' || section === 'submit') {
+				} else if (section === 'submit') {
 					Lvl.execute('collection:set:active', section);
 				} else {
 					Lvl.navigate('not-found', {

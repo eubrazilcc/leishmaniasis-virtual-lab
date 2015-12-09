@@ -27,7 +27,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	<parent>
 		<groupId>eu.eubrazilcc.lvl</groupId>
 		<artifactId>lvl-project</artifactId>
-		<version>0.9.1</version>
+		<version>0.9.2</version>
 		<relativePath>..</relativePath>
 	</parent>
 	
@@ -104,12 +104,6 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<dependency> <!-- JSR305 Annotations -->
 			<groupId>com.google.code.findbugs</groupId>
 			<artifactId>jsr305</artifactId>
-		</dependency>
-
-		<!-- Joda Time -->
-		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
 		</dependency>
 
 		<!-- Apache Tika -->

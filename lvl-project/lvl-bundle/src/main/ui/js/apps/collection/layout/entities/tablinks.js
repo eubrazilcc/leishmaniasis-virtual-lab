@@ -47,31 +47,21 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 		var iniNavigationLinks = function() {
 			Entities.navigationLinks = new Entities.NavigationCollection([ {
 				id : 1,
-				link : 'browse',
-				icon : 'fa-table',
-				text : 'Browse'
+				link : 'sequences',
+				icon : 'fa-list',
+				text : 'Sequences'
 			}, {
 				id : 2,
-				link : 'map',
-				icon : 'fa-map-marker',
-				text : 'Map'
+				link : 'samples',
+				icon : 'fa-flask',
+				text : 'Samples'
 			}, {
 				id : 3,
-				link : 'stats',
-				icon : 'fa-bar-chart-o',
-				text : 'Stats'
-			}, {
-				id : 4,
-				link : 'unseq',
-				icon : 'fa-chain-broken',
-				text : 'Unseq'
-			}, {
-				id : 5,
 				link : 'pending',
-				icon : 'fa-folder',
+				icon : 'fa-lock',
 				text : 'Pending'
 			}, {
-				id : 6,
+				id : 4,
 				link : 'submit',
 				icon : 'fa-cloud-upload',
 				text : 'Submit'

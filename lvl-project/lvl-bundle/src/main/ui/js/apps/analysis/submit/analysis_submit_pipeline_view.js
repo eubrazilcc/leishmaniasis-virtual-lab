@@ -21,7 +21,8 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 				} else if (this.model.get('name') === 'SequenceURL') {
 					this.$el.find('input.form-control').attr({
 						'data-provide' : 'typeahead',
-						'autocomplete' : 'off'
+						'autocomplete' : 'off',
+						'placeholder' : 'Start typing a filename to get suggestions'
 					});
 					this.$el.find('input[data-provide="typeahead"]').typeahead({
 						delay : 200,
@@ -39,7 +40,7 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 					});
 				} else if (this.model.get('option_0') !== undefined) {
 					var _self = this;
-					var options = _.map(_.filter(_.keys(this.model.toJSON()), function(key) {
+					var options = _.sortBy(_.map(_.filter(_.keys(this.model.toJSON()), function(key) {
 						return key.match(/^option_\d+/);
 					}), function(opt) {
 						var tokens = _self.model.get(opt).split('|');
@@ -48,16 +49,17 @@ define([ 'app', 'tpl!apps/analysis/submit/tpls/analysis_submit_pipeline', 'tpl!a
 							name : tokens[0] + ' (' + tokens[1] + ')'
 						};
 						return _self.model.get(opt);
-					});
+					}), 'id');
 					this.$el.find('input.form-control').attr({
 						'data-provide' : 'typeahead',
 						'autocomplete' : 'off'
 					});
 					var input = this.$el.find('input[data-provide="typeahead"]');
+					input.val(options[0].name);
 					input.typeahead({
 						source : options,
 						autoSelect : true
-					});
+					});									
 				}
 			},
 			onDestroy : function() {

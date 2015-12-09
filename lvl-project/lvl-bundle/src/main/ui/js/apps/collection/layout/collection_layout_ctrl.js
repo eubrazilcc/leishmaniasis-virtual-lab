@@ -20,15 +20,9 @@ define([ 'app', 'apps/collection/layout/collection_layout_view' ], function(Lvl,
 					Lvl.mainRegion.show(view);
 					return SectionController.showSection(id);
 				};
-				switch (section) {
-				case 'map':
-					require([ 'apps/collection/map/collection_map_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
-					break;
-				case 'stats':
-					require([ 'apps/collection/stats/collection_stats_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
-					break;
-				case 'unseq':
-					require([ 'apps/collection/unseq/collection_unseq_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
+				switch (section) {				
+				case 'samples':
+					require([ 'apps/collection/samples/collection_samples_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
 					break;
 				case 'pending':
 					require([ 'apps/collection/pending/collection_pending_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
@@ -36,9 +30,9 @@ define([ 'app', 'apps/collection/layout/collection_layout_view' ], function(Lvl,
 				case 'submit':
 					require([ 'apps/collection/submit/collection_submit_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
 					break;
-				case 'browse':
+				case 'sequences':
 				default:
-					require([ 'apps/collection/browse/collection_browse_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
+					require([ 'apps/collection/sequences/collection_sequences_ctrl', 'apps/collection/layout/entities/tablinks' ], controller);
 					break;
 				}
 			}

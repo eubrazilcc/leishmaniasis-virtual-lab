@@ -113,8 +113,9 @@ define([ 'marionette', 'apps/config/marionette/configuration', 'apps/config/mari
 		if (Backbone.history) {
 			Backbone.history instanceof History || (Backbone.history = new History());
 			require([ 'apps/header/header_app', 'apps/footer/footer_app', 'apps/home/home_router', 'apps/access/access_router',
-					'apps/collection/collection_router', 'apps/social/social_router', 'apps/e-compendium/e-compendium_router', 'apps/analysis/analysis_router',
-					'apps/enm/enm_router', 'apps/drive/drive_router', 'apps/saved-items/saved-items_router', 'apps/settings/settings_router',
+					'apps/collection/collection_router', 'apps/social/social_router', 'apps/e-compendium/e-compendium_router', 
+					'apps/analysis/analysis_router', 'apps/enm/enm_router', 'apps/maps/maps_router', 'apps/statistics/statistics_router', 
+					'apps/drive/drive_router', 'apps/saved-items/saved-items_router', 'apps/settings/settings_router', 
 					'apps/open/about/about_router', 'apps/open/documentation/documentation_router', 'apps/open/support/support_router',
 					'apps/open/software/software_router', 'apps/admin/admin_router' ], function() {
 				// start history
