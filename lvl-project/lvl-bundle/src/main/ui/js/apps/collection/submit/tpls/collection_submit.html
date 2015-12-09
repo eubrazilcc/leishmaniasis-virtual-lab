@@ -1,55 +1,127 @@
 <div class="row">
 	<div class="col-xs-12">
-		<h3>Submit new sequence</h3>
+		<h3>Submit new sequence: <%= pendingId() %></h3>
 	</div>
 </div>
 <div class="row">
 	<div class="col-md-6 col-xs-12">
-		<form class="form-horizontal">
+		<form class="form-horizontal" id="lvlSubmitSequenceForm" novalidate="novalidate" data-pristine="true">
 			<fieldset>
-				<legend>Sequence: <%= pendingId() %></legend>
+				<legend>Description</legend>
 				<div class="form-group">
-					<label for="inputDefinition" class="col-lg-3 control-label">Definition</label>
+					<label for="inputDefinition" class="col-lg-3 control-label">Definition<sup class="text-danger" title="Required">*</sup></label>
 					<div class="col-lg-9">
-						<input type="text" class="form-control" id="inputDefinition"
-							placeholder="Species name, gene name, is partial sequence?">
+						<input type="text" class="form-control" id="inputDefinition" name="inputDefinition"
+							placeholder="Species name, gene name, is partial sequence?" required>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="inputOrganism" class="col-lg-3 control-label">Organism</label>
+					<label for="inputOrganism" class="col-lg-3 control-label">Organism<sup class="text-danger" title="Required">*</sup></label>
 					<div class="col-lg-9">
-						<input type="text" class="form-control" id="inputOrganism"
-							placeholder="Source organism">
+						<div class="radio">
+							<label>
+								<input type="radio" id="inputOrganism1" name="inputOrganism" value="Sandflies" checked> Sandflies
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" id="inputOrganism2" name="inputOrganism" value="Leishmania"> Leishmania
+							</label>
+						</div>					
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="inputGene" class="col-lg-3 control-label">Gene</label>
+					<label for="inputEpithet" class="col-lg-3 control-label">Epithet<sup class="text-danger" title="Required">*</sup></label>
 					<div class="col-lg-9">
-						<input type="text" class="form-control" id="inputGene"
-							placeholder="Source gene">
+						<input type="text" class="form-control" id="inputEpithet" name="inputEpithet"
+							placeholder="Specific epithet (e.g braziliensis, whitmani)" required>
 					</div>
-				</div>
+				</div>				
 				<div class="form-group">
-					<label for="inputLongitude" class="col-lg-3 control-label">Location</label>
-					<div class="col-lg-4">
-						<input type="text" class="form-control" id="inputLongitude"
-							placeholder="Longitude">
-					</div>					
-					<div class="col-lg-4">
-						<input type="text" class="form-control" id="inputLatitude"
-							placeholder="Latitude">
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="inputOrigin" class="col-lg-3 control-label">Origin</label>
+					<label for="inputLongitude" class="col-lg-3 control-label">Location<sup class="text-danger" title="Required">*</sup></label>
 					<div class="col-lg-9">
-						<textarea class="form-control" rows="3" id="inputOrigin" 
-							placeholder="Paste your DNA sequence here"></textarea>
+						<div class="row">
+							<div class="col-lg-6">
+								<input type="text" class="form-control" id="inputLongitude" name="inputLongitude" placeholder="Longitude" required>
+							</div>
+							<div class="col-lg-6">
+								<input type="text" class="form-control" id="inputLatitude" name="inputLatitude" placeholder="Latitude" required>
+							</div>
+						</div>
+					</div>
+				</div>				
+			</fieldset>
+			<fieldset>
+				<legend>Sample</legend>
+				<div class="form-group">
+					<label for="inputSex" class="col-lg-3 control-label">Sex/Gender</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputSex"
+							placeholder="Sex of the individuals">
 					</div>
 				</div>
+				<div class="form-group">
+					<label for="inputIndividualCount" class="col-lg-3 control-label">Individual count</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputIndividualCount"
+							placeholder="Number of individuals collected">
+					</div>
+				</div>				
+				<div class="form-group">
+					<label for="inputCollectingMethod" class="col-lg-3 control-label">Collecting method</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputCollectingMethod"
+							placeholder="Method used to collect the samples">
+					</div>
+				</div>				
+				<div class="form-group">
+					<label for="inputPreparationType" class="col-lg-3 control-label">Preparation type</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputCollectingMethod"
+							placeholder="Type of preparation used">
+					</div>
+				</div>				
+				<div class="form-group">
+					<label for="inputMaterialType" class="col-lg-3 control-label">Material type</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputMaterialType"
+							placeholder="Type of support material used">
+					</div>
+				</div>				
+			</fieldset>
+			<fieldset>
+				<legend>Sequence</legend>
+				<div class="form-group">
+					<label for="inputGene" class="col-lg-3 control-label">Gene<sup class="text-danger" title="Required">*</sup></label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputGene" name="inputGene"
+							placeholder="Source gene" required>
+					</div>
+				</div>				
+				<div class="form-group">
+					<label for="inputOrigin" class="col-lg-3 control-label">Origin<sup class="text-danger" title="Required">*</sup></label>
+					<div class="col-lg-9">
+						<textarea class="form-control" rows="5" id="inputOrigin" name="inputOrigin"
+							placeholder="Paste your DNA sequence here" required></textarea>
+					</div>
+				</div>				
+			</fieldset>
+			<fieldset>
+				<legend>Collector</legend>
+				<div class="form-group">
+					<label for="inputInstitution" class="col-lg-3 control-label">Institution<sup class="text-danger" title="Required">*</sup></label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputInstitution" name="inputInstitution"
+							placeholder="Name of your institution" required>
+					</div>
+				</div>				
+			</fieldset>
+			<fieldset>
 				<div class="form-group">
 					<div class="col-lg-9 col-lg-offset-3">
-						<button type="submit" class="btn btn-primary">Submit</button>
+						<button type="reset" class="btn btn-default">Reset</button>
+						&nbsp;
+						<button type="submit" class="btn btn-primary" id="lvlSubmitSequenceBtn" disabled="disabled">Submit</button>
 					</div>
 				</div>
 			</fieldset>

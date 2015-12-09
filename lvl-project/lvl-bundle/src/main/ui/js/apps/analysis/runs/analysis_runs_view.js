@@ -2,7 +2,7 @@
  * RequireJS module that defines the view: analysis->runs.
  */
 
-define([ 'app', 'tpl!apps/analysis/runs/tpls/analysis_runs', 'tpl!apps/e-compendium/browse/tpls/toolbar_browse', 'tpl!common/search/tpls/search_term',
+define([ 'app', 'tpl!apps/analysis/runs/tpls/analysis_runs', 'tpl!apps/analysis/runs/tpls/toolbar_runs', 'tpl!common/search/tpls/search_term',
 		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/workflow_run', 'pace', 'moment', 'backbone.oauth2',
 		'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, RunsTpl, ToolbarTpl, SearchTermTpl, AddSearchTermTpl,
 		SaveSearchTpl, WorkflowRunModel, pace, moment) {

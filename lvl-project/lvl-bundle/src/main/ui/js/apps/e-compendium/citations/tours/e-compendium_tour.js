@@ -7,7 +7,7 @@ define(
 		function(Lvl, hopscotch) {
 			return function() {				
 				var tour = {
-					id : 'e-compendium-browse',
+					id : 'e-compendium-citations',
 					showPrevButton : false,
 					skipIfNoElement : true,
 					steps : [

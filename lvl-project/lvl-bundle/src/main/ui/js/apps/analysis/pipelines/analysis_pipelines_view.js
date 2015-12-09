@@ -2,7 +2,7 @@
  * RequireJS module that defines the view: analysis->pipelines.
  */
 
-define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps/e-compendium/browse/tpls/toolbar_browse',
+define([ 'app', 'tpl!apps/analysis/pipelines/tpls/analysis_pipelines', 'tpl!apps/analysis/pipelines/tpls/toolbar_analysis',
 		'tpl!common/search/tpls/search_term', 'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/workflow', 'pace',
 		'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter' ], function(Lvl, PipelinesTpl, ToolbarTpl, SearchTermTpl,
 		AddSearchTermTpl, SaveSearchTpl, WorkflowModel, pace) {

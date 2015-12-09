@@ -21,11 +21,11 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 -->
 <html>
 <body>
-    <h2>EUBrazilCC - Leishmaniasis Virtual Laboratory (LVL) OAuth 2 authorization resource/server</h2>
+    <h2>EUBrazilCC - Leishmaniasis Virtual Laboratory (LeishVL) OAuth 2 authorization resource/server</h2>
     <p>OAuth 2 authorization is provided in two ways:</p>
     <ul>
-        <li>LVL OAuth 2 server.</li>
-        <li>LVL OAuth 2 REST service with with WADL available at: <a href="oauth2/v1/application.wadl">LVL OAuth 2 WADL</a>.</li>        
+        <li>LeishVL OAuth 2 server.</li>
+        <li>LeishVL OAuth 2 REST service with with WADL available at: <a href="oauth2/v1/application.wadl">LeishVL OAuth 2 WADL</a>.</li>        
     </ul>
     <p>Although both services are equivalent, it's recommended to use the server when possible.</p>
     <p>Visit <a href="http://eubrazilcloudconnect.eu/" target="_blank">EUBrazilCC</a> website for more information on this project.</p>

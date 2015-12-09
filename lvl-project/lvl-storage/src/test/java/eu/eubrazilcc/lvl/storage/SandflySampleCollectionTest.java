@@ -79,7 +79,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 
 	@Test
 	public void test() {
-		System.out.println("SandflySampleCollectionTest.test()");
+		printMsg("SandflySampleCollectionTest.test()");
 		try {
 			// create sample
 			final SimpleDarwinRecord sample = DWC_XML_FACTORY.createSimpleDarwinRecord()
@@ -130,21 +130,21 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 
 			// find all
 			final List<SandflySample> all = SANDFLY_SAMPLE_DAO.findAll();
-			printMsg(" >> ALL\n" + toJson(all, JSON_PRETTY_PRINTER));
+			printMsg(" >> Find all:\n" + toJson(all, JSON_PRETTY_PRINTER));
 
 			// find
 			SandflySample sandflySample2 = SANDFLY_SAMPLE_DAO.find(sandflySampleKey);
 			assertThat("sandflySample is not null", sandflySample2, notNullValue());
 			assertThat("sandflySample coincides with original", sandflySample2, equalTo(sandflySample));
 			assertThat("sandflySample contains original sample", sandflySample2.getSample(), notNullValue());
-			System.out.println(sandflySample2.toString());
+			printMsg(sandflySample2.toString());
 
 			// duplicates are not allowed
 			try {
 				SANDFLY_SAMPLE_DAO.insert(sandflySample2);
 				fail("Duplicate sandflySamples are not allowed");
 			} catch (Exception e) {
-				System.out.println("Exception caught while trying to insert a duplicate sandflySample");
+				printMsg("Exception caught while trying to insert a duplicate sandflySample");
 			}
 
 			// insert element with hard link
@@ -195,7 +195,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 			sandflySample2 = SANDFLY_SAMPLE_DAO.find(sandflySampleKey1);
 			assertThat("sandflySample inserted with hard link is not null", sandflySample2, notNullValue());
 			assertThat("sandflySample inserted with hard link coincides with expected", sandflySample2, equalTo(sandflySample1));
-			System.out.println(sandflySample2.toString());
+			printMsg(sandflySample2.toString());
 
 			SANDFLY_SAMPLE_DAO.delete(sandflySampleKey1);
 
@@ -207,7 +207,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 			sandflySample2 = SANDFLY_SAMPLE_DAO.find(sandflySampleKey);
 			assertThat("sandflySample is not null", sandflySample2, notNullValue());
 			assertThat("sandflySample coincides with original", sandflySample2, equalTo(sandflySample));
-			System.out.println(sandflySample2.toString());
+			printMsg(sandflySample2.toString());
 
 			// search sandflySample near a point and within a maximum distance
 			List<SandflySample> sandflySamples = SANDFLY_SAMPLE_DAO.getNear(Point.builder()
@@ -266,7 +266,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 			do {
 				sandflySamples = SANDFLY_SAMPLE_DAO.list(start, size, null, null, null, count);
 				if (sandflySamples.size() != 0) {
-					System.out.println("Paging: first item " + start + ", showing " + sandflySamples.size() + " of " + count.getValue() + " items");
+					printMsg("Paging: first item " + start + ", showing " + sandflySamples.size() + " of " + count.getValue() + " items");
 				}
 				start += sandflySamples.size();
 			} while (!sandflySamples.isEmpty());
@@ -276,9 +276,9 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 			assertThat("sandflySample collection stats is not null", stats, notNullValue());
 			// uncomment for additional output
 			for (final Map.Entry<String, List<SimpleStat>> entry : stats.entrySet()) {
-				System.err.println(" >> Field: " + entry.getKey());
+				printMsg(" >> Field: " + entry.getKey());
 				for (final SimpleStat stat : entry.getValue()) {
-					System.err.println("   >> " + stat);
+					printMsg("   >> " + stat);
 				}				
 			}
 
@@ -392,7 +392,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 			e.printStackTrace(System.err);
 			fail("SandflySampleCollectionTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("SandflySampleCollectionTest.test() has finished");
+			printMsg("SandflySampleCollectionTest.test() has finished");
 		}
 	}
 

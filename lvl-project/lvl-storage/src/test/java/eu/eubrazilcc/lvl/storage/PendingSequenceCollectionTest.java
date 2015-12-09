@@ -70,7 +70,7 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 
 	@Test
 	public void test() {
-		System.out.println("PendingSequenceCollectionTest.test()");
+		printMsg("PendingSequenceCollectionTest.test()");
 		try {
 			// create sample
 			final SimpleDarwinRecord sample = DWC_XML_FACTORY.createSimpleDarwinRecord()
@@ -119,7 +119,7 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 				PENDING_SEQ_DAO.insert(pendingSeq2);
 				fail("Duplicate pendingSeqs are not allowed");
 			} catch (Exception e) {
-				System.out.println("Exception caught while trying to insert a duplicate pendingSeq");
+				printMsg("Exception caught while trying to insert a duplicate pendingSeq");
 			}
 
 			// insert element with hard link
@@ -211,7 +211,7 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 			do {
 				pendingSeqs = PENDING_SEQ_DAO.list(start, size, null, null, null, count);
 				if (pendingSeqs.size() != 0) {
-					System.out.println("Paging: first item " + start + ", showing " + pendingSeqs.size() + " of " + count.getValue() + " items");
+					printMsg("Paging: first item " + start + ", showing " + pendingSeqs.size() + " of " + count.getValue() + " items");
 				}
 				start += pendingSeqs.size();
 			} while (!pendingSeqs.isEmpty());
@@ -281,7 +281,7 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 			e.printStackTrace(System.err);
 			fail("PendingSequenceCollectionTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("PendingSequenceCollectionTest.test() has finished");
+			printMsg("PendingSequenceCollectionTest.test() has finished");
 		}
 	}
 

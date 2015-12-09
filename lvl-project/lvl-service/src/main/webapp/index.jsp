@@ -21,8 +21,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 -->
 <html>
 <body>
-    <h2>EUBrazilCC - Leishmaniasis Virtual Laboratory (LVL) RESTful Web service</h2>
-    <p>LVL RESTful web service with WADL available at: <a href="rest/v1/application.wadl">LVL service WADL</a>.
+    <h2>EUBrazilCC - Leishmaniasis Virtual Laboratory (LeishVL) RESTful Web service</h2>
+    <p>LeishVL RESTful web service with WADL available at: <a href="rest/v1/application.wadl">LeishVL service WADL</a>.
     <p>Visit <a href="http://eubrazilcloudconnect.eu/" target="_blank">EUBrazilCC</a> website for more information on this project.</p>
 </body>
 </html>
