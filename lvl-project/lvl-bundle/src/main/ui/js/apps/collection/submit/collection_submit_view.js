@@ -2,7 +2,7 @@
  * RequireJS module that defines the view: collection->submit.
  */
 
-define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', 'pace', 'bootstrapvalidator', 'backbone.syphon' ], function(Lvl, SubmitTpl, Chance, pace) {
+define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', 'pace', 'backbone.oauth2', 'bootstrapvalidator', 'backbone.syphon' ], function(Lvl, SubmitTpl, Chance, pace) {
 	Lvl.module('CollectionApp.Submit.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var lvlService = Lvl.config.get('service.url');
@@ -11,15 +11,48 @@ define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', '
 			template : SubmitTpl,
 			templateHelpers : function() {
 				return {					
-					pendingId : function() {
-						return 'user-' + new Chance().string({
+					submissionId : function() {
+						return 'user-seq-' + new Chance().string({
 							length : 8,
 							pool : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 						});
-					}					
+					}
 				}
 			},
 			events : {
+				'change [name="inputLongitude"]' : 'geocodeFn',
+				'change [name="inputLatitude"]' : 'geocodeFn',
+				'change [name="inputOrganism"]' : function(e) {
+					var self = this;
+					var organism = $(e.target).val();
+					var form = $('#lvlSubmitSequenceForm');
+					if (organism === 'Leishmania') {
+						self.$('#inputPhylum').val('Euglenozoa');
+						self.$('#inputClass').val('Kinetoplastea');
+						self.$('#inputOrder').val('Trypanosomatida');
+						self.$('#inputFamily').val('Trypanosomatidae');
+						self.$('#inputGenus').val('Leishmania');						
+						form.bootstrapValidator('resetField', 'inputEpithet', true);
+						self.$('#inputScientificName').val('');						
+					} else if (organism === 'Sandflies') {
+						self.$('#inputPhylum').val('Arthropoda');
+						self.$('#inputClass').val('Insecta');
+						self.$('#inputOrder').val('Diptera');
+						self.$('#inputFamily').val('Psychodidae');
+						form.bootstrapValidator('resetField', 'inputGenus', true);
+						form.bootstrapValidator('resetField', 'inputEpithet', true);
+						self.$('#inputScientificName').val('');						
+					}
+					form.bootstrapValidator('validateField', 'inputGenus');
+				},
+				'change #inputGenus' : function(e) {
+					var self = this;
+					self.$('#inputScientificName').val(self.$('#inputGenus').val() + ' ' + self.$('#inputEpithet').val());
+				},
+				'change #inputEpithet' : function(e) {
+					var self = this;
+					self.$('#inputScientificName').val(self.$('#inputGenus').val() + ' ' + self.$('#inputEpithet').val());
+				},
 				'focus #lvlSubmitSequenceForm input.form-control' : function(e) {
 					var form = $('#lvlSubmitSequenceForm');
 					if (Boolean(form.attr('data-pristine') === 'true')) {
@@ -39,6 +72,19 @@ define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', '
 											min : 3,
 											max : 256,
 											message : 'The definition is required to be of 3-256 characters in length'
+										}
+									}
+								},
+								'inputGenus' : {
+									verbose : false,
+									validators : {
+										notEmpty : {
+											message : 'The genus is required and cannot be empty'
+										},
+										stringLength : {
+											min : 3,
+											max : 128,
+											message : 'The genus is required to be of 3-128 characters in length'
 										}
 									}
 								},
@@ -115,6 +161,19 @@ define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', '
 					                    }
 									}
 								},
+								'inputIndividualCount' : {
+									verbose : false,
+									validators : {										
+										integer : {
+											message : 'The value is not an integer'
+										},
+										between : {
+					                        min : 0,
+					                        max : 1000,
+					                        message : 'The individual count must be between 0 and 1000'
+					                    }
+									}
+								},
 								'inputInstitution' : {
 									verbose : false,
 									validators : {
@@ -134,81 +193,120 @@ define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', '
 							data.bv.disableSubmitButtons(!isValid);
 						});
 					}
+				}, 'click #lvlResetSequenceBtn' : function(e) {
+					e.preventDefault();
+					var form = $('#lvlSubmitSequenceForm');
+					form[0].reset();
+					form.bootstrapValidator('resetForm', true);
+					form.bootstrapValidator('disableSubmitButtons', true);
 				}, 'click #lvlSubmitSequenceBtn' : function(e) {
 					e.preventDefault();
 					pace.restart();
 					$('#lvlSubmitSequenceForm button[type="submit"]').attr('disabled', 'disabled');
-					var formData = Backbone.Syphon.serialize(this);
-					var request = new FormData();
-					var issueBlob = new Blob([ JSON.stringify({
-						'sample' : {							
-						    'institutionCode' : formData.inputInstitution,
-						    'collectionCode' : formData.inputInstitution + '-collection',
-						    'continent' : 'Europe', // TODO
-						    'country' : 'Spain', // TODO
-						    'stateProvince' : 'Madrid', // TODO
-						    'county' : 'Madrid', // TODO
-						    'locality' : 'Fuenlabrada', // TODO
-						    'decimalLatitude' : formData.inputLatitude,
-						    'decimalLongitude' : formData.inputLongitude,
-						    'scientificName' : 'Leishmania infantum',
-						    'phylum' : 'Euglenozoa', // TODO
-						    'clazz' : 'Kinetoplastea', // TODO
-						    'order' : 'Trypanosomatida', // TODO
-						    'family' : 'Trypanosomatidae', // TODO
-						    'genus' : 'Leishmania', // TODO
-						    'specificEpithet' : 'infantum' // TODO
-						},
-						'sequence' : formData.inputOrigin
-					}) ], {
-						type : 'application/json'
-					});
-					request.append('issue', issueBlob);
-					
-					/*
-				|| isBlank(trimToNull(pendingSeq.getSample().getCountry()))
-				|| isBlank(trimToNull(pendingSeq.getSample().getScientificName())))
-					*/
-					
-					/* TODO 
-					
-					var inputScreenshot = $('#screenshot');
-					if (inputScreenshot.val()) {
-						request.append('file', inputScreenshot.get(0).files[0]);
-					}
-					// submit request to LVL server
-					var self = this;
-					var jqxhr = $.ajax({
-						type : 'POST',
-						processData : false,
-						contentType : false,
-						crossDomain : true,
-						url : lvlService + '/support/issues/with-attachment',
-						data : request
-					}).always(function() {
-						pace.stop();
-						var form = $('#lvlIssueReportForm');
-						form.bootstrapValidator('resetForm', true);
-						form.bootstrapValidator('disableSubmitButtons', true);
-					}).done(
-							function(data, textStatus, request) {
+					$('#lvlSubmitSequenceBtn').tooltip('hide');
+					var self = this, formData = Backbone.Syphon.serialize(this), organism = formData.inputOrganism.toLowerCase();
+					require([ 'entities/pending_sequence' ], function(PendingSequenceModel) {
+						var pendingSeq = new PendingSequenceModel.PendingSequenceCreate();
+						pendingSeq.oauth2_token = Lvl.config.authorizationToken();
+						pendingSeq.save({
+							'sample' : {							
+							    'institutionCode' : formData.inputInstitution,
+							    'collectionCode' : formData.inputInstitution + '-collection',
+							    'country' : formData.inputCountry,
+							    'stateProvince' : formData.inputStateProvince,
+							    'county' : formData.inputCounty,
+							    'locality' : formData.inputLocality,
+							    'decimalLatitude' : formData.inputLatitude,
+							    'decimalLongitude' : formData.inputLongitude,
+							    'scientificName' : formData.inputScientificName,
+							    'phylum' : formData.inputPhylum,
+							    'clazz' : formData.inputClass,
+							    'order' : formData.inputOrder,
+							    'family' : formData.inputFamily,
+							    'genus' : formData.inputGenus,
+							    'specificEpithet' : formData.inputEpithet
+							},
+							'sequence' : formData.inputOrigin,
+							'preparation' : {
+								'sex' : formData.inputSex,
+								'individualCount' : formData.inputIndividualCount,
+								'collectingMethod' : formData.inputCollectingMethod,
+								'preparationType' : formData.inputPreparationType,
+								'materialType' : formData.inputMaterialType
+							}
+						}, {							
+							success : function(model, resp, options) {
 								require([ 'common/growl' ], function(createGrowl) {
-									createGrowl('New issue report created', 'Our team will investigate your report and will send you a '
-											+ 'follow-up e-mail at the address that you provided.', false);
+									var anchor = $('<a>', {
+										href : options.xhr.getResponseHeader('Location')
+									})[0];
+									var id = anchor.pathname.substring(anchor.pathname.lastIndexOf('/') + 1);
+									createGrowl('New sequence created', id
+										+ ' <a href="/#collection/pending/' + organism + '"><i class="fa fa-arrow-circle-right fa-fw"></i> pending sequences</a>', false);
 								});
-							}).fail(function(jqXHR, textStatus, errorThrown) {
-						if (jqXHR.status !== 404) {
-							require([ 'common/alert' ], function(alertDialog) {
-								alertDialog('Error', 'The issue report cannot be sent.');
-							});
-						}
-					}); */
-					
-					// TODO
-					console.log('FORM SUBMITTED!', JSON.stringify(issueBlob));
-					// TODO
+							},
+							error : function(model, resp, options) {
+								require([ 'common/alert' ], function(alertDialog) {
+									alertDialog('Error', 'Failed to create sequence.');
+								});
+							}
+						}).always(function() {
+							pace.stop();
+							var form = self.$('#lvlSubmitSequenceForm');
+							form[0].reset();
+							form.bootstrapValidator('resetForm', true);
+							form.bootstrapValidator('disableSubmitButtons', true);
+						});
+					});					
 				}
-			}			
+			},
+			geocodeFn : function(e) {				
+				var self = this;
+				var form = $('#lvlSubmitSequenceForm'), bootstrapValidator = form.data('bootstrapValidator');
+				if (bootstrapValidator.isValidField('inputLongitude') && bootstrapValidator.isValidField('inputLatitude')) {
+					var lng = this.$('#inputLongitude').val(), lat = this.$('#inputLatitude').val();
+					pace.restart();
+					var jqxhr = $.ajax({
+						crossDomain : true,
+						url : Lvl.config.googleGeocodeEndpoint(lat, lng)						
+					}).always(function() {
+						pace.stop();						
+					}).done(function(data, textStatus, request) {
+						if ('OK' === data.status) {
+							require([ 'common/geocode_parser' ], function(parseGeocode) {
+								var address = parseGeocode(data);							
+								self.$('#inputCountry').val(address.country);
+								self.$('#inputStateProvince').val(address.stateProvince);
+								self.$('#inputCounty').val(address.county);
+								self.$('#inputLocality').val(address.locality);
+							});
+						} else {
+							require([ 'common/alert' ], function(alertDialog) {
+								alertDialog('Error', 'A location cannot be identified from the provided coordinates.');
+							});
+							self.resetAddress();
+						}
+					}).fail(function(jqXHR, textStatus, errorThrown) {
+						require([ 'common/alert' ], function(alertDialog) {
+							alertDialog('Error', 'A location cannot be identified from the provided coordinates.');
+						});
+					});
+				} else self.resetAddress();
+			},
+			resetAddress : function() {
+				var self = this;
+				self.$('#inputCountry').val('Unknown');
+				self.$('#inputStateProvince').val('');
+				self.$('#inputCounty').val('');
+				self.$('#inputLocality').val('');
+			},
+			onRender : function() {
+				this.$el.find('[data-toggle="tooltip"]').tooltip();
+			},
+			onDestroy : function() {
+				pace.stop();
+				this.stopListening();
+			}
 		});
 	});
 	return Lvl.CollectionApp.Submit.View;

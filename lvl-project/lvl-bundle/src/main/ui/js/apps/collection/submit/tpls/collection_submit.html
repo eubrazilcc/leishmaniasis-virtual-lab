@@ -1,6 +1,6 @@
 <div class="row">
 	<div class="col-xs-12">
-		<h3>Submit new sequence: <%= pendingId() %></h3>
+		<h3>Submit a new sequence</h3>
 	</div>
 </div>
 <div class="row">
@@ -16,7 +16,46 @@
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="inputOrganism" class="col-lg-3 control-label">Organism<sup class="text-danger" title="Required">*</sup></label>
+					<label for="inputLongitude" class="col-lg-3 control-label">Location<sup class="text-danger" title="Required">*</sup></label>
+					<div class="col-lg-9">						
+						<input type="text" class="form-control" id="inputLongitude" name="inputLongitude" placeholder="Longitude" required>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputLatitude" class="col-lg-3 control-label">&nbsp;</label>
+					<div class="col-lg-9">						
+						<input type="text" class="form-control" id="inputLatitude" name="inputLatitude" placeholder="Latitude" required>
+					</div>
+				</div>				
+				<div class="form-group">
+					<label for="inputCountry" class="col-lg-3 control-label">Country</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputCountry" name="inputCountry" value="Unknown" readonly>
+					</div>
+				</div>
+				<div class="form-group">
+				<label for="inputStateProvince" class="col-lg-3 control-label">State/Province</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputStateProvince" name="inputStateProvince" readonly>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputCounty" class="col-lg-3 control-label">County</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputCounty" name="inputCounty" readonly>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputLocality" class="col-lg-3 control-label">Locality</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputLocality" name="inputLocality" readonly>
+					</div>
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend>Taxonomy</legend>
+				<div class="form-group">
+					<label for="inputOrganism" class="col-lg-3 control-label">Organism</label>
 					<div class="col-lg-9">
 						<div class="radio">
 							<label>
@@ -27,64 +66,96 @@
 							<label>
 								<input type="radio" id="inputOrganism2" name="inputOrganism" value="Leishmania"> Leishmania
 							</label>
-						</div>					
+						</div>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="inputEpithet" class="col-lg-3 control-label">Epithet<sup class="text-danger" title="Required">*</sup></label>
+					<label for="inputPhylum" class="col-lg-3 control-label">Phylum</label>
 					<div class="col-lg-9">
-						<input type="text" class="form-control" id="inputEpithet" name="inputEpithet"
-							placeholder="Specific epithet (e.g braziliensis, whitmani)" required>
+						<input type="text" class="form-control" id="inputPhylum" name="inputPhylum" value="Arthropoda" readonly>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputClass" class="col-lg-3 control-label">Class</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputClass" name="inputClass" value="Insecta" readonly>
 					</div>
 				</div>				
 				<div class="form-group">
-					<label for="inputLongitude" class="col-lg-3 control-label">Location<sup class="text-danger" title="Required">*</sup></label>
+					<label for="inputOrder" class="col-lg-3 control-label">Order</label>
 					<div class="col-lg-9">
-						<div class="row">
-							<div class="col-lg-6">
-								<input type="text" class="form-control" id="inputLongitude" name="inputLongitude" placeholder="Longitude" required>
-							</div>
-							<div class="col-lg-6">
-								<input type="text" class="form-control" id="inputLatitude" name="inputLatitude" placeholder="Latitude" required>
-							</div>
-						</div>
+						<input type="text" class="form-control" id="inputOrder" name="inputOrder" value="Diptera" readonly>
 					</div>
-				</div>				
+				</div>
+				<div class="form-group">
+					<label for="inputFamily" class="col-lg-3 control-label">Family</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputFamily" name="inputFamily" value="Psychodidae" readonly>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputGenus" class="col-lg-3 control-label">Genus<sup class="text-danger" title="Required">*</sup></label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputGenus" name="inputGenus" name="inputGenus"
+							placeholder="e.g. lutzomyia, nyssomyia" required>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputEpithet" class="col-lg-3 control-label">Specific epithet<sup class="text-danger" title="Required">*</sup></label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputEpithet" name="inputEpithet"
+							placeholder="e.g. braziliensis, whitmani" required>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="inputScientificName" class="col-lg-3 control-label">Scientific name</label>
+					<div class="col-lg-9">
+						<input type="text" class="form-control" id="inputScientificName" name="inputScientificName" readonly>
+					</div>
+				</div>
 			</fieldset>
 			<fieldset>
 				<legend>Sample</legend>
 				<div class="form-group">
 					<label for="inputSex" class="col-lg-3 control-label">Sex/Gender</label>
 					<div class="col-lg-9">
-						<input type="text" class="form-control" id="inputSex"
-							placeholder="Sex of the individuals">
-					</div>
+						<div class="radio">
+							<label>
+								<input type="radio" id="inputSex1" name="inputSex" value="Female"> Female
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" id="inputSex2" name="inputSex" value="Male"> Male
+							</label>
+						</div>						
+					</div>					
 				</div>
 				<div class="form-group">
-					<label for="inputIndividualCount" class="col-lg-3 control-label">Individual count</label>
+					<label for="inputIndividualCount" class="col-lg-3 control-label">Individual count<sup class="text-danger" title="Required">*</sup></label>
 					<div class="col-lg-9">
-						<input type="text" class="form-control" id="inputIndividualCount"
-							placeholder="Number of individuals collected">
+						<input type="text" class="form-control" id="inputIndividualCount" name="inputIndividualCount"
+							placeholder="Number of individuals collected" required>
 					</div>
 				</div>				
 				<div class="form-group">
 					<label for="inputCollectingMethod" class="col-lg-3 control-label">Collecting method</label>
 					<div class="col-lg-9">
-						<input type="text" class="form-control" id="inputCollectingMethod"
+						<input type="text" class="form-control" id="inputCollectingMethod" name="inputCollectingMethod"
 							placeholder="Method used to collect the samples">
 					</div>
 				</div>				
 				<div class="form-group">
 					<label for="inputPreparationType" class="col-lg-3 control-label">Preparation type</label>
 					<div class="col-lg-9">
-						<input type="text" class="form-control" id="inputCollectingMethod"
+						<input type="text" class="form-control" id="inputPreparationType" name="inputPreparationType"
 							placeholder="Type of preparation used">
 					</div>
 				</div>				
 				<div class="form-group">
 					<label for="inputMaterialType" class="col-lg-3 control-label">Material type</label>
 					<div class="col-lg-9">
-						<input type="text" class="form-control" id="inputMaterialType"
+						<input type="text" class="form-control" id="inputMaterialType" name="inputMaterialType"
 							placeholder="Type of support material used">
 					</div>
 				</div>				
@@ -104,7 +175,7 @@
 						<textarea class="form-control" rows="5" id="inputOrigin" name="inputOrigin"
 							placeholder="Paste your DNA sequence here" required></textarea>
 					</div>
-				</div>				
+				</div>
 			</fieldset>
 			<fieldset>
 				<legend>Collector</legend>
@@ -119,9 +190,13 @@
 			<fieldset>
 				<div class="form-group">
 					<div class="col-lg-9 col-lg-offset-3">
-						<button type="reset" class="btn btn-default">Reset</button>
+						<button type="reset" class="btn btn-default" id="lvlResetSequenceBtn" data-toggle="tooltip" 
+						data-placement="bottom" title="" data-original-title="Your changes will be lost">Reset</button>
 						&nbsp;
-						<button type="submit" class="btn btn-primary" id="lvlSubmitSequenceBtn" disabled="disabled">Submit</button>
+						<button type="submit" class="btn btn-primary" id="lvlSubmitSequenceBtn" disabled="disabled" data-toggle="tooltip" 
+							data-placement="bottom" title="" data-original-title="Creates a new sequence">Submit</button>
+						<span id="helpBlock" class="help-block">Check that all required fields are completed before submitting the data.</span>
+						<input type="hidden" id="submissionId" value="<%= submissionId() %>">
 					</div>
 				</div>
 			</fieldset>

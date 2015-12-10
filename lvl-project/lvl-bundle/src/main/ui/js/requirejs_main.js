@@ -18,7 +18,7 @@ requirejs.config({
 		/* Backbone + Marionette MVC framework */
 		'underscore' : 'vendor/underscore-min', // 1.8.3
 		'backbone' : 'vendor/backbone-min', // 1.2.3
-		'marionette' : 'vendor/backbone.marionette.min', // 2.4.3
+		'marionette' : 'vendor/backbone.marionette.min', // 2.4.4
 		/* Useful backbone plug-ins */
 		'routefilter' : 'vendor/backbone.routefilter.min', // 0.2.0
 		'backbone.syphon' : 'vendor/backbone.syphon.min', // 0.6.3

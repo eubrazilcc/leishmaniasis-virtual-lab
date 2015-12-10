@@ -52,6 +52,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.PendingSequence;
+import eu.eubrazilcc.lvl.core.SamplePreparation;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.Sorting.Order;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
@@ -101,6 +102,13 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 					.namespace("username")
 					.sample(sample)
 					.sequence("GCGAAGAGGCTGGGCCAGAGAAAGCAAGACACGAGATGAAGCGGAGGGACACACACACACACACACACATACACACACACACACACACCTCCTCTACCAGAAGGAAAACG")
+					.preparation(SamplePreparation.builder()
+							.sex("Female")
+							.individualCount(23)
+							.collectingMethod("CDC")
+							.preparationType("Mata")
+							.materialType("Parátipo")
+							.build())
 					.build();
 			final WriteResult<PendingSequence> ack = PENDING_SEQ_DAO.insert(pendingSeq);
 			assertThat("write ack is not null", ack, notNullValue());
@@ -149,7 +157,14 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 					.id("LVL0002")
 					.namespace("username")
 					.sample(sample1)
-					.sequence("GCGAAGAGGCTGGGCCAGAGAAAGCAAGACACGAGATGAAGCGGAGGGACACACACACACACACACACATACACACACACACACACACCTCCTCTACCAGAAGGAAAACG")					
+					.sequence("GCGAAGAGGCTGGGCCAGAGAAAGCAAGACACGAGATGAAGCGGAGGGACACACACACACACACACACATACACACACACACACACACCTCCTCTACCAGAAGGAAAACG")
+					.preparation(SamplePreparation.builder()
+							.sex("Female")
+							.individualCount(23)
+							.collectingMethod("CDC")
+							.preparationType("Mata")
+							.materialType("Parátipo")
+							.build())
 					.build();
 			PENDING_SEQ_DAO.insert(pendingSeq1);
 			pendingSeq1.setLinks(null);			

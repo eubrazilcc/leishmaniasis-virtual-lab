@@ -24,16 +24,17 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
-import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
-import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
-import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
 import static eu.eubrazilcc.lvl.core.CollectionNames.SANDFLY_COLLECTION;
+import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
+import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
+import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.Shareable.SharedAccess.EDIT_SHARE;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getDarwinCoreSets;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getGBSeqXMLFiles;
 import static eu.eubrazilcc.lvl.core.util.TestUtils.getPubMedXMLFiles;
 import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XMLB;
+import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.GbSeqXmlBinder.GBSEQ_XMLB;
 import static eu.eubrazilcc.lvl.core.xml.PubMedXmlBinder.PUBMED_XMLB;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -68,18 +69,23 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecordSet;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests JSON mapping capabilities.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class JsonMappingTest {
+public class JsonMappingTest extends LeishvlTestCase {
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+	
+	public JsonMappingTest() {
+		super(false);		
+	}
 
 	@Test
 	public void test() {
-		System.out.println("JsonMappingTest.test()");
+		printMsg("JsonMappingTest.test()");
 		try {
 			// create test dataset
 			final Link seqLink = Link.fromUri(UriBuilder.fromUri("http://localhost/sanfly").path("gb:ABC12345678").build())
@@ -167,6 +173,25 @@ public class JsonMappingTest {
 					.collectionId(CLIOC)
 					.catalogNumber(trim(sample.getCatalogNumber()))
 					.sample(sample)
+					.build();
+
+			final PendingSequence pendingSeq = PendingSequence.builder()
+					.sample(DWC_XML_FACTORY.createSimpleDarwinRecord()
+							.withInstitutionCode("UPVLC")
+							.withCollectionCode("UPVLC-collection")
+							.withCountry("Spain")
+							.withStateProvince("Comunitat Valenciana")
+							.withCounty("Valencia")
+							.withLocality("Valencia")
+							.withScientificName("Nyssomyia whitmani"))
+					.sequence("AAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCGGGGGGGGGGGGGGGGTTTTTTTTAAAAAAAAAAAA")
+					.preparation(SamplePreparation.builder()
+							.sex("Female")
+							.individualCount(23)
+							.collectingMethod("CDC")
+							.preparationType("Mata")
+							.materialType("Parátipo")
+							.build())
 					.build();
 
 			final Target target = Target.builder()
@@ -261,20 +286,27 @@ public class JsonMappingTest {
 			// test references with links
 			reference.setLinks(newArrayList(refLink));
 			testReference(reference);
-			
+
 			// test COLFLEB samples with no links
 			testColflebSample(colflebSample);
-			
+
 			// test COLFLEB samples with links
 			colflebSample.setLinks(newArrayList(sampleLink));
 			testColflebSample(colflebSample);
-			
+
 			// test CLIOC samples with no links
 			testCliocSample(cliocSample);
-			
+
 			// test CLIOC samples with links
 			cliocSample.setLinks(newArrayList(sampleLink));
 			testCliocSample(cliocSample);
+
+			// test pending sequence with no links
+			testPendingSequence(pendingSeq);
+
+			// test pending sequence with links
+			pendingSeq.setLinks(newArrayList(sampleLink));
+			testPendingSequence(pendingSeq);
 
 			// test dataset with no links
 			testDataset(dataset);
@@ -315,7 +347,7 @@ public class JsonMappingTest {
 			e.printStackTrace(System.err);
 			fail("JsonMappingTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("JsonMappingTest.test() has finished");
+			printMsg("JsonMappingTest.test() has finished");
 		}
 	}
 
@@ -325,7 +357,7 @@ public class JsonMappingTest {
 		assertThat("serialized GenBank sequence is not null", payload, notNullValue());
 		assertThat("serialized GenBank sequence is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized GenBank sequence (JSON): " + payload);
+		printMsg(" >> Serialized GenBank sequence (JSON): " + payload);
 
 		// test GenBank sequence JSON deserialization
 		final GBSeq gbSeq2 = JSON_MAPPER.readValue(payload, GBSeq.class);
@@ -339,7 +371,7 @@ public class JsonMappingTest {
 		assertThat("serialized PubMed article is not null", payload, notNullValue());
 		assertThat("serialized PubMed article is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized PubMed article (JSON): " + payload);
+		printMsg(" >> Serialized PubMed article (JSON): " + payload);
 
 		// test PubMed article JSON deserialization
 		final PubmedArticle article2 = JSON_MAPPER.readValue(payload, PubmedArticle.class);
@@ -353,7 +385,7 @@ public class JsonMappingTest {
 		assertThat("serialized sanfly is not null", payload, notNullValue());
 		assertThat("serialized sanfly is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized sanfly (JSON): " + payload);
+		printMsg(" >> Serialized sanfly (JSON): " + payload);
 
 		// test sanfly JSON deserialization
 		final Sandfly sanfly2 = JSON_MAPPER.readValue(payload, Sandfly.class);
@@ -367,7 +399,7 @@ public class JsonMappingTest {
 		assertThat("serialized leishmania is not null", payload, notNullValue());
 		assertThat("serialized leishmania is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized leishmania (JSON): " + payload);
+		printMsg(" >> Serialized leishmania (JSON): " + payload);
 
 		// test leishmania JSON deserialization
 		final Leishmania leishmania2 = JSON_MAPPER.readValue(payload, Leishmania.class);
@@ -381,40 +413,54 @@ public class JsonMappingTest {
 		assertThat("serialized reference is not null", payload, notNullValue());
 		assertThat("serialized reference is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized reference (JSON): " + payload);
+		printMsg(" >> Serialized reference (JSON): " + payload);
 
 		// test reference JSON deserialization
 		final Reference reference2 = JSON_MAPPER.readValue(payload, Reference.class);
 		assertThat("deserialized reference is not null", reference2, notNullValue());
 		assertThat("deserialized reference coincides with expected", reference2, equalTo(reference));
 	}
-	
+
 	private void testColflebSample(final SandflySample sample) throws IOException {
-		// test sample JSON serialization
+		// test sandfly sample JSON serialization
 		final String payload = JSON_MAPPER.writeValueAsString(sample);
 		assertThat("serialized sample is not null", payload, notNullValue());
 		assertThat("serialized sample is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized sample (JSON): " + payload);
+		printMsg(" >> Serialized sample (JSON): " + payload);
 
-		// test leishmania JSON deserialization
+		// test sandfly sample JSON deserialization
 		final SandflySample sample2 = JSON_MAPPER.readValue(payload, SandflySample.class);
 		assertThat("deserialized sample is not null", sample2, notNullValue());
 		assertThat("deserialized sample coincides with expected", sample2, equalTo(sample));
 	}
-	
+
 	private void testCliocSample(final LeishmaniaSample sample) throws IOException {
-		// test sample JSON serialization
+		// test leishmania sample JSON serialization
 		final String payload = JSON_MAPPER.writeValueAsString(sample);
 		assertThat("serialized sample is not null", payload, notNullValue());
 		assertThat("serialized sample is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized sample (JSON): " + payload);
+		printMsg(" >> Serialized sample (JSON): " + payload);
 
-		// test leishmania JSON deserialization
+		// test leishmania sample JSON deserialization
 		final LeishmaniaSample sample2 = JSON_MAPPER.readValue(payload, LeishmaniaSample.class);
 		assertThat("deserialized sample is not null", sample2, notNullValue());
 		assertThat("deserialized sample coincides with expected", sample2, equalTo(sample));
+	}
+
+	private void testPendingSequence(final PendingSequence pendingSeq) throws IOException {
+		// test pending sequence JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(pendingSeq);
+		assertThat("serialized pending sequence is not null", payload, notNullValue());
+		assertThat("serialized pending sequence is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		printMsg(" >> Serialized pending sequence (JSON): " + payload);
+
+		// test pending sequence JSON deserialization
+		final PendingSequence pendingSeq2 = JSON_MAPPER.readValue(payload, PendingSequence.class);
+		assertThat("deserialized pending sequence is not null", pendingSeq2, notNullValue());
+		assertThat("deserialized pending sequence coincides with expected", pendingSeq2, equalTo(pendingSeq));
 	}
 
 	private void testDataset(final Dataset dataset) throws IOException {
@@ -423,7 +469,7 @@ public class JsonMappingTest {
 		assertThat("serialized dataset is not null", payload, notNullValue());
 		assertThat("serialized dataset is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized dataset (JSON): " + payload);
+		printMsg(" >> Serialized dataset (JSON): " + payload);
 
 		// test dataset JSON deserialization
 		final Dataset dataset2 = JSON_MAPPER.readValue(payload, Dataset.class);
@@ -437,7 +483,7 @@ public class JsonMappingTest {
 		assertThat("serialized dataset share is not null", payload, notNullValue());
 		assertThat("serialized dataset share is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized dataset share (JSON): " + payload);
+		printMsg(" >> Serialized dataset share (JSON): " + payload);
 
 		// test dataset share JSON deserialization
 		final DatasetShare datasetShare2 = JSON_MAPPER.readValue(payload, DatasetShare.class);
@@ -451,7 +497,7 @@ public class JsonMappingTest {
 		assertThat("serialized instance is not null", payload, notNullValue());
 		assertThat("serialized instance is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized instance (JSON): " + payload);
+		printMsg(" >> Serialized instance (JSON): " + payload);
 
 		// test instance JSON deserialization
 		final LvlInstance instance2 = JSON_MAPPER.readValue(payload, LvlInstance.class);
@@ -465,7 +511,7 @@ public class JsonMappingTest {
 		assertThat("serialized saved search is not null", payload, notNullValue());
 		assertThat("serialized saved search is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized saved search (JSON): " + payload);
+		printMsg(" >> Serialized saved search (JSON): " + payload);
 
 		// test instance JSON deserialization
 		final SavedSearch savedSearch2 = JSON_MAPPER.readValue(payload, SavedSearch.class);
@@ -479,7 +525,7 @@ public class JsonMappingTest {
 		assertThat("serialized issue is not null", payload, notNullValue());
 		assertThat("serialized issue is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
-		System.out.println(" >> Serialized issue (JSON): " + payload);
+		printMsg(" >> Serialized issue (JSON): " + payload);
 
 		// test instance JSON deserialization
 		final Issue issue2 = JSON_MAPPER.readValue(payload, Issue.class);

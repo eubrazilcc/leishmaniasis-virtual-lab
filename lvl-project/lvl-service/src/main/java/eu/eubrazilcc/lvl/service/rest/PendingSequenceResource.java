@@ -164,8 +164,8 @@ public class PendingSequenceResource {
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
 	public Response createPendingSequence(final @PathParam("namespace") String namespace, final PendingSequence pendingSeq, final @Context UriInfo uriInfo, 
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {	
-		final String namespace2 = parseParam(namespace);		
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace);
 		if (pendingSeq == null || pendingSeq.getSample() == null 
 				|| isBlank(trimToNull(pendingSeq.getSample().getInstitutionCode())) 
 				|| isBlank(trimToNull(pendingSeq.getSample().getCollectionCode()))
@@ -175,7 +175,7 @@ public class PendingSequenceResource {
 		}
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":*:create")
-				.getPrincipal();		
+				.getPrincipal();
 		// complete required fields
 		final Calendar cal = Calendar.getInstance();
 		pendingSeq.setId(randomUUID().toString());

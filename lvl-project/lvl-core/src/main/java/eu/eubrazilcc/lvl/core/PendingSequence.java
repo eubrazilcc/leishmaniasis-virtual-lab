@@ -79,7 +79,8 @@ public class PendingSequence implements Linkable<PendingSequence> {
 	private String id;                 // Resource identifier	
 	private SimpleDarwinRecord sample; // Sample in DWC format
 	private String sequence;           // DNA sequence
-	
+	private SamplePreparation preparation;
+
 	public PendingSequence() {
 		setNamespace(LVL_DEFAULT_NS);
 	}
@@ -129,7 +130,7 @@ public class PendingSequence implements Linkable<PendingSequence> {
 
 	public void setId(final String id) {
 		this.id = id;
-		setUrlSafeId(urlEncodeUtf8(trimToEmpty(id)));
+		setUrlSafeId(id != null ? urlEncodeUtf8(trimToEmpty(id)) : id);
 	}
 
 	public SimpleDarwinRecord getSample() {
@@ -146,6 +147,14 @@ public class PendingSequence implements Linkable<PendingSequence> {
 
 	public void setSequence(final String sequence) {
 		this.sequence = sequence;
+	}
+
+	public SamplePreparation getPreparation() {
+		return preparation;
+	}
+
+	public void setPreparation(final SamplePreparation preparation) {
+		this.preparation = preparation;
 	}
 
 	@Override
@@ -167,13 +176,14 @@ public class PendingSequence implements Linkable<PendingSequence> {
 		}
 		return Objects.equals(namespace, other.namespace)
 				&& Objects.equals(id, other.id)
-				&& Objects.equals(sample, other.sample)
-				&& Objects.equals(sequence, other.sequence);
+				// && Objects.equals(sample, other.sample)
+				&& Objects.equals(sequence, other.sequence)
+				&& Objects.equals(preparation, other.preparation);
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, urlSafeNamespace, urlSafeId, namespace, id, sample, sequence);
+		return super.hashCode() + Objects.hash(links, urlSafeNamespace, urlSafeId, namespace, id, sequence, preparation);
 	}
 
 	@Override
@@ -184,8 +194,9 @@ public class PendingSequence implements Linkable<PendingSequence> {
 				.add("urlSafeId", urlSafeId)
 				.add("namespace", namespace)
 				.add("id", id)
-				.add("sample", sample)
+				.add("sample", "<<original sample is not displayed>>")
 				.add("sequence", sequence)
+				.add("preparation", preparation)
 				.toString();
 	}
 
@@ -223,6 +234,11 @@ public class PendingSequence implements Linkable<PendingSequence> {
 
 		public Builder sequence(final String sequence) {
 			instance.setSequence(sequence);
+			return this;
+		}
+
+		public Builder preparation(final SamplePreparation preparation) {
+			instance.setPreparation(preparation);
 			return this;
 		}
 

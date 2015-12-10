@@ -49,7 +49,9 @@ public class Sample implements Localizable<Point> {
 	private Locale locale;             // Represents country with standards
 
 	private SimpleDarwinRecord sample; // Original sample in DWC format
-
+	
+	private SamplePreparation preparation;
+	
 	public String getId() {
 		return id;
 	}
@@ -101,6 +103,14 @@ public class Sample implements Localizable<Point> {
 	public void setSample(final SimpleDarwinRecord sample) {
 		this.sample = sample;
 	}
+	
+	public SamplePreparation getPreparation() {
+		return preparation;
+	}
+
+	public void setPreparation(final SamplePreparation preparation) {
+		this.preparation = preparation;
+	}
 
 	@JsonIgnore
 	@Override
@@ -118,13 +128,14 @@ public class Sample implements Localizable<Point> {
 				&& Objects.equals(collectionId, other.collectionId)
 				&& Objects.equals(catalogNumber, other.catalogNumber)
 				&& Objects.equals(location, other.location)
-				&& Objects.equals(locale, other.locale);
+				&& Objects.equals(locale, other.locale)
+				&& Objects.equals(preparation, other.preparation);		
 		// sample
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, collectionId, catalogNumber, location, locale);
+		return Objects.hash(id, collectionId, catalogNumber, location, locale, preparation);
 	}	
 
 	@Override
@@ -136,6 +147,7 @@ public class Sample implements Localizable<Point> {
 				.add("location", location)
 				.add("locale", locale)
 				.add("sample", "<<original sample is not displayed>>")
+				.add("preparation", preparation)
 				.toString();
 	}
 
@@ -179,6 +191,11 @@ public class Sample implements Localizable<Point> {
 
 		public Builder<T> sample(final SimpleDarwinRecord sample) {
 			instance.setSample(sample);
+			return this;
+		}
+		
+		public Builder<T> preparation(final SamplePreparation preparation) {
+			instance.setPreparation(preparation);
 			return this;
 		}
 

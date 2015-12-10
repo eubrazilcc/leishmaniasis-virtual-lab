@@ -30,7 +30,16 @@
 		"properties" : [
 			{
 				"name" : "api_key",
-				"value" : "771s7duqp3m4zc"
+				"value" : "changeit"
+			}
+		]
+	},
+	{
+		"section" : "google",
+		"properties" : [
+			{
+				"name" : "api_key",
+				"value" : "changeit"
 			}
 		]
 	},

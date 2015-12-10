@@ -1,9 +1,7 @@
 /**
- * RequireJS module that defines configuration parameters that are globally
- * available to all the other modules of the application. Note that this module
- * uses the 'requirejs.s.contexts._.config' hack to read values of configuration
- * that could change or disappear in the next versions of RequireJS without
- * warning.
+ * RequireJS module that defines configuration parameters that are globally available to all the other modules of the application.
+ * Note that this module uses the 'requirejs.s.contexts._.config' hack to read values of configuration that could change or disappear 
+ * in the next versions of RequireJS without warning.
  */
 
 define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/properties' ], function(Marionette, _, $, PropsEntity) {
@@ -144,6 +142,10 @@ define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/propertie
 		linkedInAuthEndpoint : function(state) {
 			return 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=' + this.props.getProperty('linkedin', 'api_key')
 					+ '&redirect_uri=' + encodeURIComponent(this.redirectUri()) + '&state=' + state + '&scope=r_basicprofile%20r_emailaddress';
+		},
+		googleGeocodeEndpoint : function(lat, lng) {
+			return 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' + lat + ',' + lng + '&result_type=sublocality&key=' 
+				+ this.props.getProperty('google', 'api_key');
 		}
 	});
 	return Marionette.Object.Configuration;
