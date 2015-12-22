@@ -37,9 +37,9 @@ import static java.lang.Math.min;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.CREATED;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -58,21 +58,21 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
-import eu.eubrazilcc.lvl.core.PendingSequence;
+import eu.eubrazilcc.lvl.core.SandflyPending;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
-import eu.eubrazilcc.lvl.service.rest.PendingSequenceResource;
-import eu.eubrazilcc.lvl.service.rest.PendingSequenceResource.PendingSequences;
+import eu.eubrazilcc.lvl.service.rest.SandflyPendingResource;
+import eu.eubrazilcc.lvl.service.rest.SandflyPendingResource.SandflyPendings;
 import eu.eubrazilcc.lvl.test.TestContext;
 import eu.eubrazilcc.lvl.test.Testable;
 
 /**
- * Tests access to pending sequences collection in the REST API.
+ * Tests access to sanfly pending sequences collection in the REST API.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PendingSequenceResourceTest extends Testable {
+public class SandflyPendingResourceTest extends Testable {
 
-	public PendingSequenceResourceTest(final TestContext testCtxt) {
-		super(testCtxt, PendingSequenceResourceTest.class);		
+	public SandflyPendingResourceTest(final TestContext testCtxt) {
+		super(testCtxt, SandflyPendingResourceTest.class);		
 	}
 
 	@Override
@@ -96,8 +96,8 @@ public class PendingSequenceResourceTest extends Testable {
 				.withGenus("Leishmania")
 				.withSpecificEpithet("infantum");
 
-		final Path path = PendingSequenceResource.class.getAnnotation(Path.class);
-		final PendingSequence pendingSeq = PendingSequence.builder()
+		final Path path = SandflyPendingResource.class.getAnnotation(Path.class);
+		final SandflyPending pendingSeq = SandflyPending.builder()
 				.sample(dwc)
 				.sequence("GCGAAGAGGCTGGGCCAGAGAAAGCAAGACACGAGATGAAGCGGAGGGACACACACACACACACACACATACACACACACACACACACCTCCTCTACCAGAAGGAAAACG")
 				.build();		
@@ -128,12 +128,12 @@ public class PendingSequenceResourceTest extends Testable {
 		pendingSeq.setNamespace(testCtxt.ownerid("user1"));		
 
 		// test get pending sequence by Id (Java object)
-		PendingSequence pendingSeq2 = testCtxt.target().path(path.value())
+		SandflyPending pendingSeq2 = testCtxt.target().path(path.value())
 				.path(urlEncodeUtf8(testCtxt.ownerid("user1")))
 				.path(pendingSeq.getId())
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequence.class);
+				.get(SandflyPending.class);
 		assertThat("Get pending sequence by Id result is not null", pendingSeq2, notNullValue());
 		assertThat("Get pending sequence by Id date is not null", pendingSeq2.getSample(), notNullValue());
 		pendingSeq.setSample(pendingSeq2.getSample());
@@ -150,7 +150,7 @@ public class PendingSequenceResourceTest extends Testable {
 					.withCountry("Spain")
 					.withLocality("This is an example")
 					.withScientificName("Leishmania infantum");					
-			final PendingSequence pendingSeq3 = PendingSequence.builder()
+			final SandflyPending pendingSeq3 = SandflyPending.builder()
 					.sample(dwc2)
 					.sequence("GCGAAGA")
 					.build();
@@ -180,16 +180,16 @@ public class PendingSequenceResourceTest extends Testable {
 		printMsg(" >> Get pending sequences HTTP headers: " + response.getStringHeaders());
 
 		// test list all pending sequences (Java object)
-		PendingSequences pendingSeqs = testCtxt.target().path(path.value())
+		SandflyPendings pendingSeqs = testCtxt.target().path(path.value())
 				.path(urlEncodeUtf8(testCtxt.ownerid("user1")))
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequences.class);
+				.get(SandflyPendings.class);
 		assertThat("Get pending sequences result is not null", pendingSeqs, notNullValue());
 		assertThat("Get pending sequences list coincides with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), hasSize(pendingSeqs.getTotalCount())));
 		// uncomment for additional output
 		printMsg(" >> Get pending sequences result: " + toJson(pendingSeqs, JSON_PRETTY_PRINTER));
-		
+
 		// access from an unauthorized user must fail
 		response = testCtxt.target().path(path.value())
 				.path(urlEncodeUtf8(testCtxt.ownerid("user1")))
@@ -211,7 +211,7 @@ public class PendingSequenceResourceTest extends Testable {
 		assertThat("Paginate pending sequences first page response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
 		assertThat("Paginate pending sequences first page response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));			
-		pendingSeqs = testCtxt.jsonMapper().readValue(payload, PendingSequences.class);
+		pendingSeqs = testCtxt.jsonMapper().readValue(payload, SandflyPendings.class);
 		assertThat("Paginate pending sequences first page result is not null", pendingSeqs, notNullValue());
 		assertThat("Paginate pending sequences first page list coincides with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(min(perPage, pendingSeqs.getTotalCount()))));		
@@ -239,7 +239,7 @@ public class PendingSequenceResourceTest extends Testable {
 		assertThat("Paginate pending sequences last page response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
 		assertThat("Paginate pending sequences last page response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));
-		pendingSeqs = testCtxt.jsonMapper().readValue(payload, PendingSequences.class);
+		pendingSeqs = testCtxt.jsonMapper().readValue(payload, SandflyPendings.class);
 		assertThat("Paginate pending sequences last page result is not null", pendingSeqs, notNullValue());
 		assertThat("Paginate pending sequences last page list is not empty", pendingSeqs.getElements(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output			
@@ -253,7 +253,7 @@ public class PendingSequenceResourceTest extends Testable {
 				.queryParam("per_page", perPage)
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequences.class);
+				.get(SandflyPendings.class);
 		assertThat("Paginate pending sequences first page result is not null", pendingSeqs, notNullValue());
 		assertThat("Paginate pending sequences first page list coincides with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(min(perPage, pendingSeqs.getTotalCount()))));		
@@ -275,7 +275,7 @@ public class PendingSequenceResourceTest extends Testable {
 				.queryParam("per_page", parseInt(getQueryParams(lastLink).get("per_page")))
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequences.class);
+				.get(SandflyPendings.class);
 		assertThat("Paginate pending sequences last page result is not null", pendingSeqs, notNullValue());
 		assertThat("Paginate pending sequences last page list is not empty", pendingSeqs.getElements(), allOf(notNullValue(), not(empty())));		
 		// uncomment for additional output
@@ -289,7 +289,7 @@ public class PendingSequenceResourceTest extends Testable {
 				.queryParam("q", "example")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequences.class);
+				.get(SandflyPendings.class);
 		assertThat("Search pending sequences result is not null", pendingSeqs, notNullValue());		
 
 		assertThat("Search pending sequences list coincides with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), 
@@ -303,7 +303,7 @@ public class PendingSequenceResourceTest extends Testable {
 				.queryParam("q", "catalogNumber:\"" + pendingSeq.getSample().getCatalogNumber() + "\"")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequences.class);
+				.get(SandflyPendings.class);
 		assertThat("Search pending sequences result is not null", pendingSeqs, notNullValue());
 		assertThat("Search pending sequences list coincides with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(pendingSeqs.getTotalCount()), hasSize(1)));
@@ -316,7 +316,7 @@ public class PendingSequenceResourceTest extends Testable {
 				.queryParam("q", "collection:" + pendingSeq.getSample().getCollectionCode())
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequences.class);
+				.get(SandflyPendings.class);
 		assertThat("Search pending sequences result is not null", pendingSeqs, notNullValue());
 		assertThat("Search pending sequences list coincides with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(pendingSeqs.getTotalCount()), hasSize(4)));		
@@ -336,7 +336,7 @@ public class PendingSequenceResourceTest extends Testable {
 		assertThat("Search pending sequences (JSON encoded) response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
 		assertThat("Search pending sequences (JSON encoded) response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));		
-		pendingSeqs = testCtxt.jsonMapper().readValue(payload, PendingSequences.class);
+		pendingSeqs = testCtxt.jsonMapper().readValue(payload, SandflyPendings.class);
 		assertThat("Search pending sequences (JSON encoded) result is not null", pendingSeqs, notNullValue());
 		assertThat("Search pending sequences (JSON encoded) items coincide with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(min(perPage, pendingSeqs.getTotalCount()))));
@@ -350,11 +350,11 @@ public class PendingSequenceResourceTest extends Testable {
 				.queryParam("order", "asc")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequences.class);
+				.get(SandflyPendings.class);
 		assertThat("Sorted pending sequences result is not null", pendingSeqs, notNullValue());
 		assertThat("Sorted pending sequences items coincide with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), hasSize(pendingSeqs.getTotalCount())));		
 		String last = "-1";
-		for (final PendingSequence s : pendingSeqs.getElements()) {
+		for (final SandflyPending s : pendingSeqs.getElements()) {
 			assertThat("PendingSeqs are properly sorted", s.getSample().getCatalogNumber().compareTo(last) > 0);
 			last = s.getSample().getCatalogNumber();
 		}
@@ -362,11 +362,11 @@ public class PendingSequenceResourceTest extends Testable {
 		printMsg(" >> Sorted pending sequences result: " + toJson(pendingSeqs, JSON_PRETTY_PRINTER));
 
 		// test get pending sequence by Id
-	 	pendingSeq2 = testCtxt.target().path(path.value())
-	 			.path(urlEncodeUtf8(LVL_DEFAULT_NS)).path(pendingSeq.getId())	 			
+		pendingSeq2 = testCtxt.target().path(path.value())
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS)).path(pendingSeq.getId())	 			
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequence.class);
+				.get(SandflyPending.class);
 		assertThat("Get pending sequence by catalog number result is not null", pendingSeq2, notNullValue());
 		assertThat("Get pending sequence by catalog number coincides with expected", pendingSeq2.equalsIgnoringVolatile(pendingSeq));
 		// uncomment for additional output
@@ -397,7 +397,7 @@ public class PendingSequenceResourceTest extends Testable {
 				.path(pendingSeq.getId())
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
-				.get(PendingSequence.class);
+				.get(SandflyPending.class);
 		assertThat("Get pending sequence by Id after update result is not null", pendingSeq2, notNullValue());
 		assertThat("Get pending sequence by Id after update coincides with expected", pendingSeq2.equalsIgnoringVolatile(pendingSeq));
 		// uncomment for additional output

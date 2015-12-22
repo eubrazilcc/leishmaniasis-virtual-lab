@@ -3,94 +3,69 @@
  */
 
 define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps/collection/pending/tpls/toolbar_pending', 'tpl!common/search/tpls/search_term',
-		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/sequence', 'entities/saved_search', 'entities/identifier', 'pace',
+		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/pending_sequence', 'entities/saved_search', 'entities/identifier', 'pace',
 		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter', 'common/ext/backgrid_ext' ], function(Lvl, PendingTpl,
-		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, SequenceEntity, SavedSearchEntity, IdentifierEntity, pace, mapCn) {
+		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, PendingSequenceEntity, SavedSearchEntity, IdentifierEntity, pace, mapCn) {
 	Lvl.module('CollectionApp.Pending.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
 				{
-					name : 'dataSource',
-					label : 'Source',
+					name : 'id',
+					label : 'Id',
 					editable : false,
 					cell : 'string'
 				},
 				{
-					name : 'definition',
-					label : 'Definition',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'accession',
-					label : 'Accession',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'length',
-					label : 'Length',
-					editable : false,
-					cell : 'integer',
-					formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
-						innerFormatter : new Backgrid.NumberFormatter({
-							decimals : 0
-						}),
-						fromRaw : function(rawValue, model) {
-							var self = this;
-							return self.innerFormatter.fromRaw(rawValue) + " bp";
-						}
-					})
-				},
-				{
-					name : 'gene',
-					label : 'Gene',
+					name : 'sample',
+					label : 'Collection',
 					editable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));
-							if (rawValue !== undefined) {
-								var names = '';
-								for (var i = 0; i < rawValue.length; i++) {
-									names += rawValue[i] + ' ';
-								}
-								this.$el.append(names.trim());
-							}
+							var rawValue = this.model.get(this.column.get('name'));							
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue['institutionCode'] === 'string') {
+								this.$el.append(formattedValue['institutionCode']);
+							}							
 							this.delegateEvents();
 							return this;
 						}
 					})
 				},
 				{
-					name : 'organism',
-					label : 'Organism',
-					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'locale',
+					name : 'sample',
 					label : 'Country',
 					editable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));
+							var rawValue = this.model.get(this.column.get('name'));							
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'string') {
-								var twoLetterCode = formattedValue.split("_")[1];
-								var code2 = twoLetterCode ? twoLetterCode.toUpperCase() : '';
-								var countryName = mapCn[code2];
-								if (countryName) {
-									this.$el.append('<a href="#" data-country-code2="' + code2.toLowerCase() + '"><span class="flag-icon flag-icon-'
-											+ code2.toLowerCase() + '" title="' + countryName + '"></span><span class="hidden-xs"> ' + code2 + '</span></a>');
-								}
-							}
+							if (formattedValue && typeof formattedValue['country'] === 'string') {
+								this.$el.append(formattedValue['country']);
+							}							
 							this.delegateEvents();
 							return this;
 						}
 					})
-				},
+				},				
+				{
+					name : 'sample',
+					label : 'Scientific name',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));							
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue['scientificName'] === 'string') {
+								this.$el.append(formattedValue['scientificName']);
+							}							
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},				
 				{
 					name : 'id',
 					label : '',
@@ -102,7 +77,7 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="#" title="Open" data-seq_id="' + formattedValue
+								this.$el.append('<a href="#" title="Open" data-pending-seq_id="' + formattedValue
 										+ '" class="text-muted"><i class="fa fa-eye fa-fw"></i></a>');
 							}
 							this.delegateEvents();
@@ -114,7 +89,7 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 			id : 'pending',
 			template : PendingTpl,
 			initialize : function() {
-				this.data_source = this.collection.data_source || 'sandflies';
+				this.data_source = this.collection.data_source || 'sandflies';				
 				this.listenTo(this.collection, 'request', this.displaySpinner);
 				this.listenTo(this.collection, 'sync error', this.removeSpinner);				
 				this.listenTo(this.collection, 'backgrid:select-all', this.selectAllHandler);
@@ -125,10 +100,10 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 						headerCell : 'select-all'
 					} ].concat(columns),
 					collection : this.collection,
-					emptyText : 'No sequences found'
+					emptyText : 'No pending sequences found'
 				});
 				// setup search
-				Lvl.vent.on('search:form:submitted', this.searchSequences);
+				Lvl.vent.on('search:form:submitted', this.searchPendingSequences);
 				// setup menu
 				$('#lvl-floating-menu-toggle').show(0);
 				$('#lvl-floating-menu').hide(0);
@@ -136,10 +111,7 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 				$('#lvl-floating-menu').append(ToolbarTpl({
 					isSanflies : 'sandflies' === this.data_source,
 					isLeishmania : 'leishmania' === this.data_source
-				}));
-				$('a#export-btn').on('click', {
-					view : this
-				}, this.exportFile);
+				}));				
 				$('a#uncheck-btn').on('click', {
 					grid : this.grid
 				}, this.deselectAll);
@@ -216,35 +188,14 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 				'click div.lvl-savable' : 'handleClickSavable',
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
-				'click a[data-country-code2]' : 'filterByCountry',
-				'click a[data-seq_id]' : 'showSequenceRecord'				
-			},
-			exportFile : function(e, data) {
-				e.preventDefault();
-				var selectedModels = e.data.view.grid.getAllSelectedIds();				
-				if (selectedModels && selectedModels.length > 0) {
-					if (selectedModels.length <= 1000) { // limit to 1000 sequences
-						$('#lvl-floating-menu').hide('fast');
-						e.data.view.trigger('sequences:file:export', e.data.view.collection.data_source, selectedModels);
-					} else {
-						$('#lvl-floating-menu').hide('0');
-						require([ 'common/growl' ], function(createGrowl) {
-							createGrowl('Export size limit reached', 'Export tool is currently limited to 1000 sequences.', false);
-						});
-					}				
-				} else {
-					$('#lvl-floating-menu').hide('0');
-					require([ 'common/growl' ], function(createGrowl) {
-						createGrowl('No sequences selected', 'Select at least one sequence to be exported', false);
-					});
-				}
-			},
+				'click a[data-pending-seq_id]' : 'showPendingSequenceRecord'				
+			},			
 			deselectAll : function(e) {
 				e.preventDefault();
 				$('#lvl-floating-menu').hide('fast');
 				$('.select-all-header-cell > input:first').prop('checked', false).change();				
 			},
-			searchSequences : function(search) {
+			searchPendingSequences : function(search) {
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
 				backgridFilter.submit();
@@ -262,7 +213,7 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 						}
 					});
 				}
-				this.searchSequences(search);
+				this.searchPendingSequences(search);
 			},
 			addSearchTerm : function(e) {
 				e.preventDefault();
@@ -280,19 +231,11 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 					searchCont.find('a[data-search-term!="sterm_-1"]').each(function(i) {
 						search += $(this).parent().text() + ' ';
 					});
-					this.searchSequences(search);
+					this.searchPendingSequences(search);
 				} else {
 					newTermInput.val('');
 				}
-			},
-			filterByCountry : function(e) {
-				e.preventDefault();
-				var _self = this;
-				var target = $(e.target);
-				var countryCode = target.is('span') || target.is('img') ? target.parent('a').get(0).getAttribute('data-country-code2') : target
-						.attr('data-country-code2');
-				this.searchSequences('locale:_' + countryCode.toUpperCase());
-			},
+			},			
 			handleClickSavable : function(e) {
 				require([ 'common/growl' ], function(createGrowl) {
 					createGrowl('Unsaved search',
@@ -320,7 +263,7 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 					tour();
 				});
 			},
-			showSequenceRecord : function(e) {
+			showPendingSequenceRecord : function(e) { // TODO
 				e.preventDefault();
 				var self = this;
 				var target = $(e.target);
@@ -383,11 +326,11 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 				var params = Lvl.flashed();
 				if (!$.isEmptyObject(params) && (params instanceof SavedSearchEntity.SavedSearch)
 						&& (params.get('type') === 'collection;pending;' + _self.data_source)) {
-					var search = '';
+					var search =  ''; // TODO 'organism:' + this.data_source;
 					_.each(params.get('search'), function(item) {
 						search += item.term;
 					});
-					_self.searchSequences(search);
+					_self.searchPendingSequences(search);
 				} else {
 					this.collection.fetch({
 						reset : true

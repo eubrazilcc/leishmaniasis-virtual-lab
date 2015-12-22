@@ -77,7 +77,7 @@ import eu.eubrazilcc.lvl.service.testable.IssuesResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaSampleResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LvlInstanceResourceTest;
-import eu.eubrazilcc.lvl.service.testable.PendingSequenceResourceTest;
+import eu.eubrazilcc.lvl.service.testable.SandflyPendingResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflyResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflySampleResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SavedSearchResourceTest;
@@ -240,15 +240,18 @@ public class ServiceTest {
 
 			// test dataset resource
 			new DatasetResourceTest(testCtxt).runTest();
-			
+
 			// test sand-fly samples resource
 			new SandflySampleResourceTest(testCtxt).runTest();
-			
+
 			// test leishmania samples resource
 			new LeishmaniaSampleResourceTest(testCtxt).runTest();
-			
-			// test pending sequences resource
-			new PendingSequenceResourceTest(testCtxt).runTest();
+
+			// test pending sand-fly sequences resource
+			new SandflyPendingResourceTest(testCtxt).runTest();
+
+			// test pending leishmania sequences resource
+			new LeishmaniaResourceTest(testCtxt).runTest();
 
 			// test shared dataset resource
 			new DatasetShareResourceTest(testCtxt).runTest();

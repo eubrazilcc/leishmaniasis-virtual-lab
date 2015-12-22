@@ -34,7 +34,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 						trigger : false,
 						replace : true
 					});
-					Lvl.execute('collection:set:active', section, subsection);
+					Lvl.execute('collection:set:active', section, subsection);					
 				} else if (section === 'submit') {
 					Lvl.execute('collection:set:active', section);
 				} else {

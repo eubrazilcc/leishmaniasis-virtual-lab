@@ -78,7 +78,7 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 public class JsonMappingTest extends LeishvlTestCase {
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
-	
+
 	public JsonMappingTest() {
 		super(false);		
 	}
@@ -175,7 +175,26 @@ public class JsonMappingTest extends LeishvlTestCase {
 					.sample(sample)
 					.build();
 
-			final PendingSequence pendingSeq = PendingSequence.builder()
+			final SandflyPending colflebPending = SandflyPending.builder()
+					.sample(DWC_XML_FACTORY.createSimpleDarwinRecord()
+							.withInstitutionCode("UPVLC")
+							.withCollectionCode("UPVLC-collection")
+							.withCountry("Spain")
+							.withStateProvince("Comunitat Valenciana")
+							.withCounty("Valencia")
+							.withLocality("Valencia")
+							.withScientificName("Leishmania (Viannia) braziliensis"))
+					.sequence("CCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAAATTTTTTTTAAAAAAAAAAAAGGGGGGGGGGGGGGGG")
+					.preparation(SamplePreparation.builder()
+							.sex("Male")
+							.individualCount(1)
+							.collectingMethod("CDC")
+							.preparationType("Mata")
+							.materialType("Parátipo")
+							.build())
+					.build();
+
+			final LeishmaniaPending cliocPending = LeishmaniaPending.builder()
 					.sample(DWC_XML_FACTORY.createSimpleDarwinRecord()
 							.withInstitutionCode("UPVLC")
 							.withCollectionCode("UPVLC-collection")
@@ -301,12 +320,19 @@ public class JsonMappingTest extends LeishvlTestCase {
 			cliocSample.setLinks(newArrayList(sampleLink));
 			testCliocSample(cliocSample);
 
-			// test pending sequence with no links
-			testPendingSequence(pendingSeq);
+			// test pending COLFLEB sequence with no links
+			testPendingColfleb(colflebPending);
 
-			// test pending sequence with links
-			pendingSeq.setLinks(newArrayList(sampleLink));
-			testPendingSequence(pendingSeq);
+			// test pending COLFLEB sequence with links
+			colflebPending.setLinks(newArrayList(sampleLink));
+			testPendingColfleb(colflebPending);
+
+			// test pending CLIOC sequence with no links
+			testPendingClioc(cliocPending);
+
+			// test pending CLIOC sequence with links
+			cliocPending.setLinks(newArrayList(sampleLink));
+			testPendingClioc(cliocPending);
 
 			// test dataset with no links
 			testDataset(dataset);
@@ -449,7 +475,7 @@ public class JsonMappingTest extends LeishvlTestCase {
 		assertThat("deserialized sample coincides with expected", sample2, equalTo(sample));
 	}
 
-	private void testPendingSequence(final PendingSequence pendingSeq) throws IOException {
+	private void testPendingColfleb(final SandflyPending pendingSeq) throws IOException {
 		// test pending sequence JSON serialization
 		final String payload = JSON_MAPPER.writeValueAsString(pendingSeq);
 		assertThat("serialized pending sequence is not null", payload, notNullValue());
@@ -458,7 +484,21 @@ public class JsonMappingTest extends LeishvlTestCase {
 		printMsg(" >> Serialized pending sequence (JSON): " + payload);
 
 		// test pending sequence JSON deserialization
-		final PendingSequence pendingSeq2 = JSON_MAPPER.readValue(payload, PendingSequence.class);
+		final SandflyPending pendingSeq2 = JSON_MAPPER.readValue(payload, SandflyPending.class);
+		assertThat("deserialized pending sequence is not null", pendingSeq2, notNullValue());
+		assertThat("deserialized pending sequence coincides with expected", pendingSeq2, equalTo(pendingSeq));
+	}
+
+	private void testPendingClioc(final LeishmaniaPending pendingSeq) throws IOException {
+		// test pending sequence JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(pendingSeq);
+		assertThat("serialized pending sequence is not null", payload, notNullValue());
+		assertThat("serialized pending sequence is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		printMsg(" >> Serialized pending sequence (JSON): " + payload);
+
+		// test pending sequence JSON deserialization
+		final LeishmaniaPending pendingSeq2 = JSON_MAPPER.readValue(payload, LeishmaniaPending.class);
 		assertThat("deserialized pending sequence is not null", pendingSeq2, notNullValue());
 		assertThat("deserialized pending sequence coincides with expected", pendingSeq2, equalTo(pendingSeq));
 	}

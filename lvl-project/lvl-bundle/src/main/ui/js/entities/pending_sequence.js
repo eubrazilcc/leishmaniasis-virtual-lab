@@ -39,7 +39,7 @@ define([ 'app', 'backbone.paginator' ], function(Lvl) {
 			mode : 'server',
 			url : Lvl.config.get('service.url') + '/pending/sequences/~',
 			initialize : function(options) {
-				this.oauth2_token = options.oauth2_token
+				this.oauth2_token = options.oauth2_token, this.data_source = options.data_source || 'sandflies'
 			},
 			state : {
 				pageSize : 100,

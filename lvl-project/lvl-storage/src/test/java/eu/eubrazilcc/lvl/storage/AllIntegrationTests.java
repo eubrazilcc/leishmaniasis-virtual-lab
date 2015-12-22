@@ -41,14 +41,15 @@ import org.junit.runners.Suite.SuiteClasses;
 	SandflySampleCollectionTest.class, LeishmaniaSampleCollectionTest.class, TokenCollectionTest.class, AuthCodeCollectionTest.class, 
 	ClientAppCollectionTest.class, ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class, LinkedInStateCollectionTest.class, 
 	NotificationCollectionTest.class, WorkflowRunCollectionTest.class, DatasetCollectionTest.class, LvlInstanceCollectionTest.class, 
-	SavedSearchCollectionTest.class, PendingSequenceCollectionTest.class, LvLQLTest.class, MapReduceTest.class, ActiveMQConnectorTest.class, 
-	SecurityManagerTest.class }) */
+	SavedSearchCollectionTest.class, SandflyPendingCollectionTest.class, LeishmaniaPendingCollectionTest.class, LvLQLTest.class, 
+	MapReduceTest.class, ActiveMQConnectorTest.class, SecurityManagerTest.class }) */
 @SuiteClasses({ LeishmaniaCollectionTest.class, ReferenceCollectionTest.class, SandflySampleCollectionTest.class, 
 	LeishmaniaSampleCollectionTest.class, TokenCollectionTest.class, AuthCodeCollectionTest.class, ClientAppCollectionTest.class, 
 	ResourceOwnerCollectionTest.class, PendingUserCollectionTest.class, LinkedInStateCollectionTest.class, NotificationCollectionTest.class, 
 	WorkflowRunCollectionTest.class, DatasetCollectionTest.class, LvlInstanceCollectionTest.class, SavedSearchCollectionTest.class, 
 	IssueCollectionTest.class, IssueAttachmentCollectionTest.class, SubscriptionRequestCollectionTest.class, 
-	PendingSequenceCollectionTest.class, LvLQLTest.class, MapReduceTest.class, ActiveMQConnectorTest.class, SecurityManagerTest.class })
+	SandflyPendingCollectionTest.class, LeishmaniaPendingCollectionTest.class, LvLQLTest.class, MapReduceTest.class, 
+	ActiveMQConnectorTest.class, SecurityManagerTest.class })
 public class AllIntegrationTests {
 
 	public static final String ANCHOR_FILENAME = "m2anchor";

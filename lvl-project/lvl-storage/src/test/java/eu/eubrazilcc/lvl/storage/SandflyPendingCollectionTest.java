@@ -27,8 +27,8 @@ import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.XmlHelper.yearAsXMLGregorianCalendar;
-import static eu.eubrazilcc.lvl.storage.dao.PendingSequenceDAO.ORIGINAL_SAMPLE_KEY;
-import static eu.eubrazilcc.lvl.storage.dao.PendingSequenceDAO.PENDING_SEQ_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyPendingDAO.ORIGINAL_SAMPLE_KEY;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyPendingDAO.SANDFLY_PENDING_DAO;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.toJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JsonOptions.JSON_PRETTY_PRINTER;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -51,8 +51,8 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
-import eu.eubrazilcc.lvl.core.PendingSequence;
 import eu.eubrazilcc.lvl.core.SamplePreparation;
+import eu.eubrazilcc.lvl.core.SandflyPending;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.Sorting.Order;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
@@ -63,22 +63,22 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
  * Tests pending sequences collection in the database.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PendingSequenceCollectionTest extends LeishvlTestCase {
+public class SandflyPendingCollectionTest extends LeishvlTestCase {
 
-	public PendingSequenceCollectionTest() {
+	public SandflyPendingCollectionTest() {
 		super(true);
 	}
 
 	@Test
 	public void test() {
-		printMsg("PendingSequenceCollectionTest.test()");
+		printMsg("SandflyPendingCollectionTest.test()");
 		try {
 			// create sample
 			final SimpleDarwinRecord sample = DWC_XML_FACTORY.createSimpleDarwinRecord()
 					.withModified(DWC_XML_FACTORY.createSimpleLiteral().withContent("2015-12-01T13:50:08"))
 					.withInstitutionCode("ISCIII-WHO-CCL")
-					.withCollectionCode("ISCIII-Leishmaniasis-collection")
-					.withCatalogNumber("LVL0001")
+					.withCollectionCode("ISCIII-Sandflies-collection")
+					.withCatalogNumber("LVLSF0001")
 					.withRecordedBy("username")
 					.withYear(yearAsXMLGregorianCalendar(2015))
 					.withContinent("Europe")
@@ -97,8 +97,8 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 					.withSpecificEpithet("infantum");
 
 			// insert
-			final PendingSequence pendingSeq = PendingSequence.builder()
-					.id("LVL0001")
+			final SandflyPending pendingSeq = SandflyPending.builder()
+					.id("LVLSF0001")
 					.namespace("username")
 					.sample(sample)
 					.sequence("GCGAAGAGGCTGGGCCAGAGAAAGCAAGACACGAGATGAAGCGGAGGGACACACACACACACACACACATACACACACACACACACACCTCCTCTACCAGAAGGAAAACG")
@@ -110,13 +110,13 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 							.materialType("Parátipo")
 							.build())
 					.build();
-			final WriteResult<PendingSequence> ack = PENDING_SEQ_DAO.insert(pendingSeq);
+			final WriteResult<SandflyPending> ack = SANDFLY_PENDING_DAO.insert(pendingSeq);
 			assertThat("write ack is not null", ack, notNullValue());
 			assertThat("database id is not empty", trim(ack.getId()), allOf(notNullValue(), not(equalTo(""))));
-			printMsg(" >> New record inserted: id=" + ack.getId() + ", record=" + toJson(pendingSeq, JSON_PRETTY_PRINTER));			
-
+			printMsg(" >> New record inserted: id=" + ack.getId() + ", record=" + toJson(pendingSeq, JSON_PRETTY_PRINTER));
+			
 			// find
-			PendingSequence pendingSeq2 = PENDING_SEQ_DAO.find(pendingSeq.getId());
+			SandflyPending pendingSeq2 = SANDFLY_PENDING_DAO.find(pendingSeq.getId());
 			assertThat("pendingSeq is not null", pendingSeq2, notNullValue());
 			assertThat("pendingSeq coincides with original", pendingSeq2, equalTo(pendingSeq));
 			assertThat("pendingSeq contains original sample", pendingSeq2.getSample(), notNullValue());
@@ -124,7 +124,7 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 
 			// duplicates are not allowed
 			try {
-				PENDING_SEQ_DAO.insert(pendingSeq2);
+				SANDFLY_PENDING_DAO.insert(pendingSeq2);
 				fail("Duplicate pendingSeqs are not allowed");
 			} catch (Exception e) {
 				printMsg("Exception caught while trying to insert a duplicate pendingSeq");
@@ -134,8 +134,8 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 			final SimpleDarwinRecord sample1 = DWC_XML_FACTORY.createSimpleDarwinRecord()
 					.withModified(DWC_XML_FACTORY.createSimpleLiteral().withContent("2015-12-02T13:50:08"))
 					.withInstitutionCode("ISCIII-WHO-CCL")
-					.withCollectionCode("ISCIII-Leishmaniasis-collection")
-					.withCatalogNumber("LVL0002")
+					.withCollectionCode("ISCIII-Sandflies-collection")
+					.withCatalogNumber("LVLSF0002")
 					.withRecordedBy("username")
 					.withYear(yearAsXMLGregorianCalendar(2015))
 					.withContinent("Europe")
@@ -152,9 +152,9 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 					.withFamily("Trypanosomatidae")
 					.withGenus("Leishmania")
 					.withSpecificEpithet("infantum");
-			final PendingSequence pendingSeq1 = PendingSequence.builder()
+			final SandflyPending pendingSeq1 = SandflyPending.builder()
 					.links(newArrayList(Link.fromUri("http://example.com/pending/sequence/lvl0002").rel(SELF).type(APPLICATION_JSON).build()))
-					.id("LVL0002")
+					.id("LVLSF0002")
 					.namespace("username")
 					.sample(sample1)
 					.sequence("GCGAAGAGGCTGGGCCAGAGAAAGCAAGACACGAGATGAAGCGGAGGGACACACACACACACACACACATACACACACACACACACACCTCCTCTACCAGAAGGAAAACG")
@@ -166,35 +166,35 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 							.materialType("Parátipo")
 							.build())
 					.build();
-			PENDING_SEQ_DAO.insert(pendingSeq1);
+			SANDFLY_PENDING_DAO.insert(pendingSeq1);
 			pendingSeq1.setLinks(null);			
 
 			// find element after insertion (hard link should be removed)
-			pendingSeq2 = PENDING_SEQ_DAO.find(pendingSeq1.getId());
+			pendingSeq2 = SANDFLY_PENDING_DAO.find(pendingSeq1.getId());
 			assertThat("pendingSeq inserted with hard link is not null", pendingSeq2, notNullValue());
 			assertThat("pendingSeq inserted with hard link coincides with expected", pendingSeq2, equalTo(pendingSeq1));
 			printMsg(" >> Found element inserted with links:\n" + toJson(pendingSeq2, JSON_PRETTY_PRINTER));
 
 			// find all
-			final List<PendingSequence> all = PENDING_SEQ_DAO.findAll();
+			final List<SandflyPending> all = SANDFLY_PENDING_DAO.findAll();
 			printMsg(" >> List all:\n" + toJson(all, JSON_PRETTY_PRINTER));
 
 			// delete
-			PENDING_SEQ_DAO.delete(pendingSeq1.getId());
+			SANDFLY_PENDING_DAO.delete(pendingSeq1.getId());
 
 			// update
 			pendingSeq.getSample().setModified(DWC_XML_FACTORY.createSimpleLiteral().withContent("2015-11-30T11:42:11"));
-			PENDING_SEQ_DAO.update(pendingSeq);
+			SANDFLY_PENDING_DAO.update(pendingSeq);
 
 			// find after update
-			pendingSeq2 = PENDING_SEQ_DAO.find(pendingSeq.getId());
+			pendingSeq2 = SANDFLY_PENDING_DAO.find(pendingSeq.getId());
 			assertThat("pendingSeq is not null", pendingSeq2, notNullValue());
 			assertThat("pendingSeq coincides with original", pendingSeq2, equalTo(pendingSeq));
 			printMsg(" >> Found element after update:\n" + toJson(pendingSeq2, JSON_PRETTY_PRINTER));
 
 			// remove
-			PENDING_SEQ_DAO.delete(pendingSeq.getId());
-			final long numRecords = PENDING_SEQ_DAO.count();
+			SANDFLY_PENDING_DAO.delete(pendingSeq.getId());
+			final long numRecords = SANDFLY_PENDING_DAO.count();
 			assertThat("number of pendingSeq stored in the database coincides with expected", numRecords, equalTo(0l));
 
 			// create a large dataset to test complex operations
@@ -204,27 +204,27 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 				final SimpleDarwinRecord sample3 = DWC_XML_FACTORY.createSimpleDarwinRecord()
 						.withModified(DWC_XML_FACTORY.createSimpleLiteral().withContent("2015-11-30T13:50:08"))
 						.withInstitutionCode("ISCIII-WHO-CCL")
-						.withCollectionCode("ISCIII-Leishmaniasis-collection")
-						.withCatalogNumber("LVL000" + Integer.toString(i))
+						.withCollectionCode("ISCIII-Sandflies-collection")
+						.withCatalogNumber("LVLSF000" + Integer.toString(i))
 						.withYear(yearAsXMLGregorianCalendar(1975 + i))
 						.withStateProvince("This is an example");
-				final PendingSequence pendingSeq3 = PendingSequence.builder()
+				final SandflyPending pendingSeq3 = SandflyPending.builder()
 						.namespace("username")
 						.id(sample3.getCatalogNumber())						
 						.sample(sample3)
 						.sequence("CCCC")
 						.build();
 				ids.add(pendingSeq3.getId());
-				PENDING_SEQ_DAO.insert(pendingSeq3);
+				SANDFLY_PENDING_DAO.insert(pendingSeq3);
 			}
 
 			// pagination
 			final int size = 3;
 			int start = 0;
-			List<PendingSequence> pendingSeqs = null;
+			List<SandflyPending> pendingSeqs = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				pendingSeqs = PENDING_SEQ_DAO.list(start, size, null, null, null, count);
+				pendingSeqs = SANDFLY_PENDING_DAO.list(start, size, null, null, null, count);
 				if (pendingSeqs.size() != 0) {
 					printMsg("Paging: first item " + start + ", showing " + pendingSeqs.size() + " of " + count.getValue() + " items");
 				}
@@ -233,13 +233,13 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 
 			// filter: full-text search
 			ImmutableMap<String, String> filter = of("text", "an example");
-			pendingSeqs = PENDING_SEQ_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
+			pendingSeqs = SANDFLY_PENDING_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered pendingSeq is not null", pendingSeqs, notNullValue());
 			assertThat("number of filtered pendingSeq coincides with expected", pendingSeqs.size(), equalTo(numItems));
 
 			// invalid filter
 			filter = of("filter_name", "filter_content");
-			pendingSeqs = PENDING_SEQ_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
+			pendingSeqs = SANDFLY_PENDING_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered pendingSeq is not null", pendingSeqs, notNullValue());
 			assertThat("number of filtered pendingSeq coincides with expected", pendingSeqs.size(), equalTo(0));
 
@@ -248,11 +248,11 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 					.field("year")
 					.order(Order.ASC)
 					.build();
-			pendingSeqs = PENDING_SEQ_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
+			pendingSeqs = SANDFLY_PENDING_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
 			assertThat("sorted pendingSeq is not null", pendingSeqs, notNullValue());
 			assertThat("number of sorted pendingSeq coincides with expected", pendingSeqs.size(), equalTo(numItems));
 			String last = "-1";
-			for (final PendingSequence cs : pendingSeqs) {
+			for (final SandflyPending cs : pendingSeqs) {
 				assertThat("pendingSeq are properly sorted", Integer.toString(cs.getSample().getYear().getYear()).compareTo(last) >= 0);
 				last = Integer.toString(cs.getSample().getYear().getYear());
 			}
@@ -262,11 +262,11 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 					.field("year")
 					.order(Order.DESC)
 					.build();
-			pendingSeqs = PENDING_SEQ_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
+			pendingSeqs = SANDFLY_PENDING_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
 			assertThat("sorted pendingSeq is not null", pendingSeqs, notNullValue());
 			assertThat("number of sorted pendingSeq coincides with expected", pendingSeqs.size(), equalTo(numItems));
 			last = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
-			for (final PendingSequence cs : pendingSeqs) {
+			for (final SandflyPending cs : pendingSeqs) {
 				assertThat("pendingSeq are properly sorted", Integer.toString(cs.getSample().getYear().getYear()).compareTo(last) <= 0);
 				last = Integer.toString(cs.getSample().getYear().getYear());
 			}
@@ -276,27 +276,27 @@ public class PendingSequenceCollectionTest extends LeishvlTestCase {
 					.field("sort_name")
 					.order(Order.DESC)
 					.build();
-			pendingSeqs = PENDING_SEQ_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
+			pendingSeqs = SANDFLY_PENDING_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
 			assertThat("sorted pendingSeq is not null", pendingSeqs, notNullValue());
 			assertThat("number of sorted pendingSeq coincides with expected", pendingSeqs.size(), equalTo(0));
 
 			// projection
-			pendingSeqs = PENDING_SEQ_DAO.list(0, Integer.MAX_VALUE, null, null, ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), null);
+			pendingSeqs = SANDFLY_PENDING_DAO.list(0, Integer.MAX_VALUE, null, null, ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), null);
 			assertThat("projected pendingSeq is not null", pendingSeqs, notNullValue());
 			assertThat("number of projected pendingSeq coincides with expected", pendingSeqs.size(), equalTo(numItems));
 			assertThat("sample was filtered from database response", pendingSeqs.get((new Random()).nextInt(numItems)).getSample(), nullValue());
 
 			// clean-up and display database statistics
 			for (final String id2 : ids) {			
-				PENDING_SEQ_DAO.delete(id2);
+				SANDFLY_PENDING_DAO.delete(id2);
 			}
-			PENDING_SEQ_DAO.stats(System.out);
+			SANDFLY_PENDING_DAO.stats(System.out);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			fail("PendingSequenceCollectionTest.test() failed: " + e.getMessage());
+			fail("SandflyPendingCollectionTest.test() failed: " + e.getMessage());
 		} finally {			
-			printMsg("PendingSequenceCollectionTest.test() has finished");
+			printMsg("SandflyPendingCollectionTest.test() has finished");
 		}
 	}
 

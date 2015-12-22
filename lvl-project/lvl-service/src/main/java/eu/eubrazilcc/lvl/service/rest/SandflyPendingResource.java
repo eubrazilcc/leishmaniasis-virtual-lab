@@ -37,8 +37,8 @@ import static eu.eubrazilcc.lvl.core.xml.XmlHelper.yearAsXMLGregorianCalendar;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
-import static eu.eubrazilcc.lvl.storage.dao.PendingSequenceDAO.DB_PREFIX;
-import static eu.eubrazilcc.lvl.storage.dao.PendingSequenceDAO.PENDING_SEQ_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyPendingDAO.DB_PREFIX;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyPendingDAO.SANDFLY_PENDING_DAO;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -84,21 +84,22 @@ import com.google.common.collect.ImmutableMap;
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
 import eu.eubrazilcc.lvl.core.PaginableWithNamespace;
 import eu.eubrazilcc.lvl.core.PendingSequence;
+import eu.eubrazilcc.lvl.core.SandflyPending;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
- * {@link PendingSequence} resource.
+ * {@link SandflyPending} resource. 
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/pending/sequences")
-public class PendingSequenceResource {
+@Path("/pending/sandflies")
+public class SandflyPendingResource {
 
-	protected final static Logger LOGGER = getLogger(PendingSequenceResource.class);
+	protected final static Logger LOGGER = getLogger(SandflyPendingResource.class);
 
-	public static final String RESOURCE_NAME = LVL_NAME + " Pending Sequences Resource";
+	public static final String RESOURCE_NAME = LVL_NAME + " Pending Sequences (sandflies) Resource";
 
 	// 2015-12-01T13:50:08
 	public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -106,7 +107,7 @@ public class PendingSequenceResource {
 	@GET
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public PendingSequences getPendingSequences(final @PathParam("namespace") String namespace, 
+	public SandflyPendings getSandflyPendings(final @PathParam("namespace") String namespace, 
 			final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @QueryParam("q") @DefaultValue("") String q,			
@@ -117,7 +118,7 @@ public class PendingSequenceResource {
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":*:view")
 				.getPrincipal();
-		final PendingSequences paginable = PendingSequences.start()
+		final SandflyPendings paginable = SandflyPendings.start()
 				.namespace(namespace2)
 				.page(page)
 				.perPage(per_page)
@@ -130,7 +131,7 @@ public class PendingSequenceResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);		
 		final Sorting sorting = parseSorting(sort, order);
-		final List<PendingSequence> pendingSeqs = PENDING_SEQ_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
+		final List<SandflyPending> pendingSeqs = SANDFLY_PENDING_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
 				ImmutableMap.of(DB_PREFIX + "sequence", false), count, ownerid);
 		paginable.setElements(pendingSeqs);
 		paginable.getExcludedFields().add(DB_PREFIX + "sequence");
@@ -143,7 +144,7 @@ public class PendingSequenceResource {
 	@GET
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
 	@Produces(APPLICATION_JSON)
-	public PendingSequence getPendingSequence(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context UriInfo uriInfo, 
+	public SandflyPending getPendingSequence(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
 		if (isBlank(id)) {
@@ -153,7 +154,7 @@ public class PendingSequenceResource {
 				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":view")
 				.getPrincipal();
 		// get from database
-		final PendingSequence pendingSeq = PENDING_SEQ_DAO.find(id2, ownerid);
+		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id2, ownerid);
 		if (pendingSeq == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -163,7 +164,7 @@ public class PendingSequenceResource {
 	@POST
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public Response createPendingSequence(final @PathParam("namespace") String namespace, final PendingSequence pendingSeq, final @Context UriInfo uriInfo, 
+	public Response createPendingSequence(final @PathParam("namespace") String namespace, final SandflyPending pendingSeq, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace);
 		if (pendingSeq == null || pendingSeq.getSample() == null 
@@ -185,7 +186,7 @@ public class PendingSequenceResource {
 		pendingSeq.getSample().setCatalogNumber(pendingSeq.getId());
 		pendingSeq.getSample().setRecordedBy(pendingSeq.getNamespace());
 		// create entry in the database
-		PENDING_SEQ_DAO.insert(pendingSeq);		
+		SANDFLY_PENDING_DAO.insert(pendingSeq);		
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(pendingSeq.getUrlSafeId());		
 		return Response.created(uriBuilder.build()).build();
 	}
@@ -193,7 +194,7 @@ public class PendingSequenceResource {
 	@PUT
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
 	@Consumes(APPLICATION_JSON)
-	public void updatePendingSequence(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final PendingSequence update, 
+	public void updatePendingSequence(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final SandflyPending update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
 		if (update == null) {
@@ -201,12 +202,12 @@ public class PendingSequenceResource {
 		}
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit");		
 		// get from database
-		final PendingSequence pendingSeq = PENDING_SEQ_DAO.find(id);
+		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id);
 		if (pendingSeq == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// update
-		PENDING_SEQ_DAO.update(update);
+		SANDFLY_PENDING_DAO.update(update);
 	}
 
 	@DELETE
@@ -218,43 +219,43 @@ public class PendingSequenceResource {
 		.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
 		.getPrincipal();
 		// get from database
-		final PendingSequence pendingSeq = PENDING_SEQ_DAO.find(id2);
+		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id2);
 		if (pendingSeq == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}		
 		// delete
-		PENDING_SEQ_DAO.delete(id2);	
+		SANDFLY_PENDING_DAO.delete(id2);	
 	}
 
 	/**
 	 * Wraps a collection of {@link PendingSequence}.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */
-	public static class PendingSequences extends PaginableWithNamespace<PendingSequence> {		
+	public static class SandflyPendings extends PaginableWithNamespace<SandflyPending> {		
 
 		@InjectLinks({
-			@InjectLink(resource=PendingSequenceResource.class, method="getPendingSequences", bindings={
+			@InjectLink(resource=SandflyPendingResource.class, method="getSandflyPendings", bindings={
 					@Binding(name="page", value="${instance.page - 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=PendingSequenceResource.class, method="getPendingSequences", bindings={
+			@InjectLink(resource=SandflyPendingResource.class, method="getSandflyPendings", bindings={
 					@Binding(name="page", value="${0}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=PendingSequenceResource.class, method="getPendingSequences", bindings={
+			@InjectLink(resource=SandflyPendingResource.class, method="getSandflyPendings", bindings={
 					@Binding(name="page", value="${instance.page + 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-			@InjectLink(resource=PendingSequenceResource.class, method="getPendingSequences", bindings={
+			@InjectLink(resource=SandflyPendingResource.class, method="getSandflyPendings", bindings={
 					@Binding(name="page", value="${instance.totalPages - 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
@@ -288,65 +289,65 @@ public class PendingSequenceResource {
 					.toString();
 		}
 
-		public static PendingSequencesBuilder start() {
-			return new PendingSequencesBuilder();
+		public static SandflyPendingsBuilder start() {
+			return new SandflyPendingsBuilder();
 		}
 
-		public static class PendingSequencesBuilder {
+		public static class SandflyPendingsBuilder {
 
-			private final PendingSequences instance = new PendingSequences();
+			private final SandflyPendings instance = new SandflyPendings();
 
-			public PendingSequencesBuilder namespace(final String namespace) {
+			public SandflyPendingsBuilder namespace(final String namespace) {
 				instance.setNamespace(trimToEmpty(namespace));
 				return this;
 			}
 
-			public PendingSequencesBuilder page(final int page) {
+			public SandflyPendingsBuilder page(final int page) {
 				instance.setPage(page);
 				return this;
 			}
 
-			public PendingSequencesBuilder perPage(final int perPage) {
+			public SandflyPendingsBuilder perPage(final int perPage) {
 				instance.setPerPage(perPage);
 				return this;
 			}
 
-			public PendingSequencesBuilder sort(final String sort) {
+			public SandflyPendingsBuilder sort(final String sort) {
 				instance.setSort(sort);
 				return this;
 			}
 
-			public PendingSequencesBuilder order(final String order) {
+			public SandflyPendingsBuilder order(final String order) {
 				instance.setOrder(order);
 				return this;
 			}
 
-			public PendingSequencesBuilder query(final String query) {
+			public SandflyPendingsBuilder query(final String query) {
 				instance.setQuery(query);
 				return this;
 			}
 
-			public PendingSequencesBuilder formattedQuery(final List<FormattedQueryParam> formattedQuery) {
+			public SandflyPendingsBuilder formattedQuery(final List<FormattedQueryParam> formattedQuery) {
 				instance.setFormattedQuery(formattedQuery);
 				return this;
 			}
 
-			public PendingSequencesBuilder totalCount(final int totalCount) {
+			public SandflyPendingsBuilder totalCount(final int totalCount) {
 				instance.setTotalCount(totalCount);
 				return this;
 			}
 
-			public PendingSequencesBuilder hash(final String hash) {
+			public SandflyPendingsBuilder hash(final String hash) {
 				instance.setHash(hash);
 				return this;
 			}
 
-			public PendingSequencesBuilder pendingSequence(final List<PendingSequence> pendingSequence) {
+			public SandflyPendingsBuilder pendingSequence(final List<SandflyPending> pendingSequence) {
 				instance.setElements(pendingSequence);
 				return this;
 			}
 
-			public PendingSequences build() {
+			public SandflyPendings build() {
 				return instance;
 			}
 

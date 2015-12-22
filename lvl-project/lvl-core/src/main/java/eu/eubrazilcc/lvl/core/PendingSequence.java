@@ -24,32 +24,13 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
-import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
-import java.util.List;
 import java.util.Objects;
 
-import javax.ws.rs.core.Link;
-
-import org.glassfish.jersey.linking.Binding;
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.InjectLinks;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
-import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
 
 /**
@@ -57,23 +38,7 @@ import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
  * could be incomplete or inaccurate.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PendingSequence implements Linkable<PendingSequence> {
-
-	@InjectLinks({
-		@InjectLink(value="pending/sequences/{urlSafeNamespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
-				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
-				@Binding(name="urlSafeId", value="${instance.urlSafeId}")
-		})
-	})
-	@JsonSerialize(using = LinkListSerializer.class)
-	@JsonDeserialize(using = LinkListDeserializer.class)
-	@JsonProperty("links")
-	private List<Link> links; // HATEOAS links
-
-	@JsonIgnore
-	private String urlSafeNamespace;
-	@JsonIgnore
-	private String urlSafeId;
+public class PendingSequence {
 
 	private String namespace;          // Name space where the record is inscribed
 	private String id;                 // Resource identifier	
@@ -85,43 +50,12 @@ public class PendingSequence implements Linkable<PendingSequence> {
 		setNamespace(LVL_DEFAULT_NS);
 	}
 
-	@Override
-	public List<Link> getLinks() {
-		return links;
-	}
-
-	@Override
-	public void setLinks(final List<Link> links) {
-		if (links != null) {
-			this.links = newArrayList(links);
-		} else {
-			this.links = null;
-		}
-	}
-
-	public String getUrlSafeNamespace() {
-		return urlSafeNamespace;
-	}
-
-	public void setUrlSafeNamespace(final String urlSafeNamespace) {
-		this.urlSafeNamespace = urlSafeNamespace;
-	}
-
-	public String getUrlSafeId() {
-		return urlSafeId;
-	}
-
-	public void setUrlSafeId(final String urlSafeId) {
-		this.urlSafeId = urlSafeId;
-	}
-
 	public String getNamespace() {
 		return namespace;
 	}
 
 	public void setNamespace(final String namespace) {
-		this.namespace = namespace;
-		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(namespace, LVL_DEFAULT_NS).trim()));
+		this.namespace = namespace;		
 	}
 
 	public String getId() {
@@ -129,8 +63,7 @@ public class PendingSequence implements Linkable<PendingSequence> {
 	}
 
 	public void setId(final String id) {
-		this.id = id;
-		setUrlSafeId(id != null ? urlEncodeUtf8(trimToEmpty(id)) : id);
+		this.id = id;		
 	}
 
 	public SimpleDarwinRecord getSample() {
@@ -163,17 +96,6 @@ public class PendingSequence implements Linkable<PendingSequence> {
 			return false;
 		}
 		final PendingSequence other = PendingSequence.class.cast(obj);
-		return Objects.equals(links, other.links)
-				&& Objects.equals(urlSafeNamespace, other.urlSafeNamespace)
-				&& Objects.equals(urlSafeId, other.urlSafeId)
-				&& equalsIgnoringVolatile(other);
-	}
-
-	@Override
-	public boolean equalsIgnoringVolatile(final PendingSequence other) {
-		if (other == null) {
-			return false;
-		}
 		return Objects.equals(namespace, other.namespace)
 				&& Objects.equals(id, other.id)
 				// && Objects.equals(sample, other.sample)
@@ -183,15 +105,12 @@ public class PendingSequence implements Linkable<PendingSequence> {
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, urlSafeNamespace, urlSafeId, namespace, id, sequence, preparation);
+		return Objects.hash(namespace, id, sequence, preparation);
 	}
 
 	@Override
 	public String toString() {
-		return toStringHelper(this)
-				.add("links", links)
-				.add("urlSafeNamespace", urlSafeNamespace)
-				.add("urlSafeId", urlSafeId)
+		return toStringHelper(this)				
 				.add("namespace", namespace)
 				.add("id", id)
 				.add("sample", "<<original sample is not displayed>>")
@@ -202,47 +121,46 @@ public class PendingSequence implements Linkable<PendingSequence> {
 
 	/* Fluent API */
 
-	public static Builder builder() {
-		return new Builder();
-	}	
+	public static class Builder<T extends PendingSequence> {
 
-	public static class Builder {
+		protected final T instance;
 
-		private final PendingSequence instance = new PendingSequence();
-
-		public Builder links(final List<Link> links) {
-			instance.setLinks(links);
-			return this;
+		public Builder(final Class<T> clazz) {
+			T tmp = null;
+			try {
+				tmp = clazz.newInstance();
+			} catch (Exception ignore) { }
+			instance = tmp;
 		}
 
-		public Builder namespace(final String namespace) {
+		public Builder<T> namespace(final String namespace) {
 			instance.setNamespace(trimToEmpty(namespace));
 			return this;
 		}
 
-		public Builder id(final String id) {
+		public Builder<T> id(final String id) {
 			String id2 = null;
 			checkArgument(isNotBlank(id2 = trimToNull(id)), "Uninitialized or invalid id");
 			instance.setId(id2);
 			return this;
 		}
 
-		public Builder sample(final SimpleDarwinRecord sample) {
+		public Builder<T> sample(final SimpleDarwinRecord sample) {
 			instance.setSample(sample);
 			return this;
 		}
 
-		public Builder sequence(final String sequence) {
+		public Builder<T> sequence(final String sequence) {
 			instance.setSequence(sequence);
 			return this;
 		}
 
-		public Builder preparation(final SamplePreparation preparation) {
+		public Builder<T> preparation(final SamplePreparation preparation) {
 			instance.setPreparation(preparation);
 			return this;
 		}
 
-		public PendingSequence build() {
+		public T build() {
 			return instance;
 		}
 

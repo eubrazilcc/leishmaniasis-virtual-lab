@@ -25,7 +25,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
-import static eu.eubrazilcc.lvl.core.CollectionNames.PENDING_SEQ_COLLECTION;
+import static eu.eubrazilcc.lvl.core.CollectionNames.SANDFLY_PENDING_COLLECTION;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
@@ -59,7 +59,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.PendingSequence;
+import eu.eubrazilcc.lvl.core.SandflyPending;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
@@ -70,23 +70,23 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore;
 
 /**
- * {@link PendingSequence} DAO.
+ * {@link SandflyPending} DAO.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequence> {
+public enum SandflyPendingDAO implements AuthenticatedDAO<String, SandflyPending> {
 
-	PENDING_SEQ_DAO;
+	SANDFLY_PENDING_DAO;
 
-	private final static Logger LOGGER = getLogger(PendingSequenceDAO.class);
+	private final static Logger LOGGER = getLogger(SandflyPendingDAO.class);
 
-	public static final String COLLECTION    = PENDING_SEQ_COLLECTION;
-	public static final String DB_PREFIX     = "pendingSequence.";
+	public static final String COLLECTION    = SANDFLY_PENDING_COLLECTION;
+	public static final String DB_PREFIX     = "sandflyPending.";
 	public static final String PRIMARY_KEY   = DB_PREFIX + "id";
 	public static final String NAMESPACE_KEY = DB_PREFIX + "namespace";
 
 	public static final String ORIGINAL_SAMPLE_KEY = DB_PREFIX + "sample";
 
-	private PendingSequenceDAO() {
+	private SandflyPendingDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		MONGODB_CONN.createNonUniqueIndex(NAMESPACE_KEY, COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".collectionCode", COLLECTION, false);
@@ -108,25 +108,25 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 	}
 
 	@Override
-	public WriteResult<PendingSequence> insert(final PendingSequence pendingSeq) {
+	public WriteResult<SandflyPending> insert(final SandflyPending pendingSeq) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<PendingSequence> store = startStore(pendingSeq);
+		final LinkableTransientStore<SandflyPending> store = startStore(pendingSeq);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return new WriteResult.Builder<PendingSequence>().id(id).build();
+		return new WriteResult.Builder<SandflyPending>().id(id).build();
 	}
 
 	@Override
-	public WriteResult<PendingSequence> insert(final PendingSequence pendingSeq, final boolean ignoreDuplicates) {
+	public WriteResult<SandflyPending> insert(final SandflyPending pendingSeq, final boolean ignoreDuplicates) {
 		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
-	public PendingSequence update(final PendingSequence pendingSeq) {
+	public SandflyPending update(final SandflyPending pendingSeq) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<PendingSequence> store = startStore(pendingSeq);
+		final LinkableTransientStore<SandflyPending> store = startStore(pendingSeq);
 		final DBObject obj = map(store);
 		MONGODB_CONN.update(obj, key(pendingSeq.getId()), COLLECTION);
 		// restore transient fields
@@ -140,34 +140,34 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 	}
 
 	@Override
-	public List<PendingSequence> findAll() {
+	public List<SandflyPending> findAll() {
 		return findAll(null);
 	}
 
 	@Override
-	public List<PendingSequence> findAll(final String user) {
+	public List<SandflyPending> findAll(final String user) {
 		return list(0, Integer.MAX_VALUE, null, null, null, null, user);
 	}
 
 	@Override
-	public PendingSequence find(final String path) {	
+	public SandflyPending find(final String path) {	
 		return find(path, null);
 	}
 
 	@Override
-	public PendingSequence find(final String path, final String user) {
+	public SandflyPending find(final String path, final String user) {
 		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(path, user) : key(path), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
-	public List<PendingSequence> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+	public List<SandflyPending> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		return list(start, size, filter, sorting, projection, count, null);
 	}	
 
 	@Override
-	public List<PendingSequence> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
+	public List<SandflyPending> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String user) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
@@ -186,9 +186,9 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 			return newArrayList();
 		}
 		// execute the query in the database
-		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, PendingSequence>() {
+		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, SandflyPending>() {
 			@Override
-			public PendingSequence apply(final BasicDBObject obj) {				
+			public SandflyPending apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);
 			}
 		});
@@ -205,22 +205,22 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 	}
 
 	@Override
-	public List<PendingSequence> getNear(final Point point, final double maxDistance) {
+	public List<SandflyPending> getNear(final Point point, final double maxDistance) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<PendingSequence> getNear(final Point point, final double maxDistance, final String user) {
+	public List<SandflyPending> getNear(final Point point, final double maxDistance, final String user) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<PendingSequence> geoWithin(final Polygon polygon) {
+	public List<SandflyPending> geoWithin(final Polygon polygon) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<PendingSequence> geoWithin(final Polygon polygon, final String user) {
+	public List<SandflyPending> geoWithin(final Polygon polygon, final String user) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
@@ -348,35 +348,35 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 		return query2;
 	}
 
-	private PendingSequence parseBasicDBObject(final BasicDBObject obj) {
-		return map(obj).getPendingSequence();
+	private SandflyPending parseBasicDBObject(final BasicDBObject obj) {
+		return map(obj).getSandflyPending();
 	}
 
-	private PendingSequence parseBasicDBObjectOrNull(final BasicDBObject obj) {
-		PendingSequence pendingSeq = null;
+	private SandflyPending parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		SandflyPending pendingSeq = null;
 		if (obj != null) {
-			final PendingSequenceEntity entity = map(obj);
+			final SandflyPendingEntity entity = map(obj);
 			if (entity != null) {
-				pendingSeq = entity.getPendingSequence();
+				pendingSeq = entity.getSandflyPending();
 			}
 		}
 		return pendingSeq;
 	}
 
-	private DBObject map(final LinkableTransientStore<PendingSequence> store) {
+	private DBObject map(final LinkableTransientStore<SandflyPending> store) {
 		DBObject obj = null;
 		try {
-			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new PendingSequenceEntity(store.purge())));
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new SandflyPendingEntity(store.purge())));
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Failed to write saved search to DB object", e);
 		}
 		return obj;
 	}	
 
-	private PendingSequenceEntity map(final BasicDBObject obj) {
-		PendingSequenceEntity entity = null;
+	private SandflyPendingEntity map(final BasicDBObject obj) {
+		SandflyPendingEntity entity = null;
 		try {
-			entity = JSON_MAPPER.readValue(obj.toString(), PendingSequenceEntity.class);		
+			entity = JSON_MAPPER.readValue(obj.toString(), SandflyPendingEntity.class);		
 		} catch (IOException e) {
 			LOGGER.error("Failed to read saved search from DB object", e);
 		}
@@ -384,22 +384,22 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 	}	
 
 	/**
-	 * {@link PendingSequence} entity.
+	 * {@link SandflyPending} entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */	
-	public static class PendingSequenceEntity {
+	public static class SandflyPendingEntity {
 
 		@JsonSerialize(using = ObjectIdSerializer.class)
 		@JsonDeserialize(using = ObjectIdDeserializer.class)
 		@JsonProperty("_id")
 		private ObjectId id;
 
-		private PendingSequence pendingSequence;
+		private SandflyPending sandflyPending;
 
-		public PendingSequenceEntity() { }
+		public SandflyPendingEntity() { }
 
-		public PendingSequenceEntity(final PendingSequence pendingSequence) {
-			setPendingSequence(pendingSequence);
+		public SandflyPendingEntity(final SandflyPending sandflyPending) {
+			setSandflyPending(sandflyPending);
 		}
 
 		public ObjectId getId() {
@@ -410,12 +410,12 @@ public enum PendingSequenceDAO implements AuthenticatedDAO<String, PendingSequen
 			this.id = id;
 		}
 
-		public PendingSequence getPendingSequence() {
-			return pendingSequence;
+		public SandflyPending getSandflyPending() {
+			return sandflyPending;
 		}
 
-		public void setPendingSequence(final PendingSequence pendingSequence) {
-			this.pendingSequence = pendingSequence;
+		public void setSandflyPending(final SandflyPending sandflyPending) {
+			this.sandflyPending = sandflyPending;
 		}
 
 	}

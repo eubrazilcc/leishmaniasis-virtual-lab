@@ -2,19 +2,19 @@
  * RequireJS module that defines the controller: collection->pending.
  */
 
-define([ 'app', 'entities/sequence', 'apps/collection/pending/collection_pending_view' ], function(Lvl, SequenceModel, View) {
+define([ 'app', 'entities/pending_sequence', 'apps/collection/pending/collection_pending_view' ], function(Lvl, PendingSequenceModel, View) {
 	Lvl.module('CollectionApp.Pending', function(Pending, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Pending.Controller = {
-			showSection : function(id) {
+			showSection : function(id) {				
 				var collectionId = id || 'sandflies';
 				var view = new View.Content({
-					collection : new SequenceModel.SequencePageableCollection({
+					collection : new PendingSequenceModel.PendingSequencePageableCollection({
 						oauth2_token : Lvl.config.authorizationToken(),
 						data_source : collectionId
 					})
 				});
-				view.on('sequences:view:sequence', function(collectionId, accession) {
+				/* TODO view.on('sequences:view:sequence', function(collectionId, accession) {
 					require([ 'apps/collection/sequence_viewer/collection_sequence_viewer', 'entities/gb_sequence' ], function(SequenceView, GbSequenceModel) {
 						var gbSequenceModel = new GbSequenceModel.GbSequence({
 							'dataSource' : collectionId,
@@ -26,19 +26,7 @@ define([ 'app', 'entities/sequence', 'apps/collection/pending/collection_pending
 						});
 						Lvl.dialogRegion.show(dialogView);
 					});
-				});
-				view.on('sequences:file:export', function(collectionId, selectedModels) {
-					require([ 'apps/collection/export/export_view' ], function(EditView) {
-						var sequences = selectedModels.filter(function(element) {
-							return element !== undefined && element !== null;
-						});
-						var dialogView = new EditView.Content({
-							collection : new SequenceModel.SequenceCollection(sequences),
-							data_source : collectionId
-						});
-						Lvl.dialogRegion.show(dialogView);
-					});
-				});
+				}); */
 				Lvl.mainRegion.currentView.tabContent.show(view);
 				return View.Content.id;
 			}
