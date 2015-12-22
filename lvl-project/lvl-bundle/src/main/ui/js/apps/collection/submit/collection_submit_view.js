@@ -208,6 +208,7 @@ define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', '
 					require([ 'entities/pending_sequence' ], function(PendingSequenceModel) {
 						var pendingSeq = new PendingSequenceModel.PendingSequenceCreate();
 						pendingSeq.oauth2_token = Lvl.config.authorizationToken();
+						pendingSeq.data_source = organism;
 						pendingSeq.save({
 							'sample' : {							
 							    'institutionCode' : formData.inputInstitution,
