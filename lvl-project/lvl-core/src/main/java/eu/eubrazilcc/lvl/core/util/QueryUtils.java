@@ -56,7 +56,7 @@ public final class QueryUtils {
 	private static final char STRIKE_MARK = ' ';
 	private static final String KEYWORD_SEPARATOR = ":";
 	private static final String QUOTES = "\"";
-	private static final Pattern KEYWORD_PATTERN = Pattern.compile("[^\\s^\"]+:[^\\s^\"]+|[^\\s^\"]+:\"\\w+[\\s|\\w|\\-]*\"");
+	private static final Pattern KEYWORD_PATTERN = Pattern.compile("[^\\s\"]+:[^\\s\"]+|[^\\s\"]+:\"[!|\\w]+[\\s|\\w|\\-|@]*\"");
 	private static final String TEXT_FIELD = "text";
 	private static final Pattern CONTAINS_SPACE_PATTERN = Pattern.compile(".*\\s.*");
 

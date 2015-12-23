@@ -71,6 +71,8 @@ public class QueryUtilsTest {
 					.put("keyword:value", Pair.of("keyword", "value"))
 					.put("keyword:\"value\"", Pair.of("keyword", "value"))
 					.put("catalogNumber:\"9f9c5951-d147-461d-9dc9-469443023d65\"", Pair.of("catalogNumber", "9f9c5951-d147-461d-9dc9-469443023d65"))
+					.put("author:\"!user1@lvl\"", Pair.of("author", "!user1@lvl"))
+					.put("author:!user1@lvl", Pair.of("author", "!user1@lvl"))
 					.build();
 			for (final Map.Entry<String, Pair<String, String>> e : queries.entrySet()) {
 				filter = parseQuery(e.getKey());

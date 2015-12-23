@@ -61,6 +61,9 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eu.eubrazilcc.lvl.core.community.Post;
+import eu.eubrazilcc.lvl.core.community.PostCategory;
+import eu.eubrazilcc.lvl.core.community.PostLevel;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.support.Issue;
@@ -140,6 +143,12 @@ public class JsonMappingTest extends LeishvlTestCase {
 					.article(article)
 					.build();
 			assertThat("reference is not null", reference, notNullValue());
+
+			final PendingReference pendingReference = PendingReference.builder()
+					.pubmedId("ADGJ87950")
+					.seqids(newHashSet("gb:ABC12345678"))
+					.sampleids(newHashSet("colfleb:123", "isciii:456"))
+					.build();
 
 			File sampleFile = getDarwinCoreSets().stream().filter(file -> {
 				return file.getAbsolutePath().contains("colfleb");
@@ -277,7 +286,17 @@ public class JsonMappingTest extends LeishvlTestCase {
 					.description("Problem description")
 					.opened(new Date())
 					.build();
-			assertThat("issue is not null", issue, notNullValue());			
+			assertThat("issue is not null", issue, notNullValue());
+
+			final Post post = Post.builder()
+					.newId()
+					.created(new Date())
+					.category(PostCategory.ANNOUNCEMENT)
+					.author("someone@lvl")
+					.level(PostLevel.NORMAL)
+					.body("New version released!")
+					.build();
+			assertThat("post is not null", post, notNullValue());
 
 			// test GenBank sequence
 			testGenBankSequence(gbSeq);
@@ -305,6 +324,13 @@ public class JsonMappingTest extends LeishvlTestCase {
 			// test references with links
 			reference.setLinks(newArrayList(refLink));
 			testReference(reference);
+
+			// test pending references with no links
+			testPendingReference(pendingReference);
+
+			// test pending references with links
+			reference.setLinks(newArrayList(refLink));
+			testPendingReference(pendingReference);			
 
 			// test COLFLEB samples with no links
 			testColflebSample(colflebSample);
@@ -368,6 +394,13 @@ public class JsonMappingTest extends LeishvlTestCase {
 			// test issue with links
 			issue.setLinks(newArrayList(refLink));
 			testIssue(issue);
+
+			// test posts
+			testPost(post);
+
+			// test posts with links
+			post.setLinks(newArrayList(refLink));
+			testPost(post);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
@@ -445,6 +478,20 @@ public class JsonMappingTest extends LeishvlTestCase {
 		final Reference reference2 = JSON_MAPPER.readValue(payload, Reference.class);
 		assertThat("deserialized reference is not null", reference2, notNullValue());
 		assertThat("deserialized reference coincides with expected", reference2, equalTo(reference));
+	}
+
+	private void testPendingReference(final PendingReference pendingReference) throws IOException {
+		// test pending reference JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(pendingReference);
+		assertThat("serialized pending reference is not null", payload, notNullValue());
+		assertThat("serialized pending reference is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		printMsg(" >> Serialized pending reference (JSON): " + payload);
+
+		// test reference JSON deserialization
+		final PendingReference pendingReference2 = JSON_MAPPER.readValue(payload, PendingReference.class);
+		assertThat("deserialized pending reference is not null", pendingReference2, notNullValue());
+		assertThat("deserialized pending reference coincides with expected", pendingReference2, equalTo(pendingReference));
 	}
 
 	private void testColflebSample(final SandflySample sample) throws IOException {
@@ -571,6 +618,20 @@ public class JsonMappingTest extends LeishvlTestCase {
 		final Issue issue2 = JSON_MAPPER.readValue(payload, Issue.class);
 		assertThat("deserialized issue is not null", issue2, notNullValue());
 		assertThat("deserialized issue coincides with expected", issue2, equalTo(issue));
+	}
+
+	private void testPost(final Post post) throws IOException {
+		// test instance JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(post);		
+		assertThat("serialized post is not null", payload, notNullValue());
+		assertThat("serialized post is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		printMsg(" >> Serialized post (JSON): " + payload);
+
+		// test instance JSON deserialization
+		final Post post2 = JSON_MAPPER.readValue(payload, Post.class);
+		assertThat("deserialized post is not null", post2, notNullValue());
+		assertThat("deserialized post coincides with expected", post2, equalTo(post));
 	}
 
 }

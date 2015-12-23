@@ -77,7 +77,7 @@ public final class PermissionHelper {
 	public static final char PERMISSION_LEVEL_SEPARATOR = ':';
 	public static final char PERMISSION_VALUE_SEPARATOR = ',';
 
-	public static final int NUMBER_OF_PERMISSIONS_GRANTED_TO_REGULAR_USERS = 14;
+	public static final int NUMBER_OF_PERMISSIONS_GRANTED_TO_REGULAR_USERS = 16;
 
 	/**
 	 * Permissions granted to the users with the role {@link #ADMIN_ROLE}.
@@ -100,7 +100,8 @@ public final class PermissionHelper {
 				"samples:*:public:*:view",
 				"citations:*:public:*:view",
 				"pipelines:*:public:*:view",
-				"datasets:*:public:*:view");
+				"datasets:*:public:*:view",
+				"posts:*:*:*:view");
 	}
 
 	/**
@@ -120,6 +121,7 @@ public final class PermissionHelper {
 				"sequences:*:" + ownerid2 + ":*:view,edit,create",
 				"citations:*:" + ownerid2 + ":*:view,edit,create",
 				"datasets:files:" + ownerid2 + ":*:view,edit,create",
+				"posts:*:" + ownerid2 + ":*:view,edit,create",
 				"pipelines:runs:" + ownerid2 + ":*:view,edit,create",
 				"notifications:*:" + ownerid2 + ":*:view,edit",
 				"saved:searches:" + ownerid2 + ":*:view,edit,create");

@@ -3,17 +3,34 @@
  */
 
 define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps/collection/pending/tpls/toolbar_pending', 'tpl!common/search/tpls/search_term',
-		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/pending_sequence', 'entities/saved_search', 'entities/identifier', 'pace',
+		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/pending_sequence', 'entities/saved_search', 'entities/identifier', 'pace', 'moment',
 		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter', 'common/ext/backgrid_ext' ], function(Lvl, PendingTpl,
-		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, PendingSequenceEntity, SavedSearchEntity, IdentifierEntity, pace, mapCn) {
+		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, PendingSequenceEntity, SavedSearchEntity, IdentifierEntity, pace, moment, mapCn) {
 	Lvl.module('CollectionApp.Pending.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
-				{
+				/*{
 					name : 'id',
 					label : 'Id',
 					editable : false,
 					cell : 'string'
+				},*/
+				{
+					name : 'sample',
+					label : 'Modified',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue['modified'] === 'object') {
+								this.$el.append('<i class="fa fa-clock-o fa-fw"></i> ' + moment(formattedValue['modified'].content, "YYYY-MM-DDTHH:mm:ss").format('MMM DD[,] YYYY [at] HH[:]mm'));
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
 				},
 				{
 					name : 'sample',
@@ -22,11 +39,11 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));							
+							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue['institutionCode'] === 'string') {
 								this.$el.append(formattedValue['institutionCode']);
-							}							
+							}
 							this.delegateEvents();
 							return this;
 						}

@@ -33,7 +33,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 	</appender>
 
 	<logger name="eu.eubrazilcc.lvl.service.actor" level="DEBUG" />
-	<logger name="eu.eubrazilcc.lvl" level="TRACE" />	
+	<logger name="eu.eubrazilcc.lvl" level="TRACE" />
 	<logger name="org.apache.activemq" level="WARN"/>
 	<logger name="org.apache.activemq.spring" level="WARN"/>
 	<logger name="org.apache.xbean.spring" level="WARN"/>

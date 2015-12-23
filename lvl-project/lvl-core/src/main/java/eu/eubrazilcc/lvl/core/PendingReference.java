@@ -23,9 +23,16 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,39 +44,46 @@ import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
-import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 
 /**
- * Stores a publication reference as a subset of PubMed fields (since publications comes from PubMed) annotated 
- * with additional fields. In particular, a GeoJSON point is included that allows callers to georeference the sequence.
+ * Stores a user citation that is pending for sanitation and later approval. Therefore, this records
+ * could be incomplete or inaccurate.
  * @author Erik Torres <ertorser@upv.es>
- * @see <a href="http://geojson.org/">GeoJSON open standard format for encoding geographic data structures</a>
  */
-public class Reference implements Linkable<Reference> {
+public class PendingReference implements Linkable<PendingReference> {
 
 	@InjectLinks({
-		@InjectLink(value="citations/{id}", rel=SELF, type=APPLICATION_JSON, bindings={@Binding(name="id", value="${instance.pubmedId}")})
+		@InjectLink(value="pending/citations/{urlSafeNamespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
+				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
+				@Binding(name="urlSafeId", value="${instance.urlSafeId}")
+		})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
-	private List<Link> links;      // HATEOAS links
+	private List<Link> links; // HATEOAS links
 
-	private String title;          // Title of the published work
-	private String pubmedId;       // PubMed Identifier (PMID)
-	private int publicationYear;   // Journal publication year
+	@JsonIgnore
+	private String urlSafeNamespace;
+	@JsonIgnore
+	private String urlSafeId;
+
+	private String namespace;      // Name space where the record is inscribed
+	private String id;             // Resource identifier	
+	private String pubmedId;       // PubMed Identifier (PMID)	
 	private Set<String> seqids;    // Sequences mentioned in this publication (must include database and accession number)
 	private Set<String> sampleids; // Samples mentioned in this publication (must include collection and catalog number)
 
-	private PubmedArticle article; // Original PubMed article
-
-	public Reference() { }
+	public PendingReference() {
+		setNamespace(LVL_DEFAULT_NS);
+	}
 
 	@Override
 	public List<Link> getLinks() {
@@ -85,12 +99,38 @@ public class Reference implements Linkable<Reference> {
 		}
 	}
 
-	public String getTitle() {
-		return title;
+	public String getUrlSafeNamespace() {
+		return urlSafeNamespace;
 	}
 
-	public void setTitle(final String title) {
-		this.title = title;
+	public void setUrlSafeNamespace(final String urlSafeNamespace) {
+		this.urlSafeNamespace = urlSafeNamespace;
+	}
+
+	public String getUrlSafeId() {
+		return urlSafeId;
+	}
+
+	public void setUrlSafeId(final String urlSafeId) {
+		this.urlSafeId = urlSafeId;
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public void setNamespace(final String namespace) {
+		this.namespace = namespace;
+		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(namespace, LVL_DEFAULT_NS).trim()));
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
+		setUrlSafeId(id != null ? urlEncodeUtf8(trimToEmpty(id)) : id);
 	}
 
 	public String getPubmedId() {
@@ -99,14 +139,6 @@ public class Reference implements Linkable<Reference> {
 
 	public void setPubmedId(final String pubmedId) {
 		this.pubmedId = pubmedId;
-	}
-
-	public int getPublicationYear() {
-		return publicationYear;
-	}
-
-	public void setPublicationYear(final int publicationYear) {
-		this.publicationYear = publicationYear;
 	}
 
 	public Set<String> getSeqids() {
@@ -125,52 +157,42 @@ public class Reference implements Linkable<Reference> {
 		this.sampleids = sampleids;
 	}
 
-	public PubmedArticle getArticle() {
-		return article;
-	}
-
-	public void setArticle(final PubmedArticle article) {
-		this.article = article;
-	}
-
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof Reference)) {
+		if (obj == null || !(obj instanceof PendingReference)) {
 			return false;
 		}
-		final Reference other = Reference.class.cast(obj);
+		final PendingReference other = PendingReference.class.cast(obj);
 		return Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);		
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final Reference other) {
+	public boolean equalsIgnoringVolatile(final PendingReference other) {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equals(title, other.title)
+		return Objects.equals(namespace, other.namespace)
+				&& Objects.equals(id, other.id)
 				&& Objects.equals(pubmedId, other.pubmedId)
-				&& Objects.equals(publicationYear, other.publicationYear)
 				&& Objects.equals(seqids, other.seqids)
 				&& Objects.equals(sampleids, other.sampleids);
-		// article
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, title, pubmedId, seqids, sampleids); // article
+		return Objects.hash(links, namespace, id, pubmedId, seqids, sampleids);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("links", links)
-				.add("title", title)
+				.add("namespace", namespace)
+				.add("id", id)
 				.add("pubmedId", pubmedId)
-				.add("publicationYear", publicationYear)
 				.add("seqids", seqids)
 				.add("sampleids", sampleids)
-				.add("article", "<<original article is not displayed>>")
 				.toString();
 	}
 
@@ -182,25 +204,27 @@ public class Reference implements Linkable<Reference> {
 
 	public static class Builder {
 
-		private final Reference instance = new Reference();
+		private final PendingReference instance = new PendingReference();
 
 		public Builder links(final List<Link> links) {
 			instance.setLinks(links);
 			return this;
 		}
 
-		public Builder title(final String title) {
-			instance.setTitle(title);
+		public Builder namespace(final String namespace) {
+			instance.setNamespace(trimToEmpty(namespace));
+			return this;
+		}
+
+		public Builder id(final String id) {
+			String id2 = null;
+			checkArgument(isNotBlank(id2 = trimToNull(id)), "Uninitialized or invalid id");
+			instance.setId(id2);
 			return this;
 		}
 
 		public Builder pubmedId(final String pubmedId) {
 			instance.setPubmedId(pubmedId);
-			return this;
-		}
-
-		public Builder publicationYear(final int publicationYear) {
-			instance.setPublicationYear(publicationYear);
 			return this;
 		}
 
@@ -214,12 +238,7 @@ public class Reference implements Linkable<Reference> {
 			return this;
 		}
 
-		public Builder article(final PubmedArticle article) {
-			instance.setArticle(article);
-			return this;
-		}
-
-		public Reference build() {
+		public PendingReference build() {
 			return instance;
 		}
 

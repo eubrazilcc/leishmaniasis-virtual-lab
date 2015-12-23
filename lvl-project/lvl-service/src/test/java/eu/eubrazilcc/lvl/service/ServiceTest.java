@@ -77,6 +77,7 @@ import eu.eubrazilcc.lvl.service.testable.IssuesResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaSampleResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LvlInstanceResourceTest;
+import eu.eubrazilcc.lvl.service.testable.PostResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflyPendingResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflyResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflySampleResourceTest;
@@ -228,7 +229,7 @@ public class ServiceTest {
 					"user1", new TestCredential(ownerId1, TOKEN_USER1), 
 					"user2", new TestCredential(ownerId2, TOKEN_USER2), 
 					"user3", new TestCredential(ownerId3, TOKEN_USER3)));
-
+			
 			// test task resource
 			new TaskResourceTest(testCtxt).runTest();
 
@@ -267,6 +268,9 @@ public class ServiceTest {
 
 			// test saved search resource
 			new SavedSearchResourceTest(testCtxt).runTest();
+			
+			// test post resource
+			new PostResourceTest(testCtxt).runTest();
 
 			// test issues resource
 			new IssuesResourceTest(testCtxt).runTest();

@@ -259,7 +259,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<configuration>
-					<argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC</argLine>
+					<!-- <argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC</argLine> -->
 					<!-- Configure integration tests to go through the JUnit test suite -->
 					<includes>
 						<include>**/AllIntegrationTests.java</include>

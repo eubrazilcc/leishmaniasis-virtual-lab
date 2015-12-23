@@ -240,7 +240,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						<artifactId>maven-surefire-plugin</artifactId>
 						<version>${maven-surefire-plugin.version}</version>
 						<configuration>
-							<argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC -Djavax.net.ssl.trustStore=${truststore.path} -Djavax.net.ssl.trustStorePassword=${truststore.password}</argLine>
+							<!-- <argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC -Djavax.net.ssl.trustStore=${truststore.path} -Djavax.net.ssl.trustStorePassword=${truststore.password}</argLine> -->
+							<argLine>-Djavax.net.ssl.trustStore=${truststore.path} -Djavax.net.ssl.trustStorePassword=${truststore.password}</argLine>
 							<!-- Configure JUnit tests to go through the JUnit test suite -->
 							<includes>
 								<include>**/AllJUnitTests.java</include>
@@ -252,7 +253,8 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-failsafe-plugin</artifactId>
 						<configuration>
-							<argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC -Djavax.net.ssl.trustStore=${truststore.path} -Djavax.net.ssl.trustStorePassword=${truststore.password}</argLine>
+							<!-- <argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC -Djavax.net.ssl.trustStore=${truststore.path} -Djavax.net.ssl.trustStorePassword=${truststore.password}</argLine> -->
+							<argLine>-Djavax.net.ssl.trustStore=${truststore.path} -Djavax.net.ssl.trustStorePassword=${truststore.password}</argLine>
 							<!-- Configure integration tests to go through the JUnit test suite -->
 							<includes>
 								<include>**/AllIntegrationTests.java</include>

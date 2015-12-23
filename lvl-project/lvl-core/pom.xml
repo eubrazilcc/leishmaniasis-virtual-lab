@@ -403,7 +403,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 						<artifactId>maven-surefire-plugin</artifactId>
 						<version>${maven-surefire-plugin.version}</version>
 						<configuration>
-							<argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC</argLine>
+							<!-- <argLine>-Xmx2048M -Xss1024k -XX:+UseConcMarkSweepGC</argLine> -->
 							<!-- Configure tests to go through the JUnit test suite -->
 							<includes>
 								<include>**/AllTests.java</include>

@@ -79,9 +79,7 @@ public enum ReferenceDAO implements BaseDAO<String, Reference> {
 	private ReferenceDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		MONGODB_CONN.createGeospatialIndex(GEOLOCATION_KEY, COLLECTION);
-		MONGODB_CONN.createTextIndex(ImmutableList.of(
-				DB_PREFIX + "title"), 
-				COLLECTION);
+		MONGODB_CONN.createTextIndex(ImmutableList.of(DB_PREFIX + "title"), COLLECTION);
 	}
 
 	@Override

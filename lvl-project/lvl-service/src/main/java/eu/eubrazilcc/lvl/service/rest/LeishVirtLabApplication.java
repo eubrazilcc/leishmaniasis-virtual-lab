@@ -67,6 +67,7 @@ public class LeishVirtLabApplication extends Application {
 		LVL_SERVICE.service();
 		// create LVL resources
 		instances = new ImmutableSet.Builder<Object>()
+				.add(new PostResource())
 				.add(new SandflySequenceResource())
 				.add(new LeishmaniaSequenceResource())
 				.add(new SandflyPendingResource())

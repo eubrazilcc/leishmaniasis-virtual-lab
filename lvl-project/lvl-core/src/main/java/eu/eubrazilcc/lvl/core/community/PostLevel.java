@@ -20,25 +20,16 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.core;
+package eu.eubrazilcc.lvl.core.community;
 
 /**
- * Stores collection names as {@link String}.
+ * Available post levels.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class CollectionNames {
+public enum PostLevel {
 
-	// sequence collections
-	public static final String SANDFLY_COLLECTION = "sandflies";
-	public static final String LEISHMANIA_COLLECTION = "leishmania";
-
-	// sample collections
-	public static final String SANDFLY_SAMPLES_COLLECTION = "sandflySamples";
-	public static final String LEISHMANIA_SAMPLES_COLLECTION = "leishmaniaSamples";
-
-	// user collections
-	public static final String SANDFLY_PENDING_COLLECTION = "sandflyPending";
-	public static final String LEISHMANIA_PENDING_COLLECTION = "leishmaniaPending";
-	public static final String REFERENCE_PENDING_COLLECTION = "pendingReference";
-
+	NORMAL,     // default priority level
+	PROMOTED,   // should be prioritized (e.g. highlighted, displayed in a priority area)  
+	INESCAPABLE // unable to be avoided or ignored
+	
 }
