@@ -42,25 +42,35 @@ import org.junit.Test;
 import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.Notification.Action;
 import eu.eubrazilcc.lvl.core.Notification.Priority;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests notification collection in the database.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class NotificationCollectionTest {
+public class NotificationCollectionTest extends LeishvlTestCase {
+	
+	public NotificationCollectionTest() {
+		super(true);
+	}
 
 	@Test
 	public void test() {
 		System.out.println("NotificationCollectionTest.test()");
 		try {
 			// insert
-			final Notification notification = Notification.builder()
+			final Notification notification = Notification.builder()					
+					.namespace("username")
 					.message("This is an example")
 					.build();
 			final String id = NOTIFICATION_DAO.insert(notification).getId();
 			assertThat("notification id is not null", id, notNullValue());
 			assertThat("notification id is not empty", isNotBlank(id));
 			notification.setId(id);
+			
+			Thread.sleep(120000l); // TODO
+			
+			System.err.println("\n\n ID: " + id + "\n"); // TODO
 
 			// find
 			Notification notification2 = NOTIFICATION_DAO.find(notification.getId());
@@ -89,6 +99,7 @@ public class NotificationCollectionTest {
 			final int numItems = 11;
 			for (int i = 0; i < numItems; i++) {
 				final Notification notification3 = Notification.builder()
+						.namespace("username")
 						.message(Integer.toString(i)).build();
 				ids.add(NOTIFICATION_DAO.insert(notification3).getId());
 			}

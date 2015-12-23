@@ -34,21 +34,24 @@ import static eu.eubrazilcc.lvl.core.DataSource.Notation.NOTATION_SHORT;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.ID_FRAGMENT_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.NO_NAME;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeSampleIds;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.escapeUrlPathSegment;
-import static eu.eubrazilcc.lvl.core.util.NamingUtils.unescapeUrlPathSegment;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.expandUUID;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeSampleIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeSeqIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.splitIds;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toAsciiSafeName;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.toId;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.unescapeUrlPathSegment;
 import static org.apache.commons.lang3.StringUtils.countMatches;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.trim;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -58,6 +61,7 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.Test;
 
@@ -72,13 +76,31 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 public class NamingUtilsTest extends LeishvlTestCase {
 
 	public NamingUtilsTest() {
-		super(true);
+		super(false);
 	}
-	
+
 	@Test
 	public void test() {
 		System.out.println("NamingUtilsTest.test()");
 		try {
+			// test compact UUID generation (22 characters long instead of 36)
+			final Map<String, String> uuids = ImmutableMap.<String, String>builder()
+					.put("50a9ee1f-17f4-4055-99fd-d9139b7198b2", "UKnuHxf0QFWZ_dkTm3GYsg")
+					.put("001544c2-ae4d-49da-8fc0-c874a6249d0d", "ABVEwq5NSdqPwMh0piSdDQ")
+					.put("dfcab578-45e8-4fbd-97fe-80f12da129d6", "38q1eEXoT72X_oDxLaEp1g")
+					.build();
+			for (final Map.Entry<String, String> e : uuids.entrySet()) {
+				final String cuuid = compactUUID(UUID.fromString(e.getKey()));
+				assertThat("Compact UUID coincides with expected", cuuid, allOf(notNullValue(), equalTo(e.getValue())));
+				final UUID uuid = expandUUID(cuuid);
+				assertThat("Expanded UUID coincides with expected", uuid, allOf(notNullValue(), equalTo(UUID.fromString(e.getKey()))));
+				printMsg(" >> UUID: " + uuid.toString() + ", cUUID: " + cuuid);
+			}
+			final String cuuid = compactRandomUUID();
+			assertThat("Compact random UUID is not empty", trim(cuuid), allOf(notNullValue(), not(equalTo(""))));
+			final UUID uuid = expandUUID(cuuid);
+			assertThat("Expanded random UUID is not null", uuid, notNullValue());
+
 			// test safe name generation
 			System.err.println(" >> Non-printable names");
 			final String[] names = { "AquaMaps (beta version)", "  Artificial   Neural  Network ",
@@ -343,7 +365,7 @@ public class NamingUtilsTest extends LeishvlTestCase {
 			System.out.println("NamingUtilsTest.test2() has finished");
 		}
 	}
-	
+
 	@Test
 	public void test3() {
 		// create test dataset
@@ -361,13 +383,13 @@ public class NamingUtilsTest extends LeishvlTestCase {
 				.put("g-forward-slash!", "g-forward-slash!")
 				.put("$g-question-mark", "$g-question-mark")
 				.build();
-		
+
 		segments.entrySet().stream().forEach(e -> {
 			// escape URL path segment
 			final String escaped = escapeUrlPathSegment(e.getKey());			
 			assertThat("escaped segment coincides with expected", trim(escaped), allOf(notNullValue(), equalTo(e.getValue())));
 			printMsg("URL path segment: '" + e.getKey() + "' was successfully escaped: '" + escaped + "'");
-			
+
 			// unescape URL path segment
 			final String unescaped = unescapeUrlPathSegment(e.getValue());
 			assertThat("unescaped segment coincides with expected", trim(unescaped), allOf(notNullValue(), equalTo(e.getKey())));			

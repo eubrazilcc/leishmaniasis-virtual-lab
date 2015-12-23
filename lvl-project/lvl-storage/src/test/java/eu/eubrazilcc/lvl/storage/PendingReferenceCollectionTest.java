@@ -63,7 +63,7 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 public class PendingReferenceCollectionTest extends LeishvlTestCase {
 
 	public PendingReferenceCollectionTest() {
-		super(true);
+		super(false);
 	}
 
 	@Test

@@ -31,6 +31,7 @@ import static java.lang.String.valueOf;
 import static java.net.URLDecoder.decode;
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.UUID.randomUUID;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -42,10 +43,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
+
+import org.apache.commons.codec.binary.Base64;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -64,6 +68,7 @@ import eu.eubrazilcc.lvl.core.geojson.GeoJsonObject;
  * Utility class to work with user-supplied text (e.g. names) and convert them into
  * safe strings that can be used for example to name files in a file-system.
  * @author Erik Torres <ertorser@upv.es>
+ * @see <a href="https://github.com/ctzen/uuid-compactor">uuid-compactor</a>
  */
 public final class NamingUtils {
 
@@ -71,6 +76,64 @@ public final class NamingUtils {
 	public static final char URI_ID_SEPARATOR = ',';
 	public static final char ID_FRAGMENT_SEPARATOR = ':';
 	public static final String ID_FRAGMENT_SEPARATOR_STRING = valueOf(ID_FRAGMENT_SEPARATOR);
+
+	private static final long LONG_BYTE_MASK = -1 ^ (-1 << Byte.SIZE);
+	private static final int NBYTES = Long.SIZE / Byte.SIZE;
+	private static final Base64 BASE64 = new Base64(true);
+
+	/**
+	 * Generates a random UUID with {@link UUID#randomUUID()} and uses the method {@link #compactUUID(UUID)} to compact it.
+	 * @return A random UUID string compacted as a URL-safe string of 22 characters.
+	 */
+	public static String compactRandomUUID() {
+		return compactUUID(randomUUID());		
+	}
+
+	/**
+	 * Encodes a {@link UUID} string using Base64 to produce a URL-safe string of 22 characters, resulting in a shorter
+	 * representation (standard UUID strings use 36 characters).
+	 * @param uuid - UUID to be compacted
+	 * @return A UUID string compacted as a URL-safe string of 22 characters.
+	 */
+	public static String compactUUID(final UUID uuid) {
+		final byte[] bytes = new byte[2 * NBYTES];
+		int i = 2 * NBYTES;
+		long x = uuid.getLeastSignificantBits();
+		while (i > NBYTES) {
+			bytes[--i] = (byte)x;
+			x >>>= Byte.SIZE;
+		}
+		x = uuid.getMostSignificantBits();
+		while (i > 0) {
+			bytes[--i] = (byte)x;
+			x >>>= Byte.SIZE;
+		}
+		// strips any trailing equal sign (=) from resulting string
+		return BASE64.encodeAsString(bytes).substring(0, 22);	
+	}
+
+	/**
+	 * Expands a compact representation of a {@link UUID} string produced with the method {@link #compactUUID(UUID)} 
+	 * to its standard representation.
+	 * @param cuuid - compact UUID to be expanded
+	 * @return A standard UUID.
+	 */
+	public static UUID expandUUID(final String cuuid) {
+		final byte[] bytes = BASE64.decode(cuuid);
+		if (bytes.length != 2 * NBYTES) {
+			throw new IllegalArgumentException("A compact UUID expected but was: " + cuuid);
+		}
+		int i = 0;
+		long msb = bytes[i++];
+		while (i < NBYTES) {
+			msb = msb << Byte.SIZE | (bytes[i++] & LONG_BYTE_MASK);
+		}
+		long lsb = bytes[i++];
+		while (i < 2 * NBYTES) {
+			lsb = lsb << Byte.SIZE | (bytes[i++] & LONG_BYTE_MASK);
+		}
+		return new UUID(msb, lsb);
+	}
 
 	/**
 	 * Replaces non-printable Unicode characters from an specified name, producing a 
@@ -208,7 +271,7 @@ public final class NamingUtils {
 	public static String unescapeUrlPathSegment(final @Nullable String segment) {
 		if (segment == null) return null;
 		return new UrlPathSegmentEscaper().unescape(segment);
-	}	
+	}
 
 	/**
 	 * Escapes/unescapes URL path segments.
