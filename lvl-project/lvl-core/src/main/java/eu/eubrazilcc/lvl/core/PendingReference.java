@@ -34,6 +34,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -80,6 +81,7 @@ public class PendingReference implements Linkable<PendingReference> {
 	private String pubmedId;       // PubMed Identifier (PMID)	
 	private Set<String> seqids;    // Sequences mentioned in this publication (must include database and accession number)
 	private Set<String> sampleids; // Samples mentioned in this publication (must include collection and catalog number)
+	private Date modified;         // Last modification time-stamp
 
 	public PendingReference() {
 		setNamespace(LVL_DEFAULT_NS);
@@ -157,6 +159,14 @@ public class PendingReference implements Linkable<PendingReference> {
 		this.sampleids = sampleids;
 	}
 
+	public Date getModified() {
+		return modified;
+	}
+
+	public void setModified(final Date modified) {
+		this.modified = modified;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof PendingReference)) {
@@ -176,12 +186,13 @@ public class PendingReference implements Linkable<PendingReference> {
 				&& Objects.equals(id, other.id)
 				&& Objects.equals(pubmedId, other.pubmedId)
 				&& Objects.equals(seqids, other.seqids)
-				&& Objects.equals(sampleids, other.sampleids);
+				&& Objects.equals(sampleids, other.sampleids)
+				&& Objects.equals(modified, other.modified);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, namespace, id, pubmedId, seqids, sampleids);
+		return Objects.hash(links, namespace, id, pubmedId, seqids, sampleids, modified);
 	}
 
 	@Override
@@ -193,6 +204,7 @@ public class PendingReference implements Linkable<PendingReference> {
 				.add("pubmedId", pubmedId)
 				.add("seqids", seqids)
 				.add("sampleids", sampleids)
+				.add("modified", modified)
 				.toString();
 	}
 
@@ -235,6 +247,11 @@ public class PendingReference implements Linkable<PendingReference> {
 
 		public Builder sampleids(final Set<String> sampleids) {
 			instance.setSampleids(sampleids);
+			return this;
+		}
+
+		public Builder modified(final Date modified){
+			instance.setModified(modified);
 			return this;
 		}
 

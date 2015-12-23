@@ -148,6 +148,7 @@ public class JsonMappingTest extends LeishvlTestCase {
 					.pubmedId("ADGJ87950")
 					.seqids(newHashSet("gb:ABC12345678"))
 					.sampleids(newHashSet("colfleb:123", "isciii:456"))
+					.modified(new Date())
 					.build();
 
 			File sampleFile = getDarwinCoreSets().stream().filter(file -> {

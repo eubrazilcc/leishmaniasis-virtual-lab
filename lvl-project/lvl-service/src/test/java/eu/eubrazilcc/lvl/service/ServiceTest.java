@@ -77,6 +77,7 @@ import eu.eubrazilcc.lvl.service.testable.IssuesResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaSampleResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LvlInstanceResourceTest;
+import eu.eubrazilcc.lvl.service.testable.PendingReferenceResourceTest;
 import eu.eubrazilcc.lvl.service.testable.PostResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflyPendingResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflyResourceTest;
@@ -229,7 +230,7 @@ public class ServiceTest {
 					"user1", new TestCredential(ownerId1, TOKEN_USER1), 
 					"user2", new TestCredential(ownerId2, TOKEN_USER2), 
 					"user3", new TestCredential(ownerId3, TOKEN_USER3)));
-			
+
 			// test task resource
 			new TaskResourceTest(testCtxt).runTest();
 
@@ -263,12 +264,15 @@ public class ServiceTest {
 			// test citation resource
 			new CitationResourceTest(testCtxt).runTest();
 
+			// test pending citation (reference) resource
+			new PendingReferenceResourceTest(testCtxt).runTest();
+
 			// test instance resource
 			new LvlInstanceResourceTest(testCtxt).runTest();
 
 			// test saved search resource
 			new SavedSearchResourceTest(testCtxt).runTest();
-			
+
 			// test post resource
 			new PostResourceTest(testCtxt).runTest();
 

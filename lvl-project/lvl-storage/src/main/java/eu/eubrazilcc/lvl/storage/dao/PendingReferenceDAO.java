@@ -81,13 +81,15 @@ public enum PendingReferenceDAO implements AuthenticatedDAO<String, PendingRefer
 	public static final String DB_PREFIX     = "pendingReference.";
 	public static final String PRIMARY_KEY   = DB_PREFIX + "id";
 	public static final String NAMESPACE_KEY = DB_PREFIX + "namespace";
+	public static final String MODIFIED_KEY  = DB_PREFIX + "modified";
 
 	public static final String PMID_KEY = DB_PREFIX + "pubmedId";
 
 	private PendingReferenceDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
 		MONGODB_CONN.createNonUniqueIndex(NAMESPACE_KEY, COLLECTION, false);
-		MONGODB_CONN.createNonUniqueIndex(PMID_KEY, COLLECTION, false);		
+		MONGODB_CONN.createNonUniqueIndex(PMID_KEY, COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(MODIFIED_KEY, COLLECTION, true);
 	}
 
 	@Override
@@ -226,6 +228,8 @@ public enum PendingReferenceDAO implements AuthenticatedDAO<String, PendingRefer
 			// sortable fields
 			if ("pmid".equalsIgnoreCase(sorting.getField())) {
 				field = PMID_KEY;
+			} else if ("modified".equalsIgnoreCase(sorting.getField())) {
+				field = MODIFIED_KEY;
 			}
 			if (isNotBlank(field)) {
 				int order = 1;

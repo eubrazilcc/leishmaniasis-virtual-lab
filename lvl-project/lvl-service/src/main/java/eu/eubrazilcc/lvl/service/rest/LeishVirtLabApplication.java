@@ -75,6 +75,7 @@ public class LeishVirtLabApplication extends Application {
 				.add(new SandflySampleResource())
 				.add(new LeishmaniaSampleResource())
 				.add(new CitationResource())
+				.add(new PendingReferenceResource())
 				.add(new WorkflowDefinitionResource())
 				.add(new WorkflowRunResource())
 				.add(new TaskResource())
