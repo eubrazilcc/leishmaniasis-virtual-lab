@@ -25,11 +25,11 @@ package eu.eubrazilcc.lvl.storage;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.util.MimeUtils.mimeType;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.storage.support.dao.IssueAttachmentDAO.ISSUE_ATTACHMENT_DAO;
 import static eu.eubrazilcc.lvl.test.testset.ImageTestHelper.createTestJpeg;
 import static eu.eubrazilcc.lvl.test.testset.ImageTestHelper.createTestPng;
 import static java.lang.System.getProperty;
-import static java.util.UUID.randomUUID;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.io.FilenameUtils.concat;
@@ -255,7 +255,7 @@ public class IssueAttachmentCollectionTest {
 			// pagination
 			final List<String> ids = newArrayList();
 			for (int i = 0; i < 11; i++) {				
-				final String fnameX = randomUUID().toString();
+				final String fnameX = compactRandomUUID();
 				final String originalFnameX = "image_" + Integer.toString(i) + ".png";
 				final File imgFileX = createTestPng(TEST_OUTPUT_DIR, originalFnameX);
 				ids.add(fnameX);

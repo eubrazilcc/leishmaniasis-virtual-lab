@@ -315,8 +315,8 @@ public enum SandflyPendingDAO implements AuthenticatedDAO<String, SandflyPending
 			}
 			if (isNotBlank(field)) {
 				if ("catalogNumber".equalsIgnoreCase(parameter)) {
-					// convert the expression to lower case and compare for exact matching
-					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toLowerCase());
+					// compare for exact matching
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
 				} else if ("year".equalsIgnoreCase(parameter)) {
 					// comparison operator
 					query2 = mongoNumeriComparison(field, expression);

@@ -32,16 +32,21 @@ import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.Sorting.Order;
 import eu.eubrazilcc.lvl.core.util.SortUtils;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests {@link SortUtils} utility class.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SortUtilsTest {
+public class SortUtilsTest extends LeishvlTestCase {
+
+	public SortUtilsTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("SortUtilsTest.test()");
+		printMsg("SortUtilsTest.test()");
 		try {
 			// test ascending order
 			Sorting sorting = parseSorting("field1", "asc");
@@ -57,7 +62,7 @@ public class SortUtilsTest {
 			e.printStackTrace(System.err);
 			fail("SortUtilsTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("SortUtilsTest.test() has finished");
+			printMsg("SortUtilsTest.test() has finished");
 		}
 	}
 

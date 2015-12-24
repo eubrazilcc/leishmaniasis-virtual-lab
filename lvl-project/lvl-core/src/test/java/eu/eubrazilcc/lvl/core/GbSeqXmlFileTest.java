@@ -48,12 +48,17 @@ import org.junit.Before;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.entrez.GbSeqXmlHelper;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests GenBank sequence XML file helper class {@link GbSeqXmlHelper}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class GbSeqXmlFileTest {
+public class GbSeqXmlFileTest extends LeishvlTestCase {
+
+	public GbSeqXmlFileTest() {
+		super(false);
+	}
 
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
 			GbSeqXmlFileTest.class.getSimpleName() + "_" + random(8, true, true)));
@@ -65,7 +70,7 @@ public class GbSeqXmlFileTest {
 
 	@Test
 	public void test() {
-		System.out.println("GbSeqXmlFileTest.test()");
+		printMsg("GbSeqXmlFileTest.test()");
 		try {
 			File output = null;
 			String payload = null;
@@ -73,7 +78,7 @@ public class GbSeqXmlFileTest {
 			// test writing individual FASTA files (uncompressed)
 			final Collection<File> files = getGBSeqXMLFiles();
 			for (final File file : files) {
-				System.out.println(" >> Sequence file: " + file.getCanonicalPath());
+				printMsg(" >> Sequence file: " + file.getCanonicalPath());
 				output = new File(TEST_OUTPUT_DIR, "sequence.fasta");
 				toFasta(file, output.getCanonicalPath(), false);
 				assertThat("fasta sequence file exists: " + output.getCanonicalPath(), output.canRead(), equalTo(true));
@@ -81,13 +86,13 @@ public class GbSeqXmlFileTest {
 				assertThat("fasta sequence is not null", payload, notNullValue());
 				assertThat("fasta sequence is not empty", isNotBlank(payload), equalTo(true));
 				/* uncomment for additional output */
-				System.out.println(" >> FASTA sequence \n" + payload);
+				printMsg(" >> FASTA sequence \n" + payload);
 				
 				final String[] sequences = readFasta(output);
 				assertThat("sequences are not null", sequences, notNullValue());
 				assertThat("number of sequences coincides with expected", sequences.length, equalTo(1));
 				/* uncomment for additional output */
-				System.out.println(" >> Read sequences \n" + Arrays.toString(sequences));
+				printMsg(" >> Read sequences \n" + Arrays.toString(sequences));
 			}
 
 			// test writing a single FASTA file (uncompressed)
@@ -98,13 +103,13 @@ public class GbSeqXmlFileTest {
 			assertThat("fasta sequences is not null", payload, notNullValue());
 			assertThat("fasta sequences is not empty", isNotBlank(payload), equalTo(true));
 			/* uncomment for additional output */
-			System.out.println(" >> FASTA sequences \n" + payload);
+			printMsg(" >> FASTA sequences \n" + payload);
 			
 			final String[] sequences = readFasta(output);
 			assertThat("sequences are not null", sequences, notNullValue());
 			assertThat("number of sequences coincides with expected", sequences.length, equalTo(files.size()));
 			/* uncomment for additional output */
-			System.out.println(" >> Read sequences \n" + Arrays.toString(sequences));
+			printMsg(" >> Read sequences \n" + Arrays.toString(sequences));
 
 			// test writing a FASTA file (compressed)
 			final List<File> list = newArrayList(files);
@@ -119,7 +124,7 @@ public class GbSeqXmlFileTest {
 			e.printStackTrace(System.err);
 			fail("GbSeqXmlFileTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("GbSeqXmlFileTest.test() has finished");
+			printMsg("GbSeqXmlFileTest.test() has finished");
 		}
 	}
 

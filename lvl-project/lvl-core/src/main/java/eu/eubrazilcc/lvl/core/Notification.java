@@ -27,6 +27,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
@@ -75,17 +76,15 @@ public class Notification implements Linkable<Notification> {
 	@JsonIgnore
 	private String urlSafeId;
 
-	private String namespace; // Name space where the record is inscribed
-	private String id;        // Resource identifier
+	private String id;         // Resource identifier
 	private Priority priority;
-	private String addressee;
+	private String addressee;  // Also, the name space where the record is inscribed in the database
 	private String scope;
 	private Date issuedAt;
 	private String message;
 	private Action action;
 
 	public Notification() {
-		setNamespace(LVL_DEFAULT_NS);
 		this.priority = Priority.NORMAL;
 		this.issuedAt = new Date();
 	}
@@ -120,15 +119,6 @@ public class Notification implements Linkable<Notification> {
 		this.urlSafeId = urlSafeId;
 	}
 
-	public String getNamespace() {
-		return namespace;
-	}
-
-	public void setNamespace(final String namespace) {
-		this.namespace = namespace;
-		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(namespace, LVL_DEFAULT_NS).trim()));
-	}
-
 	public String getId() {
 		return id;
 	}
@@ -152,6 +142,7 @@ public class Notification implements Linkable<Notification> {
 
 	public void setAddressee(final String addressee) {
 		this.addressee = addressee;
+		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(addressee, LVL_DEFAULT_NS).trim()));
 	}
 
 	public String getScope() {
@@ -201,8 +192,7 @@ public class Notification implements Linkable<Notification> {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equals(namespace, other.namespace)
-				&& Objects.equals(id, other.id)
+		return Objects.equals(id, other.id)
 				&& Objects.equals(priority, other.priority)
 				&& Objects.equals(addressee, other.addressee)
 				&& Objects.equals(scope, other.scope)
@@ -213,14 +203,13 @@ public class Notification implements Linkable<Notification> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, namespace, id, priority, addressee, scope, issuedAt, message, action);
+		return Objects.hash(links, id, priority, addressee, scope, issuedAt, message, action);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
 				.add("links", links)
-				.add("namespace", namespace)
 				.add("id", id)
 				.add("priority", priority)
 				.add("addressee", addressee)
@@ -246,8 +235,8 @@ public class Notification implements Linkable<Notification> {
 			return this;
 		}
 
-		public Builder namespace(final String namespace) {
-			instance.setNamespace(trimToEmpty(namespace));
+		public Builder newId() {
+			instance.setId(compactRandomUUID());
 			return this;
 		}
 

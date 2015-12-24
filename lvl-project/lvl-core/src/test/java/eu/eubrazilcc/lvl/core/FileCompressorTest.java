@@ -53,12 +53,17 @@ import org.junit.Before;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.io.FileCompressor;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests file archiving and compression with {@link FileCompressor} utility.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class FileCompressorTest {
+public class FileCompressorTest extends LeishvlTestCase {
+
+	public FileCompressorTest() {
+		super(false);
+	}
 
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
 			FileCompressorTest.class.getSimpleName() + "_" + random(8, true, true)));
@@ -70,14 +75,14 @@ public class FileCompressorTest {
 
 	@Test
 	public void test() {
-		System.out.println("FileCompressorTest.test()");
+		printMsg("FileCompressorTest.test()");
 		try {
 			// test create tarball from directory
 			final String filenameNoPath = "bundle.tar.gz";
 			final File tarGzipFile = new File(TEST_OUTPUT_DIR, filenameNoPath);
 			final String tarGzipFilename = tarGzipFile.getCanonicalPath();
 			final String sourceDir = concat(TEST_RESOURCES_PATH, GB_SEQUENCES_FOLDER);
-			System.out.println(" >> Will compress directory " + sourceDir + " to TARBALL " + tarGzipFilename);
+			printMsg(" >> Will compress directory " + sourceDir + " to TARBALL " + tarGzipFilename);
 			tarGzipDir(sourceDir, tarGzipFilename);
 			assertThat("tar.gz file exists", tarGzipFile.exists(), equalTo(true));
 			assertThat("tar.gz file is not empty", tarGzipFile.length() > 0l, equalTo(true));
@@ -85,7 +90,7 @@ public class FileCompressorTest {
 			// test tarball uncompress
 			final String uncompressedDirname = tarGzipFilename + "_uncompressed";
 			final File uncompressedDir = new File(uncompressedDirname);
-			System.out.println(" >> Will uncompress TARBALL " + tarGzipFilename + " to directory " + uncompressedDirname);
+			printMsg(" >> Will uncompress TARBALL " + tarGzipFilename + " to directory " + uncompressedDirname);
 			final List<String> uncompressedFiles = unGzipUnTar(tarGzipFilename, uncompressedDirname);
 			assertThat("tar.gz uncompressed directory exists", uncompressedDir.exists(), equalTo(true));
 			final int numberOfFiles = listFiles(new File(sourceDir), null, true).size();
@@ -101,7 +106,7 @@ public class FileCompressorTest {
 			shuffle(files);
 			final File srcFile = files.get(0);
 			final String srcFilename = srcFile.getCanonicalPath();
-			System.out.println(" >> Will compress file " + srcFilename + " with GZIP");
+			printMsg(" >> Will compress file " + srcFilename + " with GZIP");
 			final String outFilename = gzip(srcFilename);
 			assertThat("output GZIP filename is not null", outFilename, notNullValue());
 			assertThat("output GZIP filename is not empty", isNotEmpty(outFilename), equalTo(true));
@@ -121,7 +126,7 @@ public class FileCompressorTest {
 			e.printStackTrace(System.err);
 			fail("FileCompressorTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("FileCompressorTest.test() has finished");
+			printMsg("FileCompressorTest.test() has finished");
 		}
 	}
 

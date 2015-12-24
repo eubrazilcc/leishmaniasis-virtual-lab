@@ -36,6 +36,8 @@ import static eu.eubrazilcc.lvl.core.util.NamingUtils.NO_NAME;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.URI_ID_SEPARATOR;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactUUID;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.humanRandomUUID;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.humanUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.escapeUrlPathSegment;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.expandUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.mergeSampleIds;
@@ -81,28 +83,38 @@ public class NamingUtilsTest extends LeishvlTestCase {
 
 	@Test
 	public void test() {
-		System.out.println("NamingUtilsTest.test()");
+		printMsg("NamingUtilsTest.test()");
 		try {
-			// test compact UUID generation (22 characters long instead of 36)
-			final Map<String, String> uuids = ImmutableMap.<String, String>builder()
-					.put("50a9ee1f-17f4-4055-99fd-d9139b7198b2", "UKnuHxf0QFWZ_dkTm3GYsg")
-					.put("001544c2-ae4d-49da-8fc0-c874a6249d0d", "ABVEwq5NSdqPwMh0piSdDQ")
-					.put("dfcab578-45e8-4fbd-97fe-80f12da129d6", "38q1eEXoT72X_oDxLaEp1g")
+			// test compact UUID generation (22 or 26 characters long instead of 36)
+			final Map<String, String[]> uuids = ImmutableMap.<String, String[]>builder()
+					.put("50a9ee1f-17f4-4055-99fd-d9139b7198b2", new String[]{ "UKnuHxf0QFWZ_dkTm3GYsg", "" })
+					.put("001544c2-ae4d-49da-8fc0-c874a6249d0d", new String[]{ "ABVEwq5NSdqPwMh0piSdDQ", "" })
+					.put("dfcab578-45e8-4fbd-97fe-80f12da129d6", new String[]{ "38q1eEXoT72X_oDxLaEp1g", "" })
 					.build();
-			for (final Map.Entry<String, String> e : uuids.entrySet()) {
+			for (final Map.Entry<String, String[]> e : uuids.entrySet()) {				
 				final String cuuid = compactUUID(UUID.fromString(e.getKey()));
-				assertThat("Compact UUID coincides with expected", cuuid, allOf(notNullValue(), equalTo(e.getValue())));
-				final UUID uuid = expandUUID(cuuid);
+				assertThat("Compact UUID coincides with expected", cuuid, allOf(notNullValue(), equalTo(e.getValue()[0])));
+				UUID uuid = expandUUID(cuuid);
 				assertThat("Expanded UUID coincides with expected", uuid, allOf(notNullValue(), equalTo(UUID.fromString(e.getKey()))));
 				printMsg(" >> UUID: " + uuid.toString() + ", cUUID: " + cuuid);
+				
+				final String huuid = humanUUID(UUID.fromString(e.getKey()));
+				
+				printMsg(" >> UUID: " + uuid.toString() + ", hUUID: " + huuid);
 			}
+			
 			final String cuuid = compactRandomUUID();
 			assertThat("Compact random UUID is not empty", trim(cuuid), allOf(notNullValue(), not(equalTo(""))));
-			final UUID uuid = expandUUID(cuuid);
+			UUID uuid = expandUUID(cuuid);
+			assertThat("Expanded random UUID is not null", uuid, notNullValue());
+			
+			final String huuid = humanRandomUUID();
+			assertThat("Human random UUID is not empty", trim(huuid), allOf(notNullValue(), not(equalTo(""))));
+			uuid = expandUUID(huuid);
 			assertThat("Expanded random UUID is not null", uuid, notNullValue());
 
 			// test safe name generation
-			System.err.println(" >> Non-printable names");
+			printMsg(" >> Non-printable names");
 			final String[] names = { "AquaMaps (beta version)", "  Artificial   Neural  Network ",
 					"Bioclim)", "Climate_Space Model_ ", "\\ENFA (Ecological-Niche Factor Analysis)",
 					"Réal", "éü" };
@@ -111,7 +123,7 @@ public class NamingUtilsTest extends LeishvlTestCase {
 					"r_al", NO_NAME };
 			for (int i = 0; i < names.length; i++) {
 				final String safeName = toAsciiSafeName(names[i]);
-				System.out.println(" >> '" + names[i] + "' => "
+				printMsg(" >> '" + names[i] + "' => "
 						+ (isNotEmpty(safeName) ? "'" + safeName + "'" : "NULL"));
 				assertThat("ASCII safe name is not null", safeName, notNullValue());
 				assertThat("ASCII safe name is not empty", isNotBlank(safeName));
@@ -194,7 +206,7 @@ public class NamingUtilsTest extends LeishvlTestCase {
 					countMatches(mergedIds, String.valueOf(GENBANK)), 
 					equalTo(sequences.size()));
 			/* uncomment for additional output */
-			System.out.println(" >> merged Ids (using long notation): " + mergedIds);
+			printMsg(" >> merged Ids (using long notation): " + mergedIds);
 
 			// test sequence Ids splitting using long notation
 			idsList = splitIds(mergedIds);
@@ -205,7 +217,7 @@ public class NamingUtilsTest extends LeishvlTestCase {
 				validate(id, GENBANK);
 			}
 			/* uncomment for additional output */
-			System.out.println(" >> split Ids (using long notation): " + idsList);
+			printMsg(" >> split Ids (using long notation): " + idsList);
 
 			// test sequence Ids merging using short notation			
 			mergedIds = mergeSeqIds(sequences, NOTATION_SHORT);
@@ -221,7 +233,7 @@ public class NamingUtilsTest extends LeishvlTestCase {
 					countMatches(mergedIds, String.valueOf(GENBANK_SHORT)), 
 					equalTo(sequences.size()));
 			/* uncomment for additional output */
-			System.out.println(" >> merged Ids (using short notation): " + mergedIds);
+			printMsg(" >> merged Ids (using short notation): " + mergedIds);
 
 			// test sequence Ids splitting using short notation
 			idsList = splitIds(mergedIds);
@@ -232,19 +244,19 @@ public class NamingUtilsTest extends LeishvlTestCase {
 				validate(id, GENBANK_SHORT);
 			}
 			/* uncomment for additional output */
-			System.out.println(" >> split Ids (using long notation): " + idsList);
+			printMsg(" >> split Ids (using long notation): " + idsList);
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("NamingUtilsTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("NamingUtilsTest.test() has finished");
+			printMsg("NamingUtilsTest.test() has finished");
 		}
 	}
 
 	@Test
 	public void test2() {
-		System.out.println("NamingUtilsTest.test2()");
+		printMsg("NamingUtilsTest.test2()");
 		try {
 			// create sequence dataset
 			final List<Sample> samples = newArrayList();
@@ -322,7 +334,7 @@ public class NamingUtilsTest extends LeishvlTestCase {
 					countMatches(mergedIds, String.valueOf(COLFLEB)) + countMatches(mergedIds, String.valueOf(CLIOC)), 
 					equalTo(samples.size()));
 			/* uncomment for additional output */
-			System.out.println(" >> merged Ids (using long notation): " + mergedIds);
+			printMsg(" >> merged Ids (using long notation): " + mergedIds);
 
 			// test sample Ids splitting using long notation
 			idsList = splitIds(mergedIds);
@@ -333,7 +345,7 @@ public class NamingUtilsTest extends LeishvlTestCase {
 				validate(id, COLFLEB, CLIOC);
 			}
 			/* uncomment for additional output */
-			System.out.println(" >> split Ids (using long notation): " + idsList);
+			printMsg(" >> split Ids (using long notation): " + idsList);
 
 			// test sample Ids merging using short notation
 			mergedIds = mergeSampleIds(samples, NOTATION_SHORT);
@@ -349,7 +361,7 @@ public class NamingUtilsTest extends LeishvlTestCase {
 					countMatches(mergedIds, String.valueOf(COLFLEB_SHORT)) + countMatches(mergedIds, String.valueOf(CLIOC_SHORT)),
 					equalTo(samples.size()));
 			/* uncomment for additional output */
-			System.out.println(" >> merged Ids (using short notation): " + mergedIds);
+			printMsg(" >> merged Ids (using short notation): " + mergedIds);
 
 			// test sample Ids splitting using short notation
 			idsList = splitIds(mergedIds);
@@ -360,9 +372,9 @@ public class NamingUtilsTest extends LeishvlTestCase {
 				validate(id, COLFLEB_SHORT, CLIOC_SHORT);
 			}
 			/* uncomment for additional output */
-			System.out.println(" >> split Ids (using long notation): " + idsList);
+			printMsg(" >> split Ids (using long notation): " + idsList);
 		} finally {
-			System.out.println("NamingUtilsTest.test2() has finished");
+			printMsg("NamingUtilsTest.test2() has finished");
 		}
 	}
 

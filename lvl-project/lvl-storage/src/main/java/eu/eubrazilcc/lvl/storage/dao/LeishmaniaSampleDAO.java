@@ -355,8 +355,8 @@ public enum LeishmaniaSampleDAO implements SampleDAO<LeishmaniaSample> {
 			}
 			if (isNotBlank(field)) {
 				if ("catalogNumber".equalsIgnoreCase(parameter)) {
-					// convert the expression to upper case and compare for exact matching
-					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.toUpperCase());
+					// compare for exact matching
+					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
 				} else if ("locale".equalsIgnoreCase(parameter)) {					
 					if (compile("[a-z]{2}").matcher(expression).matches()) {
 						// search the language part of the locale

@@ -30,8 +30,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.trimToNull;
@@ -73,7 +73,7 @@ public class SubscriptionRequest implements Linkable<SubscriptionRequest> {
 	@JsonDeserialize(using = LinkListDeserializer.class)
 	@JsonProperty("links")
 	private List<Link> links; // HATEOAS links
-	
+
 	@JsonIgnore
 	private String urlSafeId;
 
@@ -97,7 +97,7 @@ public class SubscriptionRequest implements Linkable<SubscriptionRequest> {
 			this.links = null;
 		}
 	}
-	
+
 	public String getUrlSafeId() {
 		return urlSafeId;
 	}
@@ -190,7 +190,7 @@ public class SubscriptionRequest implements Linkable<SubscriptionRequest> {
 		private final SubscriptionRequest instance = new SubscriptionRequest();
 
 		public Builder newId() {
-			instance.setId(randomUUID().toString());
+			instance.setId(compactRandomUUID());
 			return this;
 		}
 

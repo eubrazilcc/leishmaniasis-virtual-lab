@@ -27,8 +27,8 @@ import static eu.eubrazilcc.lvl.core.DataSource.GENBANK_SHORT;
 import static eu.eubrazilcc.lvl.core.DataSource.LEISHVL;
 import static eu.eubrazilcc.lvl.core.DataSource.LEISHVL_SHORT;
 import static eu.eubrazilcc.lvl.core.geojson.LngLatAlt.toHumanString;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static java.util.Arrays.asList;
-import static java.util.UUID.randomUUID;
 import static org.openprovenance.prov.interop.InteropFramework.newXMLProvFactory;
 
 import java.net.MalformedURLException;
@@ -128,15 +128,15 @@ public enum Provenance {
 	public Type downloadActionType() {
 		return type("sov", "DownloadAction");
 	}
-	
+
 	public Type organizationType() {
 		return type("sov", "Organization");
 	}
-	
+
 	public Type personType() {
 		return type("sov", "Person");
 	}
-	
+
 	/* Application types */
 	public Type approvalType() {
 		return type(LVL_PREFIX, "Approval");
@@ -147,7 +147,7 @@ public enum Provenance {
 	public Attribute classAttr(final Class<?> clazz) {
 		return (Attribute) PROVENANCE.factory().newOther(PROVENANCE.qn("class"), clazz.getCanonicalName(), PROVENANCE.factory().getName().XSD_STRING);
 	}
-	
+
 	public Attribute identityProviderAttr(final String provider) {
 		return (Attribute) PROVENANCE.factory().newOther(PROVENANCE.qn("idp"), provider, PROVENANCE.factory().getName().XSD_STRING);
 	}
@@ -179,13 +179,13 @@ public enum Provenance {
 		}));
 		return agent;
 	}
-	
+
 	public Agent organizationAgent(final String name) {
 		return PROVENANCE.factory().newAgent(PROVENANCE.qn(name), asList(new Attribute[] {
 				PROVENANCE.organizationType()
 		}));
 	}
-	
+
 	public Agent personAgent(final User user) {
 		return PROVENANCE.factory().newAgent(PROVENANCE.qn(user.getUserid()), asList(new Attribute[] {
 				PROVENANCE.personType(),
@@ -214,9 +214,9 @@ public enum Provenance {
 		final QualifiedName qn = PROVENANCE.qn(prefix, entity);
 		return PROVENANCE.factory().newEntity(qn, attrs);
 	}
-	
+
 	public static String randomProvId() {
-		return "PROV-" + randomUUID().toString().replace("-", "");
+		return String.format("PROV-%s", compactRandomUUID());
 	}
 
 }

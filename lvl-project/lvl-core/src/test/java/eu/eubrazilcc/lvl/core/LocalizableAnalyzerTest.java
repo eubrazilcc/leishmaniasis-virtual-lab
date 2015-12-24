@@ -51,16 +51,21 @@ import eu.eubrazilcc.lvl.core.analysis.SequenceAnalyzer;
 import eu.eubrazilcc.lvl.core.geojson.Feature;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests {@link SequenceAnalyzer} class.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class LocalizableAnalyzerTest {
+public class LocalizableAnalyzerTest extends LeishvlTestCase {
+
+	public LocalizableAnalyzerTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("SequenceAnalyzerTest.test()");
+		printMsg("SequenceAnalyzerTest.test()");
 		try {
 			// create test dataset (minimum distance (excluding 0 distance): 0.09504164755344391 meters, between points 9 and 10,
 			// which is bellow the error margin of 1/10 meters; maximum distance: 5048619.25141461 meters, between points 2 and 8)
@@ -107,7 +112,7 @@ public class LocalizableAnalyzerTest {
 			for (final Feature feature : features) {				
 				validate(feature, distMeters, errorMeters);
 				/* uncomment for additional output */
-				System.out.println(" >> feature name: " + feature.getProperty("name") + ", location: " + feature.getGeometry());
+				printMsg(" >> feature name: " + feature.getProperty("name") + ", location: " + feature.getGeometry());
 			}
 
 			// test group sequences by location with exact location matching
@@ -120,7 +125,7 @@ public class LocalizableAnalyzerTest {
 			for (final Feature feature : features) {
 				validate(feature, distMeters, errorMeters);
 				/* uncomment for additional output */
-				System.out.println(" >> feature name (exact match): " + feature.getProperty("name") + ", location: " + feature.getGeometry());
+				printMsg(" >> feature name (exact match): " + feature.getProperty("name") + ", location: " + feature.getGeometry());
 			}
 
 			// test average weight calculation
@@ -129,7 +134,7 @@ public class LocalizableAnalyzerTest {
 			assertThat("number of features after weight calculation coincides with expected", features.size(), equalTo(9));
 			/* uncomment for additional output */
 			for (final Feature feature : features) {								
-				System.out.println(" >> feature name: " + feature.getProperty("name") + ", average weigth: " + feature.getProperty("weight"));
+				printMsg(" >> feature name: " + feature.getProperty("name") + ", average weigth: " + feature.getProperty("weight"));
 			}			
 
 			// test relative weight calculation
@@ -138,7 +143,7 @@ public class LocalizableAnalyzerTest {
 			assertThat("number of features after weight calculation coincides with expected", features.size(), equalTo(9));
 			/* uncomment for additional output */
 			for (final Feature feature : features) {								
-				System.out.println(" >> feature name: " + feature.getProperty("name") + ", relative weigth: " + feature.getProperty("weight"));
+				printMsg(" >> feature name: " + feature.getProperty("name") + ", relative weigth: " + feature.getProperty("weight"));
 			}
 
 			// test feature reallocation
@@ -150,7 +155,7 @@ public class LocalizableAnalyzerTest {
 			e.printStackTrace(System.err);
 			fail("SequenceAnalyzerTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("SequenceAnalyzerTest.test() has finished");
+			printMsg("SequenceAnalyzerTest.test() has finished");
 		}
 	}
 

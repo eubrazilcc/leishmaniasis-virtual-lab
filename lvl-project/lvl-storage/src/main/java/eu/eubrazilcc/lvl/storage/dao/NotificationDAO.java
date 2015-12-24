@@ -79,14 +79,12 @@ public enum NotificationDAO implements AuthenticatedDAO<String, Notification> {
 	public static final String COLLECTION    = "notifications";
 	public static final String DB_PREFIX     = "notification.";
 	public static final String PRIMARY_KEY   = DB_PREFIX + "id";
-	public static final String NAMESPACE_KEY = DB_PREFIX + "namespace";
 	public static final String PRIORITY_KEY  = DB_PREFIX + "priority";
 	public static final String ADDRESSE_KEY  = DB_PREFIX + "addressee";
 	public static final String ISSUED_AT_KEY = DB_PREFIX + "issuedAt";
 
 	private NotificationDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
-		MONGODB_CONN.createNonUniqueIndex(NAMESPACE_KEY, COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(PRIORITY_KEY, COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(ADDRESSE_KEY, COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(ISSUED_AT_KEY, COLLECTION, true);		
@@ -135,13 +133,13 @@ public enum NotificationDAO implements AuthenticatedDAO<String, Notification> {
 	}
 
 	@Override
-	public Notification find(final String path) {	
-		return find(path, null);
+	public Notification find(final String id) {	
+		return find(id, null);
 	}
 
 	@Override
-	public Notification find(final String path, final String user) {
-		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(path, user) : key(path), COLLECTION);		
+	public Notification find(final String id, final String user) {
+		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(id, user) : key(id), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
@@ -215,11 +213,11 @@ public enum NotificationDAO implements AuthenticatedDAO<String, Notification> {
 	}
 
 	private BasicDBObject key(final String key) {
-		return new BasicDBObject(PRIMARY_KEY, key);		
+		return new BasicDBObject(PRIMARY_KEY, key);
 	}
 
-	private BasicDBObject compositeKey(final String path, final String submitter) {
-		return new BasicDBObject(of(PRIMARY_KEY, path, NAMESPACE_KEY, submitter));
+	private BasicDBObject compositeKey(final String id, final String addresse) {
+		return new BasicDBObject(of(PRIMARY_KEY, id, ADDRESSE_KEY, addresse));
 	}
 
 	private BasicDBObject sortCriteria(final @Nullable Sorting sorting) throws InvalidSortParseException {
@@ -263,7 +261,7 @@ public enum NotificationDAO implements AuthenticatedDAO<String, Notification> {
 				query = parseFilter(entry.getKey(), entry.getValue(), query);
 			}
 		}		
-		return isNotBlank(user) ? (query != null ? query : new BasicDBObject()).append(NAMESPACE_KEY, user) : query;
+		return isNotBlank(user) ? (query != null ? query : new BasicDBObject()).append(ADDRESSE_KEY, user) : query;
 	}
 
 	private BasicDBObject parseFilter(final String parameter, final String expression, final BasicDBObject query) throws InvalidFilterParseException {

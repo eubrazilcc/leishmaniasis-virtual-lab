@@ -30,9 +30,9 @@ import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.concat;
-import static org.apache.commons.lang.RandomStringUtils.random;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.RandomStringUtils.random;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -119,7 +119,7 @@ public class GridFSFilePersistingCache {
 	public void invalidate(final @Nullable String namespace, final String filename) {
 		CACHE.invalidate(toKey(namespace, filename));
 	}
-	
+
 	public void invalidateAll() {
 		CACHE.invalidateAll();
 	}

@@ -30,8 +30,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newTreeMap;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
@@ -259,7 +259,7 @@ public class Issue implements Linkable<Issue> {
 		private final Issue instance = new Issue();
 
 		public Builder newId() {
-			instance.setId(randomUUID().toString());
+			instance.setId(compactRandomUUID());
 			return this;
 		}
 

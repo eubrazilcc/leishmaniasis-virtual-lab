@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
@@ -37,7 +38,6 @@ import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.PendingReferenceDAO.DB_PREFIX;
 import static eu.eubrazilcc.lvl.storage.dao.PendingReferenceDAO.PENDING_REFERENCE_DAO;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -171,7 +171,7 @@ public class PendingReferenceResource {
 				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":*:create")
 				.getPrincipal();
 		// complete required fields
-		pendingRef.setId(randomUUID().toString());
+		pendingRef.setId(compactRandomUUID());
 		pendingRef.setNamespace(ownerid);
 		pendingRef.setModified(new Date());		
 		// create entry in the database

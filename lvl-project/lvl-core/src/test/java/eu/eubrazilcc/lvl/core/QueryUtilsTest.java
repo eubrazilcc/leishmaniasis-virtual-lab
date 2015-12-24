@@ -44,16 +44,21 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.util.QueryUtils;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests {@link QueryUtils} utility class.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class QueryUtilsTest {
+public class QueryUtilsTest extends LeishvlTestCase {
+
+	public QueryUtilsTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("QueryUtilsTest.test()");
+		printMsg("QueryUtilsTest.test()");
 		try {
 			// full-text search
 			String query = "full-text search term";
@@ -63,8 +68,8 @@ public class QueryUtilsTest {
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));			
 			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			printMsg(" >> QUERY -->" + query + "<--");
+			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// keyword matching search
 			Map<String, Pair<String, String>> queries = new ImmutableMap.Builder<String, Pair<String, String>>()
@@ -81,8 +86,8 @@ public class QueryUtilsTest {
 				assertThat("keyword search term is not null", filter.get(e.getValue().key), notNullValue());
 				assertThat("keyword search term coincides with expected", filter.get(e.getValue().key), equalTo(e.getValue().value));			
 				/* uncomment for additional output */
-				System.out.println(" >> QUERY -->" + e.getKey() + "<--");
-				System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+				printMsg(" >> QUERY -->" + e.getKey() + "<--");
+				printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 			}
 
 			// combined full-text and keyword matching search
@@ -95,8 +100,8 @@ public class QueryUtilsTest {
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));			
 			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			printMsg(" >> QUERY -->" + query + "<--");
+			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// complex, combined full-text and keyword matching search
 			query = "full-text search term keyword1:value1 keyword2:\"value2\"";
@@ -110,8 +115,8 @@ public class QueryUtilsTest {
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));			
 			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			printMsg(" >> QUERY -->" + query + "<--");
+			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// complex, combined full-text and keyword matching search (alternative ordering)
 			query = "keyword1:\"value1 contains spaces\" keyword2:value2 \"full-text search term\"";
@@ -125,8 +130,8 @@ public class QueryUtilsTest {
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));
 			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			printMsg(" >> QUERY -->" + query + "<--");
+			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// complex, combined full-text and keyword matching search (alternative ordering)
 			query = "keyword1:value1 full-text search term keyword2:value2";
@@ -140,8 +145,8 @@ public class QueryUtilsTest {
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));
 			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			printMsg(" >> QUERY -->" + query + "<--");
+			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// complex, combined full-text and keyword matching search (alternative ordering)
 			query = "keyword1:value1 full-text search term keyword2:value2 another full-text search with duplicated values";
@@ -155,8 +160,8 @@ public class QueryUtilsTest {
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term another full-text search with duplicated values"));
 			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			printMsg(" >> QUERY -->" + query + "<--");
+			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// complex, combined full-text and keyword matching search (alternative ordering, remove duplicated terms from full-text)
 			query = "keyword1:value1 full-text search term keyword2:value2 another full-text search with duplicated values";
@@ -170,8 +175,8 @@ public class QueryUtilsTest {
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term another with duplicated values"));
 			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			printMsg(" >> QUERY -->" + query + "<--");
+			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// complex, combined full-text and keyword matching search (using a sloppy spacing format)
 			query = " keyword1:value1   full-text   search term   countryfeature:value2  ";
@@ -187,9 +192,9 @@ public class QueryUtilsTest {
 			List<FormattedQueryParam> formatted = formattedQuery(filter, Sequence.class);
 			assertThat("formatted query is not empty", formatted, allOf(notNullValue(), hasSize(3)));
 			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
-			System.out.println(" >> FORMATTED QUERY: " + collectionToString(formatted));
+			printMsg(" >> QUERY -->" + query + "<--");
+			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
+			printMsg(" >> FORMATTED QUERY: " + collectionToString(formatted));
 
 			// invalid placement
 			query = "keyword : value";
@@ -199,14 +204,14 @@ public class QueryUtilsTest {
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("keyword : value"));
 			/* uncomment for additional output */
-			System.out.println(" >> QUERY -->" + query + "<--");
-			System.out.println(" >> COMPUTED FILTER: " + mapToString(filter));
+			printMsg(" >> QUERY -->" + query + "<--");
+			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("QueryUtilsTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("QueryUtilsTest.test() has finished");
+			printMsg("QueryUtilsTest.test() has finished");
 		}
 	}
 
@@ -218,8 +223,8 @@ public class QueryUtilsTest {
 		String hash = computeHash(query, sort);
 		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
 		/* uncomment for additional output */
-		System.out.println(" >> INPUT  --> query: " + query + ", sort: " + sort + "<--");
-		System.out.println(" >> OUTPUT --> hash: " + hash + "<--");
+		printMsg(" >> INPUT  --> query: " + query + ", sort: " + sort + "<--");
+		printMsg(" >> OUTPUT --> hash: " + hash + "<--");
 
 		// test hash computation using query
 		query = "full-text search term keyword1:value1 keyword2:\"value2\"";
@@ -227,8 +232,8 @@ public class QueryUtilsTest {
 		hash = computeHash(query, sort);
 		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
 		/* uncomment for additional output */
-		System.out.println(" >> INPUT  --> query: " + query + ", sort: NULL<--");
-		System.out.println(" >> OUTPUT --> hash: " + hash + "<--");
+		printMsg(" >> INPUT  --> query: " + query + ", sort: NULL<--");
+		printMsg(" >> OUTPUT --> hash: " + hash + "<--");
 
 		// test hash computation with empty query
 		query = "";
@@ -236,8 +241,8 @@ public class QueryUtilsTest {
 		hash = computeHash(query, sort);
 		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
 		/* uncomment for additional output */
-		System.out.println(" >> INPUT  --> query: " + query + ", sort: NULL<--");
-		System.out.println(" >> OUTPUT --> hash: " + hash + "<--");
+		printMsg(" >> INPUT  --> query: " + query + ", sort: NULL<--");
+		printMsg(" >> OUTPUT --> hash: " + hash + "<--");
 	}
 
 }

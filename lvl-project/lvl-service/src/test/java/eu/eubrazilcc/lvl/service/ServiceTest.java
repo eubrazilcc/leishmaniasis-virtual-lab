@@ -77,6 +77,7 @@ import eu.eubrazilcc.lvl.service.testable.IssuesResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaSampleResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LvlInstanceResourceTest;
+import eu.eubrazilcc.lvl.service.testable.NotificationResourceTest;
 import eu.eubrazilcc.lvl.service.testable.PendingReferenceResourceTest;
 import eu.eubrazilcc.lvl.service.testable.PostResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflyPendingResourceTest;
@@ -272,6 +273,9 @@ public class ServiceTest {
 
 			// test saved search resource
 			new SavedSearchResourceTest(testCtxt).runTest();
+
+			// test notification resource
+			new NotificationResourceTest(testCtxt).runTest();
 
 			// test post resource
 			new PostResourceTest(testCtxt).runTest();

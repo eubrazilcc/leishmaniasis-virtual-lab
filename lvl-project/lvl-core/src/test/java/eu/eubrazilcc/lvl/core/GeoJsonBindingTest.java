@@ -44,18 +44,23 @@ import eu.eubrazilcc.lvl.core.geojson.LineString;
 import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Test XML/JSON to/from GeoJSON Java object binding.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class GeoJsonBindingTest {
+public class GeoJsonBindingTest extends LeishvlTestCase {
+
+	public GeoJsonBindingTest() {
+		super(false);
+	}
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
 	@Test
 	public void test() {
-		System.out.println("GeoJsonBindingTest.test()");
+		printMsg("GeoJsonBindingTest.test()");
 		try {
 			// test GeoJSON point JSON binding
 			final Point point = Point.builder()
@@ -68,8 +73,8 @@ public class GeoJsonBindingTest {
 			final Point point2 = JSON_MAPPER.readValue(payload, Point.class);
 			assertThat("point back is not null", point2, notNullValue());
 			assertThat("point back coincides with original", point2, equalTo(point));
-			System.out.println("point: " + point.toString());
-			System.out.println("point JSON payload: " + payload);
+			printMsg("point: " + point.toString());
+			printMsg("point JSON payload: " + payload);
 
 			// test GeoJSON line JSON binding
 			final LineString line = LineString.builder()			
@@ -81,8 +86,8 @@ public class GeoJsonBindingTest {
 			final LineString line2 = JSON_MAPPER.readValue(payload, LineString.class);
 			assertThat("line back is not null", line2, notNullValue());
 			assertThat("line back coincides with original", line2, equalTo(line));
-			System.out.println("line: " + line.toString());
-			System.out.println("line JSON payload: " + payload);
+			printMsg("line: " + line.toString());
+			printMsg("line JSON payload: " + payload);
 
 			// test GeoJSON polygon JSON binding
 			final Polygon polygon = Polygon.builder()
@@ -96,8 +101,8 @@ public class GeoJsonBindingTest {
 			final Polygon polygon2 = JSON_MAPPER.readValue(payload, Polygon.class);
 			assertThat("polygon back is not null", polygon2, notNullValue());
 			assertThat("polygon back coincides with original", polygon2, equalTo(polygon));
-			System.out.println("polygon: " + polygon.toString());
-			System.out.println("polygon JSON payload: " + payload);
+			printMsg("polygon: " + polygon.toString());
+			printMsg("polygon JSON payload: " + payload);
 
 			// test GeoJSON feature collection JSON binding
 			final FeatureCollection collection = FeatureCollection.builder()
@@ -111,13 +116,13 @@ public class GeoJsonBindingTest {
 			final FeatureCollection collection2 = JSON_MAPPER.readValue(payload, FeatureCollection.class);
 			assertThat("feature collection back is not null", collection2, notNullValue());
 			assertThat("feature collection back coincides with original", collection2, equalTo(collection));
-			System.out.println("feature collection: " + collection.toString());
-			System.out.println("feature collection JSON payload: " + payload);			
+			printMsg("feature collection: " + collection.toString());
+			printMsg("feature collection JSON payload: " + payload);			
 
 			// test reading complex GeoJSON from files
 			final Collection<File> files = getGeoJsonFiles();
 			for (final File file : files) {
-				System.out.println(" >> GeoJSON file: " + file.getCanonicalPath());
+				printMsg(" >> GeoJSON file: " + file.getCanonicalPath());
 				final JsonNode typeNode = JSON_MAPPER.readTree(file).get("type");
 				assertThat("GeoJSON type is not null", typeNode, notNullValue());
 				final String type = typeNode.textValue();
@@ -135,14 +140,14 @@ public class GeoJsonBindingTest {
 					throw new IllegalStateException("Unsupported GeoJSON type: " + type);
 				}
 				assertThat("GeoJSON object is not null", geojsonObject, notNullValue());
-				System.out.println("GeoJSON object: " + geojsonObject.toString());
-				System.out.println("GeoJSON JSON: " + JSON_MAPPER.writeValueAsString(geojsonObject));
+				printMsg("GeoJSON object: " + geojsonObject.toString());
+				printMsg("GeoJSON JSON: " + JSON_MAPPER.writeValueAsString(geojsonObject));
 			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("GeoJsonBindingTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("GeoJsonBindingTest.test() has finished");
+			printMsg("GeoJsonBindingTest.test() has finished");
 		}
 	}
 

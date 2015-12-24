@@ -56,32 +56,32 @@ public class Notifications extends Paginable<Notification> {
 
 	@InjectLinks({
 		@InjectLink(resource=NotificationResource.class, method="getNotifications", bindings={
-			@Binding(name="page", value="${instance.page - 1}"),
-			@Binding(name="per_page", value="${instance.perPage}"),
-			@Binding(name="sort", value="${instance.sort}"),
-			@Binding(name="order", value="${instance.order}"),
-			@Binding(name="q", value="${instance.query}")
+				@Binding(name="page", value="${instance.page - 1}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="q", value="${instance.query}")
 		}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
 		@InjectLink(resource=NotificationResource.class, method="getNotifications", bindings={
-			@Binding(name="page", value="${0}"),
-			@Binding(name="per_page", value="${instance.perPage}"),
-			@Binding(name="sort", value="${instance.sort}"),
-			@Binding(name="order", value="${instance.order}"),
-			@Binding(name="q", value="${instance.query}")
+				@Binding(name="page", value="${0}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="q", value="${instance.query}")
 		}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
 		@InjectLink(resource=NotificationResource.class, method="getNotifications", bindings={
-			@Binding(name="page", value="${instance.page + 1}"),
-			@Binding(name="per_page", value="${instance.perPage}"),
-			@Binding(name="sort", value="${instance.sort}"),
-			@Binding(name="order", value="${instance.order}"),
-			@Binding(name="q", value="${instance.query}")
+				@Binding(name="page", value="${instance.page + 1}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="q", value="${instance.query}")
 		}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
 		@InjectLink(resource=NotificationResource.class, method="getNotifications", bindings={
-			@Binding(name="page", value="${instance.totalPages - 1}"),
-			@Binding(name="per_page", value="${instance.perPage}"),
-			@Binding(name="sort", value="${instance.sort}"),
-			@Binding(name="order", value="${instance.order}"),
-			@Binding(name="q", value="${instance.query}")
+				@Binding(name="page", value="${instance.totalPages - 1}"),
+				@Binding(name="per_page", value="${instance.perPage}"),
+				@Binding(name="sort", value="${instance.sort}"),
+				@Binding(name="order", value="${instance.order}"),
+				@Binding(name="q", value="${instance.query}")
 		}, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}")
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
@@ -145,6 +145,11 @@ public class Notifications extends Paginable<Notification> {
 
 		public NotificationsBuilder totalCount(final int totalCount) {
 			instance.setTotalCount(totalCount);
+			return this;
+		}
+
+		public NotificationsBuilder hash(final String hash) {
+			instance.setHash(hash);
 			return this;
 		}
 

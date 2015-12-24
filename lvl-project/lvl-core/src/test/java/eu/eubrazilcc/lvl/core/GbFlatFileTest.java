@@ -43,12 +43,17 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableMultimap;
 
 import eu.eubrazilcc.lvl.core.entrez.GbFlatFileHelper.GenBankField;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests GenBank flat file helper class {@link GbFlatFileHelper}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class GbFlatFileTest {
+public class GbFlatFileTest extends LeishvlTestCase {
+
+	public GbFlatFileTest() {
+		super(false);
+	}
 
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
 			GbFlatFileTest.class.getSimpleName() + "_" + random(8, true, true)));
@@ -60,19 +65,19 @@ public class GbFlatFileTest {
 
 	@Test
 	public void test() {
-		System.out.println("GbFlatFileTest.test()");
+		printMsg("GbFlatFileTest.test()");
 		try {			
 			final Collection<File> files = getGenBankFlatFiles();
 			for (final File file : files) {
-				System.out.println(" >> Sequence file: " + file.getCanonicalPath());
+				printMsg(" >> Sequence file: " + file.getCanonicalPath());
 				final ImmutableMultimap<GenBankField, Locale> countries = inferCountry(file);
 				assertThat("inferred countries is not null", countries, notNullValue());
 				assertThat("inferred countries is not empty", !countries.isEmpty());
 				/* uncomment to display additional output */
-				System.out.println("Inferred countries: ");
+				printMsg("Inferred countries: ");
 				for (final GenBankField key : countries.keySet()) {
 					for (final Locale locale : countries.get(key)) {
-						System.out.println("Field=" + key + ", country=" + locale.getDisplayCountry());
+						printMsg("Field=" + key + ", country=" + locale.getDisplayCountry());
 					}
 				}
 			}
@@ -80,7 +85,7 @@ public class GbFlatFileTest {
 			e.printStackTrace(System.err);
 			fail("GbFlatFileTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("GbFlatFileTest.test() has finished");
+			printMsg("GbFlatFileTest.test() has finished");
 		}
 	}
 

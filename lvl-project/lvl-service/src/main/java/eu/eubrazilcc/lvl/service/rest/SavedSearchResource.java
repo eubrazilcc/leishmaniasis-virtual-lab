@@ -29,11 +29,11 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.SavedSearchDAO.SAVED_SEARCH_DAO;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -121,10 +121,7 @@ public final class SavedSearchResource {
 	@Produces(APPLICATION_JSON)
 	public SavedSearch getSavedSearch(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
-		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);		
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("saved:searches:" + ns2permission(namespace2) + ":" + id2 + ":view")
 				.getPrincipal();
@@ -147,13 +144,13 @@ public final class SavedSearchResource {
 		}		
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("saved:searches:" + ns2permission(namespace2) + ":*:create")
-				.getPrincipal();		
+				.getPrincipal();
 		// complete required fields
-		search.setId(randomUUID().toString());
+		search.setId(compactRandomUUID());
 		search.setNamespace(ownerid);
 		search.setSaved(new Date());		
 		// create entry in the database
-		SAVED_SEARCH_DAO.insert(search);		
+		SAVED_SEARCH_DAO.insert(search);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(search.getId());		
 		return Response.created(uriBuilder.build()).build();
 	}
@@ -167,9 +164,11 @@ public final class SavedSearchResource {
 		if (update == null) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("saved:searches:" + ns2permission(namespace2) + ":" + id2 + ":edit");		
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("saved:searches:" + ns2permission(namespace2) + ":" + id2 + ":edit")
+				.getPrincipal();
 		// get from database
-		final SavedSearch search = SAVED_SEARCH_DAO.find(id);
+		final SavedSearch search = SAVED_SEARCH_DAO.find(id2, ownerid);
 		if (search == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -182,11 +181,11 @@ public final class SavedSearchResource {
 	public void deleteSavedSearch(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-		.requiresPermissions("saved:searches:" + ns2permission(namespace2) + ":" + id2 + ":edit")
-		.getPrincipal();
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("saved:searches:" + ns2permission(namespace2) + ":" + id2 + ":edit")
+				.getPrincipal();
 		// get from database
-		final SavedSearch search = SAVED_SEARCH_DAO.find(id2);
+		final SavedSearch search = SAVED_SEARCH_DAO.find(id2, ownerid);
 		if (search == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}		
@@ -202,32 +201,32 @@ public final class SavedSearchResource {
 
 		@InjectLinks({
 			@InjectLink(resource=SavedSearchResource.class, method="getSavedSearches", bindings={
-				@Binding(name="page", value="${instance.page - 1}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="q", value="${instance.query}")
+					@Binding(name="page", value="${instance.page - 1}"),
+					@Binding(name="per_page", value="${instance.perPage}"),
+					@Binding(name="sort", value="${instance.sort}"),
+					@Binding(name="order", value="${instance.order}"),
+					@Binding(name="q", value="${instance.query}")
 			}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
 			@InjectLink(resource=SavedSearchResource.class, method="getSavedSearches", bindings={
-				@Binding(name="page", value="${0}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="q", value="${instance.query}")
+					@Binding(name="page", value="${0}"),
+					@Binding(name="per_page", value="${instance.perPage}"),
+					@Binding(name="sort", value="${instance.sort}"),
+					@Binding(name="order", value="${instance.order}"),
+					@Binding(name="q", value="${instance.query}")
 			}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
 			@InjectLink(resource=SavedSearchResource.class, method="getSavedSearches", bindings={
-				@Binding(name="page", value="${instance.page + 1}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="q", value="${instance.query}")
+					@Binding(name="page", value="${instance.page + 1}"),
+					@Binding(name="per_page", value="${instance.perPage}"),
+					@Binding(name="sort", value="${instance.sort}"),
+					@Binding(name="order", value="${instance.order}"),
+					@Binding(name="q", value="${instance.query}")
 			}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
 			@InjectLink(resource=SavedSearchResource.class, method="getSavedSearches", bindings={
-				@Binding(name="page", value="${instance.totalPages - 1}"),
-				@Binding(name="per_page", value="${instance.perPage}"),
-				@Binding(name="sort", value="${instance.sort}"),
-				@Binding(name="order", value="${instance.order}"),
-				@Binding(name="q", value="${instance.query}")
+					@Binding(name="page", value="${instance.totalPages - 1}"),
+					@Binding(name="per_page", value="${instance.perPage}"),
+					@Binding(name="sort", value="${instance.sort}"),
+					@Binding(name="order", value="${instance.order}"),
+					@Binding(name="q", value="${instance.query}")
 			}, rel=LAST, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}")
 		})
 		@JsonSerialize(using = LinkListSerializer.class)

@@ -31,10 +31,12 @@ import static java.lang.String.valueOf;
 import static java.net.URLDecoder.decode;
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 import static java.util.UUID.randomUUID;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
@@ -49,7 +51,9 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.BaseNCodec;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -80,6 +84,7 @@ public final class NamingUtils {
 	private static final long LONG_BYTE_MASK = -1 ^ (-1 << Byte.SIZE);
 	private static final int NBYTES = Long.SIZE / Byte.SIZE;
 	private static final Base64 BASE64 = new Base64(true);
+	private static final Base32 BASE32 = new Base32();
 
 	/**
 	 * Generates a random UUID with {@link UUID#randomUUID()} and uses the method {@link #compactUUID(UUID)} to compact it.
@@ -96,20 +101,47 @@ public final class NamingUtils {
 	 * @return A UUID string compacted as a URL-safe string of 22 characters.
 	 */
 	public static String compactUUID(final UUID uuid) {
+		requireNonNull(uuid, "A non-null UUID expected");
+		return compact(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits(), BASE64, 22);
+	}
+
+	/**
+	 * Generates a random UUID with {@link UUID#randomUUID()} and uses the method {@link #humanUUID(UUID)} to compact it.
+	 * @return A random UUID string compacted as a URL-safe string of 26 unambiguous characters.
+	 */
+	public static String humanRandomUUID() {
+		return humanUUID(randomUUID());
+	}
+
+	/**
+	 * Encodes a {@link UUID} string using Base32 to produce a URL-safe string of 26 characters, resulting in a shorter
+	 * representation (standard UUID strings use 36 characters). This method uses an unambiguous character set:
+	 * <br />
+	 * {@code a b c d e f g h i j k l m n o p q r s t u v w x y z 2 3 4 5 6 7}
+	 * @param uuid - UUID to be compacted
+	 * @return A UUID string compacted as a URL-safe string of 26 unambiguous characters.
+	 * @see <a href="https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet">RFC 4648 - Base32 alphabet</a>
+	 */
+	public static String humanUUID(final UUID uuid) {
+		requireNonNull(uuid, "A non-null UUID expected");
+		return compact(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits(), BASE32, 26).toLowerCase();
+	}
+
+	private static String compact(final long msb, final long lsb, final BaseNCodec codec, final int length) {
 		final byte[] bytes = new byte[2 * NBYTES];
 		int i = 2 * NBYTES;
-		long x = uuid.getLeastSignificantBits();
+		long x = lsb;
 		while (i > NBYTES) {
 			bytes[--i] = (byte)x;
 			x >>>= Byte.SIZE;
 		}
-		x = uuid.getMostSignificantBits();
+		x = msb;
 		while (i > 0) {
 			bytes[--i] = (byte)x;
 			x >>>= Byte.SIZE;
 		}
-		// strips any trailing equal sign (=) from resulting string
-		return BASE64.encodeAsString(bytes).substring(0, 22);	
+		// strips any trailing equal signs (=) from the resulting string
+		return codec.encodeAsString(bytes).substring(0, length);
 	}
 
 	/**
@@ -119,7 +151,19 @@ public final class NamingUtils {
 	 * @return A standard UUID.
 	 */
 	public static UUID expandUUID(final String cuuid) {
-		final byte[] bytes = BASE64.decode(cuuid);
+		final String cuuid2 = requireNonNull(trimToNull(cuuid), "A valid compact UUID expected");
+		switch (cuuid2.length()) {
+		case 22:
+			return expand(cuuid2, BASE64);
+		case 26:
+			return expand(cuuid2.toUpperCase(), BASE32);
+		default:
+			throw new IllegalArgumentException("Not a valid compact UUID: " + cuuid2);
+		}		
+	}
+
+	private static UUID expand(final String cuuid, final BaseNCodec codec) {
+		final byte[] bytes = codec.decode(cuuid);
 		if (bytes.length != 2 * NBYTES) {
 			throw new IllegalArgumentException("A compact UUID expected but was: " + cuuid);
 		}

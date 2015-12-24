@@ -40,16 +40,21 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.http.client.TrustedHttpsClient;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests HTTP clients provided by the class {@link TrustedHttpsClient}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class TrustedHttpsClientTest {
+public class TrustedHttpsClientTest extends LeishvlTestCase {
+
+	public TrustedHttpsClientTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("TrustedHttpsClientTest.test()");
+		printMsg("TrustedHttpsClientTest.test()");
 		try {
 			try (final TrustedHttpsClient httpClient = new TrustedHttpsClient()) {
 				final ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
@@ -67,13 +72,13 @@ public class TrustedHttpsClientTest {
 				assertThat("Content is not null", payload, notNullValue());
 				assertThat("Content not is empty", isNotBlank(payload));
 				/* uncomment for additional output
-				System.out.println(" >> Server response: " + payload); */				
+				printMsg(" >> Server response: " + payload); */				
 			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("TrustedHttpsClientTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("TrustedHttpsClientTest.test() has finished");
+			printMsg("TrustedHttpsClientTest.test() has finished");
 		}
 	}
 

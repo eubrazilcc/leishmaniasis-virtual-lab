@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.core.io.PhyloTreeCreator.newickToSvg;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2dbnamespace;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
@@ -39,7 +40,6 @@ import static eu.eubrazilcc.lvl.storage.dao.WorkflowRunDAO.WORKFLOW_RUN_DAO;
 import static java.net.URLDecoder.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.createTempDirectory;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_SVG_XML;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
@@ -208,7 +208,7 @@ public final class WorkflowRunResource {
 				.getPrincipal();		
 		// submit
 		final String invocationId = ESCENTRAL_CONN.executeWorkflow(workflowId2, Integer.toString(run.getVersion()), run.getParameters());
-		run.setId(randomUUID().toString());
+		run.setId(compactRandomUUID());
 		run.setInvocationId(invocationId);
 		run.setSubmitter(ownerid);
 		run.setSubmitted(new Date());		
@@ -236,7 +236,7 @@ public final class WorkflowRunResource {
 		// update
 		WORKFLOW_RUN_DAO.update(update);
 	}
-	
+
 	@PUT
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}/cancel")
 	@Consumes(APPLICATION_JSON)

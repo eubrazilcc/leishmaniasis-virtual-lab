@@ -22,12 +22,20 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
+import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
+import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.NotificationDAO.NOTIFICATION_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,13 +61,16 @@ import org.apache.commons.lang3.mutable.MutableLong;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.Notification;
+import eu.eubrazilcc.lvl.core.Notification.Priority;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.service.Notifications;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
- * Notification resources.
+ * {@link Notification} resources. Users are allowed to view and edit their own notifications, but only administrators are 
+ * allowed to create new notifications. User permissions in role notation:<br />
+ * <tt>notifications:*: + ownerid + :*:view,edit</tt>
  * @author Erik Torres <ertorser@upv.es>
  */
 @Path("/notifications")
@@ -67,31 +78,32 @@ public class NotificationResource {
 
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Notification Resource";
 
-	public static final String NOTIF_ID_PATTERN = "[a-zA-Z_0-9]+";
-
-	// TODO : notifications are not public, they should be listed for the user who is addressed
-	
 	@GET
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public Notifications getNotifications(final @QueryParam("page") @DefaultValue("0") int page,
+	public Notifications getNotifications(final @PathParam("namespace") String namespace, final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @QueryParam("q") @DefaultValue("") String q,			
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:public:*:view");
+		final String namespace2 = parseParam(namespace);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("notifications:*:" + ns2permission(namespace2) + ":*:view")
+				.getPrincipal();
 		final Notifications paginable = Notifications.start()
 				.page(page)
 				.perPage(per_page)
 				.sort(sort)
 				.order(order)
 				.query(q)
+				.hash(computeHash(q, null))
 				.build();
 		// get notifications from database
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<Notification> notifications = NOTIFICATION_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count);
+		final List<Notification> notifications = NOTIFICATION_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count, ownerid);
 		paginable.setElements(notifications);
 		// set total count and return to the caller
 		final int totalEntries = notifications.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
@@ -100,16 +112,16 @@ public class NotificationResource {
 	}
 
 	@GET
-	@Path("{id: " + NOTIF_ID_PATTERN + "}")
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
 	@Produces(APPLICATION_JSON)
-	public Notification getNotification(final @PathParam("id") String id, final @Context UriInfo uriInfo,
+	public Notification getNotification(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:public:" + id.trim() + ":view");
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("notifications:*:" + ns2permission(namespace2) + ":" + id2 + ":view")
+				.getPrincipal();		
 		// get from database
-		final Notification notification = NOTIFICATION_DAO.find(id);
+		final Notification notification = NOTIFICATION_DAO.find(id2, ownerid);
 		if (notification == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -117,30 +129,40 @@ public class NotificationResource {
 	}
 
 	@POST
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public Response createNotification(final Notification notification, final @Context UriInfo uriInfo,
+	public Response createNotification(final @PathParam("namespace") String namespace, final Notification notification, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:*:*:create");
-		if (notification == null || isBlank(notification.getId())) {
+		parseParam(namespace);
+		if (notification == null || (isBlank(notification.getAddressee()) && isBlank(notification.getScope())) 
+				|| isBlank(notification.getMessage())) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:*:*:create");
+		// update required fields
+		notification.setId(compactRandomUUID());
+		notification.setIssuedAt(new Date());
+		if (notification.getPriority() == null) notification.setPriority(Priority.NORMAL);
 		// create notification in the database
-		NOTIFICATION_DAO.insert(notification);
+		NOTIFICATION_MANAGER.send(notification);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(notification.getId());		
 		return Response.created(uriBuilder.build()).build();
 	}
 
 	@PUT
-	@Path("{id: " + NOTIF_ID_PATTERN + "}")
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
 	@Consumes(APPLICATION_JSON)
-	public void updateNotification(final @PathParam("id") String id, final Notification update,
+	public void updateNotification(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final Notification update,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
+		if (update == null) {
+			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:*:" + id.trim() + ":edit");
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("notifications:*:" + ns2permission(namespace2) + ":" + id2 + ":edit")
+				.getPrincipal();		
 		// get from database
-		final Notification current = NOTIFICATION_DAO.find(id);
+		final Notification current = NOTIFICATION_DAO.find(id2, ownerid);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -149,20 +171,20 @@ public class NotificationResource {
 	}
 
 	@DELETE
-	@Path("{id: " + NOTIF_ID_PATTERN + "}")
-	public void deleteNotification(final @PathParam("id") String id, final @Context HttpServletRequest request, 
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
+	public void deleteNotification(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
-		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("notifications:*:*:" + id.trim() + ":edit");
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("notifications:*:" + ns2permission(namespace2) + ":" + id2 + ":edit")
+				.getPrincipal();		
 		// get from database
-		final Notification current = NOTIFICATION_DAO.find(id);
+		final Notification current = NOTIFICATION_DAO.find(id2, ownerid);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// delete
-		NOTIFICATION_DAO.delete(id);
+		NOTIFICATION_DAO.delete(id2);
 	}
 
 }

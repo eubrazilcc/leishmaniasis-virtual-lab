@@ -28,16 +28,21 @@ import org.junit.Test;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.util.StatusPrinter;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Test logging manager.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class LogManagerTest {
+public class LogManagerTest extends LeishvlTestCase {
+
+	public LogManagerTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("LogManagerTest.test()");
+		printMsg("LogManagerTest.test()");
 		try {
 			// j.u.l. logger
 			final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(LogManagerTest.class.getCanonicalName());
@@ -61,7 +66,7 @@ public class LogManagerTest {
 			e.printStackTrace(System.err);
 			fail("LogManagerTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("LogManagerTest.test() has finished");
+			printMsg("LogManagerTest.test() has finished");
 		}
 	}
 

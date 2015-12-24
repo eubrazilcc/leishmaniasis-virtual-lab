@@ -29,6 +29,7 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
@@ -39,7 +40,6 @@ import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaPendingDAO.DB_PREFIX;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaPendingDAO.LEISHMANIA_PENDING_DAO;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -179,7 +179,7 @@ public class LeishmaniaPendingResource {
 				.getPrincipal();
 		// complete required fields
 		final Calendar cal = Calendar.getInstance();
-		pendingSeq.setId(randomUUID().toString());
+		pendingSeq.setId(compactRandomUUID());
 		pendingSeq.setNamespace(ownerid);
 		pendingSeq.getSample().setModified(DWC_XML_FACTORY.createSimpleLiteral().withContent(DATE_FORMAT.format(cal.getTime())));
 		if (pendingSeq.getSample().getYear() == null) pendingSeq.getSample().setYear(yearAsXMLGregorianCalendar(cal.get(Calendar.YEAR)));

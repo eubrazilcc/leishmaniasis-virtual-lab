@@ -74,7 +74,7 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class PostResourceTest extends Testable {
 
 	public PostResourceTest(final TestContext testCtxt) {
-		super(testCtxt, PostResourceTest.class, true);
+		super(testCtxt, PostResourceTest.class, false);
 	}
 
 	@Override
@@ -136,7 +136,7 @@ public class PostResourceTest extends Testable {
 		// uncomment for additional output			
 		printMsg(" >> Get posts response body (JSON): " + payload);
 		printMsg(" >> Get posts response JAX-RS object: " + response);
-		printMsg(" >> Get posts HTTP headers: " + response.getStringHeaders());			
+		printMsg(" >> Get posts HTTP headers: " + response.getStringHeaders());
 
 		// test list all posts (Java object)
 		Posts posts = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request(APPLICATION_JSON)

@@ -52,6 +52,7 @@ import eu.eubrazilcc.lvl.core.tapir.SpeciesLinkConnector;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecordSet;
 import eu.eubrazilcc.lvl.core.xml.tdwg.tapir.ResponseType;
 import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.ConditionalIgnore;
 import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.IgnoreCondition;
 
@@ -60,19 +61,23 @@ import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.IgnoreCondition;
  * @author Erik Torres <ertorser@upv.es>
  */
 @FixMethodOrder(NAME_ASCENDING)
-public class TapirTest {
+public class TapirTest extends LeishvlTestCase {
+
+	public TapirTest() {
+		super(false);
+	}
 
 	@Rule
 	public ConditionalIgnoreRule rule = new ConditionalIgnoreRule();
 
 	@Test
 	public void test01XmlBinding() {
-		System.out.println("TapirTest.test01XmlBinding()");
+		printMsg("TapirTest.test01XmlBinding()");
 		try {
 			// test parsing TAPIR XML responses
 			Collection<File> files = getTapirResponses();
 			for (final File file : files) {
-				System.out.println(" >> TAPIR response XML file: " + file.getCanonicalPath());
+				printMsg(" >> TAPIR response XML file: " + file.getCanonicalPath());
 				final ResponseType response = TAPIR_XMLB.typeFromFile(file);
 				assertThat("TAPIR response is not null", response, notNullValue());
 				final boolean isInventory = response.getInventory() != null;
@@ -83,7 +88,7 @@ public class TapirTest {
 			// test parsing DarwinCore XML records
 			files = getDarwinCoreSets();
 			for (final File file : files) {
-				System.out.println(" >> DarwinCore set XML file: " + file.getCanonicalPath());
+				printMsg(" >> DarwinCore set XML file: " + file.getCanonicalPath());
 				final SimpleDarwinRecordSet dwcSet = DWC_XMLB.typeFromFile(file);
 				assertThat("DwC set is not null", dwcSet, notNullValue());
 				assertThat("DwC records are not empty", dwcSet.getSimpleDarwinRecord(), allOf(notNullValue(), not(empty())));
@@ -93,14 +98,14 @@ public class TapirTest {
 			e.printStackTrace(System.err);
 			fail("TapirTest.test01XmlBinding() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("TapirTest.test01XmlBinding() has finished");
+			printMsg("TapirTest.test01XmlBinding() has finished");
 		}
 	}
 
 	@Test
 	@ConditionalIgnore(condition=EnableSpeciesLinkTestIsFound.class)
 	public void test02splink() {
-		System.out.println("TapirTest.test02splink()");
+		printMsg("TapirTest.test02splink()");
 		try {
 			// test speciesLink connector
 			try (final SpeciesLinkConnector splink = new SpeciesLinkConnector()) {
@@ -111,7 +116,7 @@ public class TapirTest {
 					final long count = splink.count(collection);
 					assertThat("collection contains at least one element", count, greaterThan(0l));
 					// uncomment for additional output
-					System.out.println(" >> speciesLink collection '" + collection + "' count: " + count);
+					printMsg(" >> speciesLink collection '" + collection + "' count: " + count);
 
 					// test collection fetching
 					final SimpleDarwinRecordSet dwcSet = splink.fetch(collection, 0, 1);
@@ -119,14 +124,14 @@ public class TapirTest {
 					assertThat("DwC records are not empty", dwcSet.getSimpleDarwinRecord(), allOf(notNullValue(), not(empty())));
 					assertThat("DwC number of records coincides with expected", dwcSet.getSimpleDarwinRecord().size(), equalTo(1));
 					// uncomment for additional output
-					System.out.println(" >> speciesLink collection '" + collection + "' fetched (start:0, limit:1):\n" + DWC_XMLB.typeToXml(dwcSet));
+					printMsg(" >> speciesLink collection '" + collection + "' fetched (start:0, limit:1):\n" + DWC_XMLB.typeToXml(dwcSet));
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("TapirTest.test02splink() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("TapirTest.test02splink() has finished");
+			printMsg("TapirTest.test02splink() has finished");
 		}
 	}
 

@@ -49,12 +49,17 @@ import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.entrez.EntrezHelper;
 import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSeq;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests Entrez utilities provided by the class {@link EntrezHelper}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class EntrezTest {
+public class EntrezTest extends LeishvlTestCase {
+
+	public EntrezTest() {
+		super(false);
+	}
 
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
 			EntrezTest.class.getSimpleName() + "_" + random(8, true, true)));
@@ -74,7 +79,7 @@ public class EntrezTest {
 
 	@Test
 	public void test() {
-		System.out.println("EntrezTest.test()");
+		printMsg("EntrezTest.test()");
 		try (final EntrezHelper entrez = EntrezHelper.create()) {
 			assertThat("Entrez helper is not null", entrez, notNullValue());
 
@@ -119,7 +124,7 @@ public class EntrezTest {
 			e.printStackTrace(System.err);
 			fail("EntrezTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("EntrezTest.test() has finished");
+			printMsg("EntrezTest.test() has finished");
 		}
 	}	
 

@@ -22,11 +22,11 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
 import static eu.eubrazilcc.lvl.storage.support.dao.SubscriptionRequestDAO.SUBSCRIPTION_REQ_DAO;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
@@ -71,7 +71,7 @@ import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
  */
 @Path("/support/subscriptions/requests")
 public class SubscriptionRequestResource {
-	
+
 	public static final String RESOURCE_NAME = ConfigurationManager.LVL_NAME + " Subscription Requests Resource";
 
 	protected final static Logger LOGGER = getLogger(SubscriptionRequestResource.class);
@@ -129,7 +129,7 @@ public class SubscriptionRequestResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		// complete required fields
-		subscriptionRequest.setId(randomUUID().toString());
+		subscriptionRequest.setId(compactRandomUUID());
 		subscriptionRequest.setRequested(new Date());
 		subscriptionRequest.setFulfilled(null);
 		// create request in the database

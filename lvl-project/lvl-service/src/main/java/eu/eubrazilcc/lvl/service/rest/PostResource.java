@@ -22,6 +22,7 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
@@ -30,7 +31,6 @@ import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.PostDAO.POST_DAO;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -104,11 +104,6 @@ public class PostResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		
-		// TODO
-		System.err.println("\n\n >> QUERY: " + filter + ", SORT: " + sorting + "\n");
-		// TODO
-		
 		final List<Post> posts = POST_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count);
 		paginable.setElements(posts);
 		// set total count and return to the caller
@@ -143,7 +138,7 @@ public class PostResource {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
 		// update the required fields
-		post.setId(randomUUID().toString());
+		post.setId(compactRandomUUID());
 		post.setCreated(new Date());
 		// save to the database
 		POST_DAO.insert(post);		

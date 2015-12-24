@@ -49,15 +49,21 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
+
 /**
  * Tests {@link DataSource} manipulation utilities.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DataSourceTest {
+public class DataSourceTest extends LeishvlTestCase {
+
+	public DataSourceTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("DataSourceTest.test()");
+		printMsg("DataSourceTest.test()");
 		try {
 			// create test datasets
 			final ImmutableMap<String, String> testDataset1 = of(GENBANK_SHORT, GENBANK, PUBMED_SHORT, PUBMED, LEISHVL_SHORT, LEISHVL,
@@ -109,7 +115,7 @@ public class DataSourceTest {
 			e.printStackTrace(System.err);
 			fail("DataSourceTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("DataSourceTest.test() has finished");
+			printMsg("DataSourceTest.test() has finished");
 		}
 	}
 

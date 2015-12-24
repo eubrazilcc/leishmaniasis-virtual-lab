@@ -80,7 +80,7 @@ public enum NotificationManager {
 		checkState(queue.offer(notification), "No space is currently available");
 		if (workers.get() == 0) {
 			createWorker();
-		}		
+		}
 	}
 
 	public void broadcast(final Notification notification) {
@@ -116,7 +116,7 @@ public enum NotificationManager {
 							do {
 								resourceOwners = RESOURCE_OWNER_DAO.list(start, PAGE_SIZE, null, null, null, count);
 								for (final ResourceOwner resourceOwner : resourceOwners) {
-									if (hasRole(notification.getScope(), resourceOwner.getUser())) {
+									if (hasRole(notification.getScope(), resourceOwner.getUser())) {										
 										notification.setAddressee(resourceOwner.getUser().getUserid());
 										NOTIFICATION_DAO.insert(notification);
 										LOGGER.trace("Notification broadcasted: " + notification);
@@ -125,7 +125,7 @@ public enum NotificationManager {
 								start += resourceOwners.size();
 							} while (!resourceOwners.isEmpty());							
 						} else {
-							// send to user converting user-names to valid resource-owner-identifiers
+							// send to user converting the addressee to a valid resource-owner identifier
 							try {
 								assertValidResourceOwnerId(notification.getAddressee());
 							} catch (Exception ignore) {

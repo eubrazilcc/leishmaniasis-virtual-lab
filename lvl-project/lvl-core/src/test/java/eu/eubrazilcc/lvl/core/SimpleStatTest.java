@@ -39,17 +39,23 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
+
 /**
  * Tests {@link SimpleStat} class.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SimpleStatTest {
+public class SimpleStatTest extends LeishvlTestCase {
+
+	public SimpleStatTest() {
+		super(false);
+	}
 
 	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 	
 	@Test
 	public void test() {
-		System.out.println("SimpleStatTest.test()");
+		printMsg("SimpleStatTest.test()");
 		try {
 			// test with less than 10 elements
 			final List<SimpleStat> stats = newArrayList();
@@ -113,7 +119,7 @@ public class SimpleStatTest {
 			assertThat("serialized list is not null", payload, notNullValue());
 			assertThat("serialized list is not empty", isNotBlank(payload), equalTo(true));
 			/* uncomment for additional output */
-			System.out.println(" >> Serialized list (JSON): " + payload);
+			printMsg(" >> Serialized list (JSON): " + payload);
 
 			// test JSON deserialization			
 			final JavaType type = JSON_MAPPER.getTypeFactory().constructParametricType(List.class, SimpleStat.class);
@@ -125,7 +131,7 @@ public class SimpleStatTest {
 			e.printStackTrace(System.err);
 			fail("SimpleStatTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("SimpleStatTest.test() has finished");
+			printMsg("SimpleStatTest.test() has finished");
 		}
 	}
 

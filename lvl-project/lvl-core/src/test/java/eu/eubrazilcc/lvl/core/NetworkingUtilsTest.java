@@ -34,15 +34,21 @@ import java.net.ServerSocket;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import org.junit.Test;
 
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
+
 /**
  * Tests networking utilities.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class NetworkingUtilsTest {
+public class NetworkingUtilsTest extends LeishvlTestCase {
+
+	public NetworkingUtilsTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("NetworkingUtilsTest.test()");
+		printMsg("NetworkingUtilsTest.test()");
 		try {
 			// check IP address discover
 			final String address = getInet4Address();
@@ -59,7 +65,7 @@ public class NetworkingUtilsTest {
 			e.printStackTrace(System.err);
 			fail("NetworkingUtilsTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("NetworkingUtilsTest.test() has finished");
+			printMsg("NetworkingUtilsTest.test() has finished");
 		}
 	}
 

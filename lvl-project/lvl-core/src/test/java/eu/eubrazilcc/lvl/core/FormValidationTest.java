@@ -37,15 +37,21 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.junit.Test;
 
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
+
 /**
  * Tests form validation utilities.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class FormValidationTest {
+public class FormValidationTest extends LeishvlTestCase {
+
+	public FormValidationTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("FormValidationTest.test()");
+		printMsg("FormValidationTest.test()");
 		try {
 			// test input parsing
 			final MultivaluedMap<String, String> form = new MultivaluedHashMap<String, String>();
@@ -74,7 +80,7 @@ public class FormValidationTest {
 			e.printStackTrace(System.err);
 			fail("FormValidationTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("FormValidationTest.test() has finished");
+			printMsg("FormValidationTest.test() has finished");
 		}
 	}
 

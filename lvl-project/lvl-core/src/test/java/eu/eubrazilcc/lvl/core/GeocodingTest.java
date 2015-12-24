@@ -37,36 +37,41 @@ import org.junit.Test;
 import com.google.common.base.Optional;
 
 import eu.eubrazilcc.lvl.core.geojson.Point;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests Geocoding utilities.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class GeocodingTest {
+public class GeocodingTest extends LeishvlTestCase {
+
+	public GeocodingTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("GeocodingTest.test()");
+		printMsg("GeocodingTest.test()");
 		try {
 			// test converting address into geographic coordinates
 			final String address1 = "Spain:Valencia";
 			Point point = geocode(address1).orNull();
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
-			System.out.println(" >> Address: " + address1 + ", Location: " + point.toString());
+			printMsg(" >> Address: " + address1 + ", Location: " + point.toString());
 
 			// test converting address with valid country, invalid region into geographic coordinates
 			final String address2 = "Thailand: Ratchabun province, Muang district, Huay-Phai sub-district";
 			point = geocode(address2).orNull();
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
-			System.out.println(" >> Address: " + address2 + ", Location: " + point.toString());
+			printMsg(" >> Address: " + address2 + ", Location: " + point.toString());
 			
 			// test converting invalid address
 			final String address3 = "1234abcd:1234abcd";
 			point = geocode(address3).orNull();
 			assertThat("location is null", point, nullValue());
-			System.out.println(" >> Address: " + address3 + ", Location: NULL");
+			printMsg(" >> Address: " + address3 + ", Location: NULL");
 			
 			// test get location from cache
 			Optional<Point> cached = getIfPresent(address1);
@@ -82,13 +87,13 @@ public class GeocodingTest {
 			point = geocode(locale).orNull();
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
-			System.out.println(" >> Locale: " + locale.getDisplayCountry() + ", Location: " + point.toString());
+			printMsg(" >> Locale: " + locale.getDisplayCountry() + ", Location: " + point.toString());
 			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("GeocodingTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("GeocodingTest.test() has finished");
+			printMsg("GeocodingTest.test() has finished");
 		}
 	}
 

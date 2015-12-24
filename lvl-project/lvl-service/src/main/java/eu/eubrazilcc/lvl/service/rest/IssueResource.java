@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.service.rest;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
@@ -31,7 +32,6 @@ import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PAT
 import static eu.eubrazilcc.lvl.storage.support.dao.IssueAttachmentDAO.ISSUE_ATTACHMENT_DAO;
 import static eu.eubrazilcc.lvl.storage.support.dao.IssueDAO.ISSUE_DAO;
 import static java.io.File.createTempFile;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
@@ -184,7 +184,7 @@ public class IssueResource {
 			File tmpFile = null;
 			OutputStream os = null;
 			try {
-				attachmentId = randomUUID().toString();
+				attachmentId = compactRandomUUID();
 				tmpFile = createTempFile("lvl-issue-attachment", ".tmp");			
 				os = new FileOutputStream(tmpFile);
 				long total = 0l, max = CONFIG_MANAGER.getMaxUserUploadedFileSize() * 1024l;
@@ -213,7 +213,7 @@ public class IssueResource {
 			}
 		}
 		// complete required fields
-		issue.setId(randomUUID().toString());
+		issue.setId(compactRandomUUID());
 		issue.setOpened(new Date());
 		issue.setStatus(IssueStatus.NEW);
 		issue.setClosed(null);

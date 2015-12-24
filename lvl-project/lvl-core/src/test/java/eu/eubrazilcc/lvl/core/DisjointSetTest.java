@@ -35,17 +35,22 @@ import java.util.List;
 import org.junit.Test;
 
 import eu.eubrazilcc.lvl.core.analysis.DisjointSet;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests {@link DisjointSet} data analysis utilities.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class DisjointSetTest {
+public class DisjointSetTest extends LeishvlTestCase {
+
+	public DisjointSetTest() {
+		super(false);
+	}
 
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test() {
-		System.out.println("DisjointSetTest.test()");
+		printMsg("DisjointSetTest.test()");
 		try {
 			// test create disjoint set
 			final List<String> dataset = newArrayList("Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine");
@@ -84,7 +89,7 @@ public class DisjointSetTest {
 			assertThat("number of root elements coincides with expected", rootList.size(), equalTo(5));
 			/* uncomment for additional output */
 			for (final String item : rootList) {
-				System.out.println(" >> root element: " + item);
+				printMsg(" >> root element: " + item);
 			}
 
 			// test get elements in a set
@@ -97,7 +102,7 @@ public class DisjointSetTest {
 				assertThat("elements coincides with expected", item, anyOf(equalTo("One"), equalTo("Two"), equalTo("Five"), 
 						equalTo("Six"), equalTo("Eight")));
 				/* uncomment for additional output */
-				System.out.println(" >> element in the same set that " + element + ": " + item);
+				printMsg(" >> element in the same set that " + element + ": " + item);
 			}
 
 			element = "One";
@@ -109,7 +114,7 @@ public class DisjointSetTest {
 				assertThat("elements coincides with expected", item, anyOf(equalTo("One"), equalTo("Two"), equalTo("Five"), 
 						equalTo("Six"), equalTo("Eight")));
 				/* uncomment for additional output */
-				System.out.println(" >> element in the same set that " + element + ": " + item);
+				printMsg(" >> element in the same set that " + element + ": " + item);
 			}
 
 			element = "Three";
@@ -120,7 +125,7 @@ public class DisjointSetTest {
 			for (final String item : elements) {
 				assertThat("elements coincides with expected", item, anyOf(equalTo("Three"), equalTo("Four")));
 				/* uncomment for additional output */
-				System.out.println(" >> element in the same set that " + element + ": " + item);
+				printMsg(" >> element in the same set that " + element + ": " + item);
 			}
 
 			element = "Seven";
@@ -131,14 +136,14 @@ public class DisjointSetTest {
 			for (final String item : elements) {
 				assertThat("elements coincides with expected", item, anyOf(equalTo("Seven")));
 				/* uncomment for additional output */
-				System.out.println(" >> element in the same set that " + element + ": " + item);
+				printMsg(" >> element in the same set that " + element + ": " + item);
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("DisjointSetTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("DisjointSetTest.test() has finished");
+			printMsg("DisjointSetTest.test() has finished");
 		}
 	}
 

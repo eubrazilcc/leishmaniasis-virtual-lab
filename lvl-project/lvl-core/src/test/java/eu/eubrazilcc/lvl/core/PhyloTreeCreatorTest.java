@@ -49,6 +49,7 @@ import org.junit.Test;
 import eu.eubrazilcc.lvl.core.io.PhyloTreeCreator;
 import eu.eubrazilcc.lvl.core.util.TestUtils.Phylogenetic;
 import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.ConditionalIgnore;
 import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.IgnoreCondition;
 
@@ -56,7 +57,11 @@ import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.IgnoreCondition;
  * Tests phylogenetic tree creator.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PhyloTreeCreatorTest {
+public class PhyloTreeCreatorTest extends LeishvlTestCase {
+
+	public PhyloTreeCreatorTest() {
+		super(false);
+	}
 
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
 			PhyloTreeCreatorTest.class.getSimpleName() + "_" + random(8, true, true)));
@@ -79,11 +84,11 @@ public class PhyloTreeCreatorTest {
 	@Test
 	@ConditionalIgnore(condition=EnablePhyloTreeTestIsFound.class)
 	public void test() {
-		System.out.println("PhyloTreeCreatorTest.test()");
+		printMsg("PhyloTreeCreatorTest.test()");
 		try {
 			final Collection<Phylogenetic> phyloFiles = getPhylogeneticFiles();
 			for (final Phylogenetic phyloFile : phyloFiles) {
-				System.out.println(" >> Tree file: " + phyloFile.getTree().getCanonicalPath() + ", Aligment file: " 
+				printMsg(" >> Tree file: " + phyloFile.getTree().getCanonicalPath() + ", Aligment file: " 
 						+ (phyloFile.getAlignment() != null ? phyloFile.getAlignment().getCanonicalPath() : null));
 				final String name = getBaseName(phyloFile.getTree().getName());
 				final File outputDir = new File(TEST_OUTPUT_DIR, name);
@@ -101,7 +106,7 @@ public class PhyloTreeCreatorTest {
 			e.printStackTrace(System.err);
 			fail("PhyloTreeCreatorTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("PhyloTreeCreatorTest.test() has finished");
+			printMsg("PhyloTreeCreatorTest.test() has finished");
 		}
 	}
 

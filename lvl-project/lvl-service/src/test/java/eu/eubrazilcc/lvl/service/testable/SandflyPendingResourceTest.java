@@ -72,7 +72,7 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class SandflyPendingResourceTest extends Testable {
 
 	public SandflyPendingResourceTest(final TestContext testCtxt) {
-		super(testCtxt, SandflyPendingResourceTest.class);		
+		super(testCtxt, SandflyPendingResourceTest.class, true);		
 	}
 
 	@Override
@@ -306,7 +306,7 @@ public class SandflyPendingResourceTest extends Testable {
 				.get(SandflyPendings.class);
 		assertThat("Search pending sequences result is not null", pendingSeqs, notNullValue());
 		assertThat("Search pending sequences list coincides with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), 
-				hasSize(pendingSeqs.getTotalCount()), hasSize(1)));
+				hasSize(pendingSeqs.getTotalCount()), hasSize(1))); // TODO
 		// uncomment for additional output
 		printMsg(" >> Search pending sequences result: " + toJson(pendingSeqs, JSON_PRETTY_PRINTER));
 

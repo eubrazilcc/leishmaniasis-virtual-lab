@@ -28,8 +28,10 @@ import static eu.eubrazilcc.lvl.storage.dao.NotificationDAO.NOTIFICATION_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.ADMIN_USER;
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.ADMIN_ROLE;
 import static java.util.Collections.shuffle;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
@@ -49,9 +51,9 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
  * @author Erik Torres <ertorser@upv.es>
  */
 public class NotificationCollectionTest extends LeishvlTestCase {
-	
+
 	public NotificationCollectionTest() {
-		super(true);
+		super(false);
 	}
 
 	@Test
@@ -59,18 +61,13 @@ public class NotificationCollectionTest extends LeishvlTestCase {
 		System.out.println("NotificationCollectionTest.test()");
 		try {
 			// insert
-			final Notification notification = Notification.builder()					
-					.namespace("username")
+			final Notification notification = Notification.builder()
+					.newId()
 					.message("This is an example")
+					.addressee("user1")
 					.build();
 			final String id = NOTIFICATION_DAO.insert(notification).getId();
-			assertThat("notification id is not null", id, notNullValue());
-			assertThat("notification id is not empty", isNotBlank(id));
-			notification.setId(id);
-			
-			Thread.sleep(120000l); // TODO
-			
-			System.err.println("\n\n ID: " + id + "\n"); // TODO
+			assertThat("notification id is not empty", trim(id), allOf(notNullValue(), not(equalTo(""))));
 
 			// find
 			Notification notification2 = NOTIFICATION_DAO.find(notification.getId());
@@ -99,9 +96,11 @@ public class NotificationCollectionTest extends LeishvlTestCase {
 			final int numItems = 11;
 			for (int i = 0; i < numItems; i++) {
 				final Notification notification3 = Notification.builder()
-						.namespace("username")
+						.id("notif-" + i)
+						.addressee("username")
 						.message(Integer.toString(i)).build();
-				ids.add(NOTIFICATION_DAO.insert(notification3).getId());
+				NOTIFICATION_DAO.insert(notification3);
+				ids.add(notification3.getId());
 			}
 
 			// pagination			
@@ -137,6 +136,7 @@ public class NotificationCollectionTest extends LeishvlTestCase {
 					priority = Priority.LOW;
 				}
 				final Notification notification3 = Notification.builder()
+						.newId()
 						.priority(priority)
 						.addressee(ADMIN_USER)
 						.message(Integer.toString(i)).build();

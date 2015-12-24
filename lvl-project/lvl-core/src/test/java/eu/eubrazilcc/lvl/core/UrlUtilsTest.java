@@ -51,11 +51,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
+
 /**
  * Tests URL utilities.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class UrlUtilsTest {
+public class UrlUtilsTest extends LeishvlTestCase {
+
+	public UrlUtilsTest() {
+		super(false);
+	}
 
 	private static final String TEST_OUTPUT_DIR = concat(System.getProperty("java.io.tmpdir"),
 			UrlUtilsTest.class.getSimpleName() + "_" + random(8, true, true));
@@ -67,7 +73,7 @@ public class UrlUtilsTest {
 
 	@Test
 	public void test() {
-		System.out.println("URLUtilsTest.test()");
+		printMsg("URLUtilsTest.test()");
 		try {			
 			// parse URL
 			final String[][] paths = { 
@@ -95,7 +101,7 @@ public class UrlUtilsTest {
 				URL url = null;
 				try {
 					url = parseURL(paths[i][0]);					
-					System.out.println("PATH='" + paths[i][0] 
+					printMsg("PATH='" + paths[i][0] 
 							+ "', URL='" + (url != null ? url.toString() : "NULL") 
 							+ "', EXPECTED='" + paths[i][1] + "'");
 					assertThat("URL is not null", url, notNullValue());
@@ -109,7 +115,7 @@ public class UrlUtilsTest {
 					if (paths[i][1] != null) {
 						throw ioe;
 					} else {
-						System.out.println("PATH='" + paths[i][0] + "' thrown the expected exception");
+						printMsg("PATH='" + paths[i][0] + "' thrown the expected exception");
 					}
 				}
 			}
@@ -180,7 +186,7 @@ public class UrlUtilsTest {
 			e.printStackTrace(System.err);
 			fail("URLUtilsTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("URLUtilsTest.test() has finished");
+			printMsg("URLUtilsTest.test() has finished");
 		}		
 	}
 

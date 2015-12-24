@@ -60,16 +60,21 @@ import eu.eubrazilcc.lvl.core.xml.ncbi.gb.GBSet;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticle;
 import eu.eubrazilcc.lvl.core.xml.ncbi.pubmed.PubmedArticleSet;
 import eu.eubrazilcc.lvl.core.xml.ncbi.taxonomy.TaxaSet;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Test XML to/from NCBI Java object binding.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class NCBIXmlBindingTest {
+public class NCBIXmlBindingTest extends LeishvlTestCase {
+
+	public NCBIXmlBindingTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("NCBIXmlBindingTest.test()");
+		printMsg("NCBIXmlBindingTest.test()");
 		try {
 			// test parsing GenInfo identifier
 			final String[] ids = { "gb|JQ790522.1|", "gi|384562886", "gi|", "gi|JQ790522", "gi" };
@@ -100,7 +105,7 @@ public class NCBIXmlBindingTest {
 					for (final Locale locale : countries2.get(key)) {
 						assertThat("inferred country coincides with expected", locale, equalTo(countries[i]));
 						/* uncomment to display additional output */
-						System.out.println("Inferred country: field=" + key + ", country=" + locale.getDisplayCountry());
+						printMsg("Inferred country: field=" + key + ", country=" + locale.getDisplayCountry());
 					}
 				}
 			}
@@ -108,7 +113,7 @@ public class NCBIXmlBindingTest {
 			// test parsing GenBank XML records
 			Collection<File> files = getGBSeqXMLSetFiles();
 			for (final File file : files) {
-				System.out.println(" >> GenBank sequence set XML file: " + file.getCanonicalPath());
+				printMsg(" >> GenBank sequence set XML file: " + file.getCanonicalPath());
 				final GBSet gbSet = GBSEQ_XMLB.typeFromFile(file);
 				assertThat("GenBank XML set is not null", gbSet, notNullValue());
 				assertThat("GenBank XML sequences is not null", gbSet.getGBSeq(), notNullValue());
@@ -119,29 +124,29 @@ public class NCBIXmlBindingTest {
 					assertThat("GenBank XML sequence version is not empty", isNotBlank(seq.getGBSeqAccessionVersion()));
 					assertThat("GenBank XML sequence organism is not empty", isNotBlank(seq.getGBSeqOrganism()));
 					/* Uncomment for additional output */
-					System.out.println(" >> Accession  : " + seq.getGBSeqPrimaryAccession());
-					System.out.println(" >> Definition : " + seq.getGBSeqDefinition());
-					System.out.println(" >> Version    : " + seq.getGBSeqAccessionVersion());
-					System.out.println(" >> Organism   : " + seq.getGBSeqOrganism());
-					System.out.println(" >> Length     : " + seq.getGBSeqLength());
+					printMsg(" >> Accession  : " + seq.getGBSeqPrimaryAccession());
+					printMsg(" >> Definition : " + seq.getGBSeqDefinition());
+					printMsg(" >> Version    : " + seq.getGBSeqAccessionVersion());
+					printMsg(" >> Organism   : " + seq.getGBSeqOrganism());
+					printMsg(" >> Length     : " + seq.getGBSeqLength());
 
 					final Set<String> gene = getGeneNames(seq);
 					if (gene != null) {
 						/* Uncomment for additional output */
-						System.out.println(" >> Gene names : " + gene);
+						printMsg(" >> Gene names : " + gene);
 					}
 
 					final List<Reference> references = getPubMedReferences(seq);
 					assertThat("References is not null", references, notNullValue());
 					assertThat("References is not empty", references.isEmpty(), equalTo(false));
 					/* Uncomment for additional output */
-					System.out.println(" >> References : " + references);
+					printMsg(" >> References : " + references);
 
 					final Set<String> pmids = getPubMedIds(seq);
 					assertThat("References PMIDS are not null", pmids, notNullValue());
 					assertThat("References PMIDS are not empty", pmids.isEmpty(), equalTo(false));
 					/* Uncomment for additional output */
-					System.out.println(" >> Reference PMIDS : " + pmids);
+					printMsg(" >> Reference PMIDS : " + pmids);
 
 					final Sequence sequence = parseSequence(seq, Sandfly.builder());
 					assertThat("Sequence is not null", sequence, notNullValue());
@@ -151,14 +156,14 @@ public class NCBIXmlBindingTest {
 					assertThat("Sequence version is not empty", isNotBlank(sequence.getVersion()));
 					assertThat("Sequence organism is not empty", isNotBlank(sequence.getOrganism()));
 					/* Uncomment for additional output */
-					System.out.println(" >> Sequence  : " + sequence.toString());
+					printMsg(" >> Sequence  : " + sequence.toString());
 				}
 			}
 
 			// test parsing GenBank isolated sequences
 			files = getGBSeqXMLFiles();
 			for (final File file : files) {
-				System.out.println(" >> GenBank sequence XML file: " + file.getCanonicalPath());
+				printMsg(" >> GenBank sequence XML file: " + file.getCanonicalPath());
 				final GBSeq seq = GBSEQ_XMLB.typeFromFile(file);
 				assertThat("GenBank XML sequence is not null", seq, notNullValue());				
 				assertThat("GenBank XML sequence accession is not empty", isNotBlank(seq.getGBSeqPrimaryAccession()));
@@ -166,29 +171,29 @@ public class NCBIXmlBindingTest {
 				assertThat("GenBank XML sequence version is not empty", isNotBlank(seq.getGBSeqAccessionVersion()));
 				assertThat("GenBank XML sequence organism is not empty", isNotBlank(seq.getGBSeqOrganism()));
 				/* Uncomment for additional output */
-				System.out.println(" >> Accession  : " + seq.getGBSeqPrimaryAccession());
-				System.out.println(" >> Definition : " + seq.getGBSeqDefinition());
-				System.out.println(" >> Version    : " + seq.getGBSeqAccessionVersion());
-				System.out.println(" >> Organism   : " + seq.getGBSeqOrganism());
-				System.out.println(" >> Length     : " + seq.getGBSeqLength());
+				printMsg(" >> Accession  : " + seq.getGBSeqPrimaryAccession());
+				printMsg(" >> Definition : " + seq.getGBSeqDefinition());
+				printMsg(" >> Version    : " + seq.getGBSeqAccessionVersion());
+				printMsg(" >> Organism   : " + seq.getGBSeqOrganism());
+				printMsg(" >> Length     : " + seq.getGBSeqLength());
 
 				final Set<String> gene = getGeneNames(seq);
 				if (gene != null) {
 					/* Uncomment for additional output */
-					System.out.println(" >> Gene names : " + gene);
+					printMsg(" >> Gene names : " + gene);
 				}
 
 				final List<Reference> references = getPubMedReferences(seq);
 				assertThat("References is not null", references, notNullValue());
 				assertThat("References is not empty", references.isEmpty(), equalTo(false));
 				/* Uncomment for additional output */
-				System.out.println(" >> References : " + references);
+				printMsg(" >> References : " + references);
 
 				final Set<String> pmids = getPubMedIds(seq);
 				assertThat("References PMIDS are not null", pmids, notNullValue());
 				assertThat("References PMIDS are not empty", pmids.isEmpty(), equalTo(false));
 				/* Uncomment for additional output */
-				System.out.println(" >> Reference PMIDS : " + pmids);
+				printMsg(" >> Reference PMIDS : " + pmids);
 
 				final Sequence sequence = parseSequence(seq, Sandfly.builder());
 				assertThat("Sequence is not null", sequence, notNullValue());
@@ -198,13 +203,13 @@ public class NCBIXmlBindingTest {
 				assertThat("Sequence version is not empty", isNotBlank(sequence.getVersion()));
 				assertThat("Sequence organism is not empty", isNotBlank(sequence.getOrganism()));
 				/* Uncomment for additional output */
-				System.out.println(" >> Sequence  : " + sequence.toString());
+				printMsg(" >> Sequence  : " + sequence.toString());
 			}
 
 			// test parsing PubMed XML records
 			files = getPubMedXMLSetFiles();
 			for (final File file : files) {
-				System.out.println(" >> PubMed article set XML file: " + file.getCanonicalPath());
+				printMsg(" >> PubMed article set XML file: " + file.getCanonicalPath());
 				final PubmedArticleSet articleSet = PUBMED_XMLB.typeFromFile(file);
 				assertThat("PubMed XML set is not null", articleSet, notNullValue());
 				assertThat("PubMed XML articles is not null", articleSet.getPubmedArticle(), notNullValue());
@@ -225,8 +230,8 @@ public class NCBIXmlBindingTest {
 					assertThat("PubMed XML article journal publication year is not empty", article.getMedlineCitation().getArticle().getJournal()
 							.getJournalIssue().getPubDate().getYearOrMonthOrDayOrSeasonOrMedlineDate().isEmpty(), equalTo(false));
 					/* Uncomment for additional output */
-					System.out.println(" >> Title : " + article.getMedlineCitation().getArticle().getArticleTitle());
-					System.out.println(" >> PMID  : " + article.getMedlineCitation().getPMID().getvalue());
+					printMsg(" >> Title : " + article.getMedlineCitation().getArticle().getArticleTitle());
+					printMsg(" >> PMID  : " + article.getMedlineCitation().getPMID().getvalue());
 
 					final Reference reference = parseArticle(article);
 					assertThat("Reference is not null", reference, notNullValue());
@@ -234,14 +239,14 @@ public class NCBIXmlBindingTest {
 					assertThat("Reference PMID is not empty", isNotBlank(reference.getPubmedId()));
 					assertThat("Reference publication year coincides with expected", reference.getPublicationYear() > 1900, equalTo(true));
 					/* Uncomment for additional output */
-					System.out.println(" >> Reference  : " + reference.toString());
+					printMsg(" >> Reference  : " + reference.toString());
 				}
 			}
 
 			// test parsing GenBank isolated articles
 			files = getPubMedXMLFiles();
 			for (final File file : files) {
-				System.out.println(" >> PubMed article XML file: " + file.getCanonicalPath());
+				printMsg(" >> PubMed article XML file: " + file.getCanonicalPath());
 				final PubmedArticle article = PUBMED_XMLB.typeFromFile(file);				
 				assertThat("PubMed XML article MEDLINE citation is not null", article.getMedlineCitation(), notNullValue());
 				assertThat("PubMed XML article is not null", article.getMedlineCitation().getArticle(), notNullValue());
@@ -258,8 +263,8 @@ public class NCBIXmlBindingTest {
 				assertThat("PubMed XML article journal publication year is not empty", article.getMedlineCitation().getArticle().getJournal()
 						.getJournalIssue().getPubDate().getYearOrMonthOrDayOrSeasonOrMedlineDate().isEmpty(), equalTo(false));
 				/* Uncomment for additional output */
-				System.out.println(" >> Title : " + article.getMedlineCitation().getArticle().getArticleTitle());
-				System.out.println(" >> PMID  : " + article.getMedlineCitation().getPMID().getvalue());
+				printMsg(" >> Title : " + article.getMedlineCitation().getArticle().getArticleTitle());
+				printMsg(" >> PMID  : " + article.getMedlineCitation().getPMID().getvalue());
 
 				final Reference reference = parseArticle(article);
 				assertThat("Reference is not null", reference, notNullValue());
@@ -267,13 +272,13 @@ public class NCBIXmlBindingTest {
 				assertThat("Reference PMID is not empty", isNotBlank(reference.getPubmedId()));
 				assertThat("Reference publication year coincides with expected", reference.getPublicationYear() > 1900, equalTo(true));
 				/* Uncomment for additional output */
-				System.out.println(" >> Reference  : " + reference.toString());
+				printMsg(" >> Reference  : " + reference.toString());
 			}
 
 			// test parsing Taxonomy XML records
 			files = getTaxonomyXMLSetFiles();
 			for (final File file : files) {
-				System.out.println(" >> Taxonomy set XML file: " + file.getCanonicalPath());
+				printMsg(" >> Taxonomy set XML file: " + file.getCanonicalPath());
 				final TaxaSet taxaSet = TAXONOMY_XMLB.typeFromFile(file);
 				assertThat("Taxonomy XML set is not null", taxaSet, notNullValue());
 				assertThat("Taxonomy XML taxons is not null", taxaSet.getTaxon(), notNullValue());
@@ -285,7 +290,7 @@ public class NCBIXmlBindingTest {
 			e.printStackTrace(System.err);
 			fail("NCBIXmlBindingTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("NCBIXmlBindingTest.test() has finished");
+			printMsg("NCBIXmlBindingTest.test() has finished");
 		}
 	}
 

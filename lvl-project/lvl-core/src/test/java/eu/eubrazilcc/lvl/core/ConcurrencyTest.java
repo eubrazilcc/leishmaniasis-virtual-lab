@@ -43,11 +43,17 @@ import org.junit.Test;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableScheduledFuture;
 
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
+
 /**
  * Tests utilities to concurrently execute tasks.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ConcurrencyTest {
+public class ConcurrencyTest extends LeishvlTestCase {
+
+	public ConcurrencyTest() {
+		super(false);
+	}
 
 	private boolean isCompleted;
 
@@ -64,7 +70,7 @@ public class ConcurrencyTest {
 
 	@Test
 	public void test() {
-		System.out.println("ConcurrencyTest.test()");
+		printMsg("ConcurrencyTest.test()");
 		try {
 			final String success = "OK";
 
@@ -100,7 +106,7 @@ public class ConcurrencyTest {
 				TASK_SCHEDULER.scheduleAtFixedRate(new Runnable() {					
 					@Override
 					public void run() {
-						System.out.println(" >> Scheluded job runs");
+						printMsg(" >> Scheluded job runs");
 					}
 				}, 0, 20, SECONDS);
 				fail("Should have thrown an IllegalStateException because task runner is uninitialized");
@@ -113,7 +119,7 @@ public class ConcurrencyTest {
 			final ListenableScheduledFuture<?> future2 = TASK_SCHEDULER.scheduleAtFixedRate(new Runnable() {					
 				@Override
 				public void run() {
-					System.out.println(" >> Scheluded job runs");
+					printMsg(" >> Scheluded job runs");
 				}
 			}, 0, 20, SECONDS);
 			assertThat("scheduled task future is not null", future2, notNullValue());			
@@ -129,7 +135,7 @@ public class ConcurrencyTest {
 			e.printStackTrace(System.err);
 			fail("ConcurrencyTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("ConcurrencyTest.test() has finished");
+			printMsg("ConcurrencyTest.test() has finished");
 		}
 	}
 

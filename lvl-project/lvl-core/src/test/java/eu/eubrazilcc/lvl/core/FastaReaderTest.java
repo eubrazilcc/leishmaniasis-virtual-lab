@@ -46,12 +46,17 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.io.FastaReader;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests FASTA format reader helper class {@link FastaReader}.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class FastaReaderTest {
+public class FastaReaderTest extends LeishvlTestCase {
+
+	public FastaReaderTest() {
+		super(false);
+	}
 
 	private static final File TEST_OUTPUT_DIR = new File(concat(getProperty("java.io.tmpdir"),
 			FastaReaderTest.class.getSimpleName() + "_" + random(8, true, true)));
@@ -65,11 +70,11 @@ public class FastaReaderTest {
 
 	@Test
 	public void test() {
-		System.out.println("FastaReaderTest.test()");
+		printMsg("FastaReaderTest.test()");
 		try {
 			final Collection<File> files = getFastaFiles();
 			for (final File file : files) {
-				System.out.println(" >> FASTA file: " + file.getCanonicalPath());
+				printMsg(" >> FASTA file: " + file.getCanonicalPath());
 				String[] sequences = readFasta(file);
 				assertThat("sequences are not null", sequences, notNullValue());
 				assertThat("number of sequences coincides with expected", sequences.length, equalTo(dataset.get(file.getName())));
@@ -77,13 +82,13 @@ public class FastaReaderTest {
 					assertThat("sequence is not empty", isNotBlank(sequence), equalTo(true)); 
 				}
 				// uncomment for additional output
-				System.out.println(" >> Read sequences \n" + Arrays.toString(sequences));				
+				printMsg(" >> Read sequences \n" + Arrays.toString(sequences));				
 			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			fail("FastaReaderTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("FastaReaderTest.test() has finished");
+			printMsg("FastaReaderTest.test() has finished");
 		}
 	}
 

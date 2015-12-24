@@ -31,15 +31,21 @@ import java.io.File;
 
 import org.junit.Test;
 
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
+
 /**
  * Tests configuration.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ConfigurationTest {
+public class ConfigurationTest extends LeishvlTestCase {
+
+	public ConfigurationTest() {
+		super(false);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("ConfigurationTest.test()");
+		printMsg("ConfigurationTest.test()");
 		try {
 			final File rootDir = CONFIG_MANAGER.getRootDir();
 			assertThat("root directory is not null", rootDir, notNullValue());
@@ -47,7 +53,7 @@ public class ConfigurationTest {
 			e.printStackTrace(System.err);
 			fail("ConfigurationTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("ConfigurationTest.test() has finished");
+			printMsg("ConfigurationTest.test() has finished");
 		}
 	}
 
