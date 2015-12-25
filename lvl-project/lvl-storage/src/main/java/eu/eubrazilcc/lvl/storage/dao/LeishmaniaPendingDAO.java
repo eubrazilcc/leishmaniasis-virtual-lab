@@ -150,13 +150,13 @@ public enum LeishmaniaPendingDAO implements AuthenticatedDAO<String, LeishmaniaP
 	}
 
 	@Override
-	public LeishmaniaPending find(final String path) {	
-		return find(path, null);
+	public LeishmaniaPending find(final String id) {	
+		return find(id, null);
 	}
 
 	@Override
-	public LeishmaniaPending find(final String path, final String user) {
-		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(path, user) : key(path), COLLECTION);		
+	public LeishmaniaPending find(final String id, final String user) {
+		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(id, user) : key(id), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
@@ -203,6 +203,11 @@ public enum LeishmaniaPendingDAO implements AuthenticatedDAO<String, LeishmaniaP
 	public long count() {
 		return MONGODB_CONN.count(COLLECTION);
 	}
+	
+	@Override
+	public long count(final String user) {
+		return MONGODB_CONN.count(COLLECTION, new BasicDBObject(NAMESPACE_KEY, user));
+	}
 
 	@Override
 	public List<LeishmaniaPending> getNear(final Point point, final double maxDistance) {
@@ -233,8 +238,8 @@ public enum LeishmaniaPendingDAO implements AuthenticatedDAO<String, LeishmaniaP
 		return new BasicDBObject(PRIMARY_KEY, key);		
 	}
 
-	private BasicDBObject compositeKey(final String path, final String submitter) {
-		return new BasicDBObject(of(PRIMARY_KEY, path, NAMESPACE_KEY, submitter));
+	private BasicDBObject compositeKey(final String id, final String submitter) {
+		return new BasicDBObject(of(PRIMARY_KEY, id, NAMESPACE_KEY, submitter));
 	}
 
 	private BasicDBObject sortCriteria(final @Nullable Sorting sorting) throws InvalidSortParseException {

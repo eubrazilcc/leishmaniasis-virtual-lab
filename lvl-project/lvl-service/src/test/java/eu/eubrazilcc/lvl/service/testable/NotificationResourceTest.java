@@ -53,6 +53,7 @@ import javax.ws.rs.core.Response;
 import eu.eubrazilcc.lvl.core.Notification;
 import eu.eubrazilcc.lvl.core.Notification.Action;
 import eu.eubrazilcc.lvl.service.Notifications;
+import eu.eubrazilcc.lvl.service.TotalCount;
 import eu.eubrazilcc.lvl.service.rest.NotificationResource;
 import eu.eubrazilcc.lvl.test.TestContext;
 import eu.eubrazilcc.lvl.test.Testable;
@@ -213,6 +214,27 @@ public class NotificationResourceTest extends Testable {
 				.equalsIgnoringVolatile(notification)));
 		// uncomment for additional output			
 		printMsg(" >> Get notifications result: " + notifications.toString());
+		
+		// get notification count
+		response = testCtxt.target().path(path.value())
+				.path(urlEncodeUtf8(LVL_DEFAULT_NS))
+				.path("/total/count")
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
+				.get();
+		assertThat("Get total count response is not null", response, notNullValue());
+		assertThat("Get total count response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+		assertThat("Get total count response is not empty", response.getEntity(), notNullValue());
+		payload = response.readEntity(String.class);
+		assertThat("Get total count response entity is not null", payload, notNullValue());
+		assertThat("Get total count response entity is not empty", isNotBlank(payload));
+		// uncomment for additional output			
+		printMsg(" >> Get total count response body (JSON): " + payload);
+		printMsg(" >> Get total count response JAX-RS object: " + response);
+		printMsg(" >> Get total count HTTP headers: " + response.getStringHeaders());
+		final TotalCount totalCount = testCtxt.jsonMapper().readValue(payload, TotalCount.class);
+		assertThat("Get total count result is not null", totalCount, notNullValue());
+		assertThat("Get total count coincide with expected", totalCount.getTotalCount(), equalTo(1L));
 
 		// test update notification
 		notification.setAction(new Action("/#/action", "This is an action"));

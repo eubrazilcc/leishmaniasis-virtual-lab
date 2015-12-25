@@ -205,6 +205,11 @@ public enum SandflyPendingDAO implements AuthenticatedDAO<String, SandflyPending
 	}
 
 	@Override
+	public long count(final String user) {
+		return MONGODB_CONN.count(COLLECTION, new BasicDBObject(NAMESPACE_KEY, user));
+	}
+
+	@Override
 	public List<SandflyPending> getNear(final Point point, final double maxDistance) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}

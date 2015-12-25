@@ -412,10 +412,21 @@ public enum MongoDBConnector implements Closeable2 {
 	 * @return the number of objects stored in the collection
 	 */
 	public long count(final String collection) {
+		return count(collection, null);
+	}
+	
+	/**
+	 * Get the count of documents in collection that would match a criteria. All the documents will be counted when no 
+	 * criteria is passed to this method.
+	 * @param collection - collection whose objects are counted
+	 * @param query - (optional) specifies the selection criteria
+	 * @return The number of documents that matches selection criteria.
+	 */
+	public long count(final String collection, final @Nullable DBObject query) {
 		checkArgument(isNotBlank(collection), "Uninitialized or invalid collection");
 		final DB db = client().getDB(CONFIG_MANAGER.getDbName());
 		final DBCollection dbcol = db.getCollection(collection);
-		return dbcol.getCount();
+		return query != null ? dbcol.getCount(query) : dbcol.getCount();
 	}
 
 	/**

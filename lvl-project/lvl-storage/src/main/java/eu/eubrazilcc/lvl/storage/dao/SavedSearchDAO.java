@@ -164,7 +164,7 @@ public enum SavedSearchDAO implements AuthenticatedDAO<String, SavedSearch> {
 			}
 		});
 	}
-	
+
 	@Override
 	public List<String> typeahead(final String field, final String query, final int size) {
 		throw new UnsupportedOperationException("Typeahead searches are not currently supported in this class");
@@ -173,6 +173,11 @@ public enum SavedSearchDAO implements AuthenticatedDAO<String, SavedSearch> {
 	@Override
 	public long count() {
 		return MONGODB_CONN.count(COLLECTION);
+	}
+
+	@Override
+	public long count(final String user) {
+		return MONGODB_CONN.count(COLLECTION, new BasicDBObject(NAMESPACE_KEY, user));
 	}
 
 	@Override

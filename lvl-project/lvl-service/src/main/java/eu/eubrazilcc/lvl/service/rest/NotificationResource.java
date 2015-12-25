@@ -65,6 +65,7 @@ import eu.eubrazilcc.lvl.core.Notification.Priority;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.service.Notifications;
+import eu.eubrazilcc.lvl.service.TotalCount;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
@@ -126,6 +127,20 @@ public class NotificationResource {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		return notification;
+	}
+	
+	@GET
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/total/count")
+	@Produces(APPLICATION_JSON)
+	public TotalCount getTotalCount(final @PathParam("namespace") String namespace, final @Context UriInfo uriInfo,
+			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace);
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("notifications:*:" + ns2permission(namespace2) + ":*:view")
+				.getPrincipal();		
+		// get from database		
+		final long totalCount = NOTIFICATION_DAO.count(ownerid);		
+		return new TotalCount(totalCount);				
 	}
 
 	@POST

@@ -136,13 +136,13 @@ public enum WorkflowRunDAO implements AuthenticatedDAO<String, WorkflowRun> {
 	}
 
 	@Override
-	public WorkflowRun find(final String path) {	
-		return find(path, null);
+	public WorkflowRun find(final String id) {	
+		return find(id, null);
 	}
 
 	@Override
-	public WorkflowRun find(final String path, final String user) {
-		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(path, user) : key(path), COLLECTION);		
+	public WorkflowRun find(final String id, final String user) {
+		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(id, user) : key(id), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
@@ -164,7 +164,7 @@ public enum WorkflowRunDAO implements AuthenticatedDAO<String, WorkflowRun> {
 			}
 		});		
 	}
-	
+
 	@Override
 	public List<String> typeahead(final String field, final String query, final int size) {
 		throw new UnsupportedOperationException("Typeahead searches are not currently supported in this class");
@@ -173,6 +173,11 @@ public enum WorkflowRunDAO implements AuthenticatedDAO<String, WorkflowRun> {
 	@Override
 	public long count() {
 		return MONGODB_CONN.count(COLLECTION);
+	}
+
+	@Override
+	public long count(final String user) {
+		return MONGODB_CONN.count(COLLECTION, new BasicDBObject(SUBMITTER_KEY, user));
 	}
 
 	@Override
@@ -208,8 +213,8 @@ public enum WorkflowRunDAO implements AuthenticatedDAO<String, WorkflowRun> {
 		return new BasicDBObject(SUBMITTER_KEY, key);		
 	}
 
-	private BasicDBObject compositeKey(final String path, final String submitter) {
-		return new BasicDBObject(of(PRIMARY_KEY, path, SUBMITTER_KEY, submitter));
+	private BasicDBObject compositeKey(final String id, final String submitter) {
+		return new BasicDBObject(of(PRIMARY_KEY, id, SUBMITTER_KEY, submitter));
 	}
 
 	private BasicDBObject sortCriteria() {

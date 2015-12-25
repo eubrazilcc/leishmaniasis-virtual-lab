@@ -75,6 +75,13 @@ public interface AuthenticatedDAO<K, E> extends BaseDAO<K, E> {
 	 */
 	List<E> list(int start, int size, @Nullable ImmutableMap<String, String> filter, @Nullable Sorting sorting, 
 			@Nullable ImmutableMap<String, Boolean> projection, @Nullable MutableLong count, String user);
+	
+	/**
+	 * Returns the number of elements in the database whose owner coincides with the specified user.
+	 * @param user - caller identity
+	 * @return the number of elements in the database whose owner coincides with the specified user.
+	 */
+	long count(String user);
 
 	/**
 	 * Returns the elements in the database that are within the specified distance (in meters) from the center point specified (using WGS84) and 

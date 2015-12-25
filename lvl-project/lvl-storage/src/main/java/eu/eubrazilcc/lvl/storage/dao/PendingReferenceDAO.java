@@ -135,13 +135,13 @@ public enum PendingReferenceDAO implements AuthenticatedDAO<String, PendingRefer
 	}
 
 	@Override
-	public PendingReference find(final String path) {	
-		return find(path, null);
+	public PendingReference find(final String id) {	
+		return find(id, null);
 	}
 
 	@Override
-	public PendingReference find(final String path, final String user) {
-		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(path, user) : key(path), COLLECTION);		
+	public PendingReference find(final String id, final String user) {
+		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(id, user) : key(id), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
@@ -190,6 +190,11 @@ public enum PendingReferenceDAO implements AuthenticatedDAO<String, PendingRefer
 	}
 
 	@Override
+	public long count(final String user) {
+		return MONGODB_CONN.count(COLLECTION, new BasicDBObject(NAMESPACE_KEY, user));
+	}
+
+	@Override
 	public List<PendingReference> getNear(final Point point, final double maxDistance) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
@@ -218,8 +223,8 @@ public enum PendingReferenceDAO implements AuthenticatedDAO<String, PendingRefer
 		return new BasicDBObject(PRIMARY_KEY, key);		
 	}
 
-	private BasicDBObject compositeKey(final String path, final String submitter) {
-		return new BasicDBObject(of(PRIMARY_KEY, path, NAMESPACE_KEY, submitter));
+	private BasicDBObject compositeKey(final String id, final String submitter) {
+		return new BasicDBObject(of(PRIMARY_KEY, id, NAMESPACE_KEY, submitter));
 	}
 
 	private BasicDBObject sortCriteria(final @Nullable Sorting sorting) throws InvalidSortParseException {
