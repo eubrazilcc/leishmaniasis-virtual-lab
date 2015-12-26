@@ -58,7 +58,7 @@ public class NotificationCollectionTest extends LeishvlTestCase {
 
 	@Test
 	public void test() {
-		System.out.println("NotificationCollectionTest.test()");
+		printMsg("NotificationCollectionTest.test()");
 		try {
 			// insert
 			final Notification notification = Notification.builder()
@@ -73,7 +73,7 @@ public class NotificationCollectionTest extends LeishvlTestCase {
 			Notification notification2 = NOTIFICATION_DAO.find(notification.getId());
 			assertThat("notification is not null", notification2, notNullValue());
 			assertThat("notification coincides with original", notification2, equalTo(notification));
-			System.out.println(notification2.toString());
+			printMsg(notification2.toString());
 
 			// update
 			notification.setAction(new Action("/#/action", "This is an action"));
@@ -84,7 +84,7 @@ public class NotificationCollectionTest extends LeishvlTestCase {
 			notification2 = NOTIFICATION_DAO.find(notification.getId());
 			assertThat("notification is not null", notification2, notNullValue());
 			assertThat("notification coincides with original", notification2, equalTo(notification));
-			System.out.println(notification2.toString());
+			printMsg(notification2.toString());
 
 			// remove
 			NOTIFICATION_DAO.delete(notification.getId());
@@ -111,7 +111,7 @@ public class NotificationCollectionTest extends LeishvlTestCase {
 			do {
 				notifications = NOTIFICATION_DAO.list(start, size, null, null, null, count);
 				if (notifications.size() != 0) {
-					System.out.println("Paging: first item " + start + ", showing " + notifications.size() + " of " + count.getValue() + " items");
+					printMsg("Paging: first item " + start + ", showing " + notifications.size() + " of " + count.getValue() + " items");
 				}
 				start += notifications.size();
 			} while (!notifications.isEmpty());
@@ -170,7 +170,7 @@ public class NotificationCollectionTest extends LeishvlTestCase {
 			e.printStackTrace(System.err);
 			fail("NotificationCollectionTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("NotificationCollectionTest.test() has finished");
+			printMsg("NotificationCollectionTest.test() has finished");
 		}
 	}
 

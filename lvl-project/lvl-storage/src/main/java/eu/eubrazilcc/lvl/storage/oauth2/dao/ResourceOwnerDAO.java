@@ -227,7 +227,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 			}
 		});		
 	}
-	
+
 	@Override
 	public List<String> typeahead(final String field, final String query, final int size) {
 		throw new UnsupportedOperationException("Typeahead searches are not currently supported in this class");
@@ -479,7 +479,9 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 * Adds permissions to data shares calling the method {@link #addPermissions(String, String...)}.
 	 * @param ownerId - identifier of the resource owner whose permissions will be modified
 	 * @param shares - data shares to which the resource owner will be granted with the defined access
+	 * @deprecated As of release 0.9.2, replaced by {@link eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO#insert(eu.eubrazilcc.lvl.core.SharedObject)}
 	 */
+	@Deprecated
 	public void addPermissions(final String ownerId, final DatasetShare... shares) {
 		checkArgument(shares != null && shares.length > 0, "Uninitialized or invalid data shares");
 		addPermissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
@@ -495,7 +497,9 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 	 * Removes permissions from data shares calling the method {@link #removePermissions(String, String...)}.
 	 * @param ownerId - identifier of the resource owner whose permissions will be modified
 	 * @param shares - data shares from which the access of the resource owner will be removed
+	 * @deprecated As of release 0.9.2, replaced by {@link eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO#delete(String)} 
 	 */
+	@Deprecated
 	public void removePermissions(final String ownerId, final DatasetShare... shares) {
 		checkArgument(shares != null && shares.length > 0, "Uninitialized or invalid data shares");
 		removePermissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
@@ -543,6 +547,10 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		update(resourceOwner);
 	}
 
+	/**
+	 * @deprecated As of release 0.9.2, replaced by {@link eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO#list(int, int, ImmutableMap, Sorting, ImmutableMap, MutableLong, String)
+	 */
+	@Deprecated
 	public List<DatasetShare> listDatashares(final String namespace, final String filename, final int start, final int size, 
 			final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, final @Nullable MutableLong count) {
 		final String namespace2 = trimToNull(namespace), filename2 = trimToNull(filename);
@@ -567,6 +575,10 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		});		
 	}
 
+	/**
+	 * @deprecated As of release 0.9.2, replaced by {@link eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO#find(String, String)
+	 */
+	@Deprecated
 	public DatasetShare findDatashare(final String namespace, final String filename, final String subject) {
 		final String namespace2 = trimToNull(namespace), filename2 = trimToNull(filename), subject2 = convertToValidResourceOwnerId(subject, true);
 		checkArgument(isNotBlank(namespace2), "Uninitialized or invalid namespace");
@@ -587,6 +599,10 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		return owner != null ? parseResourceOwner(owner, namespace2, filename2, new String[]{ rw, ro }) : null;
 	}
 
+	/**
+	 * @deprecated As of release 0.9.2, no more needed.
+	 */
+	@Deprecated
 	private DatasetShare parseResourceOwner(final ResourceOwner owner, final String namespace, final String filename, 
 			final String[] permissions) {
 		PermissionModification history = null;

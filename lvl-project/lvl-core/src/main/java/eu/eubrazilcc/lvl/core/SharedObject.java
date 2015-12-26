@@ -26,11 +26,15 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.util.Date;
 import java.util.List;
@@ -51,17 +55,15 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Provides information about a shared dataset.
+ * Provides information aboud a shared object.
  * @author Erik Torres <ertorser@upv.es>
- * @deprecated As of release 0.9.2, replaced by {@link eu.eubrazilcc.lvl.core.SharedObject}
  */
-@Deprecated
-public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
+public class SharedObject extends Shareable implements Linkable<SharedObject> {
 
 	@InjectLinks({
-		@InjectLink(value="datasets/shares/{urlSafeNamespace}/{urlSafeFilename}", rel=SELF, type=APPLICATION_JSON, bindings={
+		@InjectLink(value="shares/{urlSafeNamespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
 				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
-				@Binding(name="urlSafeFilename", value="${instance.urlSafeFilename}")
+				@Binding(name="urlSafeId", value="${instance.urlSafeId}")
 		})
 	})
 	@JsonSerialize(using = LinkListSerializer.class)
@@ -72,16 +74,12 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 	@JsonIgnore
 	private String urlSafeNamespace;
 	@JsonIgnore
-	private String urlSafeFilename;
-	@JsonIgnore
-	private String urlSafeSubject;
+	private String urlSafeId;
 
-	private String namespace;
-	private String filename;
+	private String id;        // Resource identifier	
 
-	public DatasetShare() {
-		super();
-	}
+	private String collection;
+	private String objectId;
 
 	@Override
 	public List<Link> getLinks() {
@@ -105,71 +103,69 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 		this.urlSafeNamespace = urlSafeNamespace;
 	}
 
-	public String getUrlSafeFilename() {
-		return urlSafeFilename;
+	public String getUrlSafeId() {
+		return urlSafeId;
 	}
 
-	public void setUrlSafeFilename(final String urlSafeFilename) {
-		this.urlSafeFilename = urlSafeFilename;
-	}
-
-	public String getUrlSafeSubject() {
-		return urlSafeSubject;
-	}
-
-	public void setUrlSafeSubject(final String urlSafeSubject) {
-		this.urlSafeSubject = urlSafeSubject;
-	}
-
-	public String getNamespace() {
-		return namespace;
-	}
-
-	public void setNamespace(final String namespace) {
-		this.namespace = namespace;
-		setUrlSafeNamespace(urlEncodeUtf8(trimToEmpty(namespace)));
-	}
-
-	public String getFilename() {
-		return filename;
-	}
-
-	public void setFilename(final String filename) {
-		this.filename = filename;
-		setUrlSafeFilename(urlEncodeUtf8(trimToEmpty(filename)));
+	public void setUrlSafeId(final String urlSafeId) {
+		this.urlSafeId = urlSafeId;
 	}
 
 	@Override
 	public void setSubject(final String subject) {
 		super.setSubject(subject);
-		setUrlSafeSubject(urlEncodeUtf8(trimToEmpty(subject)));
+		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(subject, LVL_DEFAULT_NS).trim()));
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
+		setUrlSafeId(id != null ? urlEncodeUtf8(trimToEmpty(id)) : id);
+	}
+
+	public String getCollection() {
+		return collection;
+	}
+
+	public void setCollection(final String collection) {
+		this.collection = collection;
+	}
+
+	public String getObjectId() {
+		return objectId;
+	}
+
+	public void setObjectId(final String objectId) {
+		this.objectId = objectId;
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof DatasetShare)) {
+		if (obj == null || !(obj instanceof SharedObject)) {
 			return false;
 		}
-		final DatasetShare other = DatasetShare.class.cast(obj);
-		return  Objects.equals(urlSafeNamespace, other.urlSafeNamespace)
-				&& Objects.equals(urlSafeFilename, other.urlSafeFilename)				
-				&& equalsIgnoringVolatile(other);
+		final SharedObject other = SharedObject.class.cast(obj);
+		return Objects.equals(links, other.links)
+				&& equalsIgnoringVolatile(other);		
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final DatasetShare other) {
+	public boolean equalsIgnoringVolatile(final SharedObject other) {
 		if (other == null) {
 			return false;
 		}
 		return super.equals((Shareable)other)
-				&& Objects.equals(namespace, other.namespace)
-				&& Objects.equals(filename, other.filename)
-				&& Objects.equals(links, other.links);
+				&& Objects.equals(id, other.id)
+				&& Objects.equals(collection, other.collection)
+				&& Objects.equals(objectId, other.objectId);
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, urlSafeNamespace, urlSafeFilename, namespace, filename);
+		return super.hashCode() + Objects.hash(links, id, collection, objectId);
 	}
 
 	@Override
@@ -177,11 +173,9 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 		return toStringHelper(this)
 				.add("Shareable", super.toString())
 				.add("links", links)
-				.add("urlSafeNamespace", urlSafeNamespace)
-				.add("urlSafeFilename", urlSafeFilename)
-				.add("urlSafeSubject", urlSafeSubject)				
-				.add("namespace", namespace)
-				.add("filename", filename)
+				.add("id", id)
+				.add("collection", collection)
+				.add("objectId", objectId)
 				.toString();
 	}
 
@@ -189,28 +183,43 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 
 	public static Builder builder() {
 		return new Builder();
-	}	
+	}
 
 	public static class Builder {
 
-		private final DatasetShare instance = new DatasetShare();
+		private final SharedObject instance = new SharedObject();
 
 		public Builder links(final List<Link> links) {
 			instance.setLinks(links);
 			return this;
 		}
 
-		public Builder namespace(final String namespace) {
-			checkArgument(isNotBlank(namespace), "Uninitialized or invalid namespace");
-			instance.setNamespace(namespace.trim());
+		public Builder newId() {
+			instance.setId(compactRandomUUID());
 			return this;
 		}
 
-		public Builder filename(final String filename) {
-			checkArgument(isNotBlank(filename), "Uninitialized or invalid filename");
-			instance.setFilename(filename.trim());
+		public Builder id(final String id) {
+			String id2 = null;
+			checkArgument(isNotBlank(id2 = trimToNull(id)), "Uninitialized or invalid id");
+			instance.setId(id2);
 			return this;
 		}
+
+		public Builder collection(final String collection) {
+			String collection2 = null;
+			checkArgument(isNotBlank(collection2 = trimToNull(collection)), "Uninitialized or invalid collection");
+			instance.setCollection(collection2);
+			return this;
+		}
+
+		public Builder objectId(final String objectId) {
+			String objectId2 = null;
+			checkArgument(isNotBlank(objectId2 = trimToNull(objectId)), "Uninitialized or invalid object Id");
+			instance.setObjectId(objectId2);
+			return this;
+		}
+
 
 		/* Inherited from Shareable */
 
@@ -237,7 +246,7 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 			return this;
 		}
 
-		public DatasetShare build() {
+		public SharedObject build() {
 			return instance;
 		}
 

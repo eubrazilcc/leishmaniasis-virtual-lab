@@ -261,6 +261,16 @@ public class JsonMappingTest extends LeishvlTestCase {
 					.build();
 			assertThat("dataset share is not null", datasetShare, notNullValue());
 
+			final SharedObject sharedObject = SharedObject.builder()
+					.subject("user1@example.com")
+					.sharedNow()
+					.accessType(EDIT_SHARE)
+					.newId()
+					.collection("datasets")
+					.objectId("LeishVL123")
+					.build();
+			assertThat("shared object is not null", sharedObject, notNullValue());
+
 			final LvlInstance instance = LvlInstance.builder()
 					.instanceId("instanceId")
 					.roles(newHashSet("shard"))
@@ -374,6 +384,13 @@ public class JsonMappingTest extends LeishvlTestCase {
 			// test dataset share with links
 			datasetShare.setLinks(newArrayList(refLink));
 			testDatasetShare(datasetShare);
+
+			// test shared object share with no links
+			testSharedObject(sharedObject);
+
+			// test shared object with links
+			sharedObject.setLinks(newArrayList(refLink));
+			testSharedObject(sharedObject);			
 
 			// test instance with no links
 			testInstance(instance);
@@ -577,6 +594,20 @@ public class JsonMappingTest extends LeishvlTestCase {
 		final DatasetShare datasetShare2 = JSON_MAPPER.readValue(payload, DatasetShare.class);
 		assertThat("deserialized dataset share is not null", datasetShare2, notNullValue());
 		assertThat("deserialized dataset share coincides with expected", datasetShare2, equalTo(datasetShare));
+	}
+
+	private void testSharedObject(final SharedObject sharedObject) throws IOException {
+		// test shared object share JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(sharedObject);
+		assertThat("serialized shared object is not null", payload, notNullValue());
+		assertThat("serialized shared object is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		printMsg(" >> Serialized shared object (JSON): " + payload);
+
+		// test shared object JSON deserialization
+		final SharedObject sharedObject2 = JSON_MAPPER.readValue(payload, SharedObject.class);
+		assertThat("deserialized shared object is not null", sharedObject2, notNullValue());
+		assertThat("deserialized shared object coincides with expected", sharedObject2, equalTo(sharedObject));
 	}
 
 	private void testInstance(final LvlInstance instance) throws IOException {

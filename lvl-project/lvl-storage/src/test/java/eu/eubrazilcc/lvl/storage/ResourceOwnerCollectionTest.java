@@ -48,16 +48,21 @@ import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO;
 import eu.eubrazilcc.lvl.storage.security.User;
+import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
  * Tests OAuth2 resource owner collection in the database.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class ResourceOwnerCollectionTest {
+public class ResourceOwnerCollectionTest extends LeishvlTestCase {
+
+	public ResourceOwnerCollectionTest() {
+		super(true);
+	}
 
 	@Test
 	public void test() {
-		System.out.println("ResourceOwnerCollectionTest.test()");
+		printMsg("ResourceOwnerCollectionTest.test()");
 		try {
 			final Collection<String> roles = newArrayList("role1", "role2");
 			final Collection<String> permissions = newArrayList("sequences:leishmania:public:*:view", "sequences:sandflies:public:*:view");
@@ -90,7 +95,7 @@ public class ResourceOwnerCollectionTest {
 			ResourceOwner resourceOwner2 = RESOURCE_OWNER_DAO.find(resourceOwner.getOwnerId());
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
 			assertThat("resource owner coincides with original", resourceOwner2, equalTo(hashed));
-			System.out.println(resourceOwner2.toString());
+			printMsg(resourceOwner2.toString());
 
 			// find (no salt) with volatile values
 			resourceOwner2 = RESOURCE_OWNER_DAO.useGravatar(true).find(resourceOwner.getOwnerId());
@@ -100,7 +105,7 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner picture URL is not empty", isNotBlank(resourceOwner2.getUser().getPictureUrl()));
 			assertThat("resource owner with volatile values coincides with original", 
 					resourceOwner2.getUser().equalsIgnoringVolatile(hashed.getUser()));
-			System.out.println(resourceOwner2.toString());
+			printMsg(resourceOwner2.toString());
 
 			// insert element with hard link
 			final ResourceOwner resourceOwner1 = ResourceOwner.builder()
@@ -121,7 +126,7 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner inserted with hard link is not null", result.getElement(), notNullValue());
 			assertThat("resource owner inserted with hard link coincides with original (ignoring password & salt)", 
 					resourceOwner1.equalsToUnprotected(result.getElement()), equalTo(true));
-			System.out.println(resourceOwner2.toString());
+			printMsg(resourceOwner2.toString());
 
 			RESOURCE_OWNER_DAO.delete(resourceOwner1.getOwnerId());
 
@@ -134,7 +139,7 @@ public class ResourceOwnerCollectionTest {
 			resourceOwner2 = RESOURCE_OWNER_DAO.reset().find(resourceOwner.getOwnerId());
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
 			assertThat("resource owner coincides with original", resourceOwner2, equalTo(hashed));
-			System.out.println(resourceOwner2.toString());
+			printMsg(resourceOwner2.toString());
 
 			// check validity using owner Id and username
 			AtomicReference<String> ownerIdRef = new AtomicReference<String>();
@@ -169,21 +174,21 @@ public class ResourceOwnerCollectionTest {
 			assertThat("dataset shares is null", shares, notNullValue());
 			assertThat("dataset shares is empty", shares.isEmpty(), equalTo(true));
 			// uncomment for additional output
-			System.out.println(" >> Dataset shares (before permissions are granted): " + shares.toString());
+			printMsg(" >> Dataset shares (before permissions are granted): " + shares.toString());
 
 			// share dataset by adding permissions to resource owner
 			RESOURCE_OWNER_DAO.addPermissions(resourceOwner.getOwnerId(), "datasets:files:otheruser@lvl:mysequences.xml:view");
 			resourceOwner2 = RESOURCE_OWNER_DAO.reset().find(resourceOwner.getOwnerId());
 			assertThat("resource owner is not null", resourceOwner2, notNullValue());
 			// uncomment for additional output
-			System.out.println(" >> Owner with permissions to view shared dataset: " + resourceOwner2.toString());
+			printMsg(" >> Owner with permissions to view shared dataset: " + resourceOwner2.toString());
 
 			// test listing shared datasets
 			shares = RESOURCE_OWNER_DAO.listDatashares("otheruser@lvl", "mysequences.xml", 0, Integer.MAX_VALUE, null, null, null);
 			assertThat("dataset shares is not null", shares, notNullValue());
 			assertThat("number of dataset shares coincides with expected", shares.size(), equalTo(1));
 			// uncomment for additional output
-			System.out.println(" >> Dataset shares (after permissions are granted): " + shares.toString());
+			printMsg(" >> Dataset shares (after permissions are granted): " + shares.toString());
 
 			// insert redundant permissions
 			RESOURCE_OWNER_DAO.addPermissions(resourceOwner.getOwnerId(), "datasets:files:otheruser@lvl:mysequences.xml:view,edit");
@@ -192,7 +197,7 @@ public class ResourceOwnerCollectionTest {
 			DatasetShare share = RESOURCE_OWNER_DAO.findDatashare("otheruser@lvl", "mysequences.xml", resourceOwner.getOwnerId());
 			assertThat("dataset share is not null", share, notNullValue());
 			// uncomment for additional output
-			System.out.println(" >> Dataset share (after adding redundant permissions): " + share.toString());
+			printMsg(" >> Dataset share (after adding redundant permissions): " + share.toString());
 
 			// test modifying a share
 			// not available
@@ -204,7 +209,7 @@ public class ResourceOwnerCollectionTest {
 			assertThat("dataset shares is null", shares, notNullValue());
 			assertThat("dataset shares is empty", shares.isEmpty(), equalTo(true));
 			// uncomment for additional output
-			System.out.println(" >> Dataset shares (after permissions are removed): " + shares.toString());
+			printMsg(" >> Dataset shares (after permissions are removed): " + shares.toString());
 
 			// get OAuth scope
 			resourceOwner2 = RESOURCE_OWNER_DAO.find(resourceOwner.getOwnerId());
@@ -212,7 +217,7 @@ public class ResourceOwnerCollectionTest {
 			assertThat("resource owner OAuth scope is not null", oauthScope, notNullValue());
 			assertThat("resource owner OAuth scope is not blank", isNotBlank(oauthScope));
 			assertThat("resource owner OAuth scope coincided with expected", oauthScope, equalTo("role1 role3"));
-			System.out.println("OAuth scope: '" + oauthScope + "'");
+			printMsg("OAuth scope: '" + oauthScope + "'");
 
 			// remove (default LVL administrator is not removed)
 			RESOURCE_OWNER_DAO.delete(resourceOwner.getOwnerId());
@@ -229,7 +234,7 @@ public class ResourceOwnerCollectionTest {
 			resourceOwner2 = RESOURCE_OWNER_DAO.find(hashed.getOwnerId());
 			assertThat("resource owner (with salt) is not null", resourceOwner2, notNullValue());
 			assertThat("resource owner (with salt) coincides with original", resourceOwner2, equalTo(hashed));
-			System.out.println(resourceOwner2.toString());
+			printMsg(resourceOwner2.toString());
 
 			// pagination
 			final List<String> ids = newArrayList();
@@ -254,7 +259,7 @@ public class ResourceOwnerCollectionTest {
 			do {
 				resourceOwners = RESOURCE_OWNER_DAO.list(start, size, null, null, null, count);
 				if (resourceOwners.size() != 0) {
-					System.out.println("Paging: first item " + start + ", showing " + resourceOwners.size() + " of " + count.getValue() + " items");
+					printMsg("Paging: first item " + start + ", showing " + resourceOwners.size() + " of " + count.getValue() + " items");
 				}
 				start += resourceOwners.size();
 			} while (!resourceOwners.isEmpty());
@@ -266,7 +271,7 @@ public class ResourceOwnerCollectionTest {
 			e.printStackTrace(System.err);
 			fail("ResourceOwnerCollectionTest.test() failed: " + e.getMessage());
 		} finally {			
-			System.out.println("ResourceOwnerCollectionTest.test() has finished");
+			printMsg("ResourceOwnerCollectionTest.test() has finished");
 		}
 	}
 
