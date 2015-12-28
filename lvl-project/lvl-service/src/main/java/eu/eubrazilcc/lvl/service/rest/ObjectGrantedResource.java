@@ -36,8 +36,8 @@ import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
-import static eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO.DB_PREFIX;
 import static eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO.SHARED_OBJECT_DAO;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.USER_ROLE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -45,7 +45,6 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -69,6 +68,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang3.mutable.MutableLong;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
@@ -80,43 +80,42 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
+import eu.eubrazilcc.lvl.core.ObjectGranted;
 import eu.eubrazilcc.lvl.core.PaginableWithNamespace;
-import eu.eubrazilcc.lvl.core.SharedObject;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
- * {@link SharedObject} resource. 
+ * {@link ObjectGranted} resource. No especial permissions are required to list user's own shared objects. All active users can share 
+ * objects with other users. To create/modify/delete a shared object, specific permissions are required on the kind of object shared.
+ * Shared objects are linked to an email address.
  * @author Erik Torres <ertorser@upv.es>
  */
-@Path("/shares")
-public class SharedObjectResource {
+@Path("/shares/granted")
+public class ObjectGrantedResource {
 
-	/* protected final static Logger LOGGER = getLogger(SharedObjectResource.class);
+	protected final static Logger LOGGER = getLogger(ObjectGrantedResource.class);
 
-	public static final String RESOURCE_NAME = LVL_NAME + " Pending Citations (references) Resource";
-
-	// 2015-12-01T13:50:08
-	public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	public static final String RESOURCE_NAME = LVL_NAME + " Shared Objects (Granted) Resource";
 
 	@GET
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public SharedObjects getSharedObjects(final @PathParam("namespace") String namespace, 
+	public ObjectsGranted getObjectsGranted(final @PathParam("namespace") String namespace, 
 			final @QueryParam("page") @DefaultValue("0") int page,
 			final @QueryParam("per_page") @DefaultValue("100") int per_page,
 			final @QueryParam("q") @DefaultValue("") String q,			
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final String namespace2 = parseParam(namespace);
+		parseParam(namespace);
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":*:view")
+				.requiresRoles(newArrayList(USER_ROLE))
 				.getPrincipal();
-		final SharedObjects paginable = SharedObjects.start()
-				.namespace(namespace2)
+		final ObjectsGranted paginable = ObjectsGranted.start()
+				.namespace(ownerid)
 				.page(page)
 				.perPage(per_page)
 				.sort(sort)
@@ -124,75 +123,82 @@ public class SharedObjectResource {
 				.query(q)
 				.hash(computeHash(q, null))
 				.build();
-		// get pending citations from database
+		// get from database
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);		
 		final Sorting sorting = parseSorting(sort, order);
-		final List<SharedObject> pendingRefs = SHARED_OBJECT_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
-				ImmutableMap.of(DB_PREFIX + "sequence", false), count, ownerid);
-		paginable.setElements(pendingRefs);
-		paginable.getExcludedFields().add(DB_PREFIX + "sequence");
+		final List<ObjectGranted> objGranteds = SHARED_OBJECT_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count, ownerid);
+		paginable.setElements(objGranteds);
 		// set total count and return to the caller
-		final int totalEntries = pendingRefs.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
+		final int totalEntries = objGranteds.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);
 		return paginable;
 	}
 
 	@GET
-	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
+	@Path("{namespace:" + URL_FRAGMENT_PATTERN + "}/{id:" + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
-	public SharedObject getSharedObject(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context UriInfo uriInfo, 
-			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
-		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
+	public ObjectGranted getObjectGranted(final @PathParam("namespace") String namespace, final @PathParam("id") String id, 
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		parseParam(namespace);
+		final String id2 = parseParam(id);
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":view")
+				.requiresRoles(newArrayList(USER_ROLE))
 				.getPrincipal();
 		// get from database
-		final SharedObject pendingRef = SHARED_OBJECT_DAO.find(id2, ownerid);
-		if (pendingRef == null) {
+		final ObjectGranted objGranted = SHARED_OBJECT_DAO.find(id2, ownerid);
+		if (objGranted == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
-		return pendingRef;
+		return objGranted;
 	}
 
 	@POST
-	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
+	@Path("{namespace:" + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public Response createSharedObject(final @PathParam("namespace") String namespace, final SharedObject pendingRef, final @Context UriInfo uriInfo, 
+	public Response createObjectGranted(final @PathParam("namespace") String namespace, final ObjectGranted objGranted, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace);
-		if (pendingRef == null || isBlank(trimToNull(pendingRef.getPubmedId()))) {
+		if (objGranted == null || isBlank(trimToNull(objGranted.getUser())) || isBlank(trimToNull(objGranted.getCollection())) 
+				|| isBlank(trimToNull(objGranted.getItemId())) || !EmailValidator.getInstance(false).isValid(objGranted.getUser())) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
+		final String collection = objGranted.getCollection().trim(), itemId = objGranted.getItemId().trim();
+		
+		
+		// TODO
+		
+		
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":*:create")
+				.requiresPermissions(String.format("%s:*:%s:%s:create", collection, ns2permission(namespace2), itemId))
 				.getPrincipal();
 		// complete required fields
-		pendingRef.setId(compactRandomUUID());
-		pendingRef.setNamespace(ownerid);
-		pendingRef.setModified(new Date());		
+		objGranted.setId(compactRandomUUID());		
+		objGranted.setOwner(ownerid);
+		objGranted.setSharedDate(new Date());
 		// create entry in the database
-		SHARED_OBJECT_DAO.insert(pendingRef);		
-		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(pendingRef.getUrlSafeId());		
+		SHARED_OBJECT_DAO.insert(objGranted);		
+		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(objGranted.getUrlSafeId());		
 		return Response.created(uriBuilder.build()).build();
 	}
 
 	@PUT
-	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
+	@Path("{namespace:" + URL_FRAGMENT_PATTERN + "}/{id:" + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public void updateSharedObject(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final SharedObject update, 
+	public void updateObjectGranted(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final ObjectGranted update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
-		if (update == null || isBlank(trimToNull(update.getPubmedId()))) {
+		if (update == null || isBlank(trimToNull(update.getUser())) || isBlank(trimToNull(update.getCollection())) 
+				|| isBlank(trimToNull(update.getItemId()))) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit");		
+		final String collection = update.getCollection().trim(), itemId = update.getItemId().trim();
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions(String.format("%s:*:%s:%s:edit", collection, ns2permission(namespace2), itemId))
+				.getPrincipal();
 		// get from database
-		final SharedObject pendingRef = SHARED_OBJECT_DAO.find(id);
-		if (pendingRef == null) {
+		final ObjectGranted objGranted = SHARED_OBJECT_DAO.find(id2, ownerid);
+		if (objGranted == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// update
@@ -200,51 +206,51 @@ public class SharedObjectResource {
 	}
 
 	@DELETE
-	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
-	public void deleteSharedObject(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context HttpServletRequest request, 
+	@Path("{namespace:" + URL_FRAGMENT_PATTERN + "}/{id:" + URL_FRAGMENT_PATTERN + "}")
+	public void deleteObjectGranted(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-		.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
-		.getPrincipal();
 		// get from database
-		final SharedObject pendingRef = SHARED_OBJECT_DAO.find(id2);
-		if (pendingRef == null) {
+		final ObjectGranted objGranted = SHARED_OBJECT_DAO.find(id2);
+		if (objGranted == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
-		}		
+		}
+		// check user permissions
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions(String.format("%s:*:%s:%s:edit", 
+				objGranted.getCollection(), ns2permission(namespace2), objGranted.getItemId()));
 		// delete
 		SHARED_OBJECT_DAO.delete(id2);	
 	}
 
 	/**
-	 * Wraps a collection of {@link SharedObject}.
+	 * Wraps a collection of {@link ObjectGranted}.
 	 * @author Erik Torres <ertorser@upv.es>
-	 *
-	public static class SharedObjects extends PaginableWithNamespace<SharedObject> {		
+	 */
+	public static class ObjectsGranted extends PaginableWithNamespace<ObjectGranted> {		
 
 		@InjectLinks({
-			@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
+			@InjectLink(resource=ObjectGrantedResource.class, method="getObjectsGranted", bindings={
 					@Binding(name="page", value="${instance.page - 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=PREVIOUS, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
+			@InjectLink(resource=ObjectGrantedResource.class, method="getObjectsGranted", bindings={
 					@Binding(name="page", value="${0}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=FIRST, type=APPLICATION_JSON, condition="${instance.page > 0}"),
-			@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
+			@InjectLink(resource=ObjectGrantedResource.class, method="getObjectsGranted", bindings={
 					@Binding(name="page", value="${instance.page + 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
 					@Binding(name="order", value="${instance.order}"),
 					@Binding(name="q", value="${instance.query}")
 			}, rel=NEXT, type=APPLICATION_JSON, condition="${instance.pageFirstEntry + instance.perPage < instance.totalCount}"),
-			@InjectLink(resource=SharedObjectResource.class, method="getSharedObjects", bindings={
+			@InjectLink(resource=ObjectGrantedResource.class, method="getObjectsGranted", bindings={
 					@Binding(name="page", value="${instance.totalPages - 1}"),
 					@Binding(name="per_page", value="${instance.perPage}"),
 					@Binding(name="sort", value="${instance.sort}"),
@@ -278,70 +284,70 @@ public class SharedObjectResource {
 					.toString();
 		}
 
-		public static SharedObjectsBuilder start() {
-			return new SharedObjectsBuilder();
+		public static ObjectsGrantedBuilder start() {
+			return new ObjectsGrantedBuilder();
 		}
 
-		public static class SharedObjectsBuilder {
+		public static class ObjectsGrantedBuilder {
 
-			private final SharedObjects instance = new SharedObjects();
+			private final ObjectsGranted instance = new ObjectsGranted();
 
-			public SharedObjectsBuilder namespace(final String namespace) {
+			public ObjectsGrantedBuilder namespace(final String namespace) {
 				instance.setNamespace(trimToEmpty(namespace));
 				return this;
 			}
 
-			public SharedObjectsBuilder page(final int page) {
+			public ObjectsGrantedBuilder page(final int page) {
 				instance.setPage(page);
 				return this;
 			}
 
-			public SharedObjectsBuilder perPage(final int perPage) {
+			public ObjectsGrantedBuilder perPage(final int perPage) {
 				instance.setPerPage(perPage);
 				return this;
 			}
 
-			public SharedObjectsBuilder sort(final String sort) {
+			public ObjectsGrantedBuilder sort(final String sort) {
 				instance.setSort(sort);
 				return this;
 			}
 
-			public SharedObjectsBuilder order(final String order) {
+			public ObjectsGrantedBuilder order(final String order) {
 				instance.setOrder(order);
 				return this;
 			}
 
-			public SharedObjectsBuilder query(final String query) {
+			public ObjectsGrantedBuilder query(final String query) {
 				instance.setQuery(query);
 				return this;
 			}
 
-			public SharedObjectsBuilder formattedQuery(final List<FormattedQueryParam> formattedQuery) {
+			public ObjectsGrantedBuilder formattedQuery(final List<FormattedQueryParam> formattedQuery) {
 				instance.setFormattedQuery(formattedQuery);
 				return this;
 			}
 
-			public SharedObjectsBuilder totalCount(final int totalCount) {
+			public ObjectsGrantedBuilder totalCount(final int totalCount) {
 				instance.setTotalCount(totalCount);
 				return this;
 			}
 
-			public SharedObjectsBuilder hash(final String hash) {
+			public ObjectsGrantedBuilder hash(final String hash) {
 				instance.setHash(hash);
 				return this;
 			}
 
-			public SharedObjectsBuilder pendingReference(final List<SharedObject> pendingReference) {
-				instance.setElements(pendingReference);
+			public ObjectsGrantedBuilder objGrantederence(final List<ObjectGranted> objGranted) {
+				instance.setElements(objGranted);
 				return this;
 			}
 
-			public SharedObjects build() {
+			public ObjectsGranted build() {
 				return instance;
 			}
 
 		}
 
-	} */
+	}
 
 }

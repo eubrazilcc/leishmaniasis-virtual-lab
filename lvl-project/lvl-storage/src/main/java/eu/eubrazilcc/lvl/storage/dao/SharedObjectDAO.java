@@ -22,7 +22,6 @@
 
 package eu.eubrazilcc.lvl.storage.dao;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static eu.eubrazilcc.lvl.core.CollectionNames.SHARED_OBJECTS_COLLECTION;
@@ -30,19 +29,27 @@ import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
 import static eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore.startStore;
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.beanutils.BeanUtilsBean;
+import org.apache.commons.beanutils.ConvertUtilsBean;
+import org.apache.commons.beanutils.PropertyUtilsBean;
+import org.apache.commons.beanutils.SuppressPropertiesBeanIntrospector;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -58,7 +65,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-import eu.eubrazilcc.lvl.core.SharedObject;
+import eu.eubrazilcc.lvl.core.ObjectAccepted;
+import eu.eubrazilcc.lvl.core.ObjectGranted;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.geojson.Polygon;
@@ -69,51 +77,55 @@ import eu.eubrazilcc.lvl.storage.mongodb.jackson.ObjectIdSerializer;
 import eu.eubrazilcc.lvl.storage.transform.LinkableTransientStore;
 
 /**
- * {@link SharedObject} DAO.
+ * {@link ObjectGranted} DAO.
  * @author Erik Torres <ertorser@upv.es>
  */
-public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
+public enum SharedObjectDAO implements AuthenticatedDAO<String, ObjectGranted> {
 
 	SHARED_OBJECT_DAO;
 
 	private final static Logger LOGGER = getLogger(SharedObjectDAO.class);
 
-	public static final String COLLECTION      = SHARED_OBJECTS_COLLECTION;
-	public static final String DB_PREFIX       = "sharedObject.";	
-	public static final String PRIMARY_KEY     = DB_PREFIX + "id";
-	public static final String SUBJECT_KEY     = DB_PREFIX + "subject";
-	public static final String SHARED_DATE_KEY = DB_PREFIX + "sharedDate";
+	public static final String COLLECTION       = SHARED_OBJECTS_COLLECTION;
+	public static final String DB_PREFIX        = "objectGranted.";
+	public static final String PRIMARY_KEY      = DB_PREFIX + "id";
+	public static final String UNIQUE_KEY_PART1 = DB_PREFIX + "user";
+	public static final String UNIQUE_KEY_PART2 = DB_PREFIX + "collection";
+	public static final String UNIQUE_KEY_PART3 = DB_PREFIX + "itemId";	
+	public static final String SHARED_DATE_KEY  = DB_PREFIX + "sharedDate";
 
 	private SharedObjectDAO() {
 		MONGODB_CONN.createIndex(PRIMARY_KEY, COLLECTION);
-		MONGODB_CONN.createNonUniqueIndex(ImmutableList.of(DB_PREFIX + "collection", DB_PREFIX + "objectId"), COLLECTION, false);
-		MONGODB_CONN.createNonUniqueIndex(SUBJECT_KEY, COLLECTION, false);
+		MONGODB_CONN.createIndex(ImmutableList.of(UNIQUE_KEY_PART1, UNIQUE_KEY_PART2, UNIQUE_KEY_PART3), COLLECTION);
+		MONGODB_CONN.createNonUniqueIndex(DB_PREFIX + "owner", COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(DB_PREFIX + "user", COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(DB_PREFIX + "collection", COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(SHARED_DATE_KEY, COLLECTION, true);
 		MONGODB_CONN.createNonUniqueIndex(DB_PREFIX + "accessType", COLLECTION, false);
 	}
 
 	@Override
-	public WriteResult<SharedObject> insert(final SharedObject sharedObj) {
+	public WriteResult<ObjectGranted> insert(final ObjectGranted objGranted) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<SharedObject> store = startStore(sharedObj);
+		final LinkableTransientStore<ObjectGranted> store = startStore(objGranted);
 		final DBObject obj = map(store);
 		final String id = MONGODB_CONN.insert(obj, COLLECTION);
 		// restore transient fields
 		store.restore();
-		return new WriteResult.Builder<SharedObject>().id(id).build();
+		return new WriteResult.Builder<ObjectGranted>().id(id).build();
 	}
 
 	@Override
-	public WriteResult<SharedObject> insert(final SharedObject sharedObj, final boolean ignoreDuplicates) {
+	public WriteResult<ObjectGranted> insert(final ObjectGranted objGranted, final boolean ignoreDuplicates) {
 		throw new UnsupportedOperationException("Inserting ignoring duplicates is not currently supported in this class");
 	}
 
 	@Override
-	public SharedObject update(final SharedObject sharedObj) {
+	public ObjectGranted update(final ObjectGranted objGranted) {
 		// remove transient fields from the element before saving it to the database
-		final LinkableTransientStore<SharedObject> store = startStore(sharedObj);
+		final LinkableTransientStore<ObjectGranted> store = startStore(objGranted);
 		final DBObject obj = map(store);
-		MONGODB_CONN.update(obj, key(sharedObj.getId()), COLLECTION);
+		MONGODB_CONN.update(obj, key(objGranted.getId()), COLLECTION);
 		// restore transient fields
 		store.restore();
 		return null;
@@ -125,39 +137,39 @@ public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
 	}
 
 	@Override
-	public List<SharedObject> findAll() {
+	public List<ObjectGranted> findAll() {
 		return findAll(null);
 	}
 
 	@Override
-	public List<SharedObject> findAll(final String user) {
-		return list(0, Integer.MAX_VALUE, null, null, null, null, user);
+	public List<ObjectGranted> findAll(final String owner) {
+		return list(0, Integer.MAX_VALUE, null, null, null, null, owner);
 	}
 
 	@Override
-	public SharedObject find(final String id) {	
+	public ObjectGranted find(final String id) {	
 		return find(id, null);
 	}
 
 	@Override
-	public SharedObject find(final String id, final String user) {
-		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(user) ? compositeKey(id, user) : key(id), COLLECTION);		
+	public ObjectGranted find(final String id, final String owner) {
+		final BasicDBObject obj = MONGODB_CONN.get(isNotBlank(owner) ? key(id).append(String.format("%s%s", DB_PREFIX, "owner"), owner) : key(id), COLLECTION);		
 		return parseBasicDBObjectOrNull(obj);
 	}
 
 	@Override
-	public List<SharedObject> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+	public List<ObjectGranted> list(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count) {
 		return list(start, size, filter, sorting, projection, count, null);
 	}	
 
 	@Override
-	public List<SharedObject> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
-			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String user) {
+	public List<ObjectGranted> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String owner) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
 		try {
-			query = buildQuery(filter, user);
+			query = buildQuery(filter, owner);
 		} catch (InvalidFilterParseException e) {
 			LOGGER.warn("Discarding operation after an invalid filter was found: " + e.getMessage());
 			return newArrayList();
@@ -171,12 +183,61 @@ public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
 			return newArrayList();
 		}
 		// execute the query in the database
-		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, SharedObject>() {
+		return transform(MONGODB_CONN.list(sort, COLLECTION, start, size, query, toProjection(projection), count), new Function<BasicDBObject, ObjectGranted>() {
 			@Override
-			public SharedObject apply(final BasicDBObject obj) {				
+			public ObjectGranted apply(final BasicDBObject obj) {				
 				return parseBasicDBObject(obj);
 			}
 		});
+	}
+
+	public ObjectAccepted findAccepted(final String id, final String user) {
+		ObjectAccepted objAccepted = null;
+		try {
+			final BasicDBObject obj = MONGODB_CONN.get(key(id).append(String.format("%s%s", DB_PREFIX, "user"), 
+					requireNonNull(trimToNull(user), "A valid user expected")), COLLECTION);		
+			final ObjectGranted objGranted = parseBasicDBObjectOrNull(obj);			
+			if (objGranted != null) {
+				ObjectAccepted tmp = new ObjectAccepted();
+				copyProperties(objGranted, tmp);
+				objAccepted = tmp;
+			}
+		} catch (IllegalAccessException | InvocationTargetException e) {
+			LOGGER.error("Failed to convert shared object", e);
+		}
+		return objAccepted;
+	}
+
+	public List<ObjectAccepted> listAccepted(final int start, final int size, final @Nullable ImmutableMap<String, String> filter, final @Nullable Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final @Nullable MutableLong count, final String user) {
+		final List<ObjectAccepted> objsAccepted = newArrayList();
+		final ImmutableMap.Builder<String, String> filterBuilder = new ImmutableMap.Builder<String, String>()
+				.put("user", requireNonNull(trimToNull(user), "A valid user expected"));
+		ofNullable(filter).orElse(ImmutableMap.of()).entrySet().stream().filter(e -> !"user".equals(e.getKey())).forEach(e -> {
+			filterBuilder.put(e.getKey(), e.getValue());
+		});
+		final List<ObjectGranted> objsGranted = list(start, size, filterBuilder.build(), sorting, projection, count);
+		if (objsGranted != null) {
+			for (final ObjectGranted objGranted : objsGranted) {
+				try {
+					final ObjectAccepted objAccepted = new ObjectAccepted();
+					copyProperties(objGranted, objAccepted);
+					objsAccepted.add(objAccepted);
+				} catch (IllegalAccessException | InvocationTargetException e) {
+					LOGGER.error("Failed to convert shared object", e);
+				}
+			}
+		}
+		return objsAccepted;
+	}
+
+	private static final List<String> FIELDS_TO_SUPPRESS = ImmutableList.of("links", "urlSafeNs", "urlSafeCol", "urlSafeId");	
+
+	public static void copyProperties(final ObjectGranted orig, final ObjectAccepted dest) throws IllegalAccessException, InvocationTargetException {
+		final PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
+		propertyUtilsBean.addBeanIntrospector(new SuppressPropertiesBeanIntrospector(FIELDS_TO_SUPPRESS));
+		final BeanUtilsBean beanUtilsBean = new BeanUtilsBean(new ConvertUtilsBean(), propertyUtilsBean);
+		beanUtilsBean.copyProperties(dest, orig);
 	}
 
 	@Override
@@ -190,27 +251,27 @@ public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
 	}
 
 	@Override
-	public long count(final String user) {
-		return MONGODB_CONN.count(COLLECTION, new BasicDBObject(SUBJECT_KEY, user));
+	public long count(final String owner) {
+		return MONGODB_CONN.count(COLLECTION, new BasicDBObject(String.format("%s%s", DB_PREFIX, "owner"), owner));
 	}
 
 	@Override
-	public List<SharedObject> getNear(final Point point, final double maxDistance) {
+	public List<ObjectGranted> getNear(final Point point, final double maxDistance) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<SharedObject> getNear(final Point point, final double maxDistance, final String user) {
+	public List<ObjectGranted> getNear(final Point point, final double maxDistance, final String owner) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<SharedObject> geoWithin(final Polygon polygon) {
+	public List<ObjectGranted> geoWithin(final Polygon polygon) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
 	@Override
-	public List<SharedObject> geoWithin(final Polygon polygon, final String user) {
+	public List<ObjectGranted> geoWithin(final Polygon polygon, final String owner) {
 		throw new UnsupportedOperationException("Geospatial searches are not currently supported in this class");
 	}
 
@@ -219,24 +280,22 @@ public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
 		MONGODB_CONN.stats(os, COLLECTION);
 	}
 
-	private BasicDBObject key(final String key) {
-		return new BasicDBObject(PRIMARY_KEY, key);		
-	}
-
-	private BasicDBObject compositeKey(final String id, final String subject) {
-		return new BasicDBObject(of(PRIMARY_KEY, id, SUBJECT_KEY, subject));
+	private BasicDBObject key(final String id) {
+		return new BasicDBObject(PRIMARY_KEY, id);		
 	}
 
 	private BasicDBObject sortCriteria(final @Nullable Sorting sorting) throws InvalidSortParseException {
 		if (sorting != null) {
 			String field = null;
 			// sortable fields
-			if ("collection".equalsIgnoreCase(sorting.getField())) {
+			if ("owner".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "owner";
+			} else if ("user".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "user";
+			} else if ("collection".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "collection";
-			} else if ("objectId".equalsIgnoreCase(sorting.getField())) {
-				field = DB_PREFIX + "objectId";
-			} else if ("subject".equalsIgnoreCase(sorting.getField())) {
-				field = SUBJECT_KEY;
+			} else if ("itemId".equalsIgnoreCase(sorting.getField())) {
+				field = DB_PREFIX + "itemId";
 			} else if ("sharedDate".equalsIgnoreCase(sorting.getField())) {
 				field = SHARED_DATE_KEY;
 			} else if ("accessType".equalsIgnoreCase(sorting.getField())) {
@@ -264,15 +323,15 @@ public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
 		return new BasicDBObject(ImmutableMap.of(SHARED_DATE_KEY, -1));
 	}
 
-	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter, final @Nullable String user) 
+	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter, final @Nullable String owner) 
 			throws InvalidFilterParseException {
 		BasicDBObject query = null;		
 		if (filter != null) {
 			for (final Entry<String, String> entry : filter.entrySet()) {
 				query = parseFilter(entry.getKey(), entry.getValue(), query);
 			}
-		}		
-		return isNotBlank(user) ? (query != null ? query : new BasicDBObject()).append(SUBJECT_KEY, user) : query;
+		}
+		return isNotBlank(owner) ? (query != null ? query : new BasicDBObject()).append(String.format("%s%s", DB_PREFIX, "owner"), owner) : query;
 	}
 
 	private BasicDBObject parseFilter(final String parameter, final String expression, final BasicDBObject query) throws InvalidFilterParseException {
@@ -280,15 +339,17 @@ public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
 		if (isNotBlank(parameter) && isNotBlank(expression)) {
 			String field = null;
 			// keyword matching search
-			if ("collection".equalsIgnoreCase(parameter)) {
+			if ("user".equalsIgnoreCase(parameter)) {
+				field = DB_PREFIX + "user";
+			} else if ("collection".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "collection";
-			} else if ("objectId".equalsIgnoreCase(parameter)) {
-				field = DB_PREFIX + "objectId";
+			} else if ("itemId".equalsIgnoreCase(parameter)) {
+				field = DB_PREFIX + "itemId";
 			} else if ("accessType".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "accessType";
 			}
 			if (isNotBlank(field)) {
-				if ("collection".equalsIgnoreCase(parameter) || "objectId".equalsIgnoreCase(parameter)) {
+				if ("user".equalsIgnoreCase(parameter) || "collection".equalsIgnoreCase(parameter) || "itemId".equalsIgnoreCase(parameter)) {
 					// compare for exact matching
 					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression);
 				} else if ("accessType".equalsIgnoreCase(parameter)) {
@@ -322,35 +383,35 @@ public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
 		return query2;
 	}
 
-	private SharedObject parseBasicDBObject(final BasicDBObject obj) {
-		return map(obj).getSharedObject();
+	private ObjectGranted parseBasicDBObject(final BasicDBObject obj) {
+		return map(obj).getObjectGranted();
 	}
 
-	private SharedObject parseBasicDBObjectOrNull(final BasicDBObject obj) {
-		SharedObject sharedObj = null;
+	private ObjectGranted parseBasicDBObjectOrNull(final BasicDBObject obj) {
+		ObjectGranted objGranted = null;
 		if (obj != null) {
-			final SharedObjectEntity entity = map(obj);
+			final ObjectGrantedEntity entity = map(obj);
 			if (entity != null) {
-				sharedObj = entity.getSharedObject();
+				objGranted = entity.getObjectGranted();
 			}
 		}
-		return sharedObj;
+		return objGranted;
 	}
 
-	private DBObject map(final LinkableTransientStore<SharedObject> store) {
+	private DBObject map(final LinkableTransientStore<ObjectGranted> store) {
 		DBObject obj = null;
 		try {
-			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new SharedObjectEntity(store.purge())));
+			obj = (DBObject) JSON.parse(JSON_MAPPER.writeValueAsString(new ObjectGrantedEntity(store.purge())));
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Failed to write saved search to DB object", e);
 		}
 		return obj;
 	}	
 
-	private SharedObjectEntity map(final BasicDBObject obj) {
-		SharedObjectEntity entity = null;
+	private ObjectGrantedEntity map(final BasicDBObject obj) {
+		ObjectGrantedEntity entity = null;
 		try {
-			entity = JSON_MAPPER.readValue(obj.toString(), SharedObjectEntity.class);		
+			entity = JSON_MAPPER.readValue(obj.toString(), ObjectGrantedEntity.class);		
 		} catch (IOException e) {
 			LOGGER.error("Failed to read saved search from DB object", e);
 		}
@@ -358,22 +419,22 @@ public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
 	}	
 
 	/**
-	 * {@link SharedObject} entity.
+	 * {@link ObjectGranted} entity.
 	 * @author Erik Torres <ertorser@upv.es>
 	 */	
-	public static class SharedObjectEntity {
+	public static class ObjectGrantedEntity {
 
 		@JsonSerialize(using = ObjectIdSerializer.class)
 		@JsonDeserialize(using = ObjectIdDeserializer.class)
 		@JsonProperty("_id")
 		private ObjectId id;
 
-		private SharedObject sharedObj;
+		private ObjectGranted objectGranted;
 
-		public SharedObjectEntity() { }
+		public ObjectGrantedEntity() { }
 
-		public SharedObjectEntity(final SharedObject sharedObj) {
-			setSharedObject(sharedObj);
+		public ObjectGrantedEntity(final ObjectGranted objectGranted) {
+			setObjectGranted(objectGranted);
 		}
 
 		public ObjectId getId() {
@@ -384,12 +445,12 @@ public enum SharedObjectDAO implements AuthenticatedDAO<String, SharedObject> {
 			this.id = id;
 		}
 
-		public SharedObject getSharedObject() {
-			return sharedObj;
+		public ObjectGranted getObjectGranted() {
+			return objectGranted;
 		}
 
-		public void setSharedObject(final SharedObject sharedObj) {
-			this.sharedObj = sharedObj;
+		public void setObjectGranted(final ObjectGranted objectGranted) {
+			this.objectGranted = objectGranted;
 		}
 
 	}

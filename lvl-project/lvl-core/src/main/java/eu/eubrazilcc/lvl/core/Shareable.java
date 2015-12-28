@@ -23,63 +23,120 @@
 package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.util.Date;
 import java.util.Objects;
 
 /**
- * Capable of being shared.
+ * Any identifiable item capable of being shared between its owner and another user.
  * @author Erik Torres <ertorser@upv.es>
  */
 public abstract class Shareable {
 
-	private String subject;
+	private String owner;
+	private String user;
+
+	private String collection;
+	private String itemId;
+
 	private Date sharedDate;
 	private SharedAccess accessType;
 
 	/**
-	 * Gets who is receiving access to the object being shared.
-	 * @return identity of the user who is receiving access to the object being shared.
+	 * Gets who is sharing access to the item being shared.
+	 * @return identity of the user who is sharing access to the item being shared.
 	 */
-	public String getSubject() {
-		return subject;
+	public String getOwner() {
+		return owner;
 	}
 
 	/**
-	 * Sets who is receiving access to the object being shared.
-	 * @param subject - the identity of the user who is receiving access to the object being shared
+	 * Sets who is sharing access to the item being shared.
+	 * @param owner - the identity of the user who is sharing access to the item being shared
 	 */
-	public void setSubject(final String subject) {
-		this.subject = subject;
+	public void setOwner(final String owner) {
+		this.owner = owner;
 	}
 
 	/**
-	 * Gets the moment when the object was shared.
-	 * @return the moment when the object was shared.
+	 * Gets who is receiving access to the item being shared.
+	 * @return identity of the user who is receiving access to the item being shared.
+	 */
+	public String getUser() {
+		return user;
+	}
+
+	/**
+	 * Sets who is receiving access to the item being shared.
+	 * @param user - the identity of the user who is receiving access to the item being shared
+	 */
+	public void setUser(final String user) {
+		this.user = user;
+	}
+
+	/**
+	 * Gets the collection where the item is stored.
+	 * @return the collection where the item is stored.
+	 */
+	public String getCollection() {
+		return collection;
+	}
+
+	/**
+	 * Sets the collection where the item is stored.
+	 * @param collection - the collection where the item is stored
+	 */
+	public void setCollection(final String collection) {
+		this.collection = collection;
+	}
+
+	/**
+	 * Gets the identifier of the shared item.
+	 * @return the identifier of the shared item.
+	 */
+	public String getItemId() {
+		return itemId;
+	}
+
+	/**
+	 * Sets the identifier of the shared item.
+	 * @param itemId - the identifier of the shared item
+	 */
+	public void setItemId(final String itemId) {
+		this.itemId = itemId;
+	}
+
+	/**
+	 * Gets the moment when the item was shared.
+	 * @return the moment when the item was shared.
 	 */
 	public Date getSharedDate() {
 		return sharedDate;
 	}
 
 	/**
-	 * Sets the moment when the object was shared.
-	 * @param sharedDate - the moment when the object was shared
+	 * Sets the moment when the item was shared.
+	 * @param sharedDate - the moment when the item was shared
 	 */
 	public void setSharedDate(final Date sharedDate) {
 		this.sharedDate = sharedDate;
 	}
 
 	/**
-	 * Gets the type of access granted over a shared object.
-	 * @return the type of access granted over a shared object.
+	 * Gets the type of access granted over a shared item.
+	 * @return the type of access granted over a shared item.
 	 */
 	public SharedAccess getAccessType() {
 		return accessType;
 	}
 
 	/**
-	 * Sets the type of access granted over a shared object.
-	 * @param accessType - the type of access granted over a shared object
+	 * Sets the type of access granted over a shared item.
+	 * @param accessType - the type of access granted over a shared item
 	 */
 	public void setAccessType(final SharedAccess accessType) {
 		this.accessType = accessType;
@@ -91,24 +148,30 @@ public abstract class Shareable {
 			return false;
 		}
 		final Shareable other = Shareable.class.cast(obj);
-		return  Objects.equals(subject, other.subject)
+		return  Objects.equals(owner, other.owner)
+				&& Objects.equals(user, other.user)
+				&& Objects.equals(collection, other.collection)
+				&& Objects.equals(itemId, other.itemId)
 				&& Objects.equals(sharedDate, other.sharedDate)
 				&& Objects.equals(accessType, other.accessType);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(subject, sharedDate, accessType);
+		return Objects.hash(owner, user, collection, itemId, sharedDate, accessType);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
-				.add("subject", subject)
+				.add("owner", owner)
+				.add("user", user)
+				.add("collection", collection)
+				.add("itemId", itemId)
 				.add("sharedDate", sharedDate)
 				.add("accessType", accessType)
 				.toString();
-	}
+	}	
 
 	/**
 	 * Defines the type of access granted over a shared object.
@@ -123,6 +186,69 @@ public abstract class Shareable {
 		 * Grants access to view and modify the shared object.
 		 */
 		EDIT_SHARE
-	}	
+	}
+
+	/* Fluent API */
+
+	public static class Builder<T extends Shareable> {
+
+		protected final T instance;
+
+		public Builder(final Class<T> clazz) {
+			T tmp = null;
+			try {
+				tmp = clazz.newInstance();
+			} catch (Exception ignore) { }
+			instance = tmp;
+		}
+
+		public Builder<T> owner(final String owner) {
+			String owner2 = null;
+			checkArgument(isNotBlank(owner2 = trimToNull(owner)), "Uninitialized or invalid owner");
+			instance.setOwner(owner2);
+			return this;
+		}
+
+		public Builder<T> user(final String user) {
+			String user2 = null;
+			checkArgument(isNotBlank(user2 = trimToNull(user)), "Uninitialized or invalid user");
+			instance.setUser(user2);
+			return this;
+		}
+
+		public Builder<T> collection(final String collection) {
+			String collection2 = null;
+			checkArgument(isNotBlank(collection2 = trimToNull(collection)), "Uninitialized or invalid collection");
+			instance.setCollection(collection2);
+			return this;
+		}
+
+		public Builder<T> itemId(final String itemId) {
+			String itemId2 = null;
+			checkArgument(isNotBlank(itemId2 = trimToNull(itemId)), "Uninitialized or invalid item Id");
+			instance.setItemId(itemId2);
+			return this;
+		}
+
+		public Builder<T> sharedDate(final Date sharedDate) {
+			instance.setSharedDate(requireNonNull(sharedDate, "Uninitialized shared date"));
+			return this;
+		}
+
+		public Builder<T> sharedNow() {
+			instance.setSharedDate(new Date());
+			return this;
+		}
+
+		public Builder<T> accessType(final SharedAccess accessType) {
+			instance.setAccessType(requireNonNull(accessType, "Uninitialized access type"));			
+			return this;
+		}
+
+		public T build() {
+			return instance;
+		}
+
+	}
 
 }

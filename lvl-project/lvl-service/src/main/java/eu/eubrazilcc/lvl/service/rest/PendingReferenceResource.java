@@ -102,7 +102,7 @@ public class PendingReferenceResource {
 	public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
 	@GET
-	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
+	@Path("{namespace:" + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public PendingReferences getPendingReferences(final @PathParam("namespace") String namespace, 
 			final @QueryParam("page") @DefaultValue("0") int page,
@@ -139,14 +139,11 @@ public class PendingReferenceResource {
 	}
 
 	@GET
-	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
+	@Path("{namespace:" + URL_FRAGMENT_PATTERN + "}/{id:" + URL_FRAGMENT_PATTERN + "}")
 	@Produces(APPLICATION_JSON)
 	public PendingReference getPendingReference(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
-		if (isBlank(id)) {
-			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
-		}
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);		
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
 				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":view")
 				.getPrincipal();
@@ -181,7 +178,7 @@ public class PendingReferenceResource {
 	}
 
 	@PUT
-	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
+	@Path("{namespace:" + URL_FRAGMENT_PATTERN + "}/{id:" + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
 	public void updatePendingReference(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final PendingReference update, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
@@ -189,9 +186,11 @@ public class PendingReferenceResource {
 		if (update == null || isBlank(trimToNull(update.getPubmedId()))) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit");		
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
+				.getPrincipal();
 		// get from database
-		final PendingReference pendingRef = PENDING_REFERENCE_DAO.find(id);
+		final PendingReference pendingRef = PENDING_REFERENCE_DAO.find(id2, ownerid);
 		if (pendingRef == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -200,15 +199,15 @@ public class PendingReferenceResource {
 	}
 
 	@DELETE
-	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{id}")
+	@Path("{namespace:" + URL_FRAGMENT_PATTERN + "}/{id:" + URL_FRAGMENT_PATTERN + "}")
 	public void deletePendingReference(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-		.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
-		.getPrincipal();
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
+				.getPrincipal();
 		// get from database
-		final PendingReference pendingRef = PENDING_REFERENCE_DAO.find(id2);
+		final PendingReference pendingRef = PENDING_REFERENCE_DAO.find(id2, ownerid);
 		if (pendingRef == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}		

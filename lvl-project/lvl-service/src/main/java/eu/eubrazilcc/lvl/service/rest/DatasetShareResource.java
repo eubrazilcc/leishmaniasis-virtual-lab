@@ -131,7 +131,7 @@ public class DatasetShareResource {
 			final DatasetShare datasetShare, final @Context UriInfo uriInfo,  final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), filename2 = parseParam(filename);
 		String subject2 = null;
-		if (datasetShare == null || isBlank(subject2 = convertToValidResourceOwnerId(parseParam(datasetShare.getSubject()), true))) {
+		if (datasetShare == null || isBlank(subject2 = convertToValidResourceOwnerId(parseParam(datasetShare.getUser()), true))) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)

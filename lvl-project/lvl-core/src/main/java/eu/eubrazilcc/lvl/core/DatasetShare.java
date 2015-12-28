@@ -140,9 +140,9 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 	}
 
 	@Override
-	public void setSubject(final String subject) {
-		super.setSubject(subject);
-		setUrlSafeSubject(urlEncodeUtf8(trimToEmpty(subject)));
+	public void setUser(final String user) {
+		super.setUser(user);
+		setUrlSafeSubject(urlEncodeUtf8(trimToEmpty(user)));
 	}
 
 	@Override
@@ -216,7 +216,7 @@ public class DatasetShare extends Shareable implements Linkable<DatasetShare> {
 
 		public Builder subject(final String subject) {
 			checkArgument(isNotBlank(subject), "Uninitialized or invalid subject");
-			instance.setSubject(subject.trim());
+			instance.setUser(subject.trim());
 			return this;
 		}
 

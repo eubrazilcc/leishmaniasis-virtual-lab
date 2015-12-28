@@ -81,6 +81,8 @@ public class LeishVirtLabApplication extends Application {
 				.add(new TaskResource())
 				.add(new DatasetResource())
 				.add(new DatasetShareResource())
+				.add(new ObjectAcceptedResource())
+				.add(new ObjectGrantedResource())
 				.add(new DatasetOpenAccessResource())
 				.add(new PublicResource())
 				.add(new NotificationResource())

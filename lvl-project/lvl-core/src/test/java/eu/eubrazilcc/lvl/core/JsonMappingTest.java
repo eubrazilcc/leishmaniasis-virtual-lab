@@ -261,15 +261,27 @@ public class JsonMappingTest extends LeishvlTestCase {
 					.build();
 			assertThat("dataset share is not null", datasetShare, notNullValue());
 
-			final SharedObject sharedObject = SharedObject.builder()
-					.subject("user1@example.com")
+			final ObjectGranted objectGranted = ObjectGranted.builder()
+					.newId()
+					.owner("user1@example.com")
+					.user("user2@example.com")
+					.collection("datasets")
+					.itemId("LeishVL123")
 					.sharedNow()
 					.accessType(EDIT_SHARE)
-					.newId()
-					.collection("datasets")
-					.objectId("LeishVL123")
 					.build();
-			assertThat("shared object is not null", sharedObject, notNullValue());
+			assertThat("granted object is not null", objectGranted, notNullValue());
+
+			final ObjectAccepted objectAccepted = ObjectAccepted.builder()
+					.newId()
+					.owner("user2@example.com")
+					.user("user1@example.com")
+					.collection("datasets")
+					.itemId("LeishVL123")
+					.sharedNow()
+					.accessType(EDIT_SHARE)
+					.build();
+			assertThat("accepted object is not null", objectAccepted, notNullValue());
 
 			final LvlInstance instance = LvlInstance.builder()
 					.instanceId("instanceId")
@@ -385,12 +397,19 @@ public class JsonMappingTest extends LeishvlTestCase {
 			datasetShare.setLinks(newArrayList(refLink));
 			testDatasetShare(datasetShare);
 
-			// test shared object share with no links
-			testSharedObject(sharedObject);
+			// test granted object share with no links
+			testObjectGranted(objectGranted);
 
-			// test shared object with links
-			sharedObject.setLinks(newArrayList(refLink));
-			testSharedObject(sharedObject);			
+			// test granted object with links
+			objectGranted.setLinks(newArrayList(refLink));
+			testObjectGranted(objectGranted);
+
+			// test accepted object share with no links
+			testObjectAccepted(objectAccepted);
+
+			// test accepted object with links
+			objectAccepted.setLinks(newArrayList(refLink));
+			testObjectAccepted(objectAccepted);
 
 			// test instance with no links
 			testInstance(instance);
@@ -596,19 +615,33 @@ public class JsonMappingTest extends LeishvlTestCase {
 		assertThat("deserialized dataset share coincides with expected", datasetShare2, equalTo(datasetShare));
 	}
 
-	private void testSharedObject(final SharedObject sharedObject) throws IOException {
-		// test shared object share JSON serialization
-		final String payload = JSON_MAPPER.writeValueAsString(sharedObject);
+	private void testObjectGranted(final ObjectGranted objectGranted) throws IOException {
+		// test granted object JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(objectGranted);
 		assertThat("serialized shared object is not null", payload, notNullValue());
 		assertThat("serialized shared object is not empty", isNotBlank(payload), equalTo(true));
 		/* uncomment for additional output */
 		printMsg(" >> Serialized shared object (JSON): " + payload);
 
-		// test shared object JSON deserialization
-		final SharedObject sharedObject2 = JSON_MAPPER.readValue(payload, SharedObject.class);
-		assertThat("deserialized shared object is not null", sharedObject2, notNullValue());
-		assertThat("deserialized shared object coincides with expected", sharedObject2, equalTo(sharedObject));
+		// test granted object JSON deserialization
+		final ObjectGranted objectGranted2 = JSON_MAPPER.readValue(payload, ObjectGranted.class);
+		assertThat("deserialized shared object is not null", objectGranted2, notNullValue());
+		assertThat("deserialized shared object coincides with expected", objectGranted2, equalTo(objectGranted));
 	}
+
+	private void testObjectAccepted(final ObjectAccepted objectAccepted) throws IOException {
+		// test accepted object JSON serialization
+		final String payload = JSON_MAPPER.writeValueAsString(objectAccepted);
+		assertThat("serialized shared object is not null", payload, notNullValue());
+		assertThat("serialized shared object is not empty", isNotBlank(payload), equalTo(true));
+		/* uncomment for additional output */
+		printMsg(" >> Serialized shared object (JSON): " + payload);
+
+		// test accepted object JSON deserialization
+		final ObjectAccepted objectAccepted2 = JSON_MAPPER.readValue(payload, ObjectAccepted.class);
+		assertThat("deserialized shared object is not null", objectAccepted2, notNullValue());
+		assertThat("deserialized shared object coincides with expected", objectAccepted2, equalTo(objectAccepted));
+	}	
 
 	private void testInstance(final LvlInstance instance) throws IOException {
 		// test instance JSON serialization

@@ -38,6 +38,8 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.Assert.fail;
 
 import java.util.Calendar;
@@ -52,15 +54,16 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
+import eu.eubrazilcc.lvl.core.ObjectAccepted;
+import eu.eubrazilcc.lvl.core.ObjectGranted;
 import eu.eubrazilcc.lvl.core.Shareable.SharedAccess;
-import eu.eubrazilcc.lvl.core.SharedObject;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.Sorting.Order;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
 /**
- * Tests pending references collection in the database.
+ * Tests shared objects collection in the database.
  * @author Erik Torres <ertorser@upv.es>
  */
 public class SharedObjectCollectionTest extends LeishvlTestCase {
@@ -74,73 +77,90 @@ public class SharedObjectCollectionTest extends LeishvlTestCase {
 		printMsg("SharedObjectCollectionTest.test()");
 		try {
 			// insert
-			final SharedObject sharedObj = SharedObject.builder()
-					.subject("user1@example.com")
+			final ObjectGranted objGranted = ObjectGranted.builder()
+					.id("Shared-A")
+					.owner("owner@example.com")
+					.user("user@example.com")
+					.collection("sequences")
+					.itemId("LeishVL123")
 					.sharedNow()
 					.accessType(EDIT_SHARE)
-					.newId()
-					.collection("datasets")
-					.objectId("LeishVL123")
 					.build();
-			final WriteResult<SharedObject> ack = SHARED_OBJECT_DAO.insert(sharedObj);
+			final WriteResult<ObjectGranted> ack = SHARED_OBJECT_DAO.insert(objGranted);
 			assertThat("write ack is not null", ack, notNullValue());
 			assertThat("database id is not empty", trim(ack.getId()), allOf(notNullValue(), not(equalTo(""))));
-			printMsg(" >> New record inserted: id=" + ack.getId() + ", record=" + toJson(sharedObj, JSON_PRETTY_PRINTER));			
+			printMsg(" >> New record inserted: id=" + ack.getId() + ", record=" + toJson(objGranted, JSON_PRETTY_PRINTER));
 
-			// find
-			SharedObject sharedObj2 = SHARED_OBJECT_DAO.find(sharedObj.getId());
-			assertThat("sharedObj is not null", sharedObj2, notNullValue());
-			assertThat("sharedObj coincides with original", sharedObj2, equalTo(sharedObj));
-			printMsg(" >> Found:\n" + toJson(sharedObj2, JSON_PRETTY_PRINTER));
+			// find (as the object's owner)
+			ObjectGranted objGranted2 = SHARED_OBJECT_DAO.find(objGranted.getId(), objGranted.getOwner());
+			assertThat("objGranted is not null", objGranted2, notNullValue());
+			assertThat("objGranted coincides with original", objGranted2, equalTo(objGranted));
+			printMsg(" >> Found:\n" + toJson(objGranted2, JSON_PRETTY_PRINTER));
+
+			// find (as the granted user)
+			final ObjectAccepted objAccepted = ObjectAccepted.builder()
+					.id(objGranted.getId())
+					.owner(objGranted.getOwner())
+					.user(objGranted.getUser())
+					.collection(objGranted.getCollection())
+					.itemId(objGranted.getItemId())
+					.sharedDate(objGranted.getSharedDate())
+					.accessType(objGranted.getAccessType())
+					.build();
+			ObjectAccepted objAccepted2 = SHARED_OBJECT_DAO.findAccepted(objGranted.getId(), objGranted.getUser()); // owner is not checked
+			assertThat("objAccepted is not null", objAccepted2, notNullValue());			
+			assertThat("objAccepted coincides with expected", objAccepted2, equalTo(objAccepted));
+			printMsg(" >> Found:\n" + toJson(objGranted2, JSON_PRETTY_PRINTER));
 
 			// duplicates are not allowed
 			try {
-				SHARED_OBJECT_DAO.insert(sharedObj2);
-				fail("Duplicate sharedObjs are not allowed");
+				SHARED_OBJECT_DAO.insert(objGranted2);
+				fail("Duplicate objGranteds are not allowed");
 			} catch (Exception e) {
-				printMsg("Exception caught while trying to insert a duplicate sharedObj");
+				printMsg("Exception caught while trying to insert a duplicate objGranted");
 			}
 
-			// insert element with hard link			
-			final SharedObject sharedObj1 = SharedObject.builder()
-					.links(newArrayList(Link.fromUri("http://example.com/shares/user1@example.com/lvl0002").rel(SELF).type(APPLICATION_JSON).build()))
-					.subject("user1@example.com")
+			// insert element with hard link (test that hard link is removed)
+			final ObjectGranted objGranted1 = ObjectGranted.builder()
+					.links(newArrayList(Link.fromUri("http://example.com/shares/granted/user1@example.com/lvl0002").rel(SELF).type(APPLICATION_JSON).build()))
+					.id("Shared-B")
+					.owner("owner@example.com")
+					.user("user@example.com")
+					.collection("sequences")
+					.itemId("LeishVL456")
 					.sharedNow()
-					.accessType(EDIT_SHARE)
-					.newId()
-					.collection("datasets")
-					.objectId("LeishVL456")
+					.accessType(EDIT_SHARE)					
 					.build();
-			SHARED_OBJECT_DAO.insert(sharedObj1);
-			sharedObj1.setLinks(null);			
+			SHARED_OBJECT_DAO.insert(objGranted1);
+			objGranted1.setLinks(null);			
 
 			// find element after insertion (hard link should be removed)
-			sharedObj2 = SHARED_OBJECT_DAO.find(sharedObj1.getId());
-			assertThat("sharedObj inserted with hard link is not null", sharedObj2, notNullValue());
-			assertThat("sharedObj inserted with hard link coincides with expected", sharedObj2, equalTo(sharedObj1));
-			printMsg(" >> Found element inserted with links:\n" + toJson(sharedObj2, JSON_PRETTY_PRINTER));
+			objGranted2 = SHARED_OBJECT_DAO.find(objGranted1.getId());
+			assertThat("objGranted inserted with hard link is not null", objGranted2, notNullValue());
+			assertThat("objGranted inserted with hard link coincides with expected", objGranted2, equalTo(objGranted1));
+			printMsg(" >> Found element inserted with links:\n" + toJson(objGranted2, JSON_PRETTY_PRINTER));
 
 			// find all
-			final List<SharedObject> all = SHARED_OBJECT_DAO.findAll();
-			printMsg(" >> List all:\n" + toJson(all, JSON_PRETTY_PRINTER));
+			final List<ObjectGranted> all = SHARED_OBJECT_DAO.findAll();
+			printMsg(" >> List all:\n" + toJson(all, JSON_PRETTY_PRINTER));			
 
 			// delete
-			SHARED_OBJECT_DAO.delete(sharedObj1.getId());
+			SHARED_OBJECT_DAO.delete(objGranted1.getId());
 
 			// update
-			sharedObj.setAccessType(SharedAccess.VIEW_SHARE);
-			SHARED_OBJECT_DAO.update(sharedObj);
+			objGranted.setAccessType(SharedAccess.VIEW_SHARE);
+			SHARED_OBJECT_DAO.update(objGranted);
 
 			// find after update
-			sharedObj2 = SHARED_OBJECT_DAO.find(sharedObj.getId());
-			assertThat("sharedObj is not null", sharedObj2, notNullValue());
-			assertThat("sharedObj coincides with original", sharedObj2, equalTo(sharedObj));
-			printMsg(" >> Found element after update:\n" + toJson(sharedObj2, JSON_PRETTY_PRINTER));
+			objGranted2 = SHARED_OBJECT_DAO.find(objGranted.getId());
+			assertThat("objGranted is not null", objGranted2, notNullValue());
+			assertThat("objGranted coincides with original", objGranted2, equalTo(objGranted));
+			printMsg(" >> Found element after update:\n" + toJson(objGranted2, JSON_PRETTY_PRINTER));
 
 			// remove
-			SHARED_OBJECT_DAO.delete(sharedObj.getId());
+			SHARED_OBJECT_DAO.delete(objGranted.getId());
 			final long numRecords = SHARED_OBJECT_DAO.count();
-			assertThat("number of sharedObj stored in the database coincides with expected", numRecords, equalTo(0l));
+			assertThat("number of objGranted stored in the database coincides with expected", numRecords, equalTo(0l));
 
 			// create a large dataset to test complex operations
 			final Calendar calendar = Calendar.getInstance();
@@ -149,70 +169,67 @@ public class SharedObjectCollectionTest extends LeishvlTestCase {
 			final int numItems = 11;
 			for (int i = 0; i < numItems; i++) {
 				calendar.add(Calendar.MINUTE, 1);
-				final SharedObject sharedObj3 = SharedObject.builder()
-						.subject("user1@example.com")
+				final ObjectGranted objGranted3 = ObjectGranted.builder()
+						.id("Shared-" + i)
+						.owner("owner@example.com")
+						.user("user@example.com")
+						.collection("pendingSequences")
+						.itemId("XYZ" + i)
 						.sharedDate(calendar.getTime())
 						.accessType(i%2 == 0 ? SharedAccess.EDIT_SHARE : SharedAccess.VIEW_SHARE)
-						.id("LVLREF000" + Integer.toString(i))
-						.collection("pendingSequences")
-						.objectId("XYZ" + i)
-						.build();
-				ids.add(sharedObj3.getId());
-				SHARED_OBJECT_DAO.insert(sharedObj3);				
+						.build();				
+				ids.add(objGranted3.getId());
+				SHARED_OBJECT_DAO.insert(objGranted3);				
 			}
 
 			// pagination
 			final int size = 3;
 			int start = 0;
-			List<SharedObject> sharedObjs = null;
+			List<ObjectGranted> objsGranted = null;
 			final MutableLong count = new MutableLong(0l);
 			do {
-				sharedObjs = SHARED_OBJECT_DAO.list(start, size, null, null, null, count);
-				if (sharedObjs.size() != 0) {
-					printMsg("Paging: first item " + start + ", showing " + sharedObjs.size() + " of " + count.getValue() + " items");					
+				objsGranted = SHARED_OBJECT_DAO.list(start, size, null, null, null, count);
+				if (objsGranted.size() != 0) {
+					printMsg("Paging: first item " + start + ", showing " + objsGranted.size() + " of " + count.getValue() + " items");					
 				}
-				start += sharedObjs.size();
-			} while (!sharedObjs.isEmpty());
+				start += objsGranted.size();
+			} while (!objsGranted.isEmpty());
 
-			// filter: collection+objectId search
-			ImmutableMap<String, String> filter = of("collection", "pendingSequences", "objectId", "XYZ1");
-			sharedObjs = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
-			assertThat("filtered sharedObj is not null", sharedObjs, notNullValue());
-			assertThat("number of filtered sharedObj coincides with expected", sharedObjs.size(), equalTo(1));
+			// filter: collection+itemId search (as the object's owner)
+			ImmutableMap<String, String> filter = of("collection", "pendingSequences", "itemId", "XYZ1");
+			objsGranted = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);			
+			assertThat("filtered objGranted coincides with expected", objsGranted, allOf(notNullValue(), not(empty()), hasSize(1)));			
 
 			// invalid filter
 			filter = of("filter_name", "filter_content");
-			sharedObjs = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
-			assertThat("filtered sharedObj is not null", sharedObjs, notNullValue());
-			assertThat("number of filtered sharedObj coincides with expected", sharedObjs.size(), equalTo(0));
+			objsGranted = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
+			assertThat("filtered objGranted coincides with expected", objsGranted, allOf(notNullValue(), empty()));
 
-			// sorting by shared date in ascending order
+			// sorting by shared date in ascending order (as the object's owner)
 			Sorting sorting = Sorting.builder()
 					.field("sharedDate")
 					.order(Order.ASC)
 					.build();
-			sharedObjs = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
-			assertThat("sorted sharedObj is not null", sharedObjs, notNullValue());
-			assertThat("number of sorted sharedObj coincides with expected", sharedObjs.size(), equalTo(numItems));
+			objsGranted = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
+			assertThat("sorted objGranted coincides with expected", objsGranted, allOf(notNullValue(), not(empty()), hasSize(numItems)));
 			Date last = new Date(0);
-			for (final SharedObject cs : sharedObjs) {
-				assertThat("sharedObj are properly sorted", cs.getSharedDate().after(last));
-				last = cs.getSharedDate();
+			for (final ObjectGranted og : objsGranted) {
+				assertThat("objGranted are properly sorted", og.getSharedDate().after(last));
+				last = og.getSharedDate();
 			}
 
-			// sorting by shared date in descending order
+			// sorting by shared date in descending order (as the object's owner)
 			sorting = Sorting.builder()
 					.field("sharedDate")
 					.order(Order.DESC)
 					.build();
-			sharedObjs = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
-			assertThat("sorted sharedObj is not null", sharedObjs, notNullValue());
-			assertThat("number of sorted sharedObj coincides with expected", sharedObjs.size(), equalTo(numItems));
+			objsGranted = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
+			assertThat("sorted objGranted coincides with expected", objsGranted, allOf(notNullValue(), not(empty()), hasSize(numItems)));
 			calendar.add(Calendar.MINUTE, 1);
 			last = calendar.getTime();
-			for (final SharedObject cs : sharedObjs) {
-				assertThat("sharedObj are properly sorted", cs.getSharedDate().before(last));
-				last = cs.getSharedDate();
+			for (final ObjectGranted og : objsGranted) {
+				assertThat("objGranted are properly sorted", og.getSharedDate().before(last));
+				last = og.getSharedDate();
 			}
 
 			// invalid sort
@@ -220,15 +237,51 @@ public class SharedObjectCollectionTest extends LeishvlTestCase {
 					.field("sort_name")
 					.order(Order.DESC)
 					.build();
-			sharedObjs = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
-			assertThat("sorted sharedObj is not null", sharedObjs, notNullValue());
-			assertThat("number of sorted sharedObj coincides with expected", sharedObjs.size(), equalTo(0));
+			objsGranted = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, null, sorting, null, null);
+			assertThat("sorted objGranted coincides with expected", objsGranted, allOf(notNullValue(), empty()));
 
-			// projection
-			sharedObjs = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, null, null, ImmutableMap.of(String.format("%s%s", DB_PREFIX, "accessType"), false), null);
-			assertThat("projected sharedObj is not null", sharedObjs, notNullValue());
-			assertThat("number of projected sharedObj coincides with expected", sharedObjs.size(), equalTo(numItems));
-			assertThat("field was filtered from database response", sharedObjs.get((new Random()).nextInt(numItems)).getAccessType(), nullValue());
+			// projection (as the object's owner)
+			objsGranted = SHARED_OBJECT_DAO.list(0, Integer.MAX_VALUE, null, null, ImmutableMap.of(String.format("%s%s", DB_PREFIX, "accessType"), false), null);			
+			assertThat("projected objGranted coincides with expected", objsGranted, allOf(notNullValue(), not(empty()), hasSize(numItems)));
+			assertThat("field was filtered from database response", objsGranted.get((new Random()).nextInt(numItems)).getAccessType(), nullValue());
+
+			// filter: collection+itemId search (as the granted user)
+			filter = of("collection", "pendingSequences", "itemId", "XYZ1");
+			List<ObjectAccepted> objsAccepted = SHARED_OBJECT_DAO.listAccepted(0, Integer.MAX_VALUE, filter, null, null, null, "user@example.com");
+			assertThat("filtered objAccepted coincides with expected", objsAccepted, allOf(notNullValue(), not(empty()), hasSize(1)));
+
+			// sorting by shared date in ascending order (as the granted user)
+			sorting = Sorting.builder()
+					.field("sharedDate")
+					.order(Order.ASC)
+					.build();
+			objsAccepted = SHARED_OBJECT_DAO.listAccepted(0, Integer.MAX_VALUE, null, sorting, null, null, "user@example.com");
+			assertThat("sorted objAccepted coincides with expected", objsAccepted, allOf(notNullValue(), not(empty()), hasSize(numItems)));
+			last = new Date(0);
+			for (final ObjectAccepted oa : objsAccepted) {
+				assertThat("objAccepted are properly sorted", oa.getSharedDate().after(last));
+				last = oa.getSharedDate();
+			}
+
+			// sorting by shared date in descending order (as the granted user)
+			sorting = Sorting.builder()
+					.field("sharedDate")
+					.order(Order.DESC)
+					.build();
+			objsAccepted = SHARED_OBJECT_DAO.listAccepted(0, Integer.MAX_VALUE, null, sorting, null, null, "user@example.com");
+			assertThat("sorted objAccepted coincides with expected", objsAccepted, allOf(notNullValue(), not(empty()), hasSize(numItems)));
+			calendar.add(Calendar.MINUTE, 1);
+			last = calendar.getTime();
+			for (final ObjectAccepted oa : objsAccepted) {
+				assertThat("objAccepted are properly sorted", oa.getSharedDate().before(last));
+				last = oa.getSharedDate();
+			}
+
+			// projection (as the granted user)
+			objsAccepted = SHARED_OBJECT_DAO.listAccepted(0, Integer.MAX_VALUE, null, null, ImmutableMap.of(String.format("%s%s", DB_PREFIX, "accessType"), false), 
+					null, "user@example.com");
+			assertThat("projected objAccepted coincides with expected", objsAccepted, allOf(notNullValue(), not(empty()), hasSize(numItems)));
+			assertThat("field was filtered from database response", objsAccepted.get((new Random()).nextInt(numItems)).getAccessType(), nullValue());			
 
 			// clean-up and display database statistics
 			for (final String id2 : ids) {			

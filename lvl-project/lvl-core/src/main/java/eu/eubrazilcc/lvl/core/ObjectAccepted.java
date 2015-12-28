@@ -24,19 +24,17 @@ package eu.eubrazilcc.lvl.core;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,14 +53,14 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Provides information aboud a shared object.
+ * Convenient class to represent a shared object when is accepted by the granted user.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class SharedObject extends Shareable implements Linkable<SharedObject> {
+public class ObjectAccepted extends Shareable implements Linkable<ObjectAccepted> {
 
 	@InjectLinks({
-		@InjectLink(value="shares/{urlSafeNamespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
-				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
+		@InjectLink(value="shares/accepted/{urlSafeNs}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
+				@Binding(name="urlSafeNs", value="${instance.urlSafeNs}"),
 				@Binding(name="urlSafeId", value="${instance.urlSafeId}")
 		})
 	})
@@ -72,14 +70,15 @@ public class SharedObject extends Shareable implements Linkable<SharedObject> {
 	private List<Link> links; // HATEOAS links
 
 	@JsonIgnore
-	private String urlSafeNamespace;
+	private String urlSafeNs;	
 	@JsonIgnore
 	private String urlSafeId;
 
-	private String id;        // Resource identifier	
+	private String id;        // Resource identifier
 
-	private String collection;
-	private String objectId;
+	public ObjectAccepted() {
+		setUrlSafeNs(LVL_DEFAULT_NS);
+	}
 
 	@Override
 	public List<Link> getLinks() {
@@ -95,13 +94,13 @@ public class SharedObject extends Shareable implements Linkable<SharedObject> {
 		}
 	}
 
-	public String getUrlSafeNamespace() {
-		return urlSafeNamespace;
+	public String getUrlSafeNs() {
+		return urlSafeNs;
 	}
 
-	public void setUrlSafeNamespace(final String urlSafeNamespace) {
-		this.urlSafeNamespace = urlSafeNamespace;
-	}
+	public void setUrlSafeNs(final String urlSafeNs) {
+		this.urlSafeNs = urlSafeNs;
+	}	
 
 	public String getUrlSafeId() {
 		return urlSafeId;
@@ -109,12 +108,6 @@ public class SharedObject extends Shareable implements Linkable<SharedObject> {
 
 	public void setUrlSafeId(final String urlSafeId) {
 		this.urlSafeId = urlSafeId;
-	}
-
-	@Override
-	public void setSubject(final String subject) {
-		super.setSubject(subject);
-		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(subject, LVL_DEFAULT_NS).trim()));
 	}
 
 	public String getId() {
@@ -126,46 +119,34 @@ public class SharedObject extends Shareable implements Linkable<SharedObject> {
 		setUrlSafeId(id != null ? urlEncodeUtf8(trimToEmpty(id)) : id);
 	}
 
-	public String getCollection() {
-		return collection;
-	}
-
-	public void setCollection(final String collection) {
-		this.collection = collection;
-	}
-
-	public String getObjectId() {
-		return objectId;
-	}
-
-	public void setObjectId(final String objectId) {
-		this.objectId = objectId;
-	}
+	@Override
+	public void setUser(final String user) {
+		setUrlSafeNs(urlEncodeUtf8(defaultIfBlank(user, LVL_DEFAULT_NS).trim()));
+		super.setUser(user);
+	}	
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof SharedObject)) {
+		if (obj == null || !(obj instanceof ObjectAccepted)) {
 			return false;
 		}
-		final SharedObject other = SharedObject.class.cast(obj);
+		final ObjectAccepted other = ObjectAccepted.class.cast(obj);
 		return Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);		
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final SharedObject other) {
+	public boolean equalsIgnoringVolatile(final ObjectAccepted other) {
 		if (other == null) {
 			return false;
 		}
 		return super.equals((Shareable)other)
-				&& Objects.equals(id, other.id)
-				&& Objects.equals(collection, other.collection)
-				&& Objects.equals(objectId, other.objectId);
+				&& Objects.equals(id, other.id);
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() + Objects.hash(links, id, collection, objectId);
+		return super.hashCode() + Objects.hash(links, id);
 	}
 
 	@Override
@@ -174,79 +155,39 @@ public class SharedObject extends Shareable implements Linkable<SharedObject> {
 				.add("Shareable", super.toString())
 				.add("links", links)
 				.add("id", id)
-				.add("collection", collection)
-				.add("objectId", objectId)
 				.toString();
 	}
 
 	/* Fluent API */
 
-	public static Builder builder() {
-		return new Builder();
+	public static ObjectAcceptedBuilder builder() {
+		return new ObjectAcceptedBuilder();
 	}
 
-	public static class Builder {
+	public static class ObjectAcceptedBuilder extends Builder<ObjectAccepted> {
 
-		private final SharedObject instance = new SharedObject();
+		public ObjectAcceptedBuilder() {
+			super(ObjectAccepted.class);
+		}
 
-		public Builder links(final List<Link> links) {
+		public ObjectAcceptedBuilder links(final List<Link> links) {
 			instance.setLinks(links);
 			return this;
 		}
 
-		public Builder newId() {
-			instance.setId(compactRandomUUID());
-			return this;
-		}
-
-		public Builder id(final String id) {
+		public ObjectAcceptedBuilder id(final String id) {
 			String id2 = null;
 			checkArgument(isNotBlank(id2 = trimToNull(id)), "Uninitialized or invalid id");
 			instance.setId(id2);
 			return this;
 		}
 
-		public Builder collection(final String collection) {
-			String collection2 = null;
-			checkArgument(isNotBlank(collection2 = trimToNull(collection)), "Uninitialized or invalid collection");
-			instance.setCollection(collection2);
+		public ObjectAcceptedBuilder newId() {
+			instance.setId(compactRandomUUID());
 			return this;
 		}
 
-		public Builder objectId(final String objectId) {
-			String objectId2 = null;
-			checkArgument(isNotBlank(objectId2 = trimToNull(objectId)), "Uninitialized or invalid object Id");
-			instance.setObjectId(objectId2);
-			return this;
-		}
-
-
-		/* Inherited from Shareable */
-
-		public Builder subject(final String subject) {
-			checkArgument(isNotBlank(subject), "Uninitialized or invalid subject");
-			instance.setSubject(subject.trim());
-			return this;
-		}
-
-		public Builder sharedDate(final Date sharedDate) {
-			checkNotNull(sharedDate, "Uninitialized shared date");
-			instance.setSharedDate(sharedDate);
-			return this;
-		}
-
-		public Builder sharedNow() {
-			instance.setSharedDate(new Date());
-			return this;
-		}
-
-		public Builder accessType(final SharedAccess accessType) {
-			checkNotNull(accessType, "Uninitialized access type");
-			instance.setAccessType(accessType);
-			return this;
-		}
-
-		public SharedObject build() {
+		public ObjectAccepted build() {
 			return instance;
 		}
 

@@ -487,7 +487,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		addPermissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
 			@Override
 			public String apply(final DatasetShare share) {
-				checkState(share.getSubject().equals(ownerId), "Subject does not coincide with owner id");
+				checkState(share.getUser().equals(ownerId), "Subject does not coincide with owner id");
 				return datasetSharePermission(share);
 			}			
 		}).filter(notNull()).toArray(String.class));		
@@ -505,7 +505,7 @@ public enum ResourceOwnerDAO implements BaseDAO<String, ResourceOwner> {
 		removePermissions(ownerId ,from(Arrays.asList(shares)).transform(new Function<DatasetShare, String>() {
 			@Override
 			public String apply(final DatasetShare share) {
-				checkState(share.getSubject().equals(ownerId), "Subject does not coincide with owner id");
+				checkState(share.getUser().equals(ownerId), "Subject does not coincide with owner id");
 				return datasetSharePermission(share);
 			}			
 		}).filter(notNull()).toArray(String.class));

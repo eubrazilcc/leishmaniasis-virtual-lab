@@ -164,8 +164,8 @@ public class DatasetShareResourceTest extends Testable {
 		assertThat("Get dataset share (from owner) namespace is not empty", isNotBlank(share2.getNamespace()), equalTo(true));
 		assertThat("Get dataset share (from owner) namespace coincides with expected", share2.getNamespace(), equalTo(testCtxt.ownerid("user1")));
 		assertThat("Get dataset share (from owner) shared date is not null", share2.getSharedDate(), notNullValue());
-		assertThat("Get dataset share (from owner) subject is not empty", isNotBlank(share2.getSubject()), equalTo(true));
-		assertThat("Get dataset share (from owner) subject coincides with expected", share2.getSubject(), equalTo(testCtxt.ownerid("user2")));			
+		assertThat("Get dataset share (from owner) subject is not empty", isNotBlank(share2.getUser()), equalTo(true));
+		assertThat("Get dataset share (from owner) subject coincides with expected", share2.getUser(), equalTo(testCtxt.ownerid("user2")));			
 		// uncomment for additional output
 		System.out.println(" >> Get dataset share (from owner) result: " + share2.toString());
 
@@ -185,8 +185,8 @@ public class DatasetShareResourceTest extends Testable {
 		assertThat("Get dataset share (from granted account) namespace is not empty", isNotBlank(share2.getNamespace()), equalTo(true));
 		assertThat("Get dataset share (from granted account) namespace coincides with expected", share2.getNamespace(), equalTo(testCtxt.ownerid("user1")));
 		assertThat("Get dataset share (from granted account) shared date is not null", share2.getSharedDate(), notNullValue());
-		assertThat("Get dataset share (from granted account) subject is not empty", isNotBlank(share2.getSubject()), equalTo(true));
-		assertThat("Get dataset share (from granted account) subject coincides with expected", share2.getSubject(), equalTo(testCtxt.ownerid("user2")));			
+		assertThat("Get dataset share (from granted account) subject is not empty", isNotBlank(share2.getUser()), equalTo(true));
+		assertThat("Get dataset share (from granted account) subject coincides with expected", share2.getUser(), equalTo(testCtxt.ownerid("user2")));			
 		// uncomment for additional output
 		System.out.println(" >> Get dataset share (from granted account) result: " + share2.toString());
 

@@ -28,6 +28,8 @@ import static eu.eubrazilcc.lvl.storage.security.el.PermissionElBuilder.buildPer
 
 import java.util.Collection;
 
+import javax.annotation.Nullable;
+
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 
@@ -73,9 +75,15 @@ public abstract class BaseSecurityManager {
 		return currentUser.isAuthenticated();
 	}
 
+	@Nullable
 	public final String getPrincipal() {
 		final Object principal = currentUser.getPrincipal();
 		return (principal != null) && (principal instanceof String) ? (String)principal : null;
+	}
+	
+	@Nullable
+	public final String getEmail() {
+		return owner != null && owner.getUser() != null ? owner.getUser().getEmail() : null;
 	}
 
 	public final boolean hasRole(final String roleIdentifier) {

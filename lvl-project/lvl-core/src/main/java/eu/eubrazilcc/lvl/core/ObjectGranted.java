@@ -27,6 +27,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_DEFAULT_NS;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.SELF;
+import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
@@ -34,10 +35,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.ws.rs.core.Link;
 
@@ -54,15 +53,14 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
 
 /**
- * Stores a user citation that is pending for sanitation and later approval. Therefore, this records
- * could be incomplete or inaccurate.
+ * Convenient class to represent an object that is shared by its owner.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PendingReference implements Linkable<PendingReference> {
+public class ObjectGranted extends Shareable implements Linkable<ObjectGranted> {
 
 	@InjectLinks({
-		@InjectLink(value="pending/citations/{urlSafeNamespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
-				@Binding(name="urlSafeNamespace", value="${instance.urlSafeNamespace}"),
+		@InjectLink(value="shares/granted/{urlSafeNs}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
+				@Binding(name="urlSafeNs", value="${instance.urlSafeNs}"),
 				@Binding(name="urlSafeId", value="${instance.urlSafeId}")
 		})
 	})
@@ -72,19 +70,14 @@ public class PendingReference implements Linkable<PendingReference> {
 	private List<Link> links; // HATEOAS links
 
 	@JsonIgnore
-	private String urlSafeNamespace;
+	private String urlSafeNs;	
 	@JsonIgnore
 	private String urlSafeId;
 
-	private String namespace;      // Name space where the record is inscribed
-	private String id;             // Resource identifier
-	private String pubmedId;       // PubMed Identifier (PMID)	
-	private Set<String> seqids;    // Sequences mentioned in this publication (must include database and accession number)
-	private Set<String> sampleids; // Samples mentioned in this publication (must include collection and catalog number)
-	private Date modified;         // Last modification time-stamp
+	private String id;        // Resource identifier
 
-	public PendingReference() {
-		setNamespace(LVL_DEFAULT_NS);
+	public ObjectGranted() {
+		setUrlSafeNs(LVL_DEFAULT_NS);
 	}
 
 	@Override
@@ -101,12 +94,12 @@ public class PendingReference implements Linkable<PendingReference> {
 		}
 	}
 
-	public String getUrlSafeNamespace() {
-		return urlSafeNamespace;
+	public String getUrlSafeNs() {
+		return urlSafeNs;
 	}
 
-	public void setUrlSafeNamespace(final String urlSafeNamespace) {
-		this.urlSafeNamespace = urlSafeNamespace;
+	public void setUrlSafeNs(final String urlSafeNs) {
+		this.urlSafeNs = urlSafeNs;
 	}
 
 	public String getUrlSafeId() {
@@ -115,15 +108,6 @@ public class PendingReference implements Linkable<PendingReference> {
 
 	public void setUrlSafeId(final String urlSafeId) {
 		this.urlSafeId = urlSafeId;
-	}
-
-	public String getNamespace() {
-		return namespace;
-	}
-
-	public void setNamespace(final String namespace) {
-		this.namespace = namespace;
-		setUrlSafeNamespace(urlEncodeUtf8(defaultIfBlank(namespace, LVL_DEFAULT_NS).trim()));
 	}
 
 	public String getId() {
@@ -135,127 +119,75 @@ public class PendingReference implements Linkable<PendingReference> {
 		setUrlSafeId(id != null ? urlEncodeUtf8(trimToEmpty(id)) : id);
 	}
 
-	public String getPubmedId() {
-		return pubmedId;
-	}
-
-	public void setPubmedId(final String pubmedId) {
-		this.pubmedId = pubmedId;
-	}
-
-	public Set<String> getSeqids() {
-		return seqids;
-	}
-
-	public void setSeqids(final Set<String> seqids) {
-		this.seqids = seqids;
-	}	
-
-	public Set<String> getSampleids() {
-		return sampleids;
-	}
-
-	public void setSampleids(final Set<String> sampleids) {
-		this.sampleids = sampleids;
-	}
-
-	public Date getModified() {
-		return modified;
-	}
-
-	public void setModified(final Date modified) {
-		this.modified = modified;
+	@Override
+	public void setOwner(final String owner) {
+		setUrlSafeNs(urlEncodeUtf8(defaultIfBlank(owner, LVL_DEFAULT_NS).trim()));
+		super.setOwner(owner);
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof PendingReference)) {
+		if (obj == null || !(obj instanceof ObjectGranted)) {
 			return false;
 		}
-		final PendingReference other = PendingReference.class.cast(obj);
+		final ObjectGranted other = ObjectGranted.class.cast(obj);
 		return Objects.equals(links, other.links)
 				&& equalsIgnoringVolatile(other);		
 	}
 
 	@Override
-	public boolean equalsIgnoringVolatile(final PendingReference other) {
+	public boolean equalsIgnoringVolatile(final ObjectGranted other) {
 		if (other == null) {
 			return false;
 		}
-		return Objects.equals(namespace, other.namespace)
-				&& Objects.equals(id, other.id)
-				&& Objects.equals(pubmedId, other.pubmedId)
-				&& Objects.equals(seqids, other.seqids)
-				&& Objects.equals(sampleids, other.sampleids)
-				&& Objects.equals(modified, other.modified);
+		return super.equals((Shareable)other)
+				&& Objects.equals(id, other.id);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(links, namespace, id, pubmedId, seqids, sampleids, modified);
+		return super.hashCode() + Objects.hash(links, id);
 	}
 
 	@Override
 	public String toString() {
 		return toStringHelper(this)
+				.add("Shareable", super.toString())
 				.add("links", links)
-				.add("namespace", namespace)
 				.add("id", id)
-				.add("pubmedId", pubmedId)
-				.add("seqids", seqids)
-				.add("sampleids", sampleids)
-				.add("modified", modified)
 				.toString();
 	}
 
 	/* Fluent API */
 
-	public static Builder builder() {
-		return new Builder();
+	public static ObjectGrantedBuilder builder() {
+		return new ObjectGrantedBuilder();
 	}
 
-	public static class Builder {
+	public static class ObjectGrantedBuilder extends Builder<ObjectGranted> {
 
-		private final PendingReference instance = new PendingReference();
+		public ObjectGrantedBuilder() {
+			super(ObjectGranted.class);
+		}
 
-		public Builder links(final List<Link> links) {
+		public ObjectGrantedBuilder links(final List<Link> links) {
 			instance.setLinks(links);
 			return this;
 		}
 
-		public Builder namespace(final String namespace) {
-			instance.setNamespace(trimToEmpty(namespace));
-			return this;
-		}
-
-		public Builder id(final String id) {
+		public ObjectGrantedBuilder id(final String id) {
 			String id2 = null;
 			checkArgument(isNotBlank(id2 = trimToNull(id)), "Uninitialized or invalid id");
 			instance.setId(id2);
 			return this;
 		}
 
-		public Builder pubmedId(final String pubmedId) {
-			instance.setPubmedId(pubmedId);
+		public ObjectGrantedBuilder newId() {
+			instance.setId(compactRandomUUID());
 			return this;
 		}
 
-		public Builder seqids(final Set<String> seqids) {
-			instance.setSeqids(seqids);
-			return this;
-		}
-
-		public Builder sampleids(final Set<String> sampleids) {
-			instance.setSampleids(sampleids);
-			return this;
-		}
-
-		public Builder modified(final Date modified){
-			instance.setModified(modified);
-			return this;
-		}
-
-		public PendingReference build() {
+		public ObjectGranted build() {
 			return instance;
 		}
 

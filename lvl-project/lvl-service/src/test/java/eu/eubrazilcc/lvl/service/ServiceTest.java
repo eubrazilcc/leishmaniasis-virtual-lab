@@ -78,6 +78,8 @@ import eu.eubrazilcc.lvl.service.testable.LeishmaniaResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LeishmaniaSampleResourceTest;
 import eu.eubrazilcc.lvl.service.testable.LvlInstanceResourceTest;
 import eu.eubrazilcc.lvl.service.testable.NotificationResourceTest;
+import eu.eubrazilcc.lvl.service.testable.ObjectAcceptedResourceTest;
+import eu.eubrazilcc.lvl.service.testable.ObjectGrantedResourceTest;
 import eu.eubrazilcc.lvl.service.testable.PendingReferenceResourceTest;
 import eu.eubrazilcc.lvl.service.testable.PostResourceTest;
 import eu.eubrazilcc.lvl.service.testable.SandflyPendingResourceTest;
@@ -232,7 +234,7 @@ public class ServiceTest {
 					"user2", new TestCredential(ownerId2, TOKEN_USER2), 
 					"user3", new TestCredential(ownerId3, TOKEN_USER3)));
 
-			// test task resource
+			/* TODO // test task resource
 			new TaskResourceTest(testCtxt).runTest();
 
 			// test sand-flies resource
@@ -257,9 +259,15 @@ public class ServiceTest {
 			new LeishmaniaResourceTest(testCtxt).runTest();
 
 			// test shared dataset resource
-			new DatasetShareResourceTest(testCtxt).runTest();
+			new DatasetShareResourceTest(testCtxt).runTest(); */
 
-			// test dataset open access resource
+			// test object granted resource
+			new ObjectGrantedResourceTest(testCtxt).runTest();
+
+			// test object accepted resource
+			new ObjectAcceptedResourceTest(testCtxt).runTest();
+
+			/* TODO // test dataset open access resource
 			new DatasetOpenAccessResourceTest(testCtxt).runTest();
 
 			// test citation resource
@@ -284,7 +292,7 @@ public class ServiceTest {
 			new IssuesResourceTest(testCtxt).runTest();
 
 			// test subscription request resource
-			new SubscriptionRequestResourceTest(testCtxt).runTest();
+			new SubscriptionRequestResourceTest(testCtxt).runTest(); */
 
 		} catch (Exception e) {
 			e.printStackTrace(System.err);

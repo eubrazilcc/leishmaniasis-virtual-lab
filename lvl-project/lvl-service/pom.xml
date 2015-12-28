@@ -71,6 +71,12 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<scope>test</scope>
 		</dependency>
 		
+		<!-- Apache Commons -->
+		<dependency> <!-- Data validation -->
+			<groupId>commons-validator</groupId>
+			<artifactId>commons-validator</artifactId>
+		</dependency>
+		
 		<!-- Java Servlet API 3.0 -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
