@@ -32,10 +32,11 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
+import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO.SHARED_OBJECT_DAO;
-import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.USER_ROLE;
+import static java.util.Objects.requireNonNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -55,8 +56,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
-import static java.util.Objects.requireNonNull;
 
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.glassfish.jersey.linking.Binding;
@@ -99,9 +98,9 @@ public class ObjectAcceptedResource {
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		parseParam(namespace);
+		final String namespace2 = parseParam(namespace);		
 		final String userEmail = requireNonNull(OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresRoles(newArrayList(USER_ROLE))
+				.requiresPermissions("users:*:*:" + ns2permission(namespace2) + ":view") // check permissions to access user's profile
 				.getEmail(), "User email not found");
 		final ObjectsAccepted paginable = ObjectsAccepted.start()
 				.namespace(userEmail)
@@ -129,10 +128,9 @@ public class ObjectAcceptedResource {
 	@Produces(APPLICATION_JSON)
 	public ObjectAccepted getObjectAccepted(final @PathParam("namespace") String namespace, final @PathParam("id") String id, 
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		parseParam(namespace);
-		final String id2 = parseParam(id);
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
 		final String userEmail = requireNonNull(OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresRoles(newArrayList(USER_ROLE))
+				.requiresPermissions("users:*:*:" + ns2permission(namespace2) + ":view") // check permissions to access user's profile
 				.getEmail(), "User email not found");
 		// get from database
 		final ObjectAccepted objAccepted = SHARED_OBJECT_DAO.findAccepted(id2, userEmail);
@@ -145,6 +143,8 @@ public class ObjectAcceptedResource {
 		}
 		return objAccepted;
 	}
+
+	// TODO : get shared object
 
 	/**
 	 * Wraps a collection of {@link ObjectAccepted}.

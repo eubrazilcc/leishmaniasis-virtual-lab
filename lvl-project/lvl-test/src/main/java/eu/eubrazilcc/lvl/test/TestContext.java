@@ -84,10 +84,16 @@ public class TestContext {
 	public static class TestCredential {
 		private final String ownerId;
 		private final String token;
-
+		private final String email;
+		
 		public TestCredential(final String ownerId, final String token) {
+			this(ownerId, token, null);
+		}
+
+		public TestCredential(final String ownerId, final String token, final String email) {
 			this.ownerId = ownerId;
 			this.token = token;
+			this.email = email;
 		}
 
 		public String getOwnerId() {
@@ -96,8 +102,11 @@ public class TestContext {
 
 		public String getToken() {
 			return token;
-		}		
-
+		}
+		
+		public String getEmail() {
+			return email;
+		}
 	}
 
 }

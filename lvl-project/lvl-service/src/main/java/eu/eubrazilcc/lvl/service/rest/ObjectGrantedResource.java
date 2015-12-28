@@ -24,6 +24,8 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.CollectionNames.LEISHMANIA_PENDING_COLLECTION;
+import static eu.eubrazilcc.lvl.core.CollectionNames.SANDFLY_PENDING_COLLECTION;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
@@ -37,7 +39,6 @@ import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO.SHARED_OBJECT_DAO;
-import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.USER_ROLE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -110,9 +111,9 @@ public class ObjectGrantedResource {
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		parseParam(namespace);
+		final String namespace2 = parseParam(namespace);
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresRoles(newArrayList(USER_ROLE))
+				.requiresPermissions("users:*:*:" + ns2permission(namespace2) + ":view") // check permissions to access user's profile
 				.getPrincipal();
 		final ObjectsGranted paginable = ObjectsGranted.start()
 				.namespace(ownerid)
@@ -125,7 +126,7 @@ public class ObjectGrantedResource {
 				.build();
 		// get from database
 		final MutableLong count = new MutableLong(0l);
-		final ImmutableMap<String, String> filter = parseQuery(q);		
+		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
 		final List<ObjectGranted> objGranteds = SHARED_OBJECT_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count, ownerid);
 		paginable.setElements(objGranteds);
@@ -140,10 +141,9 @@ public class ObjectGrantedResource {
 	@Produces(APPLICATION_JSON)
 	public ObjectGranted getObjectGranted(final @PathParam("namespace") String namespace, final @PathParam("id") String id, 
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		parseParam(namespace);
-		final String id2 = parseParam(id);
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresRoles(newArrayList(USER_ROLE))
+				.requiresPermissions("users:*:*:" + ns2permission(namespace2) + ":view") // check permissions to access user's profile
 				.getPrincipal();
 		// get from database
 		final ObjectGranted objGranted = SHARED_OBJECT_DAO.find(id2, ownerid);
@@ -163,14 +163,8 @@ public class ObjectGrantedResource {
 				|| isBlank(trimToNull(objGranted.getItemId())) || !EmailValidator.getInstance(false).isValid(objGranted.getUser())) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		final String collection = objGranted.getCollection().trim(), itemId = objGranted.getItemId().trim();
-		
-		
-		// TODO
-		
-		
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions(String.format("%s:*:%s:%s:create", collection, ns2permission(namespace2), itemId))
+				.requiresPermissions(permission(objGranted, namespace2, "create"))
 				.getPrincipal();
 		// complete required fields
 		objGranted.setId(compactRandomUUID());		
@@ -192,9 +186,8 @@ public class ObjectGrantedResource {
 				|| isBlank(trimToNull(update.getItemId()))) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		final String collection = update.getCollection().trim(), itemId = update.getItemId().trim();
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions(String.format("%s:*:%s:%s:edit", collection, ns2permission(namespace2), itemId))
+				.requiresPermissions(permission(update, namespace2, "edit"))
 				.getPrincipal();
 		// get from database
 		final ObjectGranted objGranted = SHARED_OBJECT_DAO.find(id2, ownerid);
@@ -216,10 +209,24 @@ public class ObjectGrantedResource {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// check user permissions
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions(String.format("%s:*:%s:%s:edit", 
-				objGranted.getCollection(), ns2permission(namespace2), objGranted.getItemId()));
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions(permission(objGranted, namespace2, "edit"));
 		// delete
 		SHARED_OBJECT_DAO.delete(id2);	
+	}
+
+	private String permission(final ObjectGranted objGranted, final String namespace, final String type) {
+		final String collection = objGranted.getCollection().trim(), itemId = objGranted.getItemId().trim();
+		String ptoken1 = null, ptoken2 = null;
+		switch (collection) {
+		case LEISHMANIA_PENDING_COLLECTION:
+		case SANDFLY_PENDING_COLLECTION:
+			ptoken1 = "sequences";
+			ptoken2 = "pending";
+			break;
+		default:
+			throw new WebApplicationException(String.format("Unsupported collection: ", collection), BAD_REQUEST);
+		}
+		return String.format("%s:%s:%s:%s:%s", ptoken1, ptoken2, ns2permission(namespace), itemId, type);
 	}
 
 	/**

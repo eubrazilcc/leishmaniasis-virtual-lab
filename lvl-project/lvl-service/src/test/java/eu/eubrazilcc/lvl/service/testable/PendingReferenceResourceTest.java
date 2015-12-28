@@ -108,7 +108,7 @@ public class PendingReferenceResourceTest extends Testable {
 		assertThat("Created pending response Id is not null", pendingRefId, notNullValue());
 		assertThat("Created pending response Id is not empty", isNotBlank(pendingRefId), equalTo(true));
 		pendingRef.setId(pendingRefId);
-		pendingRef.setNamespace(testCtxt.ownerid("user1"));		
+		pendingRef.setNamespace(testCtxt.ownerid("user1"));
 
 		// test get pending reference by Id (Java object)
 		PendingReference pendingRef2 = testCtxt.target().path(path.value())
