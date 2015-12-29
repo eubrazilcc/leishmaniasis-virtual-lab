@@ -108,7 +108,7 @@ public class ImportSequencesTask<T extends Sequence> extends CancellableTask<Int
 
 	private final String query;
 	private final Sequence.Builder<T> builder;
-	private final SequenceDAO<T> dao;	
+	private final SequenceDAO<T> dao;
 
 	public ImportSequencesTask(final String query, final Sequence.Builder<T> builder, final SequenceDAO<T> dao) {
 		this.query = query;
@@ -297,7 +297,7 @@ public class ImportSequencesTask<T extends Sequence> extends CancellableTask<Int
 
 	/* Fluent API */
 
-	public static Builder<Leishmania>leishmaniaBuilder() {
+	public static Builder<Leishmania> leishmaniaBuilder() {
 		return new Builder<Leishmania>();
 	}
 

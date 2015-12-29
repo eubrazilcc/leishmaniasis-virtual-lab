@@ -22,17 +22,25 @@
 
 package eu.eubrazilcc.lvl.service.rest;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Range.closed;
+import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
+import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.LEISHMANIA_QUERY;
 import static eu.eubrazilcc.lvl.core.entrez.EntrezHelper.SANDFLY_QUERY;
 import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getClientAddress;
+import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SAMPLES;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaDAO.LEISHMANIA_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaSampleDAO.LEISHMANIA_SAMPLE_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyDAO.SANDFLY_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.SANDFLY_SAMPLE_DAO;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.SseSubscriptionHttpHeaders.ssehHttpHeaders;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 import static java.util.UUID.fromString;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -70,14 +78,20 @@ import com.google.common.collect.Range;
 import com.google.common.util.concurrent.ListenableScheduledFuture;
 
 import eu.eubrazilcc.lvl.core.Leishmania;
+import eu.eubrazilcc.lvl.core.LeishmaniaSample;
+import eu.eubrazilcc.lvl.core.Sample;
 import eu.eubrazilcc.lvl.core.Sandfly;
+import eu.eubrazilcc.lvl.core.SandflySample;
 import eu.eubrazilcc.lvl.core.Sequence;
 import eu.eubrazilcc.lvl.core.concurrent.CancellableTask;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.service.Progress;
 import eu.eubrazilcc.lvl.service.Task;
+import eu.eubrazilcc.lvl.service.io.ImportSamplesTask;
 import eu.eubrazilcc.lvl.service.io.ImportSequencesTask;
+import eu.eubrazilcc.lvl.service.io.filter.NewSampleFilter;
 import eu.eubrazilcc.lvl.service.io.filter.NewSequenceFilter;
+import eu.eubrazilcc.lvl.service.io.filter.SampleIdFilter;
 import eu.eubrazilcc.lvl.service.io.filter.SequenceIdFilter;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
@@ -105,11 +119,12 @@ public class TaskResource {
 		if (task == null) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
+		final List<String> ids = newArrayList();
 		switch (task.getType()) {
 		case IMPORT_SANDFLY_SEQ:
 		case IMPORT_LEISHMANIA_SEQ:
 			OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("tasks:data:maintenance:*:create");
-			final List<String> ids = task.getIds();
+			ids.addAll(ofNullable(task.getIds()).orElse(emptyList()));
 			ImportSequencesTask<? extends Sequence> importSequencesTask = null;
 			if (IMPORT_SANDFLY_SEQ.equals(task.getType())) {
 				importSequencesTask = ImportSequencesTask.sandflyBuilder()
@@ -129,10 +144,32 @@ public class TaskResource {
 			TASK_RUNNER.execute(importSequencesTask);
 			TASK_STORAGE.add(importSequencesTask);
 			task.setUuid(importSequencesTask.getUuid());
-			break;		
+			break;
+		case IMPORT_SANDFLY_SAMPLES:
+		case IMPORT_LEISHMANIA_SAMPLES:
+			OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("tasks:data:maintenance:*:create");
+			ids.addAll(ofNullable(task.getIds()).orElse(emptyList()));
+			ImportSamplesTask<? extends Sample> importSamplesTask = null;
+			if (IMPORT_SANDFLY_SAMPLES.equals(task.getType())) {
+				importSamplesTask = ImportSamplesTask.sandflyBuilder()
+						.builder(SandflySample.builder())
+						.dao(SANDFLY_SAMPLE_DAO)
+						.filter(ids == null || ids.isEmpty() ? NewSampleFilter.sandflyBuilder().collectionId(COLFLEB).dao(SANDFLY_SAMPLE_DAO).build() : SampleIdFilter.builder().ids(ids).build())
+						.build();
+			} else {
+				importSamplesTask = ImportSamplesTask.leishmaniaBuilder()
+						.builder(LeishmaniaSample.builder())
+						.dao(LEISHMANIA_SAMPLE_DAO)
+						.filter(ids == null || ids.isEmpty() ? NewSampleFilter.leishmaniaBuilder().collectionId(CLIOC).dao(LEISHMANIA_SAMPLE_DAO).build() : SampleIdFilter.builder().ids(ids).build())
+						.build();
+			}
+			TASK_RUNNER.execute(importSamplesTask);
+			TASK_STORAGE.add(importSamplesTask);
+			task.setUuid(importSamplesTask.getUuid());			
+			break;
 		default:
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
-		}
+		}		
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(task.getUuid().toString());		
 		return Response.created(uriBuilder.build()).build();		
 	}
@@ -192,7 +229,7 @@ public class TaskResource {
 									.status(task.getStatus())
 									.hasErrors(task.hasErrors())
 									.build()))
-									.build());
+							.build());
 				} catch (IOException e) {
 					throw new RuntimeException("Error when writing the event", e);
 				}

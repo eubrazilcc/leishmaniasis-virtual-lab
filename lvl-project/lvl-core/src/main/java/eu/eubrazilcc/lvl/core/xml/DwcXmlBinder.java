@@ -22,8 +22,15 @@
 
 package eu.eubrazilcc.lvl.core.xml;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import javax.xml.bind.JAXBElement;
 
+import eu.eubrazilcc.lvl.core.Sample;
+import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
+import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.ObjectFactory;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecordSet;
@@ -61,6 +68,18 @@ public class DwcXmlBinder extends XmlBinder {
 			throw new IllegalArgumentException("Unsupported type: " + clazz.getCanonicalName());
 		}
 		return (JAXBElement<T>) element;
+	}
+
+	public static final <T extends Sample> T parseSample(final SimpleDarwinRecord record, final String collection, final Sample.Builder<T> builder) {
+		requireNonNull(record, "Valid record expected");
+		checkArgument(isNotBlank(collection), "Non-empty collection expected");
+		requireNonNull(builder, "Valid builder expected");		
+		return builder
+				.collectionId(collection.trim())
+				.catalogNumber(record.getCatalogNumber())											
+				.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(record.getDecimalLongitude(), record.getDecimalLatitude()).build()).build())
+				.sample(record)
+				.build();		
 	}
 
 }
