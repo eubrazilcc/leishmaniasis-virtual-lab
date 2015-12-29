@@ -125,7 +125,7 @@ public class TaskResource {
 						.dao(LEISHMANIA_DAO)
 						.filter(ids == null || ids.isEmpty() ? NewSequenceFilter.leishmaniaBuilder().dao(LEISHMANIA_DAO).build() : SequenceIdFilter.builder().ids(ids).build())
 						.build();
-			}			
+			}
 			TASK_RUNNER.execute(importSequencesTask);
 			TASK_STORAGE.add(importSequencesTask);
 			task.setUuid(importSequencesTask.getUuid());

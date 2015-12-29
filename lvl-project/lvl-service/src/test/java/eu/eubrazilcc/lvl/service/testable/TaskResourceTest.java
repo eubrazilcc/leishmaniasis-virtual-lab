@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.service.testable;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
+import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_LEISHMANIA_SAMPLES;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
 import static javax.ws.rs.client.Entity.entity;
@@ -60,7 +61,7 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class TaskResourceTest extends Testable {
 
 	public TaskResourceTest(final TestContext testCtxt) {
-		super(testCtxt, TaskResourceTest.class);
+		super(testCtxt, TaskResourceTest.class, true);
 	}
 
 	public void test() throws Exception {
@@ -82,9 +83,9 @@ public class TaskResourceTest extends Testable {
 		assertThat("Create import sandflies task response entity is not null", payload, notNullValue());
 		assertThat("Create import sandflies task response entity is empty", isBlank(payload));
 		// uncomment for additional output
-		System.out.println(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
-		System.out.println(" >> Create import sandflies task response JAX-RS object: " + response);
-		System.out.println(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
+		printMsg(" >> Create import sandflies task response JAX-RS object: " + response);
+		printMsg(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
 		URI location = new URI((String)response.getHeaders().get("Location").get(0));
 
 		// test import sandflies task progress
@@ -112,7 +113,7 @@ public class TaskResourceTest extends Testable {
 			assertThat("Progress event decoded object is not null", progress, notNullValue());
 			assertThat("Import sandflies task does not have errors", !progress.isHasErrors());
 			// uncomment for additional output				
-			System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: id=" 
+			printMsg(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: id=" 
 					+ id + "; name=" + name + "; data=" + data + "; object=" + progress);
 		}
 
@@ -128,9 +129,9 @@ public class TaskResourceTest extends Testable {
 		assertThat("Create import sandflies task response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
 		// uncomment for additional output
-		System.out.println(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
-		System.out.println(" >> Create import sandflies task response JAX-RS object: " + response);
-		System.out.println(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
+		printMsg(" >> Create import sandflies task response JAX-RS object: " + response);
+		printMsg(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
 		location = new URI((String)response.getHeaders().get("Location").get(0));
 
 		eventInput = testCtxt.target().path(path.value())
@@ -152,8 +153,18 @@ public class TaskResourceTest extends Testable {
 			assertThat("Progress event decoded object is not null", progress, notNullValue());
 			assertThat("Import sandflies task does not have errors", !progress.isHasErrors());
 			// uncomment for additional output				
-			System.out.println(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
+			printMsg(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
 		}
+		
+		// test import samples from speciesLink
+		task = Task.builder()
+				.type(IMPORT_LEISHMANIA_SAMPLES)
+				.ids(newArrayList("353470160", "353483325", "384562886"))
+				.build();
+		
+		
+		// TODO
+		
 	}
 
 }

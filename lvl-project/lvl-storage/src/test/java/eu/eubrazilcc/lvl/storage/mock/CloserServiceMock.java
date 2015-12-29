@@ -23,6 +23,7 @@
 package eu.eubrazilcc.lvl.storage.mock;
 
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
+import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector.ACTIVEMQ_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
@@ -60,9 +61,11 @@ public enum CloserServiceMock implements CloserServiceIf {
 		// load MongoDB connector and register it for closing
 		MONGODB_CONN.preload();
 		register(MONGODB_CONN);
-		// load task runner
+		// load task runner, task scheduler and register them for closing
 		TASK_RUNNER.preload();
 		register(TASK_RUNNER);
+		TASK_SCHEDULER.preload();
+		register(TASK_SCHEDULER);
 	}
 
 	@Override

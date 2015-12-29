@@ -198,22 +198,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 				<groupId>org.apache.avro</groupId>
 				<artifactId>avro</artifactId>
 				<version>${avro.version}</version>
-			</dependency>
-			
-			<!-- Akka: open-source toolkit and runtime for building concurrent and
-				distributed applications on the JVM -->
-				
-			<dependency>
-				<groupId>com.typesafe.akka</groupId>
-				<artifactId>akka-actor_2.11</artifactId>
-				<version>${akka.version}</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>com.typesafe.akka</groupId>
-				<artifactId>akka-slf4j_2.11</artifactId>
-				<version>${akka.version}</version>
-			</dependency>
+			</dependency>			
 		
 			<!-- Javassist (JAVA programming ASSISTant) class library for editing bytecodes in Java -->
 			
