@@ -31,6 +31,9 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
+import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XML_FACTORY;
+import static eu.eubrazilcc.lvl.core.xml.XmlHelper.yearAsXMLGregorianCalendar;
+import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaPendingDAO.LEISHMANIA_PENDING_DAO;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.toJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JsonOptions.JSON_PRETTY_PRINTER;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
@@ -63,12 +66,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
+import eu.eubrazilcc.lvl.core.LeishmaniaPending;
 import eu.eubrazilcc.lvl.core.ObjectAccepted;
 import eu.eubrazilcc.lvl.core.ObjectGranted;
+import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
 import eu.eubrazilcc.lvl.service.rest.ObjectAcceptedResource;
 import eu.eubrazilcc.lvl.service.rest.ObjectAcceptedResource.ObjectsAccepted;
 import eu.eubrazilcc.lvl.service.rest.ObjectGrantedResource;
 import eu.eubrazilcc.lvl.service.rest.ObjectGrantedResource.ObjectsGranted;
+import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.test.TestContext;
 import eu.eubrazilcc.lvl.test.Testable;
 
@@ -79,7 +85,7 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class SharedObjectResourcesTest extends Testable {
 
 	public SharedObjectResourcesTest(final TestContext testCtxt) {
-		super(testCtxt, SharedObjectResourcesTest.class, true);
+		super(testCtxt, SharedObjectResourcesTest.class, false);
 	}
 
 	@Override
@@ -155,12 +161,49 @@ public class SharedObjectResourcesTest extends Testable {
 		assertThat("Get object accepted by Id coincides with expected", objAccepted2.equalsIgnoringVolatile(objAccepted));
 		// conditional output
 		printMsg(" >> Get object accepted by Id result: " + toJson(objAccepted2, JSON_PRETTY_PRINTER));
-		
+
 		// test shared object retrieving
-		
-		
-		
-		// TODO
+		final SimpleDarwinRecord sample = DWC_XML_FACTORY.createSimpleDarwinRecord()
+				.withModified(DWC_XML_FACTORY.createSimpleLiteral().withContent("2015-11-30T13:50:08"))
+				.withInstitutionCode("ISCIII-WHO-CCL")
+				.withCollectionCode("ISCIII-Leishmaniasis-collection")
+				.withCatalogNumber("LeishVL123")
+				.withYear(yearAsXMLGregorianCalendar(1975))
+				.withStateProvince("This is an example");
+		final LeishmaniaPending pendingSeq = LeishmaniaPending.builder()
+				.namespace("username")
+				.id(sample.getCatalogNumber())						
+				.sample(sample)
+				.sequence("CCCC")
+				.build();
+		final WriteResult<LeishmaniaPending> ack = LEISHMANIA_PENDING_DAO.insert(pendingSeq);
+		assertThat("write ack is not null", ack, notNullValue());
+		assertThat("database id is not empty", trim(ack.getId()), allOf(notNullValue(), not(equalTo(""))));
+
+		response = testCtxt.target().path(aPath.value())
+				.path(urlEncodeUtf8(testCtxt.ownerid("user2")))
+				.path(objGranted.getId())
+				.path("fetch")
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user2")))
+				.get();
+		assertThat("Fecth object accepted response is not null", response, notNullValue());
+		assertThat("Fecth object accepted response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+		assertThat("Fecth object accepted response is not empty", response.getEntity(), notNullValue());
+		payload = response.readEntity(String.class);
+		assertThat("Fecth object accepted response entity is not null", payload, notNullValue());
+		assertThat("Fecth object accepted response entity is not empty", isNotBlank(payload));
+		// conditional output
+		printMsg(" >> Fecth object accepted response body (JSON): " + payload);
+		printMsg(" >> Fecth object accepted response JAX-RS object: " + response);
+		printMsg(" >> Fecth object accepted HTTP headers: " + response.getStringHeaders());
+		final LeishmaniaPending pendingSeq2 = testCtxt.jsonMapper().readValue(payload, LeishmaniaPending.class);		
+		assertThat("Fecth object accepted (JSON encoded) result is not null", pendingSeq2, notNullValue());
+		assertThat("Fecth object accepted (JSON encoded) result Id is not empty", trim(pendingSeq2.getId()), allOf(notNullValue(), not(equalTo(""))));
+		pendingSeq.setId(pendingSeq2.getId());		
+		assertThat("Fecth object accepted (JSON encoded) result coincides with expected", pendingSeq2.equalsIgnoringVolatile(pendingSeq));
+		// conditional output
+		printMsg(" >> Fecth object accepted result: " + toJson(pendingSeq2, JSON_PRETTY_PRINTER));
 
 		// create a larger dataset to test complex operations
 		final Calendar calendar = Calendar.getInstance();

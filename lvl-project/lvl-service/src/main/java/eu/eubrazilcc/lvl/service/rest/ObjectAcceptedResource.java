@@ -24,6 +24,8 @@ package eu.eubrazilcc.lvl.service.rest;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Lists.newArrayList;
+import static eu.eubrazilcc.lvl.core.CollectionNames.LEISHMANIA_PENDING_COLLECTION;
+import static eu.eubrazilcc.lvl.core.CollectionNames.SANDFLY_PENDING_COLLECTION;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.LVL_NAME;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
@@ -35,15 +37,19 @@ import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
+import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaPendingDAO.LEISHMANIA_PENDING_DAO;
+import static eu.eubrazilcc.lvl.storage.dao.SandflyPendingDAO.SANDFLY_PENDING_DAO;
 import static eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO.SHARED_OBJECT_DAO;
 import static java.util.Objects.requireNonNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -129,11 +135,43 @@ public class ObjectAcceptedResource {
 	public ObjectAccepted getObjectAccepted(final @PathParam("namespace") String namespace, final @PathParam("id") String id, 
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
+		// delegate in the private method
+		return getObjectAccepted(namespace2, id2, request, headers);
+	}
+
+	@GET
+	@Path("{namespace:" + URL_FRAGMENT_PATTERN + "}/{id:" + URL_FRAGMENT_PATTERN + "}/fetch")
+	@Produces(APPLICATION_JSON)
+	public Object getSharedObject(final @PathParam("namespace") String namespace, final @PathParam("id") String id, 
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
+		// delegate in private method to load the object's definition
+		final ObjectAccepted objAccepted = getObjectAccepted(namespace2, id2, request, headers);
+		// load target object from database
+		Object obj = null;
+		switch (objAccepted.getCollection()) {
+		case LEISHMANIA_PENDING_COLLECTION:
+			obj = LEISHMANIA_PENDING_DAO.find(objAccepted.getItemId());
+			break;
+		case SANDFLY_PENDING_COLLECTION:
+			obj = SANDFLY_PENDING_DAO.find(objAccepted.getItemId());
+			break;
+		default:
+			throw new WebApplicationException(String.format("Unsupported collection: ", objAccepted.getCollection()), BAD_REQUEST);
+		}
+		if (obj == null) {
+			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+		}
+		return obj;
+	}
+
+	@NotNull
+	private ObjectAccepted getObjectAccepted(final String user, final String itemId, final HttpServletRequest request, final HttpHeaders headers) {
 		final String userEmail = requireNonNull(OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("users:*:*:" + ns2permission(namespace2) + ":view") // check permissions to access user's profile
+				.requiresPermissions("users:*:*:" + ns2permission(user) + ":view") // check permissions to access user's profile
 				.getEmail(), "User email not found");
 		// get from database
-		final ObjectAccepted objAccepted = SHARED_OBJECT_DAO.findAccepted(id2, userEmail);
+		final ObjectAccepted objAccepted = SHARED_OBJECT_DAO.findAccepted(itemId, userEmail);
 		if (objAccepted == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -143,8 +181,6 @@ public class ObjectAcceptedResource {
 		}
 		return objAccepted;
 	}
-
-	// TODO : get shared object
 
 	/**
 	 * Wraps a collection of {@link ObjectAccepted}.
