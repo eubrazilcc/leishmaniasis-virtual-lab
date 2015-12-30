@@ -22,7 +22,6 @@
 
 package eu.eubrazilcc.lvl.service.io;
 
-import static com.google.common.base.Joiner.on;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -32,7 +31,6 @@ import static com.google.common.util.concurrent.Futures.successfulAsList;
 import static com.google.common.util.concurrent.ListenableFutureTask.create;
 import static eu.eubrazilcc.lvl.core.DataSource.CLIOC;
 import static eu.eubrazilcc.lvl.core.DataSource.COLFLEB;
-import static eu.eubrazilcc.lvl.core.DataSource.GENBANK;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskRunner.TASK_RUNNER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.parseSample;
@@ -41,7 +39,9 @@ import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.DATA_CURATOR_R
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -70,8 +70,6 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 
 	private static final Logger LOGGER = getLogger(ImportSamplesTask.class);
 
-	public static final ImmutableList<String> DATABASES = of(CLIOC, COLFLEB);
-
 	public static final long TIMEOUT_MINUTES = 60l;
 
 	private ImmutableList<RecordFilter> filters = of();
@@ -81,11 +79,13 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 
 	private final Sample.Builder<T> builder;
 	private final SampleDAO<T> dao;
+	private final Entry<String, String> collection;
 
-	public ImportSamplesTask(final Sample.Builder<T> builder, final SampleDAO<T> dao) {
+	public ImportSamplesTask(final Sample.Builder<T> builder, final SampleDAO<T> dao, final Entry<String, String> collection) {
 		this.builder = builder;
 		this.dao = dao;
-		this.task = create(importSamplesTask());
+		this.collection = collection;
+		this.task = create(importSamplesTask());		
 	}
 
 	public ImmutableList<RecordFilter> getFilters() {		
@@ -104,19 +104,18 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 		return new Callable<Integer>() {
 			@Override			
 			public Integer call() throws Exception {
-				LOGGER.info("Importing new samples from: " + DATABASES);				
+				LOGGER.info(String.format("Importing new samples from: %s", collection.getValue()));				
 				int count = 0;
 				try (final SpeciesLinkConnector splink = new SpeciesLinkConnector()) {
 					final List<ListenableFuture<Integer>> subTasks = newArrayList();
-					for (final String db : DATABASES) {
-						if (CLIOC.equals(db)) {
-							subTasks.addAll(importSplinkSubTasks(splink, "clioc"));
-						} else if (COLFLEB.equals(db)) {
-							subTasks.addAll(importSplinkSubTasks(splink, "colfleb"));
-						} else {
-							throw new IllegalArgumentException("Unsupported database: " + db);
-						}
-					}
+					switch (collection.getValue()) {
+					case CLIOC:
+					case COLFLEB:
+						subTasks.addAll(importSplinkSubTasks(splink));
+						break;
+					default:
+						throw new IllegalArgumentException(String.format("Unsupported collection: %s", collection.getValue()));
+					}					
 					final ListenableFuture<List<Integer>> globalTask = successfulAsList(subTasks);					
 					final List<Integer> results = globalTask.get(TIMEOUT_MINUTES, MINUTES);
 					for (final Integer result : results) {
@@ -135,8 +134,8 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 					setHasErrors(true);
 					setStatus("Uncaught error while importing samples: not all samples were imported");
 					LOGGER.error("Uncaught error while importing samples", e);
-				}				
-				final String msg = count + " new samples were imported from: " + on(", ").join(DATABASES);				
+				}
+				final String msg = String.format("%d new samples were imported from: %s", count, collection.getValue());
 				if (!hasErrors()) {
 					setStatus(msg);
 					LOGGER.info(msg);
@@ -153,24 +152,24 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 		};
 	}
 
-	private List<ListenableFuture<Integer>> importSplinkSubTasks(final SpeciesLinkConnector splink, final String collection) {
+	private List<ListenableFuture<Integer>> importSplinkSubTasks(final SpeciesLinkConnector splink) {
 		final List<ListenableFuture<Integer>> subTasks = newArrayList();
 		setStatus("Counting collection items");
-		final int count = (int)splink.count(collection);		
+		final int count = (int)splink.count(collection.getKey());
 		checkState(count > 0l, "It expected that the collection had elements");
 		pending.addAndGet(count);
 		final Range<Integer> range = Range.closedOpen(0, count);
 		final int STEP = 100;
 		int i = 0;
 		do {
-			subTasks.add(TASK_RUNNER.submit(importSplinkSubTask(splink, i, STEP, collection)));
+			subTasks.add(TASK_RUNNER.submit(importSplinkSubTask(splink, i, STEP)));
 			i += STEP;
 		} while (range.contains(i));
-		LOGGER.trace(String.format("Collection %s items count: %d", collection, count));		
+		LOGGER.trace(String.format("Collection %s items count: %d", collection.getValue(), count));		
 		return subTasks;
 	}
 
-	private Callable<Integer> importSplinkSubTask(final SpeciesLinkConnector splink, final int start, final int limit, final String collection) {
+	private Callable<Integer> importSplinkSubTask(final SpeciesLinkConnector splink, final int start, final int limit) {
 		return new Callable<Integer>() {
 			private int fetchCount = 0;
 			private int expected = 0;
@@ -179,17 +178,17 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 				setStatus(String.format("Fetching samples from %s", collection));
 				try {
 					// fetch samples from remote data source
-					final SimpleDarwinRecordSet dwcSet = splink.fetch(collection, start, limit);
+					final SimpleDarwinRecordSet dwcSet = splink.fetch(collection.getKey(), start, limit);
 					// import samples into the local database
 					if (dwcSet != null && dwcSet.getSimpleDarwinRecord() != null) {
 						expected = dwcSet.getSimpleDarwinRecord().size();
 						for (final SimpleDarwinRecord record : dwcSet.getSimpleDarwinRecord()) {
-							final T sample = parseSample(record, "clioc".equals(collection) ? CLIOC : COLFLEB, builder);
+							final T sample = parseSample(record, collection.getValue(), builder);
 							// filter out the samples that are already stored in the database
 							String catalogNumber = sample.getCatalogNumber();							
 							for (int i = 0; i < filters.size() && catalogNumber != null; i++) {
 								final RecordFilter filter = filters.get(i);
-								if (filter.canBeApplied(GENBANK)) {
+								if (filter.canBeApplied(collection.getValue())) {
 									catalogNumber = filters.get(i).filterById(catalogNumber);
 								}
 							}
@@ -203,7 +202,7 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 						}
 					}
 				} catch (Exception e) {
-					LOGGER.warn(String.format("Failed to import samples from collection: %s", collection), e);
+					LOGGER.warn(String.format("Failed to import samples from collection: %s", collection.getValue()), e);
 				}
 				checkState(expected == fetchCount, "No all samples were imported");				
 				return fetchCount;
@@ -221,11 +220,11 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 	/* Fluent API */
 
 	public static Builder<LeishmaniaSample> leishmaniaBuilder() {
-		return new Builder<LeishmaniaSample>();
+		return new Builder<LeishmaniaSample>(new SimpleImmutableEntry<String, String>("clioc", CLIOC));
 	}
 
 	public static Builder<SandflySample> sandflyBuilder() {
-		return new Builder<SandflySample>();
+		return new Builder<SandflySample>(new SimpleImmutableEntry<String, String>("colfleb", COLFLEB));
 	}
 
 	public static class Builder<T extends Sample> {
@@ -234,15 +233,21 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 		private SampleDAO<T> dao;		
 		private ImmutableList<RecordFilter> filters;
 
-		public Builder<T> dao(final SampleDAO<T> dao) {
-			this.dao = dao;
-			return this;
+		private final Entry<String, String> collection;
+
+		public Builder(final Entry<String, String> collection) {
+			this.collection = collection;
 		}
 
 		public Builder<T> builder(final Sample.Builder<T> builder) {
 			this.builder = builder;
 			return this;
 		}
+
+		public Builder<T> dao(final SampleDAO<T> dao) {
+			this.dao = dao;
+			return this;
+		}		
 
 		public Builder<T> filter(final RecordFilter filter) {
 			this.filters = of(filter);
@@ -258,7 +263,7 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 		public ImportSamplesTask<T> build() {
 			checkArgument(builder != null, "Uninitialized or invalid sample builder");
 			checkArgument(dao != null, "Uninitialized or invalid sample DAO");
-			final ImportSamplesTask<T> instance = new ImportSamplesTask<T>(builder, dao);
+			final ImportSamplesTask<T> instance = new ImportSamplesTask<T>(builder, dao, collection);
 			instance.setFilters(filters);
 			return instance;
 		}

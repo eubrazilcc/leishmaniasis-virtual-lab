@@ -61,7 +61,7 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class TaskResourceTest extends Testable {
 
 	public TaskResourceTest(final TestContext testCtxt) {
-		super(testCtxt, TaskResourceTest.class, true);
+		super(testCtxt, TaskResourceTest.class, false);
 	}
 
 	public void test() throws Exception {
@@ -72,7 +72,6 @@ public class TaskResourceTest extends Testable {
 				.ids(newArrayList("353470160", "353483325", "384562886"))
 				.build();
 
-		/* TODO
 		Response response = testCtxt.target().path(path.value())					
 				.request()
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
@@ -155,31 +154,31 @@ public class TaskResourceTest extends Testable {
 			assertThat("Import sandflies task does not have errors", !progress.isHasErrors());
 			// conditional output				
 			printMsg(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
-		} */
+		}
 
 		// test import samples from speciesLink
 		task = Task.builder()
 				.type(IMPORT_LEISHMANIA_SAMPLES)
 				.ids(newArrayList("IOCL 0001"))
 				.build();
-		
-		Response response = testCtxt.target().path(path.value())					
+
+		response = testCtxt.target().path(path.value())					
 				.request()
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.post(entity(task, APPLICATION_JSON));
 		assertThat("Create import leishmania task response is not null", response, notNullValue());
 		assertThat("Create import leishmania task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
 		assertThat("Create import leishmania task response is not empty", response.getEntity(), notNullValue());
-		String payload = response.readEntity(String.class);
+		payload = response.readEntity(String.class);
 		assertThat("Create import leishmania task response entity is not null", payload, notNullValue());
 		assertThat("Create import leishmania task response entity is empty", isBlank(payload));
 		// conditional output
 		printMsg(" >> Create import leishmania task response body (JSON), empty is OK: " + payload);
 		printMsg(" >> Create import leishmania task response JAX-RS object: " + response);
 		printMsg(" >> Create import leishmania task HTTP headers: " + response.getStringHeaders());
-		URI location = new URI((String)response.getHeaders().get("Location").get(0));
+		location = new URI((String)response.getHeaders().get("Location").get(0));		
 
-		EventInput eventInput = testCtxt.target().path(path.value())
+		eventInput = testCtxt.target().path(path.value())
 				.path("progress")
 				.path(getName(location.getPath()))
 				.queryParam("refresh", 1)
