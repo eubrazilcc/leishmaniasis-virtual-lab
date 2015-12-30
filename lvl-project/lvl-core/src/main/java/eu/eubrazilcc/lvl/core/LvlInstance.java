@@ -180,7 +180,7 @@ public class LvlInstance implements Localizable<Point>, Linkable<LvlInstance> {
 				.add("links", links)
 				.add("urlSafeId", urlSafeInstanceId)
 				.add("instanceId", instanceId)
-				.add("roles",roles)
+				.add("roles", roles)
 				.add("heartbeat", heartbeat.orNull())
 				.add("location", location)
 				.toString();

@@ -71,8 +71,10 @@ public abstract class TapirClient implements AutoCloseable {
 	public static final String XPATH_TO_DWCSET = "/*[local-name()=\"response\"]"
 			+ "/*[local-name()=\"search\"]"
 			+ "/*[local-name()=\"SimpleDarwinRecordSet\"]";
+	
+	public static final int TIMEOUT_MS = 120000;
 
-	private final HttpClientProvider httpClient = HttpClientProvider.create();
+	private final HttpClientProvider httpClient = HttpClientProvider.create(TIMEOUT_MS);	
 
 	protected ResponseType count(final String url, final String concept, final String filter) throws URISyntaxException, IOException {
 		final URIBuilder uriBuilder = new URIBuilder(url);
@@ -83,7 +85,6 @@ public abstract class TapirClient implements AutoCloseable {
 		uriBuilder.addParameter("concept", concept);
 		uriBuilder.addParameter("filter", filter);
 		final String url2 = uriBuilder.build().toString();
-		final HttpClientProvider httpClient = HttpClientProvider.create();
 		return httpClient.request(url2).get().handleResponse(new ResponseHandler<ResponseType>() {
 			@Override
 			public ResponseType handleResponse(final HttpResponse response) throws ClientProtocolException, IOException {

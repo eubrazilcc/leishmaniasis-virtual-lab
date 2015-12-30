@@ -23,7 +23,6 @@
 package eu.eubrazilcc.lvl.service.testable;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_LEISHMANIA_SAMPLES;
 import static eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SEQ;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
@@ -64,9 +63,9 @@ public class TaskResourceTest extends Testable {
 		super(testCtxt, TaskResourceTest.class, false);
 	}
 
-	public void test() throws Exception {
-		// test import sandfly sequences from GenBank
-		final Path path = TaskResource.class.getAnnotation(Path.class);
+	public void test() throws Exception {		
+		// test import sequences from GenBank
+		final Path path = TaskResource.class.getAnnotation(Path.class);		
 		Task task = Task.builder()
 				.type(IMPORT_SANDFLY_SEQ)
 				.ids(newArrayList("353470160", "353483325", "384562886"))
@@ -76,19 +75,19 @@ public class TaskResourceTest extends Testable {
 				.request()
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.post(entity(task, APPLICATION_JSON));
-		assertThat("Create import sandflies task response is not null", response, notNullValue());
-		assertThat("Create import sandflies task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-		assertThat("Create import sandflies task response is not empty", response.getEntity(), notNullValue());
+		assertThat("Create import sequences task response is not null", response, notNullValue());
+		assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+		assertThat("Create import sequences task response is not empty", response.getEntity(), notNullValue());
 		String payload = response.readEntity(String.class);
-		assertThat("Create import sandflies task response entity is not null", payload, notNullValue());
-		assertThat("Create import sandflies task response entity is empty", isBlank(payload));
+		assertThat("Create import sequences task response entity is not null", payload, notNullValue());
+		assertThat("Create import sequences task response entity is empty", isBlank(payload));
 		// conditional output
-		printMsg(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
-		printMsg(" >> Create import sandflies task response JAX-RS object: " + response);
-		printMsg(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Create import sequences task response body (JSON), empty is OK: " + payload);
+		printMsg(" >> Create import sequences task response JAX-RS object: " + response);
+		printMsg(" >> Create import sequences task HTTP headers: " + response.getStringHeaders());
 		URI location = new URI((String)response.getHeaders().get("Location").get(0));
 
-		// test import sandflies task progress
+		// test import sequences task progress
 		EventInput eventInput = testCtxt.target().path(path.value())
 				.path("progress")
 				.path(getName(location.getPath()))
@@ -111,13 +110,13 @@ public class TaskResourceTest extends Testable {
 			assertThat("Progress event data is not empty", isNotBlank(data));
 			final Progress progress = testCtxt.jsonMapper().readValue(data, Progress.class);				
 			assertThat("Progress event decoded object is not null", progress, notNullValue());
-			assertThat("Import sandflies task does not have errors", !progress.isHasErrors());
+			assertThat("Import sequences task does not have errors", !progress.isHasErrors());
 			// conditional output				
 			printMsg(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: id=" 
 					+ id + "; name=" + name + "; data=" + data + "; object=" + progress);
 		}
 
-		// repeat the import new sandflies task to test how the subscription is made from a client using the JavaScript EventSource interface
+		// repeat the import new sequences task to test how the subscription is made from a client using the JavaScript EventSource interface
 		task = Task.builder()
 				.type(IMPORT_SANDFLY_SEQ)
 				.ids(newArrayList("430902590"))
@@ -125,13 +124,13 @@ public class TaskResourceTest extends Testable {
 		response = testCtxt.target().path(path.value()).request()
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.post(entity(task, APPLICATION_JSON));
-		assertThat("Create import sandflies task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-		assertThat("Create import sandflies task response is not empty", response.getEntity(), notNullValue());
+		assertThat("Create import sequences task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+		assertThat("Create import sequences task response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
 		// conditional output
-		printMsg(" >> Create import sandflies task response body (JSON), empty is OK: " + payload);
-		printMsg(" >> Create import sandflies task response JAX-RS object: " + response);
-		printMsg(" >> Create import sandflies task HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Create import sequences task response body (JSON), empty is OK: " + payload);
+		printMsg(" >> Create import sequences task response JAX-RS object: " + response);
+		printMsg(" >> Create import sequences task HTTP headers: " + response.getStringHeaders());
 		location = new URI((String)response.getHeaders().get("Location").get(0));
 
 		eventInput = testCtxt.target().path(path.value())
@@ -151,31 +150,33 @@ public class TaskResourceTest extends Testable {
 			assertThat("Progress event data is not empty", isNotBlank(data));
 			final Progress progress = testCtxt.jsonMapper().readValue(data, Progress.class);
 			assertThat("Progress event decoded object is not null", progress, notNullValue());
-			assertThat("Import sandflies task does not have errors", !progress.isHasErrors());
+			assertThat("Import sequences task does not have errors", !progress.isHasErrors());
 			// conditional output				
 			printMsg(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
 		}
 
 		// test import samples from speciesLink
 		task = Task.builder()
-				.type(IMPORT_LEISHMANIA_SAMPLES)
+				.type(eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_LEISHMANIA_SAMPLES)
 				.ids(newArrayList("IOCL 0001"))
+				// .type(eu.eubrazilcc.lvl.service.Task.TaskType.IMPORT_SANDFLY_SAMPLES)
+				// .ids(newArrayList("051/75"))					
 				.build();
 
 		response = testCtxt.target().path(path.value())					
 				.request()
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.post(entity(task, APPLICATION_JSON));
-		assertThat("Create import leishmania task response is not null", response, notNullValue());
-		assertThat("Create import leishmania task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
-		assertThat("Create import leishmania task response is not empty", response.getEntity(), notNullValue());
+		assertThat("Create import samples task response is not null", response, notNullValue());
+		assertThat("Create import samples task response is CREATED", response.getStatus(), equalTo(CREATED.getStatusCode()));
+		assertThat("Create import samples task response is not empty", response.getEntity(), notNullValue());
 		payload = response.readEntity(String.class);
-		assertThat("Create import leishmania task response entity is not null", payload, notNullValue());
-		assertThat("Create import leishmania task response entity is empty", isBlank(payload));
+		assertThat("Create import samples task response entity is not null", payload, notNullValue());
+		assertThat("Create import samples task response entity is empty", isBlank(payload));
 		// conditional output
-		printMsg(" >> Create import leishmania task response body (JSON), empty is OK: " + payload);
-		printMsg(" >> Create import leishmania task response JAX-RS object: " + response);
-		printMsg(" >> Create import leishmania task HTTP headers: " + response.getStringHeaders());
+		printMsg(" >> Create import samples task response body (JSON), empty is OK: " + payload);
+		printMsg(" >> Create import samples task response JAX-RS object: " + response);
+		printMsg(" >> Create import samples task HTTP headers: " + response.getStringHeaders());
 		location = new URI((String)response.getHeaders().get("Location").get(0));		
 
 		eventInput = testCtxt.target().path(path.value())
@@ -195,7 +196,7 @@ public class TaskResourceTest extends Testable {
 			assertThat("Progress event data is not empty", isNotBlank(data));
 			final Progress progress = testCtxt.jsonMapper().readValue(data, Progress.class);
 			assertThat("Progress event decoded object is not null", progress, notNullValue());
-			assertThat("Import leishmania task does not have errors", !progress.isHasErrors());
+			assertThat("Import samples task does not have errors", !progress.isHasErrors());
 			// conditional output				
 			printMsg(" >> Event [" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:S z").format(new Date()) + "]: object=" + progress);
 		}

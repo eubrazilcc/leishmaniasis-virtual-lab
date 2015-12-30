@@ -291,7 +291,7 @@ public enum ConfigurationManager implements Closeable2 {
 							final String portalEndpoint = getString("portal.endpoint", configuration, foundNameList, null);
 							final String wfHostname = getString("workflow.endpoint.hostname", configuration, foundNameList, "localhost");
 							final boolean wfSecure = getBoolean("workflow.endpoint.secure", configuration, foundNameList, false);
-							final int wfPort = getInteger("workflow.endpoint.port", configuration, foundNameList, wfSecure ? 443 : 80);							
+							final int wfPort = getInteger("workflow.endpoint.port", configuration, foundNameList, wfSecure ? 443 : 80);
 							final String wfUsername = getString("workflow.credentials.username", configuration, foundNameList, null);
 							final String wfPasswd = getString("workflow.credentials.password", configuration, foundNameList, null);							
 							// get secondary property will return null if the requested property is missing
@@ -412,6 +412,7 @@ public enum ConfigurationManager implements Closeable2 {
 		final String concept = getString(name + ".concept", configuration, foundNameList, null);
 		final String filter = getString(name + ".filter", configuration, foundNameList, null);
 		final String orderby = getString(name + ".orderby", configuration, foundNameList, null);
+		final int maxElements = getInteger(name + ".maxElements", configuration, foundNameList, 3000);
 		final List<String> collections = getStringList(name + ".collections.collection", Pattern.compile("^[\\w]+:[\\w-]+$"), configuration, foundNameList, null);
 		final Map<String, String> collectionsMap = newHashMap();
 		if (collections != null) {
@@ -420,7 +421,7 @@ public enum ConfigurationManager implements Closeable2 {
 				collectionsMap.put(tokens[0], tokens[1]);
 			}
 		}
-		return new TapirCollection(url, outputModel, concept, filter, orderby, collectionsMap);
+		return new TapirCollection(url, outputModel, concept, filter, orderby, maxElements, collectionsMap);
 	}
 
 	private static String subsEnvVars(final String path, final boolean ensureWriting) {
@@ -670,15 +671,17 @@ public enum ConfigurationManager implements Closeable2 {
 		private final String concept;
 		private final String filter;
 		private final String orderby;
+		private final int maxElements;
 		private final Map<String, String> collections;
 
 		public TapirCollection(final URL url, final String outputModel, final String concept, final String filter, final String orderby, 
-				final Map<String, String> collections) {
+				final int maxElements, final Map<String, String> collections) {
 			this.url = url;
 			this.outputModel = outputModel;
 			this.concept = concept;
 			this.filter = filter;
 			this.orderby = orderby;
+			this.maxElements = maxElements;
 			this.collections = collections;
 		}
 
@@ -701,6 +704,10 @@ public enum ConfigurationManager implements Closeable2 {
 		public String getOrderby() {
 			return orderby;
 		}
+		
+		public int getMaxElements() {
+			return maxElements;
+		}
 
 		public Map<String, String> getCollections() {
 			return collections;
@@ -714,6 +721,7 @@ public enum ConfigurationManager implements Closeable2 {
 					.add("concept", concept)
 					.add("filter", filter)
 					.add("orderby", orderby)
+					.add("maxElements", maxElements)
 					.add("collections", collections)
 					.toString();
 		}

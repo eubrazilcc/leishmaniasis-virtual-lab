@@ -172,6 +172,7 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 		<concept>http://rs.tdwg.org/dwc/dwcore/CollectionCode</concept>
 		<filter>http://rs.tdwg.org/dwc/dwcore/CollectionCode equals "$COLLECTION"</filter>
 		<orderby>http://rs.tdwg.org/dwc/dwcore/CatalogNumber</orderby>
+		<maxElements>3000</maxElements>
 		<collections>
 			<collection>clioc:FIOCRUZ-CLIOC</collection>
 			<collection>colfleb:FIOCRUZ-COLFLEB</collection>

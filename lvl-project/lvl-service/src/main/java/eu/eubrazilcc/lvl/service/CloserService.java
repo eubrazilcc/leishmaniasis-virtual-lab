@@ -28,6 +28,7 @@ import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
 import static eu.eubrazilcc.lvl.core.concurrent.TaskStorage.TASK_STORAGE;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationFinder.findConfigurationFiles;
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
+import static eu.eubrazilcc.lvl.service.cache.CacheWarmer.CACHE_WARMER;
 import static eu.eubrazilcc.lvl.service.workflow.esc.ESCentralConnector.ESCENTRAL_CONN;
 import static eu.eubrazilcc.lvl.storage.activemq.ActiveMQConnector.ACTIVEMQ_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
@@ -75,6 +76,9 @@ public enum CloserService implements CloserServiceIf {
 		// load e-SC connector and register it for closing
 		ESCENTRAL_CONN.preload();
 		register(ESCENTRAL_CONN);
+		// load cache warmer and register it for closing
+		CACHE_WARMER.preload();
+		register(CACHE_WARMER);
 	}
 
 	@Override

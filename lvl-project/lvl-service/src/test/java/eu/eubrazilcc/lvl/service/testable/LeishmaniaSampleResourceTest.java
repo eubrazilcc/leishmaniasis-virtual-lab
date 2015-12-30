@@ -91,7 +91,7 @@ public class LeishmaniaSampleResourceTest extends Testable {
 				.withCollectionCode("Fiocruz-CLIOC")
 				.withBasisOfRecord("L")
 				.withOccurrenceID("523692851")
-				.withCatalogNumber("IOCL 0001")
+				.withCatalogNumber("IOCL 1001")
 				.withRecordedBy("001 - Mauro Célio de Almeida Marzochi")
 				.withYear(yearAsXMLGregorianCalendar(1979))
 				.withCountry("Brasil")

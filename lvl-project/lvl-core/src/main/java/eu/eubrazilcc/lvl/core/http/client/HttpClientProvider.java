@@ -97,20 +97,34 @@ public class HttpClientProvider implements AutoCloseable {
 		}
 	};
 	private final CloseableHttpClient httpClient;
-	private final List<Http1_1Request> requests = synchronizedList(new ArrayList<Http1_1Request>());	
+	private final List<Http1_1Request> requests = synchronizedList(new ArrayList<Http1_1Request>());
 
 	private HttpClientProvider() {
+		this(-1);
+	}
+
+	private HttpClientProvider(final int timeoutMs) {		
 		final ConnectionConfig connConfig = ConnectionConfig.custom()
 				.setCharset(Consts.UTF_8)
 				.build();
 		connManager.setDefaultConnectionConfig(connConfig);
 		connManager.setMaxTotal(100);
 		connManager.setDefaultMaxPerRoute(10);
+		final RequestConfig requestConfig = timeoutMs > 0 ? defaultRequestConfig(timeoutMs) : RequestConfig.DEFAULT;
 		httpClient = HttpClients.custom()
 				.setConnectionManager(connManager)
 				.setKeepAliveStrategy(keepAliveStrategy)
+				.setDefaultRequestConfig(requestConfig)
 				.evictExpiredConnections()
-				.evictIdleConnections(30l, TimeUnit.SECONDS)
+				.evictIdleConnections(timeoutMs > 0 ? timeoutMs/1000l : 30l, TimeUnit.SECONDS)
+				.build();
+	}
+
+	private static RequestConfig defaultRequestConfig(final int timeoutMs) {
+		return RequestConfig.copy(RequestConfig.DEFAULT)
+				.setSocketTimeout(timeoutMs)
+				.setConnectTimeout(timeoutMs)
+				.setConnectionRequestTimeout(timeoutMs)
 				.build();
 	}
 
@@ -141,7 +155,11 @@ public class HttpClientProvider implements AutoCloseable {
 	}
 
 	public static HttpClientProvider create() {
-		return new HttpClientProvider();
+		return create(-1);
+	}
+
+	public static HttpClientProvider create(final int timeoutMs) {
+		return new HttpClientProvider(timeoutMs);
 	}
 
 	@Override
@@ -253,7 +271,7 @@ public class HttpClientProvider implements AutoCloseable {
 		}
 
 		private HttpUriRequest createHttpRequest() {
-			HttpUriRequest httpRequest = null;
+			HttpUriRequest httpRequest = null;			
 			if (HttpGet.METHOD_NAME.equals(method)) {
 				httpRequest = RequestBuilder.get(uri)
 						.setVersion(HttpVersion.HTTP_1_1)

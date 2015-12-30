@@ -64,7 +64,7 @@ import eu.eubrazilcc.lvl.test.ConditionalIgnoreRule.IgnoreCondition;
 public class TapirTest extends LeishvlTestCase {
 
 	public TapirTest() {
-		super(true);
+		super(false);
 	}
 
 	@Rule

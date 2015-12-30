@@ -38,6 +38,7 @@ import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER
 import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.DATA_CURATOR_ROLE;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.slf4j.LoggerFactory.getLogger;
+import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.List;
@@ -155,15 +156,15 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 	private List<ListenableFuture<Integer>> importSplinkSubTasks(final SpeciesLinkConnector splink) {
 		final List<ListenableFuture<Integer>> subTasks = newArrayList();
 		setStatus("Counting collection items");
-		final int count = (int)splink.count(collection.getKey());
+		final int count = (int)splink.count(collection.getKey());				
 		checkState(count > 0l, "It expected that the collection had elements");
 		pending.addAndGet(count);
 		final Range<Integer> range = Range.closedOpen(0, count);
-		final int STEP = 100;
+		final int STEP = CONFIG_MANAGER.getSpeciesLink().getMaxElements();
 		int i = 0;
 		do {
-			subTasks.add(TASK_RUNNER.submit(importSplinkSubTask(splink, i, STEP)));
-			i += STEP;
+			subTasks.add(TASK_RUNNER.submit(importSplinkSubTask(splink, i, STEP)));			
+			i += STEP;			
 		} while (range.contains(i));
 		LOGGER.trace(String.format("Collection %s items count: %d", collection.getValue(), count));		
 		return subTasks;
@@ -175,10 +176,10 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 			private int expected = 0;
 			@Override			
 			public Integer call() throws Exception {
-				setStatus(String.format("Fetching samples from %s", collection));
+				setStatus(String.format("Fetching samples from %s", collection.getValue()));
 				try {
 					// fetch samples from remote data source
-					final SimpleDarwinRecordSet dwcSet = splink.fetch(collection.getKey(), start, limit);
+					final SimpleDarwinRecordSet dwcSet = splink.fetch(collection.getKey(), start, limit);					
 					// import samples into the local database
 					if (dwcSet != null && dwcSet.getSimpleDarwinRecord() != null) {
 						expected = dwcSet.getSimpleDarwinRecord().size();
@@ -193,9 +194,13 @@ public class ImportSamplesTask<T extends Sample> extends CancellableTask<Integer
 								}
 							}
 							if (catalogNumber != null) {
-								dao.insert(sample);
-							}
-							fetchCount++;
+								try {
+									dao.insert(sample);
+									fetchCount++;
+								} catch (Exception e) {
+									LOGGER.error("Failed to import sample", e);
+								}
+							} else fetchCount++;
 							// update progress
 							int fetchedCount = fetched.incrementAndGet();
 							setProgress(100.0d * fetchedCount / pending.get());	
