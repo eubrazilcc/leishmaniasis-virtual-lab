@@ -31,14 +31,18 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.FIRST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.NEXT;
 import static eu.eubrazilcc.lvl.core.http.LinkRelation.PREVIOUS;
+import static eu.eubrazilcc.lvl.core.mail.EmailSender.EMAIL_SENDER;
+import static eu.eubrazilcc.lvl.core.servlet.ServletUtils.getPortalEndpoint;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.compactRandomUUID;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.computeHash;
 import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
+import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.SharedObjectDAO.SHARED_OBJECT_DAO;
+import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -46,6 +50,7 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.List;
 
@@ -81,11 +86,14 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
+import eu.eubrazilcc.lvl.core.Notification;
+import eu.eubrazilcc.lvl.core.Notification.Priority;
 import eu.eubrazilcc.lvl.core.ObjectGranted;
 import eu.eubrazilcc.lvl.core.PaginableWithNamespace;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListDeserializer;
 import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
+import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
@@ -171,7 +179,22 @@ public class ObjectGrantedResource {
 		objGranted.setOwner(ownerid);
 		objGranted.setSharedDate(new Date());
 		// create entry in the database
-		SHARED_OBJECT_DAO.insert(objGranted);		
+		SHARED_OBJECT_DAO.insert(objGranted);
+		// notify user
+		final ResourceOwner addresse = RESOURCE_OWNER_DAO.findByEmail(objGranted.getUser());
+		if (addresse != null) {
+			NOTIFICATION_MANAGER.send(Notification.builder()
+					.newId()
+					.priority(Priority.NORMAL)
+					.addressee(addresse.getOwnerId())
+					.message(String.format("%s shared a new %s with you", objGranted.getOwner(), objGranted.getCollection()))
+					.build());
+		} else {
+			final URI baseUri = uriInfo.getBaseUriBuilder().clone().build();
+			EMAIL_SENDER.sendTextEmail(objGranted.getUser(), "a LeishVL user share a dataset with you", 
+					String.format("%s shared a new %s with you. Join now the LeishVL at %s to gain access to your shared data.", 
+							objGranted.getOwner(), objGranted.getCollection(), getPortalEndpoint(baseUri)));
+		}
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(objGranted.getUrlSafeId());		
 		return Response.created(uriBuilder.build()).build();
 	}

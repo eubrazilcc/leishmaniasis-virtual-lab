@@ -20,7 +20,7 @@
  * that you distribute must include a readable copy of the "NOTICE" text file.
  */
 
-package eu.eubrazilcc.lvl.oauth2.mail;
+package eu.eubrazilcc.lvl.core.mail;
 
 import static eu.eubrazilcc.lvl.core.conf.ConfigurationManager.CONFIG_MANAGER;
 import static org.slf4j.LoggerFactory.getLogger;

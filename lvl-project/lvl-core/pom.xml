@@ -95,6 +95,16 @@ that you distribute must include a readable copy of the "NOTICE" text file.
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>fluent-hc</artifactId>
 		</dependency>
+		
+		<!-- JavaMail API -->
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>javax.mail</artifactId>
+		</dependency>		
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>smtp</artifactId>
+		</dependency>		
 
 		<!-- Guava: Google Core Libraries for Java -->
 		<dependency>

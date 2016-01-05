@@ -61,8 +61,8 @@ define([ 'app', 'tpl!apps/collection/pending_shares_viewer/tpls/collection_pendi
 									var id = anchor.pathname.substring(anchor.pathname.lastIndexOf('/') + 1);
 									self.trigger('destroy');
 									require([ 'common/growl' ], function(createGrowl) {										
-										createGrowl('Notification send', id
-												+ ' <a href="/#drive/granted"><i class="fa fa-arrow-circle-right fa-fw"></i> granted objects</a>', false);
+										createGrowl('Invitation sent', 'Revoke ' + id
+												+ ' at <a href="/#drive/granted"><i class="fa fa-arrow-circle-right fa-fw"></i> granted objects</a>', false);
 									});
 								});
 							},
