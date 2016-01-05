@@ -14,19 +14,19 @@ define([ 'app', 'entities/pending_sequence', 'apps/collection/pending/collection
 						data_source : collectionId
 					})
 				});
-				/* TODO view.on('sequences:view:sequence', function(collectionId, accession) {
-					require([ 'apps/collection/sequence_viewer/collection_sequence_viewer', 'entities/gb_sequence' ], function(SequenceView, GbSequenceModel) {
-						var gbSequenceModel = new GbSequenceModel.GbSequence({
+				view.on('pending:view:record', function(collectionId, sampleId) {
+					require([ 'apps/collection/pending_viewer/collection_pending_viewer', 'entities/pending_sequence' ], function(PendingSequenceView, PendingSeqModel) {
+						var pendingSeqModel = new PendingSeqModel.PendingSequence({
 							'dataSource' : collectionId,
-							'gbSeqPrimaryAccession' : accession
+							'id' : sampleId
 						});
-						gbSequenceModel.oauth2_token = Lvl.config.authorizationToken();
-						var dialogView = new SequenceView.Content({
-							model : gbSequenceModel
+						pendingSeqModel.oauth2_token = Lvl.config.authorizationToken();
+						var dialogView = new PendingSequenceView.Content({
+							model : pendingSeqModel
 						});
 						Lvl.dialogRegion.show(dialogView);
 					});
-				}); */
+				});
 				Lvl.mainRegion.currentView.tabContent.show(view);
 				return View.Content.id;
 			}

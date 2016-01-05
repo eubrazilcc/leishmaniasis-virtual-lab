@@ -278,7 +278,7 @@ public enum SandflySampleDAO implements SampleDAO<SandflySample> {
 		if (sorting != null) {			
 			String field = null;
 			// sortable fields
-			if ("collection".equalsIgnoreCase(sorting.getField())) {
+			if ("collectionId".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "collectionId";
 			} else if ("catalogNumber".equalsIgnoreCase(sorting.getField())) {
 				field = DB_PREFIX + "catalogNumber";
@@ -334,7 +334,7 @@ public enum SandflySampleDAO implements SampleDAO<SandflySample> {
 		if (isNotBlank(parameter) && isNotBlank(expression)) {
 			String field = null;
 			// keyword matching search
-			if ("collection".equalsIgnoreCase(parameter)) {
+			if ("collectionId".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "collectionId";				
 			} else if ("catalogNumber".equalsIgnoreCase(parameter)) {
 				field = DB_PREFIX + "catalogNumber";

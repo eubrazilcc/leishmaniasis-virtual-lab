@@ -28,7 +28,7 @@ define([ 'app', 'entities/sequence', 'apps/collection/sequences/collection_seque
 					});
 				});
 				view.on('sequences:file:export', function(collectionId, selectedModels) {
-					require([ 'apps/collection/export/export_view' ], function(EditView) {
+					require([ 'apps/collection/export_sequence/export_sequence_view' ], function(EditView) {
 						var sequences = selectedModels.filter(function(element) {
 							return element !== undefined && element !== null;
 						});

@@ -131,9 +131,10 @@ public class LeishmaniaSampleResource {
 		final ImmutableMap<String, String> filter = parseQuery(q);		
 		final Sorting sorting = parseSorting(sort, order);
 		final List<LeishmaniaSample> samples = LEISHMANIA_SAMPLE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
-				ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), count);
+				null, count);
+				/* ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), count); */
 		paginable.setElements(samples);
-		paginable.getExcludedFields().add(ORIGINAL_SAMPLE_KEY);
+		/* paginable.getExcludedFields().add(ORIGINAL_SAMPLE_KEY); */
 		// set additional output and return to the caller
 		final int totalEntries = samples.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);

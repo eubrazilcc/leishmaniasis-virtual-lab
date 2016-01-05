@@ -66,7 +66,7 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 public class SandflyPendingCollectionTest extends LeishvlTestCase {
 
 	public SandflyPendingCollectionTest() {
-		super(true);
+		super(false);
 	}
 
 	@Test

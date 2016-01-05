@@ -23,8 +23,12 @@
 package eu.eubrazilcc.lvl.core.xml;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import java.util.Locale;
 
 import javax.xml.bind.JAXBElement;
 
@@ -78,8 +82,20 @@ public class DwcXmlBinder extends XmlBinder {
 				.collectionId(collection.trim())
 				.catalogNumber(record.getCatalogNumber())											
 				.location(Point.builder().coordinates(LngLatAlt.builder().coordinates(record.getDecimalLongitude(), record.getDecimalLatitude()).build()).build())
+				.locale(isNotBlank(record.getCountry()) ? countryToLocale(record.getCountry()) : null)
 				.sample(record)
 				.build();		
+	}
+	
+	/**
+	 * Converts country to Java {@link Locale}. Java {@link Locale} allows latter to export the country to several different formats, including 
+	 * a two-letter code compatible with ISO 3166-1 alpha-2 standard.
+	 * @param country - value of country field
+	 * @return a Java {@link Locale} inferred from the input sample.
+	 */
+	public static final Locale countryToLocale(final String country) {
+		checkArgument(isNotBlank(country), "Uninitialized or invalid country");
+		return getLocale(country);
 	}
 
 }

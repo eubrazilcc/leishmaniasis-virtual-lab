@@ -283,7 +283,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 			}
 
 			// filter: keyword matching search			
-			ImmutableMap<String, String> filter = of("collection", COLFLEB);
+			ImmutableMap<String, String> filter = of("collectionId", COLFLEB);
 			sandflySamples = SANDFLY_SAMPLE_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandflySample is not null", sandflySamples, notNullValue());
 			assertThat("number of filtered sandflySample coincides with expected", sandflySamples.size(), equalTo(numItems));			
@@ -313,7 +313,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 					anyOf(equalTo(numItems / 2), equalTo((numItems / 2) + 1)));
 
 			// filter: combined keyword matching search
-			filter = of("collection", COLFLEB, "catalogNumber", Integer.toString(random.nextInt(numItems)) + "/15");
+			filter = of("collectionId", COLFLEB, "catalogNumber", Integer.toString(random.nextInt(numItems)) + "/15");
 			sandflySamples = SANDFLY_SAMPLE_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandflySample is not null", sandflySamples, notNullValue());
 			assertThat("number of filtered sandflySample coincides with expected", sandflySamples.size(), equalTo(1));
@@ -325,7 +325,7 @@ public class SandflySampleCollectionTest extends LeishvlTestCase {
 			assertThat("number of filtered sandflySample coincides with expected", sandflySamples.size(), equalTo(numItems));
 
 			// filter: combined full-text search with keyword matching search
-			filter = of("collection", COLFLEB, "locale", Locale.ENGLISH.toString(), "text", "example");
+			filter = of("collectionId", COLFLEB, "locale", Locale.ENGLISH.toString(), "text", "example");
 			sandflySamples = SANDFLY_SAMPLE_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered sandflySample is not null", sandflySamples, notNullValue());
 			assertThat("number of filtered sandflySample coincides with expected", sandflySamples.size(), equalTo(numItems / 2));

@@ -1,15 +1,15 @@
 /**
- * RequireJS module that defines the view: collection->export_dataset.
+ * RequireJS module that defines the view: collection->export_sample.
  */
 
-define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'chance', 'backbone.syphon' ], function(Lvl, ExportDatasetTpl, Chance) {
+define([ 'app', 'tpl!apps/collection/export_sample/tpls/collection_export_sample', 'chance', 'backbone.syphon' ], function(Lvl, ExportDatasetTpl, Chance) {
 	Lvl.module('CollectionApp.Export.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		View.Content = Marionette.ItemView.extend({
 			template : ExportDatasetTpl,
 			templateHelpers : {
 				defaultFilename : function() {
-					return 'sequences-' + new Chance().string({
+					return 'samples-' + new Chance().string({
 						length : 8,
 						pool : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 					});
@@ -17,7 +17,7 @@ define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'ch
 			},
 			serializeData: function() {
 				return {
-					'sequencesCount' : this.collection.length
+					'samplesCount' : this.collection.length
 				};
 			},
 			initialize : function(options) {
@@ -38,7 +38,7 @@ define([ 'app', 'tpl!apps/collection/export/tpls/collection_export_dataset', 'ch
 							'compression' : formData.compression_select,
 							'filter' : formData.filter_select,
 							'ids' : _.pluck(this.collection.toJSON(), 'id'),
-							'type' : 'sequence'
+							'type' : 'sample'
 						}
 					}
 				};

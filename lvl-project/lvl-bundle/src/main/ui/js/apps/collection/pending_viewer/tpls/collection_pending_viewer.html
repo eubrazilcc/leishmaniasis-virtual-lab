@@ -1,0 +1,63 @@
+<div class="modal-dialog modal-lg">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">
+				<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+			</button>
+			<h4 class="modal-title" id="myModalLabel">Pending sequence viewer</h4>
+		</div>
+		<div class="modal-body">			
+			<div class="row">
+				<div class="col-xs-12">
+					<dl class="dl-horizontal">
+					<dt>Institution Code</dt>
+					<dd><%= dwcField('institutionCode') %></dd>
+					<dt>Collection Code</dt>
+					<dd><%= dwcField('collectionCode') %></dd>
+					<dt>Catalog Number</dt>
+					<dd><%= dwcField('catalogNumber') %></dd>
+					<dt>Scientific Name</dt>
+					<dd><%= dwcField('scientificName') %></dd>
+					<dt>Kingdom</dt>
+					<dd><%= dwcField('kingdom') %></dd>
+					<dt>Phylum</dt>
+					<dd><%= dwcField('phylum') %></dd>
+					<dt>Class</dt>
+					<dd><%= dwcField('clazz') %></dd>
+					<dt>Order</dt>
+					<dd><%= dwcField('order') %></dd>
+					<dt>Family</dt>
+					<dd><%= dwcField('family') %></dd>
+					<dt>Genus</dt>
+					<dd><%= dwcField('genus') %></dd>
+					<dt>Species</dt>
+					<dd><%= dwcField('specificEpithet') %></dd>
+					<dt>Collect Date</dt>
+					<dd><%= yearField() %></dd>
+					<dt>Continent</dt>
+					<dd><%= dwcField('continent') %></dd>
+					<dt>Country</dt>
+					<dd><%= dwcField('country') %></dd>
+					<dt>State/Province</dt>
+					<dd><%= dwcField('stateProvince') %></dd>
+					<dt>County</dt>
+					<dd><%= dwcField('county') %></dd>
+					<dt>Locality</dt>
+					<dd><%= dwcField('locality') %></dd>
+					<dt>Individual Count</dt>
+					<dd><%= dwcField('individualCount') %></dd>
+					<dt>Notes</dt>
+					<dd><%= dwcField('occurrenceRemarks') %></dd>
+					<dt>Date Last Modified</dt>
+					<dd><%= lastModified() %></dd>
+					<dt>Sequence</dt>
+					<dd><div class="well well-sm lvl-dna-sequence"><%= getSequence() %></div></dd>
+					</dl>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		</div>
+	</div>
+</div>

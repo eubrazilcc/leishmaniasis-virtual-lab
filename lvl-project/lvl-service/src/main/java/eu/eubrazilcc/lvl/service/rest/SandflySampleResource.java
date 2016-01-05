@@ -39,7 +39,7 @@ import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.cache.GeolocationCache.findNearbySandflySamples;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
-import static eu.eubrazilcc.lvl.storage.SampleKey.Builder.NUMBER_YEAR_PATTERN;
+import static eu.eubrazilcc.lvl.storage.SampleKey.Builder.FLEXIBLE_NUMBER_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.ORIGINAL_SAMPLE_KEY;
 import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.SANDFLY_SAMPLE_DAO;
 import static java.util.Optional.ofNullable;
@@ -131,10 +131,11 @@ public class SandflySampleResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);
 		final Sorting sorting = parseSorting(sort, order);
-		final List<SandflySample> samples = SANDFLY_SAMPLE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
-				ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), count);
+		final List<SandflySample> samples = SANDFLY_SAMPLE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting,
+				null, count);
+				/* ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), count); */
 		paginable.setElements(samples);
-		paginable.getExcludedFields().add(ORIGINAL_SAMPLE_KEY);
+		/* paginable.getExcludedFields().add(ORIGINAL_SAMPLE_KEY); */
 		// set additional output and return to the caller
 		final int totalEntries = samples.size() > 0 ? ((Long)count.getValue()).intValue() : 0;
 		paginable.setTotalCount(totalEntries);
@@ -172,7 +173,7 @@ public class SandflySampleResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final String id2 = urlDecodeUtf8(unescapeUrlPathSegment(id));
-		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, FLEXIBLE_NUMBER_PATTERN, NOTATION_LONG);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:public:*:view");
 		// get from database
 		final SandflySample sample = SANDFLY_SAMPLE_DAO.find(sampleKey);
@@ -207,7 +208,7 @@ public class SandflySampleResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final String id2 = urlDecodeUtf8(unescapeUrlPathSegment(id));
-		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, FLEXIBLE_NUMBER_PATTERN, NOTATION_LONG);
 		if (sampleKey == null || !sampleKey.getCollectionId().equals(update.getCollectionId()) 
 				|| !sampleKey.getCatalogNumber().equals(update.getCatalogNumber())) {
 			throw new WebApplicationException("Parameters do not match", Response.Status.BAD_REQUEST);
@@ -230,7 +231,7 @@ public class SandflySampleResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final String id2 = urlDecodeUtf8(unescapeUrlPathSegment(id));
-		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, FLEXIBLE_NUMBER_PATTERN, NOTATION_LONG);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:*:*:edit");
 		// get from database
 		final SandflySample current = SANDFLY_SAMPLE_DAO.find(sampleKey);
@@ -266,7 +267,7 @@ public class SandflySampleResource {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
 		final String id2 = urlDecodeUtf8(unescapeUrlPathSegment(id));
-		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, NUMBER_YEAR_PATTERN, NOTATION_LONG);
+		final SampleKey sampleKey = SampleKey.builder().parse(id2, ID_FRAGMENT_SEPARATOR, FLEXIBLE_NUMBER_PATTERN, NOTATION_LONG);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("samples:sandflies:public:*:view");
 		// get from database
 		final Sample sample = SANDFLY_SAMPLE_DAO.find(sampleKey);

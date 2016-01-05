@@ -280,12 +280,12 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 					tour();
 				});
 			},
-			showPendingSequenceRecord : function(e) { // TODO
+			showPendingSequenceRecord : function(e) {
 				e.preventDefault();
 				var self = this;
 				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-seq_id') : target.attr('data-seq_id');
-				this.trigger('sequences:view:sequence', self.collection.data_source, itemId);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pending-seq_id') : target.attr('data-pending-seq_id');
+				this.trigger('pending:view:record', self.collection.data_source, itemId);
 			},
 			onDestroy : function() {
 				pace.stop();

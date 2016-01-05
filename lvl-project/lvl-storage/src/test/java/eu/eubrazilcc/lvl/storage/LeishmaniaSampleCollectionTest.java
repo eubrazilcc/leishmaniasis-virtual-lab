@@ -73,7 +73,7 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 public class LeishmaniaSampleCollectionTest extends LeishvlTestCase {
 
 	public LeishmaniaSampleCollectionTest() {
-		super(true);
+		super(false);
 	}
 
 	@Test
@@ -276,7 +276,7 @@ public class LeishmaniaSampleCollectionTest extends LeishvlTestCase {
 			}
 
 			// filter: keyword matching search			
-			ImmutableMap<String, String> filter = of("collection", CLIOC);
+			ImmutableMap<String, String> filter = of("collectionId", CLIOC);
 			leishmaniaSamples = LEISHMANIA_SAMPLE_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmaniaSample is not null", leishmaniaSamples, notNullValue());
 			assertThat("number of filtered leishmaniaSample coincides with expected", leishmaniaSamples.size(), equalTo(numItems));			
@@ -306,7 +306,7 @@ public class LeishmaniaSampleCollectionTest extends LeishvlTestCase {
 					anyOf(equalTo(numItems / 2), equalTo((numItems / 2) + 1)));
 
 			// filter: combined keyword matching search
-			filter = of("collection", CLIOC, "catalogNumber", "IOCL 000" + Integer.toString(random.nextInt(numItems)));
+			filter = of("collectionId", CLIOC, "catalogNumber", "IOCL 000" + Integer.toString(random.nextInt(numItems)));
 			leishmaniaSamples = LEISHMANIA_SAMPLE_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmaniaSample is not null", leishmaniaSamples, notNullValue());
 			assertThat("number of filtered leishmaniaSample coincides with expected", leishmaniaSamples.size(), equalTo(1));
@@ -318,7 +318,7 @@ public class LeishmaniaSampleCollectionTest extends LeishvlTestCase {
 			assertThat("number of filtered leishmaniaSample coincides with expected", leishmaniaSamples.size(), equalTo(numItems));
 
 			// filter: combined full-text search with keyword matching search
-			filter = of("collection", CLIOC, "locale", Locale.ENGLISH.toString(), "text", "example");
+			filter = of("collectionId", CLIOC, "locale", Locale.ENGLISH.toString(), "text", "example");
 			leishmaniaSamples = LEISHMANIA_SAMPLE_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
 			assertThat("filtered leishmaniaSample is not null", leishmaniaSamples, notNullValue());
 			assertThat("number of filtered leishmaniaSample coincides with expected", leishmaniaSamples.size(), equalTo(numItems / 2));

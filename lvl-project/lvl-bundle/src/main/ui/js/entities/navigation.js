@@ -72,11 +72,11 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				href : '/#analysis',
 				icon : 'fa-barcode',
 				text : 'Molecular Analysis'
-			}, {
+			/* TODO }, {
 				id : 6,
 				href : '/#enm',
 				icon : 'fa-globe',
-				text : 'Ecological Niche Modelling'
+				text : 'Ecological Niche Modelling' */
 			}, {
 				id : 7,
 				href : '/#maps',

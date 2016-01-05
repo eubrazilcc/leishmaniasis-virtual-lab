@@ -28,6 +28,9 @@ import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
 import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.XmlHelper.yearAsXMLGregorianCalendar;
+import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.PRIMARY_KEY_PART1;
+import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.PRIMARY_KEY_PART2;
+import static eu.eubrazilcc.lvl.storage.dao.SandflySampleDAO.SANDFLY_SAMPLE_DAO;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.toJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JsonOptions.JSON_PRETTY_PRINTER;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.AUTHORIZATION_QUERY_OAUTH2;
@@ -35,6 +38,8 @@ import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTH
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager.bearerHeader;
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.min;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.CREATED;
@@ -52,6 +57,7 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 
 import java.math.BigInteger;
 import java.net.URI;
+import java.util.List;
 import java.util.Locale;
 
 import javax.ws.rs.Path;
@@ -59,6 +65,9 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.client.fluent.Request;
+import org.junit.BeforeClass;
+
+import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.Identifiers;
 import eu.eubrazilcc.lvl.core.SandflySample;
@@ -79,7 +88,25 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class SandflySampleResourceTest extends Testable {
 
 	public SandflySampleResourceTest(final TestContext testCtxt) {
-		super(testCtxt, SandflySampleResourceTest.class, true);
+		super(testCtxt, SandflySampleResourceTest.class);
+	}
+
+	@BeforeClass
+	public static void setup() {
+		// delete any possible sample that could be imported into the database in previous tests
+		final List<SandflySample> samples = SANDFLY_SAMPLE_DAO.list(0, Integer.MAX_VALUE, null, null, 
+				ImmutableMap.of(PRIMARY_KEY_PART1, true, PRIMARY_KEY_PART2, true), null);
+		ofNullable(samples).orElse(emptyList()).forEach(s -> {
+
+			// TODO
+			System.err.println("\n\n >> DELETING: " + s + "\n");
+			// TODO
+
+			SANDFLY_SAMPLE_DAO.delete(SampleKey.builder()
+					.collectionId(s.getCollectionId())
+					.catalogNumber(s.getCatalogNumber())
+					.build());
+		});
 	}
 
 	@Override
@@ -323,7 +350,7 @@ public class SandflySampleResourceTest extends Testable {
 
 		// test get sandfly samples applying a full-text search combined with a keyword matching filter
 		samples = testCtxt.target().path(path.value())
-				.queryParam("q", "collection:" + sampleKey.getCollectionId() + " Fiocruz")
+				.queryParam("q", "collectionId:" + sampleKey.getCollectionId() + " Fiocruz")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get(Samples.class);
@@ -336,7 +363,7 @@ public class SandflySampleResourceTest extends Testable {
 		// test get sandfly samples applying a full-text search combined with a keyword matching filter (JSON encoded)
 		response = testCtxt.target().path(path.value())
 				.queryParam("per_page", perPage)
-				.queryParam("q", "collection:" + sampleKey.getCollectionId() + " Fiocruz")
+				.queryParam("q", "collectionId:" + sampleKey.getCollectionId() + " Fiocruz")
 				.request(APPLICATION_JSON)
 				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
 				.get();

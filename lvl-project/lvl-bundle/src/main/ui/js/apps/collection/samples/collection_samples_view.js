@@ -3,70 +3,41 @@
  */
 
 define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps/collection/samples/tpls/toolbar_samples', 'tpl!common/search/tpls/search_term',
-		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/sequence', 'entities/saved_search', 'entities/identifier', 'pace',
+		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/sample', 'entities/saved_search', 'entities/identifier', 'pace',
 		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter', 'common/ext/backgrid_ext' ], function(Lvl, SamplesTpl,
-		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, SequenceEntity, SavedSearchEntity, IdentifierEntity, pace, mapCn) {
+		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, SampleEntity, SavedSearchEntity, IdentifierEntity, pace, mapCn) {
 	Lvl.module('CollectionApp.Samples.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
 				{
-					name : 'dataSource',
-					label : 'Source',
+					name : 'collectionId',
+					label : 'Collection',
 					editable : false,
 					cell : 'string'
 				},
 				{
-					name : 'definition',
-					label : 'Definition',
+					name : 'catalogNumber',
+					label : 'Catalog Number',
 					editable : false,
 					cell : 'string'
-				},
+				},				
 				{
-					name : 'accession',
-					label : 'Accession',
+					name : 'sample',
+					label : 'Scientific Name',
 					editable : false,
-					cell : 'string'
-				},
-				{
-					name : 'length',
-					label : 'Length',
-					editable : false,
-					cell : 'integer',
-					formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
-						innerFormatter : new Backgrid.NumberFormatter({
-							decimals : 0
-						}),
-						fromRaw : function(rawValue, model) {
-							var self = this;
-							return self.innerFormatter.fromRaw(rawValue) + " bp";
-						}
-					})
-				},
-				{
-					name : 'gene',
-					label : 'Gene',
-					editable : false,
+					sortable: false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));
-							if (rawValue !== undefined) {
-								var names = '';
-								for (var i = 0; i < rawValue.length; i++) {
-									names += rawValue[i] + ' ';
-								}
-								this.$el.append(names.trim());
-							}
+							var rawValue = this.model.get(this.column.get('name'));							
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue['scientificName'] === 'string') {
+								this.$el.append(formattedValue['scientificName']);
+							}							
 							this.delegateEvents();
 							return this;
 						}
 					})
-				},
-				{
-					name : 'organism',
-					label : 'Organism',
-					editable : false,
-					cell : 'string'
 				},
 				{
 					name : 'locale',
@@ -102,7 +73,7 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="#" title="Open" data-seq_id="' + formattedValue
+								this.$el.append('<a href="#" title="Open" data-sample_id="' + formattedValue
 										+ '" class="text-muted"><i class="fa fa-eye fa-fw"></i></a>');
 							}
 							this.delegateEvents();
@@ -125,10 +96,10 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 						headerCell : 'select-all'
 					} ].concat(columns),
 					collection : this.collection,
-					emptyText : 'No sequences found'
+					emptyText : 'No samples found'
 				});
 				// setup search
-				Lvl.vent.on('search:form:submitted', this.searchSequences);
+				Lvl.vent.on('search:form:submitted', this.searchSamples);
 				// setup menu
 				$('#lvl-floating-menu-toggle').show(0);
 				$('#lvl-floating-menu').hide(0);
@@ -203,7 +174,7 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 						}
 					}).fail(function() {
 						require([ 'common/growl' ], function(createGrowl) {
-							createGrowl('Operation failed', 'Cannot select all sequences at this time. Please try again later.', false);
+							createGrowl('Operation failed', 'Cannot select all samples at this time. Please try again later.', false);
 						});
 					}).always(function() {
 						self.removeSpinner(false);
@@ -217,25 +188,25 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
 				'click a[data-country-code2]' : 'filterByCountry',
-				'click a[data-seq_id]' : 'showSequenceRecord'				
+				'click a[data-sample_id]' : 'showSampleRecord'				
 			},
 			exportFile : function(e, data) {
 				e.preventDefault();
 				var selectedModels = e.data.view.grid.getAllSelectedIds();				
 				if (selectedModels && selectedModels.length > 0) {
-					if (selectedModels.length <= 1000) { // limit to 1000 sequences
+					if (selectedModels.length <= 1000) { // limit to 1000 samples
 						$('#lvl-floating-menu').hide('fast');
-						e.data.view.trigger('sequences:file:export', e.data.view.collection.data_source, selectedModels);
+						e.data.view.trigger('samples:file:export', e.data.view.collection.data_source, selectedModels);
 					} else {
 						$('#lvl-floating-menu').hide('0');
 						require([ 'common/growl' ], function(createGrowl) {
-							createGrowl('Export size limit reached', 'Export tool is currently limited to 1000 sequences.', false);
+							createGrowl('Export size limit reached', 'Export tool is currently limited to 1000 samples.', false);
 						});
 					}				
 				} else {
 					$('#lvl-floating-menu').hide('0');
 					require([ 'common/growl' ], function(createGrowl) {
-						createGrowl('No sequences selected', 'Select at least one sequence to be exported', false);
+						createGrowl('No samples selected', 'Select at least one sample to be exported', false);
 					});
 				}
 			},
@@ -244,7 +215,7 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 				$('#lvl-floating-menu').hide('fast');
 				$('.select-all-header-cell > input:first').prop('checked', false).change();				
 			},
-			searchSequences : function(search) {
+			searchSamples : function(search) {
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
 				backgridFilter.submit();
@@ -262,7 +233,7 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 						}
 					});
 				}
-				this.searchSequences(search);
+				this.searchSamples(search);
 			},
 			addSearchTerm : function(e) {
 				e.preventDefault();
@@ -280,7 +251,7 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 					searchCont.find('a[data-search-term!="sterm_-1"]').each(function(i) {
 						search += $(this).parent().text() + ' ';
 					});
-					this.searchSequences(search);
+					this.searchSamples(search);
 				} else {
 					newTermInput.val('');
 				}
@@ -291,7 +262,7 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 				var target = $(e.target);
 				var countryCode = target.is('span') || target.is('img') ? target.parent('a').get(0).getAttribute('data-country-code2') : target
 						.attr('data-country-code2');
-				this.searchSequences('locale:_' + countryCode.toUpperCase());
+				this.searchSamples('locale:_' + countryCode.toUpperCase());
 			},
 			handleClickSavable : function(e) {
 				require([ 'common/growl' ], function(createGrowl) {
@@ -320,12 +291,12 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 					tour();
 				});
 			},
-			showSequenceRecord : function(e) {
+			showSampleRecord : function(e) {
 				e.preventDefault();
 				var self = this;
 				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-seq_id') : target.attr('data-seq_id');
-				this.trigger('sequences:view:sequence', self.collection.data_source, itemId);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-sample_id') : target.attr('data-sample_id');
+				this.trigger('samples:view:sample', self.collection.data_source, itemId);
 			},
 			onDestroy : function() {
 				pace.stop();
@@ -368,7 +339,7 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 				var filter = new Backgrid.Extension.ServerSideFilter({
 					collection : this.collection,
 					name : 'q',
-					placeholder : 'filter sequences'
+					placeholder : 'filter samples'
 				});
 
 				var filterToolbar = this.$('#grid-filter-toolbar');
@@ -387,7 +358,7 @@ define([ 'app', 'tpl!apps/collection/samples/tpls/collection_samples', 'tpl!apps
 					_.each(params.get('search'), function(item) {
 						search += item.term;
 					});
-					_self.searchSequences(search);
+					_self.searchSamples(search);
 				} else {
 					this.collection.fetch({
 						reset : true
