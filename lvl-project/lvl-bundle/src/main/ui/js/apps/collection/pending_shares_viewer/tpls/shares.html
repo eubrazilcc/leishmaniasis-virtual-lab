@@ -1,0 +1,6 @@
+<% if (shares) { %>
+  <% _.each(shares, function(item){ %>
+  <dt><%= item.user %></dt>
+  <dd><%= item.sharedDate %></dd>
+<% }); %>
+<% } %>

@@ -9,12 +9,12 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 	Lvl.module('CollectionApp.Pending.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
-				/*{
+				{
 					name : 'id',
 					label : 'Id',
 					editable : false,
 					cell : 'string'
-				},*/
+				},
 				{
 					name : 'sample',
 					label : 'Modified',
@@ -96,6 +96,43 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 							if (formattedValue && typeof formattedValue === 'string') {
 								this.$el.append('<a href="#" title="Open" data-pending-seq_id="' + formattedValue
 										+ '" class="text-muted"><i class="fa fa-eye fa-fw"></i></a>');
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},
+				{
+					name : 'id',
+					label : '',
+					editable : false,
+					sortable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'string') {
+								this.$el.append('<a href="#" data-pending-share-seq_id="' + formattedValue
+										+ '" title="Share" class="text-muted"><i class="fa fa-share fa-fw"></i></a>');
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},{
+					name : 'id',
+					label : '',
+					editable : false,
+					sortable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'string') {
+								this.$el.append('<a href="#" title="Remove" class="text-muted" data-pending-remove-seq_id="' + formattedValue
+										+ '"><i class="fa fa-times fa-fw"></i></a>');
 							}
 							this.delegateEvents();
 							return this;
@@ -205,7 +242,9 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 				'click div.lvl-savable' : 'handleClickSavable',
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
-				'click a[data-pending-seq_id]' : 'showPendingSequenceRecord'				
+				'click a[data-pending-seq_id]' : 'showPendingSequenceRecord',
+				'click a[data-pending-share-seq_id]' : 'sharePendingSequenceRecord',
+				'click a[data-pending-remove-seq_id]' : 'removePendingSequenceRecord'
 			},			
 			deselectAll : function(e) {
 				e.preventDefault();
@@ -252,7 +291,7 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 				} else {
 					newTermInput.val('');
 				}
-			},			
+			},	
 			handleClickSavable : function(e) {
 				require([ 'common/growl' ], function(createGrowl) {
 					createGrowl('Unsaved search',
@@ -286,6 +325,38 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pending-seq_id') : target.attr('data-pending-seq_id');
 				this.trigger('pending:view:record', self.collection.data_source, itemId);
+			},
+			sharePendingSequenceRecord : function(e) {
+				e.preventDefault();
+				var self = this;
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pending-share-seq_id') : target.attr('data-pending-share-seq_id');
+				this.trigger('pending:share:record', self.collection.data_source, itemId);
+			},
+			removePendingSequenceRecord : function(e) {
+				e.preventDefault();
+				var self = this;
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pending-remove-seq_id') : target.attr('data-pending-remove-seq_id');				
+				var item = this.collection.get(itemId);
+				item.set('dataSource', self.data_source);
+				item.oauth2_token = Lvl.config.authorizationToken();
+				require([ 'common/confirm' ], function(confirmDialog) {
+					confirmDialog('Confirm deletion', 'This action will delete the selected record. Are you sure?', function() {
+						self.collection.remove(item);
+						item.destroy({
+							success : function(e) {
+							},
+							error : function(e) {
+								require([ 'common/alert' ], function(alertDialog) {
+									alertDialog('Error', 'The record cannot be removed.');
+								});
+							}
+						});
+					}, {
+						btn_text : 'Delete'
+					});
+				});
 			},
 			onDestroy : function() {
 				pace.stop();

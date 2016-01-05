@@ -26,7 +26,19 @@ define([ 'app', 'entities/pending_sequence', 'apps/collection/pending/collection
 						});
 						Lvl.dialogRegion.show(dialogView);
 					});
-				});
+				});				
+				view.on('pending:share:record', function(collectionId, itemId) {
+					require([ 'apps/collection/pending_shares_viewer/collection_pending_shares_viewer', 'entities/obj_granted' ], function(SharedPendingSequenceView, ObjGrantedModel) {
+						var dialogView = new SharedPendingSequenceView.Content({
+							collection : new ObjGrantedModel.ObjectGrantedPageableCollection({
+								oauth2_token : Lvl.config.authorizationToken(),
+								collectionId : collectionId,
+								itemId : itemId
+							})
+						});
+						Lvl.dialogRegion.show(dialogView);
+					});
+				});				
 				Lvl.mainRegion.currentView.tabContent.show(view);
 				return View.Content.id;
 			}

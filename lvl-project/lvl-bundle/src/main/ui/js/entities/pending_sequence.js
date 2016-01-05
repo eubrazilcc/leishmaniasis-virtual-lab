@@ -80,7 +80,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 			parseRecords : function(resp, options) {				
 				return resp.elements;
 			}
-		});		
+		});
 	});
 	return Lvl.Entities.PendingSequence;
 });

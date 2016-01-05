@@ -140,7 +140,7 @@ public class NotificationResource {
 				.getPrincipal();		
 		// get from database		
 		final long totalCount = NOTIFICATION_DAO.count(ownerid);		
-		return new TotalCount(totalCount);				
+		return new TotalCount(totalCount);
 	}
 
 	@POST

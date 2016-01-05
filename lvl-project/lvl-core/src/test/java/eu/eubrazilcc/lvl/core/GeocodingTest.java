@@ -24,7 +24,11 @@ package eu.eubrazilcc.lvl.core;
 
 import static eu.eubrazilcc.lvl.core.geocoding.GeocodingHelper.geocode;
 import static eu.eubrazilcc.lvl.core.geocoding.GeocodingHelper.getIfPresent;
+import static eu.eubrazilcc.lvl.core.geocoding.ReverseGeocodingHelper.rgeocode;
 import static eu.eubrazilcc.lvl.core.util.LocaleUtils.getLocale;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -36,6 +40,7 @@ import org.junit.Test;
 
 import com.google.common.base.Optional;
 
+import eu.eubrazilcc.lvl.core.geojson.LngLatAlt;
 import eu.eubrazilcc.lvl.core.geojson.Point;
 import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
@@ -46,12 +51,12 @@ import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 public class GeocodingTest extends LeishvlTestCase {
 
 	public GeocodingTest() {
-		super(false);
+		super(true);
 	}
 
 	@Test
-	public void test() {
-		printMsg("GeocodingTest.test()");
+	public void testGeocoding() {
+		printMsg("GeocodingTest.testGeocoding()");
 		try {
 			// test converting address into geographic coordinates
 			final String address1 = "Spain:Valencia";
@@ -66,13 +71,13 @@ public class GeocodingTest extends LeishvlTestCase {
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
 			printMsg(" >> Address: " + address2 + ", Location: " + point.toString());
-			
+
 			// test converting invalid address
 			final String address3 = "1234abcd:1234abcd";
 			point = geocode(address3).orNull();
 			assertThat("location is null", point, nullValue());
 			printMsg(" >> Address: " + address3 + ", Location: NULL");
-			
+
 			// test get location from cache
 			Optional<Point> cached = getIfPresent(address1);
 			assertThat("cached location is not null", cached, notNullValue());
@@ -88,13 +93,20 @@ public class GeocodingTest extends LeishvlTestCase {
 			assertThat("location is not null", point, notNullValue());
 			/* uncomment to display additional output */
 			printMsg(" >> Locale: " + locale.getDisplayCountry() + ", Location: " + point.toString());
-			
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			fail("GeocodingTest.test() failed: " + e.getMessage());
+			fail("GeocodingTest.testGeocoding() failed: " + e.getMessage());
 		} finally {			
-			printMsg("GeocodingTest.test() has finished");
+			printMsg("GeocodingTest.testGeocoding() has finished");
 		}
+	}
+
+	@Test
+	public void testReverseGeocoding() {
+		// test looking up for country name
+		final String country = rgeocode(Point.builder().coordinates(LngLatAlt.builder().latitude(-22.94277778).longitude(-43.35805556).build()).build()).orElse(null);
+		assertThat("country coincides with expected", trim(country), allOf(notNullValue(), equalTo("Brazil")));
 	}
 
 }

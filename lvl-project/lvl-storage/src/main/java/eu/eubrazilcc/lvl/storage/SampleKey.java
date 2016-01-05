@@ -113,7 +113,7 @@ public class SampleKey {
 		
 		public static final String IOCL_PATTERN = "(IOCL|OE)([ \\t]|%20|\\+)[0-9]+";
 		public static final String NUMBER_YEAR_PATTERN = "[0-9]+(/|%2f|%2F)[0-9]+";
-		public static final String FLEXIBLE_NUMBER_PATTERN = "[0-9]+_{0,1}[0-9]*(/|%2f|%2F){0,1}[0-9]*_{0,1}[0-9]*";
+		public static final String FLEXIBLE_PATTERN = "[\\w .+-/%2f]{2,}";
 
 		private final SampleKey instance = new SampleKey();
 

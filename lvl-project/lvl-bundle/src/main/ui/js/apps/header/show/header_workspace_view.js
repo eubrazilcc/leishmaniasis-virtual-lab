@@ -195,8 +195,27 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 				Lvl.vent.on('editable:items:dragend', this.hideMySavedItems);
 				// subscribe to events
 				$(document).on('keyup', this.handleEscKeyUpEvent);
+				// add notification timer
+				this.timer = setInterval(function() {					
+					$.ajax({
+						url : Lvl.config.get('service.url') + '/notifications/~/total/count',
+						type : 'GET',
+						headers : Lvl.config.authorizationHeader(),
+						dataType : 'json'
+					}).then(function(content) {
+						if (content) {
+							var count = content.totalCount || 0;
+							$('#notificationsCount').text(count);							
+						}
+					}, function(xhr, status, error) {						
+						console.log('Failed to update notifications count', status + ': ' + error);
+					});					
+				}, 10000);
 			},
 			onDestroy : function() {
+				// stop notification timer
+				clearInterval(this.timer);
+				// close search form
 				closeSearchForm(0);
 				// remove all event handlers
 				Lvl.vent.off('editable:items:dragstart');
@@ -215,7 +234,7 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 						text : function(event, api) {
 							api.elements.content.html('<img src="/img/ajax_loader_gray_32.gif" alt="Loading..."/>');
 							return $.ajax({
-								url : Lvl.config.get('service.url') + '/notifications',
+								url : Lvl.config.get('service.url') + '/notifications/~',
 								type : 'GET',
 								headers : Lvl.config.authorizationHeader(),
 								dataType : 'json'
