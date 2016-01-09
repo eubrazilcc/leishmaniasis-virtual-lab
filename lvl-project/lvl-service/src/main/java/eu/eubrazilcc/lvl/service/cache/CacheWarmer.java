@@ -23,7 +23,9 @@
 package eu.eubrazilcc.lvl.service.cache;
 
 import static eu.eubrazilcc.lvl.core.concurrent.TaskScheduler.TASK_SCHEDULER;
+import static eu.eubrazilcc.lvl.service.cache.GeolocationCache.findNearbyLeishmaniaSamples;
 import static eu.eubrazilcc.lvl.service.cache.GeolocationCache.findNearbyLeishmaniaSequences;
+import static eu.eubrazilcc.lvl.service.cache.GeolocationCache.findNearbySandflySamples;
 import static eu.eubrazilcc.lvl.service.cache.GeolocationCache.findNearbySandflySequences;
 import static eu.eubrazilcc.lvl.service.cache.StatisticsCache.leishmaniaStats;
 import static eu.eubrazilcc.lvl.service.cache.StatisticsCache.sandflyStats;
@@ -85,12 +87,20 @@ public enum CacheWarmer implements Closeable2 {
 				findNearbySandflySequences(Point.builder().coordinates(LngLatAlt.builder().coordinates(0.0, 0.0).build()).build(), 
 						6500000.0, true, true);
 				sandflyStats();
+				findNearbySandflySamples(Point.builder().coordinates(LngLatAlt.builder().coordinates(0.0, 0.0).build()).build(), 
+						6500000.0, true, false);
+				findNearbySandflySamples(Point.builder().coordinates(LngLatAlt.builder().coordinates(0.0, 0.0).build()).build(), 
+						6500000.0, true, true);
 				// leishmania global vector and heat maps, collection statistics
 				findNearbyLeishmaniaSequences(Point.builder().coordinates(LngLatAlt.builder().coordinates(0.0, 0.0).build()).build(), 
 						6500000.0, true, false);
 				findNearbyLeishmaniaSequences(Point.builder().coordinates(LngLatAlt.builder().coordinates(0.0, 0.0).build()).build(), 
 						6500000.0, true, true);
-				leishmaniaStats();
+				leishmaniaStats();				
+				findNearbyLeishmaniaSamples(Point.builder().coordinates(LngLatAlt.builder().coordinates(0.0, 0.0).build()).build(), 
+						6500000.0, true, false);
+				findNearbyLeishmaniaSamples(Point.builder().coordinates(LngLatAlt.builder().coordinates(0.0, 0.0).build()).build(), 
+						6500000.0, true, true);				
 			}
 		}, 30l, 3600l, TimeUnit.SECONDS); // repeat every 1 hour		
 		LOGGER.info("Cache warmer initialized successfully");

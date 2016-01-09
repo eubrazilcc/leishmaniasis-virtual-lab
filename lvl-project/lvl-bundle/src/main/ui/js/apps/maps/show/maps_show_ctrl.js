@@ -1,12 +1,12 @@
 /**
- * RequireJS module that defines the controller: maps->datasets.
+ * RequireJS module that defines the controller: maps->show.
  */
 
-define([ 'app', 'apps/maps/datasets/maps_datasets_view' ], function(Lvl, View) {
-	Lvl.module('MapsApp.Datasets', function(Datasets, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'apps/maps/show/maps_show_view' ], function(Lvl, View) {
+	Lvl.module('MapsApp.Show', function(Show, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		Datasets.Controller = {
-			showSection : function() {
+		Show.Controller = {
+			showMaps : function() {
 				var view = new View.Content();
 				view.on('sequences:view:sequence', function(accession) {
 					require([ 'apps/collection/sequence_viewer/collection_sequence_viewer', 'entities/gb_sequence' ], function(SequenceView, GbSequenceModel) {
@@ -20,10 +20,9 @@ define([ 'app', 'apps/maps/datasets/maps_datasets_view' ], function(Lvl, View) {
 						Lvl.dialogRegion.show(dialogView);
 					});
 				});
-				Lvl.mainRegion.currentView.tabContent.show(view);
-				return View.Content.id;
+                Lvl.mainRegion.show(view);
 			}
 		}
 	});
-	return Lvl.MapsApp.Datasets.Controller;
+	return Lvl.MapsApp.Show.Controller;
 });

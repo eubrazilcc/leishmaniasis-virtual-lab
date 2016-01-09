@@ -1,17 +1,17 @@
 /**
- * RequireJS module that defines the view: collection->map.
+ * RequireJS module that defines the view: maps->show.
  */
 
-define([ 'app', 'tpl!apps/maps/datasets/tpls/maps_datasets' ], function(Lvl, MapTpl) {
-	Lvl.module('MapsApp.Datasets.View', function(View, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], function(Lvl, MapShowTpl) {
+	Lvl.module('MapsApp.Show.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		var center = {
-			lon : 3.7036,
-			lat : 40.4169
+				lon : 3.7036,
+				lat : 40.4169
 		};
 		var zoom = 5.5;
 		View.Content = Marionette.ItemView.extend({
 			id : 'map',
-			template : MapTpl,
+			template : MapShowTpl,
 			initialize : function() {
 				$(window).on('resize', this.resize);
 				// setup search
@@ -25,7 +25,8 @@ define([ 'app', 'tpl!apps/maps/datasets/tpls/maps_datasets' ], function(Lvl, Map
 				var self = this;
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-seq_id') : target.attr('data-seq_id');
-				this.trigger('sequences:view:sequence', itemId);
+				this.trigger('sequences:view:sequence', itemId);				
+				$('#map-popup').popover('destroy');				
 			},
 			searchUnavailable : function(search) {				
 				require([ 'common/growl' ], function(createGrowl) {
@@ -62,7 +63,6 @@ define([ 'app', 'tpl!apps/maps/datasets/tpls/maps_datasets' ], function(Lvl, Map
 			onDestroy : function() {
 				// unsubscribe from events
 				$(window).off('resize', this.resize);
-				// TODO : more events? (see commented code below)
 			},
 			loadMap : function() {
 				require([ 'openlayers' ], function(ol) {
@@ -106,12 +106,7 @@ define([ 'app', 'tpl!apps/maps/datasets/tpls/maps_datasets' ], function(Lvl, Map
 						source : new ol.source.Vector({
 							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&' + Lvl.config.authorizationQuery(),
 							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
-						}),
-						/* TODO source : new ol.source.GeoJSON({
-							projection : 'EPSG:3857',
-							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&'
-									+ Lvl.config.authorizationQuery()
-						}), */
+						}),						
 						style : function(feature, resolution) {
 							var text = resolution < 5000 ? feature.get('count') : '';
 							if (!styleCache[text]) {
@@ -126,13 +121,7 @@ define([ 'app', 'tpl!apps/maps/datasets/tpls/maps_datasets' ], function(Lvl, Map
 						source : new ol.source.Vector({
 							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&' + Lvl.config.authorizationQuery(),
 							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
-						}),
-						/* TODO source : new ol.source.GeoJSON({
-							extractStyles : false,
-							projection : 'EPSG:3857',
-							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&'
-									+ Lvl.config.authorizationQuery()
-						}), */
+						}),						
 						radius : 5
 					});
 
@@ -301,12 +290,12 @@ define([ 'app', 'tpl!apps/maps/datasets/tpls/maps_datasets' ], function(Lvl, Map
 			resize : function() {
 				require([ 'openlayers' ], function() {
 					var windowHeight = $(window).height();
-					var offset = $('#section-tab-content').offset().top + $('#map-toolbar').height() + 2;
+					var offset = $('#map-toolbar').offset().top + $('#map-toolbar').height() + 2;
 					$('#map-container').height(windowHeight - offset);
 					this.map.updateSize();
 				});
 			}
 		});
 	});
-	return Lvl.MapsApp.Datasets.View;
+	return Lvl.MapsApp.Show.View;
 });

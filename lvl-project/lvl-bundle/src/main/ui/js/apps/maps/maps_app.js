@@ -18,9 +18,9 @@ define([ 'app' ], function(Lvl) {
 		};
 
 		/* Commands and events */
-		Lvl.commands.setHandler('maps:set:active', function(section) {
-			require([ 'apps/maps/layout/maps_layout_ctrl' ], function(LayoutController) {
-				MapsApp.currentSection = LayoutController.showLayout(section);
+		Lvl.commands.setHandler('maps:show', function() {
+			require([ 'apps/maps/show/maps_show_ctrl' ], function(MapsController) {
+				MapsController.showMaps();
 			});
 		});
 	});

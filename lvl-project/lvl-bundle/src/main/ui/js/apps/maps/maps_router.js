@@ -7,8 +7,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 		'use strict';
 		var Router = Backbone.Router.extend({
 			routes : {
-				'maps' : 'showMaps',
-				'maps/:section' : 'showMaps'
+				'maps' : 'showMaps'
 			},
 			before : function() {
 				if (!Lvl.config.isAuthenticated()) {
@@ -26,19 +25,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				return true;
 			},
 			showMaps : function(section) {
-				section = (section || 'datasets').toLowerCase();
-				if (section === 'datasets') {
-					Lvl.navigate('maps/' + section, {
-						trigger : false,
-						replace : true
-					});
-					Lvl.execute('maps:set:active', section);				
-				} else {
-					Lvl.navigate('not-found', {
-						trigger : true,
-						replace : true
-					});
-				}
+				Lvl.execute('maps:show');				
 			}
 		});
 		Lvl.addInitializer(function() {

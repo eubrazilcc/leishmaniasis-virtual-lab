@@ -1,0 +1,47 @@
+<div id="lvl-qtip-growl-container"></div>
+ 
+<div class="container-fluid lvl-main-container">
+	<div class="row">
+		<div class="col-md-12">
+			<form class="form-inline" id="map-toolbar">
+				<fieldset>
+					<div class="form-group">
+						<div class="input-group">
+							<label class="control-label"><strong>Map type: &nbsp;</strong></label>
+							<input type="radio" name="opts_map_types" value="heatmap" id="opts_map_types_heatmap" checked> Heatmap &nbsp;
+							<input type="radio" name="opts_map_types" value="vectormap" id="opts_map_types_vectormap"> Clusters
+						</div>
+						<div class="input-group">
+							<label class="control-label"><strong> &middot; Layers: &nbsp;</strong></label>
+							<div class="checkbox">
+								<label>
+									<input type="checkbox" value="sandfly_seqs" id="opts_layer_sandfly_seqs" checked>Sandfly sequences &nbsp;							
+								</label>						
+							</div>
+							<div class="checkbox">
+								<label>
+									<input type="checkbox" value="leishmania_seqs" id="opts_layer_leishmania_seqs" checked>Leishmania sequences &nbsp;
+								</label>
+							</div>
+							<div class="checkbox">
+								<label>
+									<input type="checkbox" value="sandfly_samples" id="opts_layer_sandfly_samples" checked>Sandfly samples &nbsp;							
+								</label>						
+							</div>
+							<div class="checkbox">
+								<label>
+									<input type="checkbox" value="leishmania_samples" id="opts_layer_leishmania_samples" checked>Leishmania samples
+								</label>
+							</div>
+						</div>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+		<div class="col-md-12">
+			<div id="map-container" class="lvl-map">
+				<div id="map-popup"></div>
+			</div>
+		</div>
+	</div>
+</div>
