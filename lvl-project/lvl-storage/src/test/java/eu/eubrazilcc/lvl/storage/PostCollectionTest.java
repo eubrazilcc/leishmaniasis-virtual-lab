@@ -37,6 +37,7 @@ import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
 import static org.junit.Assert.fail;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -106,21 +107,26 @@ public class PostCollectionTest {
 			final long numRecords = POST_DAO.count();
 			assertThat("number of posts stored in the database coincides with expected", numRecords, equalTo(0l));
 
-			// pagination
+			// create a large dataset to test complex operations
+			Date created5 = null;
+			final Calendar calendar = Calendar.getInstance();
+			calendar.setTime(new Date());
 			final Random random = new Random();
 			final PostCategory[] categories = PostCategory.values();
 			final PostLevel[] levels = PostLevel.values();
 			final List<String> ids = newArrayList();
-			for (int i = 0; i < 11; i++) {				
+			for (int i = 0; i < 11; i++) {
+				calendar.add(Calendar.MINUTE, 1);
 				final Post post3 = Post.builder()
 						.id("post-" + i)
-						.created(new Date())
+						.created(calendar.getTime())
 						.category(i < 3 ? PostCategory.INCIDENCE : categories[random.nextInt(categories.length)])
 						.author(i%2 == 0 ? "user1@lvl" : "user2@lvl")
 						.level(i < 5 ? PostLevel.PROMOTED : levels[random.nextInt(levels.length)])
 						.body("Body-" + i)
 						.build();
 				ids.add(post3.getId());
+				if (i == 5) created5 = post3.getCreated();
 				POST_DAO.insert(post3);
 			}
 			final int size = 3;
@@ -135,8 +141,16 @@ public class PostCollectionTest {
 				start += posts.size();
 			} while (!posts.isEmpty());
 
+			// filter posts created after a given time
+			ImmutableMap<String, String> filter = of("created", String.format(">%d", created5.getTime()));
+			posts = POST_DAO.list(0, Integer.MAX_VALUE, filter, null, null, null);
+			assertThat("Hide category list coincides with expected", posts, allOf(notNullValue(), not(empty()), hasSize(5)));
+			for (final Post p : posts) {
+				assertThat("posts are properly filtered by creation date", p.getCreated().after(created5));
+			}
+
 			// hide category and sort by date
-			ImmutableMap<String, String> filter = of("category", String.format("!%s", PostCategory.ANNOUNCEMENT.name()));
+			filter = of("category", String.format("!%s", PostCategory.ANNOUNCEMENT.name()));
 			Sorting sorting = Sorting.builder()					
 					.field("created")
 					.order(Order.ASC)
@@ -156,7 +170,15 @@ public class PostCollectionTest {
 			posts = POST_DAO.list(0, Integer.MAX_VALUE, filter, sorting, null, null);
 			assertThat("Hide author list coincides with expected", posts, allOf(notNullValue(), not(empty()), 
 					hasSize(greaterThanOrEqualTo(2)))); // there are (at least) 2 promoted posts of authored by this person
-
+			
+			// count posts before
+			long count2 = POST_DAO.countAfter(created5.getTime());
+			assertThat("count before date coincides with expected", count2, equalTo(5l));
+			
+			// count posts after
+			count2 = POST_DAO.countBefore(created5.getTime());
+			assertThat("count before date coincides with expected", count2, equalTo(5l));
+			
 			// delete entries from database
 			for (final String id2 : ids) {			
 				POST_DAO.delete(id2);

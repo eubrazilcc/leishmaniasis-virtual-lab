@@ -146,6 +146,9 @@ define([ 'marionette', 'underscore', 'jquery', 'apps/config/marionette/propertie
 		googleGeocodeEndpoint : function(lat, lng) {
 			return 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' + lat + ',' + lng + '&result_type=sublocality&key=' 
 				+ this.props.getProperty('google', 'api_key');
+		},
+		ncbiEfetchEndpoint : function() {
+			return 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi';
 		}
 	});
 	return Marionette.Object.Configuration;

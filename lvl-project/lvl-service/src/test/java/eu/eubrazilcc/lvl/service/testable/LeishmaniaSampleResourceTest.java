@@ -95,6 +95,11 @@ public class LeishmaniaSampleResourceTest extends Testable {
 		// delete any possible sample that could be imported into the database in previous tests
 		final List<LeishmaniaSample> samples = LEISHMANIA_SAMPLE_DAO.list(0, Integer.MAX_VALUE, null, null, 
 				ImmutableMap.of(PRIMARY_KEY_PART1, true, PRIMARY_KEY_PART2, true), null);
+		
+		// TODO
+		System.err.println("\n\n >> HERE IS OK: " + samples + "\n");
+		// TODO
+		
 		ofNullable(samples).orElse(emptyList()).forEach(s -> {
 			
 			// TODO

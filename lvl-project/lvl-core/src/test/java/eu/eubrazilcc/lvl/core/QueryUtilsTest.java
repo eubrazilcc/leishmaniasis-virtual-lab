@@ -67,17 +67,19 @@ public class QueryUtilsTest extends LeishvlTestCase {
 			assertThat("number of search terms coincides with expected", filter.size(), equalTo(1));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));			
-			/* uncomment for additional output */
+			// conditional output
 			printMsg(" >> QUERY -->" + query + "<--");
 			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
 			// keyword matching search
-			Map<String, Pair<String, String>> queries = new ImmutableMap.Builder<String, Pair<String, String>>()
+			Map<String, Pair<String, String>> queries = new ImmutableMap.Builder<String, Pair<String, String>>()					
 					.put("keyword:value", Pair.of("keyword", "value"))
 					.put("keyword:\"value\"", Pair.of("keyword", "value"))
 					.put("catalogNumber:\"9f9c5951-d147-461d-9dc9-469443023d65\"", Pair.of("catalogNumber", "9f9c5951-d147-461d-9dc9-469443023d65"))
 					.put("author:\"!user1@lvl\"", Pair.of("author", "!user1@lvl"))
 					.put("author:!user1@lvl", Pair.of("author", "!user1@lvl"))
+					.put("length:>10000", Pair.of("length", ">10000"))
+					.put("created:\">1452266157962\"", Pair.of("created", ">1452266157962"))
 					.build();
 			for (final Map.Entry<String, Pair<String, String>> e : queries.entrySet()) {
 				filter = parseQuery(e.getKey());
@@ -85,7 +87,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 				assertThat("number of search terms coincides with expected", filter.size(), equalTo(1));
 				assertThat("keyword search term is not null", filter.get(e.getValue().key), notNullValue());
 				assertThat("keyword search term coincides with expected", filter.get(e.getValue().key), equalTo(e.getValue().value));			
-				/* uncomment for additional output */
+				// conditional output
 				printMsg(" >> QUERY -->" + e.getKey() + "<--");
 				printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 			}
@@ -99,7 +101,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 			assertThat("keyword search term coincides with expected", filter.get("keyword"), equalTo("value"));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));			
-			/* uncomment for additional output */
+			// conditional output
 			printMsg(" >> QUERY -->" + query + "<--");
 			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
@@ -114,7 +116,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 			assertThat("keyword search term 2 coincides with expected", filter.get("keyword2"), equalTo("value2"));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));			
-			/* uncomment for additional output */
+			// conditional output
 			printMsg(" >> QUERY -->" + query + "<--");
 			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
@@ -129,7 +131,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 			assertThat("keyword search term 2 coincides with expected", filter.get("keyword2"), equalTo("value2"));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));
-			/* uncomment for additional output */
+			// conditional output
 			printMsg(" >> QUERY -->" + query + "<--");
 			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
@@ -144,7 +146,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 			assertThat("keyword search term 2 coincides with expected", filter.get("keyword2"), equalTo("value2"));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));
-			/* uncomment for additional output */
+			// conditional output
 			printMsg(" >> QUERY -->" + query + "<--");
 			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
@@ -159,7 +161,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 			assertThat("keyword search term 2 coincides with expected", filter.get("keyword2"), equalTo("value2"));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term another full-text search with duplicated values"));
-			/* uncomment for additional output */
+			// conditional output
 			printMsg(" >> QUERY -->" + query + "<--");
 			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
@@ -174,7 +176,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 			assertThat("keyword search term 2 coincides with expected", filter.get("keyword2"), equalTo("value2"));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term another with duplicated values"));
-			/* uncomment for additional output */
+			// conditional output
 			printMsg(" >> QUERY -->" + query + "<--");
 			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
@@ -191,7 +193,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("full-text search term"));
 			List<FormattedQueryParam> formatted = formattedQuery(filter, Sequence.class);
 			assertThat("formatted query is not empty", formatted, allOf(notNullValue(), hasSize(3)));
-			/* uncomment for additional output */
+			// conditional output
 			printMsg(" >> QUERY -->" + query + "<--");
 			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 			printMsg(" >> FORMATTED QUERY: " + collectionToString(formatted));
@@ -203,7 +205,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 			assertThat("number of search terms coincides with expected", filter.size(), equalTo(1));
 			assertThat("full-text search term is not null", filter.get("text"), notNullValue());
 			assertThat("full-text search term coincides with expected", filter.get("text"), equalTo("keyword : value"));
-			/* uncomment for additional output */
+			// conditional output
 			printMsg(" >> QUERY -->" + query + "<--");
 			printMsg(" >> COMPUTED FILTER: " + mapToString(filter));
 
@@ -222,7 +224,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 		String sort = "field1=asc";
 		String hash = computeHash(query, sort);
 		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
-		/* uncomment for additional output */
+		// conditional output
 		printMsg(" >> INPUT  --> query: " + query + ", sort: " + sort + "<--");
 		printMsg(" >> OUTPUT --> hash: " + hash + "<--");
 
@@ -231,7 +233,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 		sort = null;
 		hash = computeHash(query, sort);
 		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
-		/* uncomment for additional output */
+		// conditional output
 		printMsg(" >> INPUT  --> query: " + query + ", sort: NULL<--");
 		printMsg(" >> OUTPUT --> hash: " + hash + "<--");
 
@@ -240,7 +242,7 @@ public class QueryUtilsTest extends LeishvlTestCase {
 		sort = null;
 		hash = computeHash(query, sort);
 		assertThat("hash is not empty", trim(hash), allOf(notNullValue(), not(equalTo(""))));
-		/* uncomment for additional output */
+		// conditional output
 		printMsg(" >> INPUT  --> query: " + query + ", sort: NULL<--");
 		printMsg(" >> OUTPUT --> hash: " + hash + "<--");
 	}

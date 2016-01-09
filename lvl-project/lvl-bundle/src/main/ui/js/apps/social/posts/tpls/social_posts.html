@@ -1,0 +1,40 @@
+<div class="row" id="lvl-search-terms" style="display: none;">
+  <div class="col-xs-12">
+    <ul class="list-inline" id="lvl-search-terms-container"></ul>    
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-9 col-xs-12">  	
+    <div id="post-container">
+    	<div class="well well-sm text-center hidden" id="new-posts-container"></div>
+    	<p id="no-post-found">No posts found.</p>
+    	<div id="posts-list"></div>
+    	<div class="text-center hidden" id="older-posts-container"><a href="#" id="older-posts">Load older posts</a></div>
+    </div>    
+  </div>
+  <div class="col-md-3 col-xs-12">
+  	<div id="post-submitter">
+  		<div class="panel panel-default">
+  			<div class="panel-body">
+  				<form id="lvlNewPostForm" novalidate="novalidate" data-pristine="true">						
+					<fieldset>
+	            		<div class="form-group">
+	            			<label for="inputPost" class="control-label">New post:</label>
+	            			<textarea class="form-control" rows="2" name="inputPost" placeholder="Enter post content here" required></textarea>
+	            		</div>
+	            	</fieldset>
+	            	<fieldset>
+	            		<div class="form-group text-right">			
+	            			<button type="submit" class="btn btn-primary" id="lvlNewPostSubmitBtn" disabled="disabled">Post</button>
+	            			<span id="helpBlock" class="help-block">Posts are limited to 500 characters</span>
+	            		</div>
+	            	</fieldset>
+				</form>
+  			</div>
+  		</div>
+  	</div>
+  </div>
+</div>
+
+<div id="grid-filter-toolbar" class="hidden"></div>

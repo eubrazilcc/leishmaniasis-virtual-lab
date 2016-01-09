@@ -87,6 +87,7 @@ import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
 import eu.eubrazilcc.lvl.core.Notification;
+import eu.eubrazilcc.lvl.core.Notification.Action;
 import eu.eubrazilcc.lvl.core.Notification.Priority;
 import eu.eubrazilcc.lvl.core.ObjectGranted;
 import eu.eubrazilcc.lvl.core.PaginableWithNamespace;
@@ -188,13 +189,18 @@ public class ObjectGrantedResource {
 					.priority(Priority.NORMAL)
 					.addressee(addresse.getOwnerId())
 					.message(String.format("%s shared a new %s with you", objGranted.getOwner(), objGranted.getCollection()))
+					.action(new Action("acceptedObject", objGranted.getId()))
 					.build());
-		} else {
-			final URI baseUri = uriInfo.getBaseUriBuilder().clone().build();
-			EMAIL_SENDER.sendTextEmail(objGranted.getUser(), "a LeishVL user share a dataset with you", 
-					String.format("%s shared a new %s with you. Join now the LeishVL at %s to gain access to your shared data.", 
-							objGranted.getOwner(), objGranted.getCollection(), getPortalEndpoint(baseUri)));
-		}
+		} else {			
+			try {
+				final URI baseUri = uriInfo.getBaseUriBuilder().clone().build();
+				EMAIL_SENDER.sendTextEmail(objGranted.getUser(), "a LeishVL user share a dataset with you", 
+						String.format("%s shared a new %s with you. Join now the LeishVL at %s to gain access to your shared data.", 
+								objGranted.getOwner(), objGranted.getCollection(), getPortalEndpoint(baseUri)));
+			} catch (Exception e) {
+				LOGGER.warn("User will not be notified", e);
+			}
+		}		
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(objGranted.getUrlSafeId());		
 		return Response.created(uriBuilder.build()).build();
 	}

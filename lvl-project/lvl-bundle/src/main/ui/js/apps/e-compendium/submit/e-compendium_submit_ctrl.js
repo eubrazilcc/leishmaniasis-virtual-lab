@@ -3,7 +3,7 @@
  */
 
 define([ 'app', 'apps/e-compendium/submit/e-compendium_submit_view' ], function(Lvl, View) {
-	Lvl.module('CollectionApp.Submit', function(Submit, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('ECompendiumApp.Submit', function(Submit, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Submit.Controller = {
 			showSection : function() {
@@ -13,5 +13,5 @@ define([ 'app', 'apps/e-compendium/submit/e-compendium_submit_view' ], function(
 			}
 		}
 	});
-	return Lvl.CollectionApp.Submit.Controller;
+	return Lvl.ECompendiumApp.Submit.Controller;
 });

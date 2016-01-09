@@ -235,7 +235,7 @@ public class ServiceTest {
 
 			// test task resource
 			new TaskResourceTest(testCtxt).runTest();
-
+			
 			// test sand-flies resource
 			new SandflyResourceTest(testCtxt).runTest();
 

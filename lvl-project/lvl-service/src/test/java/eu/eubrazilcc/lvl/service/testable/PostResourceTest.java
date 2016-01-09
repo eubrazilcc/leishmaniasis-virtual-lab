@@ -27,7 +27,6 @@ import static eu.eubrazilcc.lvl.core.http.LinkRelation.LAST;
 import static eu.eubrazilcc.lvl.core.util.NamingUtils.urlEncodeUtf8;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getPath;
 import static eu.eubrazilcc.lvl.core.util.UrlUtils.getQueryParams;
-import static eu.eubrazilcc.lvl.storage.dao.PostDAO.POST_DAO;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.toJson;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JsonOptions.JSON_PRETTY_PRINTER;
 import static eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2Common.HEADER_AUTHORIZATION;
@@ -53,6 +52,7 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.Random;
 
 import javax.ws.rs.Path;
@@ -63,6 +63,7 @@ import eu.eubrazilcc.lvl.core.community.Post;
 import eu.eubrazilcc.lvl.core.community.PostCategory;
 import eu.eubrazilcc.lvl.core.community.PostLevel;
 import eu.eubrazilcc.lvl.service.Posts;
+import eu.eubrazilcc.lvl.service.TotalCount;
 import eu.eubrazilcc.lvl.service.rest.PostResource;
 import eu.eubrazilcc.lvl.test.TestContext;
 import eu.eubrazilcc.lvl.test.Testable;
@@ -74,7 +75,7 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class PostResourceTest extends Testable {
 
 	public PostResourceTest(final TestContext testCtxt) {
-		super(testCtxt, PostResourceTest.class, false);
+		super(testCtxt, PostResourceTest.class, true);
 	}
 
 	@Override
@@ -82,11 +83,10 @@ public class PostResourceTest extends Testable {
 		// test create new post
 		final Post post = Post.builder()
 				.category(PostCategory.ANNOUNCEMENT)
-				.author("someone@lvl")
+				.author(testCtxt.ownerid("user1"))
 				.level(PostLevel.NORMAL)
 				.body("New version released!")
 				.build();
-		POST_DAO.insert(post);
 
 		final Path path = PostResource.class.getAnnotation(Path.class);		
 		Response response = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
@@ -118,7 +118,8 @@ public class PostResourceTest extends Testable {
 		assertThat("Post Id is not empty", trim(post2.getId()), allOf(notNullValue(), not(equalTo(""))));
 		assertThat("Post creation date is not null", post2.getCreated(), notNullValue());
 		post.setId(post2.getId());
-		post.setCreated(post2.getCreated());
+		post.setCreated(post2.getCreated());		
+
 		assertThat("Get post by Id coincides with expected", post2.equalsIgnoringVolatile(post));
 		// uncomment for additional output
 		printMsg(" >> Get post by Id result: " + post2.toString());
@@ -193,6 +194,7 @@ public class PostResourceTest extends Testable {
 		printMsg(" >> Delete post HTTP headers: " + response.getStringHeaders());
 
 		// create a larger dataset to test complex operations
+		Date created7 = null;		
 		final Random random = new Random();
 		final PostCategory[] categories = PostCategory.values();
 		final PostLevel[] levels = PostLevel.values();
@@ -200,12 +202,13 @@ public class PostResourceTest extends Testable {
 		for (int i = 0; i < numItems; i++) {
 			final Post post3 = Post.builder()
 					.category(i < 3 ? PostCategory.INCIDENCE : categories[random.nextInt(categories.length)])
-					.author(i%2 == 0 ? "user1@lvl" : "user2@lvl")
 					.level(i < 5 ? PostLevel.PROMOTED : levels[random.nextInt(levels.length)])
 					.body("Body-" + i)
 					.build();
+			if (i == 7) created7 = new Date();
+			Thread.sleep(500l);
 			testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS)).request()
-			.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("user1")))
+			.header(HEADER_AUTHORIZATION, bearerHeader(i%2 == 0 ? testCtxt.token("user1") : testCtxt.token("user2")))
 			.post(entity(post3, APPLICATION_JSON));			
 		}
 
@@ -291,6 +294,21 @@ public class PostResourceTest extends Testable {
 		printMsg(" >> Paginate posts last page result: " + toJson(posts, JSON_PRETTY_PRINTER));
 
 		assertThat("Paginate posts last page links coincide with expected", posts.getLinks(), allOf(notNullValue(), not(empty()), hasSize(2)));
+
+		// filter posts created after a given time
+		posts = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS))
+				.queryParam("per_page", 100)
+				.queryParam("q", String.format("created:\">%d\"", created7.getTime()))
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
+				.get(Posts.class);
+		assertThat("Filter by creation time result is not null", posts, notNullValue());
+		assertThat("Filter by creation time list coincides with expected", posts.getElements(), allOf(notNullValue(), not(empty()), 
+				hasSize(posts.getTotalCount()), hasSize(4)));
+		for (final Post p : posts.getElements()) {
+			assertThat("posts are properly filtered by creation date", p.getCreated().after(created7));
+		}
+		printMsg(" >> Search posts result: " + toJson(posts, JSON_PRETTY_PRINTER));
 
 		// hide category and sort by date
 		posts = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS))
@@ -390,6 +408,38 @@ public class PostResourceTest extends Testable {
 		assertThat("Hide level and author (JSON encoded) items coincide with expected", posts.getElements(), allOf(notNullValue(), not(empty()), 
 				hasSize(min(100, posts.getTotalCount())), hasSize(greaterThanOrEqualTo(2)))); // there are (at least) 2 promoted posts of authored by this person
 		printMsg(" >> Search posts response body (JSON): " + payload);
+
+		// get count after date
+		response = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS))
+				.path(Long.toString(created7.getTime())).path("after")
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
+				.get();
+		assertThat("Count after date (JSON encoded) response is not null", response, notNullValue());
+		assertThat("Count after date (JSON encoded) response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+		assertThat("Count after date (JSON encoded) response is not empty", response.getEntity(), notNullValue());
+		payload = response.readEntity(String.class);
+		assertThat("Count after date (JSON encoded) response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));
+		TotalCount count = testCtxt.jsonMapper().readValue(payload, TotalCount.class);		
+		assertThat("Count after date (JSON encoded) result is not null", count, notNullValue());
+		assertThat("Count after date (JSON encoded) coincides with expected", count.getTotalCount(), equalTo(4l));
+		printMsg(" >> Count after date response body (JSON): " + payload);
+
+		// get count before date
+		response = testCtxt.target().path(path.value()).path(urlEncodeUtf8(LVL_DEFAULT_NS))
+				.path(Long.toString(created7.getTime())).path("before")
+				.request(APPLICATION_JSON)
+				.header(HEADER_AUTHORIZATION, bearerHeader(testCtxt.token("root")))
+				.get();
+		assertThat("Count before date (JSON encoded) response is not null", response, notNullValue());
+		assertThat("Count before date (JSON encoded) response is OK", response.getStatus(), equalTo(OK.getStatusCode()));
+		assertThat("Count before date (JSON encoded) response is not empty", response.getEntity(), notNullValue());
+		payload = response.readEntity(String.class);
+		assertThat("Count before date (JSON encoded) response entity is not empty", trim(payload), allOf(notNullValue(), not(equalTo(""))));
+		count = testCtxt.jsonMapper().readValue(payload, TotalCount.class);		
+		assertThat("Count before date (JSON encoded) result is not null", count, notNullValue());
+		assertThat("Count before date (JSON encoded) coincides with expected", count.getTotalCount(), equalTo(7l));
+		printMsg(" >> Count before date response body (JSON): " + payload);
 	}
 
 }

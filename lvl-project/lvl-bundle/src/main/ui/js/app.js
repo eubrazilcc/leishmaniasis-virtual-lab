@@ -117,7 +117,7 @@ define([ 'marionette', 'apps/config/marionette/configuration', 'apps/config/mari
 					'apps/analysis/analysis_router', 'apps/enm/enm_router', 'apps/maps/maps_router', 'apps/statistics/statistics_router', 
 					'apps/drive/drive_router', 'apps/saved-items/saved-items_router', 'apps/settings/settings_router', 
 					'apps/open/about/about_router', 'apps/open/documentation/documentation_router', 'apps/open/support/support_router',
-					'apps/open/software/software_router', 'apps/admin/admin_router' ], function() {
+					'apps/open/software/software_router', 'apps/admin/admin_router', 'apps/curation/curation_router' ], function() {
 				// start history
 				Backbone.history.start();
 				// only if the initial call was done from the root folder, load the default route

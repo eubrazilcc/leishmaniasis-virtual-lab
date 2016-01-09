@@ -29,7 +29,7 @@ UPV (http://www.upv.es)
 GRyCAP (http://www.grycap.upv.es)
 
 /* SITE */
-Last update: 2015/11/19
+Last update: 2016/01/09
 Standards: HTML5, CSS3
 Components: Bootstrap, jQuery, Backbone.js, Marionette.js
 Software: Eclipse IDE

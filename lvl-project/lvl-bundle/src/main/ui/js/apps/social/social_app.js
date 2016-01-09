@@ -18,9 +18,9 @@ define([ 'app' ], function(Lvl) {
 		};
 
 		/* Commands and events */
-		Lvl.commands.setHandler('show:social', function() {
-			require([ 'apps/social/show/social_show_ctrl' ], function(ShowController) {
-				ShowController.showSocial();
+		Lvl.commands.setHandler('social:set:active', function(section) {
+			require([ 'apps/social/layout/social_layout_ctrl' ], function(LayoutController) {
+				SocialApp.currentSection = LayoutController.showLayout(section);
 			});
 		});
 	});

@@ -24,6 +24,7 @@ package eu.eubrazilcc.lvl.storage.dao;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
+import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBComparison.mongoNumeriComparison;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBConnector.MONGODB_CONN;
 import static eu.eubrazilcc.lvl.storage.mongodb.MongoDBHelper.toProjection;
 import static eu.eubrazilcc.lvl.storage.mongodb.jackson.MongoDBJsonMapper.JSON_MAPPER;
@@ -139,7 +140,7 @@ public enum PostDAO implements BaseDAO<String, Post> {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
 		try {
-			query = buildQuery(filter);
+			query = buildQuery(filter);			
 		} catch (InvalidFilterParseException e) {
 			LOGGER.warn("Discarding operation after an invalid filter was found: " + e.getMessage());
 			return newArrayList();
@@ -161,6 +162,14 @@ public enum PostDAO implements BaseDAO<String, Post> {
 	@Override
 	public long count() {
 		return MONGODB_CONN.count(COLLECTION);
+	}
+	
+	public long countBefore(final long timestamp) {
+		return MONGODB_CONN.count(COLLECTION, new BasicDBObject(CREATED_KEY, new BasicDBObject("$lt", timestamp)));
+	}
+	
+	public long countAfter(final long timestamp) {
+		return MONGODB_CONN.count(COLLECTION, new BasicDBObject(CREATED_KEY, new BasicDBObject("$gt", timestamp)));
 	}
 
 	@Override
@@ -201,8 +210,10 @@ public enum PostDAO implements BaseDAO<String, Post> {
 		BasicDBObject query2 = query;
 		if (isNotBlank(parameter) && isNotBlank(expression)) {
 			String field = null;
-			// keyword matching search			
-			if ("author".equalsIgnoreCase(parameter)) {
+			// keyword matching search
+			if ("created".equalsIgnoreCase(parameter)) {
+				field = CREATED_KEY;
+			} else if ("author".equalsIgnoreCase(parameter)) {
 				field = AUTHOR_KEY;
 			} else if ("category".equalsIgnoreCase(parameter)) {
 				field = CATEGORY_KEY;
@@ -210,7 +221,10 @@ public enum PostDAO implements BaseDAO<String, Post> {
 				field = LEVEL_KEY;
 			}
 			if (isNotBlank(field)) {
-				if ("category".equalsIgnoreCase(parameter) || "level".equalsIgnoreCase(parameter)) {
+				if ("created".equalsIgnoreCase(parameter)) {
+					// comparison operator
+					query2 = mongoNumeriComparison(field, expression);				
+				} else if ("category".equalsIgnoreCase(parameter) || "level".equalsIgnoreCase(parameter)) {
 					// convert the expression to upper case and compare for exact matching					
 					query2 = (query2 != null ? query2 : new BasicDBObject()).append(field, expression.startsWith("!") 
 							? new BasicDBObject("$ne", expression.substring(1).toUpperCase()) : expression.toUpperCase());
@@ -225,7 +239,7 @@ public enum PostDAO implements BaseDAO<String, Post> {
 			} else {
 				throw new InvalidFilterParseException(parameter);
 			}
-		}
+		}		
 		return query2;
 	}
 

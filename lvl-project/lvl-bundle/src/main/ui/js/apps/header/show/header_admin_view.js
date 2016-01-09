@@ -38,8 +38,13 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_admin', 'tpl!apps/header/show/
 							return oldhtml.replace(/Noname/, data.firstname);
 						});
 					}
-					if (data.roles && $.isArray(data.roles) && _.contains(data.roles, 'admin')) {
-						$('#sectionAdmin').removeClass('hidden');
+					if (data.roles && $.isArray(data.roles)) {
+						if (_.contains(data.roles, 'admin')) {
+							$('#sectionCuration').removeClass('hidden');
+						}
+						if (_.contains(data.roles, 'curator')) {
+							$('#sectionCuration').removeClass('hidden');
+						}						
 					}
 				});
 				return {

@@ -164,7 +164,7 @@ public class SharedObjectCollectionTest extends LeishvlTestCase {
 
 			// create a large dataset to test complex operations
 			final Calendar calendar = Calendar.getInstance();
-			calendar.setTime(new Date());			
+			calendar.setTime(new Date());
 			final List<String> ids = newArrayList();
 			final int numItems = 11;
 			for (int i = 0; i < numItems; i++) {

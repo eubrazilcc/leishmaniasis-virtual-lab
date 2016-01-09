@@ -7,7 +7,8 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 		'use strict';
 		var Router = Backbone.Router.extend({
 			routes : {
-				'social' : 'showSocial'
+				'social' : 'showSocial',
+				'social/:section' : 'showSocial'
 			},
 			before : function() {
 				if (!Lvl.config.isAuthenticated()) {
@@ -24,11 +25,24 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				});
 				return true;
 			},
-			showSocial : function() {
-				Lvl.execute('show:social');
+			showSocial : function(section) {
+				section = (section || 'posts').toLowerCase();
+				if (section === 'posts') {
+					Lvl.navigate('social/' + section, {
+						trigger : false,
+						replace : true
+					});
+					Lvl.execute('social:set:active', section);
+				} else if (section === 'filters') {
+					Lvl.execute('social:set:active', section);
+				} else {
+					Lvl.navigate('not-found', {
+						trigger : true,
+						replace : true
+					});
+				}
 			}
 		});
-
 		Lvl.addInitializer(function() {
 			var router = new Router();
 		});

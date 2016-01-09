@@ -28,6 +28,7 @@ import static eu.eubrazilcc.lvl.core.util.QueryUtils.parseQuery;
 import static eu.eubrazilcc.lvl.core.util.SortUtils.parseSorting;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
+import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.NUMBER_PATTERN;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.PostDAO.POST_DAO;
@@ -69,6 +70,7 @@ import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.community.Post;
 import eu.eubrazilcc.lvl.core.conf.ConfigurationManager;
 import eu.eubrazilcc.lvl.service.Posts;
+import eu.eubrazilcc.lvl.service.TotalCount;
 import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 
 /**
@@ -91,6 +93,7 @@ public class PostResource {
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		parseParam(namespace);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("posts:*:*:*:view");
 		final Posts paginable = Posts.start()
 				.page(page)
@@ -117,6 +120,7 @@ public class PostResource {
 	@Produces(APPLICATION_JSON)
 	public Post getPost(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context UriInfo uriInfo,
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		parseParam(namespace);
 		final String id2 = parseParam(id);
 		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("posts:*:*:*:view");
 		// get from database
@@ -125,23 +129,50 @@ public class PostResource {
 			throw new WebApplicationException("Element not found", NOT_FOUND);
 		}
 		return post;
+	}	
+
+	@GET
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{timestamp: " + NUMBER_PATTERN + "}/after") // maintains coherence with create/update operations of this API
+	@Produces(APPLICATION_JSON)
+	public TotalCount getCountAfter(final @PathParam("namespace") String namespace, final @PathParam("timestamp") long timestamp,
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		parseParam(namespace);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("posts:*:*:*:view");
+		// get from database
+		final long count = POST_DAO.countAfter(timestamp);
+		return new TotalCount(count);
+	}
+
+	@GET
+	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}/{timestamp: " + NUMBER_PATTERN + "}/before") // maintains coherence with create/update operations of this API
+	@Produces(APPLICATION_JSON)
+	public TotalCount getCountBefore(final @PathParam("namespace") String namespace, final @PathParam("timestamp") long timestamp,
+			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
+		parseParam(namespace);
+		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("posts:*:*:*:view");
+		// get from database
+		final long count = POST_DAO.countBefore(timestamp);
+		return new TotalCount(count);
 	}
 
 	@POST
 	@Path("{namespace: " + URL_FRAGMENT_PATTERN + "}")
 	@Consumes(APPLICATION_JSON)
-	public Response createPost(final @PathParam("namespace") String namespace, final Post post, final @Context UriInfo uriInfo,
+	public Response createPost(final @PathParam("namespace") String namespace, final Post post, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("posts:*:" + ns2permission(namespace2) + ":*:create");
-		if (post == null || isBlank(trimToNull(post.getAuthor())) || post.getCategory() == null || post.getLevel() == null || isBlank(trimToNull(post.getBody()))) {
+		final String ownerId = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("posts:*:" + ns2permission(namespace2) + ":*:create")
+				.getPrincipal();
+		if (post == null || post.getCategory() == null || post.getLevel() == null || isBlank(trimToNull(post.getBody()))) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
 		// update the required fields
 		post.setId(compactRandomUUID());
 		post.setCreated(new Date());
+		post.setAuthor(ownerId);
 		// save to the database
-		POST_DAO.insert(post);		
+		POST_DAO.insert(post);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(post.getId());		
 		return created(uriBuilder.build()).build();
 	}
@@ -161,9 +192,13 @@ public class PostResource {
 		final Post current = POST_DAO.find(id2);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", NOT_FOUND);
-		}
+		}		
+		// ensure that unmodifiable fields are kept
+		update.setId(current.getId());
+		update.setCreated(current.getCreated());
+		update.setAuthor(current.getAuthor());
 		// update
-		POST_DAO.update(update);			
+		POST_DAO.update(update);
 	}
 
 	@DELETE
@@ -176,7 +211,7 @@ public class PostResource {
 		final Post current = POST_DAO.find(id2);
 		if (current == null) {
 			throw new WebApplicationException("Element not found", NOT_FOUND);
-		}
+		}		
 		// delete
 		POST_DAO.delete(id2);
 	}

@@ -79,7 +79,7 @@ define([ 'app', 'tpl!apps/collection/pending_shares_viewer/tpls/collection_pendi
 							form.bootstrapValidator('resetForm', true);
 							form.bootstrapValidator('disableSubmitButtons', true);
 						});
-					});					
+					});
 				}
 			},
 			displaySpinner : function() {

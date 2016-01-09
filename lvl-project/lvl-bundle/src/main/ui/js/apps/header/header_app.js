@@ -42,6 +42,10 @@ define([ 'app', 'entities/navigation' ], function(Lvl) {
 					require([ 'apps/header/show/header_admin_ctrl' ], function(AdminHeaderCtrl) {
 						HeaderApp.currentHeader = AdminHeaderCtrl.showHeader();
 					});
+				} else if (id === 'curation') {
+					require([ 'apps/header/show/header_curation_ctrl' ], function(CurationHeaderCtrl) {
+						HeaderApp.currentHeader = CurationHeaderCtrl.showHeader();
+					});
 				} else {
 					Lvl.headerRegion.reset();
 					HeaderApp.currentHeader = null;

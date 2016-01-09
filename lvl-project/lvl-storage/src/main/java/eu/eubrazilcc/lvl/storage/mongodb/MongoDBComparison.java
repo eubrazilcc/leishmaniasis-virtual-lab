@@ -48,7 +48,7 @@ public final class MongoDBComparison {
 		final Matcher matcher = LOGICAL_PATTERN.matcher(expression.trim());
 		checkState(matcher.find() && matcher.groupCount() == 3, "Unsupported expression: " + expression);
 		String operator = null;
-		Integer quantity = null;
+		Long quantity = null;
 		for (int i = 1; i < 4; i++) {
 			switch (i) {
 			case 0: // skip first position where the input is stored
@@ -59,7 +59,7 @@ public final class MongoDBComparison {
 			case 2: // skip empty spaces				
 				break;
 			case 3: // grab quantity
-				quantity = Integer.valueOf(matcher.group(i));
+				quantity = Long.valueOf(matcher.group(i));
 				break;
 			default:
 				throw new IllegalStateException("Unsupported expression: " + expression);

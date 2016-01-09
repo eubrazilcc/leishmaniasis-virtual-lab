@@ -227,7 +227,7 @@ public class Post implements Linkable<Post> {
 		public Builder level(final PostLevel level) {
 			instance.setLevel(requireNonNull(level, "Uninitialized or invalid level"));
 			return this;
-		}
+		}		
 
 		public Builder body(final String body) {
 			String body2 = null;
