@@ -18,13 +18,13 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 				Lvl.vent.on('search:form:submitted', this.searchUnavailable);
 			},
 			events : {
-				'click a[data-seq_id]' : 'showSequenceRecord'
+				'click a[data-item_id]' : 'showItemRecord'
 			},
-			showSequenceRecord : function(e) {
+			showItemRecord : function(e) {
 				e.preventDefault();
 				var self = this;
 				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-seq_id') : target.attr('data-seq_id');
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-item_id') : target.attr('data-item_id');
 				this.trigger('sequences:view:sequence', itemId);				
 				$('#map-popup').popover('destroy');				
 			},
@@ -63,15 +63,84 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 			onDestroy : function() {
 				// unsubscribe from events
 				$(window).off('resize', this.resize);
+				$('#opts_map_types_heatmap')[0].removeEventListener();
+				$('#opts_map_types_vectormap')[0].removeEventListener();
+				$('#opts_layer_sandfly_seqs')[0].removeEventListener();
+				$('#opts_layer_leishmania_seqs')[0].removeEventListener();
+				$('#opts_layer_sandfly_samples')[0].removeEventListener();
+				$('#opts_layer_leishmania_samples')[0].removeEventListener();
 			},
 			loadMap : function() {
 				require([ 'openlayers' ], function(ol) {
-					var createTextStyle = function(text) {
+					
+					var gradient = [ '#00f', '#0ff', '#0f0', '#ff0', '#f00' ]; // [ '#862197', '#0d87e9', '#439a46', '#e08600', '#e51c23' ]
+					
+					var textColor = function(color) {
+						var code;
+						switch (color) {
+						case 'ocean':
+							code = '#1a237e';
+							break;
+						case 'green':
+							code = '#29512c';
+							break;
+						case 'yellow':
+							code = '#ff6f00';
+							break;
+						case 'red':
+						default:
+							code = '#C0392B';
+							break;
+						}
+						return code;
+					}
+					
+					var fillColor = function(color) {
+						var code;
+						switch (color) {
+						case 'ocean':
+							code = 'rgba(26, 35, 126, 0.5)';
+							break;
+						case 'green':
+							code = 'rgba(41, 81, 44, 0.5)';
+							break;
+						case 'yellow':
+							code = 'rgba(255, 111, 0, 0.5)';
+							break;
+						case 'red':
+						default:
+							code = 'rgba(192, 57, 43, 0.5)';
+							break;
+						}
+						return code;
+					}
+					
+					var strokeColor = function(color) {
+						var code;
+						switch (color) {
+						case 'ocean':
+							code = '#2a37cb';
+							break;
+						case 'green':
+							code = '#468b4b';
+							break;
+						case 'yellow':
+							code = '#ffab00';
+							break;
+						case 'red':
+						default:
+							code = '#E74C3C';
+							break;
+						}
+						return code;
+					}
+					
+					var createTextStyle = function(text, color) {
 						return new ol.style.Text({
 							font : '12px Lato, Helvetica, Arial, sans-serif',
 							text : text,
 							fill : new ol.style.Fill({
-								color : '#C0392B'
+								color : textColor(color)
 							}),
 							stroke : new ol.style.Stroke({
 								color : '#fff',
@@ -80,44 +149,32 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 						});
 					};
 
-					var createFeatureStyle = function(type, text, resolution) {
+					var createFeatureStyle = function(type, text, resolution, color) {
 						var style;
 						if (type === 'Point') {
 							style = [ new ol.style.Style({
 								image : new ol.style.Circle({
 									fill : new ol.style.Fill({
-										color : 'rgba(192,57,43,0.5)'
+										color : fillColor(color)
 									}),
 									radius : resolution < 5000 ? 7 : 5,
 									stroke : new ol.style.Stroke({
-										color : '#E74C3C',
+										color : strokeColor(color),
 										width : 1
 									})
 								}),
-								text : createTextStyle(text)
+								text : createTextStyle(text, color)
 							}) ];
 						}
 						return style;
 					}
 
 					var styleCache = {};
+					
+					// layers for the heat map
 
-					var vectorLayer = new ol.layer.Vector({
-						source : new ol.source.Vector({
-							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&' + Lvl.config.authorizationQuery(),
-							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
-						}),						
-						style : function(feature, resolution) {
-							var text = resolution < 5000 ? feature.get('count') : '';
-							if (!styleCache[text]) {
-								styleCache[text] = createFeatureStyle(feature.getGeometry().getType(), text, resolution);
-							}
-							return styleCache[text];
-						},
-						visible : false
-					});
-
-					var heatmapLayer = new ol.layer.Heatmap({
+					var sandfliesSeqHeatmap = new ol.layer.Heatmap({
+						gradient : gradient,
 						source : new ol.source.Vector({
 							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&' + Lvl.config.authorizationQuery(),
 							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
@@ -125,10 +182,121 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 						radius : 5
 					});
 
-					heatmapLayer.getSource().on('addfeature', function(event) {
+					sandfliesSeqHeatmap.getSource().on('addfeature', function(event) {
 						var count = event.feature.get('count');
 						var magnitude = parseFloat(count);
 						event.feature.set('weight', magnitude);
+					});
+					
+					var leishmaniaSeqHeatmap = new ol.layer.Heatmap({
+						gradient : gradient,
+						source : new ol.source.Vector({
+							url : Lvl.config.get('service.url') + '/sequences/leishmania/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&' + Lvl.config.authorizationQuery(),
+							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
+						}),						
+						radius : 5
+					});
+
+					leishmaniaSeqHeatmap.getSource().on('addfeature', function(event) {
+						var count = event.feature.get('count');
+						var magnitude = parseFloat(count);
+						event.feature.set('weight', magnitude);
+					});
+					
+					var sandfliesSamplesHeatmap = new ol.layer.Heatmap({
+						gradient : gradient,
+						source : new ol.source.Vector({
+							url : Lvl.config.get('service.url') + '/samples/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&' + Lvl.config.authorizationQuery(),
+							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
+						}),						
+						radius : 5
+					});
+
+					sandfliesSamplesHeatmap.getSource().on('addfeature', function(event) {
+						var count = event.feature.get('count');
+						var magnitude = parseFloat(count);
+						event.feature.set('weight', magnitude);
+					});
+					
+					var leishmaniaSamplesHeatmap = new ol.layer.Heatmap({
+						gradient : gradient,
+						source : new ol.source.Vector({
+							url : Lvl.config.get('service.url') + '/samples/leishmania/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=true&' + Lvl.config.authorizationQuery(),
+							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
+						}),						
+						radius : 5
+					});
+
+					leishmaniaSamplesHeatmap.getSource().on('addfeature', function(event) {
+						var count = event.feature.get('count');
+						var magnitude = parseFloat(count);
+						event.feature.set('weight', magnitude);
+					});
+					
+					// layers for the vector map
+									
+					var sandfliesSeqVector = new ol.layer.Vector({
+						source : new ol.source.Vector({
+							url : Lvl.config.get('service.url') + '/sequences/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&' + Lvl.config.authorizationQuery(),
+							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
+						}),
+						style : function(feature, resolution) {
+							var color = 'red';
+							var text = resolution < 5000 ? feature.get('count') : '';
+							if (!styleCache[text + color]) {
+								styleCache[text + color] = createFeatureStyle(feature.getGeometry().getType(), text, resolution, color);
+							}
+							return styleCache[text + color];
+						},
+						visible : false
+					});
+					
+					var leishmaniaSeqVector = new ol.layer.Vector({
+						source : new ol.source.Vector({
+							url : Lvl.config.get('service.url') + '/sequences/leishmania/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&' + Lvl.config.authorizationQuery(),
+							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
+						}),						
+						style : function(feature, resolution) {
+							var color = 'ocean';
+							var text = resolution < 5000 ? feature.get('count') : '';
+							if (!styleCache[text + color]) {
+								styleCache[text + color] = createFeatureStyle(feature.getGeometry().getType(), text, resolution, color);
+							}
+							return styleCache[text + color];
+						},
+						visible : false
+					});
+					
+					var sandfliesSamplesVector = new ol.layer.Vector({
+						source : new ol.source.Vector({
+							url : Lvl.config.get('service.url') + '/samples/sandflies/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&' + Lvl.config.authorizationQuery(),
+							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
+						}),						
+						style : function(feature, resolution) {
+							var color = 'green';
+							var text = resolution < 5000 ? feature.get('count') : '';
+							if (!styleCache[text + color]) {
+								styleCache[text + color] = createFeatureStyle(feature.getGeometry().getType(), text, resolution, color);
+							}
+							return styleCache[text + color];
+						},
+						visible : false
+					});
+					
+					var leishmaniaSamplesVector = new ol.layer.Vector({
+						source : new ol.source.Vector({
+							url : Lvl.config.get('service.url') + '/samples/leishmania/nearby/0.0/0.0?maxDistance=6500000.0&group=true&heatmap=false&' + Lvl.config.authorizationQuery(),
+							format: new ol.format.GeoJSON({ featureProjection : 'EPSG:3857'})
+						}),						
+						style : function(feature, resolution) {
+							var color = 'yellow';
+							var text = resolution < 5000 ? feature.get('count') : '';
+							if (!styleCache[text + color]) {
+								styleCache[text + color] = createFeatureStyle(feature.getGeometry().getType(), text, resolution, color);
+							}
+							return styleCache[text + color];
+						},
+						visible : false
 					});
 
 					var osmRaster = new ol.layer.Tile({
@@ -190,7 +358,9 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 						}), new RestoreMapControl() ]),
 						interactions : ol.interaction.defaults().extend([ new ol.interaction.DragRotateAndZoom() ]),
 						layers : [ new ol.layer.Group({
-							layers : [ osmRaster, vectorLayer, tonerRaster, heatmapLayer ]
+							layers : [ osmRaster, tonerRaster, 
+							           sandfliesSeqVector, leishmaniaSeqVector, sandfliesSamplesVector, leishmaniaSamplesVector,
+							           sandfliesSeqHeatmap, leishmaniaSeqHeatmap, sandfliesSamplesHeatmap, leishmaniaSamplesHeatmap ]							
 						}) ],
 						// fastest renderer
 						renderer : 'canvas',
@@ -202,47 +372,80 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 						}),
 						ol3Logo : false
 					});
-					var radio1 = $('#opts_map_types_heatmap')[0];
-					radio1.addEventListener('change', function() {
-						var checked = this.checked;						
-						if (checked !== tonerRaster.getVisible()) {
+					var radios = [ $('#opts_map_types_heatmap')[0], $('#opts_map_types_vectormap')[0] ];
+					var checkboxes = [ $('#opts_layer_sandfly_seqs')[0], $('#opts_layer_leishmania_seqs')[0],
+					                   $('#opts_layer_sandfly_samples')[0], $('#opts_layer_leishmania_samples')[0] ];
+					radios[0].addEventListener('change', function() {
+						var checked = this.checked;
+						if (checked !== tonerRaster.getVisible()) {							
 							tonerRaster.setVisible(checked);
-							heatmapLayer.setVisible(checked);
+							sandfliesSeqHeatmap.setVisible(checkboxes[0].checked && checked);
+							leishmaniaSeqHeatmap.setVisible(checkboxes[1].checked && checked);
+							sandfliesSamplesHeatmap.setVisible(checkboxes[2].checked && checked);
+							leishmaniaSamplesHeatmap.setVisible(checkboxes[3].checked && checked);
 							osmRaster.setVisible(!checked);
-							vectorLayer.setVisible(!checked);
+							sandfliesSeqVector.setVisible(checkboxes[0].checked && !checked);
+							leishmaniaSeqVector.setVisible(checkboxes[1].checked && !checked);
+							sandfliesSamplesVector.setVisible(checkboxes[2].checked && !checked);
+							leishmaniaSamplesVector.setVisible(checkboxes[3].checked && !checked);
 						}
 					});
 					tonerRaster.on('change:visible', function() {
 						var visible = this.getVisible();
-						if (visible !== radio1.checked) {
-							radio1.checked = visible;
-							radio2.checked = !visible;
+						if (visible !== radios[0].checked) {
+							radios[0].checked = visible;
+							radios[1].checked = !visible;
 						}
 					});
-					var radio2 = $('#opts_map_types_vectormap')[0];
-					radio2.addEventListener('change', function() {
+					radios[1].addEventListener('change', function() {
 						var checked = this.checked;
-						if (checked !== osmRaster.getVisible()) {
+						if (checked !== osmRaster.getVisible()) {							
 							osmRaster.setVisible(checked);
-							vectorLayer.setVisible(checked);
+							sandfliesSeqVector.setVisible(checkboxes[0].checked && checked);
+							leishmaniaSeqVector.setVisible(checkboxes[1].checked && checked);
+							sandfliesSamplesVector.setVisible(checkboxes[2].checked && checked);
+							leishmaniaSamplesVector.setVisible(checkboxes[3].checked && checked);
 							tonerRaster.setVisible(!checked);
-							heatmapLayer.setVisible(!checked);
+							sandfliesSeqHeatmap.setVisible(checkboxes[0].checked && !checked);							
+							leishmaniaSeqHeatmap.setVisible(checkboxes[1].checked && !checked);
+							sandfliesSamplesHeatmap.setVisible(checkboxes[2].checked && !checked);
+							leishmaniaSamplesHeatmap.setVisible(checkboxes[3].checked && !checked);
 						}
 					});
 					osmRaster.on('change:visible', function() {
 						var visible = this.getVisible();
-						if (visible !== radio2.checked) {
-							radio1.checked = !visible;
-							radio2.checked = visible;
+						if (visible !== radios[1].checked) {
+							radios[0].checked = !visible;
+							radios[1].checked = visible;
 						}
 					});
-
+					checkboxes[0].addEventListener('change', function() {
+						var checked = this.checked;
+						if (osmRaster.getVisible()) sandfliesSeqVector.setVisible(checked);
+						else sandfliesSeqHeatmap.setVisible(checked);
+					});
+					checkboxes[1].addEventListener('change', function() {
+						var checked = this.checked;
+						if (osmRaster.getVisible()) leishmaniaSeqVector.setVisible(checked);
+						else leishmaniaSeqHeatmap.setVisible(checked);						
+					});
+					checkboxes[2].addEventListener('change', function() {
+						var checked = this.checked;
+						if (osmRaster.getVisible()) sandfliesSamplesVector.setVisible(checked);
+						else sandfliesSamplesHeatmap.setVisible(checked);
+					});
+					checkboxes[3].addEventListener('change', function() {
+						var checked = this.checked;
+						if (osmRaster.getVisible()) leishmaniaSamplesVector.setVisible(checked);
+						else leishmaniaSamplesHeatmap.setVisible(checked);
+					});
+					
 					// add popup
-					var createSeqLinks = function(name) {
+					var createItemLinks = function(name) {
 						var text = '';
 						var seqs = name.split(',');
 						for (i = 0; i < seqs.length; i++) {
-							text += '<a href="#" data-seq_id="' + seqs[i] + '">' + seqs[i] + '</a> ';
+							text += '<a href="#" data-item_id="' + seqs[i] + '">' + seqs[i] + '</a> ';
 						}
 						return text;
 					}
@@ -268,7 +471,7 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 								'placement' : 'top',
 								'animation' : false,
 								'html' : true,
-								'content' : createSeqLinks(feature.get('name'))
+								'content' : createItemLinks(feature.get('name'))
 							});
 							$(popupElem).popover('show');
 						}

@@ -31,7 +31,7 @@ requirejs.config({
 		'backgrid-select-all' : 'vendor/backgrid-select-all.min', // 0.3.5
 		'backgrid-filter' : 'vendor/backgrid-filter.min', // 0.3.5
 		/* OpenLayers */
-		'openlayers' : 'vendor/ol.min', // 3.11.1
+		'openlayers' : 'vendor/ol.min', // 3.11.1 
 		/* Filesize.js */
 		'filesize' : 'vendor/filesize.min', // 3.1.2
 		/* FileSaver.js */
