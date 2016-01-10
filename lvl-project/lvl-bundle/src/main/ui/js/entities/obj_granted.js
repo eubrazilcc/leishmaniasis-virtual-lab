@@ -74,11 +74,11 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 				default:
 					collectionId = 'sandflyPending';
 					break;
-				}				
+				}
 				this.oauth2_token = options.oauth2_token,
 				this.collectionId = collectionId,
 				this.itemId = options.itemId,
-				this.queryParams.q = 'collection:' + collectionId + ' itemId:' + options.itemId
+				this.queryParams.q = 'collection:' + collectionId + ' itemId:' + options.itemId;
 			},
 			state : {
 				pageSize : 1000,

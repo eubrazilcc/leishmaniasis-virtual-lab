@@ -1,0 +1,55 @@
+<div class="modal-dialog modal-lg">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">
+				<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+			</button>
+			<h4 class="modal-title" id="myModalLabel">Resolve submission</h4>
+		</div>
+		<div class="modal-body">			
+			<div class="row">
+				<div class="col-xs-12">
+					<h5>Submission resolution:</h5>
+					<form class="form-horizontal" id="lvlSubmissionResolutionForm" novalidate="novalidate" data-pristine="true">						
+						<fieldset>
+	            			<div class="form-group">
+	            				<label for="selectResolution" class="col-lg-2 control-label">Select resolution:</label>
+	            				<div class="col-lg-10">
+	            					<select class="form-control" name="selectResolution" id="selectResolution">
+	            						<option value="" selected>Choose a resolution</option>
+										<option value="ACCEPTED">Accept the submission</option>
+										<option value="INVALID">Reject invalid submission</option>
+										<option value="DUPLICATE">Submission duplicates a previous record</option>										
+									</select>
+								</div>
+	            			</div>
+	            			<div class="form-group">
+	            				<label for="inputCollection" class="col-lg-2 control-label">Assigned collection:</label>
+	            				<div class="col-lg-10">
+	            					<input type="text" class="form-control" id="inputCollection" name="inputCollection" placeholder="Collection where the submission was assigned">
+	            				</div>
+	            			</div>
+	            			<div class="form-group">
+	            				<label for="inputItemId" class="col-lg-2 control-label">Assigned Item Id:</label>
+	            				<div class="col-lg-10">
+	            					<input type="text" class="form-control" id="inputItemId" name="inputItemId" placeholder="Enter Id assigned to the item">
+	            				</div>
+	            			</div>
+	            		</fieldset>
+	            		<fieldset>
+	            			<div class="form-group">
+	            				<div class="col-lg-10 col-lg-offset-2">						
+	            					<button type="submit" class="btn btn-primary" id="lvlSubmissionResolutionBtn" disabled="disabled">Resolve</button>
+	            					<span id="helpBlock" class="help-block">Check that all required fields are completed before submitting the data.</span>
+	            				</div>
+	            			</div>
+	            		</fieldset>        		
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		</div>
+	</div>
+</div>

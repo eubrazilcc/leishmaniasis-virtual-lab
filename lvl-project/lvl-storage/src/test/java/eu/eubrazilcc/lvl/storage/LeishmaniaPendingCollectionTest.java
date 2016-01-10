@@ -55,6 +55,8 @@ import eu.eubrazilcc.lvl.core.LeishmaniaPending;
 import eu.eubrazilcc.lvl.core.SamplePreparation;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.Sorting.Order;
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionResolution;
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionStatus;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.test.LeishvlTestCase;
@@ -184,6 +186,11 @@ public class LeishmaniaPendingCollectionTest extends LeishvlTestCase {
 
 			// update
 			pendingSeq.getSample().setModified(DWC_XML_FACTORY.createSimpleLiteral().withContent("2015-11-30T11:42:11"));
+			pendingSeq.setAssignedTo("curator@lvl");
+			pendingSeq.setResolution(SubmissionResolution.ACCEPTED);
+			pendingSeq.setStatus(SubmissionStatus.CLOSED);
+			pendingSeq.setAllocatedCollection("leishmaniaPending");
+			pendingSeq.setAllocatedId("123");
 			LEISHMANIA_PENDING_DAO.update(pendingSeq);
 
 			// find after update
@@ -198,6 +205,7 @@ public class LeishmaniaPendingCollectionTest extends LeishvlTestCase {
 			assertThat("number of pendingSeq stored in the database coincides with expected", numRecords, equalTo(0l));
 
 			// create a large dataset to test complex operations
+			final Random rand = new Random();
 			final List<String> ids = newArrayList();
 			final int numItems = 11;
 			for (int i = 0; i < numItems; i++) {
@@ -214,6 +222,7 @@ public class LeishmaniaPendingCollectionTest extends LeishvlTestCase {
 						.sample(sample3)
 						.sequence("CCCC")
 						.build();
+				if (i%2 == 0) pendingSeq3.setStatus(SubmissionStatus.values()[rand.nextInt(SubmissionStatus.values().length)]);
 				ids.add(pendingSeq3.getId());
 				LEISHMANIA_PENDING_DAO.insert(pendingSeq3);
 			}
@@ -230,6 +239,14 @@ public class LeishmaniaPendingCollectionTest extends LeishvlTestCase {
 				}
 				start += pendingSeqs.size();
 			} while (!pendingSeqs.isEmpty());
+
+			// find submitted records only
+			pendingSeqs = LEISHMANIA_PENDING_DAO.list(0, Integer.MAX_VALUE, null, null, null, null, "username", true);
+			assertThat("submitted records only pendingRef is not null", pendingSeqs, notNullValue());
+			assertThat("number of submitted records only pendingRef coincides with expected", pendingSeqs.size(), equalTo(6));
+			for (final LeishmaniaPending pr : pendingSeqs) {
+				assertThat("submitted records contains a valid status", pr.getStatus(), notNullValue());
+			}
 
 			// filter: full-text search
 			ImmutableMap<String, String> filter = of("text", "an example");

@@ -31,6 +31,76 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 							return this;
 						}
 					})
+				},				
+				{
+					name : 'status',
+					label : 'Status',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);							
+							if (formattedValue && typeof formattedValue === 'string') {
+								var status = '';
+								switch (formattedValue.trim().toUpperCase()) {								
+								case 'NEW':
+									status = '<i class="fa fa-file-o fa-fw"></i> ' + formattedValue;
+									break;
+								case 'ASSIGNED':
+									status = '<i class="fa fa-user fa-fw"></i> ' + formattedValue;
+									break;
+								case 'ACCEPTED':
+									status = '<i class="fa fa-check fa-fw"></i> ' + formattedValue;
+									break;
+								case 'CLOSED':
+									status = '<i class="fa fa-archive fa-fw"></i> ' + formattedValue;
+									break;
+								case 'REOPENED':
+									status = 'fa-file-zip-o';
+									break;
+								default:
+									status = 'Unsubmitted';
+									break;
+								}
+								this.$el.append(status);
+							} else this.$el.append('<span class="label label-info">Unsubmitted</span>');
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},
+				{
+					name : 'resolution',
+					label : 'Resolution',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'string') {
+								var resolution = '';
+								switch (formattedValue.trim().toUpperCase()) {
+								case 'ACCEPTED':
+									resolution = '<span class="label label-success">' + formattedValue + '</span>';
+									break;
+								case 'INVALID':
+									resolution = '<span class="label label-danger">' + formattedValue + '</span>';
+									break;
+								case 'DUPLICATE':
+									resolution = '<span class="label label-warning">' + formattedValue + '</span>';
+									break;
+								default:
+									resolution = '';
+									break;
+								}
+								this.$el.append(resolution);
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
 				},
 				{
 					name : 'sample',
@@ -114,13 +184,33 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
 								this.$el.append('<a href="#" data-pending-share-seq_id="' + formattedValue
-										+ '" title="Share" class="text-muted"><i class="fa fa-share fa-fw"></i></a>');
+										+ '" title="Share" class="text-muted"><i class="fa fa-share-alt fa-fw"></i></a>');
 							}
 							this.delegateEvents();
 							return this;
 						}
 					})
-				},{
+				},
+				{
+					name : 'id',
+					label : '',
+					editable : false,
+					sortable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue === 'string') {
+								this.$el.append('<a href="#" data-pending-submit-seq_id="' + formattedValue
+										+ '" title="Submit" class="text-muted"><i class="fa fa-paper-plane fa-fw"></i></a>');
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},
+				{
 					name : 'id',
 					label : '',
 					editable : false,
@@ -244,6 +334,7 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 				'dragend div.lvl-savable' : 'handleDragEnd',
 				'click a[data-pending-seq_id]' : 'showPendingSequenceRecord',
 				'click a[data-pending-share-seq_id]' : 'sharePendingSequenceRecord',
+				'click a[data-pending-submit-seq_id]' : 'submitPendingSequenceRecord',
 				'click a[data-pending-remove-seq_id]' : 'removePendingSequenceRecord'
 			},			
 			deselectAll : function(e) {
@@ -332,6 +423,49 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 				var target = $(e.target);
 				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pending-share-seq_id') : target.attr('data-pending-share-seq_id');
 				this.trigger('pending:share:record', self.collection.data_source, itemId);
+			},
+			submitPendingSequenceRecord : function(e) {
+				e.preventDefault();
+				var self = this;
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pending-submit-seq_id') : target.attr('data-pending-submit-seq_id');				
+				var item = self.collection.get(itemId);				
+				if (!item.get('status') || item.get('status') === 'CLOSED') {
+					require([ 'common/confirm' ], function(confirmDialog) {
+						confirmDialog('Confirm sumission', 'This action will start a evaluation process in order to include the selected record in the public collection. Continue?', function() {
+							item.set({ 'status' : !item.get('status') ? 'NEW' : 'REOPENED' });
+							pace.restart();
+							var jqxhr = $.ajax({
+								url : Lvl.config.get('service.url') + '/pending/' + self.data_source + '/~/' + item.get('id'),
+								type: 'PUT',
+								crossDomain : true,
+								contentType : 'application/json',
+								headers : Lvl.config.authorizationHeader(),							
+								data : JSON.stringify(item)
+							}).always(function() {
+								pace.stop();
+							}).done(function(data, textStatus, request) {							
+								if (200 === request.status || 204 === request.status) {
+									// self.collection.set([ item ]);
+								} else {
+									require([ 'common/alert' ], function(alertDialog) {
+										alertDialog('Error', 'The server response was not OK.');
+									});
+								}
+							}).fail(function(jqXHR, textStatus, errorThrown) {
+								require([ 'common/alert' ], function(alertDialog) {
+									alertDialog('Error', 'The record cannot be submitted.');
+								});
+							});
+						}, {
+							btn_text : 'Submit'
+						});
+					});
+				} else {
+					require([ 'common/alert' ], function(alertDialog) {
+						alertDialog('Error', 'The record cannot be resubmitted until is closed.');
+					});
+				}				
 			},
 			removePendingSequenceRecord : function(e) {
 				e.preventDefault();

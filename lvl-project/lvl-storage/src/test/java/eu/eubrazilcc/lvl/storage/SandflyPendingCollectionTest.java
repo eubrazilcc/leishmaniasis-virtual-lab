@@ -189,7 +189,7 @@ public class SandflyPendingCollectionTest extends LeishvlTestCase {
 			pendingSeq.setAssignedTo("curator@lvl");
 			pendingSeq.setResolution(SubmissionResolution.ACCEPTED);
 			pendingSeq.setStatus(SubmissionStatus.CLOSED);
-			pendingSeq.setAllocatedCollection("sandfliesSamples");
+			pendingSeq.setAllocatedCollection("sandflyPending");
 			pendingSeq.setAllocatedId("123");
 			SANDFLY_PENDING_DAO.update(pendingSeq);
 
@@ -205,6 +205,7 @@ public class SandflyPendingCollectionTest extends LeishvlTestCase {
 			assertThat("number of pendingSeq stored in the database coincides with expected", numRecords, equalTo(0l));
 
 			// create a large dataset to test complex operations
+			final Random rand = new Random();
 			final List<String> ids = newArrayList();
 			final int numItems = 11;
 			for (int i = 0; i < numItems; i++) {
@@ -221,6 +222,7 @@ public class SandflyPendingCollectionTest extends LeishvlTestCase {
 						.sample(sample3)
 						.sequence("CCCC")
 						.build();
+				if (i%2 == 0) pendingSeq3.setStatus(SubmissionStatus.values()[rand.nextInt(SubmissionStatus.values().length)]);
 				ids.add(pendingSeq3.getId());
 				SANDFLY_PENDING_DAO.insert(pendingSeq3);
 			}
@@ -237,6 +239,14 @@ public class SandflyPendingCollectionTest extends LeishvlTestCase {
 				}
 				start += pendingSeqs.size();
 			} while (!pendingSeqs.isEmpty());
+
+			// find submitted records only
+			pendingSeqs = SANDFLY_PENDING_DAO.list(0, Integer.MAX_VALUE, null, null, null, null, "username", true);
+			assertThat("submitted records only pendingRef is not null", pendingSeqs, notNullValue());
+			assertThat("number of submitted records only pendingRef coincides with expected", pendingSeqs.size(), equalTo(6));
+			for (final SandflyPending pr : pendingSeqs) {
+				assertThat("submitted records contains a valid status", pr.getStatus(), notNullValue());
+			}
 
 			// filter: full-text search
 			ImmutableMap<String, String> filter = of("text", "an example");

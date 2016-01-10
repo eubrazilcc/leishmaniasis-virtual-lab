@@ -18,9 +18,9 @@ define([ 'app' ], function(Lvl) {
 		};
 
 		/* Commands and events */
-		Lvl.commands.setHandler('curation:set:active', function(section) {
+		Lvl.commands.setHandler('curation:set:active', function(section, subsection) {
 			require([ 'apps/curation/layout/curation_layout_ctrl' ], function(LayoutController) {
-				CurationApp.currentSection = LayoutController.showLayout(section);
+				CurationApp.currentSection = LayoutController.showLayout(section, subsection);
 			});
 		});
 	});

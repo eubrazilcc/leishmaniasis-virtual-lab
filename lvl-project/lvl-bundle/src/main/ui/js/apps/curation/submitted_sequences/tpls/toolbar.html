@@ -1,0 +1,11 @@
+<div class="btn-group-vertical" role="group">
+	<a class="btn btn-primary" id="lvl-collapse-toolbar-btn"><span class="hidden-xs">Close </span><i class="fa fa-close fa-fw"></i></a>
+	<a class="btn btn-default" id="uncheck-btn"><i class="fa fa-square-o fa-fw"></i><span class="hidden-xs"> Deselect</span></a>          
+    <a class="btn btn-default dropdown-toggle" id="switch-btn" data-toggle="dropdown">
+    	<span class="visible-xs-inline"><i class="fa fa-bug fa-fw"></i></span><span class="hidden-xs">Collection</span> <i class="fa fa-caret-down fa-fw"></i>
+	</a>
+	<ul class="dropdown-menu dropdown-menu-right" role="menu">
+		<li<% if (isSanflies) { %> class="disabled" <% } %>><a href="#curation/submitted_sequences/sandflies"><i class="fa fa-check fa-fw"></i> Sandflies</a></li>
+		<li<% if (isLeishmania) { %> class="disabled" <% } %>><a href="#curation/submitted_sequences/leishmania"><i class="fa fa-check fa-fw"></i> <i>Leishmania</i></a></li>
+	</ul>
+</div>

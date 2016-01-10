@@ -1,12 +1,12 @@
 /**
- * RequireJS module that defines the view: e-compendium->pending.
+ * RequireJS module that defines the view: curation->submitted_sequences.
  */
 
-define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!apps/e-compendium/pending/tpls/toolbar_pending', 'tpl!common/search/tpls/search_term',
-		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/pending_citation', 'entities/saved_search', 'entities/identifier', 'pace', 'moment',
-		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter', 'common/ext/backgrid_ext' ], function(Lvl, PendingTpl,
-		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, PendingCitationEntity, SavedSearchEntity, IdentifierEntity, pace, moment, mapCn) {
-	Lvl.module('ECompendiumApp.Pending.View', function(View, Lvl, Backbone, Marionette, $, _) {
+define([ 'app', 'tpl!apps/curation/submitted_sequences/tpls/submitted_sequences', 'tpl!apps/curation/submitted_sequences/tpls/toolbar', 'tpl!common/search/tpls/search_term',
+		'tpl!common/search/tpls/add_search_term', 'tpl!common/search/tpls/save_search', 'entities/pending_sequence', 'entities/saved_search', 'entities/identifier', 'pace', 'moment',
+		'common/country_names', 'backbone.oauth2', 'backgrid', 'backgrid-paginator', 'backgrid-select-all', 'backgrid-filter', 'common/ext/backgrid_ext' ], function(Lvl, SubmittedSequencesTpl,
+		ToolbarTpl, SearchTermTpl, AddSearchTermTpl, SaveSearchTpl, PendingSequenceEntity, SavedSearchEntity, IdentifierEntity, pace, moment, mapCn) {
+	Lvl.module('CurationApp.SubmittedSequences.View', function(View, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		var columns = [
 				{
@@ -16,28 +16,28 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 					cell : 'string'
 				},
 				{
-					name : 'pubmedId',
-					label : 'PMID',
+					name : 'namespace',
+					label : 'Submitter',
 					editable : false,
 					cell : 'string'
 				},
 				{
-					name : 'modified',
+					name : 'sample',
 					label : 'Modified',
 					editable : false,
 					cell : Backgrid.Cell.extend({
 						render : function() {
 							this.$el.empty();
-							var rawValue = this.model.get(this.column.get('name'));							
-							var formattedValue = this.formatter.fromRaw(rawValue, this.model);							
-							if (formattedValue && typeof formattedValue === 'number') {
-								this.$el.append('<i class="fa fa-clock-o fa-fw"></i> ' + moment(formattedValue, 'x').format('MMM DD[,] YYYY [at] HH[:]mm'));
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue['modified'] === 'object') {
+								this.$el.append('<i class="fa fa-clock-o fa-fw"></i> ' + moment(formattedValue['modified'].content, "YYYY-MM-DDTHH:mm:ss").format('MMM DD[,] YYYY [at] HH[:]mm'));
 							}
 							this.delegateEvents();
 							return this;
 						}
 					})
-				},
+				},				
 				{
 					name : 'status',
 					label : 'Status',
@@ -109,7 +109,58 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 					})
 				},
 				{
-					name : 'pubmedId',
+					name : 'sample',
+					label : 'Collection',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue['institutionCode'] === 'string') {
+								this.$el.append(formattedValue['institutionCode']);
+							}
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},
+				{
+					name : 'sample',
+					label : 'Country',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));							
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue['country'] === 'string') {
+								this.$el.append(formattedValue['country']);
+							}							
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},				
+				{
+					name : 'sample',
+					label : 'Scientific name',
+					editable : false,
+					cell : Backgrid.Cell.extend({
+						render : function() {
+							this.$el.empty();
+							var rawValue = this.model.get(this.column.get('name'));							
+							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+							if (formattedValue && typeof formattedValue['scientificName'] === 'string') {
+								this.$el.append(formattedValue['scientificName']);
+							}							
+							this.delegateEvents();
+							return this;
+						}
+					})
+				},				
+				{
+					name : 'id',
 					label : '',
 					editable : false,
 					sortable : false,
@@ -118,8 +169,9 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 							this.$el.empty();
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
-							if (formattedValue && typeof formattedValue === 'string') {								
-								this.$el.append('<a class="btn btn-link" href="http://www.ncbi.nlm.nih.gov/pubmed/' + formattedValue + '" target="_blank"><i class="fa fa-external-link fa-fw"></i> PubMed</a>');								
+							if (formattedValue && typeof formattedValue === 'string') {
+								this.$el.append('<a href="#" title="Open" data-pending-seq_id="' + formattedValue
+										+ '" class="text-muted"><i class="fa fa-eye fa-fw"></i></a>');
 							}
 							this.delegateEvents();
 							return this;
@@ -137,8 +189,8 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 							var rawValue = this.model.get(this.column.get('name'));
 							var formattedValue = this.formatter.fromRaw(rawValue, this.model);
 							if (formattedValue && typeof formattedValue === 'string') {
-								this.$el.append('<a href="#" title="Remove" class="text-muted" data-pending-remove-cit_id="' + formattedValue
-										+ '"><i class="fa fa-times fa-fw"></i></a>');
+								this.$el.append('<a href="#" data-pending-resolve-seq_id="' + formattedValue
+										+ '" title="Resolve" class="text-muted"><i class="fa fa-check fa-fw"></i></a>');
 							}
 							this.delegateEvents();
 							return this;
@@ -146,9 +198,10 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 					})
 				} ];
 		View.Content = Marionette.ItemView.extend({
-			id : 'pending',
-			template : PendingTpl,
-			initialize : function() {		
+			id : 'submitted_sequences',
+			template : SubmittedSequencesTpl,
+			initialize : function() {
+				this.data_source = this.collection.data_source || 'sandflies';				
 				this.listenTo(this.collection, 'request', this.displaySpinner);
 				this.listenTo(this.collection, 'sync error', this.removeSpinner);				
 				this.listenTo(this.collection, 'backgrid:select-all', this.selectAllHandler);
@@ -159,15 +212,18 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 						headerCell : 'select-all'
 					} ].concat(columns),
 					collection : this.collection,
-					emptyText : 'No pending citations found'
+					emptyText : 'No submitted sequences found'
 				});
 				// setup search
-				Lvl.vent.on('search:form:submitted', this.searchPendingCitations);
+				Lvl.vent.on('search:form:submitted', this.searchSubmittedSequences);
 				// setup menu
 				$('#lvl-floating-menu-toggle').show(0);
 				$('#lvl-floating-menu').hide(0);
 				$('#lvl-floating-menu').empty();
-				$('#lvl-floating-menu').append(ToolbarTpl({}));
+				$('#lvl-floating-menu').append(ToolbarTpl({
+					isSanflies : 'sandflies' === this.data_source,
+					isLeishmania : 'leishmania' === this.data_source
+				}));				
 				$('a#uncheck-btn').on('click', {
 					grid : this.grid
 				}, this.deselectAll);
@@ -219,6 +275,7 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 				if (checked === true) {
 					self.displaySpinner();
 					var identifierModel = new IdentifierEntity.Identifier({
+						'dataSource' : self.collection.data_source,
 						'queryParam' : $('form.backgrid-filter:first').find('input:first').val()
 					});
 					identifierModel.oauth2_token = Lvl.config.authorizationToken();
@@ -230,7 +287,7 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 						}
 					}).fail(function() {
 						require([ 'common/growl' ], function(createGrowl) {
-							createGrowl('Operation failed', 'Cannot select all citations at this time. Please try again later.', false);
+							createGrowl('Operation failed', 'Cannot select all sequences at this time. Please try again later.', false);
 						});
 					}).always(function() {
 						self.removeSpinner(false);
@@ -243,14 +300,15 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 				'click div.lvl-savable' : 'handleClickSavable',
 				'dragstart div.lvl-savable' : 'handleDragStart',
 				'dragend div.lvl-savable' : 'handleDragEnd',
-				'click a[data-pending-remove-cit_id]' : 'removePendingCitationRecord'
+				'click a[data-pending-seq_id]' : 'showSubmittedSequenceRecord',
+				'click a[data-pending-resolve-seq_id]' : 'resolveSubmittedSequenceRecord'
 			},			
 			deselectAll : function(e) {
 				e.preventDefault();
 				$('#lvl-floating-menu').hide('fast');
 				$('.select-all-header-cell > input:first').prop('checked', false).change();				
 			},
-			searchPendingCitations : function(search) {
+			searchSubmittedSequences : function(search) {
 				var backgridFilter = $('form.backgrid-filter:first');
 				backgridFilter.find('input:first').val(search);
 				backgridFilter.submit();
@@ -268,7 +326,7 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 						}
 					});
 				}
-				this.searchPendingCitations(search);
+				this.searchSubmittedSequences(search);
 			},
 			addSearchTerm : function(e) {
 				e.preventDefault();
@@ -286,7 +344,7 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 					searchCont.find('a[data-search-term!="sterm_-1"]').each(function(i) {
 						search += $(this).parent().text() + ' ';
 					});
-					this.searchPendingCitations(search);
+					this.searchSubmittedSequences(search);
 				} else {
 					newTermInput.val('');
 				}
@@ -303,7 +361,7 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 				e.originalEvent.dataTransfer.setData('srcId', $(e.target).attr('data-savable-id'));
 				e.originalEvent.dataTransfer.setData('savableType', 'saved_search');
 				e.originalEvent.dataTransfer.setData('savable', JSON.stringify(new SavedSearchEntity.SavedSearch({
-					type : 'e-compendium;pending;' + self.data_source,
+					type : 'curation;submitted_sequences;' + self.data_source,
 					description : '',
 					search : self.collection.formattedQuery
 				}).toJSON()));
@@ -314,35 +372,25 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 			},
 			startTour : function(e) {
 				e.preventDefault();
-				require([ 'apps/e-compendium/pending/tours/e-compendium_tour' ], function(tour) {
+				require([ 'apps/curation/submitted_sequences/tours/submitted_sequences_tour' ], function(tour) {
 					tour();
 				});
 			},
-			removePendingCitationRecord : function(e) {
+			showSubmittedSequenceRecord : function(e) {
 				e.preventDefault();
 				var self = this;
 				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pending-remove-cit_id') : target.attr('data-pending-remove-cit_id');				
-				var item = this.collection.get(itemId);
-				item.set('dataSource', self.data_source);
-				item.oauth2_token = Lvl.config.authorizationToken();
-				require([ 'common/confirm' ], function(confirmDialog) {
-					confirmDialog('Confirm deletion', 'This action will delete the selected record. Are you sure?', function() {
-						self.collection.remove(item);
-						item.destroy({
-							success : function(e) {
-							},
-							error : function(e) {
-								require([ 'common/alert' ], function(alertDialog) {
-									alertDialog('Error', 'The record cannot be removed.');
-								});
-							}
-						});
-					}, {
-						btn_text : 'Delete'
-					});
-				});
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pending-seq_id') : target.attr('data-pending-seq_id');
+				this.trigger('pending:view:record', self.collection.data_source, itemId);
 			},
+			resolveSubmittedSequenceRecord : function(e) {
+				e.preventDefault();
+				var self = this;
+				var target = $(e.target);
+				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-pending-resolve-seq_id') : target.attr('data-pending-resolve-seq_id');
+				var item = this.collection.get(itemId);
+				self.trigger('pending:resolve:record', self.collection.data_source, item);
+			},			
 			onDestroy : function() {
 				pace.stop();
 				this.stopListening();
@@ -384,7 +432,7 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 				var filter = new Backgrid.Extension.ServerSideFilter({
 					collection : this.collection,
 					name : 'q',
-					placeholder : 'filter citations'
+					placeholder : 'filter sequences'
 				});
 
 				var filterToolbar = this.$('#grid-filter-toolbar');
@@ -398,12 +446,12 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 				var _self = this;
 				var params = Lvl.flashed();
 				if (!$.isEmptyObject(params) && (params instanceof SavedSearchEntity.SavedSearch)
-						&& (params.get('type') === 'e-compendium;pending;' + _self.data_source)) {
+						&& (params.get('type') === 'curation;submitted_sequences;' + _self.data_source)) {
 					var search =  ''; // TODO 'organism:' + this.data_source;
 					_.each(params.get('search'), function(item) {
 						search += item.term;
 					});
-					_self.searchPendingCitations(search);
+					_self.searchSubmittedSequences(search);
 				} else {
 					this.collection.fetch({
 						reset : true
@@ -412,5 +460,5 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 			}
 		});
 	});
-	return Lvl.ECompendiumApp.Pending.View;
+	return Lvl.CurationApp.SubmittedSequences.View;
 });

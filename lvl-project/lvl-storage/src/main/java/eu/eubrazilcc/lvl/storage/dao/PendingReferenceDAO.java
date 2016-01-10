@@ -82,6 +82,7 @@ public enum PendingReferenceDAO implements AuthenticatedDAO<String, PendingRefer
 	public static final String PRIMARY_KEY   = DB_PREFIX + "id";
 	public static final String NAMESPACE_KEY = DB_PREFIX + "namespace";
 	public static final String MODIFIED_KEY  = DB_PREFIX + "modified";
+	public static final String STATUS_KEY    = DB_PREFIX + "status";
 
 	public static final String PMID_KEY = DB_PREFIX + "pubmedId";
 
@@ -90,6 +91,7 @@ public enum PendingReferenceDAO implements AuthenticatedDAO<String, PendingRefer
 		MONGODB_CONN.createNonUniqueIndex(NAMESPACE_KEY, COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(PMID_KEY, COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(MODIFIED_KEY, COLLECTION, true);
+		MONGODB_CONN.createNonUniqueIndex(STATUS_KEY, COLLECTION, true);
 	}
 
 	@Override
@@ -154,10 +156,15 @@ public enum PendingReferenceDAO implements AuthenticatedDAO<String, PendingRefer
 	@Override
 	public List<PendingReference> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String user) {
+		return list(start, size, filter, sorting, projection, count, user, false);
+	}
+
+	public List<PendingReference> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String user, final boolean onlySubmitted) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
 		try {
-			query = buildQuery(filter, user);
+			query = buildQuery(filter, user, onlySubmitted);
 		} catch (InvalidFilterParseException e) {
 			LOGGER.warn("Discarding operation after an invalid filter was found: " + e.getMessage());
 			return newArrayList();
@@ -258,15 +265,16 @@ public enum PendingReferenceDAO implements AuthenticatedDAO<String, PendingRefer
 		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY, 1));
 	}
 
-	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter, final @Nullable String user) 
+	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter, final @Nullable String user, final boolean onlySubmitted) 
 			throws InvalidFilterParseException {
 		BasicDBObject query = null;		
 		if (filter != null) {
 			for (final Entry<String, String> entry : filter.entrySet()) {
 				query = parseFilter(entry.getKey(), entry.getValue(), query);
 			}
-		}		
-		return isNotBlank(user) ? (query != null ? query : new BasicDBObject()).append(NAMESPACE_KEY, user) : query;
+		}
+		query = isNotBlank(user) ? (query != null ? query : new BasicDBObject()).append(NAMESPACE_KEY, user) : query;
+		return onlySubmitted ? (query != null ? query : new BasicDBObject()).append(STATUS_KEY, new BasicDBObject("$in", CurationOptions.SUBMITTED_STATUSES)) : query;
 	}
 
 	private BasicDBObject parseFilter(final String parameter, final String expression, final BasicDBObject query) throws InvalidFilterParseException {

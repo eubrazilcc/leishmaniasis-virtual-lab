@@ -37,9 +37,11 @@ import static eu.eubrazilcc.lvl.core.xml.DwcXmlBinder.DWC_XML_FACTORY;
 import static eu.eubrazilcc.lvl.core.xml.XmlHelper.yearAsXMLGregorianCalendar;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.ns2permission;
 import static eu.eubrazilcc.lvl.service.rest.QueryParamHelper.parseParam;
+import static eu.eubrazilcc.lvl.storage.NotificationManager.NOTIFICATION_MANAGER;
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.URL_FRAGMENT_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyPendingDAO.DB_PREFIX;
 import static eu.eubrazilcc.lvl.storage.dao.SandflyPendingDAO.SANDFLY_PENDING_DAO;
+import static eu.eubrazilcc.lvl.storage.security.PermissionHelper.DATA_CURATOR_ROLE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -82,6 +84,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
 import eu.eubrazilcc.lvl.core.FormattedQueryParam;
+import eu.eubrazilcc.lvl.core.Notification;
+import eu.eubrazilcc.lvl.core.Notification.Action;
+import eu.eubrazilcc.lvl.core.Notification.Priority;
 import eu.eubrazilcc.lvl.core.PaginableWithNamespace;
 import eu.eubrazilcc.lvl.core.PendingSequence;
 import eu.eubrazilcc.lvl.core.SandflyPending;
@@ -113,6 +118,7 @@ public class SandflyPendingResource {
 			final @QueryParam("q") @DefaultValue("") String q,			
 			final @QueryParam("sort") @DefaultValue("") String sort,
 			final @QueryParam("order") @DefaultValue("asc") String order,
+			final @QueryParam("onlySubmitted") @DefaultValue("false") boolean onlySubmitted,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace);
 		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
@@ -132,7 +138,7 @@ public class SandflyPendingResource {
 		final ImmutableMap<String, String> filter = parseQuery(q);		
 		final Sorting sorting = parseSorting(sort, order);
 		final List<SandflyPending> pendingSeqs = SANDFLY_PENDING_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
-				ImmutableMap.of(DB_PREFIX + "sequence", false), count, ownerid);
+				ImmutableMap.of(DB_PREFIX + "sequence", false), count, ownerid, onlySubmitted);
 		paginable.setElements(pendingSeqs);
 		paginable.getExcludedFields().add(DB_PREFIX + "sequence");
 		// set total count and return to the caller
@@ -185,8 +191,13 @@ public class SandflyPendingResource {
 		if (pendingSeq.getSample().getYear() == null) pendingSeq.getSample().setYear(yearAsXMLGregorianCalendar(cal.get(Calendar.YEAR)));
 		pendingSeq.getSample().setCatalogNumber(pendingSeq.getId());
 		pendingSeq.getSample().setRecordedBy(pendingSeq.getNamespace());
+		pendingSeq.setStatus(null);
+		pendingSeq.setResolution(null);
+		pendingSeq.setAssignedTo(null);
+		pendingSeq.setAllocatedCollection(null);
+		pendingSeq.setAllocatedId(null);
 		// create entry in the database
-		SANDFLY_PENDING_DAO.insert(pendingSeq);		
+		SANDFLY_PENDING_DAO.insert(pendingSeq);
 		final UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path(pendingSeq.getUrlSafeId());		
 		return Response.created(uriBuilder.build()).build();
 	}
@@ -200,14 +211,45 @@ public class SandflyPendingResource {
 		if (update == null) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME).requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit");		
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
+				.getPrincipal();		
 		// get from database
-		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id);
+		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id, ownerid);
 		if (pendingSeq == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
 		// update
 		SANDFLY_PENDING_DAO.update(update);
+		// notify users
+		if (update.getStatus() != null) {
+			if (isBlank(update.getAssignedTo())) {
+				NOTIFICATION_MANAGER.broadcast(Notification.builder()
+						.newId()
+						.priority(Priority.NORMAL)
+						.scope(DATA_CURATOR_ROLE)
+						.message(String.format("Sequence updated by user %s", ownerid))
+						.action(new Action("sandflyPending", update.getId()))
+						.build());
+			} else {
+				NOTIFICATION_MANAGER.send(Notification.builder()
+						.newId()
+						.priority(Priority.NORMAL)
+						.addressee(update.getAssignedTo())
+						.message(String.format("Sequence updated by user %s", ownerid))
+						.action(new Action("sandflyPending", update.getId()))
+						.build());
+			}
+		}
+		if (update.getResolution() != null) {
+			NOTIFICATION_MANAGER.send(Notification.builder()
+					.newId()
+					.priority(Priority.NORMAL)
+					.addressee(update.getNamespace())
+					.message(String.format("Sequence submission resolved"))
+					.action(new Action("sandflyPending", update.getId()))
+					.build());
+		}
 	}
 
 	@DELETE
@@ -215,11 +257,11 @@ public class SandflyPendingResource {
 	public void deletePendingSequence(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context HttpServletRequest request, 
 			final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
-		OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-		.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
-		.getPrincipal();
+		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
+				.getPrincipal();
 		// get from database
-		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id2);
+		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id2, ownerid);
 		if (pendingSeq == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}		

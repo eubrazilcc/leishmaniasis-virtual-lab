@@ -53,6 +53,8 @@ import com.google.common.collect.ImmutableMap;
 import eu.eubrazilcc.lvl.core.PendingReference;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.Sorting.Order;
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionResolution;
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionStatus;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.test.LeishvlTestCase;
 
@@ -123,6 +125,11 @@ public class PendingReferenceCollectionTest extends LeishvlTestCase {
 
 			// update
 			pendingRef.getSeqids().add("gb:DEF09876");
+			pendingRef.setAssignedTo("curator@lvl");
+			pendingRef.setResolution(SubmissionResolution.ACCEPTED);
+			pendingRef.setStatus(SubmissionStatus.CLOSED);
+			pendingRef.setAllocatedCollection("pendingReference");
+			pendingRef.setAllocatedId("123");
 			PENDING_REFERENCE_DAO.update(pendingRef);
 
 			// find after update
@@ -137,14 +144,16 @@ public class PendingReferenceCollectionTest extends LeishvlTestCase {
 			assertThat("number of pendingRef stored in the database coincides with expected", numRecords, equalTo(0l));
 
 			// create a large dataset to test complex operations
+			final Random rand = new Random();
 			final List<String> ids = newArrayList();
 			final int numItems = 11;
 			for (int i = 0; i < numItems; i++) {				
 				final PendingReference pendingRef3 = PendingReference.builder()
 						.namespace("username")
 						.id("LVLREF000" + Integer.toString(i))
-						.pubmedId("XYZ" + i)
+						.pubmedId("XYZ" + i)						
 						.build();
+				if (i%2 == 0) pendingRef3.setStatus(SubmissionStatus.values()[rand.nextInt(SubmissionStatus.values().length)]);
 				ids.add(pendingRef3.getId());
 				PENDING_REFERENCE_DAO.insert(pendingRef3);
 			}
@@ -161,6 +170,14 @@ public class PendingReferenceCollectionTest extends LeishvlTestCase {
 				}
 				start += pendingRefs.size();
 			} while (!pendingRefs.isEmpty());
+			
+			// find submitted records only
+			pendingRefs = PENDING_REFERENCE_DAO.list(0, Integer.MAX_VALUE, null, null, null, null, "username", true);
+			assertThat("submitted records only pendingRef is not null", pendingRefs, notNullValue());
+			assertThat("number of submitted records only pendingRef coincides with expected", pendingRefs.size(), equalTo(6));
+			for (final PendingReference pr : pendingRefs) {
+				assertThat("submitted records contains a valid status", pr.getStatus(), notNullValue());
+			}
 
 			// filter: PMID search
 			ImmutableMap<String, String> filter = of("pmid", "XYZ1");

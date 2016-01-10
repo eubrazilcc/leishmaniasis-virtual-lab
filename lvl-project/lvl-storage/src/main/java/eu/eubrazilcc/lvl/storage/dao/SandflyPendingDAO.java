@@ -83,6 +83,7 @@ public enum SandflyPendingDAO implements AuthenticatedDAO<String, SandflyPending
 	public static final String DB_PREFIX     = "sandflyPending.";
 	public static final String PRIMARY_KEY   = DB_PREFIX + "id";
 	public static final String NAMESPACE_KEY = DB_PREFIX + "namespace";
+	public static final String STATUS_KEY    = DB_PREFIX + "status";
 
 	public static final String ORIGINAL_SAMPLE_KEY = DB_PREFIX + "sample";
 
@@ -91,6 +92,7 @@ public enum SandflyPendingDAO implements AuthenticatedDAO<String, SandflyPending
 		MONGODB_CONN.createNonUniqueIndex(NAMESPACE_KEY, COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".collectionCode", COLLECTION, false);
 		MONGODB_CONN.createNonUniqueIndex(ORIGINAL_SAMPLE_KEY + ".catalogNumber", COLLECTION, false);
+		MONGODB_CONN.createNonUniqueIndex(STATUS_KEY, COLLECTION, true);
 		MONGODB_CONN.createTextIndex(ImmutableList.of(
 				ORIGINAL_SAMPLE_KEY + ".recordedBy",
 				ORIGINAL_SAMPLE_KEY + ".stateProvince",
@@ -169,10 +171,15 @@ public enum SandflyPendingDAO implements AuthenticatedDAO<String, SandflyPending
 	@Override
 	public List<SandflyPending> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
 			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String user) {
+		return list(start, size, filter, sorting, projection, count, user, false);
+	}
+
+	public List<SandflyPending> list(final int start, final int size, final ImmutableMap<String, String> filter, final Sorting sorting, 
+			final @Nullable ImmutableMap<String, Boolean> projection, final MutableLong count, final String user, final boolean onlySubmitted) {
 		// parse the filter or return an empty list if the filter is invalid
 		BasicDBObject query = null;
 		try {
-			query = buildQuery(filter, user);
+			query = buildQuery(filter, user, onlySubmitted);
 		} catch (InvalidFilterParseException e) {
 			LOGGER.warn("Discarding operation after an invalid filter was found: " + e.getMessage());
 			return newArrayList();
@@ -285,15 +292,16 @@ public enum SandflyPendingDAO implements AuthenticatedDAO<String, SandflyPending
 		return new BasicDBObject(ImmutableMap.of(PRIMARY_KEY, 1));
 	}
 
-	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter, final @Nullable String user) 
+	private @Nullable BasicDBObject buildQuery(final @Nullable ImmutableMap<String, String> filter, final @Nullable String user, final boolean onlySubmitted) 
 			throws InvalidFilterParseException {
 		BasicDBObject query = null;		
 		if (filter != null) {
 			for (final Entry<String, String> entry : filter.entrySet()) {
 				query = parseFilter(entry.getKey(), entry.getValue(), query);
 			}
-		}		
-		return isNotBlank(user) ? (query != null ? query : new BasicDBObject()).append(NAMESPACE_KEY, user) : query;
+		}
+		query = isNotBlank(user) ? (query != null ? query : new BasicDBObject()).append(NAMESPACE_KEY, user) : query;		
+		return onlySubmitted ? (query != null ? query : new BasicDBObject()).append(STATUS_KEY, new BasicDBObject("$in", CurationOptions.SUBMITTED_STATUSES)) : query;
 	}
 
 	private BasicDBObject parseFilter(final String parameter, final String expression, final BasicDBObject query) throws InvalidFilterParseException {

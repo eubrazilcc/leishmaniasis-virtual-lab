@@ -6,7 +6,7 @@ define([ 'app', 'apps/curation/layout/curation_layout_view' ], function(Lvl, Vie
 	Lvl.module('CurationApp.Layout', function(Layout, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Layout.Controller = {
-			showLayout : function(section) {
+			showLayout : function(section, id) {
 				var controller = function(SectionController) {
 					var tabLinks = Lvl.request('curation:navigation:entities');
 					var tabLinkToSelect = tabLinks.find(function(tabLink) {
@@ -18,7 +18,7 @@ define([ 'app', 'apps/curation/layout/curation_layout_view' ], function(Lvl, Vie
 						navigation : tabLinks
 					});
 					Lvl.mainRegion.show(view);
-					return SectionController.showSection();
+					return SectionController.showSection(id);
 				};
 				switch (section) {
 				case 'submitted_citations':				

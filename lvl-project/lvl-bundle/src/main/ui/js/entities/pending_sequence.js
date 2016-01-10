@@ -55,7 +55,8 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 				return Lvl.config.get('service.url') + '/pending/' + this.data_source + '/~';
 			},
 			initialize : function(options) {
-				this.oauth2_token = options.oauth2_token, this.data_source = options.data_source || 'sandflies'
+				this.oauth2_token = options.oauth2_token, this.data_source = options.data_source || 'sandflies';
+				this.queryParams.onlySubmitted = (options.curator === true);
 			},
 			state : {
 				pageSize : 100,

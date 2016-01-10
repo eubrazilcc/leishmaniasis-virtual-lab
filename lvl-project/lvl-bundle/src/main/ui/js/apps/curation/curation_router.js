@@ -8,7 +8,8 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 		var Router = Backbone.Router.extend({
 			routes : {
 				'curation' : 'showCuration',
-				'curation/:section' : 'showCuration'
+				'curation/:section' : 'showCuration',
+				'curation/:section/:subsection' : 'showCuration'
 			},
 			before : function() {
 				if (!Lvl.config.isAuthenticated()) {
@@ -25,16 +26,17 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 				});
 				return true;
 			},
-			showCuration : function(section) {
+			showCuration : function(section, subsection) {
 				section = (section || 'submitted_sequences').toLowerCase();
 				if (section === 'submitted_sequences') {
-					Lvl.navigate('curation/' + section, {
+					subsection = (subsection || 'sandflies').toLowerCase();					
+					Lvl.navigate('curation/' + section + '/' + subsection, {
 						trigger : false,
 						replace : true
 					});
-					Lvl.execute('curation:set:active', section);
+					Lvl.execute('curation:set:active', section, subsection);
 				} else if (section === 'submitted_citations') {
-					Lvl.execute('curation:set:active', 'submitted_citations');
+					Lvl.execute('curation:set:active', section);
 				} else {
 					Lvl.navigate('not-found', {
 						trigger : true,
