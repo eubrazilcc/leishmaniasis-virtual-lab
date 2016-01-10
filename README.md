@@ -1,4 +1,4 @@
-# Leishmaniasis-Virtual-Lab - [v0.9.8](http://lvl.i3m.upv.es/apidoc/)
+# Leishmaniasis-Virtual-Lab - [v1.0.0](http://lvl.i3m.upv.es/apidoc/)
 
 [http://lvl.i3m.upv.es](http://lvl.i3m.upv.es) - The Leishmaniasis Virtual Laboratory: an open, collaborative environment for research in leishmaniasis.
 
