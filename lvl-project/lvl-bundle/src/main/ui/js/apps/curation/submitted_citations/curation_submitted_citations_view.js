@@ -320,7 +320,7 @@ define([ 'app', 'tpl!apps/curation/submitted_citations/tpls/submitted_citations'
 			},
 			startTour : function(e) {
 				e.preventDefault();
-				require([ 'apps/curation/submitted_citations/tours/curation_tour' ], function(tour) {
+				require([ 'apps/curation/submitted_citations/tours/submitted_citations_tour' ], function(tour) {
 					tour();
 				});
 			},
