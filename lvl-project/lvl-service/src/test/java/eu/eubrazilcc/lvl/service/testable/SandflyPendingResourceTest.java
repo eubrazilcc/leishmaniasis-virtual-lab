@@ -59,6 +59,8 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
 import eu.eubrazilcc.lvl.core.SandflyPending;
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionResolution;
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionStatus;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
 import eu.eubrazilcc.lvl.service.rest.SandflyPendingResource;
 import eu.eubrazilcc.lvl.service.rest.SandflyPendingResource.SandflyPendings;
@@ -72,7 +74,7 @@ import eu.eubrazilcc.lvl.test.Testable;
 public class SandflyPendingResourceTest extends Testable {
 
 	public SandflyPendingResourceTest(final TestContext testCtxt) {
-		super(testCtxt, SandflyPendingResourceTest.class, true);		
+		super(testCtxt, SandflyPendingResourceTest.class, false);		
 	}
 
 	@Override
@@ -306,7 +308,7 @@ public class SandflyPendingResourceTest extends Testable {
 				.get(SandflyPendings.class);
 		assertThat("Search pending sequences result is not null", pendingSeqs, notNullValue());
 		assertThat("Search pending sequences list coincides with expected", pendingSeqs.getElements(), allOf(notNullValue(), not(empty()), 
-				hasSize(pendingSeqs.getTotalCount()), hasSize(1))); // TODO
+				hasSize(pendingSeqs.getTotalCount()), hasSize(1)));
 		// uncomment for additional output
 		printMsg(" >> Search pending sequences result: " + toJson(pendingSeqs, JSON_PRETTY_PRINTER));
 
@@ -374,6 +376,11 @@ public class SandflyPendingResourceTest extends Testable {
 
 		// test update pending sequence
 		pendingSeq.getSample().setCollectionID("123");
+		pendingSeq.setAssignedTo("curator@lvl");
+		pendingSeq.setResolution(SubmissionResolution.ACCEPTED);
+		pendingSeq.setStatus(SubmissionStatus.CLOSED);
+		pendingSeq.setAllocatedCollection("sandfliesSamples");
+		pendingSeq.setAllocatedId("123");
 		response = testCtxt.target().path(path.value())
 				.path(urlEncodeUtf8(testCtxt.ownerid("user1")))
 				.path(pendingSeq.getId())

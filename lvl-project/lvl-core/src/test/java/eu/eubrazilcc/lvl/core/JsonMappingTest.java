@@ -61,6 +61,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionResolution;
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionStatus;
 import eu.eubrazilcc.lvl.core.community.Post;
 import eu.eubrazilcc.lvl.core.community.PostCategory;
 import eu.eubrazilcc.lvl.core.community.PostLevel;
@@ -202,6 +204,11 @@ public class JsonMappingTest extends LeishvlTestCase {
 							.preparationType("Mata")
 							.materialType("Parátipo")
 							.build())
+					.assignedTo("curator@lvl")
+					.resolution(SubmissionResolution.ACCEPTED)
+					.status(SubmissionStatus.CLOSED)
+					.allocatedCollection("sandfliesSamples")
+					.allocatedId("123")
 					.build();
 
 			final LeishmaniaPending cliocPending = LeishmaniaPending.builder()

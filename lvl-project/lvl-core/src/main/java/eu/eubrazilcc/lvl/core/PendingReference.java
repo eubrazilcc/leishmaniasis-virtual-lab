@@ -58,7 +58,7 @@ import eu.eubrazilcc.lvl.core.json.jackson.LinkListSerializer;
  * could be incomplete or inaccurate.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PendingReference implements Linkable<PendingReference> {
+public class PendingReference extends SubmissionRequest implements Linkable<PendingReference> {
 
 	@InjectLinks({
 		@InjectLink(value="pending/citations/{urlSafeNamespace}/{urlSafeId}", rel=SELF, type=APPLICATION_JSON, bindings={
@@ -214,9 +214,11 @@ public class PendingReference implements Linkable<PendingReference> {
 		return new Builder();
 	}
 
-	public static class Builder {
+	public static class Builder extends SubmissionRequest.Builder<PendingReference> {
 
-		private final PendingReference instance = new PendingReference();
+		public Builder() {
+			super(PendingReference.class);			
+		}
 
 		public Builder links(final List<Link> links) {
 			instance.setLinks(links);

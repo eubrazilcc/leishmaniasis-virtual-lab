@@ -38,7 +38,7 @@ import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
  * could be incomplete or inaccurate.
  * @author Erik Torres <ertorser@upv.es>
  */
-public class PendingSequence {
+public class PendingSequence extends SubmissionRequest {
 
 	private String namespace;          // Name space where the record is inscribed
 	private String id;                 // Resource identifier	
@@ -121,16 +121,10 @@ public class PendingSequence {
 
 	/* Fluent API */
 
-	public static class Builder<T extends PendingSequence> {
-
-		protected final T instance;
+	public static class Builder<T extends PendingSequence> extends SubmissionRequest.Builder<T> {
 
 		public Builder(final Class<T> clazz) {
-			T tmp = null;
-			try {
-				tmp = clazz.newInstance();
-			} catch (Exception ignore) { }
-			instance = tmp;
+			super(clazz);			
 		}
 
 		public Builder<T> namespace(final String namespace) {

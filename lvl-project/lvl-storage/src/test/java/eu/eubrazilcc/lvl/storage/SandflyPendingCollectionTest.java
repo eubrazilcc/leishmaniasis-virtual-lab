@@ -55,6 +55,8 @@ import eu.eubrazilcc.lvl.core.SamplePreparation;
 import eu.eubrazilcc.lvl.core.SandflyPending;
 import eu.eubrazilcc.lvl.core.Sorting;
 import eu.eubrazilcc.lvl.core.Sorting.Order;
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionResolution;
+import eu.eubrazilcc.lvl.core.SubmissionRequest.SubmissionStatus;
 import eu.eubrazilcc.lvl.core.xml.tdwg.dwc.SimpleDarwinRecord;
 import eu.eubrazilcc.lvl.storage.dao.WriteResult;
 import eu.eubrazilcc.lvl.test.LeishvlTestCase;
@@ -114,7 +116,7 @@ public class SandflyPendingCollectionTest extends LeishvlTestCase {
 			assertThat("write ack is not null", ack, notNullValue());
 			assertThat("database id is not empty", trim(ack.getId()), allOf(notNullValue(), not(equalTo(""))));
 			printMsg(" >> New record inserted: id=" + ack.getId() + ", record=" + toJson(pendingSeq, JSON_PRETTY_PRINTER));
-			
+
 			// find
 			SandflyPending pendingSeq2 = SANDFLY_PENDING_DAO.find(pendingSeq.getId());
 			assertThat("pendingSeq is not null", pendingSeq2, notNullValue());
@@ -184,6 +186,11 @@ public class SandflyPendingCollectionTest extends LeishvlTestCase {
 
 			// update
 			pendingSeq.getSample().setModified(DWC_XML_FACTORY.createSimpleLiteral().withContent("2015-11-30T11:42:11"));
+			pendingSeq.setAssignedTo("curator@lvl");
+			pendingSeq.setResolution(SubmissionResolution.ACCEPTED);
+			pendingSeq.setStatus(SubmissionStatus.CLOSED);
+			pendingSeq.setAllocatedCollection("sandfliesSamples");
+			pendingSeq.setAllocatedId("123");
 			SANDFLY_PENDING_DAO.update(pendingSeq);
 
 			// find after update
