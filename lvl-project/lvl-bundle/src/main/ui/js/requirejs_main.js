@@ -12,8 +12,8 @@ requirejs.config({
 		'spin' : 'vendor/spin.min', // 2.1.0
 		'jquery.spin' : 'vendor/jquery.spin.min', // 2.3.2
 		/* Boostrap front-end framework */
-		// TODO 'bootstrap' : '//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min', // 3.3.6
-		'bootstrap' : '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min', // 3.3.6
+		'bootstrap' : '//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min', // 3.3.6
+		// 'bootstrap' : '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min', // 3.3.6
 		'bootstrapvalidator' : 'vendor/bootstrapValidator.min', // 0.5.3 (0.6.2 is commercial)
 		'bootstrap3-typeahead' : 'vendor/bootstrap3-typeahead.min', // 3.1.0
 		/* Backbone + Marionette MVC framework */
