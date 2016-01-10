@@ -1,12 +1,12 @@
 /**
- * RequireJS module that defines the entity: object granted.
+ * RequireJS module that defines the entity: object accepted.
  */
 
 define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
-	Lvl.module('Entities.ObjectGranted', function(Entities, Lvl, Backbone, Marionette, $, _) {
+	Lvl.module('Entities.ObjectAccepted', function(Entities, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
-		Entities.ObjectGranted = Backbone.Model.extend({			
-			urlRoot : Lvl.config.get('service.url') + '/shares/granted/~/',
+		Entities.ObjectAccepted = Backbone.Model.extend({			
+			urlRoot : Lvl.config.get('service.url') + '/shares/accepted/~/',
 			url : function() {
 				return this.urlRoot + this.id;
 			},
@@ -45,24 +45,24 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 				}
 			}
 		});
-		Entities.ObjectGrantedCreate = Backbone.Model.extend({
+		Entities.ObjectAcceptedCreate = Backbone.Model.extend({
 			url : function() {
-				return Lvl.config.get('service.url') + '/shares/granted/~';
+				return Lvl.config.get('service.url') + '/shares/accepted/~';
 			}
 		});
-		Entities.ObjectGrantedCollection = Backbone.Collection.extend({
-			model : Entities.ObjectGranted,
+		Entities.ObjectAcceptedCollection = Backbone.Collection.extend({
+			model : Entities.ObjectAccepted,
 			comparator : 'id',
 			initialize : function() {
 				var singleSelect = new Backbone.Picky.SingleSelect(this);
 				_.extend(this, singleSelect);
 			}
 		});
-		Entities.ObjectGrantedPageableCollection = Backbone.PageableCollection.extend({
-			model : Entities.ObjectGranted,
+		Entities.ObjectAcceptedPageableCollection = Backbone.PageableCollection.extend({
+			model : Entities.ObjectAccepted,
 			mode : 'server',
 			url : function() {
-				return Lvl.config.get('service.url') + '/shares/granted/~';
+				return Lvl.config.get('service.url') + '/shares/accepted/~';
 			},
 			initialize : function(options) {
 				var collectionId;
@@ -92,7 +92,7 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 				sortKey : 'sort',
 				order : 'order'
 			},
-			parseState : function(resp, queryParams, state, options) {
+			parseState : function(resp, queryParams, state, options) {				
 				// set additional properties before returning to caller
 				this.formattedQuery = resp.formattedQuery;
 				this.lvlOpHash = resp.hash;
@@ -105,5 +105,5 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 			}
 		});
 	});
-	return Lvl.Entities.ObjectGranted;
+	return Lvl.Entities.ObjectAccepted;
 });

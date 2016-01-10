@@ -55,6 +55,16 @@ define([ 'app', 'backbone.picky' ], function(Lvl) {
 				link : 'links',
 				icon : 'fa-link',
 				text : 'Links'
+			}, {
+				id : 3,
+				link : 'granted',
+				icon : 'fa-share',
+				text : 'Granted'
+			}, {
+				id : 4,
+				link : 'accepted',
+				icon : 'fa-reply',
+				text : 'Accepted'
 			} ]);
 		};
 

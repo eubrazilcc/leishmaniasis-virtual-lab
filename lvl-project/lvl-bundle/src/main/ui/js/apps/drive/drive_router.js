@@ -33,7 +33,7 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 						replace : true
 					});
 					Lvl.execute('drive:set:active', section);
-				} else if (section === 'links') {
+				} else if (section === 'links' || section === 'granted' || section === 'accepted') {
 					Lvl.execute('drive:set:active', section);
 				} else {
 					Lvl.navigate('not-found', {

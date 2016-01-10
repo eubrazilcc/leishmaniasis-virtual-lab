@@ -25,6 +25,12 @@ define([ 'app', 'apps/drive/layout/drive_layout_view' ], function(Lvl, View) {
 				case 'links':
 					require([ 'apps/drive/links/drive_links_ctrl', 'apps/drive/layout/entities/tablinks' ], controller);
 					break;
+				case 'granted':
+					require([ 'apps/drive/granted/drive_granted_ctrl', 'apps/drive/layout/entities/tablinks' ], controller);
+					break;
+				case 'accepted':
+					require([ 'apps/drive/accepted/drive_accepted_ctrl', 'apps/drive/layout/entities/tablinks' ], controller);
+					break;
 				case 'datasets':
 				default:
 					require([ 'apps/drive/datasets/drive_datasets_ctrl', 'apps/drive/layout/entities/tablinks' ], controller);	
