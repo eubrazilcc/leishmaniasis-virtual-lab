@@ -138,6 +138,13 @@
 	color: rgb(204, 153, 0);
 }
 
+@media ( min-width : 768px ) {
+	.lvl-notifications-container {
+		width: 300px !important;
+		max-width: 300px !important;
+	}
+}
+
 div#lvl-qtip-growl-container {
 	position: fixed;
 	top: 116px;

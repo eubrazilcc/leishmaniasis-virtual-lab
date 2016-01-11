@@ -87,6 +87,7 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 			events : {
 				'click a#btnSearchToggle' : 'toggleSearchForm',
 				'click a#btnProfile' : 'showUserProfile',
+				'click a#btnAlerts' : 'showNotifications',
 				'click a#lvl-search-form-collapse-btn' : 'collapseSearchForm',
 				'click button#lvl-search-form-submit-btn-xs' : 'submitSearchFormXs',
 				'submit form#lvl-search-form' : 'submitSearchForm',
@@ -94,7 +95,7 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 				'dragover div#lvl-save-items-target' : 'saveItemsDragOverHandler',
 				'dragenter div#lvl-save-items-target' : 'saveItemsDragEnterHandler',
 				'dragleave div#lvl-save-items-target' : 'saveItemsDragLeaveHandler',
-				'drop div#lvl-save-items-target' : 'saveItemsDropHandler'
+				'drop div#lvl-save-items-target' : 'saveItemsDropHandler'				
 			},
 			toggleSearchForm : function(e) {
 				e.preventDefault();
@@ -116,6 +117,10 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 			showUserProfile : function(e) {
 				e.preventDefault();
 				this.trigger('access:user:profile');
+			},
+			showNotifications : function(e) {
+				e.preventDefault();
+				
 			},
 			submitSearchFormXs : function(e) {
 				e.preventDefault();
@@ -226,14 +231,15 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 				// remove all event handlers
 				Lvl.vent.off('editable:items:dragstart');
 				Lvl.vent.off('editable:items:dragend');
-				$(document).off('keyup', this.handleEscKeyUpEvent);
+				$(document).off('keyup', this.handleEscKeyUpEvent);				
+				this.$('a#btnAlerts').unbind();
 			},
 			onRender : function(options) {
 				this.navigation.show(new View.Navigation({
 					model : options.navLinks.selected || options.navLinks.at(0),
 					collection : options.navLinks
 				}));
-				this.$('#btnAlerts').click(function(event) {
+				this.$('a#btnAlerts').click(function(event) {
 					event.preventDefault();
 				}).qtip({
 					content : {
@@ -253,11 +259,11 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 										return b.date - a.date;
 									});
 									var notifications = [];
-									for (i = 0; i < content.elements.length && i < 5; i++) {
+									for (var i = 0; i < content.elements.length && i < 5; i++) {
 										var msg = content.elements[i].message || '';
 										notifications.push({
 											date : moment(content.elements[i].issuedAt).format('MMM DD[,] YYYY [at] HH[:]mm'),
-											message : (msg.length > 24 ? msg.substr(0, 23) + '&hellip;' : msg)
+											message : (msg.length > 140 ? msg.substr(0, 139) + '&hellip;' : msg)
 										});
 									}
 									tplData = {
