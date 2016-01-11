@@ -63,7 +63,7 @@ define([ 'app', 'tpl!apps/e-compendium/pending/tpls/e-compendium_pending', 'tpl!
 									status = '<i class="fa fa-archive fa-fw"></i> ' + formattedValue;
 									break;
 								case 'REOPENED':
-									status = 'fa-file-zip-o';
+									status = '<i class="fa fa-file fa-fw"></i> ' + formattedValue;
 									break;
 								default:
 									status = 'Unsubmitted';

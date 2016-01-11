@@ -9,7 +9,8 @@ define([ 'app', 'entities/pending_citation', 'apps/curation/submitted_citations/
 			showSection : function() {
 				var view = new View.Content({
 					collection : new PendingCitationModel.PendingCitationPageableCollection({
-						oauth2_token : Lvl.config.authorizationToken()
+						oauth2_token : Lvl.config.authorizationToken(),
+						curator : true
 					})
 				});
 				view.on('pending:resolve:record', function(collectionId, item) {

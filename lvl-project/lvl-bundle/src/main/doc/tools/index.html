@@ -1,0 +1,6 @@
+
+Add curator role to an existing user:
+
+<code>
+db.resource_owners.update({ "resourceOwner.user.userid" : "demo2" }, { $addToSet : { "resourceOwner.user.roles" : { $each : [ "curator" ] } } })
+</code>

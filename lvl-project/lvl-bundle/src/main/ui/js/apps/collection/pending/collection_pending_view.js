@@ -57,7 +57,7 @@ define([ 'app', 'tpl!apps/collection/pending/tpls/collection_pending', 'tpl!apps
 									status = '<i class="fa fa-archive fa-fw"></i> ' + formattedValue;
 									break;
 								case 'REOPENED':
-									status = 'fa-file-zip-o';
+									status = '<i class="fa fa-file fa-fw"></i> ' + formattedValue;
 									break;
 								default:
 									status = 'Unsubmitted';

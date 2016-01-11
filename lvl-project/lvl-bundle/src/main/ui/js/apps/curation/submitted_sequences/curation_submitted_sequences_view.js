@@ -63,7 +63,7 @@ define([ 'app', 'tpl!apps/curation/submitted_sequences/tpls/submitted_sequences'
 									status = '<i class="fa fa-archive fa-fw"></i> ' + formattedValue;
 									break;
 								case 'REOPENED':
-									status = 'fa-file-zip-o';
+									status = '<i class="fa fa-file fa-fw"></i> ' + formattedValue;
 									break;
 								default:
 									status = 'Unsubmitted';

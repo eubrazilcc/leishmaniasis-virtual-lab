@@ -62,7 +62,9 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 			},
 			onDestroy : function() {
 				// unsubscribe from events
-				$(window).off('resize', this.resize);
+				$(window).off('resize', this.resize);				
+				Lvl.vent.off('search:form:submitted');
+				this.stopListening();
 				$('#opts_map_types_heatmap')[0].removeEventListener();
 				$('#opts_map_types_vectormap')[0].removeEventListener();
 				$('#opts_layer_sandfly_seqs')[0].removeEventListener();

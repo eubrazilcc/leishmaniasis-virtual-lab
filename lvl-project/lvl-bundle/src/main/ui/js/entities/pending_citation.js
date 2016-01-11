@@ -50,7 +50,8 @@ define([ 'app', 'backbone.picky', 'backbone.paginator' ], function(Lvl) {
 				return Lvl.config.get('service.url') + '/pending/citations/~';
 			},
 			initialize : function(options) {
-				this.oauth2_token = options.oauth2_token
+				this.oauth2_token = options.oauth2_token;
+				this.queryParams.onlySubmitted = (options.curator === true);
 			},
 			state : {
 				pageSize : 100,

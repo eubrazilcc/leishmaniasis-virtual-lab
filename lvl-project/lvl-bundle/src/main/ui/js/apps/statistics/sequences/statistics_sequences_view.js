@@ -120,6 +120,11 @@ define([ 'app', 'tpl!apps/statistics/sequences/tpls/statistics_sequences' ], fun
 					reset : true
 				});
 			},
+			onDestroy : function() {
+				// unsubscribe from events
+				Lvl.vent.off('search:form:submitted');
+				this.stopListening();
+			},
 			searchUnavailable : function(search) {				
 				require([ 'common/growl' ], function(createGrowl) {
 					createGrowl('Operation unavailable', 'Search tool is not available in this section.', false);

@@ -121,9 +121,8 @@ public class SandflyPendingResource {
 			final @QueryParam("onlySubmitted") @DefaultValue("false") boolean onlySubmitted,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace);
-		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":*:view")
-				.getPrincipal();
+		final OAuth2SecurityManager secMgr = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":*:view");
 		final SandflyPendings paginable = SandflyPendings.start()
 				.namespace(namespace2)
 				.page(page)
@@ -138,7 +137,7 @@ public class SandflyPendingResource {
 		final ImmutableMap<String, String> filter = parseQuery(q);		
 		final Sorting sorting = parseSorting(sort, order);
 		final List<SandflyPending> pendingSeqs = SANDFLY_PENDING_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
-				ImmutableMap.of(DB_PREFIX + "sequence", false), count, ownerid, onlySubmitted);
+				ImmutableMap.of(DB_PREFIX + "sequence", false), count, onlySubmitted && secMgr.hasRole(DATA_CURATOR_ROLE) ? null : secMgr.getPrincipal(), onlySubmitted);
 		paginable.setElements(pendingSeqs);
 		paginable.getExcludedFields().add(DB_PREFIX + "sequence");
 		// set total count and return to the caller
@@ -156,11 +155,10 @@ public class SandflyPendingResource {
 		if (isBlank(id)) {
 			throw new WebApplicationException("Missing required parameters", Response.Status.BAD_REQUEST);
 		}
-		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":view")
-				.getPrincipal();
+		final OAuth2SecurityManager secMgr = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":view");
 		// get from database
-		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id2, ownerid);
+		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id2, secMgr.hasRole(DATA_CURATOR_ROLE) ? null : secMgr.getPrincipal());
 		if (pendingSeq == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -211,13 +209,16 @@ public class SandflyPendingResource {
 		if (update == null) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
-				.getPrincipal();		
+		final OAuth2SecurityManager secMgr = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("sequences:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit");		
 		// get from database
-		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id, ownerid);
+		final SandflyPending pendingSeq = SANDFLY_PENDING_DAO.find(id, secMgr.hasRole(DATA_CURATOR_ROLE) ? null : secMgr.getPrincipal());
 		if (pendingSeq == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
+		}
+		// restore possible excluded fields
+		if (isBlank(trimToNull(update.getSequence()))) {
+			update.setSequence(pendingSeq.getSequence());
 		}
 		// update
 		SANDFLY_PENDING_DAO.update(update);
@@ -228,7 +229,7 @@ public class SandflyPendingResource {
 						.newId()
 						.priority(Priority.NORMAL)
 						.scope(DATA_CURATOR_ROLE)
-						.message(String.format("Sequence updated by user %s", ownerid))
+						.message(String.format("Sequence updated by %s", secMgr.getPrincipal()))
 						.action(new Action("sandflyPending", update.getId()))
 						.build());
 			} else {
@@ -236,7 +237,7 @@ public class SandflyPendingResource {
 						.newId()
 						.priority(Priority.NORMAL)
 						.addressee(update.getAssignedTo())
-						.message(String.format("Sequence updated by user %s", ownerid))
+						.message(String.format("Sequence updated by %s", secMgr.getPrincipal()))
 						.action(new Action("sandflyPending", update.getId()))
 						.build());
 			}
@@ -246,7 +247,7 @@ public class SandflyPendingResource {
 					.newId()
 					.priority(Priority.NORMAL)
 					.addressee(update.getNamespace())
-					.message(String.format("Sequence submission resolved"))
+					.message(String.format("Sequence submission resolved bby %s", secMgr.getPrincipal()))
 					.action(new Action("sandflyPending", update.getId()))
 					.build());
 		}

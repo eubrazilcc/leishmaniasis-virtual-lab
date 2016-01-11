@@ -119,9 +119,8 @@ public class PendingReferenceResource {
 			final @QueryParam("onlySubmitted") @DefaultValue("false") boolean onlySubmitted,
 			final @Context UriInfo uriInfo, final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
 		final String namespace2 = parseParam(namespace);
-		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":*:view")
-				.getPrincipal();
+		final OAuth2SecurityManager secMgr = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":*:view");		
 		final PendingReferences paginable = PendingReferences.start()
 				.namespace(namespace2)
 				.page(page)
@@ -135,8 +134,8 @@ public class PendingReferenceResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);		
 		final Sorting sorting = parseSorting(sort, order);
-		final List<PendingReference> pendingRefs = PENDING_REFERENCE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
-				ImmutableMap.of(DB_PREFIX + "sequence", false), count, ownerid, onlySubmitted);
+		final List<PendingReference> pendingRefs = PENDING_REFERENCE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count, 
+				onlySubmitted && secMgr.hasRole(DATA_CURATOR_ROLE) ? null : secMgr.getPrincipal(), onlySubmitted);
 		paginable.setElements(pendingRefs);
 		paginable.getExcludedFields().add(DB_PREFIX + "sequence");
 		// set total count and return to the caller
@@ -150,12 +149,11 @@ public class PendingReferenceResource {
 	@Produces(APPLICATION_JSON)
 	public PendingReference getPendingReference(final @PathParam("namespace") String namespace, final @PathParam("id") String id, final @Context UriInfo uriInfo, 
 			final @Context HttpServletRequest request, final @Context HttpHeaders headers) {
-		final String namespace2 = parseParam(namespace), id2 = parseParam(id);		
-		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":view")
-				.getPrincipal();
+		final String namespace2 = parseParam(namespace), id2 = parseParam(id);
+		final OAuth2SecurityManager secMgr = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":view");
 		// get from database
-		final PendingReference pendingRef = PENDING_REFERENCE_DAO.find(id2, ownerid);
+		final PendingReference pendingRef = PENDING_REFERENCE_DAO.find(id2, secMgr.hasRole(DATA_CURATOR_ROLE) ? null : secMgr.getPrincipal());
 		if (pendingRef == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -206,11 +204,10 @@ public class PendingReferenceResource {
 		if (update == null || isBlank(trimToNull(update.getPubmedId()))) {
 			throw new WebApplicationException("Missing required parameters", BAD_REQUEST);
 		}
-		final String ownerid = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
-				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit")
-				.getPrincipal();
+		final OAuth2SecurityManager secMgr = OAuth2SecurityManager.login(request, null, headers, RESOURCE_NAME)
+				.requiresPermissions("citations:pending:" + ns2permission(namespace2) + ":" + id2 + ":edit");
 		// get from database
-		final PendingReference pendingRef = PENDING_REFERENCE_DAO.find(id2, ownerid);
+		final PendingReference pendingRef = PENDING_REFERENCE_DAO.find(id2, secMgr.hasRole(DATA_CURATOR_ROLE) ? null : secMgr.getPrincipal());
 		if (pendingRef == null) {
 			throw new WebApplicationException("Element not found", Response.Status.NOT_FOUND);
 		}
@@ -223,7 +220,7 @@ public class PendingReferenceResource {
 						.newId()
 						.priority(Priority.NORMAL)
 						.scope(DATA_CURATOR_ROLE)
-						.message(String.format("Citation updated by user %s", ownerid))
+						.message(String.format("Citation updated by %s", secMgr.getPrincipal()))
 						.action(new Action("pendingReference", update.getId()))
 						.build());
 			} else {
@@ -231,7 +228,7 @@ public class PendingReferenceResource {
 						.newId()
 						.priority(Priority.NORMAL)
 						.addressee(update.getAssignedTo())
-						.message(String.format("Citation updated by user %s", ownerid))
+						.message(String.format("Citation updated by %s", secMgr.getPrincipal()))
 						.action(new Action("pendingReference", update.getId()))
 						.build());
 			}
@@ -241,7 +238,7 @@ public class PendingReferenceResource {
 					.newId()
 					.priority(Priority.NORMAL)
 					.addressee(update.getNamespace())
-					.message(String.format("Citation submission resolved"))
+					.message(String.format("Citation submission resolved by %s", secMgr.getPrincipal()))
 					.action(new Action("pendingReference", update.getId()))
 					.build());
 		}

@@ -40,7 +40,6 @@ import static eu.eubrazilcc.lvl.service.cache.GeolocationCache.findNearbyLeishma
 import static eu.eubrazilcc.lvl.storage.ResourceIdPattern.US_ASCII_PRINTABLE_PATTERN;
 import static eu.eubrazilcc.lvl.storage.SampleKey.Builder.IOCL_PATTERN;
 import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaSampleDAO.LEISHMANIA_SAMPLE_DAO;
-import static eu.eubrazilcc.lvl.storage.dao.LeishmaniaSampleDAO.ORIGINAL_SAMPLE_KEY;
 import static java.util.Optional.ofNullable;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -130,9 +129,8 @@ public class LeishmaniaSampleResource {
 		final MutableLong count = new MutableLong(0l);
 		final ImmutableMap<String, String> filter = parseQuery(q);		
 		final Sorting sorting = parseSorting(sort, order);
-		final List<LeishmaniaSample> samples = LEISHMANIA_SAMPLE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, 
-				null, count);
-				/* ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), count); */
+		final List<LeishmaniaSample> samples = LEISHMANIA_SAMPLE_DAO.list(paginable.getPageFirstEntry(), per_page, filter, sorting, null, count);
+		/* ImmutableMap.of(ORIGINAL_SAMPLE_KEY, false), count); */
 		paginable.setElements(samples);
 		/* paginable.getExcludedFields().add(ORIGINAL_SAMPLE_KEY); */
 		// set additional output and return to the caller
