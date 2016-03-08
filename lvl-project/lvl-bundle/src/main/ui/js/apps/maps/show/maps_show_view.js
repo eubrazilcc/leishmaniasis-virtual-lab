@@ -22,11 +22,14 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 			},
 			showItemRecord : function(e) {
 				e.preventDefault();
-				var self = this;
-				var target = $(e.target);
-				var itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-item_id') : target.attr('data-item_id');
-				this.trigger('sequences:view:sequence', itemId);				
-				$('#map-popup').popover('destroy');				
+				var self = this, target = $(e.target), itemId = target.is('i') ? target.parent('a').get(0).getAttribute('data-item_id') : target.attr('data-item_id');
+				if (itemId) {
+					var args = itemId.split(';');
+					if (Array.isArray(args) && args.length === 3) {
+						this.trigger(args[0] + 's:view:' + args[0], args[1], args[2]);
+					}
+				}
+				$('#map-popup').popover('destroy');
 			},
 			searchUnavailable : function(search) {				
 				require([ 'common/growl' ], function(createGrowl) {
@@ -422,7 +425,6 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 						}
 					});
 					checkboxes[0].on('change', function() {
-						console.log('SANDFLY SEQS CHANGED!'); // TODO
 						var checked = this.checked;
 						if (osmRaster.getVisible()) sandfliesSeqVector.setVisible(checked);
 						else sandfliesSeqHeatmap.setVisible(checked);
@@ -444,11 +446,11 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 					});
 					
 					// add popup
-					var createItemLinks = function(name) {
+					var createItemLinks = function(name, type, collection) {
 						var text = '';
 						var seqs = name.split(',');
 						for (i = 0; i < seqs.length; i++) {
-							text += '<a href="#" data-item_id="' + seqs[i] + '">' + seqs[i] + '</a> ';
+							text += '<a href="#" data-item_id="' + type + ';' + collection + ';' + seqs[i] + '">' + seqs[i] + '</a> ';
 						}
 						return text;
 					}
@@ -462,11 +464,25 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 					var this_ = this;
 					this.map.on('click', function(evt) {
 						$(popupElem).popover('destroy');
-						var feature = this_.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-							return feature;
+						var f = this_.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+							var type, collection;
+							if (layer === sandfliesSeqVector || layer === sandfliesSeqHeatmap) {
+								type = 'sequence';
+								collection = 'sandflies';
+							} else if (layer === leishmaniaSeqVector || layer === leishmaniaSeqHeatmap) {
+								type = 'sequence';
+								collection = 'leishmania';
+							} else if (layer === sandfliesSamplesVector || layer === sandfliesSamplesHeatmap) {
+								type = 'sample';
+								collection = 'sandflies';
+							} else if (layer === leishmaniaSamplesVector || layer === leishmaniaSamplesHeatmap) {
+								type = 'sample';
+								collection = 'leishmania';
+							}
+							return { feature: feature, type: type, collection: collection };
 						});
-						if (feature) {
-							var geometry = feature.getGeometry();
+						if (f) {
+							var geometry = f.feature.getGeometry();
 							var coord = geometry.getCoordinates();
 							popup.setPosition(coord);
 							$(popupElem).popover({
@@ -474,7 +490,7 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 								'placement' : 'top',
 								'animation' : false,
 								'html' : true,
-								'content' : createItemLinks(feature.get('name'))
+								'content' : createItemLinks(f.feature.get('name'), f.type, f.collection)
 							});
 							$(popupElem).popover('show');
 						}
