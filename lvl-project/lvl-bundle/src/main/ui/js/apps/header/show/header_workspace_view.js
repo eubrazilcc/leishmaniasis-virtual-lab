@@ -106,6 +106,7 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 				'click button#lvl-search-form-submit-btn-xs' : 'submitSearchFormXs',
 				'submit form#lvl-search-form' : 'submitSearchForm',
 				'submit form#lvl-search-form-xs' : 'submitSearchFormXs',
+				'click a#lvl-advanced-search-btn' : 'showAdvancedSearchForm',
 				'dragover div#lvl-save-items-target' : 'saveItemsDragOverHandler',
 				'dragenter div#lvl-save-items-target' : 'saveItemsDragEnterHandler',
 				'dragleave div#lvl-save-items-target' : 'saveItemsDragLeaveHandler',
@@ -134,7 +135,6 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 			},
 			showNotifications : function(e) {
 				e.preventDefault();
-				
 			},
 			submitSearchFormXs : function(e) {
 				e.preventDefault();
@@ -149,6 +149,11 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 				var searchInput = this.$('#lvl-search-form-input');
 				Lvl.vent.trigger('search:form:submitted', searchInput.val());
 				searchInput.val('');
+				closeSearchForm(0);
+			},
+			showAdvancedSearchForm : function(e) {
+				e.preventDefault();
+				Lvl.vent.trigger('search:advanced_form:opened');
 				closeSearchForm(0);
 			},
 			saveItemsDragOverHandler : function(e) {
