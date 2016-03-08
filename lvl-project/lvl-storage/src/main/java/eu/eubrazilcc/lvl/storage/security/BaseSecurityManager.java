@@ -25,7 +25,9 @@ package eu.eubrazilcc.lvl.storage.security;
 import static eu.eubrazilcc.lvl.storage.oauth2.dao.ResourceOwnerDAO.RESOURCE_OWNER_DAO;
 import static eu.eubrazilcc.lvl.storage.security.el.PermissionElBuilder.EL_PARAMETER_PATTERN;
 import static eu.eubrazilcc.lvl.storage.security.el.PermissionElBuilder.buildPermission;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import javax.annotation.Nullable;
@@ -34,6 +36,7 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 
 import eu.eubrazilcc.lvl.storage.oauth2.ResourceOwner;
+import eu.eubrazilcc.lvl.storage.oauth2.security.OAuth2SecurityManager;
 import eu.eubrazilcc.lvl.storage.security.shiro.AccessTokenToken;
 
 /**

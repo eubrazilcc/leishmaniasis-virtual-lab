@@ -194,6 +194,7 @@ public class SecurityManagerTest {
 			assertThat("expected role is present", currentUser.hasRole("user"), equalTo(true));
 			assertThat("unexpected role is not present", currentUser.hasRole("admin"), equalTo(false));
 			assertThat("expected permission is present", currentUser.isPermitted("sequences:leishmania:public:item1:view"), equalTo(true));
+			assertThat("expected permission is present", currentUser.isPermitted("samples:leishmania:public:item1:view"), equalTo(true));
 			assertThat("expected permissions are present", currentUser.isPermittedAll("sequences:sandflies:meremortal@lvl:*:create", "sequences:sandflies:meremortal@lvl:item34:edit"), equalTo(true));
 			assertThat("expected permissions (using EL expressions) are present", currentUser
 					.isPermittedAll("sequences:sandflies:" + OWNERID_EL_TEMPLATE + ":*:create", "sequences:sandflies:" + OWNERID_EL_TEMPLATE + ":item34:edit"), equalTo(true));
@@ -221,6 +222,7 @@ public class SecurityManagerTest {
 			assertThat("expected role is present", currentUser.hasRole("user"), equalTo(true));
 			assertThat("unexpected role is not present", currentUser.hasRole("admin"), equalTo(false));
 			assertThat("expected permission is present", currentUser.isPermitted("sequences:leishmania:public:item1:view"), equalTo(true));
+			assertThat("expected permission is present", currentUser.isPermitted("samples:leishmania:public:item1:view"), equalTo(true));
 			assertThat("expected permissions are present", currentUser.isPermittedAll("sequences:sandflies:meremortal@lvl:*:create", "sequences:sandflies:meremortal@lvl:item34:edit"), equalTo(true));
 			assertThat("unexpected permission is not present", currentUser.isPermitted("sequences:sandflies:meremortal2@lvl:item1:view"), equalTo(false));
 			assertThat("unexpected permissions are not present", currentUser.isPermittedAll("lightsaber:weild"), equalTo(false));
@@ -307,6 +309,11 @@ public class SecurityManagerTest {
 					currentUser.isPermitted("sequences:*:public:*:view"), equalTo(true));
 			assertThat("User own sequences are fully accessible from user profile", 
 					currentUser.isPermittedAll("sequences:*:" + meremortalOwnerid + ":*:view,edit,create"), equalTo(true));
+			
+			assertThat("Public samples are accessible for reading from user profile", 
+					currentUser.isPermitted("samples:*:public:*:view"), equalTo(true));
+			assertThat("Public sandfly samples are accessible for reading from user profile", 
+					currentUser.isPermitted("samples:sandflies:public:*:view"), equalTo(true));
 
 			assertThat("Publications are not accessible for reading from user profile", 
 					currentUser.isPermitted("citations:*:*:*:view"), equalTo(false));

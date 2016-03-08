@@ -161,8 +161,8 @@ define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', '
 											message : 'The origin is required to be a minimum of 60 characters in length'
 										},
 										regexp: {
-					                        regexp: /^[ACTG]+$/i,
-					                        message: 'The origin can consist of A, C, T and G only'
+					                        regexp: /^[ACTGN\-]+$/i,
+					                        message: 'The origin can consist of A, C, T, G, N and - only'
 					                    }
 									}
 								},
