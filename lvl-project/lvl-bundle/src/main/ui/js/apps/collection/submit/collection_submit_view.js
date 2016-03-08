@@ -31,9 +31,11 @@ define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', '
 						self.$('#inputClass').val('Kinetoplastea');
 						self.$('#inputOrder').val('Trypanosomatida');
 						self.$('#inputFamily').val('Trypanosomatidae');
-						self.$('#inputGenus').val('Leishmania');						
+						self.$('#inputGenus').val('Leishmania');
 						form.bootstrapValidator('resetField', 'inputEpithet', true);
-						self.$('#inputScientificName').val('');						
+						self.$('#inputScientificName').val('');
+						form.bootstrapValidator('resetField', 'inputIndividualCount', true);
+						self.$('#inputIndividualCount').val('1');
 					} else if (organism === 'Sandflies') {
 						self.$('#inputPhylum').val('Arthropoda');
 						self.$('#inputClass').val('Insecta');
@@ -41,9 +43,12 @@ define([ 'app', 'tpl!apps/collection/submit/tpls/collection_submit', 'chance', '
 						self.$('#inputFamily').val('Psychodidae');
 						form.bootstrapValidator('resetField', 'inputGenus', true);
 						form.bootstrapValidator('resetField', 'inputEpithet', true);
-						self.$('#inputScientificName').val('');						
+						self.$('#inputScientificName').val('');
+						form.bootstrapValidator('resetField', 'inputIndividualCount', true);
+						self.$('#inputIndividualCount').val('');
 					}
 					form.bootstrapValidator('validateField', 'inputGenus');
+					form.bootstrapValidator('validateField', 'inputIndividualCount');
 				},
 				'change #inputGenus' : function(e) {
 					var self = this;

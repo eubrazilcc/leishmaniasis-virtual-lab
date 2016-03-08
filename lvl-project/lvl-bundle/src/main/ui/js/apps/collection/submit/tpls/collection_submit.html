@@ -16,7 +16,7 @@
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="inputLongitude" class="col-lg-3 control-label">Location<sup class="text-danger" title="Required">*</sup></label>
+					<label for="inputLongitude" class="col-lg-3 control-label">WGS84 location<sup class="text-danger" title="Required">*</sup></label>
 					<div class="col-lg-9">						
 						<input type="text" class="form-control" id="inputLongitude" name="inputLongitude" placeholder="Longitude" required>
 					</div>
@@ -137,7 +137,7 @@
 						<input type="text" class="form-control" id="inputIndividualCount" name="inputIndividualCount"
 							placeholder="Number of individuals collected" required>
 					</div>
-				</div>				
+				</div>
 				<div class="form-group">
 					<label for="inputCollectingMethod" class="col-lg-3 control-label">Collecting method</label>
 					<div class="col-lg-9">
@@ -168,12 +168,12 @@
 						<input type="text" class="form-control" id="inputGene" name="inputGene"
 							placeholder="Source gene" required>
 					</div>
-				</div>				
+				</div>
 				<div class="form-group">
 					<label for="inputOrigin" class="col-lg-3 control-label">Origin<sup class="text-danger" title="Required">*</sup></label>
 					<div class="col-lg-9">
 						<textarea class="form-control" rows="5" id="inputOrigin" name="inputOrigin"
-							placeholder="Paste your DNA sequence here" required></textarea>
+							placeholder="Paste your DNA sequence without spaces or line breaks" required></textarea>
 					</div>
 				</div>
 			</fieldset>
@@ -195,7 +195,7 @@
 						&nbsp;
 						<button type="submit" class="btn btn-primary" id="lvlSubmitSequenceBtn" disabled="disabled" data-toggle="tooltip" 
 							data-placement="bottom" title="" data-original-title="Creates a new sequence">Submit</button>
-						<span id="helpBlock" class="help-block">Check that all required fields are completed before submitting the data.</span>
+						<span id="helpBlock" class="help-block"><sup class="text-danger" title="Required">*</sup> Required. Check that all required fields are completed before submitting the data.</span>
 						<input type="hidden" id="submissionId" value="<%= submissionId() %>">
 					</div>
 				</div>

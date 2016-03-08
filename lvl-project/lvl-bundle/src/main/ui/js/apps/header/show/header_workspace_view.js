@@ -46,12 +46,26 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 			collectionEvents : {
 				'reset' : 'render'
 			},
+			initialize : function(options) {
+				this.currentCollection = options.currentCollection;
+				this.listenTo(this.currentCollection, 'change', this.render);
+			},
 			onBeforeRender : function() {
-				var selectedNavLink = this.collection.selected || this.collection.at(0);
+				this.selectedNavLink = this.collection.selected || this.collection.at(0);
 				this.model.set({
-					'selected_icon' : selectedNavLink.get('icon'),
-					'selected_text' : selectedNavLink.get('text')
+					'selected_icon' : this.selectedNavLink.get('icon'),
+					'selected_text' : this.selectedNavLink.get('text')
 				});
+			},
+			onRender : function() {
+				var href = this.selectedNavLink.get('href');
+				if (href.indexOf('/#collection') >= 0 && this.currentCollection.get('section') !== 'submit') {
+					this.$el.find('#collectionName').text(this.currentCollection.get('name'));
+					this.$el.find('#collectionName').removeClass('hidden');
+				}
+			},
+			onDestroy : function() {
+				this.stopListening();
 			}
 		});
 		View.Header = Marionette.LayoutView.extend({
@@ -201,6 +215,7 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 			},
 			initialize : function(options) {
 				this.navLinks = options.navigation;
+				this.currentCollection = options.currentCollection;
 				// setup items saving
 				Lvl.vent.on('editable:items:dragstart', this.showMySavedItems);
 				Lvl.vent.on('editable:items:dragend', this.hideMySavedItems);
@@ -237,7 +252,8 @@ define([ 'app', 'tpl!apps/header/show/tpls/header_workspace', 'tpl!apps/header/s
 			onRender : function(options) {
 				this.navigation.show(new View.Navigation({
 					model : options.navLinks.selected || options.navLinks.at(0),
-					collection : options.navLinks
+					collection : options.navLinks,
+					currentCollection : this.currentCollection
 				}));
 				this.$('a#btnAlerts').click(function(event) {
 					event.preventDefault();

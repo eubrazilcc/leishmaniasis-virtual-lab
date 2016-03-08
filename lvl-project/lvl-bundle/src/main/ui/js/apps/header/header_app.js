@@ -16,6 +16,10 @@ define([ 'app', 'entities/navigation' ], function(Lvl) {
 		};
 
 		HeaderApp.navLinks = Lvl.request('navigation:links+settings:entities');
+		
+		var CurrentCollection = Backbone.Model.extend({ });
+		
+		HeaderApp.currentCollection = new CurrentCollection;
 
 		HeaderApp.currentHeader = null;
 
@@ -25,7 +29,7 @@ define([ 'app', 'entities/navigation' ], function(Lvl) {
 		 * 'application' parameter defines the current application: DNA sequence
 		 * collection, social network, e-compendium, etc.
 		 */
-		Lvl.commands.setHandler('set:active:header', function(id, application) {
+		Lvl.commands.setHandler('set:active:header', function(id, application, section, collectionName) {
 			id = (id || 'default').toLowerCase();
 			application = (application || 'home').toLowerCase();
 			// load header based on the id
@@ -36,7 +40,7 @@ define([ 'app', 'entities/navigation' ], function(Lvl) {
 					});
 				} else if (id === 'workspace') {
 					require([ 'apps/header/show/header_workspace_ctrl' ], function(WorkspaceHeaderCtrl) {
-						HeaderApp.currentHeader = WorkspaceHeaderCtrl.showHeader(HeaderApp.navLinks);
+						HeaderApp.currentHeader = WorkspaceHeaderCtrl.showHeader(HeaderApp.navLinks, HeaderApp.currentCollection);
 					});
 				} else if (id === 'admin') {
 					require([ 'apps/header/show/header_admin_ctrl' ], function(AdminHeaderCtrl) {
@@ -58,6 +62,10 @@ define([ 'app', 'entities/navigation' ], function(Lvl) {
 				});
 				navLinkToSelect.select();
 				HeaderApp.navLinks.trigger('reset');
+			}
+			// set the current collection
+			if (application === 'collection') {
+				HeaderApp.currentCollection.set({ section: section, name: collectionName });
 			}
 		});
 	});

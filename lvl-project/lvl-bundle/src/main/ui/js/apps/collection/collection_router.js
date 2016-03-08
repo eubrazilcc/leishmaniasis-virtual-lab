@@ -19,8 +19,23 @@ define([ 'app', 'routefilter' ], function(Lvl) {
 					});
 					return false;
 				}
+				var fragment = Backbone.history.fragment, slashCount = (fragment.match(/\//g) || []).length, section, collectionName;
+				switch (slashCount) {
+				case 0:
+					fragment = fragment + '/sequences/sandflies';
+					break;
+				case 1:
+					fragment = fragment + '/sandflies';
+					break;
+				default:
+				}
+				var args = this._extractParameters(this._routeToRegExp('collection/:section/:subsection'), fragment);
+				if (Array.isArray(args) && args.length >= 2) {
+					section = args[0];
+					collectionName = args[1];
+				}
 				require([ 'apps/collection/collection_app' ], function() {
-					Lvl.execute('set:active:header', 'workspace', 'collection');
+					Lvl.execute('set:active:header', 'workspace', 'collection', section, collectionName);
 					Lvl.execute('set:active:footer', 'workspace');
 					Lvl.startSubApp('CollectionApp');
 				});

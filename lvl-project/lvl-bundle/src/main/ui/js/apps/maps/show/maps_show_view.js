@@ -65,12 +65,12 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 				$(window).off('resize', this.resize);				
 				Lvl.vent.off('search:form:submitted');
 				this.stopListening();
-				$('#opts_map_types_heatmap')[0].removeEventListener();
-				$('#opts_map_types_vectormap')[0].removeEventListener();
-				$('#opts_layer_sandfly_seqs')[0].removeEventListener();
-				$('#opts_layer_leishmania_seqs')[0].removeEventListener();
-				$('#opts_layer_sandfly_samples')[0].removeEventListener();
-				$('#opts_layer_leishmania_samples')[0].removeEventListener();
+				$('#opts_map_types_heatmap').off('change');
+				$('#opts_map_types_vectormap').off('change');
+				$('#opts_layer_sandfly_seqs').off('change');
+				$('#opts_layer_leishmania_seqs').off('change');
+				$('#opts_layer_sandfly_samples').off('change');
+				$('#opts_layer_leishmania_samples').off('change');
 			},
 			loadMap : function() {
 				require([ 'openlayers' ], function(ol) {
@@ -374,22 +374,22 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 						}),
 						ol3Logo : false
 					});
-					var radios = [ $('#opts_map_types_heatmap')[0], $('#opts_map_types_vectormap')[0] ];
-					var checkboxes = [ $('#opts_layer_sandfly_seqs')[0], $('#opts_layer_leishmania_seqs')[0],
-					                   $('#opts_layer_sandfly_samples')[0], $('#opts_layer_leishmania_samples')[0] ];
-					radios[0].addEventListener('change', function() {
+					var radios = [ $('#opts_map_types_heatmap'), $('#opts_map_types_vectormap') ];
+					var checkboxes = [ $('#opts_layer_sandfly_seqs'), $('#opts_layer_leishmania_seqs'),
+					                   $('#opts_layer_sandfly_samples'), $('#opts_layer_leishmania_samples') ];
+					radios[0].on('change', function() {
 						var checked = this.checked;
 						if (checked !== tonerRaster.getVisible()) {							
 							tonerRaster.setVisible(checked);
-							sandfliesSeqHeatmap.setVisible(checkboxes[0].checked && checked);
-							leishmaniaSeqHeatmap.setVisible(checkboxes[1].checked && checked);
-							sandfliesSamplesHeatmap.setVisible(checkboxes[2].checked && checked);
-							leishmaniaSamplesHeatmap.setVisible(checkboxes[3].checked && checked);
+							sandfliesSeqHeatmap.setVisible(checkboxes[0].prop('checked') && checked);
+							leishmaniaSeqHeatmap.setVisible(checkboxes[1].prop('checked') && checked);
+							sandfliesSamplesHeatmap.setVisible(checkboxes[2].prop('checked') && checked);
+							leishmaniaSamplesHeatmap.setVisible(checkboxes[3].prop('checked') && checked);
 							osmRaster.setVisible(!checked);
-							sandfliesSeqVector.setVisible(checkboxes[0].checked && !checked);
-							leishmaniaSeqVector.setVisible(checkboxes[1].checked && !checked);
-							sandfliesSamplesVector.setVisible(checkboxes[2].checked && !checked);
-							leishmaniaSamplesVector.setVisible(checkboxes[3].checked && !checked);
+							sandfliesSeqVector.setVisible(checkboxes[0].prop('checked') && !checked);
+							leishmaniaSeqVector.setVisible(checkboxes[1].prop('checked') && !checked);
+							sandfliesSamplesVector.setVisible(checkboxes[2].prop('checked') && !checked);
+							leishmaniaSamplesVector.setVisible(checkboxes[3].prop('checked') && !checked);
 						}
 					});
 					tonerRaster.on('change:visible', function() {
@@ -399,19 +399,19 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 							radios[1].checked = !visible;
 						}
 					});
-					radios[1].addEventListener('change', function() {
+					radios[1].on('change', function() {
 						var checked = this.checked;
-						if (checked !== osmRaster.getVisible()) {							
+						if (checked !== osmRaster.getVisible()) {
 							osmRaster.setVisible(checked);
-							sandfliesSeqVector.setVisible(checkboxes[0].checked && checked);
-							leishmaniaSeqVector.setVisible(checkboxes[1].checked && checked);
-							sandfliesSamplesVector.setVisible(checkboxes[2].checked && checked);
-							leishmaniaSamplesVector.setVisible(checkboxes[3].checked && checked);
+							sandfliesSeqVector.setVisible(checkboxes[0].prop('checked') && checked);
+							leishmaniaSeqVector.setVisible(checkboxes[1].prop('checked') && checked);
+							sandfliesSamplesVector.setVisible(checkboxes[2].prop('checked') && checked);
+							leishmaniaSamplesVector.setVisible(checkboxes[3].prop('checked') && checked);
 							tonerRaster.setVisible(!checked);
-							sandfliesSeqHeatmap.setVisible(checkboxes[0].checked && !checked);							
-							leishmaniaSeqHeatmap.setVisible(checkboxes[1].checked && !checked);
-							sandfliesSamplesHeatmap.setVisible(checkboxes[2].checked && !checked);
-							leishmaniaSamplesHeatmap.setVisible(checkboxes[3].checked && !checked);
+							sandfliesSeqHeatmap.setVisible(checkboxes[0].prop('checked') && !checked);							
+							leishmaniaSeqHeatmap.setVisible(checkboxes[1].prop('checked') && !checked);
+							sandfliesSamplesHeatmap.setVisible(checkboxes[2].prop('checked') && !checked);
+							leishmaniaSamplesHeatmap.setVisible(checkboxes[3].prop('checked') && !checked);
 						}
 					});
 					osmRaster.on('change:visible', function() {
@@ -421,22 +421,23 @@ define([ 'app', 'tpl!apps/maps/show/tpls/maps-show', 'backbone.oauth2' ], functi
 							radios[1].checked = visible;
 						}
 					});
-					checkboxes[0].addEventListener('change', function() {
+					checkboxes[0].on('change', function() {
+						console.log('SANDFLY SEQS CHANGED!'); // TODO
 						var checked = this.checked;
 						if (osmRaster.getVisible()) sandfliesSeqVector.setVisible(checked);
 						else sandfliesSeqHeatmap.setVisible(checked);
 					});
-					checkboxes[1].addEventListener('change', function() {
+					checkboxes[1].on('change', function() {
 						var checked = this.checked;
 						if (osmRaster.getVisible()) leishmaniaSeqVector.setVisible(checked);
 						else leishmaniaSeqHeatmap.setVisible(checked);						
 					});
-					checkboxes[2].addEventListener('change', function() {
+					checkboxes[2].on('change', function() {
 						var checked = this.checked;
 						if (osmRaster.getVisible()) sandfliesSamplesVector.setVisible(checked);
 						else sandfliesSamplesHeatmap.setVisible(checked);
 					});
-					checkboxes[3].addEventListener('change', function() {
+					checkboxes[3].on('change', function() {
 						var checked = this.checked;
 						if (osmRaster.getVisible()) leishmaniaSamplesVector.setVisible(checked);
 						else leishmaniaSamplesHeatmap.setVisible(checked);

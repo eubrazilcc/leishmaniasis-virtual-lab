@@ -6,9 +6,10 @@ define([ 'app', 'apps/header/show/header_workspace_view' ], function(Lvl, View) 
 	Lvl.module('HeaderApp.Workspace', function(Workspace, Lvl, Backbone, Marionette, $, _) {
 		'use strict';
 		Workspace.Controller = {
-			showHeader : function(navLinks) {
+			showHeader : function(navLinks, currentCollection) {
 				var view = new View.Header({
-					navigation : navLinks
+					navigation : navLinks,
+					currentCollection: currentCollection
 				});
 				view.on('access:user:profile', function(accession) {
 					require([ 'apps/access/profile/profile_viewer', 'entities/user' ], function(UserProfileView, UserModel) {
