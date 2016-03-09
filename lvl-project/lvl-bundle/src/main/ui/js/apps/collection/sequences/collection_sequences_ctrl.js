@@ -39,6 +39,14 @@ define([ 'app', 'entities/sequence', 'apps/collection/sequences/collection_seque
 						Lvl.dialogRegion.show(dialogView);
 					});
 				});
+				view.on('sequences:advanced:search', function(collectionId) {
+					require([ 'apps/collection/advanced_search_sequence/collection_advanced_search' ], function(SearchView) {
+						var dialogView = new SearchView.Content({
+							data_source : collectionId
+						});
+						Lvl.dialogRegion.show(dialogView);
+					});
+				});
 				Lvl.mainRegion.currentView.tabContent.show(view);
 				return View.Content.id;
 			}

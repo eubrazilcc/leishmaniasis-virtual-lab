@@ -129,7 +129,7 @@ define([ 'app', 'tpl!apps/collection/sequences/tpls/collection_sequences', 'tpl!
 				});
 				// setup search
 				Lvl.vent.on('search:form:submitted', this.searchSequences);
-				Lvl.vent.on('search:advanced_form:opened', this.showAdvancedSearchForm);
+				Lvl.vent.on('search:advanced_form:opened', this.showAdvancedSearchForm, this);
 				// setup menu
 				$('#lvl-floating-menu-toggle').show(0);
 				$('#lvl-floating-menu').hide(0);
@@ -251,10 +251,7 @@ define([ 'app', 'tpl!apps/collection/sequences/tpls/collection_sequences', 'tpl!
 				backgridFilter.submit();
 			},
 			showAdvancedSearchForm : function() {
-				
-				console.log('HERE IS OK!'); // TODO
-				
-				// TODO
+				this.trigger('sequences:advanced:search', this.data_source);
 			},
 			resetSearchTerms : function(e) {
 				e.preventDefault();

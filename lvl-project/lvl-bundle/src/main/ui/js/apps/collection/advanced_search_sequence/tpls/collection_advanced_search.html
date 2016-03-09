@@ -1,0 +1,57 @@
+<div class="modal-dialog modal-lg">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">
+				<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+			</button>
+			<h4 class="modal-title" id="myModalLabel">Sequence advanced search</h4>
+		</div>
+		<div class="modal-body">
+			<form role="form">
+            	<fieldset>
+	            	<legend>Enter your search terms</legend>	            	
+	            	<div class="form-group">
+	            		<label for="source_input">Source:</label>
+	            		<input type="text" class="form-control" id="source_input" name="source_input" placeholder="Case-insensitive pattern (e.g. GenBank, genbank, genban)">
+	            	</div>
+	            	<div class="form-group">
+	            		<label for="definition_input">Definition:</label>
+	            		<input type="text" class="form-control" id="definition_input" name="definition_input" placeholder="Case-insensitive pattern (e.g. ayacuchensis, hartmanni)">
+	            	</div>
+	            	<div class="form-group">
+	            		<label for="accession_input">Accession number:</label>
+	            		<input type="text" class="form-control" id="accession_input" name="accession_input" placeholder="Exact match (e.g. AB174770)">
+	            	</div>
+	            	<div class="form-group">
+	            		<label for="length_input">Sequence length:</label>
+	            		<input type="text" class="form-control" id="length_input" name="length_input" placeholder="Numeric comparison (e.g. >400000)">
+	            	</div>
+	            	<div class="form-group">
+	            		<label for="gene_input">Gene:</label>
+	            		<input type="text" class="form-control" id="gene_input" name="gene_input" placeholder="Case-insensitive pattern (e.g. 18S, 18s)">
+	            	</div>
+	            	<div class="form-group">
+	            		<label for="organism_input">Organism:</label>
+	            		<input type="text" class="form-control" id="organism_input" name="organism_input" placeholder="Case-insensitive pattern (e.g. argentipes)">
+	            	</div>
+	            	<div class="form-group">
+	            		<label for="country_input">Country:</label>
+	            		<input type="text" class="form-control" id="country_input" name="country_input" placeholder="Case-insensitive pattern (e.g. India, india)">
+	            	</div>
+	            	<div class="form-group">
+	            		<label for="locale_input">Locale (ISO 3166-1 alpha-2):</label>
+	            		<input type="text" class="form-control" id="locale_input" name="locale_input" placeholder="Exact match (e.g. IN)">
+	            	</div>
+	            	<div class="form-group">
+	            		<label for="free_text_input">Free text:</label>
+	            		<input type="text" class="form-control" id="free_text_input" name="free_text_input" placeholder="Free text">
+	            	</div>
+				</fieldset>
+			</form>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			<button type="button" class="btn btn-primary" id="advanced_search_sequence-btn">Search</button>
+		</div>
+	</div>
+</div>
