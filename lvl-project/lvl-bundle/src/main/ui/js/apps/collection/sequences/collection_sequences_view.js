@@ -393,8 +393,12 @@ define([ 'app', 'tpl!apps/collection/sequences/tpls/collection_sequences', 'tpl!
 					});
 					_self.searchSequences(search);
 				} else {
+					var searchBtn = _self.$('#btnSearchToggle');
+					searchBtn.attr('disabled', true);
 					this.collection.fetch({
 						reset : true
+					}).always(function() {
+						searchBtn.attr('disabled', false);
 					});
 				}
 			}
